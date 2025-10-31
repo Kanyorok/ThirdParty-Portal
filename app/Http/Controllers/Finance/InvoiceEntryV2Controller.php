@@ -20,17 +20,69 @@ use Illuminate\Validation\ValidationException;
 
 class InvoiceEntryV2Controller extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = FinanceInvoiceEntry::with(['thirdParty'])
-            ->orderBy('CreatedOn', 'desc')
-            ->paginate(15);
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+        // Build query with filters
+        $query = FinanceInvoiceEntry::with(['thirdParty', 'currency']);
 
-        return view('finance.accountspayable.invoiceentry.index', compact('invoices'));
+        // Apply filters if provided
+        if ($request->filled('vendor_name')) {
+            $query->whereHas('thirdParty', function($q) use ($request) {
+                $q->where('ThirdPartyName', 'like', '%' . $request->vendor_name . '%')
+                  ->orWhere('TradingName', 'like', '%' . $request->vendor_name . '%');
+            });
+        }
+
+        if ($request->filled('invoice_number')) {
+            $query->where('InvoiceNumber', 'like', '%' . $request->invoice_number . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('InvoiceDate', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('InvoiceDate', '<=', $request->date_to);
+        }
+
+        if ($request->filled('amount_min')) {
+            $query->where('InvoiceAmount', '>=', $request->amount_min);
+        }
+
+        if ($request->filled('amount_max')) {
+            $query->where('InvoiceAmount', '<=', $request->amount_max);
+        }
+
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+
+        // Apply sorting
+        $sortField = $request->sort_by ?? 'CreatedOn';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        // Paginate results
+        $perPage = $request->per_page ?? 15;
+        $invoices = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options for dropdowns
+        $approvalStatuses = FinanceInvoiceEntry::distinct()
+            ->pluck('ApprovalStatus')
+            ->filter()
+            ->unique()
+            ->values();
+
+        return view('finance.accountspayable.invoiceentry.index', compact(
+            'invoices',
+            'approvalStatuses'
+        ));
     }
 
     public function create()
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
         $paymentMethods = CodeDetail::where('CodeID', 'PaymentMethod')
             ->orderBy('Description')
             ->get(['ID', 'Value', 'Description']);
@@ -43,6 +95,7 @@ class InvoiceEntryV2Controller extends Controller
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         // Load invoice with relationships like the original controller
         $invoice = FinanceInvoiceEntry::with([
             'thirdParty:Id,ThirdPartyName,TradingName',
@@ -125,6 +178,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function quickSearchSuppliers(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             // Support both Select2 (q) and our previous (search_term) parameter styles
             $q = trim((string) ($request->input('search_term') ?? $request->input('q') ?? ''));
@@ -220,6 +274,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function findSupplier(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             // This method can accept either search_term or supplier_id
             if ($request->has('supplier_id')) {
@@ -237,24 +292,28 @@ class InvoiceEntryV2Controller extends Controller
                         'tp.TradingName',
                         'tp.RegistrationNumber',
                         'tp.Email',
-                        'tp.Phone'
+                        'tp.Phone',
+                        'tp.PhysicalAddress',
+                        'tp.BusinessType',
+                        's.Active_Status'
                     )
                     ->first();
             } else {
                 $request->validate(['search_term' => 'required|string|min:2']);
                 $q = trim((string) $request->search_term);
 
-                // Search in ThirdParties and join with Suppliers - LIMITED TO EMAIL, REG, PHONE ONLY
+                // Search in ThirdParties and join with Suppliers - Search in all relevant fields
                 $supplier = DB::table('t_ThirdParties as tp')
                     ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
                     ->where(function($query) use ($q) {
                         $query->where('tp.RegistrationNumber', $q)
                               ->orWhere('tp.Email', $q)
                               ->orWhere('tp.Phone', $q)
-                              ->orWhere('tp.RegistrationNumber', 'like', "%{$q}%")
-                              ->orWhere('tp.Email', 'like', "%{$q}%")
-                              ->orWhere('tp.Phone', 'like', "%{$q}%");
+                              ->orWhere('tp.ThirdPartyName', 'like', "%{$q}%")
+                              ->orWhere('tp.TradingName', 'like', "%{$q}%")
+                              ->orWhere('tp.PhysicalAddress', 'like', "%{$q}%");
                     })
+                    ->where('s.Active_Status', 1) // Only active suppliers
                     ->select(
                         's.Id as SupplierID',
                         'tp.Id as ThirdPartyID',
@@ -262,7 +321,10 @@ class InvoiceEntryV2Controller extends Controller
                         'tp.TradingName',
                         'tp.RegistrationNumber',
                         'tp.Email',
-                        'tp.Phone'
+                        'tp.Phone',
+                        'tp.PhysicalAddress',
+                        'tp.BusinessType',
+                        's.Active_Status'
                     )
                     ->first();
             }
@@ -274,10 +336,14 @@ class InvoiceEntryV2Controller extends Controller
             // Get default currency for orders that don't have currency set
             $defaultCurrency = $this->getDefaultCurrency();
 
-            // Get related Purchase Orders for this ThirdParty via Supplier join
+            // Get IDs of POs that are already referenced in invoices to avoid duplicates
+            $existingPOIds = FinanceInvoiceEntry::pluck('POReference')->toArray();
+
+            // Get related Purchase Orders for this ThirdParty via Supplier join, excluding those already used in invoices
             $orders = DB::table('t_Orders as o')
                 ->join('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
                 ->where('s.ThirdPartyID', '=', (int) $supplier->ThirdPartyID)
+                ->whereNotIn('o.Id', $existingPOIds)
                 ->select(
                     'o.Id',
                     'o.OrderNo',
@@ -355,7 +421,9 @@ class InvoiceEntryV2Controller extends Controller
                     'RegistrationNumber' => $supplier->RegistrationNumber,
                     'Email' => $supplier->Email,
                     'Phone' => $supplier->Phone,
-                    'IsActive' => true // Default to active since we don't have this field
+                    'Address' => $supplier->PhysicalAddress,
+                    'BusinessType' => $supplier->BusinessType,
+                    'IsActive' => (bool) $supplier->Active_Status
                 ],
                 'orders' => $orders,
                 'grns' => $grns,
@@ -380,6 +448,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     private function getOrderLines($orderId)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             $rows = DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
@@ -440,6 +509,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     private function getGRNItems($grnId)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             return DB::table('t_GoodsReceipts as gr')
                 ->leftJoin('t_Items as i', 'gr.ItemNo', '=', 'i.Id')
@@ -471,6 +541,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
         try {
             $validated = $request->validate([
                 'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
@@ -555,6 +626,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function update(Request $request, $id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceInvoiceEntry::class);
         try {
             $invoice = FinanceInvoiceEntry::findOrFail($id);
 
@@ -597,6 +669,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function edit($id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceInvoiceEntry::class);
         $invoice = FinanceInvoiceEntry::with(['thirdParty'])->findOrFail($id);
 
         // Suppliers: fetch from suppliers joined to third parties for the dropdown
@@ -616,6 +689,81 @@ class InvoiceEntryV2Controller extends Controller
         $grns = DB::table('t_GoodsReceipts')->select('Id', 'GRNID', 'SupplierId')->get();
 
         return view('finance.accountspayable.invoiceentry.edit-v2', compact('invoice', 'suppliers', 'orders', 'currencies', 'grns'));
+    }
+
+    /**
+     * Delete invoice
+     */
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceInvoiceEntry::class);
+            try {
+            DB::beginTransaction();
+
+            $invoice = FinanceInvoiceEntry::findOrFail($id);
+
+            // Check if invoice can be deleted (only draft invoices can be deleted)
+            if ($invoice->ApprovalStatus !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only draft invoices can be deleted. Approved or posted invoices cannot be removed.'
+                ], 422);
+            }
+
+            // Get invoice number for logging
+            $invoiceNumber = $invoice->InvoiceNumber;
+
+            // Delete associated documents first
+            if (method_exists($invoice, 'documents')) {
+                $documents = $invoice->documents();
+                if ($documents) {
+                    foreach ($documents->get() as $document) {
+                        // Use the document service to properly delete the document
+                        if (method_exists($document, 'delete')) {
+                            $document->delete();
+                        }
+                    }
+                }
+            }
+
+            // Delete the invoice
+            $invoice->delete();
+
+            DB::commit();
+
+            Log::info('Invoice deleted successfully', [
+                'invoice_id' => $id,
+                'invoice_number' => $invoiceNumber,
+                'deleted_by' => Auth::id()
+            ]);
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice deleted successfully'
+                ]);
+            }
+
+            return redirect()->route('invoiceentry.index')
+                ->with('success', 'Invoice deleted successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error deleting invoice: ' . $e->getMessage(), [
+                'invoice_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete invoice: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to delete invoice: ' . $e->getMessage());
+        }
     }
 
     /**

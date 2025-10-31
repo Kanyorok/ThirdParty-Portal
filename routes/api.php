@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
+use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
+use App\Http\Controllers\API\Procurement\SupplierRFQController;
+use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
@@ -14,14 +14,15 @@ use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluation
 use App\Http\Controllers\Procurement\SupplierCategoryController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierController;
-use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
-use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\TenderInvitationController;
 use App\Http\Controllers\API\DMS\DocumentApiController;
 use App\Http\Controllers\Procurement\TenderDocumentController;
-use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -31,8 +32,8 @@ Route::post('auth/validate-token', function (Request $request) {
     }
 
     // ThirdPartyUser specific flags
-    $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool) ($user->IsActive ?? $user->isActive ?? false);
-    $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool) ($user->isApproved ?? false);
+    $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool)($user->IsActive ?? $user->isActive ?? false);
+    $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool)($user->isApproved ?? false);
 
     if (!$isActive || !$isApproved) {
         return response()->json(['valid' => false], 403);
@@ -69,12 +70,12 @@ Route::get('/health', function () {
 });
 
 // Test endpoint for debugging (NO AUTH REQUIRED)
-Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $request) {
+Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $request) {
     try {
         $thirdPartyId = $request->query('third_party_id', 1); // Default to ID 1 for testing
-        
+
         // Get supplier ID from third party ID
-        $supplier = \App\Models\ThirdParies\Supplier::whereHas('thirdParty', function($query) use ($thirdPartyId) {
+        $supplier = \App\Models\ThirdParies\Supplier::whereHas('thirdParty', function ($query) use ($thirdPartyId) {
             $query->where('Id', $thirdPartyId);
         })->first();
 
@@ -99,10 +100,10 @@ Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $reques
             'third_party_id' => $thirdPartyId,
             'supplier_found' => $supplier ? $supplier->Id : null,
             'invitations_count' => $invitations->count(),
-            'invitations' => $invitations->map(function($inv) {
+            'invitations' => $invitations->map(function ($inv) {
                 return [
                     'InvitationID' => $inv->InvitationID,
-                    'TenderId' => (int) $inv->TenderId,
+                    'TenderId' => (int)$inv->TenderId,
                     'ResponseStatus' => strtolower($inv->ResponseStatus),
                     'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded'
                 ];
@@ -145,7 +146,7 @@ Route::get('/bid-submissions/existing', [\App\Http\Controllers\API\Procurement\B
 Route::post('/bid-submissions/legacy', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'submitBid']);
 
 // Supplier Management APIs for Tender Creation
-Route::get('/suppliers/for-tender', function(Request $request) {
+Route::get('/suppliers/for-tender', function (Request $request) {
     // Temporary hardcoded data - replace with actual database query when needed
     return response()->json([
         'success' => true,
@@ -187,6 +188,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::get('{third_party}', [ThirdPartyController::class, 'show']);
         Route::put('{third_party}', [ThirdPartyController::class, 'update']);
         Route::delete('{third_party}', [ThirdPartyController::class, 'destroy']);
+    // Upload supporting documents for a third party
+    Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
         // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
         // Route::patch('{third_party}/approve', [ThirdPartyController::class, 'approve']);
         // Route::patch('{third_party}/reject', [ThirdPartyController::class, 'reject']);
@@ -198,7 +201,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
     Route::middleware('thirdparty.approved')->group(function () {
         Route::apiResource('third-party-categories', ThirdPartyCategoryController::class);
     });
-    
+
     // Additional tender-related routes (still need auth)
     Route::prefix('tenders')->group(function () {
         Route::post('{tenderId}/items', [TenderApiController::class, 'addItem']);
@@ -231,31 +234,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
 });
 
 Route::prefix('v1')->group(function () {
-    Route::prefix('website')->middleware(\App\Http\Middleware\WebsiteAuthMiddleware::class)->group(function () {
-        Route::post('reviews', \App\Http\Controllers\API\Website\ReviewsController::class);
-        Route::get('survey', [\App\Http\Controllers\API\Website\SurveyController::class, 'index']);
-        Route::post('survey', [\App\Http\Controllers\API\Website\SurveyController::class, 'store']);
-    });
 
-    Route::prefix('channels')->middleware(\App\Http\Middleware\ChannelAuthMiddleware::class)->group(function () {
-        Route::post('reviews', \App\Http\Controllers\API\Channel\ReviewsController::class);
-        Route::get('survey', [\App\Http\Controllers\API\Channel\SurveyController::class, 'index']);
-        Route::post('survey', [\App\Http\Controllers\API\Channel\SurveyController::class, 'store']);
-        Route::get('codes', \App\Http\Controllers\API\Channel\CodesController::class);
-        Route::post('lead/company', [\App\Http\Controllers\API\Channel\LeadController::class, 'company']);
-        Route::post('lead/individual', [\App\Http\Controllers\API\Channel\LeadController::class, 'individual']);
-        Route::get('clients/{client}/tickets', [\App\Http\Controllers\API\Channel\TicketController::class, 'index']);
-        Route::post('clients/{client}/tickets', [\App\Http\Controllers\API\Channel\TicketController::class, 'store']);
-    });
+    require __DIR__ . '/integrations/crm.php';
 
-    Route::prefix('pbx')->middleware([\App\Http\Middleware\CheckTokenAndAddToHeaderMiddleware::class, \App\Http\Middleware\PBXAuthMiddleware::class])->group(function () {
-        Route::get('contacts', [\App\Http\Controllers\API\PBX\ContactController::class, 'index']);
-        Route::post('contacts/create', [\App\Http\Controllers\API\PBX\ContactController::class, 'store']);
-        Route::post('calls', [\App\Http\Controllers\API\PBX\CallController::class, 'store']);
-        Route::post('calls/missed', [\App\Http\Controllers\API\PBX\CallController::class, 'missed']);
-        Route::post('calls/create', [\App\Http\Controllers\API\PBX\CallController::class, 'outgoing']);
-        Route::post('calls/non-answer', [\App\Http\Controllers\API\PBX\CallController::class, 'noAnswer']);
-    });
+    require __DIR__ . '/integrations/dms.php';
 
     Route::prefix('inventory')->group(function () {
         Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);
@@ -263,7 +245,7 @@ Route::prefix('v1')->group(function () {
 });
 
 
-Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->prefix('v1')->group(function(){
+Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->prefix('v1')->group(function () {
     Route::get('/prequalification/applications/{roundId}/progress', [PrequalificationProgressController::class, 'getApplicationProgress']);
     Route::post('/prequalification/applications/{roundId}/categories/{categoryId}/progress', [PrequalificationProgressController::class, 'updateCategoryProgress']);
     Route::get('/prequalification/applications/my-applications', [PrequalificationProgressController::class, 'getMyApplications']);
@@ -295,9 +277,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
     ->prefix('prequalification')
     ->name('api.prequalification.')
     ->group(function () {
-    Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
-    Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
-});
+        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+    });
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods

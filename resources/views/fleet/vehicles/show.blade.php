@@ -4,60 +4,73 @@
 <div class="container-fluid">
     <div class="row">
         {{-- Left Panel: Vehicle Details --}}
-<div class="col-md-4">
-    <div class="card h-100 p-3 shadow rounded-4">
-        <h5 class="card-title fw-bold">Vehicle Details</h5>
-        <hr>
+        <div class="col-md-4">
+            <div class="card h-100 p-3 shadow rounded-4">
+                <h5 class="card-title fw-bold">Vehicle Details</h5>
+                <hr>
 
-        {{-- Vehicle Images --}}
-       @if ($vehicle->image) 
-    <img src="data:{{ $vehicle->image->MIMEType }};base64,{{ $vehicle->image->Image }}"
-         alt="Vehicle Image"
-         class="img-fluid mb-3 rounded-circle border shadow"
-         style="width: 200px; height: 200px; object-fit: cover;">
-        @else
-            <img src="{{ asset('images/vehicle-placeholder.png') }}" 
-                alt="No Image"
-                class="img-fluid mb-3 rounded-circle border shadow"
-                style="width: 200px; height: 200px; object-fit: cover;">
-        @endif
-        <hr>
+                {{-- Vehicle Images --}}
+                @if ($vehicle->image)
+                    <img src="data:{{ $vehicle->image->MIMEType }};base64,{{ $vehicle->image->Image }}"
+                         alt="Vehicle Image"
+                         class="img-fluid mb-3 rounded-circle border shadow"
+                         style="width: 200px; height: 200px; object-fit: cover;">
+                @else
+                    <img src="{{ asset('images/vehicle-placeholder.png') }}"
+                         alt="No Image"
+                         class="img-fluid mb-3 rounded-circle border shadow"
+                         style="width: 200px; height: 200px; object-fit: cover;">
+                @endif
+                <hr>
 
-        {{-- Vehicle Details --}}
-        <div class="mb-2"><strong>Registration No:</strong> <span class="text-muted">{{ $vehicle->RegistrationNo }}</span></div>
-        <div class="mb-2"><strong>Color:</strong> <span class="text-muted">{{ $vehicle->Color }}</span></div>
-        <div class="mb-2"><strong>Brand:</strong> <span class="text-muted">{{ $vehicle->brand->BrandName }}</span></div>
-        <div class="mb-2"><strong>Model:</strong> <span class="text-muted">{{ $vehicle->model->ModelName }}</span></div>
-        <div class="mb-2"><strong>Year:</strong> <span class="text-muted">{{ $vehicle->YearOfManufacture }}</span></div>
-        <div class="mb-2"><strong>Chassis No:</strong> <span class="text-muted">{{ $vehicle->ChassisNo }}</span></div>
-        <div class="mb-2"><strong>Engine No:</strong> <span class="text-muted">{{ $vehicle->EngineNo }}</span></div>
-        <div class="mb-2"><strong>Capacity:</strong> <span class="text-muted">{{ $vehicle->Capacity }}</span></div>
-        <div class="mb-2"><strong>Odometer:</strong> <span class="text-muted">{{ $vehicle->OdometerReading }}</span></div>
-        <div class="mb-2"><strong>Status:</strong> <span class="text-muted">{{ $vehicle->status->Description }}</span></div>
-        <div class="mb-2"><strong>Branch:</strong> <span class="text-muted">{{ $vehicle->branch->Name ?? '-' }}</span></div>
-        <div class="mb-2"><strong>Max Load (kg):</strong> <span class="text-muted">{{ $vehicle->MaxLoad ?? '-' }}</span></div>
-        <div class="mb-2"><strong>Max Passengers:</strong> <span class="text-muted">{{ $vehicle->MaxPassengers ?? '-' }}</span></div>
-        <div class="mb-2"><strong>Vehicle Availability:</strong> <span class="text-muted">{{ $vehicle->vehicleStatus->Description ?? '-' }}</span></div>
-        <hr>
+                {{-- Vehicle Details --}}
+                <div class="mb-2"><strong>Registration No:</strong> <span
+                        class="text-muted">{{ $vehicle->RegistrationNo }}</span></div>
+                <div class="mb-2"><strong>Color:</strong> <span class="text-muted">{{ $vehicle->Color }}</span></div>
+                <div class="mb-2"><strong>Brand:</strong> <span
+                        class="text-muted">{{ $vehicle->brand->BrandName }}</span></div>
+                <div class="mb-2"><strong>Model:</strong> <span
+                        class="text-muted">{{ $vehicle->model->ModelName }}</span></div>
+                <div class="mb-2"><strong>Year:</strong> <span
+                        class="text-muted">{{ $vehicle->YearOfManufacture }}</span></div>
+                <div class="mb-2"><strong>Chassis No:</strong> <span class="text-muted">{{ $vehicle->ChassisNo }}</span>
+                </div>
+                <div class="mb-2"><strong>Engine No:</strong> <span class="text-muted">{{ $vehicle->EngineNo }}</span>
+                </div>
+                <div class="mb-2"><strong>Capacity:</strong> <span class="text-muted">{{ $vehicle->Capacity }}</span>
+                </div>
+                <div class="mb-2"><strong>Odometer:</strong> <span
+                        class="text-muted">{{ $vehicle->OdometerReading }}</span></div>
+                <div class="mb-2"><strong>Status:</strong> <span
+                        class="text-muted">{{ $vehicle->status->Description }}</span></div>
+                <div class="mb-2"><strong>Branch:</strong> <span
+                        class="text-muted">{{ $vehicle->branch->Name ?? '-' }}</span></div>
+                <div class="mb-2"><strong>Max Load (kg):</strong> <span
+                        class="text-muted">{{ $vehicle->MaxLoad ?? '-' }}</span></div>
+                <div class="mb-2"><strong>Max Passengers:</strong> <span
+                        class="text-muted">{{ $vehicle->MaxPassengers ?? '-' }}</span></div>
+                <div class="mb-2"><strong>Vehicle Availability:</strong> <span
+                        class="text-muted">{{ $vehicle->vehicleStatus->Description ?? '-' }}</span></div>
+                <hr>
 
-        <div class="d-flex justify-content-between mt-auto">
-            <a href="{{ route('fleet.vehicles.index') }}" class="btn btn-secondary">⬅ Back</a>
-            <a href="{{ route('fleet.vehicles.edit', $vehicle->Id) }}" class="btn btn-warning">✏ Edit</a>
-            <form action="{{ route('fleet.vehicles.destroy', $vehicle->Id) }}" 
-                  method="POST" 
-                  class="d-inline" 
-                  onsubmit="return confirm('Delete this Vehicle?')">
-                @csrf
-                @method('DELETE')
-                <button class="btn btn-danger">Delete</button>
+                <div class="d-flex justify-content-between mt-auto">
+                    <a href="{{ route('fleet.vehicles.index') }}" class="btn btn-secondary">⬅ Back</a>
+                    <a href="{{ route('fleet.vehicles.edit', $vehicle->Id) }}" class="btn btn-warning">✏ Edit</a>
+                    <form action="{{ route('fleet.vehicles.destroy', $vehicle->Id) }}"
+                          method="POST"
+                          class="d-inline"
+                          onsubmit="return confirm('Delete this Vehicle?')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-danger">Delete</button>
                 </form>
+                </div>
             </div>
         </div>
-    </div>
 
-    {{-- Right Panel: Tabs --}}
-    <div class="col-md-8">
-        <div class="card h-100 p-3 shadow rounded-4">
+        {{-- Right Panel: Tabs --}}
+        <div class="col-md-8">
+            <div class="card h-100 p-3 shadow rounded-4">
                 <h5 class="card-title fw-bold">Vehicle Records</h5>
                 <hr>
                 <ul class="nav nav-tabs mb-3" id="vehicleTabs" role="tablist">
@@ -68,7 +81,7 @@
                     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#maintenance" role="tab">🔧 Maintenance</a></li>
                     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#repairs" role="tab">🛠️ Repairs</a></li>
                 </ul>
-                
+
 
                 <div class="tab-content">
                     {{-- Trips Tab
@@ -236,7 +249,7 @@
                                             <td>{{ $log->ScheduledDate ? \Carbon\Carbon::parse($log->ScheduledDate)->format('d/m/Y') : '-' }}</td>
                                             <td>{{ $log->ScheduledMileage ?? '-' }}</td>
                                             <td>{{ $log->maintenanceStatus->Description ?? '-' }}
-                                                
+
                                             </td>
                                         </tr>
                                     @empty

@@ -11,28 +11,28 @@ use Illuminate\Support\Facades\DB;
 
 class ComplianceIncidentController extends Controller
 {
-public function index()
-{
-    $incidents = ComplianceIncident::with(['obligation','severity'])
-        ->orderBy('IncidentDate','desc')
-        ->get();
-    $owners = DB::table('t_Users')->pluck('Name','Id');
+    public function index()
+    {
+        $incidents = ComplianceIncident::with(['obligation', 'severity'])
+            ->orderBy('IncidentDate', 'desc')
+            ->get();
+        $owners = DB::table('t_Users')->pluck('Name', 'Id');
 
-    // ✅ Summary counts
-    $total = $incidents->count();
-    $open = $incidents->where('Status','Open')->count();
-    $resolved = $incidents->where('Status','Resolved')->count();
-    $escalated = $incidents->where('Status','Escalated')->count();
+        // ✅ Summary counts
+        $total = $incidents->count();
+        $open = $incidents->where('Status', 'Open')->count();
+        $resolved = $incidents->where('Status', 'Resolved')->count();
+        $escalated = $incidents->where('Status', 'Escalated')->count();
 
-    return view('legal.compliance.incidents.index', compact('incidents','owners','total','open','resolved','escalated'));
-}
+        return view('legal.compliance.incidents.index', compact('incidents', 'owners', 'total', 'open', 'resolved', 'escalated'));
+    }
 
     public function create()
     {
-        $obligations = ComplianceObligation::pluck('Title','Id');
-        $severities = DB::table('t_IncidentSeverityLevels')->pluck('Name','Id');
-        $owners = DB::table('t_Users')->pluck('Name','Id');
-        return view('legal.compliance.incidents.create', compact('obligations','severities','owners'));
+        $obligations = ComplianceObligation::pluck('Title', 'Id');
+        $severities = DB::table('t_IncidentSeverityLevels')->pluck('Name', 'Id');
+        $owners = DB::table('t_Users')->pluck('Name', 'Id');
+        return view('legal.compliance.incidents.create', compact('obligations', 'severities', 'owners'));
     }
 
     public function store(Request $request)
@@ -47,28 +47,28 @@ public function index()
         ]);
 
         ComplianceIncident::create($validated + [
-            'Status' => 'Open',
-            'CreatedBy' => auth()->id() ?? 1,
-            'CreatedOn' => now(),
-        ]);
+                'Status' => 'Open',
+                'CreatedBy' => auth()->id() ?? 1,
+                'CreatedOn' => now(),
+            ]);
 
-        return redirect()->route('legal.compliance.incidents.index')->with('success','Incident logged successfully.');
+        return redirect()->route('legal.compliance.incidents.index')->with('success', 'Incident logged successfully.');
     }
 
     public function show($id)
     {
-        $incident = ComplianceIncident::with(['obligation','severity','actions'])->findOrFail($id);
-        $owners = DB::table('t_Users')->pluck('Name','Id');
-        return view('legal.compliance.incidents.show', compact('incident','owners'));
+        $incident = ComplianceIncident::with(['obligation', 'severity', 'actions'])->findOrFail($id);
+        $owners = DB::table('t_Users')->pluck('Name', 'Id');
+        return view('legal.compliance.incidents.show', compact('incident', 'owners'));
     }
 
     public function edit($id)
     {
         $incident = ComplianceIncident::findOrFail($id);
-        $obligations = ComplianceObligation::pluck('Title','Id');
-        $severities = DB::table('t_IncidentSeverityLevels')->pluck('Name','Id');
-        $owners = DB::table('t_Users')->pluck('Name','Id');
-        return view('legal.compliance.incidents.edit', compact('incident','obligations','severities','owners'));
+        $obligations = ComplianceObligation::pluck('Title', 'Id');
+        $severities = DB::table('t_IncidentSeverityLevels')->pluck('Name', 'Id');
+        $owners = DB::table('t_Users')->pluck('Name', 'Id');
+        return view('legal.compliance.incidents.edit', compact('incident', 'obligations', 'severities', 'owners'));
     }
 
     public function update(Request $request, $id)
@@ -86,11 +86,11 @@ public function index()
         ]);
 
         $incident->update($validated + [
-            'ModifiedBy' => auth()->id() ?? 1,
-            'ModifiedOn' => now(),
-        ]);
+                'ModifiedBy' => auth()->id() ?? 1,
+                'ModifiedOn' => now(),
+            ]);
 
-        return redirect()->route('legal.compliance.incidents.show',$id)->with('success','Incident updated successfully.');
+        return redirect()->route('legal.compliance.incidents.show', $id)->with('success', 'Incident updated successfully.');
     }
 
     public function addAction(Request $request, $id)
@@ -113,33 +113,33 @@ public function index()
             'CreatedOn' => now(),
         ]);
 
-        return back()->with('success','Corrective action added successfully.');
+        return back()->with('success', 'Corrective action added successfully.');
     }
 
     public function dashboard()
-{
-    // Counts by severity
-    $severityData = \DB::table('t_ComplianceIncidents')
-        ->join('t_IncidentSeverityLevels','t_ComplianceIncidents.SeverityID','=','t_IncidentSeverityLevels.Id')
-        ->select('t_IncidentSeverityLevels.Name as severity', \DB::raw('COUNT(*) as total'))
-        ->groupBy('t_IncidentSeverityLevels.Name')
-        ->pluck('total','severity');
+    {
+        // Counts by severity
+        $severityData = \DB::table('t_ComplianceIncidents')
+            ->join('t_IncidentSeverityLevels', 't_ComplianceIncidents.SeverityID', '=', 't_IncidentSeverityLevels.Id')
+            ->select('t_IncidentSeverityLevels.Name as severity', \DB::raw('COUNT(*) as total'))
+            ->groupBy('t_IncidentSeverityLevels.Name')
+            ->pluck('total', 'severity');
 
-    // Counts by status
-    $statusData = \DB::table('t_ComplianceIncidents')
-        ->select('Status', \DB::raw('COUNT(*) as total'))
-        ->groupBy('Status')
-        ->pluck('total','Status');
+        // Counts by status
+        $statusData = \DB::table('t_ComplianceIncidents')
+            ->select('Status', \DB::raw('COUNT(*) as total'))
+            ->groupBy('Status')
+            ->pluck('total', 'Status');
 
-    // Quick stats
-    $total = \DB::table('t_ComplianceIncidents')->count();
-    $open = \DB::table('t_ComplianceIncidents')->where('Status','Open')->count();
-    $resolved = \DB::table('t_ComplianceIncidents')->where('Status','Resolved')->count();
-    $escalated = \DB::table('t_ComplianceIncidents')->where('Status','Escalated')->count();
+        // Quick stats
+        $total = \DB::table('t_ComplianceIncidents')->count();
+        $open = \DB::table('t_ComplianceIncidents')->where('Status', 'Open')->count();
+        $resolved = \DB::table('t_ComplianceIncidents')->where('Status', 'Resolved')->count();
+        $escalated = \DB::table('t_ComplianceIncidents')->where('Status', 'Escalated')->count();
 
-    return view('legal.compliance.incidents.dashboard', compact(
-        'severityData','statusData','total','open','resolved','escalated'
-    ));
-}
+        return view('legal.compliance.incidents.dashboard', compact(
+            'severityData', 'statusData', 'total', 'open', 'resolved', 'escalated'
+        ));
+    }
 
 }

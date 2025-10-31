@@ -33,8 +33,7 @@ public function create()
 }
 
 
-
-public function index()
+    public function index()
 {
     $payments = BancassuranceClaimPayment::with('payment','claim')->get();
 
@@ -53,7 +52,7 @@ public function store(BancassuranceClaimPaymentRequest $request)
         Carbon::parse($validated['PaymentDate']),
         $validated['PaymentAmount'],
         $validated['PaymentReference'],
-        $validated['Note'],
+        $validated['Note'] ?? '',
         $validated['PaidBy'],
         $PaymentMethod,
         $request->user(),

@@ -50,8 +50,8 @@ class OpeningStockSampleExport implements FromArray, WithHeadings
         $stores = Store::with('branch')->get();
         foreach ($stores as $store) {
             $data[] = [
-                'Branch'  => $store->branch?->Name ?? 'N/A',
-                'Store'   => $store->StoreName,
+                'Branch' => $store->branch?->Name ?? 'N/A',
+                'Store' => $store->StoreName,
             ];
         }
 

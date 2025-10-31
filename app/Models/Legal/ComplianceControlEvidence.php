@@ -11,8 +11,8 @@ class ComplianceControlEvidence extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ControlID','FileName','MimeType','FilePath',
-        'Version','UploadedBy','UploadedOn'
+        'ControlID', 'FileName', 'MimeType', 'FilePath',
+        'Version', 'UploadedBy', 'UploadedOn'
     ];
 
     public function control()

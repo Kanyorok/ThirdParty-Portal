@@ -48,7 +48,14 @@
                         </tr>
                         </thead>
                         <tbody>
+                        @php $totalAmount = 0; @endphp
                         @foreach($requisitionlineInfo as $index => $item)
+                            @php
+                                $qty = isset($item->Quantity) ? (float)$item->Quantity : 0;
+                                $unitPrice = isset($item->ExpectedPrice) ? (float)$item->ExpectedPrice : 0;
+                                $lineTotal = $qty * $unitPrice;
+                                $totalAmount += $lineTotal;
+                            @endphp
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $item->Type ?? 'N/A' }}</td>
@@ -56,16 +63,14 @@
                                 <td>{{ $item->NeedRef ?? 'N/A' }}</td>
                                 <td>{{ $item->UOM }}</td>
                                 <td>{{ $item->Quantity }}</td>
-                                <td>{{ $item->ExpectedPrice }}</td>
+                                <td>{{ number_format($unitPrice, 2) }}</td>
                                 <td>{{ ucfirst($item->Urgency) }}</td>
                             </tr>
                         @endforeach
                         <tr>
-                            <td colspan="5">
-                                <b> Total Amount</b>
-                            </td>
-                            <td colspan="2" style="text-align: right;">
-                                <b>{{ $requisitionInfo->ExpectedPrice ?? 'N/A' }}</b>
+                            <td colspan="7" class="text-end"><b>Total Amount</b></td>
+                            <td style="text-align: right;">
+                                <b>{{ number_format($totalAmount, 2) }}</b>
                             </td>
                         </tr>
                         </tbody>
@@ -84,6 +89,16 @@
 
                 <!-- Approval Actions -->
                 @if($requisitionInfo->Status == 'pending' || $requisitionInfo->Status == 'Pending')
+                    @php
+                        $validTypes = ['ALL','ANY','MAJ','AMT'];
+                        $approvalTypeValid = isset($approvalType) && in_array(strtoupper($approvalType), $validTypes);
+                    @endphp
+                    @unless($approvalTypeValid)
+                        <div class="alert alert-warning d-flex align-items-center" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Approval type is not configured for Purchase Requisitions. Please contact the administrator.
+                        </div>
+                    @endunless
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <form action="{{ route('requisition.approve', $requisitionInfo->Id) }}" method="POST"
@@ -97,7 +112,7 @@
                                        value="{{ $requisitionInfo->ExpectedPrice ?? 'N/A' }}">
                                 <input type="hidden" name="order_id" value="{{$requisitionInfo->Id}}">
                                 <input type="hidden" name="action" value="approve">
-                                <button type="submit" class="btn btn-success btn-lg">
+                                <button type="submit" class="btn btn-success btn-lg" {{ $approvalTypeValid ? '' : 'disabled' }}>
                                     <i class="fas fa-check"></i> Approve
                                 </button>
                             </form>

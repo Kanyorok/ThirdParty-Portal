@@ -11,11 +11,12 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\PriceManagement;
+use App\Traits\Model\DocumentsTrait;
 use App\Models\Core\CodeDetail;
 
 class ItemMasterList extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -31,6 +32,7 @@ class ItemMasterList extends Model
     }
 
     protected $fillable = [
+        'ItemCode',
         'BarCode',
         'ItemName',
         'ItemType',

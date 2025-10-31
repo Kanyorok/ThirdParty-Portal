@@ -20,7 +20,7 @@ class TenderResponseController extends Controller
 
     public function create(){
         // Include Title so the view can display TenderNo-Title
-        $tenders = Tender::select('Id','TenderNo','Title')->get();
+        $tenders = Tender::select('Id', 'TenderNo', 'Title')->get();
 
         // Fix: Get supplier names from the related ThirdParty table
         $suppliers = Supplier::select('t_Suppliers.Id')

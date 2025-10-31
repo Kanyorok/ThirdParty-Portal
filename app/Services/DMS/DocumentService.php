@@ -16,6 +16,7 @@ use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\SpecialPermission;
+use App\Models\DMS\DMSSignature;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentCheckOut;
 use App\Models\DMS\DocumentRelation;
@@ -23,11 +24,11 @@ use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Repository;
 use App\Services\Core\PermissionsService;
 use App\Services\DMS\Files\FileProperties;
+use App\Services\DMS\Verification\SignatureService;
 use Cache;
 use DateTime;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -69,13 +70,25 @@ class DocumentService extends PermissionsService
         $service = self::createUpload(RepositoryService::module($module), $file, $actor, false)
             ->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false)->attach($Related, $RelatedId, $actor);
 
-        if (empty($permissions)) {
+        //  if (empty($permissions)) {
             if (is_string($permissions)) {
                 $permissions = explode(',', $permissions);
             }
             self::userPermissions($service->document, $permissions, RoleEnum::Read, $actor);
-        }
+        // }
         return $service;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function sign(DMSSignature $signature, User $actor, int $Pages): static
+    {
+        if (!$this->type->canSign()) {
+            throw new ErroredException('Document cannot be signed');
+        }
+        (new SignatureService($signature))->sign($this->document, $actor, $Pages);
+        return $this;
     }
 
     /**
@@ -222,13 +235,6 @@ class DocumentService extends PermissionsService
      */
     protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, Collection $properties = null, string $checksum = null): static
     {
-        // Read the encrypted content from the file system to store in Blob
-        $encryptedContent = '';
-        try {
-            $encryptedContent = Storage::disk($disk->value)->get($path);
-        } catch (\Exception $e) {
-            Log::error("Failed to read encrypted content from path: {$path}", ['error' => $e->getMessage()]);
-        }
 
         $this->document->versions()->create([
             "Name" => $name,
@@ -237,7 +243,7 @@ class DocumentService extends PermissionsService
             "Disk" => $disk->value,
             "Checksum" => $checksum ?? (new FileProperties($this->document))->generateChecksum($disk, $path),
             "Size" => $sizeInBytes,
-            "Blob" => $encryptedContent, // Store encrypted content in Blob field
+            "Blob" => '', // Uses for search params
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
@@ -352,6 +358,52 @@ class DocumentService extends PermissionsService
         throw new ErroredException('checking in document failed');
     }
 
+    /**
+     * Used for conversions and signing
+     * @throws ErroredException
+     */
+    public function newVersionFile(string $filePath, User $actor): static
+    {
+        if (!file_exists($filePath)) {
+            throw new ErroredException('File does not exist. !');
+        }
+
+        $extension = ExtensionsEnum::fromMimeType(mime_content_type($filePath));
+        $disk = self::getDisk();
+        $checksum1 = hash_file(self::CHECKSUM, $filePath);
+        $path = self::_saveFile($disk, file_get_contents($filePath));
+        $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
+        $size = (int)filesize($filePath);
+        $name = "Signed " . pathinfo($this->document->Name, PATHINFO_FILENAME) . '.' . $extension->value;
+        unlink($filePath);
+        return $this->_newVersion($disk, $path, $name, $size, $actor, checksum: base64_encode($checksum1 . '|' . $checksum2));
+
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function newVersionUpload(UploadedFile $file, User $actor, string $Related, string|int $RelatedId): static
+    {
+        //check can change version.
+        if ($this->document->userRole($actor, [RoleEnum::Admin->value, RoleEnum::Write->value, RoleEnum::Share->value])->doesntExist()) {
+            throw new ErroredException('You do not have permission to change this document.');
+        }
+
+        if ($this->document->relations()->where('t_DocumentRelations.Related', $Related)->where('t_DocumentRelations.RelatedID', $RelatedId)->doesntExist()) {
+            throw new ErroredException('You do not have permission to change this document.');
+        }
+
+        //todo check if held or pending signing.
+        $extension = ExtensionsEnum::fromMimeType($file->getMimeType() ?? $file->getClientMimeType());
+        $disk = self::getDisk();
+        $checksum1 = hash_file(self::CHECKSUM, $file->getRealPath());
+        $path = self::_saveFile($disk, $file->getContent());
+        $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
+
+        return $this->_newVersion($disk, $path, $file->getClientOriginalName(), $file->getSize(), $actor, properties: (new UploadFileProperties($file, $extension))->getProperties(), checksum: base64_encode($checksum1 . '|' . $checksum2));
+    }
+
     public function validateToken(User $user, string $token): bool
     {
         if ((string)Cache::get($user->Id . '-download-' . $this->document->Id) !== $token) {
@@ -400,7 +452,7 @@ class DocumentService extends PermissionsService
         }
 
         if ($this->type->value === ExtensionsEnum::Pdf->value) {
-            return '<iframe src="data:application/pdf;base64,' . $this->getFileContent() . '" ' . $attr . '></iframe>';
+            return '<iframe src="data:application/pdf;base64,' . $this->getFileContent() . '#toolbar=0&navpanes=0" ' . $attr . '></iframe>'; //todo fix for pdf
             //return '<embed width="100%" height="100%" "data:application/pdf;base64,'.$this->image->Image.' type="application/pdf" />';
         }
 
@@ -426,6 +478,19 @@ class DocumentService extends PermissionsService
         }
         $content = (new EncryptionService())->decrypt(Storage::disk($currentVersion->Disk->value)->get($currentVersion->Path));
         return ($base64) ? base64_encode($content) : $content;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function getTempPath(): ?string
+    {
+        $name = Uuid::uuid4()->toString() . '.' . $this->document->ext()->value;
+        if (Storage::disk('temp')->put($name, $this->getFileContent(false))) {
+            return Storage::disk('temp')->path($name);
+        }
+
+        return null;
     }
 
     public function html(): string
@@ -477,7 +542,7 @@ class DocumentService extends PermissionsService
             : '<i data-feather="globe" title="Public" class="text-primary icon-size"></i> ';
     }
 
-    public function tags(User $user): BelongsToMany
+    public function tags(User $user)
     {
         return $this->document->tags()->user($user);/*->where(function (Builder $query) use ($user) {
             $query->where('Visibility', VisibilityEnum::Public->value)

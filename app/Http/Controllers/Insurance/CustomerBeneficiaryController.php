@@ -52,7 +52,7 @@ class CustomerBeneficiaryController extends Controller
             Auth::user(),
         );
 
-        return redirect()->route('bancassurance.customers.beneficiaries.create')->with('success', 'ADD BENEFICIARY saved.');
+        return redirect()->route('bancassurance.customers.index')->with('success', 'ADD BENEFICIARY saved.');
     }
 
 }

@@ -29,7 +29,8 @@ class AddEmployeeRequest extends FormRequest
             'FirstName' => ['required', 'string', 'max:250'],
             'MiddleName' => ['nullable', 'string', 'max:250'],
             'LastName' => ['required', 'string', 'max:250'],
-            'Phone' => ['required', 'string', 'max:20', 'regex:/(^\+?254\d{9}$)|(^0\d{9}$)|(^\d{9}$)/'],
+            // E.164 format: +<country code><national number>, total length 8-15 digits
+            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'Email' => ['required', Rule::email()
                 ->rfcCompliant(strict: false)
                 ->validateMxRecord()
@@ -124,35 +125,16 @@ class AddEmployeeRequest extends FormRequest
 
     public function getPhoneNumber(): string
     {
-        $input = (string)$this->validated('Phone');
-        $digits = preg_replace('/\D+/', '', $input);
+        $input = (string) $this->validated('Phone');
+        // Trim spaces and enforce E.164 normalization
+        $normalized = preg_replace('/\s+/', '', $input);
 
-        // Normalize to E.164 (Kenya)
-        if (str_starts_with($digits, '254') && strlen($digits) === 12) {
-            $normalized = '+'.$digits; // 2547XXXXXXXX
-        } elseif (str_starts_with($digits, '0') && strlen($digits) === 10) {
-            $normalized = '+254'.substr($digits, 1); // 07XXXXXXXX
-        } elseif (strlen($digits) === 9 && str_starts_with($digits, '7')) {
-            $normalized = '+254'.$digits; // 7XXXXXXXX
-        } else {
-            throw ValidationException::withMessages(['Phone' => 'invalid Kenyan phone number']);
+        if (!is_string($normalized) || !preg_match('/^\+[1-9]\d{7,14}$/', $normalized)) {
+            throw ValidationException::withMessages(['Phone' => 'invalid phone number, use E.164 e.g. +12025550123']);
         }
 
-        // Compare by canonical forms to avoid format duplicates
-        $suffix9 = substr(preg_replace('/\D+/', '', $normalized), -9); // 7XXXXXXXX
-        $variants = ['+254'.$suffix9, '0'.$suffix9, $suffix9];
-
-        $userDup = User::where(function($q) use ($normalized, $variants, $suffix9) {
-            $q->where('Phone', $normalized)
-              ->orWhereIn('Phone', $variants)
-              ->orWhere('Phone', 'like', '%'.$suffix9);
-        })->exists();
-
-        $empDup = Employee::where(function($q) use ($normalized, $variants, $suffix9) {
-            $q->where('Phone', $normalized)
-              ->orWhereIn('Phone', $variants)
-              ->orWhere('Phone', 'like', '%'.$suffix9);
-        })->exists();
+        $userDup = User::where('Phone', $normalized)->exists();
+        $empDup = Employee::where('Phone', $normalized)->exists();
 
         if ($userDup || $empDup) {
             throw ValidationException::withMessages(['Phone' => 'phone already exists']);

@@ -23,7 +23,11 @@ enum Transfers: string
 
     //case UnderRepair = 'ur';
 
+    case AwaitingReview = 'ar';
+
     case Disposed = 'di';
+
+    case Returned = 'rt';
 
     public function label(): string
     {
@@ -35,6 +39,8 @@ enum Transfers: string
             self::Approved => 'Approved',
             self::UnderReview => 'Under Review',
             self::Disposed => 'Disposed',
+            self::Returned => 'Returned',
+            self::AwaitingReview => 'Awaiting Review',
             //self::UnderRepair => 'Under Repair',
         };
     }
@@ -49,6 +55,9 @@ enum Transfers: string
             self::Approved => 'success',
             self::UnderReview => 'info',
             self::Disposed => 'danger',
+            self::Returned => 'secondary',
+            self::AwaitingReview => 'info',
+            
             //self::UnderRepair => 'warning',
         };
     }

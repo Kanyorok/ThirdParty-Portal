@@ -11,6 +11,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Storage;
 use Throwable;
 
 class CleanSysCommand extends Command
@@ -53,7 +54,7 @@ class CleanSysCommand extends Command
 
     protected function _cleanTmp(): void
     {
-        /*  $tempFolder = Storage::disk('temp')->path('');
+        $tempFolder = Storage::disk('temp')->path('');
           $files = scandir($tempFolder);
 
           foreach ($files as $file) {
@@ -67,7 +68,7 @@ class CleanSysCommand extends Command
                       unlink($filePath);
                   }
               }
-          }*/
+          }
     }
 
 

@@ -26,26 +26,31 @@ class PropertyMaintenanceRequestController extends Controller
     }
     public function create(){
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
-        $properties = PropertyRegistry::all()->where('IsActive',True);
+        $properties = PropertyRegistry::all()->where('IsActive', True);
         $issuetypes = CodeDetail::where('CodeID', 'IssueType')->get();
         $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
         return view('property.maintenanceandissues.maintenancerequest.create', compact('properties','issuetypes','priorities'));
     }
-    public function show($Id){
+
+    public function show($Id)
+    {
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestView, PropertyMaintenanceRequest::class);
         $maintenancerequest = PropertyMaintenanceRequest::with('issueType','priority')->get()->find($Id);
         return view('property.maintenanceandissues.maintenancerequest.show',compact('maintenancerequest'));
     }
+
     public function getBlockByProperty($PropertyId)
     {
         $blocks = PropertyBlock::where('PropertyID', $PropertyId)->get();
         return response()->json($blocks);
     }
+
     public function getFloorByBlock($BlockId)
     {
         $floors = PropertyFloor::where('BlockID', $BlockId)->get();
         return response()->json($floors);
     }
+
     public function getUnitByFloor($FloorId)
     {
         $units = PropertyUnit::where('FloorId', $FloorId)->get();
@@ -66,7 +71,7 @@ class PropertyMaintenanceRequestController extends Controller
         $Priority  = CodeDetail::findOrFail($validated['Priority']);
 
         $uploadedFile = $request->file('Document')[0] ?? null;
-            
+
         $maintenanceRequest = PropertyMaintenanceService::create(
                     $Property,
                     $Block,
@@ -107,7 +112,7 @@ class PropertyMaintenanceRequestController extends Controller
     public function update(MaintenanceRequest $request, $Id)
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
- 
+
         $validated = $request->validated();
         DB::beginTransaction();
 
@@ -150,19 +155,19 @@ class PropertyMaintenanceRequestController extends Controller
             );
 
             if ($request->hasFile('Document')) {
-            foreach (array_slice($request->file('Document'), 1) as $uploadedFile) {
-                $maintenance->maintenancerequest->newDocument(
-                    ModulesEnum::Property,
-                    $uploadedFile,
-                    [PermissionEnum::PropertyMaintenanceAssignView->value],
-                    $request->user()
-                );
-            }
+                foreach (array_slice($request->file('Document'), 1) as $uploadedFile) {
+                    $maintenance->maintenancerequest->newDocument(
+                        ModulesEnum::Property,
+                        $uploadedFile,
+                        [PermissionEnum::PropertyMaintenanceAssignView->value],
+                        $request->user()
+                    );
+                }
         }
 
             DB::commit();
             return redirect()->route('maintenancerequest.index')
-            ->with('success', 'Maintenance request updated successfully');
+                ->with('success', 'Maintenance request updated successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update maintenance request: ' . $th->getMessage());
@@ -179,7 +184,7 @@ class PropertyMaintenanceRequestController extends Controller
 
             if ($maintenancerequest->requestId()->exists()) {
                 return redirect()->back()
-                ->withErrors(['error' => 'This Maintenance request is in use and cannot be deleted.']);
+                    ->withErrors(['error' => 'This Maintenance request is in use and cannot be deleted.']);
             }
 
             $maintenancerequest->delete();

@@ -11,6 +11,7 @@ enum IntegrationsEnum: string
     //3 char
     case ReportService = 'srs';
     case Email = 'ema';
+    case DMSCoreBanking = 'cdm';
     case SMS = 'sms';
     case InfoBip = 'ibp';
     case PBX = 'pbx';
@@ -19,6 +20,8 @@ enum IntegrationsEnum: string
     case Facebook = 'sfb';
     case Twitter = 'xtw';
     case Website = 'web';
+    // Organization branding (name, motto, logo)
+    case Organization = 'org';
     case LLM = 'llm';
 
     public function description(): string
@@ -32,9 +35,11 @@ enum IntegrationsEnum: string
             self::Facebook => 'Facebook Configuration',
             self::Twitter => 'Twitter (X)',
             self::Website => 'Website Credentials',
+            self::Organization => 'Organization Branding',
             self::Channels => 'Internet & Mobile Banking',
             self::LLM => 'LLM (ai) Configuration',
             self::ReportService => "SQL Server Reporting Service",
+            self::DMSCoreBanking => "DMS Core Banking",
         };
     }
 

@@ -15,37 +15,40 @@ class BudgetLineLedgerLimitController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index() {
+    public function index()
+    {
         $limits = BudgetLineLedgerLimit::orderBy('CreatedOn', 'desc')->get();
         return view('budgetandanalytics.limits.index', compact('limits'));
     }
 
-    public function create() {
+    public function create()
+    {
         return view('budgetandanalytics.limits.create');
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $validated = $request->validate([
-            'BudgetLineID'=>'required',
-            'LedgerID'=>'required',
-            'LimitType'=>'required',
-            'LimitAmount'=>'required|numeric|min:1',
-            'EffectiveFrom'=>'required|date'
+            'BudgetLineID' => 'required',
+            'LedgerID' => 'required',
+            'LimitType' => 'required',
+            'LimitAmount' => 'required|numeric|min:1',
+            'EffectiveFrom' => 'required|date'
         ]);
 
 //        BudgetLineLedgerLimit::create($validated + ['CreatedBy'=>auth()->id()]);
         //Get Ledger CBS ID
-        $cbsID=BudgetMaster::where('BudgetGLID',$validated['BudgetLineID'])->pluck('AccountID')->first();
+        $cbsID = BudgetMaster::where('BudgetGLID', $validated['BudgetLineID'])->pluck('AccountID')->first();
         BudgetLineLedgerLimit::create([
-            'BudgetLineID'   => $validated['BudgetLineID'],
-            'LedgerID'       => $cbsID,
-            'ERPLedgerID'       => $validated['LedgerID'],
-            'LimitType'      => $validated['LimitType'],
-            'LimitAmount'    => $validated['LimitAmount'],
-            'EffectiveFrom'  => $validated['EffectiveFrom'],
-            'CreatedBy'      => auth()->id(),
+            'BudgetLineID' => $validated['BudgetLineID'],
+            'LedgerID' => $cbsID,
+            'ERPLedgerID' => $validated['LedgerID'],
+            'LimitType' => $validated['LimitType'],
+            'LimitAmount' => $validated['LimitAmount'],
+            'EffectiveFrom' => $validated['EffectiveFrom'],
+            'CreatedBy' => auth()->id(),
         ]);
-        return redirect()->route('budget.limits.index')->with('success','Ledger limit saved.');
+        return redirect()->route('budget.limits.index')->with('success', 'Ledger limit saved.');
     }
 
     /**
@@ -72,10 +75,10 @@ class BudgetLineLedgerLimitController extends Controller
 
         $budgetId = $validated['BudgetID'];
         $budget = Budget::findOrFail($budgetId);
-        $userId   = auth()->id();
+        $userId = auth()->id();
 
         try {
-            DB::transaction(function () use ($budgetId, $userId,$budget) {
+            DB::transaction(function () use ($budgetId, $userId, $budget) {
 
                 // Call stored procedure
                 DB::statement(

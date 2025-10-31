@@ -7,7 +7,7 @@
             <!-- Header -->
             <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 text-primary">
-                    <i class="fas fa-edit me-2"></i>  Activity
+                    <i class="fas fa-edit me-2"></i> Activity
                 </h5>
                 <a href="{{ route('activitymaster.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> Back to List
@@ -17,7 +17,8 @@
             <!-- Body -->
             <div class="card-body p-4">
                 <p class="text-muted small mb-3">
-                    Update the details of this activity. Ensure that all required fields are filled, especially the budget line and activity name.
+                    Update the details of this activity. Ensure that all required fields are filled, especially the
+                    budget line and activity name.
                 </p>
 
                 {{-- Validation Errors --}}
@@ -109,9 +110,11 @@
             border: none;
             border-radius: 0.5rem;
         }
+
         .btn {
             font-size: 0.9rem;
         }
+
         .form-label {
             font-weight: 500;
         }

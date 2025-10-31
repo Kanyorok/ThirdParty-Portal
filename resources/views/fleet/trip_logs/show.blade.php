@@ -55,17 +55,17 @@
         </div>
     </div>
 
-    {{-- Child Trips --}}
-    <div class="flex-grow-1 card shadow rounded-4 p-4">
-        <h5 class="mb-3">🚌 Child Trips</h5>
-        @if ($childTrips->isEmpty())
-            <div class="alert alert-info" role="alert">
-                This trip has no child trips logged.
-            </div>
-        @else
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead>
+        {{-- Child Trips --}}
+        <div class="flex-grow-1 card shadow rounded-4 p-4">
+            <h5 class="mb-3">🚌 Child Trips</h5>
+            @if ($childTrips->isEmpty())
+                <div class="alert alert-info" role="alert">
+                    This trip has no child trips logged.
+                </div>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
                         <tr>
                             <th>Trip No</th>
                             <th>Start Date</th>
@@ -77,8 +77,8 @@
                             <th>Notes</th>
                             <th>Actions</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         @foreach ($childTrips as $child)
                             <tr>
                                 <td>{{ $child->TripNo }}</td>
@@ -105,7 +105,8 @@
                                 </td>
                                 <td>{{ $child->Notes ?? 'N/A' }}</td>
                                 <td class="d-flex gap-2">
-                                    <a href="{{ route('fleet.trip_logs.edit', $child->Id) }}" class="btn btn-sm btn-warning">✏ Edit</a>
+                                    <a href="{{ route('fleet.trip_logs.edit', $child->Id) }}"
+                                       class="btn btn-sm btn-warning">✏ Edit</a>
                                     <form action="{{ route('fleet.trip_logs.destroy', $child->Id) }}" method="POST"
                                           onsubmit="return confirm('Are you sure you want to delete this child trip?');">
                                         @csrf
@@ -115,12 +116,12 @@
                                 </td>
                             </tr>
                         @endforeach
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
             </div>
-        @endif
+            @endif
+        </div>
     </div>
-</div>
 
 {{-- Approve/Reject Buttons Section --}}
 @if(($parentTrip->statusDetail->Description ?? '') === 'Scheduled')

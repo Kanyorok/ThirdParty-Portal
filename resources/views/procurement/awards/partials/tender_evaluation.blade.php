@@ -49,12 +49,27 @@
 <!-- Evaluation Results Table -->
 <div class="table-responsive mb-4">
     <table class="table table-bordered align-middle">
+        @php
+            // Build dynamic section columns from the first score row
+            $sectionColumns = [];
+            if (!empty($scores)) {
+                $firstSections = $scores[0]['section_scores'] ?? [];
+                foreach ($firstSections as $s) {
+                    $sectionColumns[] = [
+                        'id' => $s['section_id'] ?? null,
+                        'name' => $s['section_name'] ?? 'Section',
+                        'weight' => $s['weight'] ?? 0,
+                    ];
+                }
+            }
+        @endphp
         <thead class="table-primary text-center">
             <tr>
                 <th width="8%">Rank</th>
                 <th width="25%">Bidder Name</th>
-                <th width="12%">Technical</th>
-                <th width="12%">Financial</th>
+                @foreach($sectionColumns as $col)
+                    <th>{{ $col['name'] }} ({{ number_format($col['weight'] ?? 0, 0) }}%)</th>
+                @endforeach
                 <th width="12%">Total Score</th>
                 <th width="10%">Grade</th>
                 <th width="10%">Responsive?</th>
@@ -72,6 +87,7 @@
                     $technicalScore = $score['technical_score'] ?? 0;
                     $financialScore = $score['financial_score'] ?? 0;
                     $isResponsive = $score['is_responsive'] ?? true; // Default to true for evaluated bids
+                    $sectionScoresMap = collect($score['section_scores'] ?? [])->keyBy('section_id');
                     
                     $grade = 'F';
                     $gradeClass = 'bg-danger';
@@ -112,20 +128,16 @@
                             </div>
                         </div>
                     </td>
-                    <td class="text-center">
-                        <div class="progress mb-1" style="height: 20px;">
-                            <div class="progress-bar bg-info" style="width: {{ $technicalScore }}%;">
-                                {{ number_format($technicalScore, 1) }}%
+                    @foreach($sectionColumns as $col)
+                        @php $sec = $sectionScoresMap->get($col['id']); $val = $sec['score'] ?? 0; @endphp
+                        <td class="text-center">
+                            <div class="progress mb-1" style="height: 20px;">
+                                <div class="progress-bar bg-info" style="width: {{ $val }}%;">
+                                    {{ number_format($val, 1) }}%
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                    <td class="text-center">
-                        <div class="progress mb-1" style="height: 20px;">
-                            <div class="progress-bar bg-warning" style="width: {{ $financialScore }}%;">
-                                {{ number_format($financialScore, 1) }}%
-                            </div>
-                        </div>
-                    </td>
+                        </td>
+                    @endforeach
                     <td class="text-center">
                         <div class="d-flex flex-column">
                             <strong class="fs-5">{{ number_format($totalScore, 1) }}%</strong>

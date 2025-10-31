@@ -104,11 +104,12 @@ public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $i
         $assessment = BancassuranceClaimAssessment::findOrFail($id);
         return view('bancassurance.claims.assessment_show', compact('assessment'));
     }
+
     public function assessmentedit($id)
     {
         $assessment = BancassuranceClaimAssessment::findOrFail($id);
         $decisions = CodeDetail::where('CodeID', 'Decision')->get();
-        return view('bancassurance.claims.assessment_edit', compact('assessment','decisions'));
+        return view('bancassurance.claims.assessment_edit', compact('assessment', 'decisions'));
     }
 
     public function assessmentupdate(BancassuranceClaimAssessmentRequest $request, $id)
@@ -117,10 +118,16 @@ public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $i
         $validated = $request->validated();
 
         $assessment = BancassuranceClaimAssessment::findOrFail($id);
+
+        if ($assessment->claimpaiyments()->exists()) {
+            return redirect()->back()
+            ->withErrors(['error' => 'This claim has been paid cannot be modified.']);
+        }
+         
         $Decision = CodeDetail::findOrFail($validated['Decision']);
 
         $assessment = BancassuranceClaimAssessmentService::update(
-            $assessment, 
+            $assessment,
             $validated['AssessmentComments'],
             $validated['AssessmentAmount'],
             $Decision,
@@ -128,7 +135,7 @@ public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $i
         );
 
 
-        return redirect()->route('bancassurance.claims.index')
+        return redirect()->route('bancassurance.claims.assessment_list')
             ->with('success', 'Claim assessment updated successfully.');
     }
 }

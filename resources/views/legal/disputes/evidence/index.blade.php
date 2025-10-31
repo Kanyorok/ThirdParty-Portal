@@ -58,15 +58,16 @@
                                 </td>
                                 <td>
                                     <a href="{{ route('legal.cases.evidence.show',[$case->Id, $item->Id ]) }}"
-                                    class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                    class="btn btn-sm btn-info" title="View"><i class="fas fa-eye"></i></a>
                                     <a href="{{ route('legal.cases.evidence.edit', [$case->Id, $item->Id]) }}"
-                                    class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                                    class="btn btn-sm btn-primary" title="Edit"><i class="fas fa-edit"></i></a>
                                     <button type="button"
                                         class="btn btn-sm btn-danger custom-delete-btn"
                                         data-bs-toggle="modal"
                                         data-bs-target="#customDeleteConfirmModal"
                                         data-name="{{ $item->EvidenceTitle }}"
-                                        data-route="{{ route('legal.cases.evidence.destroy', [$case->Id, $item->Id]) }}">
+                                        data-route="{{ route('legal.cases.evidence.destroy', [$case->Id, $item->Id]) }}"
+                                        title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </td>
@@ -90,6 +91,10 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="d-flex justify-content-end align-items-center mt-3">
+        {{ $evidence->links() }}
     </div>
 </div>
 @include('components.modals.delete-confirm')

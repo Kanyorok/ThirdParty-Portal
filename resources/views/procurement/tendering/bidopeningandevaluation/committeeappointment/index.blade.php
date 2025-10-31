@@ -10,7 +10,7 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped table-bordered align-middle">
+            <table class="table table-striped table-bordered align-middle">
             <thead class="table-light">
             <tr>
                 <th>#</th>
@@ -25,7 +25,7 @@
             <tbody>
             @forelse ($committees as $index => $item)
                 <tr>
-                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $committees->firstItem() + $index }}</td>
                     <td class="text-uppercase">{{ $item['type'] }}</td>
                     <td>{{ $item['ref'] }}</td>
                     <td>
@@ -50,6 +50,18 @@
             @endforelse
             </tbody>
         </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="small text-muted">
+            @if($committees->total() > 0)
+                Showing {{ $committees->firstItem() }} to {{ $committees->lastItem() }} of {{ $committees->total() }} entries
+            @else
+                No entries
+            @endif
+        </div>
+        <div>
+            {{ $committees->withQueryString()->links() }}
+        </div>
     </div>
 </div>
 
@@ -88,7 +100,7 @@
 
                         <div class="col-md-6">
                             <label for="appointmentDate" class="form-label">Appointment Date</label>
-                            <input type="date" class="form-control" name="appointmentDate" id="appointmentDate">
+                            <input type="date" class="form-control" name="appointmentDate" id="appointmentDate" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}" required>
                         </div>
                         @error('appointmentDate')
                         <div class="alert alert-danger mt-2">{{ $message }}</div>
@@ -125,11 +137,46 @@
         </div>
     </div>
 </div>
-<script>
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+@endpush
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
     document.addEventListener("DOMContentLoaded", function () {
         const committeeTypeSelect = document.getElementById("committeeType");
         const referenceSelect = document.getElementById("referenceId");
         const form = document.getElementById("committeeForm");
+
+        // Initialize appointment date field similar to Raise Needs
+        const appt = document.getElementById('appointmentDate');
+        if (appt) {
+            const pad = (n) => String(n).padStart(2, '0');
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+            appt.min = todayStr;
+            if (!appt.value || appt.value < todayStr) appt.value = todayStr;
+
+            flatpickr(appt, {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                allowInput: true,
+                minDate: 'today',
+                defaultDate: new Date(),
+                disableMobile: true
+            });
+
+            appt.addEventListener('change', () => {
+                if (appt.value && appt.value < appt.min) {
+                    appt.setCustomValidity('Date cannot be earlier than today.');
+                    appt.reportValidity();
+                    appt.value = appt.min;
+                    appt.setCustomValidity('');
+                }
+            });
+        }
 
         committeeTypeSelect.addEventListener("change", function () {
             const selectedType = this.value;
@@ -158,7 +205,8 @@
                 });
         });
     });
-</script>
+    </script>
+@endpush
 
 
 @endsection

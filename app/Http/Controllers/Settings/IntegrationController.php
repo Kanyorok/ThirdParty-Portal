@@ -21,6 +21,7 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -85,11 +86,20 @@ class IntegrationController extends Controller
         }
 
         if ($Integration->value === IntegrationsEnum::ReportService->value) {
-            return $this->_reportServiceConfiguration($request->validated('SSRS_Host'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
+            return $this->_reportServiceConfiguration($request->getSSRS_Host(), $request->validated('SSRS_Path'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
         }
 
         if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value], true)) {
             return $this->_generateKey($request, $Integration);
+        }
+
+        if ($Integration->value === IntegrationsEnum::Organization->value) {
+            return $this->_saveOrganizationBranding(
+                $request->validated('Org_Name'),
+                $request->validated('Org_Motto'),
+                $request->validated('Org_Logo'),
+                $request->user()
+            );
         }
 
         return $this->errored('integration not complete');
@@ -136,8 +146,6 @@ class IntegrationController extends Controller
                     'Configuration' => $data,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Set Updated Integration Config for: ' . $Integration->description());
@@ -218,8 +226,6 @@ class IntegrationController extends Controller
                     'Configuration' => $data,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated a new channels api key.');
@@ -271,7 +277,7 @@ class IntegrationController extends Controller
         }
 
         return $this->_saveData(IntegrationsEnum::Twitter, [
-            'account_id' => $userResponse->data->id,
+            'account_id' => $userResponse?->data->id,
             'username' => $userResponse->data->username,
             'name' => $userResponse->data->name,
             'access_token' => $accessToken,
@@ -308,8 +314,6 @@ class IntegrationController extends Controller
                     'Configuration' => ['Key' => md5($key)],
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated ' . $Integration->description() . ' api key.');
@@ -322,9 +326,9 @@ class IntegrationController extends Controller
         return $this->succeeded('key generated.', data: ['token' => $key]);
     }
 
-    private function _reportServiceConfiguration(string $Host, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
+    private function _reportServiceConfiguration(string $Host, string $Path, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
     {
-        $DisplayName = SSRSService::testConfig($Host, $Username, $password);
+        $DisplayName = SSRSService::testConfig($Host, $Path, $Username, $password);
         if (is_null($DisplayName)) {
             throw ValidationException::withMessages([
                 'password' => ['invalid credentials']
@@ -333,8 +337,46 @@ class IntegrationController extends Controller
         return $this->_saveData(IntegrationsEnum::ReportService, [
             'host' => $Host,
             'username' => $Username,
+            'path' => $Path,
             'name' => $DisplayName,
             'password' => Crypt::encryptString($password),
         ], $actor);
+    }
+
+    private function _saveOrganizationBranding(string $name, ?string $motto, ?string $logo, User $actor): JsonResponse
+    {
+        $path = null;
+        try {
+            if (is_string($logo) && str_starts_with($logo, 'data:image/')) {
+                // data URL: data:image/png;base64,xxxx
+                [$meta, $data] = explode(',', $logo, 2);
+                $ext = 'png';
+                if (preg_match('/data:image\/(\w+);base64/i', $meta, $m)) {
+                    $ext = strtolower($m[1]);
+                }
+                $binary = base64_decode($data, true);
+                if ($binary !== false) {
+                    $filename = 'branding/logo_' . Str::random(12) . '.' . $ext;
+                    // store publicly
+                    Storage::disk('public')->put($filename, $binary);
+                    $path = 'storage/' . $filename;
+                }
+            } elseif (is_string($logo) && $logo !== '') {
+                // treat as existing relative path (e.g., uploaded via separate endpoint)
+                $path = $logo;
+            }
+        } catch (Throwable $e) {
+            Log::warning('Org logo store failed: ' . $e->getMessage());
+        }
+
+        $payload = [
+            'name' => $name,
+            'motto' => $motto,
+        ];
+        if ($path) {
+            $payload['logo'] = $path;
+        }
+
+        return $this->_saveData(IntegrationsEnum::Organization, $payload, $actor);
     }
 }

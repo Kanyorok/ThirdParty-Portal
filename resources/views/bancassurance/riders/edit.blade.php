@@ -3,15 +3,15 @@
 
 @section('content')
 
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
 <div class="container mt-4">
     <div class="card shadow-sm">
@@ -29,8 +29,8 @@
                         <label for="Provider-select" class="form-label">
                             Select Provider <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control" 
-                               value="{{ optional($providers->firstWhere('Id', $rider->InsuranceProviderId))->Name ?? 'N/A' }}" 
+                        <input type="text" class="form-control"
+                               value="{{ optional($providers->firstWhere('Id', $rider->InsuranceProviderId))->Name ?? 'N/A' }}"
                                readonly>
                         <input type="hidden" name="InsuranceProviderId" value="{{ $rider->InsuranceProviderId }}">
                     </div>
@@ -41,7 +41,7 @@
                         <select name="Product" id="Product-select" class="form-select" required>
                             <option value="">-- Select --</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->Id }}" 
+                                <option value="{{ $product->Id }}"
                                     {{ $product->Id == $rider->Product ? 'selected' : '' }}>
                                     {{ $product->Name }}
                                 </option>
@@ -56,16 +56,16 @@
                         <label for="RiderName" class="form-label">
                             Rider Name <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="RiderName" id="RiderName" 
-                               class="form-control" 
+                        <input type="text" name="RiderName" id="RiderName"
+                               class="form-control"
                                value="{{ old('RiderName', $rider->RiderName) }}" required>
                     </div>
                     <div class="col-md-6">
                         <label for="AdditionalPremium" class="form-label">
                             Additional Premium <span class="text-danger">*</span>
                         </label>
-                        <input type="number" name="AdditionalPremium" id="AdditionalPremium" 
-                               class="form-control" step="0.01" min="0" 
+                        <input type="number" name="AdditionalPremium" id="AdditionalPremium"
+                               class="form-control" step="0.01" min="0"
                                value="{{ old('AdditionalPremium', $rider->AdditionalPremium) }}" required>
                     </div>
                 </div>
@@ -73,18 +73,19 @@
                 <!-- Description -->
                 <div class="mb-3">
                     <label for="Description" class="form-label">Description</label>
-                    <textarea name="Description" id="Description" class="form-control" rows="2">{{ old('Description', $rider->Description) }}</textarea>
+                    <textarea name="Description" id="Description" class="form-control"
+                              rows="2">{{ old('Description', $rider->Description) }}</textarea>
                 </div>
 
                 <!-- Checkboxes -->
                 <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" name="IsOptional" value="1" 
+                    <input class="form-check-input" type="checkbox" name="IsOptional" value="1"
                            id="IsOptional" {{ $rider->IsOptional ? 'checked' : '' }}>
                     <label class="form-check-label" for="IsOptional">Is Optional</label>
                 </div>
 
                 <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" name="IsActive" value="1" 
+                    <input class="form-check-input" type="checkbox" name="IsActive" value="1"
                            id="IsActive" {{ $rider->IsActive ? 'checked' : '' }}>
                     <label class="form-check-label" for="IsActive">Is Active</label>
                 </div>

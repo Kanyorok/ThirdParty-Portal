@@ -87,15 +87,18 @@
             background-color: #f8f9fa;
             transition: background-color 0.2s ease;
         }
+
         .table th, .table td {
             text-align: left;
             vertical-align: middle;
             padding: 0.5rem;
         }
+
         .btn-sm {
             padding: 0.25rem 0.6rem;
             font-size: 0.8rem;
         }
+
         .card {
             border: none;
             border-radius: 0.5rem;

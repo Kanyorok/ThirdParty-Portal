@@ -12,11 +12,11 @@
 @endsection
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4>📝 Trips List</h4>
-        <a href="{{ route('fleet.trip_logs.create') }}" class="btn btn-primary">➕ Log New Trip</a>
-    </div>
+    <div class="card p-4 shadow rounded-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4>📝 Trips List</h4>
+            <a href="{{ route('fleet.trip_logs.create') }}" class="btn btn-primary">➕ Log New Trip</a>
+        </div>
 
     <div class="table-responsive">
         <table id="tripTable" class="table table-bordered table-striped align-middle">

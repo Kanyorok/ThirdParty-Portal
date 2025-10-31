@@ -20,7 +20,7 @@ class PropertyNewTenantController extends Controller
     }
     public function index()
     {
-        $newtenants = PropertyNewTenant::with('type','thirdParty')->get();
+        $newtenants = PropertyNewTenant::with('type', 'thirdParty')->get();
         return view('property.tenantmanagement.tenantmaintenance.index', compact('newtenants'));
     }
 
@@ -36,7 +36,7 @@ class PropertyNewTenantController extends Controller
         // // Fetch only tenants with active Tenant type
         // $tenants = ThirdParties::whereHas('types', function ($q) {
         //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
-        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')  
+        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
         //         ->whereHas('category', function ($sub) {
         //             $sub->where('Name', 'Tenant');
         //         });
@@ -53,14 +53,14 @@ class PropertyNewTenantController extends Controller
 
         $tenants = ThirdParties::all();
 
-        return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes','tenants'));
+        return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes', 'tenants'));
     }
 
 
     public function edit($id)
     {
         $this->authorize(PermissionEnum::TenantMaintenanceUpdate, PropertyNewTenant::class);
-        $tenants = PropertyNewTenant::with('type','thirdParty')->findOrFail($id);
+        $tenants = PropertyNewTenant::with('type', 'thirdParty')->findOrFail($id);
         $tenantTypes = CodeDetail::where('CodeID', 'TenantType')->get();
 
         return view('property.tenantmanagement.tenantmaintenance.edit', compact('tenants', 'tenantTypes'));

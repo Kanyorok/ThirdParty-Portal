@@ -6,19 +6,19 @@
 @endsection
 
 @section('content')
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -29,31 +29,31 @@
     <div class="table-responsive">
         <table id="consumptionTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Consumption No</th>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>UOM</th>
-                    <th>Branch</th>
-                    <th>Issued To</th>
-                    <th>Issued By</th>
-                    <th>Issued On</th>
-                    <th>Actions</th>
-                </tr>
+            <tr>
+                <th>#</th>
+                <th>Consumption No</th>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>UOM</th>
+                <th>Branch</th>
+                <th>Issued To</th>
+                <th>Issued By</th>
+                <th>Issued On</th>
+                <th>Actions</th>
+            </tr>
             </thead>
             <tbody>
-                @foreach($consumptions as $consumption)
+            @foreach($consumptions as $consumption)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $consumption->ConsumptionNo }}</td>
                     <td>
                         {{-- Try different approaches --}}
                         {{ $consumption->item_name ?? 'N/A' }} {{-- Using the accessor --}}
-                        
+
                         {{-- OR --}}
                         {{-- {{ $consumption->stockItem?->ItemName ?? $consumption->item?->item?->ItemName ?? 'N/A' }} --}}
-                        
+
                         {{-- OR --}}
                         {{-- {{ $consumption->masterItem?->ItemName ?? 'N/A' }} --}}
                     </td>
@@ -76,35 +76,35 @@
                         </form>
                     </td>
                 </tr>
-                @endforeach
+            @endforeach
             </tbody>
         </table>
     </div>
 </div>
 
-@section('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            @if(!$consumptions->isEmpty())
-            $('#consumptionTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true,
-                language: {
-                    emptyTable: ""
-                }
+    @section('scripts')
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                @if(!$consumptions->isEmpty())
+                $('#consumptionTable').DataTable({
+                    pageLength: 10,
+                    ordering: true,
+                    searching: true,
+                    lengthChange: true,
+                    language: {
+                        emptyTable: ""
+                    }
+                });
+                @endif
             });
-            @endif
-        });
 
-        function confirmDelete(Id) {
-            if (confirm('⚠️ Are you sure you want to delete this stock consumption?')) {
-                document.getElementById('delete-form-' + Id).submit();
+            function confirmDelete(Id) {
+                if (confirm('⚠️ Are you sure you want to delete this stock consumption?')) {
+                    document.getElementById('delete-form-' + Id).submit();
+                }
             }
-        }
-    </script>
-@endsection
+        </script>
+    @endsection
 @endsection

@@ -40,17 +40,17 @@
                         <div class="card-body">
                             {{-- Meta --}}
                             <div class="row g-3">
-                                <div class="col-md-6">
+                                <div class="col-md-8">
                                     <label class="form-label">Template Name <span class="text-danger">*</span></label>
                                     <input type="text" name="TemplateName" class="form-control" placeholder="e.g. Master Services Agreement" required>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label class="form-label">Document Type</label>
-                                    <input type="text" name="DocumentType" class="form-control" placeholder="e.g. Contract / NDA / Lease">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Version</label>
-                                    <input type="number" step="0.0001" name="Version" class="form-control" value="1.0">
+                                    <select name="DocumentType" class="form-control">
+@foreach($docTypes as $docType)
+                                        <option value="{{ $docType->Description }}">{{ $docType->Description }}</option>
+@endforeach
+                                    </select>
                                 </div>
 
                                 <div class="col-12">
@@ -71,7 +71,8 @@
                             <input type="hidden" name="AttachedClauseIDs" id="AttachedClauseIDs" value="[]">
 
                             <div class="d-flex justify-content-end gap-2">
-                                <button type="submit" class="btn btn-success" onclick="if(this.form.checkValidity()){this.disabled = true; this.innerText = 'Saving...'; this.form.submit();}">
+                                <button type="submit" class="btn btn-success"
+                                        onclick="if(this.form.checkValidity()){this.disabled = true; this.innerText = 'Saving...'; this.form.submit();}">
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Save Template
                                 </button>
                             </div>

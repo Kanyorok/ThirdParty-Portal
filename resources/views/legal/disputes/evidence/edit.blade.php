@@ -6,11 +6,11 @@
     <div class="card p-2 shadow rounded-4 mb-0">
         <div class="card-body mb-0">
             <p class="text-muted">
-                Update the evidence details for case: 
+                Update the evidence details for case:
                 <strong class="text-dark">{{ $cases->CaseTitle }}</strong>
             </p>
 
-            <form method="POST" action="{{ route('legal.cases.evidence.update', [$cases->Id, $evidence->Id]) }}">
+            <form method="POST" action="{{ route('legal.cases.evidence.update', [$cases->Id, $evidence->Id]) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -21,22 +21,30 @@
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">DMS Document ID (optional)</label>
-                        <input type="text" name="DMSDocumentID" value="{{ old('DMSDocumentID', $evidence->DMSDocumentID) }}" class="form-control">
+                        <label class="form-label">Upload Document (optional)</label>
+                        <input type="file" name="DMSDocumentID" class="form-control"
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpeg,.jpg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/jpg,image/png">
+                        <small class="form-text text-muted">Accepted formats: PDF, Word, Excel, CSV, JPG, PNG</small>
+                        @if ($evidence->DMSDocumentID)
+                        <div class="mt-2">
+                          <span class="text-success">Current Document: {{ basename($evidence->DMSDocumentID) }}</span>
+                        </div>
+                        @endif
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">External File Link (optional)</label>
                         <input type="url" name="ExternalLink" value="{{ old('ExternalLink', $evidence->ExternalLink) }}" class="form-control" placeholder="https://example.com/document.pdf">
                     </div>
                 </div>
-                
+
                 <div class="mb-3">
                     <label class="form-label">Description</label>
-                    <textarea name="Description" class="form-control" rows="3" required>{{ old('Description', $evidence->Description) }}</textarea>
+                    <textarea name="Description" class="form-control" rows="3"
+                              required>{{ old('Description', $evidence->Description) }}</textarea>
                 </div>
 
-                <div class="form-check mb-3">                   
-                    <input type="checkbox" class="form-check-input" name="IsActive" 
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" name="IsActive"
                         id="IsActive" {{ old('IsActive', $evidence->IsActive === 'Active') ? 'checked' : '' }}>
                     <label class="form-check-label" for="IsActive">Mark as Active</label>
                 </div>

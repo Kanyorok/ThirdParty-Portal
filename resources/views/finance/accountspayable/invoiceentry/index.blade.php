@@ -12,6 +12,85 @@
                 </a>
             </div>
 
+            <!-- Filter Section -->
+            <div class="card-body border-bottom pb-0">
+                <form action="{{ route('invoiceentry.index') }}" method="GET" id="filter-form" class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label for="vendor_name" class="form-label small text-muted">Vendor Name</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-building"></i></span>
+                            <input type="text" class="form-control form-control-sm" id="vendor_name" name="vendor_name"
+                                value="{{ request('vendor_name') }}" placeholder="Search vendor...">
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="invoice_number" class="form-label small text-muted">Invoice Number</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-hashtag"></i></span>
+                            <input type="text" class="form-control form-control-sm" id="invoice_number" name="invoice_number"
+                                value="{{ request('invoice_number') }}" placeholder="Search invoice...">
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="date_from" class="form-label small text-muted">Date From</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-calendar-alt"></i></span>
+                            <input type="date" class="form-control form-control-sm" id="date_from" name="date_from"
+                                value="{{ request('date_from') }}">
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="date_to" class="form-label small text-muted">Date To</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-calendar-alt"></i></span>
+                            <input type="date" class="form-control form-control-sm" id="date_to" name="date_to"
+                                value="{{ request('date_to') }}">
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="approval_status" class="form-label small text-muted">Status</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-check-circle"></i></span>
+                            <select class="form-select form-select-sm" id="approval_status" name="approval_status">
+                                <option value="all" {{ request('approval_status') == 'all' ? 'selected' : '' }}>All Statuses</option>
+                                @foreach($approvalStatuses as $status)
+                                    <option value="{{ $status }}" {{ request('approval_status') == $status ? 'selected' : '' }}>
+                                        {{ ucfirst($status) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="per_page" class="form-label small text-muted">Per Page</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-list-ol"></i></span>
+                            <select class="form-select form-select-sm" id="per_page" name="per_page">
+                                @foreach([15, 25, 50, 100] as $perPageOption)
+                                    <option value="{{ $perPageOption }}" {{ request('per_page', 15) == $perPageOption ? 'selected' : '' }}>
+                                        {{ $perPageOption }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 d-flex justify-content-end mb-3">
+                        <button type="submit" class="btn btn-sm btn-primary me-2">
+                            <i class="fas fa-filter me-1"></i> Apply Filters
+                        </button>
+                        <a href="{{ route('invoiceentry.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+
             <div class="card-body p-3">
                 <!-- Invoice Entries Table -->
                 <div class="table-responsive">
@@ -20,12 +99,56 @@
                         <thead class="table-light">
                         <tr>
                             <th>#</th>
-                            <th>Vendor</th>
-                            <th>Invoice Number</th>
-                            <th>Invoice Date</th>
-                            <th class="text-end">Amount</th>
-                            <th scope="col">Approval</th>
-{{--                            <th>Description</th>--}}
+                            <th>
+                                <a href="{{ route('invoiceentry.index', array_merge(request()->query(), ['sort_by' => 'ThirdPartyID', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'ThirdPartyID' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
+                                    Vendor
+                                    @if(request('sort_by') == 'ThirdPartyID')
+                                        <i class="fas fa-sort-{{ request('sort_direction') == 'asc' ? 'up' : 'down' }} ms-1 text-muted"></i>
+                                    @else
+                                        <i class="fas fa-sort ms-1 text-muted opacity-50"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('invoiceentry.index', array_merge(request()->query(), ['sort_by' => 'InvoiceNumber', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'InvoiceNumber' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
+                                    Invoice Number
+                                    @if(request('sort_by') == 'InvoiceNumber')
+                                        <i class="fas fa-sort-{{ request('sort_direction') == 'asc' ? 'up' : 'down' }} ms-1 text-muted"></i>
+                                    @else
+                                        <i class="fas fa-sort ms-1 text-muted opacity-50"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('invoiceentry.index', array_merge(request()->query(), ['sort_by' => 'InvoiceDate', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'InvoiceDate' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
+                                    Invoice Date
+                                    @if(request('sort_by') == 'InvoiceDate')
+                                        <i class="fas fa-sort-{{ request('sort_direction') == 'asc' ? 'up' : 'down' }} ms-1 text-muted"></i>
+                                    @else
+                                        <i class="fas fa-sort ms-1 text-muted opacity-50"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th class="text-end">
+                                <a href="{{ route('invoiceentry.index', array_merge(request()->query(), ['sort_by' => 'InvoiceAmount', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'InvoiceAmount' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
+                                    Amount
+                                    @if(request('sort_by') == 'InvoiceAmount')
+                                        <i class="fas fa-sort-{{ request('sort_direction') == 'asc' ? 'up' : 'down' }} ms-1 text-muted"></i>
+                                    @else
+                                        <i class="fas fa-sort ms-1 text-muted opacity-50"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('invoiceentry.index', array_merge(request()->query(), ['sort_by' => 'ApprovalStatus', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'ApprovalStatus' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
+                                    Approval
+                                    @if(request('sort_by') == 'ApprovalStatus')
+                                        <i class="fas fa-sort-{{ request('sort_direction') == 'asc' ? 'up' : 'down' }} ms-1 text-muted"></i>
+                                    @else
+                                        <i class="fas fa-sort ms-1 text-muted opacity-50"></i>
+                                    @endif
+                                </a>
+                            </th>
                             <th class="text-center">Actions</th>
                         </tr>
                         </thead>
@@ -57,19 +180,19 @@
                                        title="View Invoice">
                                         <i class="fas fa-eye"></i>
                                     </a>
-{{--                                    @if(strtolower($item->ApprovalStatus) === 'draft')--}}
-{{--                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"--}}
-{{--                                        class="btn btn-sm btn-outline-primary me-1"--}}
-{{--                                        title="Edit">--}}
-{{--                                            <i class="fas fa-edit"></i>--}}
-{{--                                        </a>--}}
-{{--                                    @else--}}
-{{--                                        <a href="#"--}}
-{{--                                        class="btn btn-sm btn-outline-primary me-1 disabled"--}}
-{{--                                        title="Edit (disabled)">--}}
-{{--                                            <i class="fas fa-edit"></i>--}}
-{{--                                        </a>--}}
-{{--                                    @endif--}}
+                                    {{--                                    @if(strtolower($item->ApprovalStatus) === 'draft')--}}
+                                    {{--                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"--}}
+                                    {{--                                        class="btn btn-sm btn-outline-primary me-1"--}}
+                                    {{--                                        title="Edit">--}}
+                                    {{--                                            <i class="fas fa-edit"></i>--}}
+                                    {{--                                        </a>--}}
+                                    {{--                                    @else--}}
+                                    {{--                                        <a href="#"--}}
+                                    {{--                                        class="btn btn-sm btn-outline-primary me-1 disabled"--}}
+                                    {{--                                        title="Edit (disabled)">--}}
+                                    {{--                                            <i class="fas fa-edit"></i>--}}
+                                    {{--                                        </a>--}}
+                                    {{--                                    @endif--}}
 
                                     @if(strtolower($item->ApprovalStatus) === 'draft')
                                         <button type="button"

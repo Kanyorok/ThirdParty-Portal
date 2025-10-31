@@ -43,7 +43,7 @@
                             @endif
                         </dd>
                         <dt class="col-5 fw-semibold">GL Account</dt>
-                        <dd class="col-7">{{ $account->glAccount?->GLName ?? $account->GLAccountID ?? '—' }}</dd>
+                        <dd class="col-7">{{$account->glAccount?->GLCode}} <small>({{ $account->glAccount?->GLName ?? $account->GLAccountID ?? '—' }})</small></dd>
                         <dt class="col-5 fw-semibold">Opening Balance</dt>
                         <dd class="col-7">{{ number_format($account->OpeningBalance,2) }}</dd>
                         <dt class="col-5 fw-semibold">Current Balance</dt>

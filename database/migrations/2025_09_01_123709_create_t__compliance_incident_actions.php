@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -31,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-     Schema::dropIfExists('t_ComplianceIncidentActions');
+        Schema::dropIfExists('t_ComplianceIncidentActions');
     }
 };

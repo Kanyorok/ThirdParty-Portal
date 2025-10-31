@@ -29,12 +29,14 @@
                     <div class="mb-3">
                         <p class="mb-1"><strong>Budget:</strong> {{ $entries->first()->budget->Name ?? '' }}</p>
                         <p class="mb-1"><strong>Total Allocations:</strong> {{ number_format($totalAllocation, 2) }}</p>
-{{--                        <p class="mb-1"><strong>Source:</strong> <span class="badge bg-secondary">Manual Entry</span></p>--}}
+                        {{--                        <p class="mb-1"><strong>Source:</strong> <span class="badge bg-secondary">Manual Entry</span></p>--}}
                     </div>
 
                     <!-- Table -->
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover table-striped align-middle text-center budget-lines-table" style="min-width: 700px;">
+                        <table
+                            class="table table-bordered table-hover table-striped align-middle text-center budget-lines-table"
+                            style="min-width: 700px;">
                             <thead class="table-light">
                             <tr>
                                 <th>#</th>
@@ -79,14 +81,16 @@
                                         @endif
 
                                         <!-- Allocation Modal -->
-                                        <div class="modal fade" id="allocModal{{ $item->Id }}" tabindex="-1" aria-labelledby="allocModalLabel{{ $item->Id }}" aria-hidden="true">
+                                        <div class="modal fade" id="allocModal{{ $item->Id }}" tabindex="-1"
+                                             aria-labelledby="allocModalLabel{{ $item->Id }}" aria-hidden="true">
                                             <div class="modal-dialog modal-lg">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
                                                         <h6 class="modal-title" id="allocModalLabel{{ $item->Id }}">
                                                             Monthly Allocations – {{ $item->budgetline->LineName }}
                                                         </h6>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body">
                                                         @if($item->allocations && $item->allocations->count())
@@ -107,7 +111,9 @@
                                                                 </tbody>
                                                             </table>
                                                         @else
-                                                            <div class="alert alert-info mb-0">No allocations found for this entry.</div>
+                                                            <div class="alert alert-info mb-0">No allocations found for
+                                                                this entry.
+                                                            </div>
                                                         @endif
                                                         <div class="mt-2">
                                                             <p class="text-muted mb-0">Total Allocated:
@@ -116,7 +122,9 @@
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                                        <button type="button" class="btn btn-secondary btn-sm"
+                                                                data-bs-dismiss="modal">Close
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -149,6 +157,7 @@
             font-size: 13px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .budget-lines-table th,
         .budget-lines-table td {
             vertical-align: middle;

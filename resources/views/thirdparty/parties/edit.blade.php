@@ -447,7 +447,8 @@
                 </div>
                 @endif
 
-                <form action="{{ route('thirdparty.parties.update', ['party' => $party->Id]) }}" method="POST" id="thirdPartyEditForm">
+                    <form action="{{ route('thirdparty.parties.update', ['party' => $party->Id]) }}" method="POST"
+                          id="thirdPartyEditForm">
                     @csrf
                     @method('PATCH')
 
@@ -534,26 +535,28 @@
                         </div>
                     </div>
 
-                    <div class="section">
-                        <h3 class="section-title">
-                            <i class="fas fa-user"></i>
-                            Primary Contact
-                        </h3>
-                        <div class="form-grid cols-2">
-                            <div class="form-field">
-                                <label class="form-label">Primary Contact</label>
-                                <div class="form-control" style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
-                                    {{ $primaryUser?->FullName ?: 'N/A' }}
+                        <div class="section">
+                            <h3 class="section-title">
+                                <i class="fas fa-user"></i>
+                                Primary Contact
+                            </h3>
+                            <div class="form-grid cols-2">
+                                <div class="form-field">
+                                    <label class="form-label">Primary Contact</label>
+                                    <div class="form-control"
+                                         style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
+                                        {{ $primaryUser?->FullName ?: 'N/A' }}
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="form-field">
-                                <label class="form-label">Primary Email</label>
-                                <div class="form-control" style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
-                                    {{ $primaryUser?->Email ?: 'N/A' }}
+                                <div class="form-field">
+                                    <label class="form-label">Primary Email</label>
+                                    <div class="form-control"
+                                         style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
+                                        {{ $primaryUser?->Email ?: 'N/A' }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
                     <div class="section">
                         <h3 class="section-title">
@@ -640,7 +643,9 @@
                                     id="Phone"
                                     name="Phone"
                                     value="{{ old('Phone', $party->Phone) }}"
-                                    aria-describedby="Phone-error">
+                                    pattern="^\+[1-9]\d{7,14}$" inputmode="tel" placeholder="e.g., +12025550123"
+                                    aria-describedby="Phone-error Phone_help">
+                                <div class="form-text" id="Phone_help">Use international format (E.164), starting with + and country code, 8–15 digits total.</div>
                                 @error('Phone')
                                 <div class="form-error" id="Phone-error">
                                     <i class="fas fa-exclamation-circle"></i>
@@ -762,47 +767,47 @@
 @endsection
 
 @section('scripts')
-<script>
-$(document).ready(function() {
-    // Debug form submission
-    $('#thirdPartyEditForm').on('submit', function(e) {
-        console.log('Form submission started');
-        console.log('ApprovalStatus value:', $('#ApprovalStatus').val());
-        console.log('Status value:', $('#Status').val());
-        console.log('Form data:', $(this).serialize());
-        
-        // Check if required fields are filled
-        const approvalStatus = $('#ApprovalStatus').val();
-        const status = $('#Status').val();
-        
-        if (!approvalStatus) {
-            console.error('ApprovalStatus is empty');
-            alert('Please select an Approval Status');
-            e.preventDefault();
-            return false;
-        }
-        
-        if (!status) {
-            console.error('Status is empty');
-            alert('Please select a Status');
-            e.preventDefault();
-            return false;
-        }
-        
-        console.log('Form validation passed, submitting...');
-    });
-    
-    // Debug dropdown changes
-    $('#ApprovalStatus, #Status').on('change', function() {
-        console.log('Dropdown changed:', $(this).attr('id'), 'Value:', $(this).val());
-    });
-    
-    // Debug initial values
-    console.log('Initial ApprovalStatus:', $('#ApprovalStatus').val());
-    console.log('Initial Status:', $('#Status').val());
-    console.log('Current party ID:', '{{ $party->Id }}');
-    console.log('Current ApprovalStatus enum value:', '{{ $party->ApprovalStatus?->value }}');
-    console.log('Current Status enum value:', '{{ $party->Status?->value }}');
-});
-</script>
+    <script>
+        $(document).ready(function () {
+            // Debug form submission
+            $('#thirdPartyEditForm').on('submit', function (e) {
+                console.log('Form submission started');
+                console.log('ApprovalStatus value:', $('#ApprovalStatus').val());
+                console.log('Status value:', $('#Status').val());
+                console.log('Form data:', $(this).serialize());
+
+                // Check if required fields are filled
+                const approvalStatus = $('#ApprovalStatus').val();
+                const status = $('#Status').val();
+
+                if (!approvalStatus) {
+                    console.error('ApprovalStatus is empty');
+                    alert('Please select an Approval Status');
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (!status) {
+                    console.error('Status is empty');
+                    alert('Please select a Status');
+                    e.preventDefault();
+                    return false;
+                }
+
+                console.log('Form validation passed, submitting...');
+            });
+
+            // Debug dropdown changes
+            $('#ApprovalStatus, #Status').on('change', function () {
+                console.log('Dropdown changed:', $(this).attr('id'), 'Value:', $(this).val());
+            });
+
+            // Debug initial values
+            console.log('Initial ApprovalStatus:', $('#ApprovalStatus').val());
+            console.log('Initial Status:', $('#Status').val());
+            console.log('Current party ID:', '{{ $party->Id }}');
+            console.log('Current ApprovalStatus enum value:', '{{ $party->ApprovalStatus?->value }}');
+            console.log('Current Status enum value:', '{{ $party->Status?->value }}');
+        });
+    </script>
 @endsection

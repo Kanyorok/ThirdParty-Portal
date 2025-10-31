@@ -15,13 +15,15 @@ BEGIN
     -- We store LineTotal on each line as: ((Qty * UnitPriceExcl) - LineDiscount) * (1 + TaxRate/100)
     -- Use LineTotal to derive totals to avoid double-counting or mismatched discount handling.
     SELECT @TotPriceIncl = SUM(ISNULL(y.LineTotal, 0)),
-        @TotDiscAmnt = SUM(ISNULL(y.fLineDiscount, 0)),
-        @TotalBeforeDiscount = SUM(ISNULL(y.fQuantity,0) * ISNULL(y.fUnitPriceExcl,0)),
-        -- Derive exclusive totals and tax by reversing the tax component per line
-        @TotPriceExcl = SUM(CASE WHEN ISNULL(y.fTaxRate,0) = 0 THEN ISNULL(y.LineTotal,0)
-                    ELSE ISNULL(y.LineTotal,0) / (1 + (y.fTaxRate / 100.0)) END),
-        @TotTax = SUM(CASE WHEN ISNULL(y.fTaxRate,0) = 0 THEN 0
-                  ELSE ISNULL(y.LineTotal,0) - (ISNULL(y.LineTotal,0) / (1 + (y.fTaxRate / 100.0))) END)
+           @TotDiscAmnt = SUM(ISNULL(y.fLineDiscount, 0)),
+           @TotalBeforeDiscount = SUM(ISNULL(y.fQuantity, 0) * ISNULL(y.fUnitPriceExcl, 0)),
+           -- Derive exclusive totals and tax by reversing the tax component per line
+           @TotPriceExcl = SUM(CASE
+                                   WHEN ISNULL(y.fTaxRate, 0) = 0 THEN ISNULL(y.LineTotal, 0)
+                                   ELSE ISNULL(y.LineTotal, 0) / (1 + (y.fTaxRate / 100.0)) END),
+           @TotTax = SUM(CASE
+                             WHEN ISNULL(y.fTaxRate, 0) = 0 THEN 0
+                             ELSE ISNULL(y.LineTotal, 0) - (ISNULL(y.LineTotal, 0) / (1 + (y.fTaxRate / 100.0))) END)
     FROM t_OrderLines y
     WHERE y.iOrderID = @OrderId;
 

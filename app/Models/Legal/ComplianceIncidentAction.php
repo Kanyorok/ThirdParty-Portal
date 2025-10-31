@@ -11,8 +11,8 @@ class ComplianceIncidentAction extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'IncidentID','RootCause','CorrectiveAction',
-        'ActionOwnerID','DueDate','Status','CreatedBy','CreatedOn'
+        'IncidentID', 'RootCause', 'CorrectiveAction',
+        'ActionOwnerID', 'DueDate', 'Status', 'CreatedBy', 'CreatedOn'
     ];
 
     public function incident()

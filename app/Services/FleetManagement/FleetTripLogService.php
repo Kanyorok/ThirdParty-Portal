@@ -24,7 +24,7 @@ class FleetTripLogService
             return 'TRP-0001';
         }
 
-        $lastNumber = (int) str_replace('TRP-', '', $latestTrip->TripNo);
+        $lastNumber = (int)str_replace('TRP-', '', $latestTrip->TripNo);
         $newNumber = $lastNumber + 1;
 
         return 'TRP-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
@@ -155,14 +155,14 @@ class FleetTripLogService
                 'Notes' => $data['Notes'] ?? null,
             ]);
 
-            $tripLog->ModifiedBy = Auth::id();
-            $tripLog->ModifiedOn = now();
-            $tripLog->save();
+        $tripLog->ModifiedBy = Auth::id();
+        $tripLog->ModifiedOn = now();
+        $tripLog->save();
 
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($tripLog)
-                ->log("Trip log updated");
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($tripLog)
+            ->log("Trip log updated");
 
             return $tripLog;
         });

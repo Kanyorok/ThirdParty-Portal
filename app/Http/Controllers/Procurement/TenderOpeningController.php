@@ -263,7 +263,22 @@ class TenderOpeningController extends Controller
             }
 
             $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
-            
+
+            // Prepare DMS lookup for new-format docs that contain document_id
+            $docIds = collect($encryptedDocs)
+                ->map(fn($d) => $d['document_id'] ?? null)
+                ->filter()
+                ->values()
+                ->all();
+
+            $dmsDocs = [];
+            if (!empty($docIds)) {
+                $dmsDocs = \App\Models\DMS\Document::whereIn('DocumentId', $docIds)
+                    ->with('current')
+                    ->get()
+                    ->keyBy('DocumentId');
+            }
+
             $bidDetails = [
                 'submission_info' => [
                     'id' => $submission->Id,
@@ -292,11 +307,19 @@ class TenderOpeningController extends Controller
                     'ceremony_type' => ucfirst($submission->CeremonyType ?? 'Unknown'),
                     'read_out_summary' => $submission->ReadOutSummary
                 ],
-                'documents' => array_map(function($doc) {
+                'documents' => array_map(function($doc) use ($dmsDocs) {
+                    $documentId = $doc['document_id'] ?? null;
+                    $linked = $documentId && isset($dmsDocs[$documentId]) ? $dmsDocs[$documentId] : null;
+                    $name = $linked?->Name
+                        ?? ($doc['original_name'] ?? ($doc['original_filename'] ?? 'Unknown'));
+                    $sizeBytes = $linked?->current?->Size ?? ($doc['file_size'] ?? null);
+                    $uploadedAtVal = $linked?->getAttribute('CreatedOn');
                     return [
-                        'filename' => $doc['original_filename'] ?? 'Unknown',
-                        'size' => $this->formatFileSize($doc['file_size'] ?? 0),
-                        'uploaded_at' => $doc['uploaded_at'] ?? null
+                        'filename' => $name,
+                        'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
+                        'uploaded_at' => ($uploadedAtVal instanceof \Carbon\Carbon)
+                            ? $uploadedAtVal->format('d/m/Y H:i:s')
+                            : ($uploadedAtVal ?: ($doc['uploaded_at'] ?? null))
                     ];
                 }, $encryptedDocs)
             ];

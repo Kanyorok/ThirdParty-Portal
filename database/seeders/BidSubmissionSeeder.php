@@ -14,12 +14,12 @@ class BidSubmissionSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create();
-        
+
         // Get available data
         $tenders = Tender::with('currency')->limit(4)->get();
         $suppliers = Supplier::with('thirdParty')->limit(10)->get();
         $users = User::limit(5)->get();
-        
+
         if ($tenders->isEmpty() || $suppliers->isEmpty() || $users->isEmpty()) {
             $this->command->info('⚠️  Missing required data. Please ensure you have tenders, suppliers, and users in the database.');
             return;
@@ -39,7 +39,7 @@ class BidSubmissionSeeder extends Seeder
                     ['status' => 'draft', 'amount' => 475000, 'responsive' => null, 'source' => 'portal'],
                 ]
             ],
-            
+
             // Scenario 2: Tender with opened bids ready for evaluation
             [
                 'tender' => $tenders[1],
@@ -50,8 +50,8 @@ class BidSubmissionSeeder extends Seeder
                     ['status' => 'non-responsive', 'amount' => 650000, 'responsive' => false, 'source' => 'portal', 'opened' => true],
                 ]
             ],
-            
-            // Scenario 3: Tender with evaluated bids 
+
+            // Scenario 3: Tender with evaluated bids
             [
                 'tender' => $tenders[2],
                 'description' => 'Tender with fully evaluated bids',
@@ -61,7 +61,7 @@ class BidSubmissionSeeder extends Seeder
                     ['status' => 'evaluated', 'amount' => 295000, 'responsive' => true, 'source' => 'portal', 'opened' => true, 'tech_score' => 88, 'fin_score' => 85],
                 ]
             ],
-            
+
             // Scenario 4: Single tender with awarded bid
             [
                 'tender' => $tenders[3],
@@ -77,15 +77,15 @@ class BidSubmissionSeeder extends Seeder
         foreach ($submissionScenarios as $scenario) {
             $tender = $scenario['tender'];
             $this->command->info("📝 Creating bids for tender: {$tender->TenderNo} - {$scenario['description']}");
-            
+
             foreach ($scenario['bids'] as $index => $bidConfig) {
                 $supplier = $suppliers[$index % count($suppliers)];
                 $user = $users[$index % count($users)];
-                
+
                 // Calculate submission date (past few days)
                 $submittedDaysAgo = $faker->numberBetween(1, 7);
                 $submissionDate = now()->subDays($submittedDaysAgo);
-                
+
                 $bid = BidSubmission::create([
                     'TenderRef' => $tender->TenderNo,
                     'SupplierName' => $supplier->thirdParty->TradingName ?? $supplier->thirdParty->ThirdPartyName,
@@ -97,7 +97,7 @@ class BidSubmissionSeeder extends Seeder
                     'SubmissionSource' => $bidConfig['source'],
                     'DocumentsAccessible' => $bidConfig['opened'] ?? false,
                     'BidOpeningDate' => $tender->OpeningDate,
-                    
+
                     // Business fields
                     'BidAmount' => $bidConfig['amount'],
                     'Currency' => $tender->currency->Code ?? 'KES',
@@ -105,27 +105,27 @@ class BidSubmissionSeeder extends Seeder
                     'DeliveryPeriod' => $faker->numberBetween(30, 120),
                     'PaymentTerms' => $this->generatePaymentTerms($faker),
                     'BidStatus' => $bidConfig['status'],
-                    
+
                     // Evaluation fields
                     'IsResponsive' => $bidConfig['responsive'],
                     'ResponsivenessRemarks' => $this->generateResponsivenessRemarks($bidConfig, $faker),
                     'TechnicalScore' => $bidConfig['tech_score'] ?? null,
                     'FinancialScore' => $bidConfig['fin_score'] ?? null,
-                    'TotalScore' => isset($bidConfig['tech_score'], $bidConfig['fin_score']) ? 
+                    'TotalScore' => isset($bidConfig['tech_score'], $bidConfig['fin_score']) ?
                         ($bidConfig['tech_score'] + $bidConfig['fin_score']) : null,
                     'EvaluationNotes' => isset($bidConfig['tech_score']) ? $this->generateEvaluationNotes($bidConfig, $faker) : null,
-                    
+
                     // Opening ceremony tracking
                     'OpenedAt' => ($bidConfig['opened'] ?? false) ? $submissionDate->addDays(1) : null,
                     'OpenedBy' => ($bidConfig['opened'] ?? false) ? $user->Id : null,
-                    
+
                     // Mock encrypted documents
                     'EncryptedDocuments' => $this->generateMockEncryptedDocs($bidConfig, $faker),
-                    
+
                     'CreatedBy' => $user->Id,
                     'ModifiedBy' => $user->Id,
                 ]);
-                
+
                 $this->command->info("  ✅ Created {$bidConfig['status']} bid: {$supplier->thirdParty->TradingName} - KES " . number_format($bidConfig['amount']));
             }
         }
@@ -152,14 +152,14 @@ class BidSubmissionSeeder extends Seeder
         if ($config['source'] === 'portal') {
             return 'Submitted via supplier portal with encrypted documents';
         }
-        
+
         $remarks = [
             'Hand delivered to procurement office',
-            'Submitted via email with password protection', 
+            'Submitted via email with password protection',
             'Delivered by courier service',
             'Submitted through tender box'
         ];
-        
+
         return $faker->randomElement($remarks);
     }
 
@@ -172,7 +172,7 @@ class BidSubmissionSeeder extends Seeder
             '15 days from acceptance',
             '30% advance, 70% on completion'
         ];
-        
+
         return $faker->randomElement($terms);
     }
 
@@ -181,11 +181,11 @@ class BidSubmissionSeeder extends Seeder
         if ($config['responsive'] === null) {
             return null;
         }
-        
+
         if ($config['responsive']) {
             return 'All required documents submitted and meet specifications';
         }
-        
+
         $issues = [
             'Missing tax compliance certificate',
             'Bid validity period insufficient',
@@ -193,7 +193,7 @@ class BidSubmissionSeeder extends Seeder
             'Financial documents incomplete',
             'Late submission after deadline'
         ];
-        
+
         return $faker->randomElement($issues);
     }
 
@@ -206,7 +206,7 @@ class BidSubmissionSeeder extends Seeder
             'Excellent track record and references provided',
             'Good value proposition with reasonable timeline'
         ];
-        
+
         return $faker->randomElement($notes);
     }
 
@@ -214,13 +214,13 @@ class BidSubmissionSeeder extends Seeder
     {
         $docCount = $faker->numberBetween(2, 5);
         $docs = [];
-        
+
         for ($i = 0; $i < $docCount; $i++) {
             $docs[] = [
                 'id' => $faker->uuid,
                 'original_filename' => $faker->randomElement([
                     'technical_proposal.pdf',
-                    'financial_proposal.pdf', 
+                    'financial_proposal.pdf',
                     'company_profile.pdf',
                     'tax_certificate.pdf',
                     'references.pdf'
@@ -230,7 +230,7 @@ class BidSubmissionSeeder extends Seeder
                 'uploaded_at' => now()->toISOString()
             ];
         }
-        
+
         return json_encode($docs);
     }
 

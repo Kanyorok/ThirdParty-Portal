@@ -42,18 +42,25 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="p-2 bg-light rounded-3">
-                        <strong class="text-info">DMS Document ID:</strong>
-                        <div class="d-flex justify-content-between">
-                            @if($evidence->DMSDocumentID)
-                                <p>{{ $evidence->DMSDocumentID ?? 'N/A' }}</p>
-                                <p>
-                                    <a href="#" class="btn btn-sm btn-primary">
-                                        View Document
-                                    </a>
-                                </p>
-                            @else
-                                <p>N/A</p>
-                            @endif
+                        <strong class="text-info">Attachments:</strong>
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white">
+                                <h6 class="mb-0 text-muted"><i class="far fa-paperclip me-2"></i>Attachments</h6>
+                            </div>
+                            <div class="card-body" id="legalDocAttachments">
+                                @php
+                                    $documents = $evidence->documents() 
+                                        ->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                                @endphp
+                                @forelse($documents as $document)
+                                    @php
+                                        $document->setRelations([]);
+                                    @endphp
+                                    {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                                @empty
+                                    <span class="text-muted">No attachments.</span>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -83,4 +90,8 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+    @includeIf('snippets.actions.preview-files')
 @endsection

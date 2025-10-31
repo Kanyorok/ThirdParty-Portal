@@ -5,9 +5,10 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up(): void {
+    public function up(): void
+    {
         Schema::table('t_PettyCashVouchers', function (Blueprint $table) {
-            $table->string('ApprovalStatus',20)->default('N/A'); // N/A|Pending|Approved|Rejected
+            $table->string('ApprovalStatus', 20)->default('N/A'); // N/A|Pending|Approved|Rejected
             $table->dateTime('SubmittedOn')->nullable();
             $table->unsignedBigInteger('SubmittedBy')->nullable();
             $table->dateTime('ApprovedOn')->nullable();
@@ -17,9 +18,11 @@ return new class extends Migration {
             $table->index(['ReplenishmentBatchID']);
         });
     }
-    public function down(): void {
+
+    public function down(): void
+    {
         Schema::table('t_PettyCashVouchers', function (Blueprint $table) {
-            $table->dropColumn(['ApprovalStatus','SubmittedOn','SubmittedBy','ApprovedOn','ApprovedBy','ReplenishmentBatchID']);
+            $table->dropColumn(['ApprovalStatus', 'SubmittedOn', 'SubmittedBy', 'ApprovedOn', 'ApprovedBy', 'ReplenishmentBatchID']);
         });
     }
 };

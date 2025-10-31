@@ -19,15 +19,15 @@ Route::prefix('goods-receipt')->name('goods-receipt.')->group(function () {
     Route::get('/dashboard', [EnhancedGoodsReceiptController::class, 'dashboard'])->name('dashboard');
     Route::get('/create', [EnhancedGoodsReceiptController::class, 'create'])->name('create');
     Route::post('/', [EnhancedGoodsReceiptController::class, 'store'])->name('store');
-    
+
     // GRN details and processing
     Route::get('/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'show'])->name('show');
     Route::post('/process/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'processGRN'])->name('process');
-    
+
     // AJAX endpoints
     Route::get('/api/po-details/{poId}', [EnhancedGoodsReceiptController::class, 'getPODetails'])->name('po-details');
     Route::post('/api/quality-check/{grnLineId}', [EnhancedGoodsReceiptController::class, 'updateQualityStatus'])->name('quality-check');
-    
+
     // Reports and summaries
     Route::get('/summary/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'showSummary'])->name('summary');
     Route::get('/reports/processing-status', [EnhancedGoodsReceiptController::class, 'processingStatusReport'])->name('reports.processing-status');

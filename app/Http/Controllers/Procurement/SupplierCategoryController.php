@@ -56,7 +56,7 @@ class SupplierCategoryController extends Controller
 
     public function create()
     {
-        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id','Name']);
+        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id', 'Name']);
         return view('procurement.suppliers.supplier_categories.create', compact('itemCategories'));
     }
 
@@ -85,7 +85,7 @@ class SupplierCategoryController extends Controller
     public function edit(SupplierCategory $supplier_cat)
     {
         $supplier_cat->load('itemCategories');
-        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id','Name']);
+        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id', 'Name']);
         return view('procurement.suppliers.supplier_categories.edit', [
             'category' => $supplier_cat,
             'itemCategories' => $itemCategories,

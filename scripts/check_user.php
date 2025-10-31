@@ -3,10 +3,12 @@ require __DIR__ . '/../vendor/autoload.php';
 $app = require __DIR__ . '/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
+
 use App\Models\ThirdParty\ThirdPartyUser;
+
 $email = $argv[1] ?? 'jd@craftsilicon.com';
 $user = ThirdPartyUser::with('thirdParty')->where('Email', $email)->first();
-if (! $user) {
+if (!$user) {
     echo "User not found: $email\n";
     exit(0);
 }
@@ -15,7 +17,7 @@ $approval = 'null';
 if ($tp) {
     $a = $tp->ApprovalStatus;
     if (is_object($a)) {
-        $approval = $a->value ?? ($a->name ?? (string) $a);
+        $approval = $a->value ?? ($a->name ?? (string)$a);
     } else {
         $approval = $a ?? 'null';
     }

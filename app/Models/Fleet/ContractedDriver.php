@@ -17,7 +17,7 @@ use App\Traits\Model\DocumentsTrait;
 class ContractedDriver extends Model
 {
 
-    use UserActorTrait, SoftDeletes,DocumentsTrait;
+    use UserActorTrait, SoftDeletes, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -50,15 +50,15 @@ class ContractedDriver extends Model
     {
         return 'DriverId';
     }
-    
+
     public function company()
     {
         return $this->belongsTo(Supplier::class, 'Company', 'Id');
     }
 
-     public function tripLogs()
+    public function tripLogs()
     {
         return $this->hasMany(FleetTripLog::class, 'DriverID', 'Id');
     }
-    
+
 }

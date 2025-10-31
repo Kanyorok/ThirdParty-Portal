@@ -56,8 +56,8 @@ return new class extends Migration {
             $table->foreign('ChequeBookID')->references('ChequeBookID')->on('t_ChequeBooks');
             $table->foreign('CurrencyID')->references('Id')->on('t_Currencies');
 
-            $table->index(['Direction','Status']);
-            $table->unique(['ChequeBookID','ChequeNumber']); // prevents duplicate leaves per book
+            $table->index(['Direction', 'Status']);
+            $table->unique(['ChequeBookID', 'ChequeNumber']); // prevents duplicate leaves per book
         });
     }
 

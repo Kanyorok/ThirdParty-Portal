@@ -2,7 +2,7 @@
 @section('title', 'Edit Maintenance Work Completion')
 
 @section('content')
-<div class="container mt-4" style="max-width: 1000px;">
+    <div class="container mt-4" style="max-width: 1000px;">
     <form action="{{ route('workcompletion.update', $workCompletion->Id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
@@ -14,7 +14,7 @@
                 {{-- Maintenance Request --}}
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Maintenance Request</label>
-                    <input type="text" class="form-control bg-light" 
+                    <input type="text" class="form-control bg-light"
                            value="{{ $workCompletion->request->request->RequestNumber ?? '—' }}" readonly>
                     <input type="hidden" name="RequestNumber" value="{{ old('RequestNumber', $workCompletion->RequestNumber) }}">
                 </div>
@@ -51,21 +51,21 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Completion Date</label>
-                        <input type="date" class="form-control" name="CompletionDate" 
+                        <input type="date" class="form-control" name="CompletionDate"
                                value="{{ old('CompletionDate', $workCompletion->CompletionDate) }}" required>
                         @error('CompletionDate') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label">Parts Used</label>
-                        <input type="text" class="form-control" name="PartsUsed" 
+                        <input type="text" class="form-control" name="PartsUsed"
                                value="{{ old('PartsUsed', $workCompletion->PartsUsed) }}">
                         @error('PartsUsed') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label">Cost</label>
-                        <input type="number" class="form-control" name="Cost" 
+                        <input type="number" class="form-control" name="Cost"
                                value="{{ old('Cost', $workCompletion->Cost) }}">
                         @error('Cost') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
@@ -75,7 +75,7 @@
                         <select class="form-select" name="FinalStatus" required>
                             <option value="">-- Select Status --</option>
                             @foreach ($finalstatus as $status)
-                                <option value="{{ $status->ID }}" 
+                                <option value="{{ $status->ID }}"
                                     {{ old('FinalStatus', $workCompletion->FinalStatus) == $status->ID ? 'selected' : '' }}>
                                     {{ $status->Description }}
                                 </option>
@@ -106,7 +106,8 @@
                 {{-- Work Summary --}}
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Work Done Summary</label>
-                    <textarea class="form-control" rows="3" name="WorkDoneSummary" required>{{ old('WorkDoneSummary', $workCompletion->WorkDoneSummary) }}</textarea>
+                    <textarea class="form-control" rows="3" name="WorkDoneSummary"
+                              required>{{ old('WorkDoneSummary', $workCompletion->WorkDoneSummary) }}</textarea>
                     @error('WorkDoneSummary') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
             </div>
@@ -122,5 +123,5 @@
 @endsection
 
 @section('scripts')
- @include('snippets.actions.preview-files')
+    @include('snippets.actions.preview-files')
 @endsection

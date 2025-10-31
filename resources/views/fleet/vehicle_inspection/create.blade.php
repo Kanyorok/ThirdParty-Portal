@@ -2,42 +2,42 @@
 @section('title', 'New Vehicle Inspection')
 
 @section('content')
-<div class="card shadow p-4 rounded-4">
-    <h4 class="mb-4">➕ New Vehicle Inspection</h4>
+    <div class="card shadow p-4 rounded-4">
+        <h4 class="mb-4">➕ New Vehicle Inspection</h4>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <strong>⚠️ Please fix the following errors:</strong>
-            <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form action="{{ route('fleet.vehicle_inspection.store') }}" 
-          method="POST" 
-          enctype="multipart/form-data">
-        @csrf
-
-        {{-- Post-Trip Inspection --}}
-        @if(isset($parentInspection))
-            <input type="hidden" name="VehicleID" value="{{ $parentInspection->VehicleID }}">
-            <input type="hidden" name="FuelType" value="{{ $parentInspection->FuelType }}">
-            <input type="hidden" name="InspectionTypeID" value="{{ $parentInspection->InspectionTypeID }}">
-            <input type="hidden" name="ParentInspectionID" value="{{ $parentInspection->Id }}">
-
-            <div class="alert alert-info">
-                Creating a <strong>Post-Trip</strong> inspection for:
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <strong>⚠️ Please fix the following errors:</strong>
                 <ul class="mb-0">
-                    <li><strong>Pre-Trip ID:</strong> {{ $parentInspection->InspectionID }}</li>
-                    <li><strong>Vehicle:</strong> {{ $parentInspection->vehicle?->RegistrationNo }}</li>
-                    <li><strong>Fuel Type:</strong> {{ $parentInspection->fuel?->FuelName }}</li>
-                    <li><strong>Inspection Type:</strong> {{ $parentInspection->inspectionType?->Description }}</li>
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
                 </ul>
             </div>
         @endif
+
+        <form action="{{ route('fleet.vehicle_inspection.store') }}"
+              method="POST"
+              enctype="multipart/form-data">
+            @csrf
+
+            {{-- Post-Trip Inspection --}}
+            @if(isset($parentInspection))
+                <input type="hidden" name="VehicleID" value="{{ $parentInspection->VehicleID }}">
+                <input type="hidden" name="FuelType" value="{{ $parentInspection->FuelType }}">
+                <input type="hidden" name="InspectionTypeID" value="{{ $parentInspection->InspectionTypeID }}">
+                <input type="hidden" name="ParentInspectionID" value="{{ $parentInspection->Id }}">
+
+                <div class="alert alert-info">
+                    Creating a <strong>Post-Trip</strong> inspection for:
+                    <ul class="mb-0">
+                        <li><strong>Pre-Trip ID:</strong> {{ $parentInspection->InspectionID }}</li>
+                        <li><strong>Vehicle:</strong> {{ $parentInspection->vehicle?->RegistrationNo }}</li>
+                        <li><strong>Fuel Type:</strong> {{ $parentInspection->fuel?->FuelName }}</li>
+                        <li><strong>Inspection Type:</strong> {{ $parentInspection->inspectionType?->Description }}</li>
+                    </ul>
+                </div>
+            @endif
 
             {{-- Pre-Trip Inspection --}}
             @unless(isset($parentInspection))
@@ -136,43 +136,44 @@
                     </select>
                 </div>
 
-        {{-- Safety Equipment --}}
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <label class="form-label fw-bold">Safety Equipment</label>
-                <div class="d-flex flex-wrap gap-4 border rounded p-3">
-                    @foreach([
-                        'Reflector' => 'Reflector',
-                        'FireExtinguisher' => 'Fire Extinguisher',
-                        'FirstAidKit' => 'First Aid Kit',
-                        'SpareTyre' => 'Spare Tyre',
-                        'Spanner' => 'Spanner',
-                        'Jack' => 'Jack',
-                        '4XFloorMats' => '4X Floor Mats',
-                    ] as $field => $label)
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="{{ $field }}" value="1" {{ old($field) ? 'checked' : '' }}>
-                            <label class="form-check-label">{{ $label }}</label>
+                {{-- Safety Equipment --}}
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Safety Equipment</label>
+                        <div class="d-flex flex-wrap gap-4 border rounded p-3">
+                            @foreach([
+                                'Reflector' => 'Reflector',
+                                'FireExtinguisher' => 'Fire Extinguisher',
+                                'FirstAidKit' => 'First Aid Kit',
+                                'SpareTyre' => 'Spare Tyre',
+                                'Spanner' => 'Spanner',
+                                'Jack' => 'Jack',
+                                '4XFloorMats' => '4X Floor Mats',
+                            ] as $field => $label)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="{{ $field }}"
+                                           value="1" {{ old($field) ? 'checked' : '' }}>
+                                    <label class="form-check-label">{{ $label }}</label>
+                                </div>
+                            @endforeach
                         </div>
-                    @endforeach
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        {{-- Document Upload --}}
-        <div class="mb-3 mt-3">
-            <label class="form-label">Upload Supporting Document</label>
-            <input type="file" name="Document" class="form-control">
-            <small class="text-muted">Attach inspection sheet, photos, or related files</small>
-        </div>
+                {{-- Document Upload --}}
+                <div class="mb-3 mt-3">
+                    <label class="form-label">Upload Supporting Document</label>
+                    <input type="file" name="Document" class="form-control">
+                    <small class="text-muted">Attach inspection sheet, photos, or related files</small>
+                </div>
 
-        {{-- Submit --}}
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Save Inspection</button>
-            <a href="{{ route('fleet.vehicle_inspection.index') }}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
-</div>
+                {{-- Submit --}}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Save Inspection</button>
+                    <a href="{{ route('fleet.vehicle_inspection.index') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+        </form>
+    </div>
 @endsection
 
 @section('scripts')

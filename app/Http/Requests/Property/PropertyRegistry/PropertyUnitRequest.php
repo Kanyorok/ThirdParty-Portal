@@ -24,25 +24,25 @@ class PropertyUnitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'PropertyID'   => 'required|exists:t_PropertyRegistry,Id',
-            'BlockID'      => 'required|exists:t_PropertyBlock,Id',
-            'FloorID'      => 'required|exists:t_PropertyFloor,Id',
-            'UnitCode'     => [
+            'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
+            'BlockID' => 'required|exists:t_PropertyBlock,Id',
+            'FloorID' => 'required|exists:t_PropertyFloor,Id',
+            'UnitCode' => [
                 'required',
                 'string',
                 'max:50',
                 Rule::unique((new PropertyUnit)->getTable())
-                    ->where(fn ($query) => $query
+                    ->where(fn($query) => $query
                         ->where('PropertyID', $this->PropertyID)
                         ->where('BlockID', $this->BlockID)
                         ->where('FloorID', $this->FloorID)
                     )
                     ->ignore($this->route('id'), 'Id'),
             ],
-            'UnitSize'     => 'required|integer',
-            'IsRentable'   => 'required|boolean',
-            'CurrentStatus'=> 'required|boolean',
-            'Remarks'      => 'nullable|string|max:50',
+            'UnitSize' => 'required|integer',
+            'IsRentable' => 'required|boolean',
+            'CurrentStatus' => 'required|boolean',
+            'Remarks' => 'nullable|string|max:50',
         ];
     }
 }

@@ -71,8 +71,8 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::put('/fleetmake/{Id}', [FleetMakeController::class, 'update'])->name('fleetmake.update');
     Route::post('/fleetmake', [FleetMakeController::class, 'store'])->name('fleetmake.store');
     Route::delete('/fleetmake/{Id}', [FleetMakeController::class, 'destroy'])->name('fleetmake.destroy');
-    
-   
+
+
 
     // Route::resource('fleetmodel', FleetModelController::class);
     Route::get('/fleetmodel', [FleetModelController::class, 'index'])->name('fleetmodel.index');
@@ -223,7 +223,7 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
 
 
 
-     // ==================== Vehicle Inspections====================
+    // ==================== Vehicle Inspections====================
     Route::get('/vehicle_inspection', [FleetVehicleInspectionController::class, 'index'])->name('fleet.vehicle_inspection.index');
     Route::get('/vehicle_inspection/create', [FleetVehicleInspectionController::class, 'create'])->name('fleet.vehicle_inspection.create');
     Route::post('/vehicle_inspection', [FleetVehicleInspectionController::class, 'store'])->name('fleet.vehicle_inspection.store');

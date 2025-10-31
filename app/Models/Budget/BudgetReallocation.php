@@ -140,7 +140,7 @@ class BudgetReallocation extends Model
     // Accessors
     public function getStatusBadgeClassAttribute()
     {
-        return match(strtolower($this->Status)) {
+        return match (strtolower($this->Status)) {
             'approved' => 'bg-success',
             'pending' => 'bg-warning text-dark',
             'rejected' => 'bg-danger',

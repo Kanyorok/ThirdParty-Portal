@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::table('t_Suppliers', function (Blueprint $table) {
@@ -26,7 +25,8 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'uq_t_suppliers_round_tp_c
 BEGIN
     CREATE UNIQUE INDEX uq_t_suppliers_round_tp_cat ON dbo.t_Suppliers (RoundID, ThirdPartyID, CategoryId) WHERE CategoryId IS NOT NULL;
 END
-SQL);
+SQL
+            );
         } catch (\Throwable $e) {
             // Fallback: create a non-unique composite index if filtered unique not supported
             try {
@@ -35,8 +35,10 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_t_suppliers_round_tp_c
 BEGIN
     CREATE INDEX ix_t_suppliers_round_tp_cat ON dbo.t_Suppliers (RoundID, ThirdPartyID, CategoryId);
 END
-SQL);
-            } catch (\Throwable $ignored) {}
+SQL
+                );
+            } catch (\Throwable $ignored) {
+            }
         }
     }
 
@@ -48,8 +50,10 @@ IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'uq_t_suppliers_round_tp_cat' 
 BEGIN
     DROP INDEX uq_t_suppliers_round_tp_cat ON dbo.t_Suppliers;
 END
-SQL);
-        } catch (\Throwable $e) {}
+SQL
+            );
+        } catch (\Throwable $e) {
+        }
 
         try {
             DB::statement(<<<SQL
@@ -57,8 +61,10 @@ IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_t_suppliers_round_tp_cat' 
 BEGIN
     DROP INDEX ix_t_suppliers_round_tp_cat ON dbo.t_Suppliers;
 END
-SQL);
-        } catch (\Throwable $e) {}
+SQL
+            );
+        } catch (\Throwable $e) {
+        }
 
         Schema::table('t_Suppliers', function (Blueprint $table) {
             if (Schema::hasColumn('t_Suppliers', 'CategoryId')) {

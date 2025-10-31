@@ -10,25 +10,28 @@ use Yajra\DataTables\DataTables;
 
 trait SpecialPermissionTrait
 {
-    private function permissions(MorphMany $query, bool $canDelete, array $with = ['party']): JsonResponse
+    private function permissions(MorphMany $query, bool $canDelete, array $with = ['party'], array $instructions = []): JsonResponse
     {
         $query->lock('WITH(NOLOCK)')->with(in_array('model', $with, true) ? $with : array_merge($with, ['model']));
 
-
-        return Datatables::of($query->select('*'))->addIndexColumn()
-            ->addColumn('action', function (SpecialPermission $permission) use ($canDelete) {
-                if ($canDelete) {
-                    return '<button type="button" data-click_url="' . $this->_trashRoute($permission) . '" data-info="' . (new PartyService($permission->party))->getName() . '"
-                        class="btn btn-danger btn-sm share-permission-trash"><i class="fas fa-trash"></i></button>';
-                }
-                return '...';
-            })->editColumn('party', function (SpecialPermission $permission) {
-                return (new PartyService($permission->party))->getDTRow();
-            })->editColumn('CreatedOn', function (SpecialPermission $permission) {
-                return $permission->CreatedOn?->format('d M, Y H:i');
-            })->editColumn('Role', function (SpecialPermission $permission) {
-                return $permission->Permission->name;
-            })->rawColumns(['action', 'party'])->make();
+        try {
+            return Datatables::of($query)->addIndexColumn()
+                ->addColumn('action', function (SpecialPermission $permission) use ($canDelete) {
+                    if ($canDelete) {
+                        return '<button type="button" data-click_url="' . $this->_trashRoute($permission) . '" data-info="' . (new PartyService($permission->party))->getName() . '"
+                            class="btn btn-danger btn-sm share-permission-trash"><i class="fas fa-trash"></i></button>';
+                    }
+                    return '...';
+                })->editColumn('party', function (SpecialPermission $permission) {
+                    return (new PartyService($permission->party))->getDTRow();
+                })->editColumn('CreatedOn', function (SpecialPermission $permission) {
+                    return $permission->CreatedOn?->format('d M, Y H:i');
+                })->editColumn('Role', function (SpecialPermission $permission) use ($instructions) {
+                    return $permission->Permission->description($instructions);
+                })->rawColumns(['action', 'party'])->make();
+        } catch (\Exception) {
+            return $this->errored('fetching data failed, try again later');
+        }
     }
 
     abstract protected function _trashRoute(SpecialPermission $permission): string;

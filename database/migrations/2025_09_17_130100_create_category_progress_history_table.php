@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_CategoryProgressHistory', function (Blueprint $table) {
@@ -24,15 +23,24 @@ return new class extends Migration
         });
 
         DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory ADD CONSTRAINT FK_ProgHist_AppCat FOREIGN KEY (ApplicationCategoryId) REFERENCES dbo.t_ApplicationCategoryStatus(Id) ON DELETE CASCADE");
-    DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory ADD CONSTRAINT FK_ProgHist_ChangedBy FOREIGN KEY (ChangedBy) REFERENCES dbo.t_ThirdPartyUsers(Id)");
-    DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory ADD CONSTRAINT FK_ProgHist_CreatedBy FOREIGN KEY (CreatedBy) REFERENCES dbo.t_ThirdPartyUsers(Id)");
+        DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory ADD CONSTRAINT FK_ProgHist_ChangedBy FOREIGN KEY (ChangedBy) REFERENCES dbo.t_ThirdPartyUsers(Id)");
+        DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory ADD CONSTRAINT FK_ProgHist_CreatedBy FOREIGN KEY (CreatedBy) REFERENCES dbo.t_ThirdPartyUsers(Id)");
     }
 
     public function down(): void
     {
-        try { DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory DROP CONSTRAINT FK_ProgHist_AppCat"); } catch (\Throwable $e) {}
-        try { DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory DROP CONSTRAINT FK_ProgHist_ChangedBy"); } catch (\Throwable $e) {}
-        try { DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory DROP CONSTRAINT FK_ProgHist_CreatedBy"); } catch (\Throwable $e) {}
+        try {
+            DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory DROP CONSTRAINT FK_ProgHist_AppCat");
+        } catch (\Throwable $e) {
+        }
+        try {
+            DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory DROP CONSTRAINT FK_ProgHist_ChangedBy");
+        } catch (\Throwable $e) {
+        }
+        try {
+            DB::statement("ALTER TABLE dbo.t_CategoryProgressHistory DROP CONSTRAINT FK_ProgHist_CreatedBy");
+        } catch (\Throwable $e) {
+        }
         Schema::dropIfExists('t_CategoryProgressHistory');
     }
 };

@@ -62,12 +62,12 @@ class TenderApiController extends Controller
                 // 2) Restricted + invited (exists in t_TenderInvitations for any supplierId)
                 $query->where(function ($vis) use ($supplierIds) {
                     $vis->where(function ($open) {
-                            $open->where('TenderType', TenderTypeEnum::Open->value)
-                                ->whereIn('Status', [
-                                    TenderStatusEnum::Published->value,
-                                    TenderStatusEnum::OpeningInProgress->value,
-                                ]);
-                        });
+                        $open->where('TenderType', TenderTypeEnum::Open->value)
+                            ->whereIn('Status', [
+                                TenderStatusEnum::Published->value,
+                                TenderStatusEnum::OpeningInProgress->value,
+                            ]);
+                    });
                     if (!empty($supplierIds)) {
                         $vis->orWhere(function ($restricted) use ($supplierIds) {
                             $restricted->where('TenderType', TenderTypeEnum::Restricted->value)
@@ -75,23 +75,23 @@ class TenderApiController extends Controller
                                     TenderStatusEnum::Published->value,
                                     TenderStatusEnum::OpeningInProgress->value,
                                 ])
-                                ->where(function($source) use ($supplierIds) {
+                                ->where(function ($source) use ($supplierIds) {
                                     // Prefer invitations source of truth
                                     $source->whereExists(function ($sub) use ($supplierIds) {
-                                    $sub->select(DB::raw(1))
-                                        ->from('t_TenderInvitations as ti')
-                                        ->whereColumn('ti.TenderId', 't_Tenders.Id')
-                                        ->whereIn('ti.SupplierId', $supplierIds)
-                                        ->whereNull('ti.DeletedOn');
+                                        $sub->select(DB::raw(1))
+                                            ->from('t_TenderInvitations as ti')
+                                            ->whereColumn('ti.TenderId', 't_Tenders.Id')
+                                            ->whereIn('ti.SupplierId', $supplierIds)
+                                            ->whereNull('ti.DeletedOn');
                                     })
-                                    // Safety: if invitations are missing, fall back to selected suppliers (t_TenderSuppliers)
-                                    ->orWhereExists(function ($sub2) use ($supplierIds) {
-                                        $sub2->select(DB::raw(1))
-                                            ->from('t_TenderSuppliers as ts')
-                                            ->whereColumn('ts.TenderID', 't_Tenders.Id')
-                                            ->whereIn('ts.SupplierID', $supplierIds)
-                                            ->whereNull('ts.DeletedOn');
-                                    });
+                                        // Safety: if invitations are missing, fall back to selected suppliers (t_TenderSuppliers)
+                                        ->orWhereExists(function ($sub2) use ($supplierIds) {
+                                            $sub2->select(DB::raw(1))
+                                                ->from('t_TenderSuppliers as ts')
+                                                ->whereColumn('ts.TenderID', 't_Tenders.Id')
+                                                ->whereIn('ts.SupplierID', $supplierIds)
+                                                ->whereNull('ts.DeletedOn');
+                                        });
                                 });
                         });
                     }
@@ -115,14 +115,14 @@ class TenderApiController extends Controller
                 $query->where('TenderType', $typeParam);
             }
 
-            $search = trim((string) $request->query('search', ''));
+            $search = trim((string)$request->query('search', ''));
             if ($search !== '') {
                 $like = '%' . str_replace(['%', '_'], ['[%]', '[_]'], $search) . '%';
                 $query->where(function ($w) use ($like) {
                     $w->where('Title', 'like', $like)
-                      ->orWhere('TenderNo', 'like', $like)
-                      ->orWhere('ScopeOfWork', 'like', $like)
-                      ->orWhere('Instructions', 'like', $like);
+                        ->orWhere('TenderNo', 'like', $like)
+                        ->orWhere('ScopeOfWork', 'like', $like)
+                        ->orWhere('Instructions', 'like', $like);
                 });
             }
 

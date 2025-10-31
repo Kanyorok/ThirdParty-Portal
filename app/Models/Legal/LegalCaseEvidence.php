@@ -44,12 +44,4 @@ class LegalCaseEvidence extends Model
     {
         return $this->belongsTo(LegalCase::class, 'LegalCaseID','Id');
     }
-
-    /**
-     * Relation to uploaded documents.
-     */
-    public function documents()
-    {
-        return $this->morphMany(Document::class, 'documentable')->latest();
-    }
 }

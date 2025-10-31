@@ -122,14 +122,14 @@
                                 <td>
                                     {{-- Always allow view --}}
                                     <a href="{{ route('legal.documents.show', $doc->Id) }}"
-                                       class="btn btn-sm btn-outline-info">
+                                       class="btn btn-sm btn-outline-info" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
 
                                     @if($doc->ExecutionStatus === 'Pending')
                                         {{-- Only show edit/delete if NOT pending --}}
                                         <a href="{{ route('legal.documents.edit', $doc->Id) }}"
-                                           class="btn btn-sm btn-outline-warning">
+                                           class="btn btn-sm btn-outline-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button type="button"
@@ -137,7 +137,8 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#customDeleteConfirmModal"
                                                 data-name="{{ $doc->DocumentTitle }}"
-                                                data-route="{{ route('legal.documents.destroy', $doc->Id) }}">
+                                                data-route="{{ route('legal.documents.destroy', $doc->Id) }}"
+                                                title="Delete">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     @else

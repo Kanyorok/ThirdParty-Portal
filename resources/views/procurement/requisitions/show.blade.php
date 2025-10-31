@@ -135,19 +135,15 @@
                                 <input type="text" class="form-control" id="EstUnitCostDisplay" value="" readonly>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="EstCostDisplay">Estimated Cost</label>
-                                <input type="text" class="form-control" id="EstCostDisplay" value="" readonly>
-                            </div>
-                            <div class="mb-3">
                                 <label class="form-label" for="UOM">UOM </label>
 
                                 <select class="form-control" name="UOM" id="UOM" required>
-                                    
+
                                 </select>
 
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-                         
+
                             <input type="hidden" name="EstimatedPrice" id="EstimatedPrice">
 
 {{--                            <div class="mb-3">--}}
@@ -295,7 +291,6 @@
                             $('#UOM').empty().append('<option value="">Select UOM</option>');
                             $('#EstimatedPrice').val('');
                             $('#EstUnitCostDisplay').val('');
-                            $('#EstCostDisplay').val('');
                             $('#QtyAvailable').html('');
                             $('#LineItemID').val('');
                         }
@@ -305,7 +300,6 @@
                         $('#UOM').empty().append('<option value="">Select UOM</option>');
                         $('#EstimatedPrice').val('');
                         $('#EstUnitCostDisplay').val('');
-                        $('#EstCostDisplay').val('');
                         $('#QtyAvailable').html('');
                         $('#LineItemID').val('');
                     }
@@ -314,21 +308,12 @@
                 $('#UOM').empty().append('<option value="">Select UOM</option>');
                 $('#EstimatedPrice').val(0);
                 $('#EstUnitCostDisplay').val('');
-                $('#EstCostDisplay').val('');
                 $('#LineItemID').val('');
                 $('#QtyAvailable').html('');
             }
         });
 
-        // Compute Estimated Cost when quantity changes
-        $('#Quantity').on('input', function(){
-            const qty = parseFloat($(this).val() || 0) || 0;
-            const unit = parseFloat($('#EstimatedPrice').val() || 0) || 0;
-            const total = qty * unit;
-            if (!isNaN(total)) {
-                $('#EstCostDisplay').val(total.toFixed(2));
-            }
-        });
+        // No Estimated Cost field; only show Est. Unit Cost
 
         $("#MarketingList").select2({
             dropdownParent: $Modal,

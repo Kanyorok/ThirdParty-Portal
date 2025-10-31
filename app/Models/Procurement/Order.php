@@ -18,7 +18,7 @@ class Order extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    
+
     protected $connection = 'sqlsrv';
     protected $table = 't_Orders';
     protected $primaryKey = 'Id';
@@ -30,7 +30,7 @@ class Order extends Model
 
     protected $fillable = [
         'OrderNo',
-        'OrderDate', 
+        'OrderDate',
         'Terms',
         'Priority',
         'ExtOrdNum', // RFQ Reference
@@ -40,7 +40,7 @@ class Order extends Model
         'OriginationType', // 'rfq', 'contract', 'award', 'direct_procurement'
         'OriginationRef', // Reference to the originating record (Contract ID, Award ID, Plan ID)
         'ContractRef', // For contract-based LPOs
-        'AwardRef', // For award-based LPOs  
+        'AwardRef', // For award-based LPOs
         'PlanRef', // For direct procurement LPOs
         'TotalAmount',
         'Notes',
@@ -147,9 +147,9 @@ class Order extends Model
      */
     public function getOriginationTypeDisplayName(): string
     {
-        return match($this->OriginationType) {
+        return match ($this->OriginationType) {
             'contract' => 'Contract-Based',
-            'award' => 'Award-Based', 
+            'award' => 'Award-Based',
             'direct_procurement' => 'Direct Procurement',
             'rfq' => 'RFQ-Based',
             default => 'Unknown'
@@ -161,7 +161,7 @@ class Order extends Model
      */
     public function getOriginationReferenceDisplay(): string
     {
-        return match($this->OriginationType) {
+        return match ($this->OriginationType) {
             'contract' => $this->contract?->ContractRef ?? 'N/A',
             'award' => $this->award?->tender?->TenderNo ?? 'N/A',
             'direct_procurement' => $this->procurementPlan?->Title ?? 'N/A',

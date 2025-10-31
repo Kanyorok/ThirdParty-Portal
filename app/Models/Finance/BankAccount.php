@@ -18,26 +18,30 @@ class BankAccount extends Model
     const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
-        'BankID','BranchID','AccountName','AccountNumber','IBAN',
-        'CurrencyID','GLAccountID','OpeningBalance','CurrentBalance',
-        'IsDefault','IsActive',
+        'BankID', 'BranchID', 'AccountName', 'AccountNumber', 'IBAN',
+        'CurrencyID', 'GLAccountID', 'OpeningBalance', 'CurrentBalance',
+        'IsDefault', 'IsActive',
         // audit fields are set explicitly, not mass-assigned
     ];
 
     protected $casts = [
         'IsDefault' => 'boolean',
-        'IsActive'  => 'boolean',
+        'IsActive' => 'boolean',
         'OpeningBalance' => 'decimal:2',
         'CurrentBalance' => 'decimal:2',
         'CreatedOn' => 'datetime',
-        'ModifiedOn'=> 'datetime',
+        'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
 
     protected static function booted()
     {
-        static::creating(function ($m) { $m->CreatedBy  = Auth::id(); });
-        static::updating(function ($m) { $m->ModifiedBy = Auth::id(); });
+        static::creating(function ($m) {
+            $m->CreatedBy = Auth::id();
+        });
+        static::updating(function ($m) {
+            $m->ModifiedBy = Auth::id();
+        });
     }
 
     public function bank()

@@ -139,7 +139,7 @@ class PlanManualInputController extends Controller
     public function update(PlanManualInputRequest $request, $lineItemId)
     {
         $validated = $request->validated();
-    $user = Auth::user();
+        $user = Auth::user();
         $lineItem = PlanLineItem::findOrFail($lineItemId);
 
         $this->authorize('update', $lineItem);
@@ -180,7 +180,7 @@ class PlanManualInputController extends Controller
         }
 
         $lineItem->ModifiedOn = now();
-    $lineItem->ModifiedBy = Auth::id();
+        $lineItem->ModifiedBy = Auth::id();
 
         $lineItem->save();
 

@@ -3,11 +3,11 @@
     <!-- Home Link with HTMX -->
     <li class="pc-item {{ request()->is('/') ? 'active' : '' }}">
         @php $homePath = parse_url(route('home'), PHP_URL_PATH) ?? '/'; @endphp
-        <a href="{{ route('home') }}" 
-           class="pc-link sidebar-link" 
-           hx-get="{{ route('home') }}" 
-           hx-target="#page-content" 
-           hx-push-url="true" 
+        <a href="{{ route('home') }}"
+           class="pc-link sidebar-link"
+           hx-get="{{ route('home') }}"
+           hx-target="#page-content"
+           hx-push-url="true"
            hx-swap="innerHTML"
            data-route="{{ $homePath }}">
             <span class="pc-micon">
@@ -16,7 +16,7 @@
             <span class="pc-mtext fw-bold" data-i18n="Data">Home</span>
         </a>
     </li>
-    
+
     <!-- Module Links with HTMX -->
     @foreach (ModuleService::generateNavbar() as $module)
         <li class="pc-item
@@ -29,13 +29,13 @@
                 active
             @endif
             ">
-            
+
             <!-- Main Module Link -->
-            <a href="{{ $module['route'] }}" 
+            <a href="{{ $module['route'] }}"
                class="pc-link sidebar-link"
-               hx-get="{{ $module['route'] }}" 
-               hx-target="#page-content" 
-               hx-push-url="true" 
+               hx-get="{{ $module['route'] }}"
+               hx-target="#page-content"
+               hx-push-url="true"
                hx-swap="innerHTML"
                data-route="{{ parse_url($module['route'], PHP_URL_PATH) ?? '/' }}">
                 <span class="pc-micon">

@@ -27,7 +27,8 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Upload Document </label>
-                        <input type="file" name="DMSDocumentID" class="form-control"  accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,application/pdf,image/jpeg,image/jpg,image/png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                        <input type="file" name="DMSDocumentID" class="form-control"
+                               accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,application/pdf,image/jpeg,image/jpg,image/png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
                         <small class="form-text text-muted">Accepted formats: PDF, JPG, JPEG, PNG, DOCX, XLSX</small>
                     </div>
 

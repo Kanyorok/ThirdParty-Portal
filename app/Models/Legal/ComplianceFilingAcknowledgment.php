@@ -11,12 +11,12 @@ class ComplianceFilingAcknowledgment extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'FilingID','AckFileName','MimeType','FilePath',
-        'UploadedBy','UploadedOn'
+        'FilingID', 'AckFileName', 'MimeType', 'FilePath',
+        'UploadedBy', 'UploadedOn'
     ];
 
     public function filing()
     {
-        return $this->belongsTo(ComplianceFiling::class,'FilingID');
+        return $this->belongsTo(ComplianceFiling::class, 'FilingID');
     }
 }

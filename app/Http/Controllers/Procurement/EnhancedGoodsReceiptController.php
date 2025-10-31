@@ -30,6 +30,8 @@ class EnhancedGoodsReceiptController extends Controller
      */
     public function index(Request $request)
     {
+        // Quick config check for Service GL transaction code
+        $serviceGlConfigured = DB::table('t_FinanceTransactionTypes')->where('Code', 'GRN-SERVICE')->exists();
         $query = EnhancedGoodsReceipt::with([
             'receiver', 'supplier', 'item', 'order', 'qualityChecker', 'poster'
         ]);
@@ -56,19 +58,19 @@ class EnhancedGoodsReceiptController extends Controller
         }
 
         // Group by GRNID for summary view
-        $goodsReceipts = $query->selectRaw('MIN(id) as id, GRNID, POID, COUNT(*) as line_count, 
+        $goodsReceipts = $query->selectRaw('MIN(id) as id, GRNID, POID, COUNT(*) as line_count,
                                           SUM(TotalValue) as total_value, MAX(ReceivedDate) as received_date')
-                             ->groupBy('GRNID', 'POID')
-                             ->orderByDesc('received_date')
-                             ->paginate(20);
+            ->groupBy('GRNID', 'POID')
+            ->orderByDesc('received_date')
+            ->paginate(20);
 
         // Load full data for each GRN
         $goodsReceipts->getCollection()->transform(function ($receipt) {
             return EnhancedGoodsReceipt::with(['receiver', 'supplier', 'order'])
-                                       ->find($receipt->id);
+                ->find($receipt->id);
         });
 
-        return view('procurement.goods-receipt.index', compact('goodsReceipts'));
+        return view('procurement.goods-receipt.index', compact('goodsReceipts', 'serviceGlConfigured'));
     }
 
     /**
@@ -78,7 +80,7 @@ class EnhancedGoodsReceiptController extends Controller
     {
         // Get approved POs that don't have complete GRNs
         $availablePOs = $this->getAvailablePurchaseOrders();
-        
+
         return view('procurement.goods-receipt.create', compact('availablePOs'));
     }
 
@@ -95,10 +97,10 @@ class EnhancedGoodsReceiptController extends Controller
             ->leftJoin('t_ThirdParties as tp', 's.ThirdPartyID', '=', 'tp.Id')
             ->where('o.Status', 'approved')
             ->whereRaw('ol.fQuantity > COALESCE((
-                SELECT SUM(ReceivedQTY) 
-                FROM t_GoodsReceipts 
-                WHERE POID = o.Id 
-                AND ItemNo = ol.iStockCodeID 
+                SELECT SUM(ReceivedQTY)
+                FROM t_GoodsReceipts
+                WHERE POID = o.Id
+                AND ItemNo = ol.iStockCodeID
                 AND DeletedOn IS NULL
             ), 0)')
             ->whereNull('o.DeletedOn')
@@ -116,15 +118,15 @@ class EnhancedGoodsReceiptController extends Controller
                     ->where('ol.iOrderID', $order->Id)
                     ->whereNull('ol.DeletedOn')
                     ->whereRaw('ol.fQuantity > COALESCE((
-                        SELECT SUM(ReceivedQTY) 
-                        FROM t_GoodsReceipts 
-                        WHERE POID = ? 
-                        AND ItemNo = ol.iStockCodeID 
+                        SELECT SUM(ReceivedQTY)
+                        FROM t_GoodsReceipts
+                        WHERE POID = ?
+                        AND ItemNo = ol.iStockCodeID
                         AND DeletedOn IS NULL
                     ), 0)', [$order->Id])
                     ->select(['ol.*', 'i.ItemName', 'i.ItemDescription'])
                     ->get();
-                
+
                 $order->remaining_lines = $orderLines;
                 $order->supplier = (object)[
                     'thirdParty' => (object)[
@@ -132,19 +134,19 @@ class EnhancedGoodsReceiptController extends Controller
                         'ThirdPartyName' => $order->SupplierFullName
                     ]
                 ];
-                
+
                 return $order;
             })
             ->filter(function ($order) {
                 return $order->remaining_lines->isNotEmpty();
             })
-            ->get()
+            ->values()
             ->map(function ($order) {
                 $order->remaining_lines = $order->orderLines->filter(function ($line) {
                     $receivedQty = EnhancedGoodsReceipt::where('POID', $order->Id)
-                                                       ->where('ItemNo', $line->iStockCodeID)
-                                                       ->whereNull('DeletedOn')
-                                                       ->sum('ReceivedQTY');
+                        ->where('ItemNo', $line->iStockCodeID)
+                        ->whereNull('DeletedOn')
+                        ->sum('ReceivedQTY');
                     return $line->fQuantity > $receivedQty;
                 });
                 return $order;
@@ -161,7 +163,7 @@ class EnhancedGoodsReceiptController extends Controller
     {
         try {
             $order = Order::with(['orderLines.item.itemType', 'supplier.thirdParty'])
-                          ->findOrFail($poId);
+                ->findOrFail($poId);
 
             $poDetails = [
                 'order_no' => $order->OrderNo,
@@ -174,9 +176,9 @@ class EnhancedGoodsReceiptController extends Controller
 
             foreach ($order->orderLines as $line) {
                 $receivedQty = EnhancedGoodsReceipt::where('POID', $poId)
-                                                   ->where('ItemNo', $line->iStockCodeID)
-                                                   ->whereNull('DeletedOn')
-                                                   ->sum('ReceivedQTY');
+                    ->where('ItemNo', $line->iStockCodeID)
+                    ->whereNull('DeletedOn')
+                    ->sum('ReceivedQTY');
 
                 $remainingQty = $line->fQuantity - $receivedQty;
 
@@ -250,9 +252,9 @@ class EnhancedGoodsReceiptController extends Controller
                 $totalValue = $itemData['received_qty'] * $itemData['unit_price'];
 
                 // Determine quality status
-                $qualityStatus = $itemData['requires_quality_check'] ?? false 
-                               ? EnhancedGoodsReceipt::QUALITY_PENDING
-                               : EnhancedGoodsReceipt::QUALITY_NOT_REQUIRED;
+                $qualityStatus = $itemData['requires_quality_check'] ?? false
+                    ? EnhancedGoodsReceipt::QUALITY_PENDING
+                    : EnhancedGoodsReceipt::QUALITY_NOT_REQUIRED;
 
                 EnhancedGoodsReceipt::create([
                     'GRNID' => $request->grn_id,
@@ -294,7 +296,7 @@ class EnhancedGoodsReceiptController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to create GRN', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -313,9 +315,9 @@ class EnhancedGoodsReceiptController extends Controller
     public function show($grnId, $poId)
     {
         $grnLines = EnhancedGoodsReceipt::with([
-                'item.itemType', 'item.uom', 'receiver', 'qualityChecker', 
-                'poster', 'supplier.thirdParty', 'order', 'orderLine'
-            ])
+            'item.itemType', 'item.uom', 'receiver', 'qualityChecker',
+            'poster', 'supplier.thirdParty', 'order', 'orderLine'
+        ])
             ->byGRN($grnId)
             ->byPO($poId)
             ->get();
@@ -348,9 +350,9 @@ class EnhancedGoodsReceiptController extends Controller
     {
         try {
             $grnLines = EnhancedGoodsReceipt::byGRN($grnId)
-                                            ->byPO($poId)
-                                            ->readyForPosting()
-                                            ->get();
+                ->byPO($poId)
+                ->readyForPosting()
+                ->get();
 
             if ($grnLines->isEmpty()) {
                 return response()->json([
@@ -461,16 +463,16 @@ class EnhancedGoodsReceiptController extends Controller
 
         // Get recent GRNs
         $recentGRNs = EnhancedGoodsReceipt::with(['item', 'supplier'])
-                                          ->orderByDesc('CreatedOn')
-                                          ->limit(10)
-                                          ->get();
+            ->orderByDesc('CreatedOn')
+            ->limit(10)
+            ->get();
 
         // Get processing errors
         $processingErrors = EnhancedGoodsReceipt::where('ProcessingStatus', EnhancedGoodsReceipt::STATUS_ERROR)
-                                               ->with(['item'])
-                                               ->orderByDesc('ModifiedOn')
-                                               ->limit(5)
-                                               ->get();
+            ->with(['item'])
+            ->orderByDesc('ModifiedOn')
+            ->limit(5)
+            ->get();
 
         return view('procurement.goods-receipt.dashboard', compact('stats', 'recentGRNs', 'processingErrors'));
     }
@@ -484,7 +486,7 @@ class EnhancedGoodsReceiptController extends Controller
         }
 
         $itemTypeName = $item->itemType->TypeName ?? 'Stock';
-        
+
         $typeMapping = [
             'Stock' => EnhancedGoodsReceipt::ITEM_TYPE_STOCK,
             'Inventory' => EnhancedGoodsReceipt::ITEM_TYPE_STOCK,
@@ -513,15 +515,15 @@ class EnhancedGoodsReceiptController extends Controller
         if ($grnLines->every->isProcessed()) {
             return 'All Processed';
         }
-        
+
         if ($grnLines->some->isProcessed()) {
             return 'Partially Processed';
         }
-        
+
         if ($grnLines->some->hasError()) {
             return 'Has Errors';
         }
-        
+
         return 'Pending';
     }
 }

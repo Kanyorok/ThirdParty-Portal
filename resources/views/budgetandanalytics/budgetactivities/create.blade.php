@@ -36,7 +36,8 @@
                             <select name="BudgetID" class="form-select" required>
                                 <option disabled value="">-- Select Budget --</option>
                                 @foreach ($budgets as $item)
-                                    <option value="{{ $item->Id }}" {{ old('BudgetID') == $item->Id ? 'selected' : '' }}>
+                                    <option
+                                        value="{{ $item->Id }}" {{ old('BudgetID') == $item->Id ? 'selected' : '' }}>
                                         {{ $item->Name }}
                                     </option>
                                 @endforeach
@@ -47,9 +48,11 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Budget Line</label>
                             <select name="BudgetLineID" class="form-select" id="budgetLineSelect" required>
-                                <option disabled {{ old('BudgetLineID') ? '' : 'selected' }}>-- Select Budget Line --</option>
+                                <option disabled {{ old('BudgetLineID') ? '' : 'selected' }}>-- Select Budget Line --
+                                </option>
                                 @foreach ($budgetLines as $item)
-                                    <option value="{{ $item->Id }}" {{ old('BudgetLineID') == $item->Id ? 'selected' : '' }}>
+                                    <option
+                                        value="{{ $item->Id }}" {{ old('BudgetLineID') == $item->Id ? 'selected' : '' }}>
                                         {{ $item->LineName }}
                                     </option>
                                 @endforeach
@@ -59,8 +62,10 @@
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Activity</label>
-                            <select name="ActivityID" id="activitySelect" class="form-select" required {{ old('BudgetLineID') ? '' : 'disabled' }}>
-                                <option disabled {{ old('ActivityID') ? '' : 'selected' }}>-- Select Activity --</option>
+                            <select name="ActivityID" id="activitySelect" class="form-select"
+                                    required {{ old('BudgetLineID') ? '' : 'disabled' }}>
+                                <option disabled {{ old('ActivityID') ? '' : 'selected' }}>-- Select Activity --
+                                </option>
                                 {{-- If you want activities to reload via JS, you’ll keep them empty --}}
                             </select>
                             <div id="activity-loading" class="form-text text-muted d-none">Loading activities...</div>
@@ -71,8 +76,10 @@
                             <label class="form-label">Allocation Type</label>
                             <select name="AllocationType" class="form-select" id="allocationType" required>
                                 <option value="" selected>-- Select allocation type --</option>
-{{--                                <option value="full" {{ old('AllocationType') == 'full' ? 'selected' : '' }}>Annual or Full Allocation</option>--}}
-                                <option value="monthly" {{ old('AllocationType') == 'monthly' ? 'selected' : '' }}>Monthly Allocation</option>
+                                {{--                                <option value="full" {{ old('AllocationType') == 'full' ? 'selected' : '' }}>Annual or Full Allocation</option>--}}
+                                <option value="monthly" {{ old('AllocationType') == 'monthly' ? 'selected' : '' }}>
+                                    Monthly Allocation
+                                </option>
                             </select>
                             @error('AllocationType') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
@@ -114,14 +121,16 @@
                         </div>
                         @error('monthly_allocations') <small class="text-danger">{{ $message }}</small> @enderror
                         <div class="mt-3">
-                            <strong>Total Allocation:</strong> <span id="totalAllocation" class="text-danger">0.00</span>
+                            <strong>Total Allocation:</strong> <span id="totalAllocation"
+                                                                     class="text-danger">0.00</span>
                         </div>
                     </div>
 
                     <!-- Submit Button (initially hidden) -->
                     <div class="text-end mt-4" id="submitButtonContainer" style="display:none;">
                         <button class="btn btn-secondary">
-                            <a href="{{ route('budgetactivities.index') }}" class="float-end text-white">← Back to Activities</a>
+                            <a href="{{ route('budgetactivities.index') }}" class="float-end text-white">← Back to
+                                Activities</a>
                         </button>
 
                         <button type="submit" class="btn btn-success"

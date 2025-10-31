@@ -11,7 +11,7 @@
       <!-- Property Drill-down -->
       <div class="row g-3 mb-3">
        <div class="col-md-4">
-            <label class="form-label">Select Property<span class="text-danger">*</span></label>
+           <label class="form-label">Select Property<span class="text-danger">*</span></label>
             <select name="Property" id="property-select" class="form-select" required>
               <option value="">-- Select Property --</option>
               @foreach ($properties as $property)
@@ -22,21 +22,21 @@
 
           <div class="col-md-4">
             <label class="form-label">Select Block</label>
-            <select name="Block" id="block-select" class="form-select" >
+              <select name="Block" id="block-select" class="form-select">
               <option value="">-- Select Block --</option>
             </select>
           </div>
 
           <div class="col-md-4">
             <label class="form-label">Select Floor</label>
-            <select name="Floor" id="floor-select" class="form-select" >
+              <select name="Floor" id="floor-select" class="form-select">
               <option value="">-- Select Floor --</option>
             </select>
           </div>
 
           <div class="col-md-6 mt-3">
             <label class="form-label">Select Unit</label>
-            <select name="Unit" id="unit-select" class="form-select" >
+              <select name="Unit" id="unit-select" class="form-select">
               <option value="">-- Select Unit --</option>
             </select>
           </div>
@@ -45,11 +45,11 @@
       <!-- Request Details -->
       <div class="row g-3 mb-3">
         <div class="col-md-4">
-          <label class="form-label">Reported By<span class="text-danger">*</span></label>
+            <label class="form-label">Reported By<span class="text-danger">*</span></label>
             <input type="text" class="form-control" placeholder="e.g. Moses K. / Caretaker" name="ReportedBy" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Issue Type<span class="text-danger">*</span></label>
+            <label class="form-label">Issue Type<span class="text-danger">*</span></label>
             <select class="form-select" name="IssueType" required>
             <option value="">-- Select Issue Type --</option>
               @foreach ($issuetypes as $issuetype)
@@ -58,7 +58,7 @@
           </select>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Priority<span class="text-danger">*</span></label>
+            <label class="form-label">Priority<span class="text-danger">*</span></label>
             <select class="form-select" name="Priority" required>
             <option value="">-- Select Priority Level --</option>
               @foreach ($priorities as $priority)
@@ -69,9 +69,9 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Issue Description<span class="text-danger">*</span></label>
+          <label class="form-label">Issue Description<span class="text-danger">*</span></label>
           <textarea class="form-control" rows="3" placeholder="Describe the issue..."
-          name="IssueDescription" required></textarea>
+                    name="IssueDescription" required></textarea>
       </div>
 
         <!-- Document Upload -->
@@ -79,7 +79,9 @@
             <label class="form-label">Upload Relevant Documents</label>
             <input type="file" name="Document[]" class="form-control" multiple>
         </div>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Request</button>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Request
+        </button>
     </form>
     </div>
   </div>
@@ -87,9 +89,9 @@
 <script>
   // Define routes with placeholders
   const routes = {
-    getBlocks: "{{ route('getblockbyproperty.maintenance', ['PropertyId' => '__ID__']) }}",
-    getFloors: "{{ route('getfloorbyblock.maintenance', ['BlockId' => '__ID__']) }}",
-    getUnits: "{{ route('getunitbyfloor.maintenance', ['FloorId' => '__ID__']) }}"
+      getBlocks: "{{ route('getblockbyproperty.maintenance', ['PropertyId' => '__ID__']) }}",
+      getFloors: "{{ route('getfloorbyblock.maintenance', ['BlockId' => '__ID__']) }}",
+      getUnits: "{{ route('getunitbyfloor.maintenance', ['FloorId' => '__ID__']) }}"
   };
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -100,14 +102,14 @@
 
     // Property → Block
     propertySelect.addEventListener('change', function () {
-      const PropertyId = this.value;
+        const PropertyId = this.value;
 
       blockSelect.innerHTML = '<option value="">-- Select Block --</option>';
       floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
       unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
 
-      if (PropertyId) {
-        fetch(routes.getBlocks.replace('__ID__', PropertyId))
+        if (PropertyId) {
+            fetch(routes.getBlocks.replace('__ID__', PropertyId))
           .then(res => res.json())
           .then(data => {
             data.forEach(block => {
@@ -126,13 +128,13 @@
 
     // Block → Floor
     blockSelect.addEventListener('change', function () {
-      const BlockId = this.value;
+        const BlockId = this.value;
 
       floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
       unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
 
-      if (BlockId) {
-        fetch(routes.getFloors.replace('__ID__', BlockId))
+        if (BlockId) {
+            fetch(routes.getFloors.replace('__ID__', BlockId))
           .then(res => res.json())
           .then(data => {
             data.forEach(floor => {
@@ -151,12 +153,12 @@
 
     // Floor → Unit
     floorSelect.addEventListener('change', function () {
-      const FloorId = this.value;
+        const FloorId = this.value;
 
       unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
 
-      if (FloorId) {
-        fetch(routes.getUnits.replace('__ID__', FloorId))
+        if (FloorId) {
+            fetch(routes.getUnits.replace('__ID__', FloorId))
           .then(res => res.json())
           .then(data => {
             data.forEach(unit => {

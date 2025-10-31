@@ -65,7 +65,7 @@ class TransactionService
             'ThirdPartyID'      =>$payload['ThirdPartyID'] ?? null,
             'ReferenceNumber'   => $payload['ReferenceNumber'] ?? uniqid('REF-'),
             'TransactionType'   => (string)($payload['TransactionType'] ?? 'External'),
-            'ModuleID'          => (int)$payload['ModuleID'],
+            'ModuleID'          => $payload['ModuleID'],
             'SourceTable'       => $payload['SourceTable'] ?? null,
             'BranchID'          => (int)($payload['BranchID'] ?? 1),
             'DepartmentID'      => $payload['DepartmentID'] ?? null,
@@ -212,7 +212,7 @@ class TransactionService
     protected function validatePayloadForMapping(array $payload): void
     {
         $rules = [
-            'ModuleID'          => 'required|integer|exists:t_Modules,ModuleID', // adjust column if needed
+            'ModuleID'          => 'required',//|integer|exists:t_Modules,ModuleID', // adjust column if needed
             'ThirdPartyID'=> 'nullable|integer',
             'TransactionTypeID' => 'nullable|integer|exists:t_FinanceTransactionTypes,Id', // adjust
             'ReferenceNumber'   => 'required|string|max:100',
@@ -251,7 +251,7 @@ class TransactionService
             '*.ReferenceNumber'   => 'required|string|max:100',
             '*.TransactionType'   => 'required|string|max:100',
             '*.TransactionTypeID'   => 'nullable|string|max:100',
-            '*.ModuleID'          => 'nullable|integer', // FK not enforced here; already validated in payload
+            '*.ModuleID'          => 'nullable',//|integer', // FK not enforced here; already validated in payload
             '*.SourceTable'       => 'nullable|string|max:100',
             '*.GLAccountID'       => 'required|integer|exists:t_FinanceGLAccounts,Id',
             '*.BranchID'          => 'nullable|integer|exists:t_Branches,Id',
@@ -464,8 +464,8 @@ class TransactionService
                 'BranchID'     => $l['BranchID'] ?? null,
                 'DepartmentID' => $l['DepartmentID'] ?? null,
                 'IsDebit'      => $isDebit,
-                'Amount'       => $isDebit?$amount*-1:$amount,
-                'Debit'        => $debit*-1,
+                'Amount' => $isDebit ? $amount * -1 : $amount,
+                'Debit' => $debit * -1,
                 'Credit'       => $credit,
                 'Narration'    => $l['Narration'] ?? null,
             ];
@@ -484,12 +484,13 @@ class TransactionService
             $journal = FinanceJournalEntry::create([
                 'Date'           => $header['Date'],
                 'Type'=> $header['IsScheduled']?'recurring':'normal',
+                'SourceModule'   => $payload['ModuleID'] ?? '1100000', // Default to Finance module if not specified
                 'Description'    => $header['Description'] ?? null,
                 'SystemDescription'=>$header['Description'] ?? null,
                 'Reference'      => $header['ReferenceNumber'] ?? null, // if your table has a Reference column
                 'BatchNumber'    => $header['BatchNumber'] ?? null,     // add column if you want linkage
                 'IdempotencyKey' => $jKey ?? null,                      // add column if you decide to store it
-                'TotalDebit'     => $totalDebit*-1 ?? null,                // optional summary cols if present
+                'TotalDebit' => $totalDebit * -1 ?? null,                // optional summary cols if present
                 'TotalCredit'    => $totalCredit ?? null,
                 'CurrencyID'     => $header['CurrencyID'] ?? null,
                 'ApprovalStatus'=>'posted',
@@ -524,8 +525,8 @@ class TransactionService
                     'BranchID'       => $ln['BranchID'],
                     'DepartmentID'   => $ln['DepartmentID'],
                     'IsDebit'        => $ln['IsDebit'],
-                    'Amount'         => $ln['IsDebit']?$ln['Amount']*-1:$ln['Amount'],
-                    'Debit'          => $ln['Debit']*-1,
+                    'Amount' => $ln['IsDebit'] ? $ln['Amount'] * -1 : $ln['Amount'],
+                    'Debit' => $ln['Debit'] * -1,
                     'Credit'         => $ln['Credit'],
                     'Narration'      => $ln['Narration'],
                     'SystemDescription'      => $ln['Narration'],
@@ -555,7 +556,7 @@ class TransactionService
     {
         $glAccountId = (int)$trx['GLAccountID'];
         $branchId    = $trx['BranchID'] ?? null;
-        $amount      = abs((float)$trx['Amount']);
+        $amount = abs((float)$trx['Amount']);
         $drcr        = strtoupper($trx['DRCR'] ?? 'DR');     // DR or CR
         $rate        = (float)($trx['ExchangeRate'] ?? 1);
         $currencyId  = $trx['CurrencyID'] ?? null;

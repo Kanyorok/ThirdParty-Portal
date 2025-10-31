@@ -34,9 +34,14 @@
                             <label for="status" class="form-label small mb-1">Status</label>
                             <select class="form-select form-select-sm" id="status" name="status">
                                 <option value="">All</option>
-                                <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="Approved" {{ request('status') == 'Approved' ? 'selected' : '' }}>Approved</option>
-                                <option value="Rejected" {{ request('status') == 'Rejected' ? 'selected' : '' }}>Rejected</option>
+                                <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending
+                                </option>
+                                <option value="Approved" {{ request('status') == 'Approved' ? 'selected' : '' }}>
+                                    Approved
+                                </option>
+                                <option value="Rejected" {{ request('status') == 'Rejected' ? 'selected' : '' }}>
+                                    Rejected
+                                </option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -54,7 +59,8 @@
                                 <button type="submit" class="btn btn-primary btn-sm">
                                     <i class="fas fa-search"></i> Filter
                                 </button>
-                                <a href="{{ route('creditmanagement.index') }}" class="btn btn-outline-secondary btn-sm">
+                                <a href="{{ route('creditmanagement.index') }}"
+                                   class="btn btn-outline-secondary btn-sm">
                                     <i class="fas fa-times"></i>
                                 </a>
                             </div>
@@ -74,7 +80,8 @@
                     <form method="GET" action="{{ route('creditmanagement.index') }}" class="row g-3 border-top pt-3">
                         <div class="col-md-3">
                             <label for="credit_from" class="form-label small mb-1">Credit Limit From</label>
-                            <input type="number" class="form-control form-control-sm" id="credit_from" name="credit_from"
+                            <input type="number" class="form-control form-control-sm" id="credit_from"
+                                   name="credit_from"
                                    placeholder="0.00" step="0.01" value="{{ request('credit_from') }}">
                         </div>
                         <div class="col-md-3">
@@ -92,9 +99,14 @@
                             <label for="status_adv" class="form-label small mb-1">Status</label>
                             <select class="form-select form-select-sm" id="status_adv" name="status">
                                 <option value="">All</option>
-                                <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="Approved" {{ request('status') == 'Approved' ? 'selected' : '' }}>Approved</option>
-                                <option value="Rejected" {{ request('status') == 'Rejected' ? 'selected' : '' }}>Rejected</option>
+                                <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending
+                                </option>
+                                <option value="Approved" {{ request('status') == 'Approved' ? 'selected' : '' }}>
+                                    Approved
+                                </option>
+                                <option value="Rejected" {{ request('status') == 'Rejected' ? 'selected' : '' }}>
+                                    Rejected
+                                </option>
                             </select>
                         </div>
                         <div class="col-12 d-flex gap-2">
@@ -134,7 +146,8 @@
                                     <td>{{ $credit->customer->RegistrationNumber  ?? '-'}}</td>
                                     <td>{{ number_format($credit->CreditLimit,2) ?? '-' }}</td>
                                     <td>
-                                        <span class="badge {{ $credit->risk_badge_class }} px-2 py-1">{{ $credit->RiskLevel ?? 'Medium' }}</span>
+                                        <span
+                                            class="badge {{ $credit->risk_badge_class }} px-2 py-1">{{ $credit->RiskLevel ?? 'Medium' }}</span>
                                         <div class="small text-muted mt-1">Score: {{ $credit->RiskScore ?? 50 }}</div>
                                     </td>
                                     <td>
@@ -152,27 +165,36 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="small text-muted">Issued {{ \Carbon\Carbon::parse($credit->EffectiveFrom)->format('Y-m-d') ?? '-' }}</div>
+                                        <div class="small text-muted">
+                                            Issued {{ \Carbon\Carbon::parse($credit->EffectiveFrom)->format('Y-m-d') ?? '-' }}</div>
                                         <div class="progress mt-1" style="height:6px;">
-                                            <div class="progress-bar {{ ($credit->utilization ?? 0) < 50 ? 'bg-success' : ((($credit->utilization ?? 0) < 80) ? 'bg-warning' : 'bg-danger') }}" style="width: {{ $credit->utilization ?? 0 }}%"></div>
+                                            <div
+                                                class="progress-bar {{ ($credit->utilization ?? 0) < 50 ? 'bg-success' : ((($credit->utilization ?? 0) < 80) ? 'bg-warning' : 'bg-danger') }}"
+                                                style="width: {{ $credit->utilization ?? 0 }}%"></div>
                                         </div>
-                                        <div class="small fw-light">{{ number_format($credit->utilization ?? 0,2) }}% used</div>
+                                        <div class="small fw-light">{{ number_format($credit->utilization ?? 0,2) }}%
+                                            used
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <a href="{{ route('creditmanagement.show', $credit->Id) }}" class="btn btn-sm btn-outline-info" title="View">
+                                            <a href="{{ route('creditmanagement.show', $credit->Id) }}"
+                                               class="btn btn-sm btn-outline-info" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ route('creditadjustment.index', ['customer_id' => $credit->CustomerID]) }}" class="btn btn-sm btn-outline-warning" title="Adjustments">
+                                            <a href="{{ route('creditadjustment.index', ['customer_id' => $credit->CustomerID]) }}"
+                                               class="btn btn-sm btn-outline-warning" title="Adjustments">
                                                 <i class="fas fa-list"></i>
                                             </a>
                                             @php $isApproved = strtolower($credit->Status ?? '') === 'approved'; @endphp
                                             @if($isApproved)
-                                                <a href="{{ route('creditadjustment.createWithId', $credit->Id) }}" class="btn btn-sm btn-outline-success" title="Add Adjustment">
+                                                <a href="{{ route('creditadjustment.createWithId', $credit->Id) }}"
+                                                   class="btn btn-sm btn-outline-success" title="Add Adjustment">
                                                     <i class="fas fa-plus"></i>
                                                 </a>
                                             @else
-                                                <a href="{{ route('creditmanagement.edit', $credit->Id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <a href="{{ route('creditmanagement.edit', $credit->Id) }}"
+                                                   class="btn btn-sm btn-outline-primary" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <button type="button"
@@ -212,10 +234,11 @@
                 @if($credits->hasPages())
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <div class="text-muted small">
-                            Showing {{ $credits->firstItem() }} to {{ $credits->lastItem() }} of {{ $credits->total() }} results
+                            Showing {{ $credits->firstItem() }} to {{ $credits->lastItem() }} of {{ $credits->total() }}
+                            results
                         </div>
                         <nav>
-                            {{ $credits->links('pagination::bootstrap-4') }}
+                            {{ $credits->links('pagination::bootstrap-5') }}
                         </nav>
                     </div>
                 @endif
@@ -232,12 +255,23 @@
             --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
         }
         body, .card, .table { font-family: var(--font-sans); }
+
         .table-hover tbody tr:hover {
             background-color: #fafafa;
             transition: background-color .2s ease-in-out;
         }
-        .card { border-radius: .75rem; }
-        .btn-sm { padding: .25rem .55rem; }
-        .form-label.small { font-size: 0.75rem; color: #6c757d; }
+
+        .card {
+            border-radius: .75rem;
+        }
+
+        .btn-sm {
+            padding: .25rem .55rem;
+        }
+
+        .form-label.small {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
     </style>
 @endsection

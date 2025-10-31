@@ -10,12 +10,13 @@ use App\Models\procurement\RFQResponseItem;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class RFQResponseController extends Controller
 {
     public function index()
     {
-        $rfqResponses = RFQResponse::with(['rfq', 'items', 'items.uom'])->get();
+        $rfqResponses = RFQResponse::with(['rfq', 'items', 'items.uom'])->latest()->paginate(10);
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
     public function create()
@@ -25,7 +26,7 @@ class RFQResponseController extends Controller
         $currencies = \App\Models\Core\Currency::query()
             ->orderByRaw("CASE WHEN Symbol = 'Ksh' THEN 0 ELSE 1 END")
             ->orderBy('Name')
-            ->get(['Id','Name','Code','Symbol']);
+            ->get(['Id', 'Name', 'Code', 'Symbol']);
 
         // Get all unique SupplierIds from the pivot table t_RFQ_Supplier
         $supplierIds = DB::table('t_RFQ_Supplier')->pluck('SupplierId')->unique();
@@ -203,59 +204,56 @@ class RFQResponseController extends Controller
 
         // Categories used in this RFQ (from its lines)
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
+
+        // Expand to include ancestors and all descendants
         $allCategoryIds = collect();
         foreach ($itemCategoryIds as $catId) {
-            $cat = \App\Models\Inventory\ItemCategories::find($catId);
-            if ($cat) {
-                $allCategoryIds->push($cat->Id);
-                // include ancestors so if classification includes a parent, subcategory items still qualify
-                $parent = $cat->parent;
-                while ($parent) {
-                    $allCategoryIds->push($parent->Id);
-                    $parent = $parent->parent;
+            $catId = (int)$catId;
+            if (!$catId) {
+                continue;
+            }
+            // climb ancestors
+            $current = $catId;
+            while ($current) {
+                $allCategoryIds->push($current);
+                $parent = DB::table('t_ItemCategories')->where('Id', $current)->value('ParentId');
+                if ($parent === null || (int)$parent === 0) {
+                    break;
                 }
+                $current = (int)$parent;
             }
         }
-        // include descendants (BFS) so if a parent item category is mapped, its subcategories are covered
-        $queue = collect($itemCategoryIds);
+        // BFS descendants
+        $queue = collect($allCategoryIds->unique()->values());
         while ($queue->isNotEmpty()) {
-            $currentBatch = $queue->splice(0, 100)->all();
-            $children = DB::table('t_ItemCategories')
-                ->whereIn('ParentId', $currentBatch)
-                ->pluck('Id');
-            $newChildren = $children->diff($allCategoryIds);
-            if ($newChildren->isNotEmpty()) {
-                $allCategoryIds = $allCategoryIds->merge($newChildren);
-                $queue = $queue->merge($newChildren);
+            $batch = $queue->splice(0, 200)->all();
+            $children = DB::table('t_ItemCategories')->whereIn('ParentId', $batch)->pluck('Id');
+            $new = $children->diff($allCategoryIds);
+            if ($new->isNotEmpty()) {
+                $allCategoryIds = $allCategoryIds->merge($new);
+                $queue = $queue->merge($new);
             }
         }
         $allCategoryIds = $allCategoryIds->unique()->values();
 
-        // Exclude suppliers (by ThirdParty) that already responded to this RFQ
+        // Exclude suppliers (by ThirdParty) that already submitted FINAL responses to this RFQ
         $respondedThirdPartyIds = DB::table('t_RFQResponse as rr')
             ->join('t_Suppliers as rs', 'rs.Id', '=', 'rr.SupplierId')
             ->where('rr.RFQId', $rfqId)
             ->whereNull('rr.DeletedOn')
             ->whereNull('rs.DeletedOn')
+            ->where('rr.Status', 'FINAL')
             ->pluck('rs.ThirdPartyID');
 
-        // Map through classification table to suppliers, join t_ThirdParties for display name
-        $suppliers = DB::table('t_Suppliers as s')
+        // Prefer invited suppliers from pivot table t_RFQ_Supplier, then exclude those already with FINAL responses
+        $suppliers = DB::table('t_RFQ_Supplier as p')
+            ->join('t_Suppliers as s', 's.Id', '=', 'p.SupplierId')
             ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->where('p.RFQId', $rfqId)
             ->whereNull('s.DeletedOn')
             ->whereNull('tp.DeletedOn')
             ->where('s.Active_Status', 1)
             ->whereNotIn('tp.Id', $respondedThirdPartyIds)
-            ->whereExists(function ($q) use ($allCategoryIds) {
-                $q->select(DB::raw(1))
-                    ->from('t_SupplierCategory_ItemCategory as scic')
-                    ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
-                    ->whereNull('sc.DeletedOn')
-                    ->whereNull('scic.DeletedOn')
-                    ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                    ->whereColumn('sc.SupplierCategoryID', 's.CategoryId');
-            })
-            // De-duplicate by ThirdParty (one option per supplier); pick a stable SupplierId
             ->groupBy('tp.Id', 'tp.TradingName')
             ->select(
                 DB::raw('MIN(s.Id) as Id'),
@@ -268,8 +266,8 @@ class RFQResponseController extends Controller
 
     public function findExisting(Request $request)
     {
-        $rfqId = (int) $request->query('rfqId');
-        $supplierId = (int) $request->query('supplierId');
+        $rfqId = (int)$request->query('rfqId');
+        $supplierId = (int)$request->query('supplierId');
 
         if (!$rfqId || !$supplierId) {
             return response()->json(['exists' => false]);
@@ -298,7 +296,7 @@ class RFQResponseController extends Controller
             'exists' => true,
             'header' => [
                 'currency' => $existing->Currency,
-                'durationDays' => (int) ($existing->DurationDays ?? 0),
+                'durationDays' => (int)($existing->DurationDays ?? 0),
                 'status' => $existing->Status ?? null,
                 'submittedOn' => $existing->SubmittedOn ? \Illuminate\Support\Carbon::parse($existing->SubmittedOn)->toISOString() : null,
             ],
@@ -306,9 +304,9 @@ class RFQResponseController extends Controller
                 return [
                     'name' => $it->ItemName,
                     'uom' => $it->UOM,
-                    'quantity' => (float) $it->Quantity,
-                    'quotedPrice' => (float) $it->QuotedPrice,
-                    'totalPayable' => (float) $it->TotalPayable,
+                    'quantity' => (float)$it->Quantity,
+                    'quotedPrice' => (float)$it->QuotedPrice,
+                    'totalPayable' => (float)$it->TotalPayable,
                 ];
             }),
         ]);

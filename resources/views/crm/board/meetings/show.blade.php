@@ -25,8 +25,8 @@
                                 class="fas fa-trash-alt"></i></button>
                     </h5>
                     <p><b>Venue </b> : {{ (new MeetingService($meeting))->getVenue(true) }}
-                        &nbsp;|&nbsp;<b>Start </b>: {{ $meeting->StartOn->format('M d, Y h:i A') }}
-                        &nbsp;|&nbsp;<b>End </b>: {{ $meeting->EndOn->format('M d, Y h:i A') }}</p>
+                        &nbsp;|&nbsp;<b>Start </b>: {{ $meeting->StartOn->format('M d, Y h:i A') }} <small class="text-muted">({{ config('app.timezone') }})</small>
+                        &nbsp;|&nbsp;<b>End </b>: {{ $meeting->EndOn->format('M d, Y h:i A') }} <small class="text-muted">({{ config('app.timezone') }})</small></p>
                     <p><b>Agenda </b> : {{ $meeting->Notes }}</p>
                 </div>
                 <div class="card-footer" id="meetingAttachmentContents">
@@ -76,7 +76,7 @@
                                    role="alert"></p>
                             </div>
                             <div class="col-md-6 col-12 mb-3">
-                                <label class="form-label" for="BoardMeetingStart">Start <span
+                                <label class="form-label" for="BoardMeetingStart">Start <small class="text-muted">({{ config('app.timezone') }})</small> <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control flatpickr-datetime" id="BoardMeetingStart"
                                        name="BoardMeetingStart" placeholder="Select start.."
@@ -85,7 +85,7 @@
                                    role="alert"></p>
                             </div>
                             <div class="col-md-6 col-12 mb-3">
-                                <label class="form-label" for="BoardMeetingEnd">End <span
+                                <label class="form-label" for="BoardMeetingEnd">End <small class="text-muted">({{ config('app.timezone') }})</small> <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control flatpickr-datetime " id="BoardMeetingEnd"
                                        name="BoardMeetingEnd" placeholder="Select end.."

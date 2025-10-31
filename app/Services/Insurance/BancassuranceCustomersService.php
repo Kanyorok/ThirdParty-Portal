@@ -20,7 +20,7 @@ class BancassuranceCustomersService
     }
 
     public static function create(
-        ThirdParties         $ThirdPartyId,
+        ThirdParties $ThirdPartyId,
         ?BancAssuranceReferral $ReferralID = null,
         DateTime              $DateOfBirth,
         CodeDetail            $Gender,

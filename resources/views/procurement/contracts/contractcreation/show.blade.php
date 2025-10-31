@@ -2,7 +2,7 @@
 @section('title', 'Contract Details')
 
 @php
-use Illuminate\Support\Facades\Storage;
+    use Illuminate\Support\Facades\Storage;
 @endphp
 
 @section('content')
@@ -20,13 +20,13 @@ use Illuminate\Support\Facades\Storage;
                         <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary me-2">
                             <i class="fas fa-arrow-left"></i> Back to Contracts
                         </a>
-                        
+
                         @if($contract->ContractStatus === 'Under Review')
                             <a href="{{ route('contracts.approvalQueue') }}" class="btn btn-info me-2">
                                 <i class="fas fa-clock"></i> Go to Approval Queue
                             </a>
                         @endif
-                        
+
                         @if($contract->ContractStatus === 'Draft Created')
                             <a href="{{ route('contracts.edit', $contract->Id) }}" class="btn btn-primary">
                                 <i class="fas fa-edit"></i> Edit Contract
@@ -66,11 +66,12 @@ use Illuminate\Support\Facades\Storage;
                                 <h5>Contract Duration</h5>
                                 @if($contract->ContractStartDate && $contract->ContractEndDate)
                                     <div class="text-muted">
-                                        {{ $contract->ContractStartDate->format('d/m/Y') }} - 
+                                        {{ $contract->ContractStartDate->format('d/m/Y') }} -
                                         {{ $contract->ContractEndDate->format('d/m/Y') }}
                                     </div>
                                     <small class="text-success">
-                                        ({{ $contract->ContractStartDate->diffInDays($contract->ContractEndDate) }} days)
+                                        ({{ $contract->ContractStartDate->diffInDays($contract->ContractEndDate) }}
+                                        days)
                                     </small>
                                 @else
                                     <span class="text-muted">Duration not set</span>
@@ -87,7 +88,8 @@ use Illuminate\Support\Facades\Storage;
                                     <strong class="text-success fs-5">
                                         {{ number_format($contract->ContractValue, 2) }}
                                     </strong>
-                                    <div class="text-muted">{{ is_object($contract->tender->Currency) ? $contract->tender->Currency->Code : ($contract->tender->Currency ?? 'KES') }}</div>
+                                    <div
+                                        class="text-muted">{{ is_object($contract->tender->Currency) ? $contract->tender->Currency->Code : ($contract->tender->Currency ?? 'KES') }}</div>
                                 @else
                                     <span class="text-muted">Value not set</span>
                                 @endif
@@ -162,17 +164,21 @@ use Illuminate\Support\Facades\Storage;
                                 @csrf
                                 <div class="row">
                                     <div class="col-md-8">
-                                        <input type="file" id="contractDocument" name="contract_document" class="form-control" accept=".pdf,.doc,.docx" required>
+                                        <input type="file" id="contractDocument" name="contract_document"
+                                               class="form-control" accept=".pdf,.doc,.docx" required>
                                         <small class="text-muted">Accepted formats: PDF, DOC, DOCX (Max: 10MB)</small>
-                                        
+
                                         <!-- Progress Bar -->
-                                        <div id="uploadProgress" class="progress mt-2" style="display: none; height: 20px;">
-                                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
-                                                 style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                        <div id="uploadProgress" class="progress mt-2"
+                                             style="display: none; height: 20px;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                                 role="progressbar"
+                                                 style="width: 0%" aria-valuenow="0" aria-valuemin="0"
+                                                 aria-valuemax="100">
                                                 <span id="progressText">0%</span>
                                             </div>
                                         </div>
-                                        
+
                                         <!-- Upload Status -->
                                         <div id="uploadStatus" class="mt-2"></div>
                                     </div>
@@ -184,43 +190,43 @@ use Illuminate\Support\Facades\Storage;
                                 </div>
                             </form>
                         @endif
-                        
+
                         <!-- Display uploaded documents -->
                         <div class="table-responsive">
                             <table class="table table-sm" id="documentsTable">
                                 <thead class="table-light">
-                                    <tr>
-                                        <th>Document Type</th>
-                                        <th>File Name</th>
-                                        <th>Upload Date</th>
-                                        <th>Actions</th>
-                                    </tr>
+                                <tr>
+                                    <th>Document Type</th>
+                                    <th>File Name</th>
+                                    <th>Upload Date</th>
+                                    <th>Actions</th>
+                                </tr>
                                 </thead>
                                 <tbody id="documentsTableBody">
-                                    @php
-                                        $documents = json_decode($contract->SpecialConditions ?? '[]', true);
-                                        $documents = is_array($documents) ? $documents : [];
-                                    @endphp
-                                    
-                                    @forelse($documents as $doc)
-                                        @if(isset($doc['original_name']))
-                                            <tr>
-                                                <td>{{ $doc['type'] ?? 'Contract Document' }}</td>
-                                                <td>{{ $doc['original_name'] }}</td>
-                                                <td>{{ isset($doc['upload_date']) ? \Carbon\Carbon::parse($doc['upload_date'])->format('d/m/Y H:i') : 'N/A' }}</td>
-                                                <td>
-                                                    <a href="{{ Storage::url($doc['file_path']) }}" target="_blank" 
-                                                       class="btn btn-sm btn-outline-primary">
-                                                        <i class="fas fa-download"></i> Download
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @endif
-                                    @empty
-                                        <tr id="noDocsRow">
-                                            <td colspan="4" class="text-center text-muted">No documents uploaded yet</td>
+                                @php
+                                    $documents = json_decode($contract->SpecialConditions ?? '[]', true);
+                                    $documents = is_array($documents) ? $documents : [];
+                                @endphp
+
+                                @forelse($documents as $doc)
+                                    @if(isset($doc['original_name']))
+                                        <tr>
+                                            <td>{{ $doc['type'] ?? 'Contract Document' }}</td>
+                                            <td>{{ $doc['original_name'] }}</td>
+                                            <td>{{ isset($doc['upload_date']) ? \Carbon\Carbon::parse($doc['upload_date'])->format('d/m/Y H:i') : 'N/A' }}</td>
+                                            <td>
+                                                <a href="{{ Storage::url($doc['file_path']) }}" target="_blank"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-download"></i> Download
+                                                </a>
+                                            </td>
                                         </tr>
-                                    @endforelse
+                                    @endif
+                                @empty
+                                    <tr id="noDocsRow">
+                                        <td colspan="4" class="text-center text-muted">No documents uploaded yet</td>
+                                    </tr>
+                                @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -247,7 +253,7 @@ use Illuminate\Support\Facades\Storage;
                                 </div>
                             </div>
                         </div>
-                        
+
                         @if($contract->SpecialConditions)
                             <div class="mt-3">
                                 <h6 class="text-primary">⚖️ Special Conditions</h6>
@@ -275,7 +281,7 @@ use Illuminate\Support\Facades\Storage;
                                         </button>
                                     </div>
                                 @endif
-                                
+
                                 @if($contract->ContractStatus === 'Approved')
                                     <div class="col-md-3">
                                         <button class="btn btn-primary w-100" onclick="executeContract()">
@@ -284,16 +290,18 @@ use Illuminate\Support\Facades\Storage;
                                         </button>
                                     </div>
                                 @endif
-                                
+
                                 @if($contract->ContractStatus === 'Executed')
                                     <div class="col-md-3">
-                                        <a href="{{ route('contracts.lifecycle.execution', $contract->Id) }}" class="btn btn-info w-100">
+                                        <a href="{{ route('contracts.lifecycle.execution', $contract->Id) }}"
+                                           class="btn btn-info w-100">
                                             <i class="fas fa-chart-line"></i>
                                             Monitor Performance
                                         </a>
                                     </div>
                                     <div class="col-md-3">
-                                        <a href="{{ route('contracts.lifecycle.amend', $contract->Id) }}" class="btn btn-warning w-100">
+                                        <a href="{{ route('contracts.lifecycle.amend', $contract->Id) }}"
+                                           class="btn btn-warning w-100">
                                             <i class="fas fa-edit"></i>
                                             Amend Contract
                                         </a>
@@ -302,7 +310,8 @@ use Illuminate\Support\Facades\Storage;
 
                                 @if(in_array($contract->ContractStatus, ['Draft Created', 'Under Review', 'Approved', 'Executed']))
                                     <div class="col-md-3">
-                                        <a href="{{ route('contracts.lifecycle.terminate', $contract->Id) }}" class="btn btn-danger w-100">
+                                        <a href="{{ route('contracts.lifecycle.terminate', $contract->Id) }}"
+                                           class="btn btn-danger w-100">
                                             <i class="fas fa-times-circle"></i>
                                             Terminate Contract
                                         </a>
@@ -325,12 +334,14 @@ use Illuminate\Support\Facades\Storage;
                                 <div class="timeline-content">
                                     <h6 class="timeline-title">Award Approved</h6>
                                     <p class="timeline-description">
-                                        Tender awarded to {{ $contract->winningSupplier->thirdParty->TradingName ?? ($contract->winningSupplier->thirdParty->Name ?? 'N/A') }}
+                                        Tender awarded
+                                        to {{ $contract->winningSupplier->thirdParty->TradingName ?? ($contract->winningSupplier->thirdParty->Name ?? 'N/A') }}
                                     </p>
-                                    <small class="text-muted">{{ $contract->ApprovedOn ? $contract->ApprovedOn->format('M d, Y H:i') : 'N/A' }}</small>
+                                    <small
+                                        class="text-muted">{{ $contract->ApprovedOn ? $contract->ApprovedOn->format('M d, Y H:i') : 'N/A' }}</small>
                                 </div>
                             </div>
-                            
+
                             @if($contract->hasContract())
                                 <div class="timeline-item">
                                     <div class="timeline-marker bg-info"></div>
@@ -339,11 +350,12 @@ use Illuminate\Support\Facades\Storage;
                                         <p class="timeline-description">
                                             Contract {{ $contract->ContractRef }} created
                                         </p>
-                                        <small class="text-muted">{{ $contract->ModifiedOn ? $contract->ModifiedOn->format('M d, Y H:i') : 'N/A' }}</small>
+                                        <small
+                                            class="text-muted">{{ $contract->ModifiedOn ? $contract->ModifiedOn->format('M d, Y H:i') : 'N/A' }}</small>
                                     </div>
                                 </div>
                             @endif
-                            
+
                             @if($contract->ContractApprovedOn)
                                 <div class="timeline-item">
                                     <div class="timeline-marker bg-primary"></div>
@@ -352,7 +364,8 @@ use Illuminate\Support\Facades\Storage;
                                         <p class="timeline-description">
                                             Contract approved and ready for execution
                                         </p>
-                                        <small class="text-muted">{{ $contract->ContractApprovedOn->format('M d, Y H:i') }}</small>
+                                        <small
+                                            class="text-muted">{{ $contract->ContractApprovedOn->format('M d, Y H:i') }}</small>
                                     </div>
                                 </div>
                             @endif
@@ -368,7 +381,7 @@ use Illuminate\Support\Facades\Storage;
             position: relative;
             padding: 20px 0;
         }
-        
+
         .timeline::before {
             content: '';
             position: absolute;
@@ -378,13 +391,13 @@ use Illuminate\Support\Facades\Storage;
             width: 2px;
             background: #dee2e6;
         }
-        
+
         .timeline-item {
             position: relative;
             margin-bottom: 20px;
             padding-left: 50px;
         }
-        
+
         .timeline-marker {
             position: absolute;
             left: 14px;
@@ -394,19 +407,19 @@ use Illuminate\Support\Facades\Storage;
             border: 2px solid #fff;
             box-shadow: 0 0 0 3px #dee2e6;
         }
-        
+
         .timeline-content {
             background: #f8f9fa;
             padding: 15px;
             border-radius: 5px;
             position: relative;
         }
-        
+
         .timeline-title {
             margin-bottom: 5px;
             font-weight: bold;
         }
-        
+
         .timeline-description {
             margin-bottom: 5px;
         }
@@ -414,66 +427,66 @@ use Illuminate\Support\Facades\Storage;
 
     <script>
         // Document Upload with Progress Bar
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        document.getElementById('uploadForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            
+
             const fileInput = document.getElementById('contractDocument');
             const uploadBtn = document.getElementById('uploadBtn');
             const progressContainer = document.getElementById('uploadProgress');
             const progressBar = progressContainer.querySelector('.progress-bar');
             const progressText = document.getElementById('progressText');
             const uploadStatus = document.getElementById('uploadStatus');
-            
+
             if (!fileInput.files[0]) {
                 uploadStatus.innerHTML = '<div class="alert alert-danger">Please select a file to upload.</div>';
                 return;
             }
-            
+
             // Reset status
             uploadStatus.innerHTML = '';
             progressContainer.style.display = 'block';
             uploadBtn.disabled = true;
             uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-            
+
             // Create FormData
             const formData = new FormData();
             formData.append('contract_document', fileInput.files[0]);
             formData.append('_token', '{{ csrf_token() }}');
-            
+
             // Create XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
-            
+
             // Upload progress
-            xhr.upload.addEventListener('progress', function(e) {
+            xhr.upload.addEventListener('progress', function (e) {
                 if (e.lengthComputable) {
                     const percentComplete = (e.loaded / e.total) * 100;
                     progressBar.style.width = percentComplete + '%';
                     progressText.textContent = Math.round(percentComplete) + '%';
                 }
             });
-            
+
             // Upload complete
-            xhr.addEventListener('load', function() {
+            xhr.addEventListener('load', function () {
                 console.log('Upload response status:', xhr.status); // Debug log
                 console.log('Upload response:', xhr.responseText); // Debug log
-                
+
                 try {
                     const response = JSON.parse(xhr.responseText);
                     console.log('Parsed response:', response); // Debug log
-                    
+
                     if (response.success) {
                         // Success
                         progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
                         progressBar.classList.add('bg-success');
                         uploadStatus.innerHTML = '<div class="alert alert-success">' + response.message + '</div>';
-                        
+
                         // Add document to table
                         console.log('Adding document to table:', response.document); // Debug log
                         addDocumentToTable(response.document);
-                        
+
                         // Reset form
                         fileInput.value = '';
-                        
+
                         // Hide progress after delay
                         setTimeout(() => {
                             progressContainer.style.display = 'none';
@@ -488,54 +501,54 @@ use Illuminate\Support\Facades\Storage;
                 } catch (e) {
                     console.error('JSON parse error:', e);
                     console.error('Raw response:', xhr.responseText);
-                    
+
                     // If we can't parse JSON, show the raw response or a generic error
                     let errorMessage = 'Invalid response from server.';
                     if (xhr.responseText && xhr.responseText.length < 200) {
                         errorMessage = xhr.responseText;
                     }
-                    
+
                     progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
                     progressBar.classList.add('bg-danger');
                     uploadStatus.innerHTML = '<div class="alert alert-danger">' + errorMessage + '</div>';
                 }
-                
+
                 // Reset button
                 uploadBtn.disabled = false;
                 uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Document';
             });
-            
+
             // Upload error
-            xhr.addEventListener('error', function() {
+            xhr.addEventListener('error', function () {
                 uploadStatus.innerHTML = '<div class="alert alert-danger">Upload failed. Please check your connection.</div>';
                 uploadBtn.disabled = false;
                 uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Document';
             });
-            
+
             // Send request
             xhr.open('POST', '{{ route("contracts.uploadDocument", $contract->Id) }}');
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.send(formData);
         });
-        
+
         // Add document to table
         function addDocumentToTable(doc) {
             console.log('addDocumentToTable called with:', doc); // Debug log
-            
+
             const tableBody = document.getElementById('documentsTableBody');
             const noDocsRow = document.getElementById('noDocsRow');
-            
+
             if (!tableBody) {
                 console.error('Table body not found!');
                 return;
             }
-            
+
             // Remove "no documents" row if it exists
             if (noDocsRow) {
                 console.log('Removing no docs row');
                 noDocsRow.remove();
             }
-            
+
             // Create new row
             const newRow = document.createElement('tr');
             const uploadDate = new Date(doc.upload_date).toLocaleDateString('en-GB', {
@@ -545,9 +558,9 @@ use Illuminate\Support\Facades\Storage;
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            
+
             console.log('Creating row with date:', uploadDate); // Debug log
-            
+
             newRow.innerHTML = `
                 <td>${doc.type || 'Contract Document'}</td>
                 <td>${doc.original_name}</td>
@@ -558,7 +571,7 @@ use Illuminate\Support\Facades\Storage;
                     </a>
                 </td>
             `;
-            
+
             tableBody.appendChild(newRow);
             console.log('Row added to table'); // Debug log
         }
@@ -569,14 +582,14 @@ use Illuminate\Support\Facades\Storage;
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '{{ route("contracts.submitForReview", $contract->Id) }}';
-                
+
                 // Add CSRF token
                 const csrfToken = document.createElement('input');
                 csrfToken.type = 'hidden';
                 csrfToken.name = '_token';
                 csrfToken.value = '{{ csrf_token() }}';
                 form.appendChild(csrfToken);
-                
+
                 // Add optional review notes (you could add a prompt for this)
                 const reviewNotes = prompt('Add any review notes (optional):');
                 if (reviewNotes !== null) {
@@ -586,19 +599,19 @@ use Illuminate\Support\Facades\Storage;
                     notesInput.value = reviewNotes;
                     form.appendChild(notesInput);
                 }
-                
+
                 document.body.appendChild(form);
                 form.submit();
             }
         }
-        
+
         function executeContract() {
             if (confirm('Execute this contract? This will mark the contract as active and binding.')) {
                 // TODO: Implement contract execution
                 alert('Feature coming soon: Contract execution workflow');
             }
         }
-        
+
         function addAddendum() {
             // Create modal for addendum
             const modalHtml = `
@@ -611,19 +624,19 @@ use Illuminate\Support\Facades\Storage;
                             </div>
                             <form action="{{ route('contracts.addAddendum', $contract->Id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">Addendum Title <span class="text-danger">*</span></label>
-                                        <input type="text" name="addendum_title" class="form-control" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Description <span class="text-danger">*</span></label>
-                                        <textarea name="addendum_description" class="form-control" rows="4" required 
-                                                  placeholder="Describe the changes or additions to the contract..."></textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Effective Date</label>
-                                        <input type="date" name="effective_date" class="form-control" value="{{ date('Y-m-d') }}">
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Addendum Title <span class="text-danger">*</span></label>
+                    <input type="text" name="addendum_title" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                    <textarea name="addendum_description" class="form-control" rows="4" required
+                              placeholder="Describe the changes or additions to the contract..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Effective Date</label>
+                    <input type="date" name="effective_date" class="form-control" value="{{ date('Y-m-d') }}">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Upload Addendum Document (Optional)</label>
@@ -641,13 +654,13 @@ use Illuminate\Support\Facades\Storage;
                     </div>
                 </div>
             `;
-            
+
             // Remove existing modal if any
             const existingModal = document.getElementById('addendumModal');
             if (existingModal) {
                 existingModal.remove();
             }
-            
+
             // Add modal to DOM and show
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             const modal = new bootstrap.Modal(document.getElementById('addendumModal'));

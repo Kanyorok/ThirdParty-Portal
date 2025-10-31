@@ -33,6 +33,7 @@ class RequisitionsController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Requisitions::class);
 //        return view('procurement.requisitions.approval');
         try {
             $details = $this->service->fetchRequisition();
@@ -58,6 +59,7 @@ class RequisitionsController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', Requisitions::class);
         try {
             $user = Auth::user();
 
@@ -70,7 +72,7 @@ class RequisitionsController extends Controller
                 ->where('CodeID', 'RequisitionStatus')
                 ->where('Value', 'Ap')
                 ->value('ID');
-          
+
             $branchId = session('LoginBranchId');
             $departmentId = $employee?->DepartmentId ?? null;
 
@@ -108,7 +110,7 @@ class RequisitionsController extends Controller
      */
     public function store(RequisitionRequest $request): JsonResponse
     {
-//       dd($request->user());
+        $this->authorize('create', Requisitions::class);
         try {
             $validatedData = $request->validated();
 
@@ -166,12 +168,20 @@ class RequisitionsController extends Controller
             $requisitionInfo = $this->service->getRelatedRequisition($id);
             $requisitionlineInfo = $this->requisitionItemService->getRequisitionRelatedItems($id);
             $approvalStatus = $this->getApprovalStatus('purchase_requisition', $id);
+            // Determine approval type configured for this document
+            $approvalType = \Illuminate\Support\Facades\DB::table('t_ApprovalGroups')
+                ->where('DocType', 'purchase_requisition')
+                ->value('ApprovalType');
 
-            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus'));
+            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus', 'approvalType'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $uid = null;
-            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            try {
+                $uid = \Illuminate\Support\Facades\Auth::id();
+            } catch (\Throwable $t) {
+                $uid = null;
+            }
             Log::warning("Unauthorized access attempt to view Requisition ID: {$id} by user ID: " . ($uid ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -185,6 +195,20 @@ class RequisitionsController extends Controller
 
     public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
     {
+        $requisition = Requisitions::findOrFail($id);
+        $this->authorize('approve', $requisition);
+        // Block APPROVE action if approval type is not configured for purchase requisitions
+        if (strtolower($requisitionRequest->input('action')) === 'approve') {
+            $approvalType = DB::table('t_ApprovalGroups')
+                ->where('DocType', 'purchase_requisition')
+                ->value('ApprovalType');
+
+            $validTypes = ['ALL', 'ANY', 'MAJ', 'AMT'];
+            if (!$approvalType || !in_array(strtoupper($approvalType), $validTypes, true)) {
+                return back()->with('error', 'Approval type is not set for Purchase Requisitions. Please contact the administrator.');
+            }
+        }
+
         // Allow rejection even if no lines; enforce line check only for approval action
         if ($requisitionRequest->input('action') === 'approve') {
             $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();
@@ -255,7 +279,7 @@ class RequisitionsController extends Controller
             'departments' => $departments,
         ]);
     }
-    
+
     public function getRequisitions(): JsonResponse{
         try{
             $details = $this->service->fetchRequisition();

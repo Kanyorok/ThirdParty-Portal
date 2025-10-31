@@ -87,7 +87,7 @@ class ThirdPartyWebController extends Controller
                 })
                 ->addColumn('BusinessType', fn(ThirdParties $thirdParty) => $thirdParty->BusinessType?->label() ?? 'N/A')
                 ->addColumn('ApprovalStatus', fn(ThirdParties $thirdParty) => $thirdParty->ApprovalStatus?->label() ?? $thirdParty->ApprovalStatus?->value ?? 'N/A')
-                ->addColumn('IsPrequalified', fn(ThirdParties $thirdParty) => (bool) $thirdParty->IsPrequalified)
+                ->addColumn('IsPrequalified', fn(ThirdParties $thirdParty) => (bool)$thirdParty->IsPrequalified)
                 ->addColumn('PrimaryUser', fn(ThirdParties $thirdParty) => trim((string)($thirdParty->UserFirstName ?? '') . ' ' . (string)($thirdParty->UserLastName ?? '')) ?: 'N/A')
                 ->addColumn('PrimaryEmail', fn(ThirdParties $thirdParty) => $thirdParty->UserEmail ?? 'N/A')
                 ->addColumn('actions', fn(ThirdParties $thirdParty) => '<a href="' . route('thirdparty.parties.show', ['party' => $thirdParty->Id]) . '" class="btn btn-sm btn-info">View</a>')
@@ -160,7 +160,7 @@ class ThirdPartyWebController extends Controller
                 'status' => $request->input('Status'),
                 'totalParties' => ThirdParties::count()
             ]);
-            
+
             $data = $request->validated();
             $data['ModifiedBy'] = Auth::id();
 
@@ -218,7 +218,7 @@ class ThirdPartyWebController extends Controller
                 ->with('success', 'Third party information updated successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to update third party: ' . $e->getMessage(), [
-                'partyId' => $party->Id, 
+                'partyId' => $party->Id,
                 'request_data' => $request->all(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -258,74 +258,74 @@ class ThirdPartyWebController extends Controller
         ]);
 
         try {
-              $action = $request->input('action');
-              $selectedItems = $request->input('selectedItems');
-              $userId = Auth::id();
-              $now = now();
-            
+            $action = $request->input('action');
+            $selectedItems = $request->input('selectedItems');
+            $userId = Auth::id();
+            $now = now();
+
             $successCount = 0;
             $errorCount = 0;
             $errors = [];
 
-              DB::transaction(function () use ($action, $selectedItems, $userId, $now, &$successCount, &$errorCount, &$errors) {
+            DB::transaction(function () use ($action, $selectedItems, $userId, $now, &$successCount, &$errorCount, &$errors) {
                 foreach ($selectedItems as $partyId) {
                     try {
                         $party = ThirdParties::findOrFail($partyId);
-                        
+
                         switch ($action) {
                             case 'approve':
-                                  if ($party->ApprovalStatus !== ThirdPartyApprovalStatusEnum::Approved) {
-                                      $party->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
-                                      $party->ModifiedBy = $userId;
-                                      $party->ModifiedOn = $now;
-                                      $party->save();
-                                      
-                                      // Activate users when approved
-                                      ThirdPartyUser::where('ThirdPartyId', $partyId)
-                                          ->update(['IsActive' => 1, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
-                                  }
+                                if ($party->ApprovalStatus !== ThirdPartyApprovalStatusEnum::Approved) {
+                                    $party->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
+                                    $party->ModifiedBy = $userId;
+                                    $party->ModifiedOn = $now;
+                                    $party->save();
+
+                                    // Activate users when approved
+                                    ThirdPartyUser::where('ThirdPartyId', $partyId)
+                                        ->update(['IsActive' => 1, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
+                                }
                                 break;
-                                
+
                             case 'reject':
                                 if ($party->ApprovalStatus !== ThirdPartyApprovalStatusEnum::Rejected) {
                                     $party->ApprovalStatus = ThirdPartyApprovalStatusEnum::Rejected;
                                     $party->ModifiedBy = $userId;
                                     $party->ModifiedOn = $now;
                                     $party->save();
-                                    
+
                                     // Deactivate users when rejected
                                     ThirdPartyUser::where('ThirdPartyId', $partyId)
                                         ->update(['IsActive' => 0, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
                                 }
                                 break;
-                                
+
                             case 'activate':
                                 if ($party->Status !== ThirdPartyStatusEnum::Active) {
                                     $party->Status = ThirdPartyStatusEnum::Active;
                                     $party->ModifiedBy = $userId;
                                     $party->ModifiedOn = $now;
                                     $party->save();
-                                    
+
                                     // Activate users when status is set to active
                                     ThirdPartyUser::where('ThirdPartyId', $partyId)
                                         ->update(['IsActive' => 1, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
                                 }
                                 break;
-                                
+
                             case 'deactivate':
                                 if ($party->Status !== ThirdPartyStatusEnum::Inactive) {
                                     $party->Status = ThirdPartyStatusEnum::Inactive;
                                     $party->ModifiedBy = $userId;
                                     $party->ModifiedOn = $now;
                                     $party->save();
-                                    
+
                                     // Deactivate users when status is set to inactive
                                     ThirdPartyUser::where('ThirdPartyId', $partyId)
                                         ->update(['IsActive' => 0, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
                                 }
                                 break;
                         }
-                        
+
                         $successCount++;
                     } catch (\Exception $e) {
                         $errorCount++;

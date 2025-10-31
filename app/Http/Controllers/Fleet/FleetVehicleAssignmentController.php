@@ -23,7 +23,7 @@ class FleetVehicleAssignmentController extends Controller
     public function __construct(FleetVehicleAssignmentService $service)
     {
         $this->service = $service;
-        
+
     }
 
     /** Show all assignments */
@@ -34,7 +34,7 @@ class FleetVehicleAssignmentController extends Controller
             ->get();
 
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-            ->pluck('name', 'Id');    
+            ->pluck('name', 'Id');
 
         // fetch approved parent trips for UI (so delete -> index also has approved trips)
         $approvedStatusId = CodeDetail::where('CodeID', 'TripStatus')
@@ -96,6 +96,7 @@ class FleetVehicleAssignmentController extends Controller
 
     /** Show edit form */
     public function edit($id)
+    public function edit($id)
     {
         $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
             ->where('Id', $id)
@@ -120,18 +121,18 @@ class FleetVehicleAssignmentController extends Controller
 
     /** Update an assignment */
     public function update(FleetVehicleAssignmentRequest $request, $id)
-{
-    try {
-        $assignment = FleetVehicleAssignment::findOrFail($id);
+    {
+        try {
+            $assignment = FleetVehicleAssignment::findOrFail($id);
 
-        $this->service->update($assignment, $request->validated());
+            $this->service->update($assignment, $request->validated());
 
-        return redirect()->route('fleet.assignments.index')
-            ->with('success', 'Vehicle assignment updated successfully.');
-    } catch (\Exception $e) {
-        return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
+            return redirect()->route('fleet.assignments.index')
+                ->with('success', 'Vehicle assignment updated successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
+        }
     }
-}
 
 
     /** Delete an assignment */
@@ -146,7 +147,6 @@ class FleetVehicleAssignmentController extends Controller
     }
 
 
-    
     /* ------------------ AJAX HELPERS ------------------ */
 
     public function getVehiclesByTrip($Id)
