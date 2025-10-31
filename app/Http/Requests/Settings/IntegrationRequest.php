@@ -37,6 +37,11 @@ class IntegrationRequest extends FormRequest
             'SSRS_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
             'SSRS_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
 
+            // iTrack 
+            'iTrack_URl' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'url:http,https', 'max:200'],
+            'iTrack_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'max:200'],
+            'iTrack_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'max:200'],
+
             // Email Integration Validation Rules
             'Incoming_Server' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'string', new isDomain()],
             'Incoming_Port' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'integer', 'min:1', 'max:65535'],
@@ -153,6 +158,18 @@ class IntegrationRequest extends FormRequest
         }
 
         throw ValidationException::withMessages(['Channel_Callback' => 'url given may not not reachable']);
+    }
+
+    public function getITrackUrl(): string
+    {
+        try {
+            if (Http::get($this->validated('iTrack_URl'))->successful()) {
+                return $this->validated('iTrack_URl');
+            }
+        } catch (Exception|Throwable) {
+        }
+
+        throw ValidationException::withMessages(['iTrack_URl' => 'url given may not not reachable']);
     }
 
     /**

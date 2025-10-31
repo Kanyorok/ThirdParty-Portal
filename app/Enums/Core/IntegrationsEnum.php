@@ -14,6 +14,7 @@ enum IntegrationsEnum: string
     case DMSCoreBanking = 'cdm';
     case SMS = 'sms';
     case InfoBip = 'ibp';
+    case iTrack = 'itk';
     case PBX = 'pbx';
     case CoreBanking = 'cbs';
     case Channels = 'imb';
@@ -28,6 +29,7 @@ enum IntegrationsEnum: string
             self::CoreBanking => __('Core Banking '),
             self::SMS => __('Craft SMS Gateway'),
             self::InfoBip => 'Infobip (Email)',
+            self::iTrack => 'iTrack (Car Tracking)',
             self::PBX => '3CX Credentials',
             self::Email => 'Email Configuration',
             self::Facebook => 'Facebook Configuration',
