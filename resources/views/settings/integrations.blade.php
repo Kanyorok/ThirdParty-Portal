@@ -84,9 +84,9 @@
                                                     <input type="file" class="form-control config-org-form" id="Org_Logo_File" accept="image/*" disabled>
                                                     <small class="text-muted">Select an image to auto-fill the field above.</small>
                                                 </div>
-                                                @if(is_string($orgConfig?->logo))
+                                                @if(isset($orgConfig->logo) && is_string($orgConfig->logo))
                                                     <div class="mt-2">
-                                                        <img src="{{ asset($orgConfig?->logo) }}" alt="Logo" style="height:48px" class="rounded bg-white p-1 border">
+                                                        <img src="{{ asset($orgConfig->logo) }}" alt="Logo" style="height:48px" class="rounded bg-white p-1 border">
                                                     </div>
                                                 @endif
                                             </div>
