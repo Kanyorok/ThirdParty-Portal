@@ -63,4 +63,12 @@ class RequisitionPolicy
     {
         return $user->can(PermissionEnum::RequisitionDelete->value);
     }
+
+    /**
+     * Approve a requisition.
+     */
+    public function approve(User $user, Requisitions $requisition): bool
+    {
+        return $user->can(PermissionEnum::RequisitionApproval->value);
+    }
 }

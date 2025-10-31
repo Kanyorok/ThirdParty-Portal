@@ -70,4 +70,12 @@ class OrderPolicy
     {
         return $user->can(PermissionEnum::PurchaseOrderDelete->value);
     }
+
+    /**
+     * Approve a Purchase Order.
+     */
+    public function approve(User $user, Order $order): bool
+    {
+        return $user->can(PermissionEnum::PurchaseOrderApproval->value);
+    }
 }
