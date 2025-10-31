@@ -72,6 +72,7 @@ class RequisitionService {
             return DB::table('t_ItemTypes')
                 ->select('Id', 'TypeName')
                 ->where('Active', true)
+                ->whereNull('DeletedOn')
                 ->get();
         } catch (QueryException $e) {
             Log::error('Error fetching item types: ' . $e->getMessage());

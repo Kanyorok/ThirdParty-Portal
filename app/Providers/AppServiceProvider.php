@@ -231,6 +231,7 @@ use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
+use App\Policies\Procurement\RFQPolicy;
 use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyAttachmentsPolicy;
@@ -493,6 +494,17 @@ class AppServiceProvider extends ServiceProvider
 
         ]);
 
+        // Super-admin bypass: Admin roles can perform any ability
+        Gate::before(function ($user, string $ability = null, $arguments = null) {
+            try {
+                if ($user->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+            }
+            return null;
+        });
+
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
         Gate::policy(Repository::class, RepositoryPolicy::class);
@@ -504,6 +516,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(LegalHold::class, LegalHoldPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
+        Gate::policy(RFQ::class, RFQPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(DepartmentNeed::class, DepartmentNeedsPolicy::class);

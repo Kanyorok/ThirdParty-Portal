@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Auth\ModelRole;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
+use App\Services\Core\ModuleService;
 use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -57,6 +58,7 @@ class UserRoleController extends Controller
         }
 
         (new UserService($user))->setRole($role, $branch, $request->user());
+        ModuleService::clearNavbarCache($user);
 
         return back()->with('success', 'Role and Branch created successfully.');
 
@@ -107,6 +109,7 @@ class UserRoleController extends Controller
         $modelRole->role_id = $role->id;
         $modelRole->BranchId = $branch->Id;
         $modelRole->save();
+        ModuleService::clearNavbarCache($request->user());
 
         if ($request->ajax()) {
             return response()->json(['message' => 'Role assignment updated successfully.']);
@@ -125,6 +128,7 @@ class UserRoleController extends Controller
     {
         try {
             $modelRole->delete();
+            ModuleService::clearNavbarCache(request()->user());
             if (request()->ajax()) {
                 return response()->json(['message' => 'Role assignment deleted successfully.']);
             }
@@ -164,6 +168,7 @@ class UserRoleController extends Controller
 
         try {
             $modelRole->delete();
+            ModuleService::clearNavbarCache($request->user());
             if ($request->ajax()) {
                 return response()->json(['message' => 'Role assignment deleted successfully.']);
             }

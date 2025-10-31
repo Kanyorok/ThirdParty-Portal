@@ -4,6 +4,7 @@ namespace App\Policies\Procurement;
 
 use App\Models\Auth\User;
 use App\Models\Procurement\RequisitionLine;
+use App\Enums\Core\PermissionEnum;
 
 class RequisitionLinesPolicy
 {
@@ -12,8 +13,7 @@ class RequisitionLinesPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
-//        return $user->can(PermissionEnum::RequisitionItemsRead->value);
+        return $user->can(PermissionEnum::RequisitionItemsRead->value);
     }
 
     /**
@@ -21,9 +21,7 @@ class RequisitionLinesPolicy
      */
     public function view(User $user, RequisitionLine $requisitionLines): bool
     {
-//        return $user->can(PermissionEnum::RequisitionItemsRead->value);
-
-        return true;
+        return $user->can(PermissionEnum::RequisitionItemsRead->value);
     }
 
     /**
@@ -31,8 +29,7 @@ class RequisitionLinesPolicy
      */
     public function create(User $user): bool
     {
-//        return $user->can(PermissionEnum::RequisitionItemsWrite->value);
-        return true;
+        return $user->can(PermissionEnum::RequisitionItemsWrite->value);
     }
 
     /**
@@ -40,8 +37,7 @@ class RequisitionLinesPolicy
      */
     public function update(User $user, RequisitionLine $requisitionLines): bool
     {
-//        return $user->can(PermissionEnum::RequisitionItemsUpdate->value);
-        return true;
+        return $user->can(PermissionEnum::RequisitionItemsUpdate->value);
     }
 
     /**
@@ -49,7 +45,7 @@ class RequisitionLinesPolicy
      */
     public function delete(User $user, RequisitionLine $requisitionLines): bool
     {
-        return true;
+        return $user->can(PermissionEnum::RequisitionItemsDelete->value);
     }
 
     /**
@@ -57,7 +53,7 @@ class RequisitionLinesPolicy
      */
     public function restore(User $user, RequisitionLine $requisitionLines): bool
     {
-        return true;
+        return $user->can(PermissionEnum::RequisitionItemsUpdate->value);
     }
 
     /**
@@ -65,6 +61,6 @@ class RequisitionLinesPolicy
      */
     public function forceDelete(User $user, RequisitionLine $requisitionLines): bool
     {
-        return true;
+        return $user->can(PermissionEnum::RequisitionItemsDelete->value);
     }
 }

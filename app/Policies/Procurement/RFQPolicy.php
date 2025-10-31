@@ -4,6 +4,7 @@ namespace App\Policies\Procurement;
 
 use App\Models\Auth\User;
 use App\Models\Procurement\RFQ;
+use App\Enums\Core\PermissionEnum;
 use Illuminate\Auth\Access\Response;
 
 class RFQPolicy
@@ -13,7 +14,7 @@ class RFQPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::RFQRead->value);
+        return $user->can(PermissionEnum::RfqRead->value);
     }
 
     /**
@@ -22,7 +23,7 @@ class RFQPolicy
     public function view(User $user, RFQ $rfq): bool
     {
         // Only owner or users with permission
-        return $this->isOwner($user, $rfq) || $user->can(PermissionEnum::RFQRead->value);
+        return $this->isOwner($user, $rfq) || $user->can(PermissionEnum::RfqRead->value);
     }
 
     /**
@@ -30,7 +31,7 @@ class RFQPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can(PermissionEnum::RFQCreate->value);
+        return $user->can(PermissionEnum::RfqWrite->value);
     }
 
     /**
@@ -43,7 +44,7 @@ class RFQPolicy
             return $this->isOwner($user, $rfq);
         }
 
-        return $user->can(PermissionEnum::RFQUpdate->value);
+        return $user->can(PermissionEnum::RfqUpdate->value);
     }
 
     /**
@@ -53,6 +54,22 @@ class RFQPolicy
     {
         // Only the owner can delete if it's still draft
         return $this->isOwner($user, $rfq) && $this->isDraft($rfq);
+    }
+
+    /**
+     * Approve an RFQ
+     */
+    public function approve(User $user, RFQ $rfq): bool
+    {
+        return $user->can(PermissionEnum::RfqApproval->value);
+    }
+
+    /**
+     * Reject an RFQ
+     */
+    public function reject(User $user, RFQ $rfq): bool
+    {
+        return $user->can(PermissionEnum::RfqApproval->value);
     }
 
     /**
