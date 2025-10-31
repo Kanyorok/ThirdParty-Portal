@@ -10,6 +10,7 @@ use App\Models\procurement\RFQResponseItem;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class RFQResponseController extends Controller
 {
@@ -203,17 +204,22 @@ class RFQResponseController extends Controller
 
         // Categories used in this RFQ (from its lines)
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
+
         // Expand to include ancestors and all descendants
         $allCategoryIds = collect();
         foreach ($itemCategoryIds as $catId) {
             $catId = (int)$catId;
-            if (!$catId) continue;
+            if (!$catId) {
+                continue;
+            }
             // climb ancestors
             $current = $catId;
             while ($current) {
                 $allCategoryIds->push($current);
                 $parent = DB::table('t_ItemCategories')->where('Id', $current)->value('ParentId');
-                if ($parent === null || (int)$parent === 0) break;
+                if ($parent === null || (int)$parent === 0) {
+                    break;
+                }
                 $current = (int)$parent;
             }
         }
@@ -230,37 +236,24 @@ class RFQResponseController extends Controller
         }
         $allCategoryIds = $allCategoryIds->unique()->values();
 
-        // Exclude suppliers (by ThirdParty) that already responded to this RFQ
+        // Exclude suppliers (by ThirdParty) that already submitted FINAL responses to this RFQ
         $respondedThirdPartyIds = DB::table('t_RFQResponse as rr')
             ->join('t_Suppliers as rs', 'rs.Id', '=', 'rr.SupplierId')
             ->where('rr.RFQId', $rfqId)
             ->whereNull('rr.DeletedOn')
             ->whereNull('rs.DeletedOn')
+            ->where('rr.Status', 'FINAL')
             ->pluck('rs.ThirdPartyID');
 
-        // Map through classification table to suppliers, join t_ThirdParties for display name
-        // Note: Some DBs store supplier-category relation via pivot t_ThirdParty_SupplierCategory.
-        // Join both direct CategoryId mapping and pivot-derived categories.
-        $suppliers = DB::table('t_Suppliers as s')
+        // Prefer invited suppliers from pivot table t_RFQ_Supplier, then exclude those already with FINAL responses
+        $suppliers = DB::table('t_RFQ_Supplier as p')
+            ->join('t_Suppliers as s', 's.Id', '=', 'p.SupplierId')
             ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-            ->leftJoin('t_ThirdParty_SupplierCategory as tpsc', 'tpsc.ThirdPartyID', '=', 'tp.Id')
+            ->where('p.RFQId', $rfqId)
             ->whereNull('s.DeletedOn')
             ->whereNull('tp.DeletedOn')
             ->where('s.Active_Status', 1)
             ->whereNotIn('tp.Id', $respondedThirdPartyIds)
-            ->whereExists(function ($q) use ($allCategoryIds) {
-                $q->select(DB::raw(1))
-                    ->from('t_SupplierCategory_ItemCategory as scic')
-                    ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
-                    ->whereNull('sc.DeletedOn')
-                    ->whereNull('scic.DeletedOn')
-                    ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                    ->where(function ($w) {
-                        $w->whereColumn('sc.SupplierCategoryID', 's.CategoryId')
-                          ->orWhereColumn('sc.SupplierCategoryID', 'tpsc.SupplierCategoryID');
-                    });
-            })
-            // De-duplicate by ThirdParty (one option per supplier); pick a stable SupplierId
             ->groupBy('tp.Id', 'tp.TradingName')
             ->select(
                 DB::raw('MIN(s.Id) as Id'),

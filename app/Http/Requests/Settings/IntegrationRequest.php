@@ -91,6 +91,12 @@ class IntegrationRequest extends FormRequest
             'InfoBip_Host' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string', 'max:200'],
             'InfoBip_Email' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string', 'max:200', 'email:rfc,dns'],
             'InfoBip_API_Key' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string'],
+
+            // Organization Branding Validation Rules
+            'Org_Name' => ['exclude_unless:Integration,' . IntegrationsEnum::Organization->value, 'required', 'string', 'max:150'],
+            'Org_Motto' => ['exclude_unless:Integration,' . IntegrationsEnum::Organization->value, 'nullable', 'string', 'max:200'],
+            // Accept a data URL/base64 or a simple path string set by client uploader
+            'Org_Logo' => ['exclude_unless:Integration,' . IntegrationsEnum::Organization->value, 'nullable', 'string'],
         ];
     }
 

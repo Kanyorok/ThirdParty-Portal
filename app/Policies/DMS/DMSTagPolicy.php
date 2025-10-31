@@ -2,6 +2,7 @@
 
 namespace App\Policies\DMS;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\DMS\DMSTags;
 
@@ -12,7 +13,7 @@ class DMSTagPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSView->value);
     }
 
     /**
@@ -20,7 +21,7 @@ class DMSTagPolicy
      */
     public function view(User $user, DMSTags $dMSTags): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSView->value);
     }
 
     /**
@@ -28,7 +29,7 @@ class DMSTagPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSBulkUpload->value);
     }
 
     /**
@@ -36,7 +37,7 @@ class DMSTagPolicy
      */
     public function update(User $user, DMSTags $dMSTags): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSBulkUpload->value);
     }
 
     /**
@@ -44,7 +45,7 @@ class DMSTagPolicy
      */
     public function delete(User $user, DMSTags $dMSTags): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSBulkUpload->value);
     }
 
     /**

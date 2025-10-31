@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RoleRequest;
 use App\Models\Auth\User;
+use App\Services\Core\ModuleService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -99,6 +100,8 @@ class RoleController extends Controller
                 );
 
                 activity()->causedBy($actor)->performedOn($role)->event('create')->log('create role ' . $role->name);
+
+                // Clear navbar caches for all users who might use this role in the future? (noop for create)
             });
         } catch (Exception $e) {
             Log::error('Error creating role: ' . $e->getMessage());
@@ -134,6 +137,16 @@ class RoleController extends Controller
 
                 activity()->causedBy($actor)->performedOn($role)->event('update')->log('update role ' . $role->name);
             });
+
+            // Clear navbar cache for all users assigned to this role so menu reflects new permissions immediately
+            try {
+                $role->loadMissing('users');
+                foreach ($role->users as $user) {
+                    ModuleService::clearNavbarCache($user);
+                }
+            } catch (\Throwable $e) {
+                // best-effort; ignore
+            }
         } catch (Exception $e) {
             Log::error('Error updating role: ' . $e->getMessage());
             return $this->errored('Unexpected error, try again later.');
@@ -153,6 +166,11 @@ class RoleController extends Controller
                 $role->delete();
                 activity()->causedBy($request->user())->performedOn($role)->event('delete')->log('Deleted role ' . $role->name);
             });
+            try {
+                foreach ($role->users as $user) {
+                    ModuleService::clearNavbarCache($user);
+                }
+            } catch (\Throwable $e) {}
         } catch (Exception $e) {
             Log::error('Error deleting role: ' . $e->getMessage());
             return $this->errored('Unexpected error, try again later.');

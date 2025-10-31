@@ -131,4 +131,68 @@ class ItemMasterListService
             'ModifiedOn' => now(),
         ]);
     }
+
+    /**
+     * Update an existing Item Master entry with category, image, and documents handling.
+     */
+    public function update(int $id, array $data, ?UploadedFile $imageFile = null, UploadedFile|array|null $document = null): ItemMasterList
+    {
+        return DB::transaction(function () use ($id, $data, $imageFile, $document) {
+            $item = ItemMasterList::findOrFail($id);
+
+            $item->fill($data);
+            $item->ModifiedBy = Auth::id();
+            $item->ModifiedOn = now();
+
+            // Handle category hierarchy update
+            $item->Category = $data['SubCategory'] ?? $data['Category'] ?? $item->Category;
+
+            // Handle image removal
+            if (!empty($data['remove_image'])) {
+                if ($item->ImageId) {
+                    Image::destroy($item->ImageId);
+                }
+                $item->ImageId = null;
+            }
+
+            // Handle image replacement
+            if ($imageFile) {
+                if ($item->ImageId) {
+                    Image::destroy($item->ImageId);
+                }
+                $image = $this->storeImage($imageFile);
+                $item->ImageId = $image->ImageID;
+            }
+
+            $item->save();
+
+            // Handle document replacement (accept single or multiple uploads)
+            if ($document) {
+                foreach ($item->documents as $doc) {
+                    $doc->delete();
+                }
+
+                $documents = is_array($document) ? $document : [$document];
+                foreach ($documents as $docFile) {
+                    if ($docFile instanceof UploadedFile) {
+                        $item->newDocument(
+                            ModulesEnum::Inventory,
+                            $docFile,
+                            [PermissionEnum::MasterListView->value],
+                            Auth::user()
+                        );
+                    }
+                }
+            }
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($item)
+                ->withProperties(['attributes' => $data])
+                ->event('updated')
+                ->log('Item updated');
+
+            return $item;
+        });
+    }
 }

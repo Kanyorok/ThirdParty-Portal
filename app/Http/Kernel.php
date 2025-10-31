@@ -56,5 +56,8 @@ class Kernel extends HttpKernel
         'thirdparty' => \App\Http\Middleware\EnforceThirdPartyUser::class,
         'thirdparty.approved' => \App\Http\Middleware\CheckThirdPartyApprovalStatus::class,
         'verified.user' => \App\Http\Middleware\VerifiedUser::class,
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+        'role_or_permission' => \App\Http\Middleware\RoleOrPermissionMiddleware::class,
     ];
 }
