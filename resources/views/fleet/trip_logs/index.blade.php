@@ -56,8 +56,8 @@
                                 'scheduled' => 'bg-primary',
                                 'in progress' => 'bg-warning',
                                 'completed' => 'bg-success',
-                                'cancelled' => 'bg-danger',
-                                'delayed' => 'bg-secondary',
+                                'rejected' => 'bg-danger',
+                                'approved' => 'bg-success',
                                 default => 'bg-info'
                             };
                         @endphp
@@ -75,22 +75,26 @@
                             <span class="badge bg-secondary">—</span>
                         @endif
                     </td>
-                    <td>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a href="{{ route('fleet.trip_logs.show', $trip->Id) }}" 
-                               class="btn btn-info" 
-                               title="View Trip Details">
-                                👁️
+                    <td class="text-center">
+                        <a href="{{ route('fleet.trip_logs.show', $trip->Id) }}" 
+                        class="btn btn-sm btn-success me-1" 
+                        data-bs-toggle="tooltip" 
+                        data-bs-placement="top" 
+                        title="View Trip Details">
+                            👁️
+                        </a>
+
+                        @if(!$trip->ParentTripID)
+                            <a href="{{ route('fleet.trip_logs.create', ['parentTripId' => $trip->Id]) }}" 
+                            class="btn btn-sm btn-primary" 
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            title="Add Child Trips">
+                                ➕
                             </a>
-                            @if(!$trip->ParentTripID)
-                                <a href="{{ route('fleet.trip_logs.create', ['parentTripId' => $trip->Id]) }}" 
-                                   class="btn btn-success" 
-                                   title="Add Child Trips">
-                                    ➕
-                                </a>
-                            @endif
-                        </div>
+                        @endif
                     </td>
+
                 </tr>
             @empty
                 <tr>

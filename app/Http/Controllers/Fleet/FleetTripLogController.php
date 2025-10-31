@@ -235,4 +235,47 @@ class FleetTripLogController extends Controller
             ];
         }));
     }
+
+        public function approve($id)
+    {
+        // load the trip instance and authorize on it
+        $trip = \App\Models\Fleet\FleetTripLog::with('childTrips')->findOrFail($id);
+        $this->authorize('update', $trip);
+
+        try {
+            $trip = $this->tripLogService->approveTrip($id);
+
+            return redirect()
+                ->route('fleet.trip_logs.show', $id)
+                ->with('success', "Trip {$trip->TripNo} and all child trips approved successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Error approving trip: ' . $e->getMessage());
+            return redirect()
+                ->route('fleet.trip_logs.show', $id)
+                ->with('error', 'Failed to approve trip: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reject a trip and all its child trips
+     */
+    public function reject($id)
+    {
+        // load the trip instance and authorize on it
+        $trip = \App\Models\Fleet\FleetTripLog::with('childTrips')->findOrFail($id);
+        $this->authorize('update', $trip);
+
+        try {
+            $trip = $this->tripLogService->rejectTrip($id);
+
+            return redirect()
+                ->route('fleet.trip_logs.show', $id)
+                ->with('success', "Trip {$trip->TripNo} and all child trips rejected successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Error rejecting trip: ' . $e->getMessage());
+            return redirect()
+                ->route('fleet.trip_logs.show', $id)
+                ->with('error', 'Failed to reject trip: ' . $e->getMessage());
+        }
+    }
 }

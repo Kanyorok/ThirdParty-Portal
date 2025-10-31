@@ -17,22 +17,22 @@ class StartPendingTrips extends Command
         $now = Carbon::now();
 
         // ✅ Using Description field for lookup
-        $scheduledId = CodeDetail::where('CodeID', 'TripStatus')->where('Description', 'Scheduled')->value('ID');
+        $approvedId = CodeDetail::where('CodeID', 'TripStatus')->where('Description', 'Approved')->value('ID');
         $ongoingId = CodeDetail::where('CodeID', 'TripStatus')->where('Description', 'Ongoing')->value('ID');
 
-        if (!$scheduledId || !$ongoingId) {
+        if (!$approvedId || !$ongoingId) {
             $this->error('Trip status IDs not found!');
             \Log::error('Trip status IDs not found for scheduled command');
             return;
         }
 
         $this->info("Looking for trips to start...");
-        $this->info("Scheduled Status ID: {$scheduledId}");
+        $this->info("Approved Status ID: {$approvedId}");
         $this->info("Ongoing Status ID: {$ongoingId}");
         $this->info("Current time: {$now}");
 
         // Find trips that should be started
-        $trips = FleetTripLog::where('Status', $scheduledId)
+        $trips = FleetTripLog::where('Status', $approvedId)
             ->where(function($query) use ($now) {
                 $query->where(function($q) use ($now) {
                     // If both date and time are set
@@ -60,7 +60,7 @@ class StartPendingTrips extends Command
                     ->event('trip-started')
                     ->log("Trip #{$trip->TripNo} started automatically at {$now}");
 
-                $this->info("Trip #{$trip->TripNo} started successfully (Status: Scheduled → Ongoing)");
+                $this->info("Trip #{$trip->TripNo} started successfully (Status: Approved → Ongoing)");
                 
             } catch (\Exception $e) {
                 $this->error("Failed to start trip #{$trip->TripNo}: " . $e->getMessage());

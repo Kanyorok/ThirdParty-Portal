@@ -5,6 +5,11 @@ namespace App\Services\FleetManagement;
 use App\Models\Fleet\FleetTripLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Core\Workflow;
+use App\Models\Core\PendingWorkflow;
+use App\Enums\WorkflowStatus;
+use App\Models\Core\CodeDetail;
+
 
 class FleetTripLogService
 {
@@ -31,7 +36,6 @@ class FleetTripLogService
     public function createParentTrip(array $data): FleetTripLog
     {
         return DB::transaction(function () use ($data) {
-            // ✅ Using Description field for lookup
             $scheduledStatus = \App\Models\Core\CodeDetail::where('CodeID', 'TripStatus')
                 ->where('Description', 'Scheduled')
                 ->value('ID');
@@ -85,7 +89,6 @@ class FleetTripLogService
     public function createChildTrips(FleetTripLog $parent, array $childData): void
     {
         DB::transaction(function () use ($parent, $childData) {
-            // ✅ Using Description field for lookup
             $scheduledStatus = \App\Models\Core\CodeDetail::where('CodeID', 'TripStatus')
                 ->where('Description', 'Scheduled')
                 ->value('ID');
@@ -181,5 +184,154 @@ class FleetTripLogService
 
             $tripLog->delete();
         });
+    }
+
+    /**
+     * Approve a parent trip and all its child trips
+     */
+    public function approveTrip(int $tripId): FleetTripLog
+    {
+        return DB::transaction(function () use ($tripId) {
+            $parentTrip = FleetTripLog::with('childTrips')->findOrFail($tripId);
+            
+            $approvedStatusId = $this->getTripStatusId('Approved');
+            
+            $parentTrip->update([
+                'ApprovedOn' => now(),
+                'ApprovedBy' => Auth::id(),
+                'Status' => $approvedStatusId,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            if ($parentTrip->childTrips->isNotEmpty()) {
+                FleetTripLog::where('ParentTripID', $parentTrip->Id)
+                    ->update([
+                        'ApprovedOn' => now(),
+                        'ApprovedBy' => Auth::id(),
+                        'Status' => $approvedStatusId,
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
+                    ]);
+            }
+
+            // Log workflow for parent
+            $this->logTripWorkflow($parentTrip->Id, $approvedStatusId, 'Trip approved');
+
+            // Log workflows for child trips
+            foreach ($parentTrip->childTrips as $childTrip) {
+                $this->logTripWorkflow($childTrip->Id, $approvedStatusId, 'Child trip approved');
+            }
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($parentTrip)
+                ->event('approved')
+                ->log("Trip {$parentTrip->TripNo} and all child trips approved");
+
+            return $parentTrip->fresh(['childTrips']);
+        });
+    }
+
+    /**
+     * Reject a parent trip and all its child trips
+     */
+    public function rejectTrip(int $tripId): FleetTripLog
+    {
+        return DB::transaction(function () use ($tripId) {
+            $parentTrip = FleetTripLog::with('childTrips')->findOrFail($tripId);
+            $rejectedStatusId = $this->getTripStatusId('Rejected');
+            $parentTrip->update([
+                'ApprovedOn' => now(),
+                'ApprovedBy' => Auth::id(),
+                'Status' => $rejectedStatusId,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            // Update all child trips status
+            if ($parentTrip->childTrips->isNotEmpty()) {
+                FleetTripLog::where('ParentTripID', $parentTrip->Id)
+                    ->update([
+                        'ApprovedOn' => now(),
+                        'ApprovedBy' => Auth::id(),
+                        'Status' => $rejectedStatusId,
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
+                    ]);
+            }
+
+            // Log workflow for parent
+            $this->logTripWorkflow($parentTrip->Id, $rejectedStatusId, 'Trip rejected');
+
+            // Log workflows for child trips
+            foreach ($parentTrip->childTrips as $childTrip) {
+                $this->logTripWorkflow($childTrip->Id, $rejectedStatusId, 'Child trip rejected');
+            }
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($parentTrip)
+                ->event('rejected')
+                ->log("Trip {$parentTrip->TripNo} and all child trips rejected");
+
+            return $parentTrip->fresh(['childTrips']);
+        });
+    }
+
+    /**
+     * Get trip status ID by description
+     */
+    private function getTripStatusId(string $description): int
+    {
+        $status = CodeDetail::where('CodeID', 'TripStatus')
+            ->where('Description', $description)
+            ->first();
+
+        if (!$status) {
+            throw new \Exception("Trip status '{$description}' not found in system configuration.");
+        }
+
+        // Support different column names (ID / Id / id)
+        return $status->ID ?? $status->Id ?? $status->id;
+    }
+
+    /**
+     * Log workflow for trip approval/rejection
+     */
+    private function logTripWorkflow(int $tripId, int $statusId, string $notes = null): void
+    {
+        // Get CodeDetail for the status id
+        $code = CodeDetail::where('CodeID', 'TripStatus')->find($statusId);
+
+        // Prefer Value, then CodeValue, then Description
+        $statusValue = $code->Value ?? $code->Value ?? $code->Description ?? null;
+
+        // Save into t_Workflow: Stage holds CodeDetail ID, Status holds the CodeDetail value/label
+        Workflow::create([
+            'Source' => 'TripLog',
+            'SourceID' => $tripId,
+            'Stage' => $statusId,        // CodeDetail ID
+            'Status' => $statusValue,    // CodeDetail value (or description)
+            'Notes' => $notes,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        // Ensure pending workflow stores the CodeDetail value too
+        PendingWorkflow::updateOrCreate(
+            ['Source' => 'TripLog', 'SourceID' => $tripId],
+            [
+                'Stage' => $statusId,
+                'Status' => $statusValue,
+                'UserId' => Auth::id(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]
+        );
     }
 }

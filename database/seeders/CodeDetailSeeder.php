@@ -559,6 +559,8 @@ class CodeDetailSeeder extends Seeder
 
             //Trip Statuses
             ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'AP'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'RE'],
             ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'OG'],
             ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'CO'],
             ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'CA'],

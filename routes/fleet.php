@@ -217,6 +217,8 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::get('fleet/vehicles/available', [FleetTripLogController::class, 'getAvailableVehicles'])->name('fleet.vehicles.available');
     Route::get('fleet/drivers/available', [FleetTripLogController::class, 'getAvailablePermanentDrivers'])->name('fleet.drivers.available');
     Route::get('fleet/contracted_drivers/available', [FleetTripLogController::class, 'getAvailableContractedDrivers'])->name('fleet.contracted_drivers.available');
+    Route::patch('fleet/trip-logs/{Id}/approve', [FleetTripLogController::class, 'approve'])->name('fleet.trip_logs.approve');
+    Route::patch('fleet/trip-logs/{Id}/reject', [FleetTripLogController::class, 'reject'])->name('fleet.trip_logs.reject');
     
 
 
