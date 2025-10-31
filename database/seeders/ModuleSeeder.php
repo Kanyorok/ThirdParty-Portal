@@ -26,7 +26,7 @@ class ModuleSeeder extends Seeder
         $this->_seed($this->_procurement($fresh));
         $this->_seed($this->_inventory($fresh));
         $this->_seed($this->_propertyManagement($fresh));
-        $this->_seed($this->_fleetManagement($fresh));
+        $this->_seed($this->_fleetManagement());
         $this->_seed($this->_documentManagement());
         $this->_seed($this->_legal($fresh));
         $this->_seed($this->_insurance($fresh));
@@ -341,9 +341,9 @@ class ModuleSeeder extends Seeder
     }
 
 
-    protected function _fleetManagement(bool $fresh): Collection
+    protected function _fleetManagement(): Collection
     {
-        $values = collect([
+        return collect([
             ['ModuleID' => 600000, 'Name' => ModulesEnum::Fleet->description(), 'Icon' => '<i data-feather="truck"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
             //Fleet Management
             ['ModuleID' => 601000, 'Name' => 'Vehicle Management', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
@@ -351,6 +351,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 601200, 'Name' => 'Compliance', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => null],
             ['ModuleID' => 601210, 'Name' => 'Insurance Tracker', 'Icon' => 'Track insurance policies, premiums, providers, and renewal dates', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.insurance_tracker.index'],
             ['ModuleID' => 601220, 'Name' => 'Inspection Schedule', 'Icon' => 'Track vehicle inspection types, dates, and compliance status', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.inspection_schedule.index'],
+            ['ModuleID' => 601300, 'Name' => 'Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 601000, 'Route' => 'fleet.tracking.index'],
 
             //Driver Management
             ['ModuleID' => 602000, 'Name' => 'Driver Management', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
@@ -398,8 +399,6 @@ class ModuleSeeder extends Seeder
             //Reports
             ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'fleet-reports.index'],
         ]);
-
-        return $values;
     }
 
     protected function _documentManagement(): Collection
