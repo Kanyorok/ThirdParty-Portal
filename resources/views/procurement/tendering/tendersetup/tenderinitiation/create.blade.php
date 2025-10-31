@@ -200,14 +200,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                 <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline: <span class="text-danger">*</span></label>
-                <input type="date" data-disable-past="true" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
+                <input type="date" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
                 @error('submission_deadline')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                 <label for="openingDate" class="form-label fw-bold">Opening Date: <span class="text-danger">*</span></label>
-                <input type="date" data-disable-past="true" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
+                <input type="date" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
                 @error('opening_date')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
@@ -344,7 +344,8 @@
   window.loadPlanItemsForPlan = loadPlanItemsForPlan;
   window.addPlanItemToGrid = addPlanItemToGrid;
 
-  // ---- Manual Entry: add rows with Item Master select
+  // ---- Helpers
+  async function refreshItemCate  // ---- Manual Entry: add rows with Item Master select
   let manualRowSeq = 0;
   function addManualItemRow() {
     const tbody = document.getElementById('manualItemsBody');
@@ -476,8 +477,7 @@
     document.querySelectorAll('.manual-item-select').forEach(select => {
       const prevValue = select.value;
       select.innerHTML = selectedItemCategory ? getFilteredItemOptions(selectedItemCategory) : getAllItemOptions();
-      // keep previous if still valid
-      if ([...select.options].some(opt => opt.value === prevValue)) {
+..select.options].some(opt => opt.value === prevValue)) {
         select.value = prevValue;
       }
     });
@@ -579,84 +579,6 @@
     suppliersSection.style.display = 'block';
     if (itemCatSel && itemCatSel.value) populateSuppliers(itemCatSel.value);
   }
-
-  // ---- Date constraints and validation
-  const submissionInput = document.getElementById('submissionDeadline');
-  const openingInput = document.getElementById('openingDate');
-  const form = document.querySelector('form[action="{{ route('initiatetender.store') }}"]');
-
-  function setMinDatesToToday() {
-    const today = new Date();
-    // format YYYY-MM-DD
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const iso = `${yyyy}-${mm}-${dd}`;
-    if (submissionInput) submissionInput.min = iso;
-    if (openingInput) openingInput.min = iso;
-  }
-
-  function showFieldError(inputEl, message) {
-    // remove existing helper
-    let helper = inputEl.parentNode.querySelector('.invalid-feedback.d-block.date-error');
-    if (!helper) {
-      helper = document.createElement('div');
-      helper.className = 'invalid-feedback d-block date-error';
-      inputEl.parentNode.appendChild(helper);
-    }
-    helper.textContent = message;
-    inputEl.classList.add('is-invalid');
-  }
-
-  function clearFieldError(inputEl) {
-    const helper = inputEl.parentNode.querySelector('.invalid-feedback.d-block.date-error');
-    if (helper) helper.remove();
-    inputEl.classList.remove('is-invalid');
-  }
-
-  function validateDates() {
-    clearFieldError(submissionInput);
-    clearFieldError(openingInput);
-
-    if (!submissionInput || !openingInput) return true;
-
-    const subVal = submissionInput.value;
-    const openVal = openingInput.value;
-
-    // If either is empty, rely on HTML required attribute for presence
-    if (!subVal || !openVal) return true;
-
-    const subDate = new Date(subVal);
-    const openDate = new Date(openVal);
-
-    if (subDate > openDate || subDate.getTime() === openDate.getTime()) {
-      showFieldError(submissionInput, 'Submission Deadline must be before the Opening Date.');
-      showFieldError(openingInput, 'Opening Date must be after the Submission Deadline.');
-      return false;
-    }
-    return true;
-  }
-
-  // set today as min for both inputs to prevent past dates
-  setMinDatesToToday();
-
-  // Keep validation in sync when user changes either date
-  if (submissionInput) submissionInput.addEventListener('change', validateDates);
-  if (openingInput) openingInput.addEventListener('change', validateDates);
-
-  // Validate on form submit and prevent submission if invalid
-  if (form) {
-    form.addEventListener('submit', function (ev) {
-      if (!validateDates()) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        // focus first invalid
-        const firstInvalid = form.querySelector('.is-invalid');
-        if (firstInvalid) firstInvalid.focus();
-      }
-    });
-  }
-
 })();
 </script>
 
