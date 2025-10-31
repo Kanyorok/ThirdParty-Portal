@@ -96,7 +96,6 @@ class FleetVehicleAssignmentController extends Controller
 
     /** Show edit form */
     public function edit($id)
-    public function edit($id)
     {
         $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
             ->where('Id', $id)

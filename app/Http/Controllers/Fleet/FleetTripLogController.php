@@ -56,11 +56,6 @@ class FleetTripLogController extends Controller
             'vehicleTypes', 'loadTypes', 'tripTypes', 'parentTrip', 'tripLog'
         ));
     }
-        return view('fleet.trip_logs.create', compact(
-            'vehicleTypes', 'loadTypes', 'tripTypes', 'parentTrip', 'tripLog'
-        ));
-    }
-
 
     public function store(FleetTripLogRequest $request)
 {
