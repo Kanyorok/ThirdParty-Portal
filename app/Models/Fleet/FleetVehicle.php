@@ -28,7 +28,7 @@ class FleetVehicle extends Model
     protected $fillable = [
         'RegistrationNo', 'VehicleType', 'Make', 'Model', 'YearOfManufacture', 'ChassisNo', 'EngineNo', 'FuelType', 'Capacity',
         'OdometerReading', 'Status', 'AssignedBranch', 'MaxPassengers', 'MaxLoad', 'VehicleStatus', 'Color', 'ImageId',
-        'TrackerNo', 'CreatedBy', 'ModifiedBy',
+        'TrackerNo', 'CreatedBy',  'CreatedOn', 'ModifiedBy',
     ];
 
 
