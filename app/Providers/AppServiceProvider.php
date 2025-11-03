@@ -9,7 +9,7 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Services\Procurement\ApprovalWorkflow;
+use App\Services\Workflow\ApprovalWorkflow;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;

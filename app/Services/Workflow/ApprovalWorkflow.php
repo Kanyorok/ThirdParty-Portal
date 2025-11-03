@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Procurement;  
+namespace App\Services\Workflow;  
 
 use App\Enums\Procurement\DepartmentNeedsEnum;  
 use App\Exceptions\ErroredException;

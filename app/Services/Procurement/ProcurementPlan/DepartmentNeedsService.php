@@ -7,7 +7,7 @@ use App\Models\Auth\User;
 use App\Services\Procurement\DepartmentNeedsWorkflow;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Models\Core\ApprovalLimits;
-use App\Services\Procurement\ApprovalWorkflow;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -30,7 +30,8 @@ class DepartmentNeedsService
         $existing = DepartmentNeed::where('BranchID', $branchId)
             ->where('DepartmentID', $departmentId)
             ->where('ItemID', $itemId)
-            ->where('Status', DepartmentNeedsEnum::Pending)
+            ->where('Status', DepartmentNeedsEnum::Pending,
+                  DepartmentNeedsEnum::Submitted->value)
             ->first();
 
         if ($existing) {
@@ -56,7 +57,7 @@ class DepartmentNeedsService
                 'RequestedQty' => $data['RequestedQty'],
                 'EstimatedUnitCost' => $data['EstimatedUnitCost'],
                 'Justification' => $data['Justification'],
-                'Status' => DepartmentNeedsEnum::Pending->value, // Start as Pending
+                'Status' =>  DepartmentNeedsEnum::Pending->value, // Start as sub,iited for approval 
                 'FiscalYear' => $data['FiscalYear'],
                 'PriorityLevel' => $data['PriorityLevel'],
                 'IsEmergency' => $data['IsEmergency'],

@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Services\Core\WorkflowActionService;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\DepartmentNeed;
-use App\Services\Procurement\ApprovalWorkflow;  // Use the refactored class
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,7 @@ class DepartmentNeedApprovalController extends Controller
     {
         $this->workflow = $workflow;  // Injected with codeId via service container
     }
+
 
     /**
      * Display a listing of department needs pending approval.
