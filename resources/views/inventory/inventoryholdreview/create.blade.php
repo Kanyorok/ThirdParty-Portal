@@ -152,121 +152,119 @@
     </div>
 
     <script>
-        document.getElementById('InventoryHoldID').addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            
-            if (!this.value) {
-                document.getElementById('hold-details').classList.add('d-none');
+    document.getElementById('InventoryHoldID').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (!this.value) {
+            document.getElementById('hold-details').classList.add('d-none');
+            document.getElementById('returnBtn').disabled = true;
+            return;
+        }
+
+        // Get data from data attributes
+        const itemName = selectedOption.getAttribute('data-itemname');
+        const quantity = selectedOption.getAttribute('data-quantity');
+        const fromBranch = selectedOption.getAttribute('data-frombranch');
+        const currentBranch = selectedOption.getAttribute('data-currentbranch');
+        const sourceType = selectedOption.getAttribute('data-sourcetype');
+        const store = selectedOption.getAttribute('data-store');
+        const defect = selectedOption.getAttribute('data-defect');
+        const itemId = selectedOption.getAttribute('data-itemid');
+        const branchId = selectedOption.getAttribute('data-branchid');
+
+        // Populate the form fields
+        document.getElementById('ItemName').value = itemName || '';
+        document.getElementById('Quantity').value = quantity || '';
+        document.getElementById('Store').value = store || '';
+        document.getElementById('Defect').value = defect || '';
+        
+        // Determine source display
+        let sourceDisplay = '';
+        if (sourceType === 'Transaction Transfer' && fromBranch) {
+            sourceDisplay = `${fromBranch} → ${currentBranch || 'Current Branch'}`;
+        } else {
+            sourceDisplay = sourceType || fromBranch || 'N/A';
+        }
+        document.getElementById('SourceDisplay').value = sourceDisplay;
+
+        // Set hidden fields
+        document.getElementById('ItemID_hidden').value = itemId || '';
+        document.getElementById('FromBranch_hidden').value = branchId || '';
+        document.getElementById('Quantity_hidden').value = quantity || '';
+        document.getElementById('Id_hidden').value = this.value;
+
+        // Show details section
+        document.getElementById('hold-details').classList.remove('d-none');
+
+        // 🔒 Disable or hide "Return to Sender" if it's an Adjustment
+        const returnBtn = document.getElementById('returnBtn');
+        if (sourceType && sourceType.toLowerCase().includes('adjustment')) {
+            returnBtn.disabled = true;
+            returnBtn.classList.add('btn-secondary');
+            returnBtn.classList.remove('btn-info');
+            returnBtn.innerHTML = '<i class="fas fa-ban"></i> Return To Sender';
+        } else {
+            returnBtn.disabled = false;
+            returnBtn.classList.remove('btn-secondary');
+            returnBtn.classList.add('btn-info');
+            returnBtn.innerHTML = '<i class="fas fa-undo"></i> Return to Sender';
+        }
+    });
+
+    // Action button handlers
+    document.getElementById('disposeBtn').addEventListener('click', function () {
+        if (confirm('Are you sure you want to dispose this item? This action cannot be undone.')) {
+            submitAction('dispose');
+        }
+    });
+
+    document.getElementById('repairBtn')?.addEventListener('click', function () {
+        if (confirm('Mark this item for repair?')) {
+            submitAction('repair');
+        }
+    });
+
+    document.getElementById('returnBtn').addEventListener('click', function () {
+        if (this.disabled) return; // Prevent disabled button action
+        if (confirm('Return this item to the sender?')) {
+            submitAction('return');
+        }
+    });
+
+    function submitAction(action) {
+        const holdId = document.getElementById('InventoryHoldID').value;
+        if (!holdId) {
+            alert('Please select an item to review.');
+            return;
+        }
+
+        // Validate required fields for dispose action
+        if (action === 'dispose') {
+            const condition = document.getElementById('Condition').value;
+            if (!condition) {
+                alert('Please select a condition before disposing the item.');
+                document.getElementById('Condition').focus();
                 return;
             }
-
-            // Get data from data attributes
-            const itemName = selectedOption.getAttribute('data-itemname');
-            const quantity = selectedOption.getAttribute('data-quantity');
-            const fromBranch = selectedOption.getAttribute('data-frombranch');
-            const currentBranch = selectedOption.getAttribute('data-currentbranch');
-            const sourceType = selectedOption.getAttribute('data-sourcetype');
-            const store = selectedOption.getAttribute('data-store');
-            const defect = selectedOption.getAttribute('data-defect');
-            const itemId = selectedOption.getAttribute('data-itemid');
-            const branchId = selectedOption.getAttribute('data-branchid');
-
-            // Populate the form fields
-            document.getElementById('ItemName').value = itemName || '';
-            document.getElementById('Quantity').value = quantity || '';
-            document.getElementById('Store').value = store || '';
-            document.getElementById('Defect').value = defect || '';
-            
-            // Determine source display
-            let sourceDisplay = '';
-            if (sourceType === 'Transaction Transfer' && fromBranch) {
-                sourceDisplay = `${fromBranch} → ${currentBranch || 'Current Branch'}`;
-            } else {
-                sourceDisplay = sourceType || fromBranch || 'N/A';
-            }
-            document.getElementById('SourceDisplay').value = sourceDisplay;
-
-            // Set hidden fields
-            document.getElementById('ItemID_hidden').value = itemId || '';
-            document.getElementById('FromBranch_hidden').value = branchId || '';
-            document.getElementById('Quantity_hidden').value = quantity || '';
-            document.getElementById('Id_hidden').value = this.value;
-
-            // Show details section
-            document.getElementById('hold-details').classList.remove('d-none');
-        });
-
-        // Action button handlers
-        document.getElementById('disposeBtn').addEventListener('click', function () {
-            if (confirm('Are you sure you want to dispose this item? This action cannot be undone.')) {
-                submitAction('dispose');
-            }
-        });
-
-        document.getElementById('repairBtn')?.addEventListener('click', function () {
-            if (confirm('Mark this item for repair?')) {
-                submitAction('repair');
-            }
-        });
-
-        document.getElementById('returnBtn').addEventListener('click', function () {
-            if (confirm('Return this item to the sender?')) {
-                submitAction('return');
-            }
-        });
-
-        function submitAction(action) {
-            const holdId = document.getElementById('InventoryHoldID').value;
-            if (!holdId) {
-                alert('Please select an item to review.');
-                return;
-            }
-
-            // Validate required fields for dispose action
-            if (action === 'dispose') {
-                const condition = document.getElementById('Condition').value;
-                if (!condition) {
-                    alert('Please select a condition before disposing the item.');
-                    document.getElementById('Condition').focus();
-                    return;
-                }
-            }
-
-            const form = document.getElementById('reviewForm');
-            const actionInput = document.createElement('input');
-            actionInput.type = 'hidden';
-            actionInput.name = 'Action';
-            actionInput.value = action;
-
-            form.appendChild(actionInput);
-            form.submit();
         }
 
-        // Initialize form if there's a previously selected value
-        document.addEventListener('DOMContentLoaded', function() {
-            const holdSelect = document.getElementById('InventoryHoldID');
-            if (holdSelect.value) {
-                holdSelect.dispatchEvent(new Event('change'));
-            }
-        });
-    </script>
+        const form = document.getElementById('reviewForm');
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'Action';
+        actionInput.value = action;
 
-    <style>
-        .form-label {
-            font-weight: 500;
-            color: #495057;
+        form.appendChild(actionInput);
+        form.submit();
+    }
+
+    // Initialize form if there's a previously selected value
+    document.addEventListener('DOMContentLoaded', function() {
+        const holdSelect = document.getElementById('InventoryHoldID');
+        if (holdSelect.value) {
+            holdSelect.dispatchEvent(new Event('change'));
         }
-        #hold-details {
-            border-left: 4px solid #007bff;
-        }
-        .btn {
-            min-width: 140px;
-        }
-        .text-danger {
-            color: #dc3545 !important;
-        }
-        .text-info {
-            color: #17a2b8 !important;
-        }
-    </style>
+    });
+</script>
+
 @endsection

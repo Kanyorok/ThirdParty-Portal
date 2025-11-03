@@ -4,6 +4,8 @@
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    {{-- Font Awesome for icons --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 
 @section('content')
@@ -38,34 +40,41 @@
                 @endphp
                 <tr>
                     <td>{{ $adjustments->firstItem() + $index }}</td>
-                    <td>{{ $adjustment->AdjustmentId}}</
-                    >
+                    <td>{{ $adjustment->AdjustmentId}}</td>
                     <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d/m/Y') }}</td>
                     <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
                     <td>{{$adjustment->adjustedBy->Name ?? 'N/A'}}</td>
                     <td>
                         @if($statusEnum)
                             <span class="badge bg-{{ $statusEnum->badgeColor() }}">
-                                    {{ $statusEnum->label() }}
+                                    {{ $statusEnum->name }}
                                 </span>
                         @else
                             <span class="badge bg-secondary">Unknown</span>
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('transactionsadjustment.show', $adjustment->Id) }}"
-                           class="btn btn-sm btn-primary">View</a>
+                        <div class="d-flex gap-1">
+                            <a href="{{ route('transactionsadjustment.show', $adjustment->Id) }}"
+                               class="btn btn-sm btn-primary" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
 
-                        @if($statusEnum === Transfers::Pending)
-                            <a href="{{ route('transactionsadjustment.edit', $adjustment->Id) }}"
-                               class="btn btn-sm btn-warning">Edit</a>
-                            <form action="{{ route('transactionsadjustment.destroy', $adjustment->Id) }}" method="POST"
-                                  class="d-inline" onsubmit="return confirm('Delete this adjustment?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                            </form>
-                        @endif
+                            @if($statusEnum === Transfers::Pending)
+                                <a href="{{ route('transactionsadjustment.edit', $adjustment->Id) }}"
+                                   class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('transactionsadjustment.destroy', $adjustment->Id) }}" method="POST"
+                                      class="d-inline" onsubmit="return confirm('Delete this adjustment?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </td>
                 </tr>
             @empty

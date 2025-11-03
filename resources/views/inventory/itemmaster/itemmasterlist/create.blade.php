@@ -27,6 +27,8 @@
                 {{-- Row 1 --}}
                 <div class="row mb-3">
                     <div class="col-md-4">
+<<<<<<< HEAD
+=======
                         <label for="BarCode" class="form-label">Bar Code <span class="text-danger">*</span></label>
                         <input type="text" name="BarCode" id="BarCode" class="form-control @error('BarCode') is-invalid @enderror"
                                value="{{ old('BarCode') }}" required>
@@ -37,6 +39,7 @@
                         @enderror
                     </div>
                     <div class="col-md-4">
+>>>>>>> dev
                         <label for="ItemName" class="form-label">Item Name <span class="text-danger">*</span></label>
                         <input type="text" name="ItemName" id="ItemName" class="form-control @error('ItemName') is-invalid @enderror"
                                value="{{ old('ItemName') }}" required>
@@ -46,6 +49,17 @@
                             </div>
                         @enderror
                     </div>
+                    <div class="col-md-4">
+                        <label for="BarCode" class="form-label">Bar Code <span class="text-danger">*</span></label>
+                        <input type="text" name="BarCode" id="BarCode" class="form-control @error('BarCode') is-invalid @enderror" 
+                               value="{{ old('BarCode') }}">
+                        @error('BarCode')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+                    
                     <div class="col-md-4">
                         <label for="ItemType" class="form-label">Item Type <span class="text-danger">*</span></label>
                         <select name="ItemType" id="ItemType" class="form-select @error('ItemType') is-invalid @enderror" required>

@@ -30,7 +30,7 @@ class ItemMasterListController extends Controller
         $this->service = $service;
     }
 
-    public function index(Request $request)
+   public function index(Request $request)
     {
         if ($request->ajax()) {
             $items = ItemMasterList::with([
@@ -63,38 +63,42 @@ class ItemMasterListController extends Controller
                 })
                 ->addColumn('ItemPrice', fn($item) => optional($item->price)->ActualPrice ?? '—')
                 ->addColumn('Action', function ($item) {
-                    $viewUrl   = route('itemmasterlist.show', $item->Id);
-                    $editUrl   = route('itemmasterlist.edit', $item->Id);
-                    $deleteUrl = route('itemmasterlist.destroy', $item->Id);
+            $viewUrl   = route('itemmasterlist.show', $item->Id);
+            $editUrl   = route('itemmasterlist.edit', $item->Id);
+            $deleteUrl = route('itemmasterlist.destroy', $item->Id);
 
-                    $actions = '
-                        <a href="' . $viewUrl . '" class="btn btn-sm btn-primary">View</a>
-                        <a href="' . $editUrl . '" class="btn btn-sm btn-warning">Edit</a>
-                    ';
+            $actions = '
+                <div class="btn-group" role="group">
+                    <a href="' . $viewUrl . '" class="btn btn-sm btn-view" data-bs-toggle="tooltip" title="View Item">
+                        <i class="bi bi-eye"></i>
+                        
+                    </a>
+                    <a href="' . $editUrl . '" class="btn btn-sm btn-edit" data-bs-toggle="tooltip" title="Edit Item">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+            ';
 
-                    if ($item->inUse()) {
-                        $actions .= '<span class="badge bg-info">In Use</span>';
-                    } else {
-                        $actions .= '
-                            <button type="button" class="btn btn-danger btn-sm"
-                                onclick="if(confirm(\'⚠️ Are you sure you want to delete this item?\')) { 
-                                    this.disabled=true; 
-                                    this.innerText=\'Submitting...\'; 
-                                    document.getElementById(\'delete-form-' . $item->Id . '\').submit(); 
-                                }">
-                                Delete
-                            </button>
-                            <form id="delete-form-' . $item->Id . '" 
-                                action="' . $deleteUrl . '" 
-                                method="POST" style="display:none;">
-                                ' . csrf_field() . '
-                                ' . method_field('DELETE') . '
-                            </form>
-                        ';
-                    }
+            if ($item->inUse()) {
+                $actions .= '
+                    <span class="btn btn-sm btn-info disabled" data-bs-toggle="tooltip" title="Item is in use and cannot be deleted">
+                        <i class="bi bi-lock"></i>
+                    </span>
+                ';
+            } else {
+                $actions .= '
+                    <button type="button" class="btn btn-sm btn-delete delete-btn" 
+                        data-bs-toggle="tooltip" title="Delete Item"
+                        data-item-id="' . $item->Id . '"
+                        data-item-name="' . e($item->ItemName) . '">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                ';
+            }
 
-                    return $actions;
-                })
+            $actions .= '</div>';
+
+            return $actions;
+        })
                 ->rawColumns(['Status', 'Action'])
                 ->make(true);
         }
@@ -185,37 +189,26 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-   public function update($Id)
+   public function update(ItemMasterListRequest $request, $Id)
     {
-        // Base controller disables method injection; fetch the current request manually
-        $request = request();
-
         $item = ItemMasterList::findOrFail($Id);
         $this->authorize('update', $item);
 
-        // Validate update payload (unique rules ignore current item)
-        $validated = $request->validate([
-            'BarCode' => ['required','string','max:255', Rule::unique('t_Items','BarCode')->ignore($Id)],
-            'ItemName' => ['required','string','max:255', Rule::unique('t_Items','ItemName')->ignore($Id)],
-            'ItemType' => 'required|exists:t_ItemTypes,Id',
-            'Category' => 'required|exists:t_ItemCategories,Id',
-            'SubCategory' => 'nullable|exists:t_ItemCategories,Id',
-            'UOM' => 'required|exists:t_UOM,Id',
-            'InventoryType' => 'required|exists:t_InventoryTypes,Id',
-            'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'Document' => 'nullable', // accept multiple via array
-            'Document.*' => 'nullable|file|max:2048',
-            'ItemDescription' => 'required|string',
-            'Status' => 'nullable|exists:t_CodeDetails,ID',
-            'remove_image' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
+        $document = $request->file('Document');
+        $image = $request->file('ImageUpload');
 
-        $imageFile = $request->file('ImageUpload');
-        $document = $request->file('Document'); // single or array
+        // Handle image removal if requested
+        if ($request->has('remove_image') && $request->input('remove_image') == '1') {
+            if ($item->ImageId) {
+                \App\Models\DMS\Image::destroy($item->ImageId);
+                $item->ImageId = null;
+            }
+        }
 
-        $this->service->update((int)$Id, $validated, $imageFile, $document);
+        $this->service->update($Id, $validated, $image, $document);
 
-        return redirect()->route('itemmasterlist.show', $Id)
+        return redirect()->route('itemmaster.index')
             ->with('success', 'Item updated successfully.');
     }
 

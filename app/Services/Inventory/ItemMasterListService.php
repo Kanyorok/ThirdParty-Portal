@@ -84,6 +84,56 @@ class ItemMasterListService
         });
     }
 
+    public function update(int $id, array $data, ?UploadedFile $imageFile = null, ?UploadedFile $document = null): ItemMasterList
+{
+    return DB::transaction(function () use ($id, $data, $imageFile, $document) {
+        $item = ItemMasterList::findOrFail($id);
+
+        $item->fill($data);
+        $item->ModifiedBy = Auth::id();
+        $item->ModifiedOn = now();
+
+        // Handle category hierarchy update
+        $item->Category = $data['SubCategory'] ?? $data['Category'] ?? $item->Category;
+
+        // Handle image replacement
+        if ($imageFile) {
+            // Delete previous image if any
+            if ($item->ImageId) {
+                Image::destroy($item->ImageId);
+            }
+            $image = $this->storeImage($imageFile);
+            $item->ImageId = $image->ImageID;
+        }
+
+        $item->save();
+
+        // Handle document replacement
+        if ($document) {
+            // Remove old docs
+            foreach ($item->documents as $doc) {
+                $doc->delete();
+            }
+
+            $item->newDocument(
+                ModulesEnum::Inventory,
+                $document,
+                [PermissionEnum::MasterListView->value],
+                Auth::user()
+            );
+        }
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($item)
+            ->withProperties(['attributes' => $data])
+            ->event('updated')
+            ->log('Item updated');
+
+        return $item;
+    });
+}
+
     /**
      * Soft delete an item and remove its related media.
      */

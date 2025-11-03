@@ -23,13 +23,14 @@
 
         {{-- Row 1 --}}
         <div class="row mb-3">
-            <div class="col-md-4">
-                <label for="BarCode" class="form-label">Bar Code</label>
-                <input type="text" name="BarCode" class="form-control" value="{{ old('BarCode', $item->BarCode) }}" required>
-            </div>
+            
             <div class="col-md-4">
                 <label for="ItemName" class="form-label">Item Name</label>
                 <input type="text" name="ItemName" class="form-control" value="{{ old('ItemName', $item->ItemName) }}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="BarCode" class="form-label">Bar Code</label>
+                <input type="text" name="BarCode" class="form-control" value="{{ old('BarCode', $item->BarCode) }}" >
             </div>
             <div class="col-md-4">
                 <label for="ItemType" class="form-label">Item Type</label>
@@ -138,9 +139,12 @@
             @endforelse
             
             {{-- Upload new documents --}}
-            <input type="file" name="Document[]" class="form-control" multiple>
-            <small class="text-muted
-">You can upload multiple documents. Attach datasheets, images, or related files.</small>
+            <div class="mb-3">
+                <label class="form-label">Upload Supporting Document</label>
+                <input type="file" name="Document" class="form-control">
+                <small class="text-muted">Attach inspection sheet, photos, or related files</small>
+            </div>
+        </div>
 
         </div>
 

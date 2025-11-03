@@ -5,7 +5,6 @@
 @section('title', 'View Transfers')
 
 @section('content')
-    {{-- Session Errors --}}
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ session('error') }}
@@ -29,7 +28,7 @@
 
     <div class="container bg-white shadow-sm rounded p-4 mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>Goods Transfer List</h4>
+            <h4>Transferred Goods List</h4>
             <a href="{{ route('transactionstransfers.create') }}" class="btn btn-success">➕ New Transfer</a>
         </div>
 
@@ -76,16 +75,21 @@
                         <td class="d-flex gap-1">
                             {{-- View always allowed --}}
                             <a href="{{ route('transactionstransfers.show', $transfer->Id) }}"
-                               class="btn btn-sm btn-primary">View</a>
+                               class="btn btn-sm btn-primary" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
 
                             {{-- Edit --}}
                             @if($isPending)
                                 <a href="{{ route('transactionstransfers.edit', $transfer->Id) }}"
-                                   class="btn btn-sm btn-warning">Edit</a>
+                                   class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                             @else
                                 <button type="button" class="btn btn-sm btn-warning"
-                                        onclick="return showCustomError('Only pending transfers can be edited.');">
-                                    Edit
+                                        onclick="return showCustomError('Only pending transfers can be edited.');"
+                                        title="Edit">
+                                    <i class="fas fa-edit"></i>
                                 </button>
                             @endif
 
@@ -97,14 +101,16 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="button" class="btn btn-sm btn-danger"
-                                            onclick="return confirmDelete('{{ $transfer->Id }}');">
-                                        Delete
+                                            onclick="return confirmDelete('{{ $transfer->Id }}');"
+                                            title="Delete">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             @else
                                 <button type="button" class="btn btn-sm btn-danger"
-                                        onclick="return showCustomError('Only pending transfers can be deleted.');">
-                                    Delete
+                                        onclick="return showCustomError('Only pending transfers can be deleted.');"
+                                        title="Delete">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             @endif
                         </td>
@@ -119,9 +125,10 @@
         </div>
     </div>
 
-    {{-- JavaScript --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         $(document).ready(function () {
             @if(!$transfers->isEmpty())
