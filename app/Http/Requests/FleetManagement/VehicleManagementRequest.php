@@ -22,13 +22,28 @@ class VehicleManagementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'RegistrationNo' => 'required|string|max:255',
+            'RegistrationNo' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:t_FleetVehicles,RegistrationNo'
+            ],
             'VehicleType' => 'required|integer|exists:t_CodeDetails,ID',
             'Make' => 'nullable|integer|exists:t_FleetBrands,Id',
             'Model' => 'nullable|integer|exists:t_FleetModels,Id',
             'YearOfManufacture' => 'nullable|integer',
-            'ChassisNo' => 'nullable|string|max:100',
-            'EngineNo' => 'nullable|string|max:100',
+            'ChassisNo' => [
+                'nullable',
+                'string',
+                'max:100',
+                'unique:t_FleetVehicles,ChassisNo'
+            ],
+            'EngineNo' => [
+                'nullable',
+                'string',
+                'max:100',
+                'unique:t_FleetVehicles,EngineNo'
+            ],
             'FuelType' => 'required|integer|exists:t_FuelTypes,Id',
             'Capacity' => 'nullable|string|max:50',
             'OdometerReading' => 'nullable|numeric',
@@ -39,7 +54,18 @@ class VehicleManagementRequest extends FormRequest
             'Color' => 'nullable|string|max:15',
             'ImageFile' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'AssignedBranch' => 'required|integer|exists:t_Branches,Id',
-            //
         ];
     }
+
+    /**
+     * Custom error messages.
+     */
+    public function messages(): array
+{
+    return [
+        'RegistrationNo.unique' => '⚠️ A vehicle with this registration number already exists.',
+        'EngineNo.unique' => '🚫 A vehicle with this engine number already exists.',
+        'FuelType.required' => '⛽ The fuel type field is required.',
+    ];
+}
 }

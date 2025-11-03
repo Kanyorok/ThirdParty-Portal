@@ -37,6 +37,11 @@ class IntegrationRequest extends FormRequest
             'SSRS_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
             'SSRS_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
 
+            // iTrack 
+            'iTrack_URl' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'url:http,https', 'max:200'],
+            'iTrack_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'max:200'],
+            'iTrack_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'max:200'],
+
             // Email Integration Validation Rules
             'Incoming_Server' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'string', new isDomain()],
             'Incoming_Port' => ['exclude_unless:Integration,' . IntegrationsEnum::Email->value, 'required', 'integer', 'min:1', 'max:65535'],
@@ -86,6 +91,12 @@ class IntegrationRequest extends FormRequest
             'InfoBip_Host' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string', 'max:200'],
             'InfoBip_Email' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string', 'max:200', 'email:rfc,dns'],
             'InfoBip_API_Key' => ['exclude_unless:Integration,' . IntegrationsEnum::InfoBip->value, 'required', 'string'],
+
+            // Organization Branding Validation Rules
+            'Org_Name' => ['exclude_unless:Integration,' . IntegrationsEnum::Organization->value, 'required', 'string', 'max:150'],
+            'Org_Motto' => ['exclude_unless:Integration,' . IntegrationsEnum::Organization->value, 'nullable', 'string', 'max:200'],
+            // Accept a data URL/base64 or a simple path string set by client uploader
+            'Org_Logo' => ['exclude_unless:Integration,' . IntegrationsEnum::Organization->value, 'nullable', 'string'],
         ];
     }
 
@@ -153,6 +164,18 @@ class IntegrationRequest extends FormRequest
         }
 
         throw ValidationException::withMessages(['Channel_Callback' => 'url given may not not reachable']);
+    }
+
+    public function getITrackUrl(): string
+    {
+        try {
+            if (Http::get($this->validated('iTrack_URl'))->successful()) {
+                return $this->validated('iTrack_URl');
+            }
+        } catch (Exception|Throwable) {
+        }
+
+        throw ValidationException::withMessages(['iTrack_URl' => 'url given may not not reachable']);
     }
 
     /**

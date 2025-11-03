@@ -14,6 +14,7 @@
                         <a href="{{ route('purchaseOrder.index') }}" class="btn btn-outline-primary me-2">
                             <i class="fas fa-list"></i> All LPOs
                         </a>
+                        @can('create', \App\Models\Procurement\Order::class)
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
                                 <i class="fas fa-plus"></i> Quick Create
@@ -32,6 +33,7 @@
                                         <i class="fas fa-file-alt text-primary"></i> Traditional RFQ-Based</a></li>
                             </ul>
                         </div>
+                        @endcan
                     </div>
                 </div>
 
@@ -69,10 +71,12 @@
                                     </div>
                                 </div>
                                 <div class="mt-3">
+                                    @can('create', \App\Models\Procurement\Order::class)
                                     <a href="{{ route('lpo.origination.contract-based') }}"
                                        class="btn btn-success btn-sm">
                                         <i class="fas fa-plus"></i> Create from Contract
                                     </a>
+                                    @endcan
                                 </div>
                             </div>
                         </div>
@@ -95,10 +99,12 @@
                                     </div>
                                 </div>
                                 <div class="mt-3">
+                                    @can('create', \App\Models\Procurement\Order::class)
                                     <a href="{{ route('lpo.origination.award-based') }}"
                                        class="btn btn-warning btn-sm text-dark">
                                         <i class="fas fa-plus"></i> Create from Award
                                     </a>
+                                    @endcan
                                 </div>
                             </div>
                         </div>
@@ -122,10 +128,12 @@
                                     </div>
                                 </div>
                                 <div class="mt-3">
+                                    @can('create', \App\Models\Procurement\Order::class)
                                     <a href="{{ route('lpo.origination.direct-procurement') }}"
                                        class="btn btn-info btn-sm">
                                         <i class="fas fa-plus"></i> Create Direct LPO
                                     </a>
+                                    @endcan
                                 </div>
                             </div>
                         </div>
@@ -150,9 +158,11 @@
                                     </div>
                                 </div>
                                 <div class="mt-3">
+                                    @can('create', \App\Models\Procurement\Order::class)
                                     <a href="{{ route('purchaseOrder.create') }}" class="btn btn-primary btn-sm">
                                         <i class="fas fa-plus"></i> Create from RFQ
                                     </a>
+                                    @endcan
                                 </div>
                             </div>
                         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Communication\Email;
 use App\Models\Communication\EmailConversation;
@@ -13,7 +14,7 @@ class CrmEmailPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::EmailRead->value);
     }
 
     /**
@@ -37,7 +38,7 @@ class CrmEmailPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::EmailAssign->value);
     }
 
     /**

@@ -91,9 +91,9 @@
                                                             <tr>
                                                                 <td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') }}</td>
                                                                 <td>{{ $postTrip->Mileage }} Km/h</td>
-                                                                <td>{{ $postTrip->Fuel }} Ltr</td>
-                                                                <td>{{ $postTrip->EngineOil }} Ltr</td>
-                                                                <td>{{ $postTrip->Coolant }} Ltr</td>
+                                                                <td>{{ $inspection->fuel->Description ?? 'N/A' }}</td>
+                                                                <td>{{ $inspection->engineOil->Description ?? 'N/A' }} </td>
+                                                                <td>{{ $inspection->coolant->Description ?? 'N/A' }} </td>
                                                                 <td>{{ $postTrip->Reflector ? '✔️' : '❌' }}</td>
                                                                 <td>{{ $postTrip->FireExtinguisher ? '✔️' : '❌' }}</td>
                                                                 <td>{{ $postTrip->FirstAidKit ? '✔️' : '❌' }}</td>

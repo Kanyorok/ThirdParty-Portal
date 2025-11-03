@@ -15,26 +15,37 @@ class FleetInsuranceTrackerRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Validation rules.
      */
     public function rules(): array
     {
         return [
-
             'VehicleID' => 'required|integer|exists:t_FleetVehicles,Id',
             'InsuranceProvider' => 'required|integer|exists:t_InsuranceProviders,Id',
-            'PolicyNumber' => 'required|integer',
+            'PolicyNumber' => 'required|string|max:100',
+
+            // Coverage dates
             'CoverageStartDate' => 'required|date',
-            'CoverageEndDate' => 'required|date',
+            'CoverageEndDate' => 'required|date|after:CoverageStartDate',
+
+            // Renewal reminder must not be before start date
+            'RenewalReminderDate' => 'nullable|date|after_or_equal:CoverageStartDate',
+
             'PremiumAmount' => 'required|numeric|min:0',
-            'RenewalReminderDate' => 'required|date',
             'Notes' => 'nullable|string',
             'Document' => 'nullable|file|max:2048',
             'Status' => 'required|integer|exists:t_CodeDetails,ID',
-            //
         ];
     }
 
+    /**
+     * Custom validation messages.
+     */
+    public function messages(): array
+    {
+        return [
+            'CoverageEndDate.after' => 'The coverage Expiry date must be after the start date.',
+            'RenewalReminderDate.after_or_equal' => 'The renewal reminder date cannot be before the coverage start date.',
+        ];
+    }
 }

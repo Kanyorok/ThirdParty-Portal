@@ -22,7 +22,7 @@ class FuelTypRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'FuelName' => 'required|string|max:100',
+            'FuelName' => 'required|string|max:100|unique:t_FuelTypes,FuelName',
             'Description' => 'nullable|string|max:255',
             'IsActive' => 'boolean',
 
