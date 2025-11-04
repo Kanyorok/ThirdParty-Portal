@@ -10,10 +10,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
     const url = new URL(request.url);
-    const parts = url.pathname.split("/");
-    const rfqId = parts[parts.indexOf("[rfqId]") + 0] || parts[parts.length - 2];
-    // If pattern extraction fails, fallback to last segment before 'route'
-    const id = rfqId || parts[parts.length - 1];
+    // Extract the RFQ ID from the last non-empty path segment
+    const parts = url.pathname.split("/").filter(Boolean);
+    const id = parts[parts.length - 1];
+    if (!id || !/^\d+$/.test(id)) {
+        return NextResponse.json({ message: "Invalid RFQ id" }, { status: 400 });
+    }
     const search = request.nextUrl.searchParams.toString();
     const targetUrl = `${EXTERNAL_API_BASE}/api/procurement/rfq-clarifications/${encodeURIComponent(id)}${search ? `?${search}` : ""}`;
 
@@ -29,10 +31,16 @@ export async function GET(request: NextRequest) {
 
         const text = await res.text();
         const contentType = res.headers.get("content-type") || "";
-        const data = contentType.includes("application/json") ? JSON.parse(text || "{}") : text;
+        type JsonData = Record<string, unknown>;
+        const data: JsonData | string = contentType.includes("application/json")
+            ? (JSON.parse(text || "{}") as JsonData)
+            : text;
 
         if (!res.ok) {
-            return NextResponse.json({ message: data?.message || "Failed to fetch clarifications", errors: data?.errors }, { status: res.status });
+            const obj = typeof data === "string" ? {} : data;
+            const message = (obj["message"] as string) || "Failed to fetch clarifications";
+            const errors = obj["errors"];
+            return NextResponse.json({ message, errors }, { status: res.status });
         }
 
         return NextResponse.json(data);

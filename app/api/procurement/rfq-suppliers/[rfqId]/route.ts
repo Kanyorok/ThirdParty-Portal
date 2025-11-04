@@ -10,8 +10,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
     const url = new URL(request.url);
-    const parts = url.pathname.split("/");
-    const rfqId = parts[parts.length - 2];
+    // Extract the RFQ ID from the last non-empty path segment
+    const parts = url.pathname.split("/").filter(Boolean);
+    const rfqId = parts[parts.length - 1];
+    if (!rfqId || !/^\d+$/.test(rfqId)) {
+        return NextResponse.json({ message: "Invalid RFQ id" }, { status: 400 });
+    }
     const search = request.nextUrl.searchParams.toString();
     const targetUrl = `${EXTERNAL_API_BASE}/api/procurement/rfq-suppliers/${encodeURIComponent(rfqId)}${search ? `?${search}` : ""}`;
 
@@ -27,10 +31,16 @@ export async function GET(request: NextRequest) {
 
         const bodyText = await res.text();
         const contentType = res.headers.get("content-type") || "";
-        const data = contentType.includes("application/json") ? JSON.parse(bodyText || "{}") : bodyText;
+        type JsonData = Record<string, unknown>;
+        const data: JsonData | string = contentType.includes("application/json")
+            ? (JSON.parse(bodyText || "{}") as JsonData)
+            : bodyText;
 
         if (!res.ok) {
-            return NextResponse.json({ message: (data as any)?.message || "Failed to fetch RFQ invitation", errors: (data as any)?.errors }, { status: res.status });
+            const obj = typeof data === "string" ? {} : data;
+            const message = (obj["message"] as string) || "Failed to fetch RFQ invitation";
+            const errors = obj["errors"];
+            return NextResponse.json({ message, errors }, { status: res.status });
         }
 
         return NextResponse.json(data);
