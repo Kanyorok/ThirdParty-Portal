@@ -118,7 +118,9 @@
                         onchange="loadPlanItemsForPlan()">
                         <option selected disabled>-- Choose Procurement Plan --</option>
                         @foreach ($procurementPlan as $item)
-                        <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
+                            @if (!$item->isUsed())
+                                <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
+                            @endif
                         @endforeach
                     </select>
         </div>

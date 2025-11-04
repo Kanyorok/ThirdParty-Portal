@@ -42,8 +42,8 @@
                         // New multi-type display: join Codes; fallback to legacy enum label
                         'Third Party Types' => ($party->types && $party->types->count()) ? $party->types->pluck('Code')->filter()->unique()->join(', ') : $party->ThirdPartyType?->label(),
                         'Is Prequalified' => $party->IsPrequalified,
-                        'Created On' => $party->CreatedOn?->format('Y-m-d H:i:s'),
-                        'Modified On' => $party->ModifiedOn?->format('Y-m-d H:i:s'),
+                        'Created On' => $party->CreatedOn?->format('d/m/Y H:i:s'),
+                        'Modified On' => $party->ModifiedOn?->format('d/m/Y H:i:s'),
                         ];
                         @endphp
 

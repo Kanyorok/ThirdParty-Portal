@@ -49,7 +49,7 @@
                                     <td>{{ $item->RequisitionNo }}</td>
                                     <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
                                     <td data-order="{{ $item->CreatedOn ? Carbon::parse($item->CreatedOn)->format('Y-m-d H:i:s') : '' }}">
-                                        {{ $item->CreatedOn ? Carbon::parse($item->CreatedOn)->format('d-m-Y') : '' }}
+                                        {{ $item->CreatedOn ? Carbon::parse($item->CreatedOn)->format('d/m/Y') : '' }}
                                     </td>
                                     <td>{{ $item->BranchID }}</td>
                                     <td>{{ $item->DepartmentID }}</td>
