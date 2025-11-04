@@ -202,27 +202,69 @@ class ModuleService
      */
     private static function filterItemForUser(array $item, User $user, array $permSet, ?string $parentName): ?array
     {
-        // Filter children first
-        $filteredChildren = [];
-        foreach ($item['children'] as $child) {
-            $filteredChild = self::filterItemForUser($child, $user, $permSet, parentName: ($item['name'] ?? null));
-            if ($filteredChild !== null) {
-                $filteredChildren[] = $filteredChild;
+        // Preserve original children for fallback logic
+        $originalChildren = $item['children'] ?? [];
+            // Filter children by resolver (read visibility)
+            $filteredChildren = [];
+            foreach ($originalChildren as $child) {
+                $filteredChild = self::filterItemForUser($child, $user, $permSet, parentName: ($item['name'] ?? null));
+                if ($filteredChild !== null) {
+                    $filteredChildren[] = $filteredChild;
+                }
             }
-        }
-
-        $item['children'] = $filteredChildren;
+            $item['children'] = $filteredChildren;
 
         // If this item has a route, check if user can access it
-    $routeName = $item['route_name'] ?? null;
-    // Visibility rule: require read/view-level permission for this route
-    $canAccessRoute = $routeName ? self::userCanReadRoute($user, $permSet, $routeName) : false;
+        $routeName = $item['route_name'] ?? null;
+        // Submodule key inference: prefer route base or menu item name kebab
+        $subKey = null;
+        if (is_string($routeName) && $routeName !== '') {
+            $parts = explode('.', Str::lower($routeName));
+            $actions = ['index','create','store','edit','update','destroy','show','list','data'];
+            $candidate = end($parts) ?: null;
+            if ($candidate && in_array($candidate, $actions, true) && count($parts) > 1) {
+                $candidate = prev($parts) ?: $candidate;
+            }
+            $subKey = $candidate ?: ($parts[0] ?? null);
+        }
+        if (!$subKey) {
+            $subKey = Str::kebab(Str::lower((string)($item['name'] ?? '')));
+        }
+        // Visibility rule: submodule is visible only if user has read on that submodule (or it is open)
+        $canAccessRoute = $subKey ? PermissionResolver::isReadable($user, $subKey) : false;
 
         // Strict rule: keep item only if the route is accessible OR it has accessible children
         if ($canAccessRoute || !empty($filteredChildren)) {
             return $item;
         }
 
+    // No fallback: parent is visible only if it has any readable children
+
+        return null;
+    }
+
+    /**
+     * Permissive filter: include an item if user can access its route via ANY action (read/write/update/delete/approval),
+     * or if any of its children are included by the same permissive rules.
+     */
+    private static function filterItemForUserAny(array $item, User $user, array $permSet): ?array
+    {
+        $children = $item['children'] ?? [];
+        $filteredChildren = [];
+        foreach ($children as $child) {
+            $fc = self::filterItemForUserAny($child, $user, $permSet);
+            if ($fc !== null) {
+                $filteredChildren[] = $fc;
+            }
+        }
+
+        $item['children'] = $filteredChildren;
+
+        $routeName = $item['route_name'] ?? null;
+        $canAccessAny = $routeName ? self::userCanAccessRoute($user, $permSet, $routeName) : false;
+        if ($canAccessAny || !empty($filteredChildren)) {
+            return $item;
+        }
         return null;
     }
 
@@ -246,18 +288,44 @@ class ModuleService
         // Prefer explicit map from permission middleware
         $required = self::$routePermissionMap[$routeName] ?? null;
         if (is_string($required) && $required !== '') {
-            // If middleware states a create/update/delete, we DO NOT consider that read for menu visibility
-            return Str::endsWith($required, ['-read','-view']) && isset($permSet[$required]);
+            // Honor explicit permission middleware: if user has it, consider this route visible in the menu
+            if (isset($permSet[$required])) return true;
+            // Also accept common read/view suffixes if present
+            if (Str::endsWith($required, ['-read','-view']) && isset($permSet[$required])) return true;
         }
 
-        // Heuristic: base.read or base.view
-        $base = Str::of($routeName)->before('.')->lower()->toString();
-        $baseCompressed = preg_replace('/[^a-z0-9]/', '', $base);
-        foreach (['read','view'] as $suf) {
-            $p1 = $base . '-' . $suf;
-            if (isset($permSet[$p1])) return true;
-            $p2 = $baseCompressed . '-' . $suf;
-            if (isset($permSet[$p2])) return true;
+        // Heuristic: try multiple base candidates from dotted route names (e.g., settings.users.index → users)
+        $segments = array_values(array_filter(explode('.', Str::lower($routeName))));
+        $actions = ['index','create','store','edit','update','destroy','show','list','data'];
+        $candidates = [];
+        // Prefer segment after 'settings' if present
+        $idx = array_search('settings', $segments, true);
+        if ($idx !== false && isset($segments[$idx + 1])) {
+            $candidates[] = $segments[$idx + 1];
+        }
+        // Last non-action segment
+        for ($i = count($segments) - 1; $i >= 0; $i--) {
+            if (!in_array($segments[$i], $actions, true)) {
+                $candidates[] = $segments[$i];
+                break;
+            }
+        }
+        // Add all non-action segments as fallbacks
+        foreach ($segments as $seg) {
+            if (!in_array($seg, $actions, true)) $candidates[] = $seg;
+        }
+        $candidates = array_values(array_unique($candidates));
+
+        foreach ($candidates as $base) {
+            $baseCompressed = preg_replace('/[^a-z0-9]/', '', $base);
+            foreach (['read','view'] as $suf) {
+                $p1 = $base . '-' . $suf;
+                if (isset($permSet[$p1])) return true;
+                $p2 = $baseCompressed . '-' . $suf;
+                if (isset($permSet[$p2])) return true;
+            }
+            // Accept bare permission names (e.g., 'roles', 'users', 'teams', 'branches') commonly used under Settings
+            if (isset($permSet[$base]) || isset($permSet[$baseCompressed])) return true;
         }
         return false;
     }
