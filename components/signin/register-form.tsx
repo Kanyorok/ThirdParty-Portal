@@ -116,40 +116,48 @@ export function RegisterForm() {
                 if (data && /\D/.test(data)) {
                   e.preventDefault()
                 }
+                  // Prevent input if already at max length
+                  const target = e.target as HTMLInputElement
+                  if (target && target.value.length >= 15) {
+                    e.preventDefault()
+                  }
               }
 
               const handlePaste = (e: any) => {
                 const pasted = e?.clipboardData?.getData?.("text") || (window as any).clipboardData?.getData?.("Text") || ""
                 if (!pasted) return
-                const cleaned = pasted.replace(/\D/g, "")
-                if (cleaned === pasted) return // no invalid chars
-                e.preventDefault()
-                const target = e.target as HTMLInputElement
-                const start = target.selectionStart ?? target.value.length
-                const end = target.selectionEnd ?? start
-                const newVal = target.value.slice(0, start) + cleaned + target.value.slice(end)
-                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
-                if (nativeSetter) {
-                  nativeSetter.call(target, newVal)
-                } else {
-                  target.value = newVal
-                }
-                const ev = new Event("input", { bubbles: true })
-                target.dispatchEvent(ev)
-                // let react-hook-form know about the change
-                if (phoneReg.onChange) phoneReg.onChange({ target } as any)
+                  let cleaned = pasted.replace(/\D/g, "")
+                  if (cleaned.length > 15) cleaned = cleaned.slice(0, 15)
+                  if (cleaned === pasted && cleaned.length <= 15) return // no invalid chars and within limit
+                  e.preventDefault()
+                  const target = e.target as HTMLInputElement
+                  const start = target.selectionStart ?? target.value.length
+                  const end = target.selectionEnd ?? start
+                  let newVal = target.value.slice(0, start) + cleaned + target.value.slice(end)
+                  if (newVal.length > 15) newVal = newVal.slice(0, 15)
+                  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+                  if (nativeSetter) {
+                    nativeSetter.call(target, newVal)
+                  } else {
+                    target.value = newVal
+                  }
+                  const ev = new Event("input", { bubbles: true })
+                  target.dispatchEvent(ev)
+                  // let react-hook-form know about the change
+                  if (phoneReg.onChange) phoneReg.onChange({ target } as any)
               }
 
               const handleChange = (e: any) => {
-                const cleaned = (e.target.value || "").replace(/\D/g, "")
-                if (cleaned !== e.target.value) {
-                  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
-                  if (nativeSetter) nativeSetter.call(e.target, cleaned)
-                  else e.target.value = cleaned
-                  const ev = new Event("input", { bubbles: true })
-                  e.target.dispatchEvent(ev)
-                }
-                if (phoneReg.onChange) phoneReg.onChange(e)
+                  let cleaned = (e.target.value || "").replace(/\D/g, "")
+                  if (cleaned.length > 15) cleaned = cleaned.slice(0, 15)
+                  if (cleaned !== e.target.value) {
+                    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+                    if (nativeSetter) nativeSetter.call(e.target, cleaned)
+                    else e.target.value = cleaned
+                    const ev = new Event("input", { bubbles: true })
+                    e.target.dispatchEvent(ev)
+                  }
+                  if (phoneReg.onChange) phoneReg.onChange(e)
               }
 
               return (
@@ -163,6 +171,7 @@ export function RegisterForm() {
                   onBeforeInput={handleBeforeInput}
                   onPaste={handlePaste}
                   onChange={handleChange}
+                    maxLength={15}
                   className={resolveInputStyles("phone", !!errors.phone)}
                 />
               )
