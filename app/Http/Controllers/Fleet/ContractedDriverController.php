@@ -13,6 +13,7 @@ use App\Models\Fleet\FleetTripLog;
 use App\Models\Core\CodeDetail;
 use App\Models\Auth\User;
 use App\Models\HRM\Employee;
+use App\Models\ThirdParty\ThirdParties;
 use App\Models\Fleet\FleetContractedDriverAssignment;
 use Illuminate\Support\Facades\DB;
 use App\Models\Fleet\ContractedDriver;
@@ -38,7 +39,7 @@ class ContractedDriverController extends Controller
     public function create()
     {
         $this->authorize('create', ContractedDriver::class);
-        $companies = Supplier::all();
+        $companies = ThirdParties::where('IsPrequalified', true)->get();
         return view('fleet.contracted_drivers.create', compact('companies'));
     }
 
@@ -58,7 +59,7 @@ class ContractedDriverController extends Controller
     {
         $this->authorize('edit', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
-        $companies = Supplier::all();
+        $companies = ThirdParties::where('IsPrequalified', true)->get();
         return view('fleet.contracted_drivers.edit', compact('driver','companies'));
     }
 
