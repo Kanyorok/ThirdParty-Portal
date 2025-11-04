@@ -214,8 +214,9 @@ class ModuleService
         $item['children'] = $filteredChildren;
 
         // If this item has a route, check if user can access it
-        $routeName = $item['route_name'] ?? null;
-        $canAccessRoute = $routeName ? self::userCanAccessRoute($user, $permSet, $routeName) : false;
+    $routeName = $item['route_name'] ?? null;
+    // Visibility rule: require read/view-level permission for this route
+    $canAccessRoute = $routeName ? self::userCanReadRoute($user, $permSet, $routeName) : false;
 
         // Strict rule: keep item only if the route is accessible OR it has accessible children
         if ($canAccessRoute || !empty($filteredChildren)) {
@@ -223,6 +224,42 @@ class ModuleService
         }
 
         return null;
+    }
+
+    /**
+     * Strict read-only route access used for menu visibility: require read/view for route base
+     */
+    private static function userCanReadRoute(User $user, array $permSet, string $routeName): bool
+    {
+        // Overrides for departmental plan routes -> departmentneeds-read
+        $overrides = [
+            'procurementdepartmentalplan.index' => PermissionEnum::DepartmentNeedsRead->value,
+            'procurementdepartmentalplan.view' => PermissionEnum::DepartmentNeedsRead->value,
+            'procurementdepartmentalplan.data' => PermissionEnum::DepartmentNeedsRead->value,
+            // approvals list is not a read of base module; keep it separate
+        ];
+        if (isset($overrides[$routeName])) {
+            $required = Str::lower($overrides[$routeName]);
+            return isset($permSet[$required]);
+        }
+
+        // Prefer explicit map from permission middleware
+        $required = self::$routePermissionMap[$routeName] ?? null;
+        if (is_string($required) && $required !== '') {
+            // If middleware states a create/update/delete, we DO NOT consider that read for menu visibility
+            return Str::endsWith($required, ['-read','-view']) && isset($permSet[$required]);
+        }
+
+        // Heuristic: base.read or base.view
+        $base = Str::of($routeName)->before('.')->lower()->toString();
+        $baseCompressed = preg_replace('/[^a-z0-9]/', '', $base);
+        foreach (['read','view'] as $suf) {
+            $p1 = $base . '-' . $suf;
+            if (isset($permSet[$p1])) return true;
+            $p2 = $baseCompressed . '-' . $suf;
+            if (isset($permSet[$p2])) return true;
+        }
+        return false;
     }
 
     /**
