@@ -209,13 +209,25 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
 
 
-    // RFQ routes
-    Route::get('/rfqs/create', [RFQController::class, 'create'])->name('rfqs.create');
-    Route::post('/rfqs', [RFQController::class, 'store'])->name('rfqs.store');
-    Route::get('/rfqs/{id}', [RFQController::class, 'show'])->name('rfqs.show');
-    Route::get('/rfqs', [RFQController::class, 'index'])->name('rfqs.index');
-    Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])->name('rfqs.approve');
-    Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])->name('rfqs.reject');
+    // RFQ routes (enforced via canAction)
+    Route::get('/rfqs/create', [RFQController::class, 'create'])
+        ->middleware('canAction:write,rfqs')
+        ->name('rfqs.create');
+    Route::post('/rfqs', [RFQController::class, 'store'])
+        ->middleware('canAction:write,rfqs')
+        ->name('rfqs.store');
+    Route::get('/rfqs/{id}', [RFQController::class, 'show'])
+        ->middleware('canAction:read,rfqs')
+        ->name('rfqs.show');
+    Route::get('/rfqs', [RFQController::class, 'index'])
+        ->middleware('canAction:read,rfqs')
+        ->name('rfqs.index');
+    Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])
+        ->middleware('canAction:approve,rfqs')
+        ->name('rfqs.approve');
+    Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])
+        ->middleware('canAction:approve,rfqs')
+        ->name('rfqs.reject');
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');
