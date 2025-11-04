@@ -281,6 +281,31 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Support\Facades\Blade::if('canRead', function (string $base) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\ModuleService::userHasAction($user, $base, 'read');
+        });
+        \Illuminate\Support\Facades\Blade::if('canWrite', function (string $base) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\ModuleService::userHasAction($user, $base, 'create');
+        });
+        \Illuminate\Support\Facades\Blade::if('canUpdate', function (string $base) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\ModuleService::userHasAction($user, $base, 'update');
+        });
+        \Illuminate\Support\Facades\Blade::if('canDelete', function (string $base) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\ModuleService::userHasAction($user, $base, 'delete');
+        });
+        \Illuminate\Support\Facades\Blade::if('canApprove', function (string $base) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\ModuleService::userHasAction($user, $base, 'approval');
+        });
         Relation::morphMap([
 
             //Core

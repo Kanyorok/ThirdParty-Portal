@@ -2,7 +2,7 @@
 // AssetMeterReadingController.php
 namespace App\Http\Controllers\Assets\Master;
 
-use App\HttpControllers\Controller; // <-- fix namespace below
+use App\Http\Controllers\Controller; // fixed namespace
 use App\Models\Assets\Master\{AssetMeter, AssetMeterReading};
 use Illuminate\Http\Request;
 
