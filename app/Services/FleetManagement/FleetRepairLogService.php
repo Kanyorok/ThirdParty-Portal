@@ -18,7 +18,7 @@ class FleetRepairLogService
             $data['VehicleID'] = $data['VehicleID'] ?? null;
             $data['RepairType'] = $data['RepairType'] ?? null;
             $data['RepairDate'] = $data['RepairDate'] ?? null;
-            $data['Vendor'] = $data['Vendor'] ?? null;
+            $data['VendorID'] = $data['VendorID'] ?? null;
             $data['Cost'] = $data['Cost'] ?? null;
             $data['Description'] = $data['Description'] ?? null;
             $data['Notes'] = $data['Notes'] ?? null;
