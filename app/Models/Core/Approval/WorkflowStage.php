@@ -65,5 +65,9 @@ class WorkflowStage extends Model
         return $this->belongsTo(Workflow::class, 'WorkFlowId', 'Id');
     }
 
+      public static function getPrimaryKey(): string
+    {
+        return 'WorkFlowStageId';
+    }
 
     }

@@ -11,7 +11,7 @@ Route::middleware(['web','auth'])->group(function(){
 
 require __DIR__ . '/auth.php';
 
-Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function () {
+Route::middleware(['web','auth'])->namespace('App\Http\Controllers')->group(function () {
     require __DIR__ . '/crm.php';
     
     // Procurement routes with prefix

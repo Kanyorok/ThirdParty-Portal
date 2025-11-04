@@ -182,6 +182,7 @@ abstract class ApprovalWorkflowService
                 'Stage'      => (string)$stageId,
                 'Amount'     => $amount,
                 'Notes'      => $notes,
+                'isApproved' => null,  //  Explicitly set to null (unprocessed)
                 'CreatedBy'  => $actorId,
                 'ModifiedBy' => $actorId,
                 'CreatedOn'  => now(),
@@ -208,6 +209,7 @@ abstract class ApprovalWorkflowService
             $verifyEntry = DB::table('t_WorkFlowHistory')
                 ->where('Source', $table)
                 ->where('SourceID', (string)$sourceId)
+                ->where('isApproved', null)
                 ->where('Stage', (string)$stageId)
                 ->where('StatusId', $statusId)
                 ->whereNull('DeletedOn')
@@ -283,102 +285,148 @@ abstract class ApprovalWorkflowService
         string|int $sourceId, 
         string $remarks, 
         string $statusColumn
-    ): bool {
-        // Resolve morph alias to actual model class
-        $class = Relation::getMorphedModel($source);
-        if (!($class && class_exists($class))) {
-            throw new ErroredException('Invalid Related Entity');
-        }
-        
-        // Get the actual table name
-        $table = (new $class)->getTable();
+    ): bool
+    {
+         // Resolve morph alias to actual model class
+    $class = Relation::getMorphedModel($source);
+    if (!($class && class_exists($class))) {
+        throw new ErroredException('Invalid Related Entity');
+    }
+    
+    // Determine the status value to set based on module (using your getStatusValueForModule method)
+    $statusValueToSet = $this->getStatusValueForModule($source, $status);
+    
+    // Get the actual table name
+    $table = (new $class)->getTable();
 
-        Log::info("Executing workflow action", [
-            'source_alias' => $source,
+    Log::info("Executing workflow action", [
+        'source_alias' => $source,
+        'sourceId' => $sourceId,
+        'resolved_class' => $class,
+        'resolved_table' => $table,
+        'actor' => $actor->Id,
+        'actorName' => $actor->Name ?? $actor->UserID,
+        'statusId' => $status->ID,
+        'statusDescription' => $status->Description,
+        'statusColumn' => $statusColumn,
+        'statusValueToSet' => $statusValueToSet,  // Log the mapped value
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        Log::info("Calling p_ProcessWorkflowAction", [
+            'table' => $table,
             'sourceId' => $sourceId,
-            'resolved_class' => $class,
-            'resolved_table' => $table,
-            'actor' => $actor->Id,
-            'actorName' => $actor->Name ?? $actor->UserID,
+            'userId' => $actor->Id,
+            'userName' => $actor->Name ?? $actor->UserID,
             'statusId' => $status->ID,
-            'statusDescription' => $status->Description,
-            'statusColumn' => $statusColumn,
+            'notes' => $remarks,
+            'statusValueToSet' => $statusValueToSet,
         ]);
 
-        try {
-            DB::beginTransaction();
+        // Call stored procedure with corrected parameters
+        $result = DB::select(
+            'EXEC p_ProcessWorkflowAction 
+                @Source = ?, 
+                @SourceID = ?, 
+                @UserID = ?, 
+                @UserName = ?, 
+                @Notes = ?, 
+                @StatusColumn = ?, 
+                @StatusID = ?, 
+                @StatusValueToSet = ?',
+            [
+                $table,
+                (string)$sourceId,
+                $actor->Id,
+                $actor->Name ?? $actor->UserID,
+                $remarks,
+                $statusColumn,
+                $status->ID,  // BIGINT StatusId for t_WorkFlowHistory
+                $statusValueToSet  // Mapped status value for source table
+            ]
+        );
 
-            Log::info("Calling p_ProcessWorkflowAction", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'userId' => $actor->Id,
-                'userName' => $actor->Name ?? $actor->UserID,
-                'statusId' => $status->ID,
-                'notes' => $remarks,
-            ]);
+        Log::info("p_ProcessWorkflowAction raw result", [
+            'result' => $result,
+        ]);
 
-            // Call stored procedure
-            $result = DB::select(
-                'EXEC p_ProcessWorkflowAction 
-                    @Source = ?, 
-                    @SourceID = ?, 
-                    @UserID = ?, 
-                    @UserName = ?, 
-                    @Notes = ?, 
-                    @StatusColumn = ?, 
-                    @StatusID = ?',
-                [
-                    $table,
-                    (string)$sourceId,
-                    $actor->Id,
-                    $actor->Name ?? $actor->UserID,
-                    $remarks,
-                    $statusColumn,
-                    $status->ID
-                ]
-            );
-
-            Log::info("p_ProcessWorkflowAction raw result", [
-                'result' => $result,
-            ]);
-
-            // Check if stored procedure returned an error
-            if (!empty($result) && isset($result[0]->Status)) {
-                if ($result[0]->Status === 'ERROR') {
-                    Log::error("p_ProcessWorkflowAction returned ERROR", [
-                        'message' => $result[0]->Message ?? 'Unknown error',
-                    ]);
-                    throw new ErroredException($result[0]->Message ?? 'Workflow action failed');
-                }
-                
-                Log::info("p_ProcessWorkflowAction executed successfully", [
-                    'status' => $result[0]->Status,
-                    'message' => $result[0]->Message ?? null,
-                    'workflowStatus' => $result[0]->WorkflowStatus ?? null,
+        // Check if stored procedure returned an error
+        if (!empty($result) && isset($result[0]->Status)) {
+            if ($result[0]->Status === 'ERROR') {
+                Log::error("p_ProcessWorkflowAction returned ERROR", [
+                    'message' => $result[0]->Message ?? 'Unknown error',
                 ]);
+                throw new ErroredException($result[0]->Message ?? 'Workflow action failed');
             }
-
-            DB::commit();
-
-        } catch (ErroredException $e) {
-            DB::rollBack();
-            Log::error("ErroredException in _executeWorkflowAction", [
-                'message' => $e->getMessage(),
+            
+            Log::info("p_ProcessWorkflowAction executed successfully", [
+                'status' => $result[0]->Status,
+                'message' => $result[0]->Message ?? null,
+                'workflowStatus' => $result[0]->WorkflowStatus ?? null,
             ]);
-            throw $e;
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Error in _executeWorkflowAction', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'table' => $table,
-                'sourceId' => $sourceId
-            ]);
-            throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         }
 
-        return true;
+        DB::commit();
+
+    } catch (ErroredException $e) {
+        DB::rollBack();
+        Log::error("ErroredException in _executeWorkflowAction", [
+            'message' => $e->getMessage(),
+        ]);
+        throw $e;
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        Log::error('Error in _executeWorkflowAction', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'table' => $table,
+            'sourceId' => $sourceId
+        ]);
+        throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
     }
+
+    return true;
+    }
+        
+        
+    
+
+    /**
+     * Determine the status value to set based on module
+     */
+     private function getStatusValueForModule(string $source, CodeDetail $status): string
+    {
+        // Load mappings from config
+        $mappings = config('workflow', []);
+
+        // Check if the source has a mapping defined
+        if (isset($mappings[$source]) && is_array($mappings[$source])) {
+            $moduleMapping = $mappings[$source];
+
+            // Look up the status description in the mapping
+            if (isset($moduleMapping[$status->Description])) {
+                return $moduleMapping[$status->Description];
+            }
+
+            // Optional: Check for variations (e.g., 'Approval' as alias for 'Approved')
+            $aliases = [
+                'Approval' => 'Approved',  // Map 'Approval' to 'Approved' if needed
+            ];
+            $normalizedDescription = $aliases[$status->Description] ?? $status->Description;
+            if (isset($moduleMapping[$normalizedDescription])) {
+                return $moduleMapping[$normalizedDescription];
+            }
+        }
+
+        // Fallback: Use full description (original behavior for unmapped modules)
+        Log::info("No mapping found for source '{$source}', using fallback", [
+            'statusDescription' => $status->Description,
+        ]);
+        return strtolower($status->Description);
+    }
+
 
     /**
      * Extract clean error message from SQL Server
@@ -437,6 +485,7 @@ abstract class ApprovalWorkflowService
             $existingSubmission = DB::table('t_WorkFlowHistory')
                 ->where('Source', $table)
                 ->where('SourceID', (string)$sourceId)
+                ->where('isApproved', null)
                 ->whereNull('DeletedOn')
                 ->first();
 
@@ -502,6 +551,12 @@ abstract class ApprovalWorkflowService
 
             DB::commit();
             Log::info("Transaction committed successfully");
+
+              $model->refresh();
+        Log::info("Model refreshed after workflow action", [
+            'sourceId' => $sourceId,
+            'newStatus' => $model->Status ?? 'N/A',
+        ]);
 
             // Execute workflow stored procedure
             try {
@@ -617,6 +672,14 @@ abstract class ApprovalWorkflowService
             ->first();
 
         if (!$stage || !$stage->PermissionId) {
+            return false;
+        }
+         $hasPending = WorkflowPending::where('Source', $table)
+            ->where('SourceID', (string)$sourceId)
+            ->where('UserId', $user->Id)
+            ->whereNull('DeletedOn')
+            ->exists();
+        if (!$hasPending) {
             return false;
         }
 

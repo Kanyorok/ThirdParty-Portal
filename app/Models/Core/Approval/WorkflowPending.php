@@ -38,6 +38,9 @@ class WorkflowPending extends Model
      *
      * @var string
      */
+
+    const DELETED_AT = 'DeletedOn';
+
     protected $keyType = 'int';
 
     /**

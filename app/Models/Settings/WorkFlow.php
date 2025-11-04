@@ -6,6 +6,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
+use App\Models\Core\Module;
 use App\Models\Settings\WorkFlowType;
 use App\Models\Settings\WorkflowStage;
 
@@ -47,4 +48,10 @@ class WorkFlow extends Model
     {
         return $this->hasMany(WorkflowStage::class, 'WorkFlowId', 'Id');
     }
+
+    public function module()
+   {
+    return $this->belongsTo(Module::class, 'ModuleId');
+   }
+
 }
