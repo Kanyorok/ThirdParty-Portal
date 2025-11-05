@@ -104,4 +104,6 @@ class FleetVehicle extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'VehicleStatus', 'ID');
     }
+
+    
 }

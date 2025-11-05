@@ -58,6 +58,10 @@ class FleetTripLog extends Model
     {
         return $this->belongsTo(\App\Models\Fleet\FleetVehicle::class, 'VehicleID', 'Id');
     }
+    public function vehicleAssignments()
+    {
+        return $this->hasMany(FleetVehicleAssignment::class, 'TripNo', 'TripNo');
+    }
 
 
     public function statusDetail()
