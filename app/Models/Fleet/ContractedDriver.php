@@ -59,7 +59,9 @@ class ContractedDriver extends Model
 
     public function tripLogs()
     {
-        return $this->hasMany(FleetTripLog::class, 'DriverID', 'Id');
+        return $this->hasMany(FleetTripLog::class, 'DriverNo', 'Id');
     }
+
+    
 
 }

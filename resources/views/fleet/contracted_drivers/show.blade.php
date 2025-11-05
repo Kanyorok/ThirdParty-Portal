@@ -172,45 +172,46 @@
                         </div>
 
                         {{-- Trips Tab Content --}}
-                        <div class="tab-pane fade" id="trips">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5>Trips</h5>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Trip No</th>
-                                        <th>Vehicle</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Start Time</th>
-                                        <th>End Time</th>
-                                        <th>Start Location</th>
-                                        <th>End Location</th>
-                                        <th>Distance (Km)</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="tripsTable">
-                                    @foreach($trips as $trip)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $trip->TripNo }}</td>
-                                            <td>{{ $trip->vehicle?->RegistrationNo ?? 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') }}</td>
-                                            <td>{{ $trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') : '—' }}</td>
-                                            <td>{{ $trip->StartTime }}</td>
-                                            <td>{{ $trip->EndTime }}</td>
-                                            <td>{{ $trip->StartLocation }}</td>
-                                            <td>{{ $trip->EndLocation }}</td>
-                                            <td>{{ $trip->DistanceCovered }}</td>
-                                        </tr>
-                                    @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="tab-pane fade" id="trips" role="tabpanel">
+                        <div class="card shadow rounded-4 p-3">
+                            <h5 class="mb-3">🚗 Trips History</h5>
+
+                            @if($trips->isEmpty())
+                                <p class="text-muted">No trips recorded for this contracted driver yet.</p>
+                            @else
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Trip No</th>
+                                                <th>Vehicle</th>
+                                                <th>Origin</th>
+                                                <th>Destination</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($trips as $trip)
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>{{ $trip->TripNo ?? 'N/A' }}</td>
+                                                    <td>{{ $trip->vehicle->RegNo ?? 'N/A' }}</td>
+                                                    <td>{{ $trip->Origin ?? '-' }}</td>
+                                                    <td>{{ $trip->Destination ?? '-' }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($trip->TripDate)->format('d M Y') }}</td>
+                                                    <td>
+                                                        <span class="badge bg-primary">{{ $trip->Status ?? 'Unknown' }}</span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>

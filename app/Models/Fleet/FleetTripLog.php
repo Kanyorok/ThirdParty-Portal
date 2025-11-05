@@ -54,6 +54,12 @@ class FleetTripLog extends Model
         return 'TripId';
     }
 
+    public function vehicle()
+    {
+        return $this->belongsTo(\App\Models\Fleet\FleetVehicle::class, 'VehicleID', 'Id');
+    }
+
+
     public function statusDetail()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
@@ -94,9 +100,5 @@ class FleetTripLog extends Model
         {
             return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
         }
-
-
-
-
 
 }
