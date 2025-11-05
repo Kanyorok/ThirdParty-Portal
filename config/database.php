@@ -115,6 +115,25 @@ return [
             'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
         ],
 
+        // Secondary connection pointing to the legacy/old BR ERP database
+        'sqlsrv_old' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DB_OLD_URL'),
+            'host' => env('DB_OLD_HOST', env('DB_HOST', '172.16.2.16')),
+            'port' => env('DB_OLD_PORT', env('DB_PORT', '1433')),
+            'database' => env('DB_OLD_DATABASE', 'BR_ERP_OLD'),
+            'username' => env('DB_OLD_USERNAME', env('DB_USERNAME', 'realm')),
+            'password' => env('DB_OLD_PASSWORD', env('DB_PASSWORD', 'friend')),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'options' => [
+                // PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60,//s
+            ],
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
+        ],
+
 
     ],
 

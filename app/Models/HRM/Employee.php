@@ -54,7 +54,8 @@ class Employee extends Model
 
     public function user(): HasOne
     {
-        return $this->hasOne(User::class, 'EmployeeID', 'Id')->withTrashed();
+    // Correct FK mapping: t_Users.EmployeeId -> t_Employees.Id
+    return $this->hasOne(User::class, 'EmployeeId', 'Id')->withTrashed();
     }
 
     public static function getPrimaryKey(): string

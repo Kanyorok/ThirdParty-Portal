@@ -266,10 +266,10 @@ Route::prefix('procurement')->name('api.procurement.')
 
         // Supplier RFQ endpoints (supplier portal)
         Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation']);
+    Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
-        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications']);
+    Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
 
 // Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage

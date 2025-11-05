@@ -18,6 +18,7 @@ class ModuleService
      * In-request caches to avoid repeated DB/route scans.
      */
     private static array $permissionSetCache = [];
+    private static array $normalizedPermissionSetCache = [];
     private static ?array $routePermissionMap = null;
 
     public static function generateNavbar(User $user = null): string
@@ -201,27 +202,132 @@ class ModuleService
      */
     private static function filterItemForUser(array $item, User $user, array $permSet, ?string $parentName): ?array
     {
-        // Filter children first
-        $filteredChildren = [];
-        foreach ($item['children'] as $child) {
-            $filteredChild = self::filterItemForUser($child, $user, $permSet, parentName: ($item['name'] ?? null));
-            if ($filteredChild !== null) {
-                $filteredChildren[] = $filteredChild;
+        // Preserve original children for fallback logic
+        $originalChildren = $item['children'] ?? [];
+            // Filter children by resolver (read visibility)
+            $filteredChildren = [];
+            foreach ($originalChildren as $child) {
+                $filteredChild = self::filterItemForUser($child, $user, $permSet, parentName: ($item['name'] ?? null));
+                if ($filteredChild !== null) {
+                    $filteredChildren[] = $filteredChild;
+                }
             }
-        }
-
-        $item['children'] = $filteredChildren;
+            $item['children'] = $filteredChildren;
 
         // If this item has a route, check if user can access it
         $routeName = $item['route_name'] ?? null;
-        $canAccessRoute = $routeName ? self::userCanAccessRoute($user, $permSet, $routeName) : false;
+        // Submodule key inference: prefer route base or menu item name kebab
+        $subKey = null;
+        if (is_string($routeName) && $routeName !== '') {
+            $parts = explode('.', Str::lower($routeName));
+            $actions = ['index','create','store','edit','update','destroy','show','list','data'];
+            $candidate = end($parts) ?: null;
+            if ($candidate && in_array($candidate, $actions, true) && count($parts) > 1) {
+                $candidate = prev($parts) ?: $candidate;
+            }
+            $subKey = $candidate ?: ($parts[0] ?? null);
+        }
+        if (!$subKey) {
+            $subKey = Str::kebab(Str::lower((string)($item['name'] ?? '')));
+        }
+        // Visibility rule: submodule is visible only if user has read on that submodule (or it is open)
+        $canAccessRoute = $subKey ? PermissionResolver::isReadable($user, $subKey) : false;
 
         // Strict rule: keep item only if the route is accessible OR it has accessible children
         if ($canAccessRoute || !empty($filteredChildren)) {
             return $item;
         }
 
+    // No fallback: parent is visible only if it has any readable children
+
         return null;
+    }
+
+    /**
+     * Permissive filter: include an item if user can access its route via ANY action (read/write/update/delete/approval),
+     * or if any of its children are included by the same permissive rules.
+     */
+    private static function filterItemForUserAny(array $item, User $user, array $permSet): ?array
+    {
+        $children = $item['children'] ?? [];
+        $filteredChildren = [];
+        foreach ($children as $child) {
+            $fc = self::filterItemForUserAny($child, $user, $permSet);
+            if ($fc !== null) {
+                $filteredChildren[] = $fc;
+            }
+        }
+
+        $item['children'] = $filteredChildren;
+
+        $routeName = $item['route_name'] ?? null;
+        $canAccessAny = $routeName ? self::userCanAccessRoute($user, $permSet, $routeName) : false;
+        if ($canAccessAny || !empty($filteredChildren)) {
+            return $item;
+        }
+        return null;
+    }
+
+    /**
+     * Strict read-only route access used for menu visibility: require read/view for route base
+     */
+    private static function userCanReadRoute(User $user, array $permSet, string $routeName): bool
+    {
+        // Overrides for departmental plan routes -> departmentneeds-read
+        $overrides = [
+            'procurementdepartmentalplan.index' => PermissionEnum::DepartmentNeedsRead->value,
+            'procurementdepartmentalplan.view' => PermissionEnum::DepartmentNeedsRead->value,
+            'procurementdepartmentalplan.data' => PermissionEnum::DepartmentNeedsRead->value,
+            // approvals list is not a read of base module; keep it separate
+        ];
+        if (isset($overrides[$routeName])) {
+            $required = Str::lower($overrides[$routeName]);
+            return isset($permSet[$required]);
+        }
+
+        // Prefer explicit map from permission middleware
+        $required = self::$routePermissionMap[$routeName] ?? null;
+        if (is_string($required) && $required !== '') {
+            // Honor explicit permission middleware: if user has it, consider this route visible in the menu
+            if (isset($permSet[$required])) return true;
+            // Also accept common read/view suffixes if present
+            if (Str::endsWith($required, ['-read','-view']) && isset($permSet[$required])) return true;
+        }
+
+        // Heuristic: try multiple base candidates from dotted route names (e.g., settings.users.index → users)
+        $segments = array_values(array_filter(explode('.', Str::lower($routeName))));
+        $actions = ['index','create','store','edit','update','destroy','show','list','data'];
+        $candidates = [];
+        // Prefer segment after 'settings' if present
+        $idx = array_search('settings', $segments, true);
+        if ($idx !== false && isset($segments[$idx + 1])) {
+            $candidates[] = $segments[$idx + 1];
+        }
+        // Last non-action segment
+        for ($i = count($segments) - 1; $i >= 0; $i--) {
+            if (!in_array($segments[$i], $actions, true)) {
+                $candidates[] = $segments[$i];
+                break;
+            }
+        }
+        // Add all non-action segments as fallbacks
+        foreach ($segments as $seg) {
+            if (!in_array($seg, $actions, true)) $candidates[] = $seg;
+        }
+        $candidates = array_values(array_unique($candidates));
+
+        foreach ($candidates as $base) {
+            $baseCompressed = preg_replace('/[^a-z0-9]/', '', $base);
+            foreach (['read','view'] as $suf) {
+                $p1 = $base . '-' . $suf;
+                if (isset($permSet[$p1])) return true;
+                $p2 = $baseCompressed . '-' . $suf;
+                if (isset($permSet[$p2])) return true;
+            }
+            // Accept bare permission names (e.g., 'roles', 'users', 'teams', 'branches') commonly used under Settings
+            if (isset($permSet[$base]) || isset($permSet[$baseCompressed])) return true;
+        }
+        return false;
     }
 
     /**
@@ -299,7 +405,8 @@ class ModuleService
             'department-need-approval.destroy' => PermissionEnum::DepartmentNeedsApproval->value,
         ];
         if (isset($overrides[$routeName])) {
-            return isset($permSet[$overrides[$routeName]]);
+            $required = Str::lower($overrides[$routeName]);
+            return isset($permSet[$required]);
         }
 
         // Use prebuilt route->permission map if available
@@ -310,20 +417,18 @@ class ModuleService
 
         // Heuristic fallback from route base name
         // Prefer the first segment after module prefix when present (e.g., rfqs.index → rfq; tendersubmission.index → tendersubmission)
-        $base = Str::of($routeName)->before('.')->slug('-')->toString();
-        // Try to singularize common plural forms crudely
-        if (Str::endsWith($base, 's')) {
-            $base = Str::substr($base, 0, Str::length($base) - 1);
+        $base = Str::of($routeName)->before('.')->lower()->toString();
+        // Generate candidate bases: keep separators and compressed
+        $baseCompressed = preg_replace('/[^a-z0-9]/', '', $base);
+        $suffixes = ['read','view','create','write','update','edit','delete','destroy','approval','approve'];
+        foreach ($suffixes as $suf) {
+            // raw style: base(with hyphens/segments)-suffix
+            $p1 = $base . '-' . $suf;
+            if (isset($permSet[$p1])) return true;
+            // compressed base-suffix (covers camelCase bases stored without separators)
+            $p2 = $baseCompressed . '-' . $suf;
+            if (isset($permSet[$p2])) return true;
         }
-        $candidates = [
-            $base . '-read', $base . '-create', $base . '-update', $base . '-delete', $base . '-approval'
-        ];
-        foreach ($candidates as $p) {
-            if (isset($permSet[$p])) {
-                return true;
-            }
-        }
-
         return false;
     }
 
@@ -341,7 +446,7 @@ class ModuleService
                 $middlewares = method_exists($route, 'gatherMiddleware') ? $route->gatherMiddleware() : ($route->middleware() ?? []);
                 foreach ($middlewares as $mw) {
                     if (is_string($mw) && Str::startsWith($mw, 'permission:')) {
-                        $map[$name] = (string)Str::after($mw, 'permission:');
+                        $map[$name] = Str::lower((string)Str::after($mw, 'permission:'));
                         break;
                     }
                 }
@@ -354,7 +459,7 @@ class ModuleService
     /**
      * Get a set of permission names for the current user/branch for this request.
      */
-    private static function getUserPermissionSet(User $user): array
+    public static function getUserPermissionSet(User $user): array
     {
         $branchId = (string) (session('LoginBranchId') ?? 'no-branch');
         $key = $user->getAuthIdentifier() . '|' . $branchId;
@@ -366,14 +471,79 @@ class ModuleService
         } catch (\Throwable $e) {
             $perms = [];
         }
-        // Convert to set for O(1) lookups
+        // Convert to lowercased set for O(1) lookups
         $set = [];
-        foreach ($perms as $p) $set[$p] = true;
+        foreach ($perms as $p) {
+            $set[Str::lower((string)$p)] = true;
+        }
+        // Warm normalized cache sibling
+        self::$normalizedPermissionSetCache[$key] = self::normalizePermissionSetKeys(array_keys($set));
         return self::$permissionSetCache[$key] = $set;
     }
 
     private static function isSuper(User $user): bool
     {
         return $user->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin']);
+    }
+
+    /**
+     * Determine if the user has a base-action permission (e.g., tender-read) with robust normalization.
+     */
+    public static function userHasAction(User $user, string $base, string $action): bool
+    {
+        $raw = self::getUserPermissionSet($user); // lowercased keys
+        $norm = self::getNormalizedPermissionSet($user);
+
+        $baseLower = Str::lower($base);
+        $baseCompressed = preg_replace('/[^a-z0-9]/', '', $baseLower);
+        $baseKebab = Str::kebab($baseLower);
+
+        $synonyms = [
+            'read' => ['read','view'],
+            'create' => ['create','write'],
+            'write' => ['create','write'],
+            'update' => ['update','edit'],
+            'delete' => ['delete','destroy'],
+            'approval' => ['approval','approve'],
+            'approve' => ['approval','approve'],
+        ];
+        $suffixes = $synonyms[$action] ?? [$action];
+
+        foreach ($suffixes as $suf) {
+            // raw variants
+            $c1 = $baseLower . '-' . $suf; // e.g., tender-read, tenderinvitation-read
+            if (isset($raw[$c1])) return true;
+            $c2 = $baseCompressed . '-' . $suf; // e.g., masterlist-view
+            if (isset($raw[$c2])) return true;
+            $c3 = $baseKebab . '-' . $suf; // e.g., master-list-view
+            if (isset($raw[$c3])) return true;
+
+            // normalized compressed (no separators)
+            $n1 = $baseCompressed . $suf; // e.g., masterlistview
+            if (isset($norm[$n1])) return true;
+        }
+        return false;
+    }
+
+    private static function getNormalizedPermissionSet(User $user): array
+    {
+        $branchId = (string) (session('LoginBranchId') ?? 'no-branch');
+        $key = $user->getAuthIdentifier() . '|' . $branchId;
+        if (isset(self::$normalizedPermissionSetCache[$key])) {
+            return self::$normalizedPermissionSetCache[$key];
+        }
+        // Ensure raw cache is warmed
+        $raw = self::getUserPermissionSet($user);
+        return self::$normalizedPermissionSetCache[$key] = self::normalizePermissionSetKeys(array_keys($raw));
+    }
+
+    private static function normalizePermissionSetKeys(array $names): array
+    {
+        $set = [];
+        foreach ($names as $name) {
+            $norm = preg_replace('/[^a-z0-9]/', '', Str::lower((string)$name));
+            $set[$norm] = true;
+        }
+        return $set;
     }
 }

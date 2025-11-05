@@ -23,7 +23,8 @@
             <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
         </span>
     </div>
-    <form action="{{ route('initiatetender.store') }}" method="POST" enctype="multipart/form-data">
+  @canWrite('tender')
+  <form action="{{ route('initiatetender.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('POST')
 
@@ -230,10 +231,11 @@
                     </div>
 
         <!-- Buttons -->
-        <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn btn-primary">Save Tender</button>
-                    </div>
-                </form>
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-primary">Save Tender</button>
+    </div>
+  </form>
+  @endcanWrite
 
 </div>
 <script>

@@ -94,10 +94,12 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 mt-4">
+                        @canUpdate('tender')
                         <button type="submit" class="btn btn-primary"
                                 onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Edit
                             Tender Info
                         </button>
+                        @endcanUpdate
                     </div>
             </div>
             </form>
@@ -111,10 +113,12 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="card-title mb-3">📦 Items in this Tender</h5>
                 <h4></h4>
+                @canUpdate('tender')
                 <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
                         data-bs-target="#addItemModal">
                     + Add Item
                 </button>
+                @endcanUpdate
             </div>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
@@ -141,10 +145,13 @@
                             </td>
                             <td>PR/2025/211</td>
                             <td>
+                                @canUpdate('tender')
                                 <a href="#" class="btn btn-sm btn-outline-primary" title="Edit"
                                    data-bs-toggle="modal" data-bs-target="#editItemModal-{{$item->id}}">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                @endcanUpdate
+                                @canDelete('tender')
                                 <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
                                       style="display: inline;">
                                     @csrf
@@ -157,6 +164,7 @@
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
+                                @endcanDelete
                             </td>
                         </tr>
                     @endforeach
@@ -177,8 +185,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="card-title mb-3">🏷️ Selected Suppliers (Restricted Tender)</h5>
                     <h4></h4>
+                    @canUpdate('tender')
                     <a href="#" class="btn btn-sm btn-success"
                        data-bs-toggle="modal" data-bs-target="#addSupplierModal">+ Add Supplier</a>
+                    @endcanUpdate
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
@@ -199,6 +209,7 @@
                 <td>{{ $item->supplier->thirdParty->Email ?? '—' }}</td>
                 <td>{{ $item->supplier->thirdParty->Phone ?? '—' }}</td>
                                 <td class="text-center">
+                                    @canDelete('tender')
                                     <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
                                           style="display: inline;">
                                         @csrf
@@ -211,6 +222,7 @@
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
+                                    @endcanDelete
                                 </td>
                             </tr>
                         @endforeach
@@ -389,7 +401,9 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
                             </button>
+                            @canUpdate('tender')
                             <button type="submit" class="btn btn-success">Add Supplier</button>
+                            @endcanUpdate
                         </div>
                     </form>
                 </div>
