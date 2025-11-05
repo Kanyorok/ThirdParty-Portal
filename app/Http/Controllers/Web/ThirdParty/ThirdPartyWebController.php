@@ -6,9 +6,11 @@ use App\Enums\BusinessTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest;
+use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyWithUserRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
+use App\Models\Core\CodeDetail;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyType;
 use Illuminate\Support\Facades\DB;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +20,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class ThirdPartyWebController extends Controller
 {
@@ -102,32 +106,87 @@ class ThirdPartyWebController extends Controller
     {
         $businessTypes = BusinessTypeEnum::cases();
         $approvalStatuses = ThirdPartyApprovalStatusEnum::cases();
-        return view('thirdparty.parties.create', compact('businessTypes', 'approvalStatuses'));
+        $thirdPartyTypes = ThirdPartyType::orderBy('Code')->get();
+        $partyTypes = CodeDetail::where('CodeID', 'PartyType')->get();
+        return view('thirdparty.parties.create', compact('businessTypes', 'approvalStatuses', 'thirdPartyTypes','partyTypes'));
     }
 
-    public function store(StoreThirdPartyRequest $request): RedirectResponse
-    {
-        try {
-            $data = $request->validated();
-            $typeId = $data['ThirdPartyType'] ?? null; // numeric TypeId now
-            unset($data['ThirdPartyType']);
-            $party = ThirdParties::create($data);
-            if ($typeId) {
+public function store(StoreThirdPartyWithUserRequest $request)
+{
+    try {
+            DB::beginTransaction();
+
+            $validated = $request->validated();
+
+            $partyType = strtolower($validated['PartyType'] ?? '');
+            $thirdPartyName = $validated['ThirdPartyName'] ?? null;
+
+            if ($partyType === 'in' || str_contains($partyType, 'individual')) {
+                $thirdPartyName = trim($validated['FirstName'] . ' ' . $validated['LastName']);
+            }
+
+            $creatorId = DB::table('t_ThirdPartyUsers')->value('Id') ?? NULL;
+
+            $thirdParty = ThirdParties::create([
+                'ThirdPartyName'     => $thirdPartyName,
+                'TradingName'        => $validated['TradingName'] ?? null,
+                'BusinessType'       => $validated['BusinessType'] ?? null,
+                'Country'            => $validated['Country'],
+                'PhysicalAddress'    => $validated['PhysicalAddress'],
+                'Email'              => $validated['Email'],
+                'Phone'              => $validated['Phone'],
+                'Website'            => $validated['Website'] ?? null,
+                'ThirdPartyType'     => $validated['ThirdPartyType'],
+                'PartyType'          => $validated['PartyType'],
+                'RegistrationNumber' => $validated['RegistrationNumber'] ?? null,
+                'TaxPIN'             => $validated['TaxPIN'] ?? null,
+                'VATNumber'          => $validated['VATNumber'] ?? null,
+                'ApprovalStatus'     => $validated['ApprovalStatus'] ?? null,
+                'Status'             => $validated['Status'] ?? null,
+                'CreatedBy'          => $creatorId,
+            ]);
+
+        $user = ThirdPartyUser::create([
+            'UserID'       => strtoupper(Str::random(6)),
+            'FirstName'    => $request->FirstName,
+            'LastName'     => $request->LastName,
+            'Email'        => $request->UserEmail,
+            'Phone'        => $request->UserPhone,
+            'Gender'       => $request->Gender,
+            'Password'     => bcrypt('12345678'), // default password
+            'IsActive'     => 1,
+            'EmailVerifiedOn' => now(),
+            'CreatedBy'    => $creatorId,
+            'CreatedOn'    => now(),
+            'ThirdPartyId' => $thirdParty->Id, // 🔗 link to company
+        ]);
+
+        if (is_array($request->ThirdPartyType)) {
+            foreach ($request->ThirdPartyType as $typeId) {
                 DB::table('t_ThirdPartyType_ThirdParties')->insert([
-                    'TypeId' => $typeId,
-                    'ThirdPartyId' => $party->Id,
-                    'CreatedOn' => now(),
+                    'TypeId'       => $typeId,
+                    'ThirdPartyId' => $thirdParty->Id,
+                    'CreatedBy'    => Auth::id() ?? 1,
+                    'ModifiedBy'   => Auth::id() ?? 1,
+                    'CreatedOn'    => now(),
+                    'ModifiedOn'   => now(),
                 ]);
             }
-            return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
-                ->with('success', 'Third party created successfully.');
-        } catch (\Exception $e) {
-            Log::error('Failed to create third party: ' . $e->getMessage(), ['request_data' => $request->all()]);
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Failed to create third party. Please try again.');
         }
+
+
+        DB::commit();
+
+        return redirect()
+            ->route('thirdparty.parties.index')
+            ->with('success', 'Third Party and User created successfully.');
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        report($e);
+        return back()->with('error', 'Failed to create third party: ' . $e->getMessage());
     }
+}
+
 
     public function show(ThirdParties $party): View
     {

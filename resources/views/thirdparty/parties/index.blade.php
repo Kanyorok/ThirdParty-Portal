@@ -624,6 +624,9 @@
             <div class="controls-section">
                 <div id="dt-length-container" class="dt-length-container"></div>
                 <div class="search-section">
+                    <div>
+                        <a href="{{ route('thirdparty.parties.create') }}">Create Third Party</a>
+                    </div>
                     <div class="input-group">
                         <input type="search"
                             class="form-control"
