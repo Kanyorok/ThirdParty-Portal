@@ -7,6 +7,7 @@ use App\Models\FleetManagement\FleetMake;
 use App\Http\Requests\FleetManagement\FleetMakeRequest;
 use App\Http\Requests\FleetManagement\FleetModelRequest;
 use App\Policies\FleetManagement\FleetMakePolicy;
+
 use App\Services\FleetManagement\FleetMakeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -26,9 +27,9 @@ class FleetMakeController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetMake::class);
-        $fleetMakes = FleetMake::all();
+        $fleetMakes = FleetMake::withCount('vehicles')->get();
         return view('fleetmanagement.fleetmake.index', compact('fleetMakes'));
-    }
+    }  
 
     public function create()
     {

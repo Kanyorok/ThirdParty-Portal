@@ -7,7 +7,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
-
+use App\Models\Fleet\FleetVehicle;
 
 class FleetMake extends Model
 {
@@ -48,6 +48,11 @@ class FleetMake extends Model
     public function deleter()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
+    }
+
+     public function vehicles()
+    {
+        return $this->hasMany(FleetVehicle::class, 'Make', 'Id');
     }
 
     

@@ -34,4 +34,17 @@ class FleetInspectionScheduleRequest extends FormRequest
         ];
     }
 
+
+
+/**
+     * Custom error messages for validation.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'DueDate.after_or_equal' => '⚠️📅 Due date must be on or after the inspection date.',
+        ];
+    }
 }

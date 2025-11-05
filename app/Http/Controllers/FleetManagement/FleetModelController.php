@@ -26,7 +26,7 @@ class FleetModelController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetModel::class);
-        $fleetModels = FleetModel::all();
+        $fleetModels = FleetModel::withCount('vehicles')->get();
         $brands = FleetMake::all();
         return view('fleetmanagement.fleetmodel.index', compact('fleetModels', 'brands'));
     }
