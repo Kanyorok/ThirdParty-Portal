@@ -165,7 +165,7 @@
                         <span class="badge bg-success ms-2">FINAL</span>
                         @endif
                     </td>
-                    <td>{{ $stage->type_name->TypeID ?? '-' }}</td>
+                    <td>{{ $stage->type->TypeID ?? '-' }}</td>
                     <td>{{ $stage->role_name ?? '-' }}</td>
                     <td>{{ $stage->MaxAmount ?? '-' }}</td>
                     <td>
@@ -272,7 +272,7 @@ $(document).ready(function() {
                                 ${stage.StageName}
                                 ${finalBadge}
                             </td>
-                            <td>${stage.type_name?.TypeID ?? '-'}</td>
+                            <td>${stage.type?.TypeID ?? '-'}</td>
                             <td>${stage.role_name ?? '-'}</td>
                             <td>${stage.MaxAmount ?? '-'}</td>
                             <td>${finalBadgeCell}</td>

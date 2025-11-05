@@ -45,9 +45,9 @@ class WorkflowStage extends Model
     ];
 
     // Fixed relationships
-    public function type_name()
+     public function type_name(): BelongsTo
     {
-        return $this->belongsTo(WorkflowType::class, 'WorkFlowTypeId', 'Id');
+        return $this->belongsTo(WorkFlowType::class, 'WorkFlowTypeId', 'Id');
     }
 
     public function permission()

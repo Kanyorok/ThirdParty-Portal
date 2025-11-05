@@ -182,7 +182,7 @@ abstract class ApprovalWorkflowService
                 'Stage'      => (string)$stageId,
                 'Amount'     => $amount,
                 'Notes'      => $notes,
-                'isApproved' => null,  //  Explicitly set to null (unprocessed)
+                // 'isApproved' => null,  //  Explicitly set to null (unprocessed)
                 'CreatedBy'  => $actorId,
                 'ModifiedBy' => $actorId,
                 'CreatedOn'  => now(),
@@ -209,7 +209,7 @@ abstract class ApprovalWorkflowService
             $verifyEntry = DB::table('t_WorkFlowHistory')
                 ->where('Source', $table)
                 ->where('SourceID', (string)$sourceId)
-                ->where('isApproved', null)
+                // ->where('isApproved', null)
                 ->where('Stage', (string)$stageId)
                 ->where('StatusId', $statusId)
                 ->whereNull('DeletedOn')
@@ -485,7 +485,7 @@ abstract class ApprovalWorkflowService
             $existingSubmission = DB::table('t_WorkFlowHistory')
                 ->where('Source', $table)
                 ->where('SourceID', (string)$sourceId)
-                ->where('isApproved', null)
+                // ->where('isApproved', null)
                 ->whereNull('DeletedOn')
                 ->first();
 

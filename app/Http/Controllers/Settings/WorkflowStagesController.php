@@ -54,7 +54,7 @@ class WorkflowStagesController extends Controller
         } catch (\App\Exceptions\ErroredException $e) {
             Log::error('Failed to create workflow stage', [
                 'error' => $e->getMessage(),
-                // 'request' => $request->all(),
+                'request' => $request->all(),
             ]);
 
             return response()->json([

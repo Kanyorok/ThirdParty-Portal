@@ -24,12 +24,11 @@ class WorkflowHistory extends Model
 
     protected $fillable = [
         "Source", "SourceID", "Stage", "Amount", "Notes", "StatusId",
-        "CreatedBy", "ModifiedBy", "DeletedBy", "isApproved" 
+        "CreatedBy", "ModifiedBy", "DeletedBy","isApproved" 
     ];
 
     protected $casts = [
-        'StatusId' => 'integer', 
-        'isApproved' => 'boolean',
+        'StatusId' => 'integer',
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',

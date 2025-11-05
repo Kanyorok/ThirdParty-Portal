@@ -79,6 +79,7 @@ return new class extends Migration {
             $table->string("Stage", 200);
             $table->decimal('Amount', 20, 4)->nullable();
             $table->longText('Notes')->nullable();
+            $table->boolean('isApproved')->nullable()->after('Notes')->comment('Null = not processed, 0 = rejected, 1 = approved');
             $table->foreignId('StatusId')->constrained('t_CodeDetails', 'ID');//todo add submitted default for this
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
