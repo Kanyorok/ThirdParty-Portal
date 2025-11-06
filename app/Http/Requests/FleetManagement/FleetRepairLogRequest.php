@@ -25,7 +25,7 @@ class FleetRepairLogRequest extends FormRequest
             'VehicleID' => 'required|exists:t_FleetVehicles,Id',
             'RepairType' => 'required|integer',
             'RepairDate' => 'required|date',
-            'Vendor' => 'nullable|string|max:255',
+            'VendorID' => 'nullable|exists:t_ThirdParties,Id',
             'Cost' => 'nullable|numeric|min:0',
             'Description' => 'nullable|string|max:1000',
             'Notes' => 'nullable|string',
