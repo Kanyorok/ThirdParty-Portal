@@ -25,6 +25,7 @@ class Workflow extends Model
         'Name',
         'Source',
         'WorkflowTypeId',
+        'IsFinalStage',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -35,6 +36,7 @@ class Workflow extends Model
 
     protected $casts = [
         'CreatedOn' => 'datetime',
+        'IsFinalStage' => 'boolean',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];

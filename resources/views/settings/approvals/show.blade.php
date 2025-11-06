@@ -50,7 +50,7 @@
     <hr>
 
     {{-- Add Stage Form --}}
-    <div class="card shadow p-4 rounded-4 mt-4" id="stageFormCard">
+     <div class="card shadow p-4 rounded-4 mt-4" id="stageFormCard">
         <h4 class="mb-4">➕ Add Approval Stage</h4>
 
         @if($approval->IsFinalStage)
@@ -193,22 +193,120 @@
 @endsection
 
 @section('scripts')
+@section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
     let workflowHasFinalStage = {{ $approval->IsFinalStage ? 'true' : 'false' }};
+    const STORAGE_KEY = 'workflow-stage-form-{{ $approval->Id }}';
+
+    // Enhanced save form state with better error handling
+    function saveFormState() {
+        try {
+            const formData = {
+                StageName: $('input[name="StageName"]').val(),
+                EscalationLimit: $('input[name="EscalationLimit"]').val(),
+                WorkFlowTypeId: $('#TypeID').val(),
+                WorkFlowLimitId: $('#WorkflowLimitID').val(),
+                Count: $('input[name="Count"]').val(),
+                PermissionId: $('#PermissionId').val(),
+                IsFinalStage: $('#IsFinalStage').is(':checked'),
+                // Save Select2 display values too
+                PermissionText: $('#PermissionId').select2('data')?.[0]?.text || '',
+                WorkFlowLimitText: $('#WorkflowLimitID').select2('data')?.[0]?.text || '',
+                lastUpdated: Date.now()
+            };
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+            console.log('Form state saved:', formData);
+        } catch (error) {
+            console.error('Error saving form state:', error);
+        }
+    }
+
+    // Enhanced load form state with better timing
+    function loadFormState() {
+        try {
+            const saved = sessionStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const formData = JSON.parse(saved);
+                console.log('Loading saved form state:', formData);
+                
+                // Basic fields
+                $('input[name="StageName"]').val(formData.StageName || '');
+                $('input[name="EscalationLimit"]').val(formData.EscalationLimit || '');
+                
+                // WorkFlowTypeId with proper event triggering
+                if (formData.WorkFlowTypeId) {
+                    $('#TypeID').val(formData.WorkFlowTypeId).trigger('change');
+                }
+                
+                // Wait for any animations/rendering to complete
+                setTimeout(() => {
+                    // Dependent fields after type change
+                    if (formData.WorkFlowLimitId) {
+                        $('#WorkflowLimitID').val(formData.WorkFlowLimitId).trigger('change');
+                    }
+                    if (formData.Count) {
+                        $('input[name="Count"]').val(formData.Count);
+                    }
+                    if (formData.PermissionId) {
+                        $('#PermissionId').val(formData.PermissionId).trigger('change');
+                    }
+                    
+                    $('#IsFinalStage').prop('checked', formData.IsFinalStage || false);
+                    
+                    console.log('Form state loaded successfully');
+                }, 300);
+            }
+        } catch (error) {
+            console.error('Error loading form state:', error);
+        }
+    }
+
+    // Clear saved form state
+    function clearFormState() {
+        try {
+            sessionStorage.removeItem(STORAGE_KEY);
+            console.log('Form state cleared');
+        } catch (error) {
+            console.error('Error clearing form state:', error);
+        }
+    }
+
+    // Initialize Select2 first
+    $('.select2').select2({ 
+        theme: 'bootstrap4', 
+        placeholder: '🔍 Type to search...', 
+        allowClear: true 
+    });
+
+    // Load form state after a brief delay to ensure DOM is ready
+    setTimeout(loadFormState, 100);
+
+    // Save form state on any input change with debouncing
+    let saveTimeout;
+    function debouncedSave() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveFormState, 500);
+    }
+
+    $('#stageForm').on('input change keyup', '.form-control, .form-select, .form-check-input', debouncedSave);
+    $('#stageForm').on('select2:select select2:unselect', debouncedSave);
 
     // Toggle AMT/CNT fields
     function toggleFields() {
         const selected = $('#TypeID').find(':selected').data('code');
         $('#limitGroup').toggle(selected === 'AMT');
         $('#countGroup').toggle(selected === 'CNT');
+        
+        // Save state after toggle
+        debouncedSave();
     }
+    
     $('#TypeID').on('change', toggleFields);
-    toggleFields();
-
-    // Enable select2 for static selects
-    $('.select2').select2({ theme: 'bootstrap4', placeholder: '🔍 Type to search...', allowClear: true });
+    
+    // Initial toggle
+    setTimeout(toggleFields, 200);
 
     // Renumber table rows
     function renumberStages() {
@@ -252,11 +350,18 @@ $(document).ready(function() {
             }
         }
 
+        // Show loading state
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
         $.ajax({
             url: "{{ route('settings.workflow_stages.store') }}",
             method: "POST",
             data: $(this).serialize(),
             success: function(res){
+                submitBtn.prop('disabled', false).html(originalText);
+                
                 if(res.status === 'success'){
                     const stage = res.stage;
                     $('#noStages').remove();
@@ -289,6 +394,10 @@ $(document).ready(function() {
                     renumberStages();
                     $('#stageForm')[0].reset();
                     $('#PermissionId').val(null).trigger('change');
+                    $('#WorkflowLimitID').val(null).trigger('change');
+                    
+                    // Clear the saved form state
+                    clearFormState();
                     
                     // If this was a final stage, hide the form
                     if (stage.IsFinalStage) {
@@ -301,6 +410,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr){ 
+                submitBtn.prop('disabled', false).html(originalText);
                 const errorMsg = xhr.responseJSON?.message || 'Error creating stage';
                 alert(errorMsg);
             }
@@ -320,17 +430,22 @@ $(document).ready(function() {
         
         if(!confirm(confirmMsg)) return;
 
+        const deleteBtn = $(this).find('button');
+        const originalText = deleteBtn.html();
+        deleteBtn.prop('disabled', true).html('...');
+
         let id = $(this).data('id');
         $.ajax({
             url: `/settings/workflow_stages/${id}`,
             method: 'POST',
             data: $(this).serialize(),
             success: function(res){
+                deleteBtn.prop('disabled', false).html(originalText);
+                
                 if(res.status === 'success'){
                     $(`#stage-${id}`).remove();
                     renumberStages();
 
-                    // If the deleted stage was final, show the form again
                     if (isFinal) {
                         updateFormVisibility(false);
                     }
@@ -343,10 +458,29 @@ $(document).ready(function() {
                     alert(res.message || 'Failed to delete stage');
                 }
             },
-            error: function(){ alert('Error deleting stage'); }
+            error: function(){ 
+                deleteBtn.prop('disabled', false).html(originalText);
+                alert('Error deleting stage'); 
+            }
         });
     });
 
+    // Enhanced page event handling
+    $(window).on('beforeunload', function() {
+        // Force save before unload
+        saveFormState();
+    });
+
+    // Save state when navigating away via links
+    $(document).on('click', 'a', function() {
+        saveFormState();
+    });
+
+    // Periodically save state (as backup)
+    setInterval(saveFormState, 30000); // Every 30 seconds
+
+    console.log('Workflow stage form state management initialized');
 });
 </script>
+@endsection
 @endsection

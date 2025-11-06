@@ -8,8 +8,8 @@ use App\Http\Requests\Settings\WorkFlowRequest;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Settings\WorkFlow;
-use App\Models\Settings\WorkFlowStage;
+use App\Models\Core\Approval\WorkFlow;
+use App\Models\Core\Approval\WorkFlowStage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -164,16 +164,30 @@ class WorkFlowController extends Controller
 
     public function show($id)
     {
-        $approval = WorkFlow::findOrFail($id);
-        $sourceOptions = array_flip(Relation::morphMap());
-        $approvalTypes = DB::table('t_WorkFlowTypes')->get();
-        $permissions = DB::table('t_Permissions')->get();
-        $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'Source')->get();
+       
+     // Use fresh() to get latest data from database
+    $approval = WorkFlow::findOrFail($id);
+    $approval->refresh(); // Ensure we have fresh data
+    
+    $sourceOptions = array_flip(Relation::morphMap());
+    $approvalTypes = DB::table('t_WorkFlowTypes')->get();
+    $permissions = DB::table('t_Permissions')->get();
+    $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'Source')->get();
 
-        $stages = WorkFlowStage::where('WorkFlowId', $id)->with(['workflow'])->get();
+    $stages = WorkFlowStage::where('WorkFlowId', $id)
+        ->with(['type_name', 'workflow'])
+        ->orderBy('Order')
+        ->get();
 
-        return view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'));
-    }
+    return view('settings.approvals.show', compact(
+        'approval',
+        'sourceOptions',
+        'permissions',
+        'approvalTypes',
+        'workflowLimits',
+        'stages'
+    ));
+}
 
     public function destroy(string $id)
     {
