@@ -169,10 +169,17 @@
                     <div class="bg-light p-5 mb-5 border rounded-3" id="contact-section">
                         <h2 class="h5 fw-bold mb-3">Contact Details</h2>
                         <div class="row g-4">
-                            <div class="col-md-6">
-                                <label for="Country" class="form-label">Country</label>
-                                <input type="text" class="form-control" id="Country" name="Country" value="{{ old('Country') }}">
-                            </div>
+                            <select class="form-select @error('Country') is-invalid @enderror" id="Country" name="Country">
+                                <option value="">Select Country</option>
+                                @foreach ($country as $c)
+                                    <option value="{{ $c->Id }}" {{ old('Name') == $c->Name ? 'selected' : '' }}>
+                                        {{ $c->Name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('Name')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
 
                             <div class="col-md-6">
                                 <label for="Website" class="form-label">Website</label>

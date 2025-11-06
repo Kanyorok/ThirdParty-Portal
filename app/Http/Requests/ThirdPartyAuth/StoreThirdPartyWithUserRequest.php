@@ -4,10 +4,6 @@ namespace App\Http\Requests\ThirdPartyAuth;
 
 use App\Models\Core\CodeDetail;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\Enums\BusinessTypeEnum;
-use App\Enums\Employee\GenderEnum;
-use App\Models\ThirdParty\ThirdPartyType;
 
 class StoreThirdPartyWithUserRequest extends FormRequest
 {
@@ -66,7 +62,6 @@ public function rules(): array
     if ($isIndividual) {
         $rules['IDNumber'] = ['nullable', 'string', 'max:100'];
         $rules['PassportNo'] = ['nullable', 'string', 'max:100'];
-        $rules['RegistrationNumber'] = ['nullable', 'string', 'max:255'];
         $rules['TaxPIN'] = ['nullable', 'string', 'max:255'];
         $rules['VATNumber'] = ['nullable', 'string', 'max:255'];
     } else {

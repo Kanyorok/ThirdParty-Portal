@@ -3,759 +3,226 @@
 @section('title', 'Registered Third Parties')
 
 @section('styles')
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
 <style>
-    :root {
-        --primary-50: #eff6ff;
-        --primary-100: #dbeafe;
-        --primary-500: #3b82f6;
-        --primary-600: #2563eb;
-        --primary-700: #1d4ed8;
-        --accent-50: #ecfdf5;
-        --accent-500: #10b981;
-        --accent-600: #059669;
-        --red-50: #fef2f2;
-        --red-100: #fee2e2;
-        --red-500: #ef4444;
-        --red-600: #dc2626;
-        --red-700: #b91c1c;
-        --amber-50: #fffbeb;
-        --amber-100: #fef3c7;
-        --amber-600: #d97706;
-        --amber-700: #b45309;
-        --gray-50: #f9fafb;
-        --gray-100: #f3f4f6;
-        --gray-200: #e5e7eb;
-        --gray-300: #d1d5db;
-        --gray-400: #9ca3af;
-        --gray-500: #6b7280;
-        --gray-600: #4b5563;
-        --gray-700: #374151;
-        --gray-800: #1f2937;
-        --gray-900: #111827;
-        --ring-primary: 0 0 0 3px rgb(59 130 246 / 0.1);
-    }
-
-    * {
-        box-sizing: border-box;
-    }
-
     body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        line-height: 1.6;
-        color: var(--gray-900);
-        background-color: var(--gray-50);
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-    .container-custom {
-        width: 100%;
-        padding: 1rem;
-        margin: 0 auto;
+        background-color: #f8fafc;
+        font-family: "Inter", sans-serif;
     }
 
     .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         margin-bottom: 2rem;
     }
 
-    .page-title {
-        font-size: 2rem;
+    .page-header h1 {
         font-weight: 700;
-        color: var(--gray-900);
-        margin: 0;
-        letter-spacing: -0.025em;
+        font-size: 1.75rem;
+        color: #1e293b;
     }
 
     .card {
-        background-color: white;
-        border: 1.5px solid var(--gray-200);
-        border-radius: 0.75rem;
-        overflow: hidden;
-        transition: border-color 0.2s ease-in-out;
-    }
-
-    .card:hover {
-        border-color: var(--gray-300);
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     }
 
     .card-header {
-        background: linear-gradient(135deg, var(--primary-50) 0%, white 100%);
-        border-bottom: 1.5px solid var(--gray-200);
-        padding: 2rem 2.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
+        background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 1rem 1rem 0 0;
     }
 
     .card-header h4 {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--gray-900);
+        font-size: 1.25rem;
         margin: 0;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-    }
-
-    .card-header h4 i {
-        color: var(--primary-600);
-        font-size: 1.375rem;
-    }
-
-    .card-body {
-        padding: 2.5rem;
-    }
-
-    .form-control,
-    .form-select {
-        width: 100%;
-        padding: 0.875rem 1.125rem;
-        font-size: 0.9375rem;
-        line-height: 1.375rem;
-        color: var(--gray-900);
-        background-color: white;
-        border: 1.5px solid var(--gray-300);
-        border-radius: 0.5rem;
-        transition: all 0.15s ease-in-out;
-        outline: none;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        border-color: var(--primary-500);
-        box-shadow: var(--ring-primary);
-        background-color: var(--primary-50);
-    }
-
-    .form-control:hover:not(:focus),
-    .form-select:hover:not(:focus) {
-        border-color: var(--gray-400);
-    }
-
-    .form-label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--gray-700);
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-
-    .input-group {
-        display: flex;
-        position: relative;
-    }
-
-    .input-group .form-control {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-        border-right: none;
-        flex: 1;
-    }
-
-    .input-group .form-control:focus {
-        border-right: none;
-    }
-
-    .input-group-text {
-        background-color: white;
-        border: 1.5px solid var(--gray-300);
-        border-left: none;
-        border-radius: 0;
-        padding: 0.875rem 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--gray-500);
-    }
-
-    .input-group .btn {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        border-left: none;
-    }
-
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         gap: 0.5rem;
-        padding: 0.875rem 1.5rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        line-height: 1.25rem;
-        border-radius: 0.5rem;
-        border: 1.5px solid transparent;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.15s ease-in-out;
-        white-space: nowrap;
-        outline: none;
     }
 
-    .btn:focus {
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-    }
-
-    .btn-primary {
-        color: white;
-        background-color: var(--primary-600);
-        border-color: var(--primary-600);
-    }
-
-    .btn-primary:hover {
-        background-color: var(--primary-700);
-        border-color: var(--primary-700);
-        transform: translateY(-1px);
-    }
-
-    .btn-primary:focus {
-        box-shadow: var(--ring-primary);
-    }
-
-    .btn-outline-secondary {
-        color: var(--gray-700);
-        background-color: white;
-        border-color: var(--gray-300);
-    }
-
-    .btn-outline-secondary:hover {
-        background-color: var(--gray-50);
-        border-color: var(--gray-400);
-        color: var(--gray-800);
-        transform: translateY(-1px);
-    }
-
-    .btn-outline-secondary:focus {
-        box-shadow: var(--ring-primary);
-    }
-
-    .btn-outline-primary {
-        color: var(--primary-600);
-        background-color: white;
-        border-color: var(--primary-300);
-    }
-
-    .btn-outline-primary:hover {
-        background-color: var(--primary-50);
-        border-color: var(--primary-500);
-        color: var(--primary-700);
-    }
-
-    .btn-sm {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8125rem;
-    }
-
-    .btn-link {
-        background: none;
-        border: none;
-        color: var(--gray-500);
-        padding: 0;
-        text-decoration: none;
-    }
-
-    .btn-link:hover {
-        color: var(--gray-700);
-    }
-
-    .filter-section {
-        background-color: var(--gray-50);
-        border: 1.5px solid var(--gray-200);
+    .filter-bar {
+        background: #f1f5f9;
+        padding: 1.25rem;
         border-radius: 0.75rem;
-        padding: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .filter-collapse {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .controls-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .search-section {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .search-section .input-group {
-        min-width: 320px;
-    }
-
-    .badge {
-        font-size: 0.75rem;
-        font-weight: 500;
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.375rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-    }
-
-    .badge-status-pending {
-        background-color: var(--amber-100);
-        color: var(--amber-700);
-        border: 1px solid var(--amber-200);
-    }
-
-    .badge-status-approved {
-        background-color: var(--accent-50);
-        color: var(--accent-600);
-        border: 1px solid var(--accent-200);
-    }
-
-    .badge-status-rejected {
-        background-color: var(--red-100);
-        color: var(--red-700);
-        border: 1px solid var(--red-200);
-    }
-
-    .badge-status-active {
-        background-color: var(--accent-50);
-        color: var(--accent-600);
-        border: 1px solid var(--accent-200);
-    }
-
-    .badge-status-inactive {
-        background-color: var(--gray-100);
-        color: var(--gray-600);
-        border: 1px solid var(--gray-200);
-    }
-
-    .badge-prequalified-yes {
-        background-color: var(--accent-500);
-        color: white;
-        border: 1px solid var(--accent-600);
-    }
-
-    .badge-prequalified-no {
-        background-color: var(--red-100);
-        color: var(--red-700);
-        border: 1px solid var(--red-200);
-    }
-
-    .badge-info {
-        background-color: var(--primary-100);
-        color: var(--primary-700);
-        border: 1px solid var(--primary-200);
-    }
-
-    .badge-primary {
-        background-color: var(--primary-600);
-        color: white;
-        border: 1px solid var(--primary-700);
-    }
-
-    .table-container {
-        background-color: white;
-        border: 1.5px solid var(--gray-200);
-        border-radius: 0.75rem;
-        overflow: hidden;
-    }
-
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    table.dataTable {
-        border-collapse: collapse;
-        width: 100% !important;
-        margin: 0 !important;
-    }
-
-    table.dataTable thead th {
-        background-color: var(--gray-50);
-        border-bottom: 1.5px solid var(--gray-200);
-        padding: 1.25rem 1.5rem;
-        font-weight: 600;
-        font-size: 0.8125rem;
-        color: var(--gray-600);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        text-align: left;
-        white-space: nowrap;
-    }
-
-    table.dataTable tbody td {
-        padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid var(--gray-100);
-        vertical-align: middle;
-        font-size: 0.875rem;
-        color: var(--gray-800);
-        white-space: nowrap;
-    }
-
-    table.dataTable tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    table.dataTable tbody tr:hover {
-        background-color: var(--gray-50);
-    }
-
-    .dataTables_wrapper {
-        font-size: 0.875rem;
-        color: var(--gray-900);
-    }
-
-    .dataTables_wrapper .dataTables_length {
-        margin: 0;
-    }
-
-    .dataTables_wrapper .dataTables_length select {
-        min-width: 80px;
-        font-size: 0.875rem;
-        margin: 0 0.5rem;
-    }
-
-    .dataTables_wrapper .dataTables_info {
-        color: var(--gray-600);
-        font-size: 0.875rem;
-        padding-top: 1rem;
-    }
-
-    .dataTables_wrapper .dataTables_paginate {
-        padding-top: 1.5rem;
-        display: flex;
-        justify-content: center;
-        gap: 0.25rem;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-        padding: 0.5rem 0.875rem;
-        border-radius: 0.375rem;
-        border: 1.5px solid var(--gray-200);
-        color: var(--gray-600);
-        background-color: white;
-        transition: all 0.15s ease-in-out;
-        text-decoration: none;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-        background-color: var(--primary-600);
-        color: white;
-        border-color: var(--primary-600);
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
-        background-color: var(--gray-50);
-        border-color: var(--gray-300);
-        color: var(--gray-800);
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .dt-length-container {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--gray-700);
-        font-size: 0.875rem;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: var(--gray-500);
-    }
-
-    .empty-state img {
-        max-height: 120px;
-        margin-bottom: 1rem;
-        opacity: 0.7;
-    }
-
-    .loading-state {
-        text-align: center;
-        padding: 2rem;
-    }
-
-    .spinner-border {
-        width: 2rem;
-        height: 2rem;
-        border: 0.25em solid var(--primary-200);
-        border-right-color: var(--primary-600);
-        border-radius: 50%;
-        animation: spinner-border 0.75s linear infinite;
-    }
-
-    @keyframes spinner-border {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    .visually-hidden {
-        position: absolute !important;
-        width: 1px !important;
-        height: 1px !important;
-        padding: 0 !important;
-        margin: -1px !important;
-        overflow: hidden !important;
-        clip: rect(0, 0, 0, 0) !important;
-        white-space: nowrap !important;
-        border: 0 !important;
-    }
-
-    .filter-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
         margin-bottom: 1.5rem;
     }
 
-    .filter-actions {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        flex-wrap: wrap;
+    .filter-bar .input-group input {
+        border-radius: 0.5rem;
     }
 
-    @media (max-width: 768px) {
-        .container-custom {
-            padding: 0.75rem;
-        }
-
-        .card-header {
-            padding: 1.5rem;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .controls-section {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .search-section {
-            justify-content: stretch;
-        }
-
-        .search-section .input-group {
-            min-width: auto;
-            width: 100%;
-        }
-
-        .filter-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .filter-actions {
-            flex-direction: column;
-        }
-
-        .dataTables_wrapper .dataTables_paginate {
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        table.dataTable thead th,
-        table.dataTable tbody td {
-            padding: 1rem;
-        }
+    .filter-bar .btn {
+        border-radius: 0.5rem;
     }
 
-    @media (max-width: 480px) {
-        .page-title {
-            font-size: 1.25rem;
-        }
+    .table thead {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+    }
 
-        .card-header h4 {
-            font-size: 1.25rem;
-        }
+    .table th {
+        font-size: 0.85rem;
+        color: #475569;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
 
-        .btn {
-            padding: 0.75rem 1rem;
-            font-size: 0.8125rem;
-        }
+    .table td {
+        vertical-align: middle;
+        color: #1e293b;
+        font-size: 0.9rem;
+    }
 
-        table.dataTable thead th,
-        table.dataTable tbody td {
-            padding: 0.75rem;
-            font-size: 0.8125rem;
-        }
+    .badge {
+        padding: 0.4em 0.65em;
+        font-size: 0.75rem;
+        border-radius: 0.4rem;
+    }
+
+    .badge-success {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-warning {
+        background-color: #fef9c3;
+        color: #92400e;
+    }
+
+    .actions button,
+    .actions a {
+        margin: 0 0.15rem;
+    }
+
+    .actions i {
+        font-size: 1rem;
+    }
+
+    .bulk-actions {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 1rem;
     }
 </style>
 @endsection
 
 @section('content')
-<div class="container-custom">
+<div class="container py-4">
+
     <div class="page-header">
-        <h1 class="page-title">Third Parties Management</h1>
+        <h1><i class="bi bi-building"></i> Registered Third Parties</h1>
+        <a href="{{ route('thirdparty.parties.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> New Third Party
+        </a>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h4>
-                <i class="fas fa-building"></i>
-                Third Parties Overview
-            </h4>
+            <h4><i class="bi bi-list-task"></i> Third Party Overview</h4>
         </div>
 
         <div class="card-body">
-            <div class="controls-section">
-                <div id="dt-length-container" class="dt-length-container"></div>
-                <div class="search-section">
-                    <div>
-                        <a href="{{ route('thirdparty.parties.create') }}">Create Third Party</a>
-                    </div>
-                    <div class="input-group">
-                        <input type="search"
-                            class="form-control"
-                            id="filterFormQ"
-                            placeholder="Search third parties..."
-                            autocomplete="off"
-                            aria-label="Search third parties">
-                        <span class="input-group-text" id="clearSearchSpan" style="display: none;">
-                            <button type="button"
-                                id="clearSearchBtn"
-                                class="btn btn-link"
-                                aria-label="Clear search">
-                                <i class="fas fa-times-circle"></i>
-                            </button>
-                        </span>
-                        <button class="btn btn-primary"
-                            type="button"
-                            id="searchButton"
-                            aria-label="Perform search">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                    <button class="btn btn-outline-secondary"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#advancedFilters"
-                        aria-expanded="false"
-                        aria-controls="advancedFilters">
-                        <i class="fas fa-filter"></i> Filters
-                        <span id="activeFilterCount"
-                            class="badge badge-primary rounded-pill ms-2"
-                            style="display:none;"></span>
-                    </button>
-                </div>
-            </div>
 
-            <div class="collapse filter-collapse" id="advancedFilters">
-                <div class="filter-section">
-                    <div class="filter-grid">
-                        <div>
-                            <label for="filterType" class="form-label">Type</label>
-                            <select id="filterType"
-                                class="form-select"
-                                name="type"
-                                aria-label="Filter by Type">
-                                <option value="">All Types</option>
-                                @foreach (\App\Enums\ThirdPartyTypeEnum::cases() as $type)
-                                <option value="{{ $type->value }}">{{ $type->label() }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label for="filterStatus" class="form-label">Approval Status</label>
-                            <select id="filterStatus"
-                                class="form-select"
-                                name="status"
-                                aria-label="Filter by Approval Status">
-                                <option value="">All Statuses</option>
-                                @foreach (\App\Enums\ThirdPartyApprovalStatusEnum::cases() as $status)
-                                <option value="{{ $status->value }}">{{ $status->label() }}</option>
-                                @endforeach
-                            </select>
+            <!-- Search + Filters -->
+            <div class="filter-bar">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="search" id="filterFormQ" class="form-control" placeholder="Search by name or email...">
+                            <button class="btn btn-outline-secondary" id="clearSearchBtn" type="button" style="display:none;">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                            <button class="btn btn-primary" id="searchButton" type="button">
+                                <i class="bi bi-search"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="filter-actions">
-                        <button type="button" id="applyFiltersBtn" class="btn btn-primary">
-                            <i class="fas fa-check-circle"></i> Apply Filters
-                        </button>
-                        <button type="button" id="resetFilterBtn" class="btn btn-outline-secondary">
-                            <i class="fas fa-undo"></i> Reset Filters
+
+                    <div class="col-md-3">
+                        <select id="filterType" class="form-select">
+                            <option value="">All Types</option>
+                            @foreach (\App\Enums\ThirdPartyTypeEnum::cases() as $type)
+                                <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <select id="filterStatus" class="form-select">
+                            <option value="">All Statuses</option>
+                            @foreach (\App\Enums\ThirdPartyApprovalStatusEnum::cases() as $status)
+                                <option value="{{ $status->value }}">{{ $status->label() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 text-end">
+                        <button id="applyFiltersBtn" class="btn btn-success w-100">
+                            <i class="bi bi-funnel-fill"></i> Apply
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- Bulk Actions -->
-            <div class="bulk-actions-container"
-                 style="display: none; margin-bottom: 1rem; padding: 1rem; background-color: var(--primary-50); border-radius: 0.5rem; border: 1px solid var(--primary-200);">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="text-primary fw-semibold">
-                            <span id="selectedCount">0</span> item(s) selected
-                        </span>
-                        <div class="bulk-action-buttons d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-success bulk-action-btn" data-action="approve"
-                                    data-url="{{ route('thirdparty.parties.bulk-action') }}">
-                                <i class="fas fa-check-circle"></i> Approve Selected
-                            </button>
-                            <button type="button" class="btn btn-sm btn-warning bulk-action-btn" data-action="activate"
-                                    data-url="{{ route('thirdparty.parties.bulk-action') }}">
-                                <i class="fas fa-play-circle"></i> Update Active
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger bulk-action-btn" data-action="reject"
-                                    data-url="{{ route('thirdparty.parties.bulk-action') }}">
-                                <i class="fas fa-times-circle"></i> Reject Selected
-                            </button>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelection">
-                        <i class="fas fa-times"></i> Clear Selection
+            <div class="bulk-actions d-flex justify-content-between align-items-center">
+                <div>
+                    <strong id="selectedCount">0</strong> selected
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-success bulk-action-btn" data-action="approve">
+                        <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                    <button class="btn btn-sm btn-warning bulk-action-btn" data-action="activate">
+                        <i class="bi bi-play-circle"></i> Activate
+                    </button>
+                    <button class="btn btn-sm btn-danger bulk-action-btn" data-action="reject">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="clearSelection">
+                        <i class="bi bi-dash-circle"></i> Clear
                     </button>
                 </div>
             </div>
 
-            <div class="table-container">
-                <div class="table-responsive">
-                    <table id="thirdPartiesTable" class="table w-100">
-                        <thead>
-                            <tr>
-                                <th>
-                                    <input type="checkbox" id="selectAll" title="Select All">
-                                </th>
-                                <th>ID</th>
-                                <th>Company Name</th>
-                                <th>Trading Name</th>
-                                <th>Country</th>
-                                <th>Third Party Type</th>
-                                <th>Approval Status</th>
-                                <th>Business Type</th>
-                                <th>Primary Contact</th>
-                                <th>Primary Email</th>
-                                <th>Prequalified</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+            <!-- Table -->
+            <div class="table-responsive">
+                <table id="thirdPartiesTable" class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll"></th>
+                            <th>ID</th>
+                            <th>Company</th>
+                            <th>Trading Name</th>
+                            <th>Country</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Email</th>
+                            <th>Prequalified</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
+
         </div>
     </div>
 </div>
@@ -763,326 +230,199 @@
 
 @section('scripts')
 <script>
-    const filterQuery = $('#filterFormQ');
-    const filterType = $('#filterType');
-    const filterStatus = $('#filterStatus');
-    const clearSearchBtn = $('#clearSearchBtn');
-    const clearSearchSpan = $('#clearSearchSpan');
-    const searchButton = $('#searchButton');
-    const applyFiltersBtn = $('#applyFiltersBtn');
-    const resetFilterBtn = $('#resetFilterBtn');
-    const activeFilterCount = $('#activeFilterCount');
-    let thirdPartiesTable = null;
-
-    const debounce = (fn, delay) => {
-        let timeout;
-        return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => fn.apply(this, args), delay);
-        };
-    };
-
-    const updateFilterCount = () => {
-        let count = 0;
-        if (filterQuery.val()) count++;
-        if (filterType.val()) count++;
-        if (filterStatus.val()) count++;
-        activeFilterCount.text(count).toggle(count > 0);
-    };
-
-    const initializeDataTable = () => {
-        if (thirdPartiesTable) thirdPartiesTable.destroy();
-
-        thirdPartiesTable = $('#thirdPartiesTable').DataTable({
-            processing: true,
-            serverSide: true,
-            responsive: true,
-            searching: false,
-            dom: '<"top"l>rtip',
-            ajax: {
-                url: "{{ route('thirdparty.parties.index') }}",
-                data: d => {
-                    d.search.value = filterQuery.val();
-                    d.type = filterType.val();
-                    d.status = filterStatus.val();
-                }
-            },
-            columns: [{
+$(function() {
+    const bulkActionUrl = "{{ route('thirdparty.parties.bulk-action') }}"; // replace if route name differs
+    const table = $('#thirdPartiesTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('thirdparty.parties.index') }}",
+            data: function(d) {
+                d.search = $('#filterFormQ').val();
+                d.type = $('#filterType').val();
+                d.status = $('#filterStatus').val();
+            }
+        },
+        columns: [
+            {
                 data: null,
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row) {
-                    return `<input type="checkbox" name="selectedItems[]" value="${row.Id}" class="item-checkbox">`;
+                render: (data, type, row) => `<input type="checkbox" class="item-checkbox" value="${row.Id}">`,
+                orderable: false
+            },
+            { data: 'Id' },
+            { data: 'ThirdPartyName' },
+            { data: 'TradingName' },
+            { data: 'CountryId', name: 'Country' },
+            { data: 'ThirdPartyType' },
+            { data: 'ApprovalStatus',
+                render: data => {
+                    const cls = data === 'Approved' ? 'badge-success' :
+                                data === 'Pending' ? 'badge-warning' : 'badge-danger';
+                    return `<span class="badge ${cls}">${data}</span>`;
                 }
             },
-                {
-                    data: 'Id',
-                    name: 'Id'
-                },
-                {
-                    data: 'ThirdPartyName',
-                    name: 'ThirdPartyName'
-                },
-                {
-                    data: 'TradingName',
-                    name: 'TradingName',
-                    render: function (data) {
-                        return data || 'N/A';
-                    }
-                },
-                {
-                    data: 'Country',
-                    name: 'Country'
-                },
-                {
-                    data: 'ThirdPartyType',
-                    name: 'ThirdPartyType',
-                    render: function(data, type, row) {
-                        return `<span class="badge badge-info">${data}</span>`;
-                    }
-                },
-                {
-                    data: 'ApprovalStatus',
-                    name: 'ApprovalStatus',
-                    render: function(data, type, row) {
-                        let badgeClass = '';
-                        switch (data.toLowerCase()) {
-                            case 'pending':
-                                badgeClass = 'badge-status-pending';
-                                break;
-                            case 'approved':
-                                badgeClass = 'badge-status-approved';
-                                break;
-                            case 'rejected':
-                                badgeClass = 'badge-status-rejected';
-                                break;
-                            default:
-                                badgeClass = 'badge-info';
-                        }
-                        return `<span class="badge ${badgeClass}">${data}</span>`;
-                    }
-                },
-                {
-                    data: 'BusinessType',
-                    name: 'BusinessType'
-                },
-                {
-                    data: 'PrimaryUser',
-                    name: 'PrimaryUser'
-                },
-                {
-                    data: 'PrimaryEmail',
-                    name: 'PrimaryEmail'
-                },
-                {
-                    data: 'IsPrequalified',
-                    name: 'IsPrequalified',
-                    render: function(data, type, row) {
-                        if (type === 'display') {
-                            const badgeClass = data ? 'badge-prequalified-yes' : 'badge-prequalified-no';
-                            const text = data ? 'Yes' : 'No';
-                            return `<span class="badge ${badgeClass}">${text}</span>`;
-                        }
-                        return data;
-                    }
-                },
-                {
-                    data: 'actions',
-                    name: 'actions',
-                    orderable: false,
-                    searchable: false,
-                    render: function(data, type, row) {
-                        const viewUrl = `{{ route('thirdparty.parties.show', ['party' => ':id']) }}`.replace(':id', row.Id);
-                        return `<a href="${viewUrl}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i> View</a>`;
-                    }
-                }
-            ],
-            language: {
-                emptyTable: `
-                    <div class='empty-state'>
-                        <img class='img-fluid' src='{{ asset('assets/img/errors/404.svg') }}' alt='No data found'>
-                        <p>No third parties found matching your criteria.</p>
-                    </div>
-                `,
-                processing: `
-                    <div class='loading-state'>
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                `,
-                lengthMenu: "Show _MENU_ entries",
-                info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                infoEmpty: "Showing 0 to 0 of 0 entries",
-                infoFiltered: "(filtered from _MAX_ total entries)",
-                paginate: {
-                    first: "First",
-                    last: "Last",
-                    next: "Next",
-                    previous: "Previous"
-                }
+            { data: 'PrimaryEmail' },
+            { data: 'IsPrequalified',
+                render: d => d === 'Yes'
+                    ? '<span class="badge bg-success">Yes</span>'
+                    : '<span class="badge bg-secondary">No</span>'
             },
-            initComplete: function() {
-                $('.dataTables_length').appendTo('#dt-length-container');
-                $('.dataTables_length select').addClass('form-select');
-                updateFilterCount();
+            {
+                data: 'Id',
+                render: id => `
+                    <div class="actions text-center">
+                        <a href="/thirdparty/parties/${id}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                        <a href="/thirdparty/parties/${id}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                        <form action="/thirdparty/parties/${id}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this record?')"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
+                `
             }
-        });
-    };
-
-    $(document).ready(function() {
-        $.fn.dataTable.ext.errMode = 'none';
-        initializeDataTable();
-
-        const reloadTable = () => {
-            thirdPartiesTable.ajax.reload(updateFilterCount);
-        };
-
-        const debouncedReloadTable = debounce(reloadTable, 300);
-
-        filterQuery.on('input', function() {
-            clearSearchSpan.toggle(!!$(this).val());
-            debouncedReloadTable();
-        });
-
-        searchButton.on('click', reloadTable);
-
-        applyFiltersBtn.on('click', function() {
-            reloadTable();
-            $('#advancedFilters').collapse('hide');
-        });
-
-        clearSearchBtn.on('click', function() {
-            filterQuery.val('');
-            clearSearchSpan.hide();
-            reloadTable();
-        });
-
-        resetFilterBtn.on('click', function() {
-            filterQuery.val('');
-            filterType.val('');
-            filterStatus.val('');
-            clearSearchSpan.hide();
-            $('#advancedFilters').collapse('hide');
-            reloadTable();
-        });
-
-        filterQuery.on('keypress', function(e) {
-            if (e.which === 13) {
-                reloadTable();
-            }
-        });
-
-        // Bulk Actions Handler
-        const bulkActionsContainer = $('.bulk-actions-container');
-        const selectAllCheckbox = $('#selectAll');
-        const selectedCountSpan = $('#selectedCount');
-        const clearSelectionBtn = $('#clearSelection');
-
-        // Handle select all checkbox
-        selectAllCheckbox.on('change', function () {
-            const isChecked = $(this).is(':checked');
-            $('.item-checkbox').prop('checked', isChecked);
-            updateBulkActions();
-        });
-
-        // Handle individual checkboxes
-        $(document).on('change', '.item-checkbox', function () {
+        ],
+        drawCallback: function() {
+            // Rebind checkbox events after each draw
+            bindRowSelection();
             updateSelectAllState();
-            updateBulkActions();
-        });
-
-        // Handle bulk action buttons
-        $('.bulk-action-btn').on('click', function (e) {
-            e.preventDefault();
-            const action = $(this).data('action');
-            const selectedItems = $('.item-checkbox:checked').map(function () {
-                return $(this).val();
-            }).get();
-
-            if (selectedItems.length === 0) {
-                alert('Please select at least one item to perform this action.');
-                return;
-            }
-
-            const actionName = $(this).text().trim();
-            const confirmed = confirm(`Are you sure you want to ${actionName.toLowerCase()} ${selectedItems.length} selected item(s)?`);
-
-            if (!confirmed) {
-                return;
-            }
-
-            // Show loading state
-            const $button = $(this);
-            const originalText = $button.html();
-            $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
-
-            // Make AJAX request
-            $.ajax({
-                url: $button.data('url'),
-                method: 'POST',
-                data: {
-                    action: action,
-                    selectedItems: selectedItems,
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function (response) {
-                    alert(response.message || 'Action completed successfully');
-                    reloadTable();
-                    clearSelection();
-                },
-                error: function (xhr) {
-                    const errorMessage = xhr.responseJSON?.message || 'An error occurred while processing the request';
-                    alert(errorMessage);
-                },
-                complete: function () {
-                    $button.prop('disabled', false).html(originalText);
-                }
-            });
-        });
-
-        // Clear selection
-        clearSelectionBtn.on('click', function () {
-            clearSelection();
-        });
-
-        function updateSelectAllState() {
-            const totalCheckboxes = $('.item-checkbox').length;
-            const checkedCheckboxes = $('.item-checkbox:checked').length;
-
-            if (checkedCheckboxes === 0) {
-                selectAllCheckbox.prop('checked', false);
-                selectAllCheckbox.prop('indeterminate', false);
-            } else if (checkedCheckboxes === totalCheckboxes) {
-                selectAllCheckbox.prop('checked', true);
-                selectAllCheckbox.prop('indeterminate', false);
-            } else {
-                selectAllCheckbox.prop('checked', false);
-                selectAllCheckbox.prop('indeterminate', true);
-            }
-        }
-
-        function updateBulkActions() {
-            const selectedCount = $('.item-checkbox:checked').length;
-
-            if (selectedCount > 0) {
-                bulkActionsContainer.show();
-                selectedCountSpan.text(selectedCount);
-
-                // Enable/disable buttons based on selection
-                $('.bulk-action-btn').prop('disabled', false);
-            } else {
-                bulkActionsContainer.hide();
-                $('.bulk-action-btn').prop('disabled', true);
-            }
-        }
-
-        function clearSelection() {
-            $('.item-checkbox').prop('checked', false);
-            selectAllCheckbox.prop('checked', false);
-            selectAllCheckbox.prop('indeterminate', false);
-            updateBulkActions();
         }
     });
+
+    // UI elements
+    const $bulkBar = $('.bulk-actions');
+    const $selectedCount = $('#selectedCount');
+    const $selectAll = $('#selectAll');
+
+    // store selected ids in a Set to keep selections across paging
+    const selectedIds = new Set();
+
+    // bind checkboxes inside table
+    function bindRowSelection() {
+        // row checkboxes
+        $('#thirdPartiesTable .item-checkbox').off('change').on('change', function() {
+            const id = $(this).val();
+            if ($(this).is(':checked')) {
+                selectedIds.add(id);
+            } else {
+                selectedIds.delete(id);
+            }
+            refreshSelectionUI();
+        });
+    }
+
+    // update selectAll checkbox based on visible rows
+    function updateSelectAllState() {
+        const $visibleCheckboxes = $('#thirdPartiesTable .item-checkbox');
+        if ($visibleCheckboxes.length === 0) {
+            $selectAll.prop('checked', false).prop('indeterminate', false);
+            return;
+        }
+        const totalVisible = $visibleCheckboxes.length;
+        const checkedVisible = $visibleCheckboxes.filter(':checked').length;
+
+        if (checkedVisible === 0) {
+            $selectAll.prop('checked', false).prop('indeterminate', false);
+        } else if (checkedVisible === totalVisible) {
+            $selectAll.prop('checked', true).prop('indeterminate', false);
+        } else {
+            $selectAll.prop('checked', false).prop('indeterminate', true);
+        }
+    }
+
+    // refresh bulk bar UI
+    function refreshSelectionUI() {
+        // Update row checkbox states to match selectedIds (useful after page switch)
+        $('#thirdPartiesTable .item-checkbox').each(function() {
+            const id = $(this).val();
+            $(this).prop('checked', selectedIds.has(id));
+        });
+
+        const count = selectedIds.size;
+        $selectedCount.text(count);
+        if (count > 0) {
+            $bulkBar.show();
+        } else {
+            $bulkBar.hide();
+        }
+
+        updateSelectAllState();
+    }
+
+    // select all visible
+    $selectAll.on('change', function() {
+        const checked = $(this).is(':checked');
+        $('#thirdPartiesTable .item-checkbox').each(function() {
+            $(this).prop('checked', checked).trigger('change');
+        });
+    });
+
+    // Clear selection button
+    $('#clearSelection').on('click', function(e) {
+        e.preventDefault();
+        selectedIds.clear();
+        refreshSelectionUI();
+    });
+
+    // Bulk action handler
+    $('.bulk-action-btn').on('click', function(e) {
+        e.preventDefault();
+        const action = $(this).data('action');
+        if (!action) return;
+
+        if (selectedIds.size === 0) {
+            alert('No items selected.');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to ${action} ${selectedIds.size} item(s)?`)) return;
+
+        // Prepare payload
+        const payload = {
+            action: action,
+            selectedItems: Array.from(selectedIds)
+        };
+
+        // Send AJAX POST (uses jQuery)
+        $.ajax({
+            url: bulkActionUrl,
+            method: 'POST',
+            data: payload,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if (res && res.success) {
+                    // show success toast/alert (adjust to your toastr if available)
+                    alert(res.message || 'Bulk action completed successfully.');
+                    // clear selection and reload table
+                    selectedIds.clear();
+                    refreshSelectionUI();
+                    table.ajax.reload(null, false); // keep current page
+                } else {
+                    alert(res.message || 'Bulk action finished with issues.');
+                }
+            },
+            error: function(xhr) {
+                let msg = 'Bulk action failed.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                } else if (xhr.responseText) {
+                    msg = xhr.responseText;
+                }
+                alert(msg);
+                console.error('Bulk action error', xhr);
+            }
+        });
+    });
+
+    // Make search and filters work (already there)
+    $('#searchButton').on('click', () => table.ajax.reload());
+    $('#applyFiltersBtn').on('click', () => table.ajax.reload());
+
+    // Keep selection checkboxes synced when user pages / sorts (initial bind)
+    bindRowSelection();
+});
 </script>
+
 @endsection
