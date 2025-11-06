@@ -237,92 +237,68 @@ public function store(StoreThirdPartyWithUserRequest $request)
         return view('thirdparty.parties.show', compact('party', 'primaryUser'));
     }
 
-    public function edit(ThirdParties $party): View
+    public function edit($id): View
     {
-        $businessTypes = BusinessTypeEnum::cases();
-        $approvalStatuses = ThirdPartyApprovalStatusEnum::cases();
-        $party->loadMissing('types');
-        $primaryUser = ThirdPartyUser::where('ThirdPartyId', $party->Id)
-            ->orderByDesc('CreatedOn')
-            ->first();
-        return view('thirdparty.parties.edit', compact('party', 'businessTypes', 'approvalStatuses', 'primaryUser'));
+        $thirdParty = ThirdParties::with('types')->findOrFail($id);
+        $primaryUser = ThirdPartyUser::where('ThirdPartyId', $thirdParty->Id)->orderByDesc('CreatedOn')->first();
+
+
+        return view('thirdparty.parties.edit', [
+            'thirdParty' => $thirdParty,
+            'partyTypes' => CodeDetail::where('CodeID', 'PartyType')->get(),
+            'thirdPartyTypes' => ThirdPartyType::orderBy('Code')->get(),
+            'country' => Country::all(),
+            'businessTypes' => BusinessTypeEnum::cases(),
+            'approvalStatuses' => ThirdPartyApprovalStatusEnum::cases(),
+            'statuses' => ThirdPartyStatusEnum::cases(),
+            'primaryUser' => $primaryUser
+        ]);
     }
 
     public function update(UpdateThirdPartyRequest $request, ThirdParties $party): RedirectResponse
     {
         try {
-            // Debug logging
             Log::info('ThirdParty Update Started', [
                 'partyId' => $party->Id,
                 'requestData' => $request->all(),
-                'approvalStatus' => $request->input('ApprovalStatus'),
-                'status' => $request->input('Status'),
-                'totalParties' => ThirdParties::count()
             ]);
 
             $data = $request->validated();
             $data['ModifiedBy'] = Auth::id();
 
-            Log::info('Validated data', [
-                'partyId' => $party->Id,
-                'validatedData' => $data
-            ]);
-
             $party->update($data);
 
-            Log::info('Party updated successfully', [
+            Log::info('ThirdParty updated successfully', [
                 'partyId' => $party->Id,
                 'newApprovalStatus' => $party->ApprovalStatus,
-                'newStatus' => $party->Status
+                'newStatus' => $party->Status,
             ]);
 
-            // Sync linked users' IsActive based on Status and/or ApprovalStatus edits
-            if (array_key_exists('Status', $data)) {
-                if ($data['Status'] === ThirdPartyStatusEnum::Active->value) {
-                    ThirdPartyUser::where('ThirdPartyId', $party->Id)
-                        ->update(['IsActive' => 1, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
-                    Log::info('Users activated for party (via Status=Active)', [
-                        'partyId' => $party->Id,
-                        'affected' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
-                    ]);
-                } elseif ($data['Status'] === ThirdPartyStatusEnum::Inactive->value) {
-                    ThirdPartyUser::where('ThirdPartyId', $party->Id)
-                        ->update(['IsActive' => 0, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
-                    Log::info('Users deactivated for party (via Status=Inactive)', [
-                        'partyId' => $party->Id,
-                        'affected' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
-                    ]);
-                }
+            // ✅ Update linked users’ IsActive field according to Status or ApprovalStatus
+            if (isset($data['Status'])) {
+                $isActive = $data['Status'] === ThirdPartyStatusEnum::Active->value ? 1 : 0;
+                ThirdPartyUser::where('ThirdPartyId', $party->Id)
+                    ->update(['IsActive' => $isActive, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
             }
 
-            if (array_key_exists('ApprovalStatus', $data)) {
-                if ($data['ApprovalStatus'] === ThirdPartyApprovalStatusEnum::Approved->value) {
-                    ThirdPartyUser::where('ThirdPartyId', $party->Id)
-                        ->update(['IsActive' => 1, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
-                    Log::info('Users activated for party (via ApprovalStatus=Approved)', [
-                        'partyId' => $party->Id,
-                        'affected' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
-                    ]);
-                } elseif ($data['ApprovalStatus'] === ThirdPartyApprovalStatusEnum::Rejected->value) {
-                    ThirdPartyUser::where('ThirdPartyId', $party->Id)
-                        ->update(['IsActive' => 0, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
-                    Log::info('Users deactivated for party (via ApprovalStatus=Rejected)', [
-                        'partyId' => $party->Id,
-                        'affected' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
-                    ]);
-                }
+            if (isset($data['ApprovalStatus'])) {
+                $isActive = $data['ApprovalStatus'] === ThirdPartyApprovalStatusEnum::Approved->value ? 1 : 0;
+                ThirdPartyUser::where('ThirdPartyId', $party->Id)
+                    ->update(['IsActive' => $isActive, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
             }
 
-            return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
+            return redirect()
+                ->route('thirdparty.parties.show', $party->Id)
                 ->with('success', 'Third party information updated successfully.');
+
         } catch (\Exception $e) {
-            Log::error('Failed to update third party: ' . $e->getMessage(), [
+            Log::error('Failed to update third party', [
                 'partyId' => $party->Id,
-                'request_data' => $request->all(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
+
+            return redirect()
+                ->route('thirdparty.parties.show', $party->Id)
                 ->with('error', 'Failed to update third party information. Please try again.');
         }
     }
