@@ -56,4 +56,21 @@ class Workflow extends Model
         return $this->morphTo('source', 'Source', 'SourceID');
     }
 
+    // Boot method to handle cascade delete
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When workflow is being deleted, delete all its stages first
+        static::deleting(function ($workflow) {
+            // Delete all associated stages
+            $workflow->stages()->delete();
+            
+            \Illuminate\Support\Facades\Log::info('Deleted workflow stages during cascade', [
+                'workflow_id' => $workflow->Id,
+                'stages_deleted' => $workflow->stages()->count(),
+            ]);
+        });
+    }
+
 }

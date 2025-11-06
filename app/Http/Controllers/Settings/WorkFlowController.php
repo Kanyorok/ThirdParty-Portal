@@ -8,7 +8,7 @@ use App\Http\Requests\Settings\WorkFlowRequest;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Core\Approval\WorkFlow;
+use App\Models\Settings\WorkFlow;
 use App\Models\Core\Approval\WorkFlowStage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -45,16 +45,12 @@ class WorkFlowController extends Controller
         // Not used
     }
 
-    /**
-     * Store a newly created workflow and auto-detect the module
-     */
     public function store(WorkFlowRequest $request)
     {
         $validated = $request->validated();
         $user = Auth::user();
 
         try {
-            //  Resolve the selected document type (alias or model class)
             $selection = (string) ($validated['DocType'] ?? '');
             $tableName = $this->resolveSelectedToTable($selection);
 
@@ -62,7 +58,6 @@ class WorkFlowController extends Controller
                 throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
             }
 
-            // Automatically detect the module linked to the document type
             $moduleId = DB::table('t_ModuleSources')
                 ->where('DocumentType', $tableName)
                 ->value('ModuleID');
@@ -71,30 +66,23 @@ class WorkFlowController extends Controller
                 Log::warning("No module found for document type: {$tableName}");
             }
 
-            //  Create the workflow
             $workFlow = WorkFlow::create([
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
                 'Source' => $tableName,
+                'IsFinalStage' => false, // Initialize as false
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
                 'CreatedOn' => now(),
             ]);
 
-            //  Optionally log the module linkage
             Log::info('Workflow created successfully.', [
-                'workflow_id' => $workFlow->id,
+                'workflow_id' => $workFlow->Id,
                 'source' => $tableName,
                 'module_id' => $moduleId,
                 'created_by' => Auth::id(),
             ]);
-
-            // (Optional) You can store module info in a pivot/log table if needed
-            // DB::table('t_WorkflowModules')->insert([
-            //     'WorkflowId' => $workFlow->id,
-            //     'ModuleID' => $moduleId,
-            // ]);
 
             activity()->causedBy($user)
                 ->performedOn($workFlow)
@@ -108,16 +96,13 @@ class WorkFlowController extends Controller
             ]);
 
             return redirect()->back()->withErrors([
-                'error' => 'Failed to create approval stage: ' . $e->getMessage()
+                'error' => 'Failed to create approval workflow: ' . $e->getMessage()
             ]);
         }
 
         return redirect()->back()->with('success', 'Approval workflow created successfully.');
     }
 
-    /**
-     * Update existing workflow
-     */
     public function update(Request $request, string $id)
     {
         $validated = $request->validate([
@@ -135,7 +120,6 @@ class WorkFlowController extends Controller
                 throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
             }
 
-            // Auto-detect module again on update
             $moduleId = DB::table('t_ModuleSources')
                 ->where('DocumentType', $tableName)
                 ->value('ModuleID');
@@ -149,7 +133,7 @@ class WorkFlowController extends Controller
             ]);
 
             Log::info('Workflow updated successfully.', [
-                'workflow_id' => $workFlow->id,
+                'workflow_id' => $workFlow->Id,
                 'module_id' => $moduleId,
                 'updated_by' => Auth::id(),
             ]);
@@ -164,39 +148,64 @@ class WorkFlowController extends Controller
 
     public function show($id)
     {
-       
-     // Use fresh() to get latest data from database
-    $approval = WorkFlow::findOrFail($id);
-    $approval->refresh(); // Ensure we have fresh data
-    
-    $sourceOptions = array_flip(Relation::morphMap());
-    $approvalTypes = DB::table('t_WorkFlowTypes')->get();
-    $permissions = DB::table('t_Permissions')->get();
-    $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'Source')->get();
+        $approval = WorkFlow::findOrFail($id);
+        $approval->refresh();
+        
+        $sourceOptions = array_flip(Relation::morphMap());
+        $approvalTypes = DB::table('t_WorkFlowTypes')->get();
+        $permissions = DB::table('t_Permissions')->get();
+        $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'Source')->get();
 
-    $stages = WorkFlowStage::where('WorkFlowId', $id)
-        ->with(['type_name', 'workflow'])
-        ->orderBy('Order')
-        ->get();
+        $stages = WorkFlowStage::where('WorkFlowId', $id)
+            ->with(['type_name', 'workflow'])
+            ->orderBy('Order')
+            ->get();
 
-    return view('settings.approvals.show', compact(
-        'approval',
-        'sourceOptions',
-        'permissions',
-        'approvalTypes',
-        'workflowLimits',
-        'stages'
-    ));
-}
+        return view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'));
+    }
 
     public function destroy(string $id)
     {
+        DB::beginTransaction();
+        
         try {
             $workFlow = WorkFlow::findOrFail($id);
+            $workflowName = $workFlow->Name;
+            
+            // Count stages before deletion
+            $stagesCount = WorkFlowStage::where('WorkFlowId', $id)->count();
+            
+            // Delete all associated stages first (explicit deletion)
+            WorkFlowStage::where('WorkFlowId', $id)->delete();
+            
+            Log::info('Deleted workflow stages', [
+                'workflow_id' => $id,
+                'workflow_name' => $workflowName,
+                'stages_deleted' => $stagesCount,
+            ]);
+            
+            // Now delete the workflow
             $workFlow->delete();
-
-            return redirect()->route('settings.workflows.index')->with('success', 'Approval workflow deleted.');
+            
+            // Log activity
+            activity()->performedOn($workFlow)
+                ->event('delete')
+                ->log("Deleted workflow '{$workflowName}' and {$stagesCount} stage(s)");
+            
+            DB::commit();
+            
+            return redirect()->route('settings.workflows.index')
+                ->with('success', "Workflow '{$workflowName}' and {$stagesCount} associated stage(s) deleted successfully.");
+                
         } catch (\Throwable $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to delete workflow', [
+                'workflow_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return back()->with('error', 'Delete failed: ' . $e->getMessage());
         }
     }
