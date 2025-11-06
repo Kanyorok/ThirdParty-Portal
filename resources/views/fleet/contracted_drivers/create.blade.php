@@ -23,7 +23,7 @@
 
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Full Name</label>
+                    <label class="form-label">Full Name<span class="text-danger">*</span></label>
                     <input type="text" name="FullName" class="form-control @error('FullName') is-invalid @enderror"
                            value="{{ old('FullName') }}" required>
                     @error('FullName')
@@ -32,7 +32,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">National ID</label>
+                    <label class="form-label">National ID<span class="text-danger">*</span></label>
                     <input type="text" name="NationalID" class="form-control @error('NationalID') is-invalid @enderror"
                            value="{{ old('NationalID') }}">
                     @error('NationalID')
@@ -41,7 +41,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Phone</label>
+                    <label class="form-label">Phone<span class="text-danger">*</span></label>
                     <input type="text" name="Phone" class="form-control @error('Phone') is-invalid @enderror"
                            value="{{ old('Phone') }}">
                     @error('Phone')
@@ -51,19 +51,19 @@
 
 
             <div class="col-md-6">
-                <label for="Company" class="form-label">Company Name</label>
-                <select name="Company" class="form-select">
+                <label for="CompanyID" class="form-label">Company Name<span class="text-danger">*</span></label>
+                <select name="CompanyID" class="form-select">
                     <option value="">Select Company</option>
                     @foreach($companies as $company)
-                        <option value="{{ $company->Id }}" {{ old('Company') == $company->Id ? 'selected' : '' }}>
-                            {{ $company->SupplierName }}
+                        <option value="{{ $company->Id }}" {{ old('CompanyID') == $company->Id ? 'selected' : '' }}>
+                            {{ $company->ThirdPartyName }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Contract Start Date</label>
+                    <label class="form-label">Contract Start Date<span class="text-danger">*</span></label>
                     <input type="date" name="ContractStartDate"
                            class="form-control @error('ContractStartDate') is-invalid @enderror"
                            value="{{ old('ContractStartDate') }}">
@@ -73,7 +73,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Contract End Date</label>
+                    <label class="form-label">Contract End Date<span class="text-danger">*</span></label>
                     <input type="date" name="ContractEndDate"
                            class="form-control @error('ContractEndDate') is-invalid @enderror"
                            value="{{ old('ContractEndDate') }}">
@@ -107,7 +107,7 @@
 
         <!-- Document Upload -->
         <div class="mb-3">
-            <label class="form-label">Upload Supporting Documents</label>
+            <label class="form-label">Upload Supporting Documents<span class="text-danger">*</span></label>
 
             <input type="file" name="Document" class="form-control" multiple>
             <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>

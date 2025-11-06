@@ -70,23 +70,23 @@
                     <input type="text" class="form-control" name="CurrencyCode" value="KES" required>
                 </div>
                 <div class="row">
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         <label class="form-label">Effective From</label>
                         <input type="date" class="form-control" name="EffectiveFrom" required>
-                    </div>
-                    <div class="col-md-6">
+                    </div> --}}
+                    {{-- <div class="col-md-6">
                         <label class="form-label">Effective To</label>
                         <input type="date" class="form-control" name="EffectiveTo">
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="form-check mt-3">
                     <input class="form-check-input" type="checkbox" name="IsDefault" id="isDefault" value="1">
                     <label class="form-check-label" for="isDefault">Mark as Default Price</label>
                 </div>
-                <div class="mb-3 mt-3">
+                {{-- <div class="mb-3 mt-3">
                     <label class="form-label">Source</label>
                     <input type="text" class="form-control" name="Source" placeholder="Optional">
-                </div>
+                </div> --}}
                 <button type="submit" class="btn btn-primary mt-3">Save Price</button>
             </form>
         </div>
@@ -121,15 +121,21 @@
                         <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
                         <td>{!! $price->IsDefault ? '✔️' : '' !!}</td> --}}
                         <td>
-                            <a href="{{ route('pricemanagement.edit', $price->Id) }}" class="btn btn-sm btn-info">Edit</a>
-                            <form action="{{ route('pricemanagement.destroy', $price->Id) }}" method="POST"
-                                style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Delete this price?')">Delete
-                                </button>
-                            </form>
+                            <div class="d-flex gap-1">
+                                <a href="{{ route('pricemanagement.edit', $price->Id) }}" 
+                                   class="btn btn-sm btn-info" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('pricemanagement.destroy', $price->Id) }}" method="POST"
+                                    style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('Delete this price?')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -162,6 +168,10 @@
         </div>
     </div>
 </div>
+
+<!-- Add Font Awesome CSS for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>

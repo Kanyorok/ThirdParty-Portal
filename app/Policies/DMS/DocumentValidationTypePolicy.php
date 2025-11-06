@@ -2,6 +2,7 @@
 
 namespace App\Policies\DMS;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\DMS\DocumentValidationType;
 
@@ -12,7 +13,7 @@ class DocumentValidationTypePolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSView->value);
     }
 
     /**
@@ -20,7 +21,7 @@ class DocumentValidationTypePolicy
      */
     public function view(User $user, DocumentValidationType $documentValidationType): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSView->value);
     }
 
     /**
@@ -28,7 +29,7 @@ class DocumentValidationTypePolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSBulkUpload->value);
     }
 
     /**
@@ -36,7 +37,7 @@ class DocumentValidationTypePolicy
      */
     public function update(User $user, DocumentValidationType $documentValidationType): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSBulkUpload->value);
     }
 
     /**
@@ -44,7 +45,7 @@ class DocumentValidationTypePolicy
      */
     public function delete(User $user, DocumentValidationType $documentValidationType): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSBulkUpload->value);
     }
 
     /**

@@ -20,6 +20,7 @@ class RFQController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', RFQ::class);
         // Build base query
         $query = RFQ::with(['category', 'suppliers', 'requisition']);
 
@@ -86,6 +87,7 @@ class RFQController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', RFQ::class);
         $categories = ItemCategories::all();
         $suppliers = Supplier::all(); // Fetch all suppliers for selection
         return view('procurement.rfqs.create', compact('categories', 'suppliers'));
@@ -96,6 +98,7 @@ class RFQController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', RFQ::class);
         $request->validate([
             'RequisitionId' => 'required|exists:t_Requisitions,Id',
             'Comments' => 'nullable|string|max:255',
@@ -141,12 +144,13 @@ class RFQController extends Controller
      */
     public function approve(Request $request, $id)
     {
+        $rfq = RFQ::findOrFail($id);
+        $this->authorize('approve', $rfq);
         $request->validate([
             'suppliers' => 'required|array',
             'suppliers.*' => 'exists:t_Suppliers,Id',
         ]);
 
-        $rfq = RFQ::findOrFail($id);
 
         // Check if RFQ has at least one line item
         if ($rfq->rfqLines()->count() < 1) {
@@ -266,11 +270,12 @@ class RFQController extends Controller
      */
     public function reject(Request $request, $id)
     {
+        $rfq = RFQ::findOrFail($id);
+        $this->authorize('reject', $rfq);
         $request->validate([
             'RejectionReason' => 'required|string|max:255',
         ]);
 
-        $rfq = RFQ::findOrFail($id);
 
         //Check if RFQ has at least one line item
         if ($rfq->rfqLines()->count() < 1) {
@@ -291,6 +296,7 @@ class RFQController extends Controller
     {
         // Get the RFQ and its associated RFQLines
         $rfq = RFQ::with('rfqLines', 'rfqLines.uom')->findOrFail($id);
+        $this->authorize('view', $rfq);
 
         // Gather item category IDs from RFQ lines and include ancestors and descendants
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
@@ -373,6 +379,7 @@ class RFQController extends Controller
     public function edit($id)
     {
         $rfq = RFQ::with('suppliers')->findOrFail($id);
+        $this->authorize('update', $rfq);
         $categories = ItemCategories::all();
         $suppliers = Supplier::all();
 
@@ -384,6 +391,8 @@ class RFQController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $rfq = RFQ::findOrFail($id);
+        $this->authorize('update', $rfq);
         $request->validate([
             'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
             'Comments' => 'nullable|string|max:255',
@@ -392,7 +401,6 @@ class RFQController extends Controller
             'suppliers.*' => 'exists:t_Suppliers,Id',
         ]);
 
-        $rfq = RFQ::findOrFail($id);
 
         // Update RFQ details
         $rfq->update([
@@ -414,6 +422,7 @@ class RFQController extends Controller
     public function destroy($id)
     {
         $rfq = RFQ::findOrFail($id);
+        $this->authorize('delete', $rfq);
         $rfq->delete();
 
         return redirect()->route('rfqs.index')->with('success', 'RFQ deleted successfully.');

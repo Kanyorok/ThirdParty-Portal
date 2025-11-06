@@ -39,9 +39,9 @@
                         <td>{{ $inspection->vehicle?->RegistrationNo }}</td>
                         <td>{{ $inspection->driver?->FullName }}</td>
                         <td>{{ $inspection->Mileage }} Km/h</td>
-                        <td>{{ $inspection->Fuel }} Ltr</td>
-                        <td>{{ $inspection->EngineOil }} Ltr</td>
-                        <td>{{ $inspection->Coolant }} Ltr</td>
+                        <td>{{ $inspection->fuel->Description ?? 'N/A' }}</td>
+                        <td>{{ $inspection->engineOil->Description ?? 'N/A' }} </td>
+                        <td>{{ $inspection->coolant->Description ?? 'N/A' }} </td>
                         <td>
                             <a href="{{ route('fleet.vehicle_inspection.show', $inspection->Id) }}"
                                class="btn btn-sm btn-info">
@@ -91,9 +91,9 @@
                                                             <tr>
                                                                 <td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') }}</td>
                                                                 <td>{{ $postTrip->Mileage }} Km/h</td>
-                                                                <td>{{ $postTrip->Fuel }} Ltr</td>
-                                                                <td>{{ $postTrip->EngineOil }} Ltr</td>
-                                                                <td>{{ $postTrip->Coolant }} Ltr</td>
+                                                                <td>{{ $inspection->fuel->Description ?? 'N/A' }}</td>
+                                                                <td>{{ $inspection->engineOil->Description ?? 'N/A' }} </td>
+                                                                <td>{{ $inspection->coolant->Description ?? 'N/A' }} </td>
                                                                 <td>{{ $postTrip->Reflector ? '✔️' : '❌' }}</td>
                                                                 <td>{{ $postTrip->FireExtinguisher ? '✔️' : '❌' }}</td>
                                                                 <td>{{ $postTrip->FirstAidKit ? '✔️' : '❌' }}</td>

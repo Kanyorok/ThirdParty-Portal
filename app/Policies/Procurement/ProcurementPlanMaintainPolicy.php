@@ -11,7 +11,7 @@ class ProcurementPlanMaintainPolicy
 
     public function viewAny(User $user)
     {
-        return true;
+        return $user->can(PermissionEnum::PlanMaintenanceRead->value);
     }
 
 

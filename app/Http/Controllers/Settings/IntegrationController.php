@@ -14,6 +14,7 @@ use App\Services\ThirdParty\AIService;
 use App\Services\ThirdParty\CSSMSService;
 use App\Services\ThirdParty\FacebookService;
 use App\Services\ThirdParty\InfobipService;
+use App\Services\ThirdParty\iTrackService;
 use App\Services\ThirdParty\SSRSService;
 use App\Services\ThirdParty\TwitterService;
 use EchoLabs\Prism\Enums\Provider;
@@ -51,6 +52,10 @@ class IntegrationController extends Controller
 
         if ($Integration->value === IntegrationsEnum::InfoBip->value) {
             return $this->_infoBipConfiguration($request->validated('InfoBip_Host'), $request->validated('InfoBip_Email'), $request->validated('InfoBip_API_Key'), $request->user());
+        }
+
+        if ($Integration->value === IntegrationsEnum::iTrack->value) {
+            return $this->_iTrackConfiguration($request->getITrackUrl(), $request->validated('iTrack_Username'), $request->validated('iTrack_Password'), $request->user());
         }
 
         if ($Integration->value === IntegrationsEnum::LLM->value) {
@@ -339,6 +344,21 @@ class IntegrationController extends Controller
             'username' => $Username,
             'path' => $Path,
             'name' => $DisplayName,
+            'password' => Crypt::encryptString($password),
+        ], $actor);
+    }
+
+    private function _iTrackConfiguration(string $Host, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
+    {
+        if (!iTrackService::testConfig($Host, $Username, $password)) {
+            throw ValidationException::withMessages([
+                'iTrack_Password' => ['invalid credentials'],
+                'iTrack_Username' => ['invalid credentials']
+            ]);
+        }
+        return $this->_saveData(IntegrationsEnum::iTrack, [
+            'host' => $Host,
+            'username' => $Username,
             'password' => Crypt::encryptString($password),
         ], $actor);
     }

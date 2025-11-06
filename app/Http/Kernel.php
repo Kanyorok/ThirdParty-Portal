@@ -48,6 +48,7 @@ class Kernel extends HttpKernel
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
+    'canAction' => \App\Http\Middleware\CanAction::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
@@ -56,5 +57,8 @@ class Kernel extends HttpKernel
         'thirdparty' => \App\Http\Middleware\EnforceThirdPartyUser::class,
         'thirdparty.approved' => \App\Http\Middleware\CheckThirdPartyApprovalStatus::class,
         'verified.user' => \App\Http\Middleware\VerifiedUser::class,
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+        'role_or_permission' => \App\Http\Middleware\RoleOrPermissionMiddleware::class,
     ];
 }

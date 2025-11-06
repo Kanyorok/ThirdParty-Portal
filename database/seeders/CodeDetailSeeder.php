@@ -25,6 +25,9 @@ use Illuminate\Support\Facades\DB;
 
 class CodeDetailSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
         $date = now();
@@ -259,6 +262,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
+
+            // Approval WorkFlow Documents
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PR', 'Description' => 'Requisition'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PO', 'Description' => 'Purchase Order'],
 
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
@@ -528,6 +535,18 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
 
 
+            ['CodeID' => 'FleetUOM', 'Description' => 'Sufficient', 'Value' => 'SU'],
+            ['CodeID' => 'FleetUOM', 'Description' => 'Insufficient', 'Value' => 'IN'],
+            ['CodeID' => 'FleetUOM', 'Description' => 'Excess', 'Value' => 'EX'],
+
+
+            //Fuel UOMs
+            ['CodeID' => 'FuelUOM', 'Description' => '1/4', 'Value' => 'Q'],
+            ['CodeID' => 'FuelUOM', 'Description' => '2/4', 'Value' => 'H'],
+            ['CodeID' => 'FuelUOM', 'Description' => '3/4', 'Value' => 'Q'],
+            ['CodeID' => 'FuelUOM', 'Description' => '4/4', 'Value' => 'F'],
+
+
             //Vehicle Request Status
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Pending', 'Value' => 'pe'],
@@ -554,6 +573,14 @@ class CodeDetailSeeder extends Seeder
             //Repair Type
             ['CodeID' => 'FleetRepairType', 'Description' => 'Normal', 'Value' => 'NO'],
             ['CodeID' => 'FleetRepairType', 'Description' => 'Emergency', 'Value' => 'EM'],
+
+            //Trip Statuses
+            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'AP'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'RE'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'OG'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'CO'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'CA'],
 
             //Maintenance Status
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],

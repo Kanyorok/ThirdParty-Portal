@@ -42,4 +42,19 @@ class FleetVehicleInspectionRequest extends FormRequest
             'Document' => 'nullable|file|max:2048',
         ];
     }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->VehicleID && $this->Mileage) {
+                $lastInspection = \App\Models\Fleet\FleetVehicleInspection::where('VehicleID', $this->VehicleID)
+                    ->orderByDesc('InspectionDate')
+                    ->first();
+
+                if ($lastInspection && $this->Mileage < $lastInspection->Mileage) {
+                    $validator->errors()->add('Mileage', 'Mileage cannot be lower than the previous inspection (' . $lastInspection->Mileage . ' km).');
+                }
+            }
+        });
+    }
 }

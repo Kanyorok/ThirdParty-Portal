@@ -31,7 +31,8 @@ class FuelTypeController extends Controller
      */
     public function index()
     {
-        $fuelTypes = FuelType::all();
+        $fuelTypes = FuelType::withCount('vehicles')->get();
+        
         return view('fleetmanagement.fueltypes.index', compact('fuelTypes'));
     }
 

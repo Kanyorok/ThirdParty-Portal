@@ -220,6 +220,7 @@ class PurchaseOrderController extends Controller
     public function index()
 
     {
+        $this->authorize('viewAny', Order::class);
 
 //        User::query()->hasPermission(PermissionEnum::Users->value)->dd();
 
@@ -241,6 +242,7 @@ class PurchaseOrderController extends Controller
      */
      public function create()
     {
+        $this->authorize('create', Order::class);
         try {
             $itemTypes = $this->itemService->getTypes();
 
@@ -479,6 +481,7 @@ class PurchaseOrderController extends Controller
      */
     public function store(PurchaseOrderRequest $request)
     {
+        $this->authorize('create', Order::class);
         try {
             $validatedData = $request->validated();
 
@@ -780,6 +783,7 @@ class PurchaseOrderController extends Controller
 
     public function linkRFQ()
     {
+        $this->authorize('viewAny', Order::class);
         try {
             $RFQ = $this->rfqService->fetchRFQ();
 //            \Log::info('RFQ loaded in create():', $RFQ->toArray());
@@ -825,11 +829,14 @@ class PurchaseOrderController extends Controller
 
     public function approve(ApproveOrderRequest $orderRequest, $id)
     {
+        $order = Order::findOrFail($id);
+        $this->authorize('approve', $order);
         return $this->documentApprovalService->approve($orderRequest, $id);
     }
 
     public function fetchRFQDetails($id): JsonResponse
     {
+        $this->authorize('create', Order::class);
         try {
             $RFQData = $this->rfqService->RFQTOPO($id);
 

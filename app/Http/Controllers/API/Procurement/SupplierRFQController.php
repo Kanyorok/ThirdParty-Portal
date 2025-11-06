@@ -47,8 +47,9 @@ class SupplierRFQController extends Controller
         return response()->json(['data' => $invitations]);
     }
 
-    public function getInvitation(int $rfqId): JsonResponse
+    public function getInvitation(int|string $rfq): JsonResponse
     {
+        $rfqId = (int) $rfq;
         $user = Auth::user();
         $thirdPartyId = $user->ThirdPartyId ?? null;
         if (!$thirdPartyId) {
@@ -265,8 +266,9 @@ class SupplierRFQController extends Controller
         return response()->json(['message' => 'Clarification submitted'], 201);
     }
 
-    public function listClarifications(int $rfqId): JsonResponse
+    public function listClarifications(int|string $rfq): JsonResponse
     {
+        $rfqId = (int) $rfq;
         $user = Auth::user();
         $thirdPartyId = $user->ThirdPartyId ?? null;
         if (!$thirdPartyId) {
