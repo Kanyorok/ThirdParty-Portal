@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Call;
 
 use App\Enums\ScheduleStatusEnum;
-use App\Models\Call;
-use App\Models\Schedule;
+use App\Models\Communication\Call;
+use App\Models\CRM\Schedule;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -22,9 +22,12 @@ class StartCallRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'call_initiated' => ['required', 'date_format:"H:i"'],
-            'schedule' => ['required']
-        ];
+                'call_initiated' => [
+                                     'required',
+                                     'date_format:"H:i"',
+                                    ],
+                'schedule'       => ['required'],
+               ];
     }
 
     /**
@@ -43,9 +46,7 @@ class StartCallRequest extends FormRequest
             return $schedule;
         }
 
-        throw ValidationException::withMessages([
-            'schedule' => 'schedule not found',
-        ]);
+        throw ValidationException::withMessages(['schedule' => 'schedule not found']);
     }
 
     /**
@@ -55,9 +56,7 @@ class StartCallRequest extends FormRequest
     {
         $current_start = Carbon::createFromFormat('H:i', $this->validated('call_initiated'));
         if (!$current_start instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'call_initiated' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['call_initiated' => 'invalid date format']);
         }
         if ($current_start->greaterThan(now())) {
             $current_start = now()->subMinute();

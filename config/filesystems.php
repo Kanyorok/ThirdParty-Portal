@@ -29,17 +29,58 @@ return [
     */
 
     'disks' => [
-
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
+            'permissions' => [
+                'file' => [
+                    'public' => 0664,
+                    'private' => 0660,
+                ],
+                'dir' => [
+                    'public' => 0765,
+                    'private' => 0760,
+                ],
+            ],
+            'throw' => false,
+        ],
+
+        'fs' => [
+            'driver' => 'local',
+            'root' => storage_path('app/files'),
+            'throw' => false,
+            'permissions' => [
+                'file' => [
+                    'public' => 0664,
+                    'private' => 0660,
+                ],
+                'dir' => [
+                    'public' => 0776,
+                    'private' => 0765,
+                ],
+            ],
+        ],
+
+        'temp' => [
+            'driver' => 'local',
+            'root' => storage_path('app/temp'), //sys_get_temp_dir(),
+            'permissions' => [
+                'file' => [
+                    'public' => 0664,
+                    'private' => 0660,
+                ],
+                'dir' => [
+                    'public' => 0775,
+                    'private' => 0770,
+                ],
+            ],
             'throw' => false,
         ],
 
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
         ],

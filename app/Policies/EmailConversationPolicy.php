@@ -4,9 +4,9 @@ namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\RoleEnum;
-use App\Models\EmailConversation;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
+use App\Models\Communication\EmailConversation;
 use Illuminate\Database\Query\Builder;
 
 class EmailConversationPolicy
@@ -16,7 +16,7 @@ class EmailConversationPolicy
      */
     public function viewAny(User $user): bool
     {
-       return true;
+        return $user->can(PermissionEnum::EmailRead->value);
     }
 
     /**
@@ -24,21 +24,23 @@ class EmailConversationPolicy
      */
     public function view(User $user, EmailConversation $emailConversation): bool
     {
-        if( $user->can(PermissionEnum::EmailRead->value)){
+        if ($user->can(PermissionEnum::EmailRead->value)) {
             return true;
         }
 
-        if ($emailConversation->watchers()->where(function (Builder $query) use ($user) {
-            $query->where(function (Builder $query) use ($user) {
-                $query->where('t_EmailConversationUsers.PartyID', $user->Id)->where('t_EmailConversationUsers.Party', User::getPrimaryKey());
-            })->orWhere(function (Builder $query) use ($user) {
-                $query->where('t_EmailConversationUsers.PartyID', $user->teams()->select('t_Teams.TeamID'))->where('t_EmailConversationUsers.Party', Team::getPrimaryKey());
-            });
-        })->exists()){
+        if (
+            $emailConversation->watchers()->where(function (Builder $query) use ($user) {
+                $query->where(function (Builder $query) use ($user) {
+                    $query->where('t_EmailConversationUsers.PartyID', $user->Id)->where('t_EmailConversationUsers.Party', User::getPrimaryKey());
+                })->orWhere(function (Builder $query) use ($user) {
+                    $query->where('t_EmailConversationUsers.PartyID', $user->teams()->select('t_Teams.TeamID'))->where('t_EmailConversationUsers.Party', Team::getPrimaryKey());
+                });
+            })->exists()
+        ) {
             return true;
         }
 
-       return false;
+        return false;
     }
 
     /**
@@ -46,7 +48,7 @@ class EmailConversationPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::EmailAssign->value);
     }
 
     /**
@@ -54,17 +56,19 @@ class EmailConversationPolicy
      */
     public function update(User $user, EmailConversation $emailConversation): bool
     {
-        if ($user->can(PermissionEnum::EmailAssign->value)){
+        if ($user->can(PermissionEnum::EmailAssign->value)) {
             return true;
         }
 
-        if ($emailConversation->watchers()->where(function (Builder $query) use ($user) {
-            $query->where(function (Builder $query) use ($user) {
-                $query->where('t_EmailConversationUsers.PartyID', $user->Id)->where('t_EmailConversationUsers.Party', User::getPrimaryKey());
-            })->orWhere(function (Builder $query) use ($user) {
-                $query->where('t_EmailConversationUsers.PartyID', $user->teams()->select('t_Teams.TeamID'))->where('t_EmailConversationUsers.Party', Team::getPrimaryKey());
-            });
-        })->whereIn('t_EmailConversationUsers.Role',[RoleEnum::Admin->value, RoleEnum::Write->value, RoleEnum::Share->value])->exists()){
+        if (
+            $emailConversation->watchers()->where(function (Builder $query) use ($user) {
+                $query->where(function (Builder $query) use ($user) {
+                    $query->where('t_EmailConversationUsers.PartyID', $user->Id)->where('t_EmailConversationUsers.Party', User::getPrimaryKey());
+                })->orWhere(function (Builder $query) use ($user) {
+                    $query->where('t_EmailConversationUsers.PartyID', $user->teams()->select('t_Teams.TeamID'))->where('t_EmailConversationUsers.Party', Team::getPrimaryKey());
+                });
+            })->whereIn('t_EmailConversationUsers.Role', [RoleEnum::Admin->value, RoleEnum::Write->value, RoleEnum::Share->value])->exists()
+        ) {
             return true;
         }
 
@@ -76,17 +80,19 @@ class EmailConversationPolicy
      */
     public function delete(User $user, EmailConversation $emailConversation): bool
     {
-        if ($user->can(PermissionEnum::EmailDelete->value)){
+        if ($user->can(PermissionEnum::EmailDelete->value)) {
             return true;
         }
 
-        if ($emailConversation->watchers()->where(function (Builder $query) use ($user) {
-            $query->where(function (Builder $query) use ($user) {
-                $query->where('t_EmailConversationUsers.PartyID', $user->Id)->where('t_EmailConversationUsers.Party', User::getPrimaryKey());
-            })->orWhere(function (Builder $query) use ($user) {
-                $query->where('t_EmailConversationUsers.PartyID', $user->teams()->select('t_Teams.TeamID'))->where('t_EmailConversationUsers.Party', Team::getPrimaryKey());
-            });
-        })->whereIn('t_EmailConversationUsers.Role',[RoleEnum::Admin->value])->exists()){
+        if (
+            $emailConversation->watchers()->where(function (Builder $query) use ($user) {
+                $query->where(function (Builder $query) use ($user) {
+                    $query->where('t_EmailConversationUsers.PartyID', $user->Id)->where('t_EmailConversationUsers.Party', User::getPrimaryKey());
+                })->orWhere(function (Builder $query) use ($user) {
+                    $query->where('t_EmailConversationUsers.PartyID', $user->teams()->select('t_Teams.TeamID'))->where('t_EmailConversationUsers.Party', Team::getPrimaryKey());
+                });
+            })->whereIn('t_EmailConversationUsers.Role', [RoleEnum::Admin->value])->exists()
+        ) {
             return true;
         }
 

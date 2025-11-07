@@ -2,29 +2,28 @@
 
 namespace App\Services;
 
-use App\Enums\LocalityTypeEnum;
-use App\Models\Locality;
+use App\Models\Core\Locality;
 
 class LocalityService
 {
-    public LocalityTypeEnum $typeEnum;
+
 
     public function __construct(public Locality $locality)
     {
-        $this->typeEnum = $locality->LocationType;
     }
 
-    public function getLocation(): string
+    public function getLocation(bool $array = false): string|array
     {
-        if (is_null($this->locality->LocalityID)) {
-            return $this->locality->Name;
+        if ($this->locality->in instanceof Locality) {
+            return ($array) ? [
+                'ID' => $this->locality->ID,
+                'Name' => $this->locality->Name . ' - ' . $this->locality->in?->Name,
+            ] : $this->locality->Name . ' - ' . $this->locality->in?->Name;
         }
 
-        $parent = $this->locality->in;
-        if (!$parent instanceof Locality) {
-            return $this->locality->Name;
-        }
-
-        return $this->locality->Name . ', ' . $parent->Name;
+        return ($array) ? [
+            'ID' => $this->locality->ID,
+            'Name' => $this->locality->Name,
+        ] : $this->locality->Name;
     }
 }

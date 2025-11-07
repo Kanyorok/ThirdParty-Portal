@@ -15,9 +15,9 @@ class CommentCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->transform(function ($comment) {
-                return new CommentResource($comment);
-            }),
-        ];
+                'data' => $this->collection->transform(function ($comment) {
+                    return new CommentResource($comment);
+                }),
+               ];
     }
 }

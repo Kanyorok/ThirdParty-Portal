@@ -2,8 +2,8 @@
 
 namespace App\Events\DebtCollection;
 
-use App\Models\BulkNotification;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\BulkNotification;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -11,7 +11,9 @@ use Illuminate\Support\Carbon;
 
 class BulkNotificationEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
@@ -19,5 +21,4 @@ class BulkNotificationEvent
     public function __construct(public BulkNotification $bulkNotification, public User $actor, public array $attributes, public Carbon $dated)
     {
     }
-
 }

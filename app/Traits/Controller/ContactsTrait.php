@@ -2,10 +2,10 @@
 
 namespace App\Traits\Controller;
 
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Contact;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\CRM\Contact;
+use App\Models\CRM\Lead;
 use Exception;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -26,7 +26,7 @@ trait ContactsTrait
         return Datatables::of($query->lock('WITH(NOLOCK)')->with('party')->select('*'))->addIndexColumn()
             ->addColumn('action', function (Contact $contact) {
                 if ($contact->PartyID === '0') {
-                    return '<a href="'.route('unattached.contacts.show', [$contact->ContactID]).'" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</a>';
+                    return '<a href="' . route('unattached.contacts.show', [$contact->ContactID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</a>';
                 }
                 return '<button type="button"  data-click_url="' . route('contacts.show', [$contact->ContactID]) . '" data-summary_title="contact details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
             })->editColumn('Email', function (Contact $contact) {
@@ -86,10 +86,11 @@ trait ContactsTrait
                  }*/
                 return  $contact->Phone;
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (Contact $contact) {
-                    return route('contacts.show', [$contact->ContactID]);
-                }, 'summary_title' => 'contact details',
-            ])->rawColumns(['action', 'Email', 'Phone'])->make();
+                                                                                                  'dbl_click_url' => function (Contact $contact) {
+                                                                                                    return route('contacts.show', [$contact->ContactID]);
+                                                                                                  },
+                                                                                                  'summary_title' => 'contact details',
+                                                                                                 ])->rawColumns(['action', 'Email', 'Phone'])->make();
     }
 
     /**
@@ -120,9 +121,9 @@ trait ContactsTrait
     public function trash(Contact $contact, User $actor): void
     {
         $contact->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
-        ])->save(['timestamps' => false]);
+                             'DeletedOn' => now(),
+                             'DeletedBy' => $actor->Id,
+                            ])->save(['timestamps' => false]);
 
         //return ActivityService::task($task, $actor->Id . ' canceled task', $actor);
     }

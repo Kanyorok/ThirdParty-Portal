@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Base;
 
-use App\Models\Board;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\CRM\Lead;
+use App\Models\ThirdParies\Board;
 use App\Services\BR\ClientService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,17 +21,23 @@ class MessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message_to' => ['required', 'min:9', 'max:50'],
-            'message_content' => ['required', 'string', 'min:5'],
-        ];
+                'message_to'      => [
+                                      'required',
+                                      'min:9',
+                                      'max:50',
+                                     ],
+                'message_content' => [
+                                      'required',
+                                      'string',
+                                      'min:5',
+                                     ],
+               ];
     }
 
 
     public function messages(): array
     {
-        return [
-            'message_content.min' => 'Write something about it.',
-        ];
+        return ['message_content.min' => 'Write something about it.'];
     }
 
 
@@ -51,9 +57,7 @@ class MessageRequest extends FormRequest
             return $phone;
         }
 
-        throw ValidationException::withMessages([
-            'message_to' => 'The phone number does not related to lead.',
-        ]);
+        throw ValidationException::withMessages(['message_to' => 'The phone number does not related to lead.']);
     }
 
     public function getBoardMemberPhone(Board $boardMember): string
@@ -64,9 +68,7 @@ class MessageRequest extends FormRequest
             return $phone;
         }
 
-        throw ValidationException::withMessages([
-            'message_to' => 'The phone number does not related to board member.',
-        ]);
+        throw ValidationException::withMessages(['message_to' => 'The phone number does not related to board member.']);
     }
 
     public function getUserPhone(User $user): string
@@ -77,9 +79,7 @@ class MessageRequest extends FormRequest
             return $phone;
         }
 
-        throw ValidationException::withMessages([
-            'message_to' => 'The phone number does not related to user.',
-        ]);
+        throw ValidationException::withMessages(['message_to' => 'The phone number does not related to user.']);
     }
 
     /**
@@ -98,8 +98,6 @@ class MessageRequest extends FormRequest
             return $phone;
         }
 
-        throw ValidationException::withMessages([
-            'message_to' => 'The phone number does not related to client.',
-        ]);
+        throw ValidationException::withMessages(['message_to' => 'The phone number does not related to client.']);
     }
 }

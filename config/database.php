@@ -109,29 +109,31 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'options' => [
-               // PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60,//s
-            ]
+                // PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60,//s
+            ],
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+            'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
         ],
 
-        /*'brcbs' => [
+        // Secondary connection pointing to the legacy/old BR ERP database
+        'sqlsrv_old' => [
             'driver' => 'sqlsrv',
-            'url' => env('DB_URL_CBS'),
-            'host' => env('DB_HOST_CBS', 'localhost'),
-            'port' => env('DB_PORT_CBS', '1433'),
-            'database' => env('DB_DATABASE_CBS', 'BRCBS'),
-            'username' => env('DB_USERNAME_CBS', 'administrator'),
-            'password' => env('DB_PASSWORD_CBS', ''),
-            'charset' => env('DB_CHARSET_CBS', 'utf8'),
+            'url' => env('DB_OLD_URL'),
+            'host' => env('DB_OLD_HOST', env('DB_HOST', '172.16.2.16')),
+            'port' => env('DB_OLD_PORT', env('DB_PORT', '1433')),
+            'database' => env('DB_OLD_DATABASE', 'BR_ERP_OLD'),
+            'username' => env('DB_OLD_USERNAME', env('DB_USERNAME', 'realm')),
+            'password' => env('DB_OLD_PASSWORD', env('DB_PASSWORD', 'friend')),
+            'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
             'options' => [
-                //PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 300,
-            ]
+                // PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60,//s
+            ],
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
-        ],*/
+            'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
+        ],
+
 
     ],
 
@@ -168,7 +170,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [

@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Board;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\User;
+use App\Models\ThirdParies\Board;
 
 class ClientPolicy
 {
@@ -30,7 +30,7 @@ class ClientPolicy
 
     public function summary(User $user, Client $client): bool
     {
-        return true;
+        return $user->can(PermissionEnum::Members->value);
         //  return (!$user->can(PermissionEnum::Managers->value) && (User::query()->where('ClientID', $client->ClientID)->exists() || Board::query()->where('ClientID', $client->ClientID)->exists()));
     }
 

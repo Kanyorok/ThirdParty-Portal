@@ -3,12 +3,11 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Board;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\ThirdParies\Board;
 
 class BoardPolicy
 {
-
     public function meeting(User $user): bool
     {
         return $user->can(PermissionEnum::BoardMeeting->value);

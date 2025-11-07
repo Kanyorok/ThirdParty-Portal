@@ -3,18 +3,17 @@
 namespace App\Services\Feedback;
 
 use App\Enums\TonalityEnum;
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Branch;
 use App\Models\BR\Client;
-use App\Models\Lead;
-use App\Models\Review;
-use App\Models\User;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Review;
 use Illuminate\Support\Str;
 use Sentiment\Analyzer;
 
 class ReviewService
 {
-
     public function __construct(public Review $review)
     {
     }
@@ -34,17 +33,17 @@ class ReviewService
     {
         $review = new Review();
         $review->fill([
-            'BranchID' => $branch,
-            'Party' => $party,
-            'PartyID' => $partyID,
-            'Source' => $source,
-            'SourceID' => $sourceID,
-            'Rating' => $rate,
-            'Tonality' => TonalityEnum::Unknown->value,
-            'Content' => $content,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                       'BranchID'   => $branch,
+                       'Party'      => $party,
+                       'PartyID'    => $partyID,
+                       'Source'     => $source,
+                       'SourceID'   => $sourceID,
+                       'Rating'     => $rate,
+                       'Tonality'   => TonalityEnum::Unknown->value,
+                       'Content'    => $content,
+                       'CreatedBy'  => $actor->Id,
+                       'ModifiedBy' => $actor->Id,
+                      ])->save();
 
         $service = new self($review);
         if (is_null($branch)) {
@@ -71,9 +70,7 @@ class ReviewService
                 }
 
                 if (!is_null($sentiment)) {
-                    $this->review->update([
-                        'Tonality' => $sentiment,
-                    ]);
+                    $this->review->update(['Tonality' => $sentiment]);
                 }
             } catch (\Exception) {
             }
@@ -111,8 +108,8 @@ class ReviewService
         foreach (Branch::all(['BranchName', 'OurBranchID']) as $branch) {
             if ($str->contains([$branch->BranchName, explode(' ', $branch->BranchName)[0]], true)) {
                 $this->review->update([
-                    'BranchID' => $branch->OurBranchID,
-                ]);
+                                       'BranchID' => $branch->OurBranchID,
+                                      ]);
                 break;
             }
         }

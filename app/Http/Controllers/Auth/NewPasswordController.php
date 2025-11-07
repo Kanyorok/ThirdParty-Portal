@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Auth\User;
 use App\Services\BR\BREncryption;
-use App\Services\UserService;
+use App\Services\HRM\UserService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
@@ -41,44 +40,42 @@ class NewPasswordController extends Controller
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', Rules\Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()],
+            'password' => [
+                'required',
+                'confirmed',
+                Rules\Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),
+            ],
         ]);
 
-        $user = User::query()->where('Email', '=', $request->get('email'))->first();
-        if (!$user instanceof User) {
+        $user = User::where('Email', $request->email)->first();
+
+        if (!$user || !Password::tokenExists($user, $request->token)) {
             throw ValidationException::withMessages([
-                'email' => ['Confirm the the email and token are valid.'],
+                'email' => ['Confirm the email and token are valid.'],
             ]);
         }
 
-        if (Password::tokenExists($user, $request->get('token'))) {
-            if ($user->Linked) {
-                (new UserService($user))->syncBR();
-
-                Password::deleteToken($user);
-
-                return $this->succeeded('account linked with core banking, synced use core banking password', route('home'));
-            }
-
-
-            $user->forceFill([
-                'Password' => BREncryption::hashUser($user, $request->password),
-                'remember_token' => Str::random(60),
-            ])->save();
-
+        if ($user->Linked) {
+            (new UserService($user))->syncBR();
             Password::deleteToken($user);
-
-            activity()->causedBy($user)->performedOn($user)->event('password-reset')->log('Reset password using email link.');
-
-            Auth::login($user);
-            event(new PasswordReset($user));
-            activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $request->getClientIp());
-            return $this->succeeded('password reset successful', route('home'));
+            return $this->succeeded('Account linked with core banking, synced. Use core banking password.', route('home'));
         }
 
+        $user->forceFill([
+            'Password' => BREncryption::hashUser($user, $request->password),
+            'remember_token' => Str::random(60),
+        ])->save();
 
-        throw ValidationException::withMessages([
-            'email' => ['Confirm the the email and token are valid.'],
-        ]);
+        Password::deleteToken($user);
+        event(new PasswordReset($user));
+
+        activity()
+            ->causedBy($user)
+            ->performedOn($user)
+            ->event('password-reset')
+            ->log('Reset password using email link.');
+
+        return $this->succeeded('Password reset successful. Please log in and select a branch.', route('login'));
     }
+
 }

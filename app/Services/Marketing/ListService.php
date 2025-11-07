@@ -5,12 +5,12 @@ namespace App\Services\Marketing;
 use App\Enums\Core\VisibilityEnum;
 use App\Enums\MarketingListEnum;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Models\Lead;
-use App\Models\MarketingList;
-use App\Models\User;
+use App\Models\CRM\Lead;
+use App\Models\CRM\MarketingList;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -45,12 +45,12 @@ class ListService
     public function update(string $label, User $actor, VisibilityEnum $visibility, string $notes = ''): static
     {
         $this->list->update([
-            'Label' => $label,
-            'Notes' => $notes,
-            'Visibility' => $visibility->value,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                             'Label'      => $label,
+                             'Notes'      => $notes,
+                             'Visibility' => $visibility->value,
+                             'CreatedBy'  => $actor->Id,
+                             'ModifiedBy' => $actor->Id,
+                            ]);
 
         activity()->causedBy($actor)->performedOn($this->list)->event('update')->log('updated marketing list ' . $label);
 
@@ -60,14 +60,14 @@ class ListService
     public function trash(User $actor): static
     {
         $this->list->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
-        ])->save(['timestamps' => false]);
+                                'DeletedOn' => now(),
+                                'DeletedBy' => $actor->Id,
+                               ])->save(['timestamps' => false]);
 
         $this->list->parties()->update([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
-        ]);
+                                        'DeletedOn' => now(),
+                                        'DeletedBy' => $actor->Id,
+                                       ]);
 
         activity()->causedBy($actor)->performedOn($this->list)->event('delete')->log('deleted marketing list ' . $this->list->Label);
 
@@ -78,15 +78,15 @@ class ListService
     {
         $list = new MarketingList();
         $list->fill([
-            'slug' => Str::slug(Str::limit($label, 70, '') . ' ' . Str::random(7)),
-            'Label' => $label,
-            'Type' => $type->value,
-            'Visibility' => $visibility->value,
-            'Notes' => $notes,
-            'Source' => $Source,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                     'slug'       => Str::slug(Str::limit($label, 70, '') . ' ' . Str::random(7)),
+                     'Label'      => $label,
+                     'Type'       => $type->value,
+                     'Visibility' => $visibility->value,
+                     'Notes'      => $notes,
+                     'Source'     => $Source,
+                     'CreatedBy'  => $actor->Id,
+                     'ModifiedBy' => $actor->Id,
+                    ])->save();
 
         activity()->causedBy($actor)->performedOn($list->refresh())->event('create')->log('created ' . $type->name . ' marketing list');
 
@@ -149,14 +149,14 @@ class ListService
         foreach ($parties->chunk(200) as $chunk) {
             foreach ($chunk as $PartyID) {
                 $data->add([
-                    'MarketingListId' => $this->list->MarketingListID,
-                    "Party" => $Party,
-                    "PartyID" => $PartyID,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => $dated,
-                    'ModifiedOn' => $dated
-                ]);
+                            'MarketingListId' => $this->list->MarketingListID,
+                            "Party"           => $Party,
+                            "PartyID"         => $PartyID,
+                            'CreatedBy'       => $actor->Id,
+                            'ModifiedBy'      => $actor->Id,
+                            'CreatedOn'       => $dated,
+                            'ModifiedOn'      => $dated,
+                           ]);
             }
 
             if ($data->count() > 0) {
@@ -186,9 +186,9 @@ class ListService
     protected function _removeParty(array $Parties, string $Party, User $actor): void
     {
         $this->list->parties()->where('Party', $Party)->whereIn('PartyID', $Parties)->update([
-            'DeletedBy' => $actor->Id,
-            'DeletedOn' => now()
-        ]);
+                                                                                              'DeletedBy' => $actor->Id,
+                                                                                              'DeletedOn' => now(),
+                                                                                             ]);
     }
 
     public function addLeads(string|array $LeadIDs, User $actor): static
@@ -203,7 +203,9 @@ class ListService
                 $query->whereIn('LeadID', $LeadIDs)
                     ->whereNotIn('LeadID', $this->list->parties()->where('Party', Lead::getPrimaryKey())->select('PartyID'));
             })->select('LeadID')->get('t_Leads.LeadID')->pluck('LeadID')->toArray(),
-            Party: Lead::getPrimaryKey(), actor: $actor);
+            Party: Lead::getPrimaryKey(),
+            actor: $actor
+        );
 
         return $this;
     }

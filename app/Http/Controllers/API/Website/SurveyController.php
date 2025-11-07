@@ -6,7 +6,7 @@ use App\Enums\Feedback\SurveyQuestionTypeEnum;
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Feedback\SurveyQuestionsCollection;
-use App\Models\SurveyQuestionAnswer;
+use App\Models\CRM\SurveyQuestionAnswer;
 use App\Services\Feedback\SurveyService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -40,9 +40,7 @@ class SurveyController extends Controller
 
         $response = $request->get('response');
         if (!is_array($response)) {
-            throw ValidationException::withMessages([
-                'response' => 'please enter response'
-            ]);
+            throw ValidationException::withMessages(['response' => 'please enter response']);
         }
 
         $actor = SystemHelper::user();
@@ -58,8 +56,8 @@ class SurveyController extends Controller
                     $questionResponse = $answer['answers'][0]['value'];
                 } catch (Exception $exception) {
                     throw ValidationException::withMessages([
-                        $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.'
-                    ]);
+                                                             $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.',
+                                                            ]);
                 }
 
                 if (is_null($respondent)) {
@@ -74,34 +72,34 @@ class SurveyController extends Controller
                     $option = $question->answers()->where('Id', $questionResponse)->first();
                     if (!$option instanceof SurveyQuestionAnswer) {
                         throw ValidationException::withMessages([
-                            $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.'
-                        ]);
+                                                                 $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.',
+                                                                ]);
                     }
                     $idResponse = $option->Id;
                 } else {
                     throw ValidationException::withMessages([
-                        $question->SurveyQuestionId => $question->SurveyQuestionId . ' has an error, contact support.'
-                    ]);
+                                                             $question->SurveyQuestionId => $question->SurveyQuestionId . ' has an error, contact support.',
+                                                            ]);
                 }
 
                 $ans->add([
-                    'Party' => $respondent,
-                    'Source' => 'Website',
-                    'Response' => $txtResponse,
-                    'SurveyQuestionAnswerID' => $idResponse,
-                    'SurveyQuestionID' => $question->Id,
-                    'CreatedOn' => $date,
-                    'ModifiedOn' => $date,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                           'Party'                  => $respondent,
+                           'Source'                 => 'Website',
+                           'Response'               => $txtResponse,
+                           'SurveyQuestionAnswerID' => $idResponse,
+                           'SurveyQuestionID'       => $question->Id,
+                           'CreatedOn'              => $date,
+                           'ModifiedOn'             => $date,
+                           'CreatedBy'              => $actor->Id,
+                           'ModifiedBy'             => $actor->Id,
+                          ]);
 
                 continue 2;
             }
 
             throw ValidationException::withMessages([
-                $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.'
-            ]);
+                                                     $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.',
+                                                    ]);
         }
 
         DB::table('t_SurveyQuestionResponses')->insert($ans->toArray());

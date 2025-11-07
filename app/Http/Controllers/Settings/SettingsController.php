@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Settings;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Http\Controllers\Controller;
-use App\Models\APICredential;
-use App\Models\CodeDetail;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+use App\Models\Settings\APICredential;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\View\View;
 
@@ -48,15 +48,21 @@ class SettingsController extends Controller
         $x = $all->where('Integration', IntegrationsEnum::Twitter->value)->first();
         $ai = $all->where('Integration', IntegrationsEnum::LLM->value)->first();
         $InfoBip = $all->where('Integration', IntegrationsEnum::InfoBip->value)->first();
+        $srsConfig = $all->where('Integration', IntegrationsEnum::ReportService->value)->first();
+        $iTrackConfig = $all->where('Integration', IntegrationsEnum::iTrack->value)->first();
+    $org = $all->where('Integration', IntegrationsEnum::Organization->value)->first();
 
         return view('settings.integrations')
-            ->with('twitterConfig', ($x instanceof APICredential) ? $x->Configuration : null)
-            ->with('facebookConfig', ($fb instanceof APICredential) ? $fb->Configuration : null)
-            ->with('smsConfig', ($sms instanceof APICredential) ? $sms->Configuration : null)
-            ->with('cbsConfig', ($cbs instanceof APICredential) ? $cbs->Configuration : null)
-            ->with('emailConfig', ($email instanceof APICredential) ? $email->Configuration : null)
-            ->with('channelsConfig', ($channel instanceof APICredential) ? $channel->Configuration : null)
-            ->with('llmConfig', ($ai instanceof APICredential) ? $ai->Configuration : null)
-            ->with('infoBipConfig', ($InfoBip instanceof APICredential) ? $InfoBip->Configuration : null);
+            ->with('twitterConfig', ($x instanceof APICredential) ? $x->Configuration : new APICredential)
+            ->with('facebookConfig', ($fb instanceof APICredential) ? $fb->Configuration : new APICredential)
+            ->with('smsConfig', ($sms instanceof APICredential) ? $sms->Configuration : new APICredential)
+            ->with('cbsConfig', ($cbs instanceof APICredential) ? $cbs->Configuration : new APICredential)
+            ->with('emailConfig', ($email instanceof APICredential) ? $email->Configuration : new APICredential)
+            ->with('channelsConfig', ($channel instanceof APICredential) ? $channel->Configuration : new APICredential)
+            ->with('llmConfig', ($ai instanceof APICredential) ? $ai->Configuration : new APICredential)
+            ->with('infoBipConfig', ($InfoBip instanceof APICredential) ? $InfoBip->Configuration : new APICredential)
+            ->with('srsConfig', ($srsConfig instanceof APICredential) ? $srsConfig->Configuration : new APICredential)
+            ->with('iTrackConfig', ($iTrackConfig instanceof APICredential) ? $iTrackConfig->Configuration : new APICredential)
+            ->with('orgConfig', ($org instanceof APICredential) ? $org->Configuration : new APICredential);
     }
 }

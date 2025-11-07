@@ -7,23 +7,28 @@ use App\Enums\EmailEncryptionEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\IntegrationRequest;
-use App\Models\APICredential;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Settings\APICredential;
 use App\Services\CRMEmailService;
 use App\Services\ThirdParty\AIService;
 use App\Services\ThirdParty\CSSMSService;
 use App\Services\ThirdParty\FacebookService;
 use App\Services\ThirdParty\InfobipService;
+use App\Services\ThirdParty\iTrackService;
+use App\Services\ThirdParty\SSRSService;
 use App\Services\ThirdParty\TwitterService;
 use EchoLabs\Prism\Enums\Provider;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use SensitiveParameter;
+use Throwable;
 
 class IntegrationController extends Controller
 {
@@ -46,7 +51,11 @@ class IntegrationController extends Controller
         }
 
         if ($Integration->value === IntegrationsEnum::InfoBip->value) {
-            return $this->_infoBipConfiguration($request->validated('InfoBip_Host'),$request->validated('InfoBip_Email'),$request->validated('InfoBip_API_Key'), $request->user());
+            return $this->_infoBipConfiguration($request->validated('InfoBip_Host'), $request->validated('InfoBip_Email'), $request->validated('InfoBip_API_Key'), $request->user());
+        }
+
+        if ($Integration->value === IntegrationsEnum::iTrack->value) {
+            return $this->_iTrackConfiguration($request->getITrackUrl(), $request->validated('iTrack_Username'), $request->validated('iTrack_Password'), $request->user());
         }
 
         if ($Integration->value === IntegrationsEnum::LLM->value) {
@@ -66,17 +75,36 @@ class IntegrationController extends Controller
         }
 
         if ($Integration->value === IntegrationsEnum::Twitter->value) {
-            return $this->_saveXConfiguration($request->validated('X_Access_Token'), $request->validated('X_Access_Token_Secret'), $request->validated('X_Consumer_Key'),
-                $request->validated('X_Consumer_Secret'), $request->validated('X_Bearer_Token'), $request->validated('X_Is_Free') === 'yes',
-                $request->user());
+            return $this->_saveXConfiguration(
+                $request->validated('X_Access_Token'),
+                $request->validated('X_Access_Token_Secret'),
+                $request->validated('X_Consumer_Key'),
+                $request->validated('X_Consumer_Secret'),
+                $request->validated('X_Bearer_Token'),
+                $request->validated('X_Is_Free') === 'yes',
+                $request->user()
+            );
         }
 
         if ($Integration->value === IntegrationsEnum::CoreBanking->value) {
             return $this->_coreBankingConfiguration($request->getCBSHost(), $request->validated('CBS_ConsumerKey'), $request->validated('CBS_ConsumerSecret'), $request->user());
         }
 
+        if ($Integration->value === IntegrationsEnum::ReportService->value) {
+            return $this->_reportServiceConfiguration($request->getSSRS_Host(), $request->validated('SSRS_Path'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
+        }
+
         if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value], true)) {
             return $this->_generateKey($request, $Integration);
+        }
+
+        if ($Integration->value === IntegrationsEnum::Organization->value) {
+            return $this->_saveOrganizationBranding(
+                $request->validated('Org_Name'),
+                $request->validated('Org_Motto'),
+                $request->validated('Org_Logo'),
+                $request->user()
+            );
         }
 
         return $this->errored('integration not complete');
@@ -103,7 +131,7 @@ class IntegrationController extends Controller
                 'username' => $request->validated('Outgoing_Username'),
                 'password' => $request->validated('Outgoing_Password'),
                 'encryption' => $Outgoing_Encryption->value,
-            ]
+            ],
         ];
 
         return $this->_saveData(IntegrationsEnum::Email, $data, $request->user());
@@ -114,7 +142,7 @@ class IntegrationController extends Controller
         try {
             DB::transaction(static function () use ($Integration, $data, $actor) {
                 APICredential::query()->where('Integration', $Integration->value)->update([
-                    'DeletedBy' => $actor->Id
+                    'DeletedBy' => $actor->Id,
                 ]);
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
@@ -123,18 +151,48 @@ class IntegrationController extends Controller
                     'Configuration' => $data,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Set Updated Integration Config for: ' . $Integration->description());
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error updating ' . $Integration->name . ' config failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded($Integration->description() . ' updated.');
+    }
+
+    private function _infoBipConfiguration(string $host, string $email, #[SensitiveParameter] string $APIKey, User $actor): JsonResponse
+    {
+        try {
+            if (InfobipService::testConfig($host, $email, $APIKey, $actor)) {
+                return $this->_saveData(IntegrationsEnum::InfoBip, [
+                    'Host' => $host,
+                    'Email' => $email,
+                    'Key' => $APIKey,
+                ], $actor);
+            }
+        } catch (Exception $e) {
+            return $this->errored($e->getMessage());
+        }
+        return $this->errored('invalid configuration check.');
+    }
+
+    private function _llmConfiguration(Provider $provider, string $model, #[SensitiveParameter] string $APIKey, User $actor): JsonResponse
+    {
+        try {
+            if (AIService::testConfig($provider, $model, $APIKey)) {
+                return $this->_saveData(IntegrationsEnum::LLM, [
+                    'Model' => $model,
+                    'Provider' => $provider->value,
+                    'Config' => ['api_key' => $APIKey],
+                ], $actor);
+            }
+        } catch (Exception $e) {
+            return $this->errored($e->getMessage());
+        }
+        return $this->errored('invalid configuration check.');
     }
 
     private function _saveSMSConfiguration(string $priority, string $messageType, #[SensitiveParameter] string $sender_id, #[SensitiveParameter] string $password, User $actor): JsonResponse
@@ -147,21 +205,24 @@ class IntegrationController extends Controller
             'priority' => $priority,
             'messageType' => $messageType,
             'sender_Id' => $sender_id,
-            'password' => $password
+            'password' => $password,
         ], $actor);
     }
 
     private function _generateChannelKey(IntegrationRequest $request, string $callbackUrl): JsonResponse
     {
         $key = base64_encode(Str::random(64));
-        $data = ['Key' => md5($key), 'Callback' => $callbackUrl];
+        $data = [
+            'Key' => md5($key),
+            'Callback' => $callbackUrl,
+        ];
         $actor = $request->user();
 
         try {
             DB::transaction(static function () use ($data, $actor) {
                 $Integration = IntegrationsEnum::Channels;
                 APICredential::query()->where('Integration', $Integration->value)->update([
-                    'DeletedBy' => $actor->Id
+                    'DeletedBy' => $actor->Id,
                 ]);
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
@@ -170,13 +231,11 @@ class IntegrationController extends Controller
                     'Configuration' => $data,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated a new channels api key.');
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error updating Channel config failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -208,7 +267,7 @@ class IntegrationController extends Controller
             'app_secret' => $appSecret,
             'page_token' => $tokenResponse->access_token,
             'page_token_expires_at' => bcadd($tokenResponse->expires_in, now()->format('U')),
-            'page_name' => $pageName
+            'page_name' => $pageName,
         ], $actor);
     }
 
@@ -223,7 +282,7 @@ class IntegrationController extends Controller
         }
 
         return $this->_saveData(IntegrationsEnum::Twitter, [
-            'account_id' => $userResponse->data->id,
+            'account_id' => $userResponse?->data->id,
             'username' => $userResponse->data->username,
             'name' => $userResponse->data->name,
             'access_token' => $accessToken,
@@ -231,7 +290,7 @@ class IntegrationController extends Controller
             'consumer_key' => $consumerKey,
             'consumer_secret' => $consumerSecret,
             'bearer_token' => $bearerToken,
-            'is_free' => $isFree
+            'is_free' => $isFree,
         ], $actor);
     }
 
@@ -240,39 +299,8 @@ class IntegrationController extends Controller
         return $this->_saveData(IntegrationsEnum::CoreBanking, [
             'host' => $Host,
             'ConsumerKey' => $ConsumerKey,
-            'ConsumerSecret' => $ConsumerSecret
+            'ConsumerSecret' => $ConsumerSecret,
         ], $actor);
-    }
-
-    private function _llmConfiguration(Provider $provider, string $model, #[SensitiveParameter] string $APIKey, User $actor): JsonResponse
-    {
-        try {
-            if (AIService::testConfig($provider, $model, $APIKey)) {
-                return $this->_saveData(IntegrationsEnum::LLM, [
-                    'Model' => $model,
-                    'Provider' => $provider->value,
-                    'Config' => ['api_key' => $APIKey],
-                ], $actor);
-            }
-        } catch (Exception $e) {
-            return $this->errored($e->getMessage());
-        }
-        return $this->errored('invalid configuration check.');
-    }
-    private function _infoBipConfiguration(string $host, string $email, #[SensitiveParameter] string $APIKey, User $actor): JsonResponse
-    {
-        try {
-            if (InfobipService::testConfig($host, $email, $APIKey, $actor)) {
-                return $this->_saveData(IntegrationsEnum::InfoBip, [
-                    'Host' => $host,
-                    'Email' => $email,
-                    'Key' => $APIKey,
-                ], $actor);
-            }
-        } catch (Exception $e) {
-            return $this->errored($e->getMessage());
-        }
-        return $this->errored('invalid configuration check.');
     }
 
     private function _generateKey(IntegrationRequest $request, IntegrationsEnum $Integration): JsonResponse
@@ -282,7 +310,7 @@ class IntegrationController extends Controller
         try {
             DB::transaction(static function () use ($Integration, $key, $actor) {
                 APICredential::query()->where('Integration', $Integration->value)->update([
-                    'DeletedBy' => $actor->Id
+                    'DeletedBy' => $actor->Id,
                 ]);
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
@@ -291,17 +319,84 @@ class IntegrationController extends Controller
                     'Configuration' => ['Key' => md5($key)],
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated ' . $Integration->description() . ' api key.');
             });
-        } catch (\Throwable|Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error updating ' . $Integration->description() . ' failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('key generated.', data: ['token' => $key]);
+    }
+
+    private function _reportServiceConfiguration(string $Host, string $Path, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
+    {
+        $DisplayName = SSRSService::testConfig($Host, $Path, $Username, $password);
+        if (is_null($DisplayName)) {
+            throw ValidationException::withMessages([
+                'password' => ['invalid credentials']
+            ]);
+        }
+        return $this->_saveData(IntegrationsEnum::ReportService, [
+            'host' => $Host,
+            'username' => $Username,
+            'path' => $Path,
+            'name' => $DisplayName,
+            'password' => Crypt::encryptString($password),
+        ], $actor);
+    }
+
+    private function _iTrackConfiguration(string $Host, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
+    {
+        if (!iTrackService::testConfig($Host, $Username, $password)) {
+            throw ValidationException::withMessages([
+                'iTrack_Password' => ['invalid credentials'],
+                'iTrack_Username' => ['invalid credentials']
+            ]);
+        }
+        return $this->_saveData(IntegrationsEnum::iTrack, [
+            'host' => $Host,
+            'username' => $Username,
+            'password' => Crypt::encryptString($password),
+        ], $actor);
+    }
+
+    private function _saveOrganizationBranding(string $name, ?string $motto, ?string $logo, User $actor): JsonResponse
+    {
+        $path = null;
+        try {
+            if (is_string($logo) && str_starts_with($logo, 'data:image/')) {
+                // data URL: data:image/png;base64,xxxx
+                [$meta, $data] = explode(',', $logo, 2);
+                $ext = 'png';
+                if (preg_match('/data:image\/(\w+);base64/i', $meta, $m)) {
+                    $ext = strtolower($m[1]);
+                }
+                $binary = base64_decode($data, true);
+                if ($binary !== false) {
+                    $filename = 'branding/logo_' . Str::random(12) . '.' . $ext;
+                    // store publicly
+                    Storage::disk('public')->put($filename, $binary);
+                    $path = 'storage/' . $filename;
+                }
+            } elseif (is_string($logo) && $logo !== '') {
+                // treat as existing relative path (e.g., uploaded via separate endpoint)
+                $path = $logo;
+            }
+        } catch (Throwable $e) {
+            Log::warning('Org logo store failed: ' . $e->getMessage());
+        }
+
+        $payload = [
+            'name' => $name,
+            'motto' => $motto,
+        ];
+        if ($path) {
+            $payload['logo'] = $path;
+        }
+
+        return $this->_saveData(IntegrationsEnum::Organization, $payload, $actor);
     }
 }

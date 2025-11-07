@@ -18,10 +18,17 @@ class SurveyQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'QuestionType' => ['nullable'],
-            'SurveyQuestion' => ['required', 'min:3', 'max:500'],
-            'SurveyHelp' => ['nullable', 'max:5000'],
-        ];
+                'QuestionType'   => ['nullable'],
+                'SurveyQuestion' => [
+                                     'required',
+                                     'min:3',
+                                     'max:500',
+                                    ],
+                'SurveyHelp'     => [
+                                     'nullable',
+                                     'max:5000',
+                                    ],
+               ];
     }
 
     /**
@@ -36,8 +43,6 @@ class SurveyQuestionRequest extends FormRequest
             }
         }
 
-        throw ValidationException::withMessages([
-            'QuestionType' => 'invalid question type'
-        ]);
+        throw ValidationException::withMessages(['QuestionType' => 'invalid question type']);
     }
 }

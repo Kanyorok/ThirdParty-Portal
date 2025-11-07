@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use App\Enums\TicketStatusEnum;
 use App\Helpers\StringHelper;
 use App\Models\BR\Client;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
@@ -27,7 +27,7 @@ class TicketResource extends JsonResource
                 'type' => 'lead',
                 //'avatar' => $this->party->getImage(' width="32" height="32" class="img-thumbnail" alt="' . $this->party->Name . '"')
             ];
-        } else if ($this->party instanceof Client) {
+        } elseif ($this->party instanceof Client) {
             $party = [
                 'id' => $this->party->ClientID,
                 'name' => $this->party->Name,
@@ -45,7 +45,7 @@ class TicketResource extends JsonResource
             'priority' => $this->Priority->name,
             'category' => [
                 'id' => $this->CategoryID,
-                'name' => $this->category->Description
+                'name' => $this->category->Description,
             ],
             'party' => $party,
             'dated' => [

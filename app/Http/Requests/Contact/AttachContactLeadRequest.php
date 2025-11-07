@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\Contact;
 
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 
 class AttachContactLeadRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -17,18 +16,20 @@ class AttachContactLeadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'lead' => ['required', 'string','max:200'],
-        ];
+                'lead' => [
+                           'required',
+                           'string',
+                           'max:200',
+                          ],
+               ];
     }
 
-    public function getLead():Lead
+    public function getLead(): Lead
     {
         $lead = Lead::where('LeadID', $this->validated('lead'))->first();
-        if ($lead instanceof Lead){
+        if ($lead instanceof Lead) {
             return $lead;
         }
-        throw ValidationException::withMessages([
-           'lead' => 'lead not found, or invalid.'
-        ]);
+        throw ValidationException::withMessages(['lead' => 'lead not found, or invalid.']);
     }
 }

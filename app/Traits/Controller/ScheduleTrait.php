@@ -5,14 +5,13 @@ namespace App\Traits\Controller;
 use App\Enums\MeetingStatusEnum;
 use App\Enums\ScheduleStatusEnum;
 use App\Exceptions\ErroredException;
-use App\Models\Board;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Call;
-use App\Models\Lead;
-use App\Models\Meeting;
-use App\Models\MeetingRoom;
-use App\Models\Schedule;
-use App\Models\User;
+use App\Models\Communication\Call;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Meeting;
+use App\Models\CRM\MeetingRoom;
+use App\Models\CRM\Schedule;
 use App\Services\ActivityService;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
@@ -47,7 +46,6 @@ trait ScheduleTrait
             })->editColumn('EndOn', function (Schedule $schedule) {
                 return $schedule->EndOn?->format('F d, Y h:i A');
             })->rawColumns(['action'])->make();
-
     }
 
 
@@ -89,16 +87,16 @@ trait ScheduleTrait
     public function cancel(Model $model, Schedule $schedule, User $actor): void
     {
         $schedule->forceFill([
-            'ScheduleStatusID' => ScheduleStatusEnum::Canceled->value,
-            'DeletedOn' => Carbon::now(),
-            'DeletedBy' => $actor->Id
-        ])->save(['timestamps' => false]);
+                              'ScheduleStatusID' => ScheduleStatusEnum::Canceled->value,
+                              'DeletedOn'        => Carbon::now(),
+                              'DeletedBy'        => $actor->Id,
+                             ])->save(['timestamps' => false]);
 
         $scheduled = $schedule->scheduled;
         if ($scheduled instanceof Meeting) {
             $scheduled->fill([
-                'StatusID' => MeetingStatusEnum::Canceled->value,
-            ])->save();
+                              'StatusID' => MeetingStatusEnum::Canceled->value,
+                             ])->save();
         }
 
         if ($model instanceof Client) {

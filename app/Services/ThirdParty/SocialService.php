@@ -3,7 +3,7 @@
 namespace App\Services\ThirdParty;
 
 use App\Exceptions\ErroredException;
-use App\Models\Social;
+use App\Models\CRM\Social;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -23,7 +23,11 @@ class SocialService
         }
 
         // Check file type (basic image mime type check)
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $allowedTypes = [
+                         'image/jpeg',
+                         'image/png',
+                         'image/gif',
+                        ];
         $mimeType = mime_content_type($imagePath);
 
         return in_array($mimeType, $allowedTypes, true);

@@ -5,8 +5,8 @@ namespace App\Policies;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\LeadStatusEnum;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Lead;
 
 class LeadPolicy
 {
@@ -64,8 +64,10 @@ class LeadPolicy
             return true;
         }
 
-        if ($lead->watchers()->where('t_LeadUsers.PartyID', $user->Id)
-            ->where('t_LeadUsers.Party', User::getPrimaryKey())->whereIn('Role', [RoleEnum::Write->value, RoleEnum::Admin->value])->exists()) {
+        if (
+            $lead->watchers()->where('t_LeadUsers.PartyID', $user->Id)
+            ->where('t_LeadUsers.Party', User::getPrimaryKey())->whereIn('Role', [RoleEnum::Write->value, RoleEnum::Admin->value])->exists()
+        ) {
             return true;
         }
         return $user->can([PermissionEnum::LeadUpdate->value]);
@@ -80,8 +82,10 @@ class LeadPolicy
             return true;
         }
 
-        if ($lead->watchers()->where('t_LeadUsers.PartyID', $user->Id)
-            ->where('t_LeadUsers.Party', User::getPrimaryKey())->whereIn('Role', [RoleEnum::Write->value, RoleEnum::Admin->value])->exists()) {
+        if (
+            $lead->watchers()->where('t_LeadUsers.PartyID', $user->Id)
+            ->where('t_LeadUsers.Party', User::getPrimaryKey())->whereIn('Role', [RoleEnum::Write->value, RoleEnum::Admin->value])->exists()
+        ) {
             return true;
         }
 
@@ -97,8 +101,10 @@ class LeadPolicy
             return true;
         }
 
-        if ($lead->watchers()->where('t_LeadUsers.PartyID', $user->Id)
-            ->where('t_LeadUsers.Party', User::getPrimaryKey())->where('Role', RoleEnum::Admin->value)->exists()) {
+        if (
+            $lead->watchers()->where('t_LeadUsers.PartyID', $user->Id)
+            ->where('t_LeadUsers.Party', User::getPrimaryKey())->where('Role', RoleEnum::Admin->value)->exists()
+        ) {
             return true;
         }
 
@@ -110,8 +116,10 @@ class LeadPolicy
         if ($lead->RelationshipManagerID === $user->Id) {
             return true;
         }
-        if ($lead->watchers()->where('t_LeadUsers.PartyID', $user->Id)
-            ->where('t_LeadUsers.Party', User::getPrimaryKey())->whereIn('Role', [RoleEnum::Admin->value, RoleEnum::Share->value,])->exists()) {
+        if (
+            $lead->watchers()->where('t_LeadUsers.PartyID', $user->Id)
+            ->where('t_LeadUsers.Party', User::getPrimaryKey())->whereIn('Role', [RoleEnum::Admin->value, RoleEnum::Share->value])->exists()
+        ) {
             return true;
         }
 

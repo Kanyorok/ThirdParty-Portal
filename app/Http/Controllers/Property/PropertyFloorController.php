@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Http\Controllers\Property;
+
+use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\PropertyRegistry\PropertyFloorRequest;
+use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyRegistry;
+use App\Services\Property\PropertyRegistry\PropertyFloorService;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Throwable;
+
+class PropertyFloorController extends Controller
+{
+    protected $service;
+    public function __construct(PropertyFloorService $service)
+    {
+        $this->service = $service;
+    }
+    public function index()
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralView, PropertyFloor::class);
+        $floors = PropertyFloor::all();
+        return view('property.propertyregistry.structuralmapping.addfloor.index', compact('floors'));
+    }
+
+    public function create(){
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
+        $lineentries = PropertyRegistry::with('getBlockByProperty')->where('IsActive', true)->get();
+
+
+        return view('property.propertyregistry.structuralmapping.addfloor.create', compact('lineentries'));
+    }
+
+    public function getBlocksForFloor($PropertyId)
+    {
+        $blocks = PropertyBlock::where('PropertyID', $PropertyId)->get();
+        return response()->json($blocks);
+    }
+
+    public function store(PropertyFloorRequest $request)
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
+
+        $validated = $request->validated();
+        try {
+            PropertyFloorService::create(
+                PropertyRegistry::findOrFail($validated['PropertyID']),
+                PropertyBlock::findOrFail($validated['BlockID']),
+                $validated['FloorLabel'],
+                $validated['FloorNotes'] ?? '',
+                Auth::user()
+            );
+            return redirect()->route('addfloor.index')->with('success', 'Floor added!');
+        } catch (Exception $e) {
+            return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function edit($id)
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyFloor::class);
+        $floor = PropertyFloor::findOrFail($id);
+        $blocks = PropertyBlock::all();
+        $properties = PropertyRegistry::all();
+        $lineentries = PropertyRegistry::with('getBlockByProperty')->get();
+
+        return view('property.propertyregistry.structuralmapping.addfloor.edit', compact('blocks', 'properties', 'lineentries', 'floor'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyFloor::class);
+        $validated = $request->validate([
+            'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
+            'BlockID' => 'required|exists:t_PropertyBlock,Id',
+            'FloorLabel' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique(PropertyFloor::class, 'FloorLabel')
+                    ->where(fn($query) => $query
+                        ->where('PropertyID', $request->PropertyID)
+                        ->where('BlockID', $request->BlockID)
+                    )
+                    ->ignore($id, 'Id'), // Exclude current record
+            ],
+            'FloorNotes' => 'nullable|string|max:100',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $floor = PropertyFloor::findOrFail($id);
+
+            $floor->update([
+                'PropertyID' => $validated['PropertyID'],
+                'BlockID' => $validated['BlockID'],
+                'FloorLabel' => $validated['FloorLabel'],
+                'FloorNotes' => $validated['FloorNotes'] ?? '',
+                'ModifiedBy' => Auth::Id(),
+            ]);
+
+            DB::commit();
+            activity()
+                ->performedOn($floor)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated Floor');
+
+            return redirect()->route('addfloor.index')->with('success', 'Floor updated successfully');
+        } catch (Throwable $th) {
+            DB::rollBack();
+            return back()->withErrors(['error' => $th->getMessage()])->withInput();
+        }
+    }
+
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyFloor::class);
+        try {
+            $floor = PropertyFloor::findOrFail($id);
+
+            if ($floor->units()->exists()) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'This Property Floor is in use and cannot be deleted.']);
+            }
+
+            $floor->delete();
+
+            return redirect()->route('addfloor.index')
+                ->with('success', 'Property Floor Deleted Successfully!');
+        } catch (Throwable $th) {
+            // Log the error for debugging
+            Log::error('Error deleting property floor: ' . $th->getMessage());
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete Property Floor. Please try again.'])
+                ->withInput();
+        }
+    }
+}

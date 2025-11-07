@@ -2,19 +2,18 @@
 
 namespace App\Helpers;
 
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Support\Facades\Log;
 
 class SystemHelper
 {
-    public const ID = 'CRMSYS';
+    public const ID = 'ERPSYS';
 
     public static function user(): User
     {
         return User::where('UserID', self::ID)->withTrashed()->firstOr(function () {
             return self::_create();
         });
-
     }
 
     protected static function _create(): User
@@ -25,13 +24,16 @@ class SystemHelper
             'Name' => 'SYSTEM',
             'Email' => 'SYSTEM ACCOUNT',
             'Phone' => 0,
-            'BranchId' => '00',
             'Linked' => false,
             'Notes' => 'SYSTEM ACCOUNT',
             'Password' => 'SYSTEM ACCOUNT',
-            'Email_Signature' => '<p>Regards,<br>Customer Relations<br>' . config('org.name') . '</p>'
+            'Email_Signature' => '<p>Regards,<br>. .<br>' . config('org.name') . '</p>',
         ]);
+    }
 
+    public static function notifyAdmin(string $message): void
+    {
+        Log::error($message);
     }
 
     /**
@@ -41,11 +43,4 @@ class SystemHelper
     {
         return ($user->UserID === self::ID);
     }
-
-
-    public static function notifyAdmin(string $message): void
-    {
-        Log::critical($message);
-    }
-
 }

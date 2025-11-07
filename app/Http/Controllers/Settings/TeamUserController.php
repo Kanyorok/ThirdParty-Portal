@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Settings;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Models\Team;
-use App\Models\TeamUser;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\Team;
+use App\Models\Auth\TeamUser;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -40,8 +40,13 @@ class TeamUserController extends Controller
     {
         $this->authorize('update', $team);
         $request->validate([
-            'users' => ['required', 'array', 'min:1', 'max:200'],
-        ]);
+                            'users' => [
+                                        'required',
+                                        'array',
+                                        'min:1',
+                                        'max:200',
+                                       ],
+                           ]);
 
         $actor = $request->user();
         $dated = now();
@@ -52,13 +57,13 @@ class TeamUserController extends Controller
                 $data = collect([]);
                 foreach ($users as $user) {
                     $data->add([
-                        'TeamId' => $team->TeamID,
-                        'UserId' => $user->Id,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => $dated,
-                        'ModifiedOn' => $dated
-                    ]);
+                                'TeamId'     => $team->TeamID,
+                                'UserId'     => $user->Id,
+                                'CreatedBy'  => $actor->Id,
+                                'ModifiedBy' => $actor->Id,
+                                'CreatedOn'  => $dated,
+                                'ModifiedOn' => $dated,
+                               ]);
                 }
 
                 if ($data->count() > 0) {
@@ -66,7 +71,6 @@ class TeamUserController extends Controller
                 }
 
                 activity()->causedBy($actor)->performedOn($team)->event('updated')->log('added users : ' . implode(',', $users->pluck('UserID')->toArray()));
-
             });
         } catch (ErroredException $e) {
             return $e->toJson();

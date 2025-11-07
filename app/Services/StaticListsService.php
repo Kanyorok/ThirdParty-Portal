@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\CodeDetail;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -17,18 +17,18 @@ class StaticListsService
     {
         $detail = new CodeDetail();
         $detail->fill([
-            'CodeID' => $list,
-            'Description' => $description,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                       'CodeID'      => $list,
+                       'Description' => $description,
+                       'CreatedBy'   => $actor->Id,
+                       'ModifiedBy'  => $actor->Id,
+                      ])->save();
 
         activity()->causedBy($actor)->performedOn($detail->refresh())->event('create')->log('created ' . $detail->CodeID);
 
         return (new self($detail))->setOrder($actor);
     }
 
-    public function setOrder(User $actor, int $position = null): static
+    public function setOrder(User $actor, $position = null): static
     {
         if (is_int($position)) {
             $newPosition = $position;
@@ -71,26 +71,26 @@ class StaticListsService
         return $this->setOrder($actor, (CodeDetail::query()->where('CodeID', $this->codeDetail->CodeID)->count()));
     }
 
-    public const string MarketingModes = 'MarketingModes';
-    public const string CustomerResponses = 'CustomerResponses';
-    public const string ProductDevelopmentStages = 'ProductDevelopmentStages';
-    public const string LeadLossReason = 'LeadLossReason';
-    public const string Industries = 'Industries';
-    public const string CustomerType = 'CustomerTypes';
-    public const string TicketCategories = 'TicketCategories';
+    public const MarketingModes = 'MarketingModes';
+    public const CustomerResponses = 'CustomerResponses';
+    public const ProductDevelopmentStages = 'ProductDevelopmentStages';
+    public const LeadLossReason = 'LeadLossReason';
+    public const Industries = 'Industries';
+    public const CustomerType = 'CustomerTypes';
+    public const TicketCategories = 'TicketCategories';
 
 
     public static function getLists(): Collection
     {
         return collect([
-            self::MarketingModes,
-            self::CustomerResponses,
-            self::LeadLossReason,
-            self::Industries,
-            self::CustomerType,
-            self::TicketCategories,
-            self::ProductDevelopmentStages,
-        ]);
+                        self::MarketingModes,
+                        self::CustomerResponses,
+                        self::LeadLossReason,
+                        self::Industries,
+                        self::CustomerType,
+                        self::TicketCategories,
+                        self::ProductDevelopmentStages,
+                       ]);
     }
 
     public static function getIndustries(): \Illuminate\Database\Eloquent\Collection

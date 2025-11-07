@@ -2,7 +2,7 @@
 
 namespace App\Models\BR;
 
-use App\Models\CrmBranch;
+use App\Models\Core\Branch as CRMBranch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -18,11 +18,11 @@ class Branch extends Model
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->primaryKey;
+        return (new self())->primaryKey;
     }
 
     public function local(): HasOne
     {
-        return $this->hasOne(CrmBranch::class, 'BranchID', 'OurBranchID')->latest('Id');
+        return $this->hasOne(CRMBranch::class, 'BranchID', 'OurBranchID')->latest('Id');
     }
 }

@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\CodeDetail;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 
 class CodeDetailPolicy
 {
@@ -64,5 +64,4 @@ class CodeDetailPolicy
     {
         return false;
     }
-
 }

@@ -3,14 +3,14 @@
 namespace App\Http\Requests\Lead;
 
 use App\Enums\Core\PermissionEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadTypeEnum;
-use App\Enums\LocalityTypeEnum;
 use App\Helpers\SystemHelper;
-use App\Models\CodeDetail;
-use App\Models\Lead;
-use App\Models\Locality;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\Country;
+use App\Models\Core\Locality;
+use App\Models\CRM\Lead;
 use App\Services\StaticListsService;
 use Carbon\Carbon;
 use Exception;
@@ -22,10 +22,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Propaganistas\LaravelPhone\PhoneNumber;
+use Propaganistas\LaravelPhone\Rules\Phone;
+use Throwable;
 
 class NewLeadRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -34,29 +36,47 @@ class NewLeadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => ['required', 'string', 'max:250'],
-            'Type' => ['required', Rule::in(LeadTypeEnum::values())],
-            'Location' => ['required', Rule::exists('t_Localities', 'ID')->where(function (Builder $query) {
-                return $query->where('LocationType', LocalityTypeEnum::City->value);
-            })],
-            'Gender' => ['required_if:Type,' . LeadTypeEnum::Individual->value, Rule::in(GenderEnum::values())],
-            'Surname' => ['required_if:Type,' . LeadTypeEnum::Individual->value, 'string', 'max:150'],
-            'Industry' => ['required', Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
-                return $query->where('CodeID', StaticListsService::Industries);
-            })],
-            'CustomerType' => ['required', Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
-                return $query->where('CodeID', StaticListsService::CustomerType);
-            })],
-            'Source' => ['required', Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
-                return $query->where('CodeID', StaticListsService::MarketingModes);
-            })],
-            'Phone' => ['required', 'string', 'max:15'],
-            'Email' => ['nullable', 'email', 'max:250'],
-            'JobTitle' => ['nullable', 'string', 'max:200'],
-            'LastContact' => ['nullable', 'date_format:"Y-m-d H:i"', 'before:now'],
-            'image' => ['nullable', Rule::imageFile()->max('10mb')],
-            'Notes' => ['nullable', 'string', 'max:5000'],
-            'RelationshipManager' => ['nullable', 'string'],
+            'Name' => ['required', 'string', 'min:3', 'max:250',],
+            'Type' => ['required', Rule::in(LeadTypeEnum::values()),],
+            'Country' => ['required', Rule::exists('t_Countries', 'CountryCode')],
+            'Location' => ['required',],
+            'Gender' => [
+                'required_if:Type,' . LeadTypeEnum::Individual->value,
+                Rule::in(GenderEnum::values()),
+            ],
+            'Surname' => ['required_if:Type,' . LeadTypeEnum::Individual->value, 'string', 'min:3', 'max:150',],
+            'Industry' => [
+                'required',
+                Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
+                    return $query->where('CodeID', StaticListsService::Industries);
+                }),
+            ],
+            'CustomerType' => ['required',
+                Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
+                    return $query->where('CodeID', StaticListsService::CustomerType);
+                }),
+            ],
+            'Source' => ['required',
+                Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
+                    return $query->where('CodeID', StaticListsService::MarketingModes);
+                }),
+            ],
+            'Phone' => ['required', (new Phone)->countryField('Country'),],
+            'Email' => [
+                'nullable', Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(), 'max:250',
+            ],
+            'JobTitle' => ['nullable', 'string', 'max:200',],
+            'LastContact' => ['nullable', 'date_format:"Y-m-d H:i"', 'before:now',],
+            'image' => ['nullable', Rule::imageFile()->max('10mb'),],
+            'Notes' => ['nullable', 'string', 'max:5000',],
+            'RelationshipManager' => ['nullable', 'string',],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'Phone.*' => 'invalid phone number provided.'
         ];
     }
 
@@ -67,9 +87,7 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
-        throw ValidationException::withMessages([
-            'CustomerType' => 'invalid customer type given'
-        ]);
+        throw ValidationException::withMessages(['CustomerType' => 'invalid customer type given']);
     }
 
     public function getSource(): CodeDetail
@@ -79,9 +97,7 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
-        throw ValidationException::withMessages([
-            'Source' => 'invalid source given'
-        ]);
+        throw ValidationException::withMessages(['Source' => 'invalid source given']);
     }
 
     public function getIndustry(): CodeDetail
@@ -91,25 +107,51 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
-        throw ValidationException::withMessages([
-            'Industry' => 'invalid industry given'
-        ]);
+        throw ValidationException::withMessages(['Industry' => 'invalid industry given']);
+    }
+
+    public function getPhoneNumber(): string
+    {
+        return (new PhoneNumber($this->validated('Phone'), $this->validated('Country')))->formatE164();
     }
 
     public function getLocation(): Locality
     {
-        $location = Locality::where('LocationType', LocalityTypeEnum::City->value)->where('ID', $this->validated('Location'))->first();
-        if ($location instanceof Locality) {
-            return $location;
+        $country = Country::query()->where('CountryCode', $this->validated('Country'))->first();
+        if ($country instanceof Country) {
+            $location = $country->localities()->where('ID', $this->validated('Location'))->first();
+            if ($location instanceof Locality) {
+                return $location;
+            }
         }
-        throw ValidationException::withMessages([
-            'Location' => 'Location is not a valid location.',
-        ]);
+
+        throw ValidationException::withMessages(['Location' => 'Location is not a valid location.']);
     }
 
-    public function getImage(): ?UploadedFile
+    /**
+     * @throws ValidationException
+     * @throws Throwable
+     */
+    public function save(User $actor, Lead $lead = null): Lead
     {
-        return $this->file('image');
+        $update = ($lead instanceof Lead);
+        $data = $this->_data($actor, $update);
+        $image = $this->getImage();
+        $lead = (is_null($lead)) ? new Lead() : $lead;
+        return DB::transaction(static function () use ($update, $data, $lead, $image, $actor) {
+            $lead->fill($data)->save();
+
+            if ($image instanceof UploadedFile) {
+                $lead->setImage($image, $actor, 'ImageId');
+            }
+
+            /*if (!$update) {
+                //activity
+                //  ActivityService::leadAdded($lead, $actor);
+            }*/
+
+            return $lead;
+        });
     }
 
     /**
@@ -120,7 +162,7 @@ class NewLeadRequest extends FormRequest
         return array_merge([
             "Name" => $this->validated('Name'),
             "Email" => $this->validated('Email'),
-            "Phone" => $this->validated('Phone'),
+            "Phone" => $this->getPhoneNumber(),
             "Website" => $this->validated('Website'),
             "Gender" => $this->getGender(),
             "LocationID" => $this->validated('Location'),
@@ -140,31 +182,20 @@ class NewLeadRequest extends FormRequest
         ]);
     }
 
-
     /**
      * @throws ValidationException
      */
-    public function save(User $actor, Lead $lead = null): Lead
+    public function getGender(): GenderEnum
     {
-        $update = ($lead instanceof Lead);
-        $data = $this->_data($actor, $update);
-        $image = $this->getImage();
-        $lead = (is_null($lead)) ? new Lead() : $lead;
-        return DB::transaction(static function () use ($update, $data, $lead, $image, $actor) {
-            $lead->fill($data)->save();
+        if ($this->Type === LeadTypeEnum::Company->value) {
+            return GenderEnum::Other;
+        }
 
-            if ($image instanceof UploadedFile) {
-                $lead->setImage($image, $actor, 'ImageId');
-            }
-
-            if (!$update) {
-                //activity
-                //  ActivityService::leadAdded($lead, $actor);
-            }
-
-            return $lead;
-
-        });
+        try {
+            return GenderEnum::from($this->validated('Gender'));
+        } catch (Exception) {
+        }
+        throw ValidationException::withMessages(['Gender' => 'invalid gender provided.']);
     }
 
     /**
@@ -176,9 +207,7 @@ class NewLeadRequest extends FormRequest
             try {
                 return Carbon::createFromFormat('Y-m-d H:i', $this->LastContact);
             } catch (Exception) {
-                throw ValidationException::withMessages([
-                    'LastContact' => 'invalid date format provided.'
-                ]);
+                throw ValidationException::withMessages(['LastContact' => 'invalid date format provided.']);
             }
         }
         return null;
@@ -195,9 +224,7 @@ class NewLeadRequest extends FormRequest
         }
         $user = User::query()->where('t_Users.UserID', Str::upper($userID))->where('t_Users.UserID', '!=', SystemHelper::ID)->first(['Id', 'UserID']);
         if (!$user instanceof User) {
-            throw ValidationException::withMessages([
-                'RelationshipManager' => 'invalid user selected.',
-            ]);
+            throw ValidationException::withMessages(['RelationshipManager' => 'invalid user selected.']);
         }
 
         if ($user->Id === $this->user()->Id) {
@@ -205,9 +232,7 @@ class NewLeadRequest extends FormRequest
         }
 
         if (!$this->user()->can(PermissionEnum::LeadDelegate->value)) {
-            throw ValidationException::withMessages([
-                'RelationshipManager' => 'You cannot assign to another person',
-            ]);
+            throw ValidationException::withMessages(['RelationshipManager' => 'You cannot assign to another person']);
         }
 
         if (!$user->can('viewAny', Lead::class)) {
@@ -219,22 +244,8 @@ class NewLeadRequest extends FormRequest
         return $user;
     }
 
-    /**
-     * @throws ValidationException
-     */
-    public function getGender(): GenderEnum
+    public function getImage(): ?UploadedFile
     {
-        if ($this->Type === LeadTypeEnum::Company->value) {
-            return GenderEnum::Other;
-        }
-
-        try {
-            return GenderEnum::from($this->validated('Gender'));
-        } catch (Exception) {
-        }
-        throw ValidationException::withMessages([
-            'Gender' => 'invalid gender provided.'
-        ]);
+        return $this->file('image');
     }
-
 }

@@ -8,7 +8,7 @@ use App\Helpers\SystemHelper;
 use App\Models\BR\Branch;
 use App\Models\BR\Client;
 use App\Models\BR\SystemCodeDetail;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -35,7 +35,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Join Date',
                 'FieldName' => 'CreatedOn',
                 'Relation' => null,
@@ -47,7 +48,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Join Date',
                 'FieldName' => 'CreatedOn',
                 'Relation' => null,
@@ -59,7 +61,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Join Date',
                 'FieldName' => 'CreatedOn',
                 'Relation' => null,
@@ -71,7 +74,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Date of Birth',
                 'FieldName' => 'DateOfBirth',
                 'Relation' => 'individual',
@@ -83,7 +87,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Date of Birth',
                 'FieldName' => 'DateOfBirth',
                 'Relation' => 'individual',
@@ -95,7 +100,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Date of Birth',
                 'FieldName' => 'DateOfBirth',
                 'Relation' => 'individual',
@@ -107,7 +113,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Client Type',
                 'FieldName' => 'ClientTypeID',
                 'Relation' => 'type',
@@ -119,7 +126,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Client Status',
                 'FieldName' => 'ClientStatusID',
                 'Relation' => 'status',
@@ -131,7 +139,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Gender',
                 'FieldName' => 'GenderID',
                 'Relation' => 'individual',
@@ -144,7 +153,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
 
-            ], [
+            ],
+            [
                 'Name' => 'Member Class',
                 'FieldName' => 'MemberClassID',
                 'Relation' => 'class',
@@ -175,7 +185,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Date Added',
                 'FieldName' => 'CreatedOn',
                 'Relation' => null,
@@ -187,7 +198,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Date Added',
                 'FieldName' => 'CreatedOn',
                 'Relation' => null,
@@ -199,7 +211,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Last Contacted',
                 'FieldName' => 'LastContacted',
                 'Relation' => null,
@@ -211,7 +224,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Last Contacted',
                 'FieldName' => 'LastContacted',
                 'Relation' => null,
@@ -223,7 +237,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Last Contacted',
                 'FieldName' => 'LastContacted',
                 'Relation' => null,
@@ -235,7 +250,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Gender',
                 'FieldName' => 'Gender',
                 'Relation' => 'enum',
@@ -247,7 +263,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Lead Status',
                 'FieldName' => 'Status',
                 'Relation' => 'enum',
@@ -259,7 +276,8 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ], [
+            ],
+            [
                 'Name' => 'Lead Type',
                 'FieldName' => 'Type',
                 'Relation' => 'enum',
@@ -271,7 +289,7 @@ class SysFilterSeeder extends Seeder
                 'ModifiedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'CreatedOn' => $date,
-            ]
+            ],
         ]);
     }
 }

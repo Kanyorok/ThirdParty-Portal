@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\BR\Branch;
-use App\Models\MeetingRoom;
+use App\Models\CRM\MeetingRoom;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -19,11 +19,26 @@ class MeetingRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'RooMName' => ['required', 'string', 'max:255'],
-            'RooMCapacity' => ['required', 'integer', 'min:2'],
-            'RooMNotes' => ['nullable', 'string', 'max:2000'],
-            'RooMBranch' => ['nullable', 'string'],
-        ];
+                'RooMName'     => [
+                                   'required',
+                                   'string',
+                                   'max:255',
+                                  ],
+                'RooMCapacity' => [
+                                   'required',
+                                   'integer',
+                                   'min:2',
+                                  ],
+                'RooMNotes'    => [
+                                   'nullable',
+                                   'string',
+                                   'max:2000',
+                                  ],
+                'RooMBranch'   => [
+                                   'nullable',
+                                   'string',
+                                  ],
+               ];
     }
 
     public function generateID(): string
@@ -50,8 +65,6 @@ class MeetingRoomRequest extends FormRequest
             return $this->validated('RooMBranch');
         }
 
-        throw ValidationException::withMessages([
-            'RooMBranch' => 'Branch may be invalid',
-        ]);
+        throw ValidationException::withMessages(['RooMBranch' => 'Branch may be invalid']);
     }
 }

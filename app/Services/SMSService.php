@@ -6,15 +6,15 @@ use App\Enums\EmailStatusEnum;
 use App\Enums\EmailTypeEnum;
 use App\Events\SMSSendEvent;
 use App\Helpers\SystemHelper;
-use App\Models\Board;
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
-use App\Models\BulkNotification;
-use App\Models\Campaign;
-use App\Models\CampaignParty;
-use App\Models\CrmSMS;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\Communication\BulkNotification;
+use App\Models\Communication\SMS;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\CampaignParty;
+use App\Models\CRM\Lead;
+use App\Models\ThirdParies\Board;
 use App\Services\BR\ClientService;
 use App\Services\Marketing\CampaignService;
 use App\Services\ThirdParty\CSSMSService;
@@ -27,10 +27,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Yajra\DataTables\DataTables;
 
-
 class SMSService
 {
-    public function __construct(public CrmSMS $sms)
+    public function __construct(public SMS $sms)
     {
     }
 
@@ -47,29 +46,29 @@ class SMSService
 
     private static function create(User $actor, string $phoneNo, string $content, string $Party, string $PartyID): SMSService
     {
-        $sms = new CrmSMS();
+        $sms = new SMS();
         $sms->fill([
-            'SMSId' => self::_id(),
-            'Phone' => $phoneNo,
-            'Type' => EmailTypeEnum::Outgoing->value,
-            'Status' => EmailStatusEnum::Draft->value,
-            'Content' => Str::of($content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
-            'Party' => $Party,
-            'PartyID' => $PartyID,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                    'SMSId'      => self::_id(),
+                    'Phone'      => $phoneNo,
+                    'Type'       => EmailTypeEnum::Outgoing->value,
+                    'Status'     => EmailStatusEnum::Draft->value,
+                    'Content'    => Str::of($content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
+                    'Party'      => $Party,
+                    'PartyID'    => $PartyID,
+                    'CreatedBy'  => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                   ])->save();
 
         return new SMSService($sms);
     }
 
     protected static function _id(): string
     {
-        $number = CrmSMS::withTrashed()->count();
+        $number = SMS::withTrashed()->count();
         do {
             $number++;
             $slug = Str::slug('M' . Str::padLeft(($number), 4, '0'));
-        } while (CrmSMS::where('SMSId', $slug)->withTrashed()->exists());
+        } while (SMS::where('SMSId', $slug)->withTrashed()->exists());
 
         return $slug;
     }
@@ -89,9 +88,9 @@ class SMSService
     public function setSource(string $Source, string $SourceID): static
     {
         $this->sms->update([
-            'Source' => $Source,
-            'SourceID' => $SourceID
-        ]);
+                            'Source'   => $Source,
+                            'SourceID' => $SourceID,
+                           ]);
 
         return $this;
     }
@@ -99,8 +98,8 @@ class SMSService
     public function setBulk(BulkNotification $bulkNotification): static
     {
         $this->sms->update([
-            'BulkNotificationId' => $bulkNotification->BulkNotificationID
-        ]);
+                            'BulkNotificationId' => $bulkNotification->BulkNotificationID,
+                           ]);
 
         return $this;
     }
@@ -125,8 +124,8 @@ class SMSService
             }
 
             $this->sms->update([
-                'Status' => EmailStatusEnum::Sending->value
-            ]);
+                                'Status' => EmailStatusEnum::Sending->value,
+                               ]);
 
             event(new SMSSendEvent($this->sms));
             return $this;
@@ -146,9 +145,9 @@ class SMSService
     protected function _failed(): static
     {
         $this->sms->update([
-            'Dated' => now(),
-            'Status' => EmailStatusEnum::Failed->value
-        ]);
+                            'Dated'  => now(),
+                            'Status' => EmailStatusEnum::Failed->value,
+                           ]);
 
         return $this->_UpdateParent(EmailStatusEnum::Failed);
     }
@@ -158,21 +157,21 @@ class SMSService
         $source = $this->sms->source;
         if ($source instanceof CampaignParty) {//update status
             $source->update([
-                'Status' => $status->value,
-                'Channel' => CrmSMS::getPrimaryKey(),
-                'ChannelID' => $this->sms->Id,
-            ]);
+                             'Status'    => $status->value,
+                'Channel' => SMS::getPrimaryKey(),
+                             'ChannelID' => $this->sms->Id,
+                            ]);
             if ($source->campaign instanceof Campaign) {
                 (new CampaignService($source->campaign))->complete();
             }
-        } else if ($this->sms->bulk instanceof BulkNotification) {
+        } elseif ($this->sms->bulk instanceof BulkNotification) {
             $this->updateBulkNotification($this->sms->bulk);
         }
 
         if ($this->sms->Party === Lead::getPrimaryKey() && $this->sms->party instanceof Lead) {
             $this->sms->party->update([
-                'LastContacted' => now()
-            ]);
+                                       'LastContacted' => now(),
+                                      ]);
         }
         return $this;
     }
@@ -181,8 +180,8 @@ class SMSService
     {
         if ($notification->Total <= $notification->sms()->count()) {
             $notification->update([
-                'CompleteOn' => ($this->sms->Dated) ?? now()
-            ]);
+                                   'CompleteOn' => ($this->sms->Dated) ?? now(),
+                                  ]);
         }
         return $this;
     }
@@ -202,7 +201,7 @@ class SMSService
 
         $this->sms->update([
             'Dated' => now(),
-            'Status' => EmailStatusEnum::Sent->value
+            'Status' => EmailStatusEnum::Sent->value,
         ]);
 
         return $this->_UpdateParent(EmailStatusEnum::Sent);
@@ -224,34 +223,35 @@ class SMSService
             $query->with($with);
         }
         return Datatables::of($query->select('*'))->addIndexColumn()
-            ->addColumn('action', function (CrmSMS $sms) {
+            ->addColumn('action', function (SMS $sms) {
                 return '...';
-            })->editColumn('party', function (CrmSMS $sms) use ($with) {
+            })->editColumn('party', function (SMS $sms) use ($with) {
                 if (in_array('party', $with, true)) {
                     return (new PartyService($sms->party))->getDTRow();
                 }
                 return '';
-            })->editColumn('source', function (CrmSMS $sms) use ($with) {
+            })->editColumn('source', function (SMS $sms) use ($with) {
                 if (in_array('source', $with, true)) {
                     return (new self($sms))->source();
                 }
                 return '-';
-            })->editColumn('SMSId', function (CrmSMS $sms) {
+            })->editColumn('SMSId', function (SMS $sms) {
                 return Str::upper($sms->SMSId);
-            })->editColumn('Type', function (CrmSMS $sms) {
+            })->editColumn('Type', function (SMS $sms) {
                 return $sms->Type->name;
-            })->editColumn('CreatedOn', function (CrmSMS $sms) {
+            })->editColumn('CreatedOn', function (SMS $sms) {
                 return $sms->CreatedOn?->format('F d, Y h:i A');
-            })->editColumn('Dated', function (CrmSMS $sms) {
+            })->editColumn('Dated', function (SMS $sms) {
                 if ($sms->Dated instanceof Carbon) {
                     return $sms->Dated->format('F d, Y h:i A');
                 }
                 return $sms->CreatedOn?->format('F d, Y h:i A');
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (CrmSMS $sms) {
-                    return route('sms.summary', [$sms->SMSId]);
-                }, 'summary_title' => 'sms details.'
-            ])->rawColumns(['action', 'party', 'source'])->make();
+                'dbl_click_url' => function (SMS $sms) {
+                                                                                                    return route('sms.summary', [$sms->SMSId]);
+                                                                                                  },
+                                                                                                  'summary_title' => 'sms details.',
+                                                                                                 ])->rawColumns(['action', 'party', 'source'])->make();
     }
 
     public function source(): string

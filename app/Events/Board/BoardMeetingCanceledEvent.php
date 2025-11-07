@@ -2,23 +2,21 @@
 
 namespace App\Events\Board;
 
-use App\Models\Meeting;
-use Illuminate\Broadcasting\Channel;
+use App\Models\CRM\Meeting;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class BoardMeetingCanceledEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(public  Meeting $meeting)
+    public function __construct(public Meeting $meeting)
     {
         //
     }

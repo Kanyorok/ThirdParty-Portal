@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Settings\Users;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\UserRequest;
-use App\Models\BR\Branch;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\HRM\Employee;
+use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,58 +17,101 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('ajax')->except(['show']);
+        $this->middleware('ajax')->except(['show', 'index']);
         $this->authorizeResource(User::class);
     }
 
     /**
      * Display a listing of the resource.
-     * @throws Exception
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse|View
     {
-        return UserService::dt(User::query(), ['photo', 'branch']);
+        if ($request->ajax()) {
+            try {
+                return UserService::dt(User::query(), ['photo']);
+            } catch (Exception $e) {
+            }
+            return $this->errored('unexpected error, try again later');
+        }
+
+        return view('settings.users.index');
+
     }
 
     /**
      * Store a newly created resource in storage.
      * @throws ValidationException
      */
-    public function store(UserRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
-        $gender = $request->getGender();
-        $email = $request->getUserEmail();
-        $phone = $request->getUserPhone();
-        $userID = $request->getUserID();
-        $role = $request->getRole();
-        $branch = $request->getBranch();
+    $validated = $request->validate([
+            'Role' => ['required', 'string', 'max:20'],
+            'Employee' => ['required', 'string', 'max:20'],
+            'BranchId' => ['required', 'integer', 'exists:t_Branches,Id'],
+        ]);
 
+        $role = Role::query()->where('id', $validated['Role'])->first();
+        if (!$role instanceof Role) {
+            throw ValidationException::withMessages(['Role' => 'invalid role defined']);
+        }
+
+        $branch = Branch::query()->where('Id', $validated['BranchId'])->first();
+        if (!$branch instanceof Branch) {
+            throw ValidationException::withMessages(['BranchId' => 'branch not found']);
+        }
+
+        // Only allow employees without a linked user AND whose email isn't already used by another user
+        $employee = Employee::query()
+            ->doesntHave('user')
+            ->where('EmployeeID', $validated['Employee'])
+            ->whereNotNull('Email')
+            ->whereNotIn('Email', function ($q) {
+                $q->select('Email')->from('t_Users');
+            })
+            ->first();
+        if (!$employee instanceof Employee) {
+            throw ValidationException::withMessages(['Employee' => 'employee not found or already has an account/email in use.']);
+        }
+
+        $actor = $request->user();
         try {
-            DB::transaction(static function () use ($role, $branch, $userID, $email, $gender, $request, $phone) {
-                $service = UserService::create($branch, $userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($request->validated('Notes')) ?? '');
-                if ($request->sync()) {
-                    $service->syncBR();
-                }
-                $service->setRole($role)->welcomeEmail();
+            return DB::transaction(function () use ($actor, $role, $employee, $branch) {
+                UserService::create($employee, $actor)
+                    ->setRole($role, $branch, $actor)
+                    ->welcomeEmail();
+                return $this->succeeded('user added successfully');
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            return $this->errored('This email already exists for another user.');
+        } catch (Throwable|Exception $e) {
             Log::error('Error create user ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
+            Log::error($e);
         }
 
-        return $this->succeeded('user added successfully');
+        return $this->errored('unexpected error, try again later');
     }
 
     public function create(): View
     {
+        // Exclude employees with existing user accounts and those whose email is already present in users
+        $employees = Employee::query()
+            ->doesntHave('user')
+            ->whereNotNull('Email')
+            ->whereNotIn('Email', function ($q) {
+                $q->select('Email')->from('t_Users');
+            })
+            ->get(['EmployeeID', 'FirstName', 'LastName']);
+
         return view('settings.users.create')
+            ->with('employees', $employees)
             ->with('Roles', Role::all())
             ->with('branches', Branch::all());
     }
@@ -77,13 +121,19 @@ class UserController extends Controller
      */
     public function show(Request $request, User $user): View
     {
+        // If the user is viewing their own profile, show profile view
         if ($request->user()->UserID === $user->UserID) {
             return view('auth.profile')->with('user', $request->user());
         }
 
-        return view('settings.users.show', compact('user'));
-    }
+        // Eager load branchRoles with branch and role relationships
+        $user->load(['branchRoles.branch', 'branchRoles.role']);
 
+        $branches = Branch::all();
+        $roles = Role::all();
+
+        return view('settings.users.show', compact('user', 'branches', 'roles'));
+    }
 
     public function edit(User $user): View
     {
@@ -109,9 +159,8 @@ class UserController extends Controller
         try {
             DB::transaction(static function () use ($branch, $user, $userID, $email, $gender, $request, $phone, $clientID) {
                 (new UserService($user))
-                    ->update($userID, $request->validated('Name'), $email, $phone, $gender, $request->user(),
-                        ($user->Email_Signature) ?? '', ($request->validated('Notes')) ?? '', $branch, $clientID)
-                    ->syncBR();
+                    ->update($userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($user->Email_Signature) ?? '', ($request->validated('Notes')) ?? '', $branch, $clientID);
+
             });
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -132,8 +181,12 @@ class UserController extends Controller
             return $this->errored("how, why you can't delete it? how did you get here");
         }
 
-        (new UserService($user))->trash($request->user());
+        try {
+            (new UserService($user))->trash($request->user());
+        } catch (ErroredException $e) {
+            return $e->toJson();
+        }
 
-        return $this->succeeded('account trashed successfully.', route('settings.users'));
+        return $this->succeeded('account trashed successfully.', route('users.index'));
     }
 }

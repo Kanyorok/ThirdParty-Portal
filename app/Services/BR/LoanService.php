@@ -2,11 +2,11 @@
 
 namespace App\Services\BR;
 
+use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
 use App\Models\BR\Guarantor;
-use App\Models\BulkNotification;
-use App\Models\User;
+use App\Models\Communication\BulkNotification;
 use App\Services\CRMEmailService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,13 +15,13 @@ use Throwable;
 
 class LoanService
 {
-    public const string MODULE = 'DEBT';
+    public const MODULE = 'DEBT';
 
     public function __construct(public DebtProduct $loan)
     {
     }
 
-    public function message(string $message, User $actor, bool $immediate = false, BulkNotification $bulkNotification = null): array
+    public function message(string $message, User $actor, bool $immediate = false, $bulkNotification = null): array
     {
         if (!$this->loan->client instanceof Client) {
             return [];
@@ -59,10 +59,16 @@ class LoanService
             : Str::of($content)->replace(['#name', '#amount', '#loanee'], [$guarantor->client?->Name, number_format($guarantor->GuaranteeAmount, 2), $this->loan->AccountName]);
 
         return $str->replace([
-            '#arrears', '#account', '#date', '#product'
-        ], [
-            number_format($this->loan->ArrearsDays), Str::of($this->loan->AccountID)->mask('*', 4, -4), $this->loan->processDate->format('M d, Y'), $this->loan->ProductName
-        ])->toString();
+                              '#arrears',
+                              '#account',
+                              '#date',
+                              '#product',
+                             ], [
+                                 number_format($this->loan->ArrearsDays),
+                                 Str::of($this->loan->AccountID)->mask('*', 4, -4),
+                                 $this->loan->processDate->format('M d, Y'),
+                                 $this->loan->ProductName,
+                                ])->toString();
     }
 
     public function guarantorMail(Collection $guarantors, string $subject, string $content, User $actor, array $cc): array

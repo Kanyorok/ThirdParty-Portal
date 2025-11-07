@@ -4,19 +4,28 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="description" content="@yield('description')">
 <meta name="keywords" content="">
-<link rel="preconnect" href="https://fonts.gstatic.com">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/icons/apple-touch-icon.png') }}">
-<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/icons/favicon-32x32.png') }}">
-<link rel="icon" type="image/png" sizes="192x192" href="{{ asset('assets/img/icons/android-icon-192x192.png') }}">
-<link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/icons/favicon-16x16.png') }}">
-<link rel="manifest" href="{{ asset('site.webmanifest') }}">
-<link rel="mask-icon" href="{{ asset('assets/img/icons/safari-pinned-tab.svg') }}" color="#3e17a0">
-<link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
 <meta name="msapplication-TileColor" content="#3e17a0">
 <meta name="msapplication-TileImage" content="{{ asset('assets/img/icons/mstile-144x144.png') }}') }}">
 <meta name="msapplication-config" content="{{ asset('browserconfig.xml') }}">
 <meta name="theme-color" content="#2e3192">
-<link href="{{ asset('assets/css/light.css') }}" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('assets/plugins/notyf/notyf.min.css') }}">
+<link rel="icon" href="{{ asset('assets/img/CBT-Logo.jpg') }}" type="image/x-icon"><!-- [Font] Family -->
+<link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}" id="main-font-link">
+<link rel="stylesheet" href="{{ asset('assets/fonts/phosphor/duotone/style.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/fonts/tabler-icons.min.css') }}"><!-- [Feather Icons] https://feathericons.com -->
+<link rel="stylesheet" href="{{ asset('assets/fonts/feather.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/fonts/fontawesome.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/fonts/material.css') }}"><!-- [Template CSS Files] -->
+<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" id="main-style-link">
+{{--<script src="{{ asset('assets/js/tech-stack.js') }}"></script> --}}
+<link rel="stylesheet" href="{{ asset('assets/css/style-preset.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/libs/dataTables/bootstrap5.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/libs/notyf/notyf.min.css') }}">
+
+{{-- Added as it is used in Property and Insurance beautification --}}
+{{-- Include Bootstrap Icons --}}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+{{-- Include DataTables CSS --}}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @yield('styles')
+

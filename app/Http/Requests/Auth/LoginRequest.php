@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Models\User;
+use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
+use App\Models\HRM\Employee;
 use App\Services\BR\BREncryption;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +28,7 @@ class LoginRequest extends FormRequest
         return [
             'UserID' => ['required', 'string'],
             'password' => ['required', 'string'],
+            'branch' => ['required', 'exists:t_Branches,Id'],
         ];
     }
 
@@ -38,10 +42,13 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
-
-        $user = User::where('UserID', Str::upper($this->get('UserID')))->first();
-        if ($user instanceof User && BREncryption::checkAuthUser($user, $this->get('password'))) {
+        $user = User::query()->where(function (Builder $query) {
+            $query->where('UserID', $this->string('UserID')->upper()->toString())->orWhere('Email', $this->string('UserID')->lower()->toString());
+        })->first();
+        if ($user instanceof User && ($user->employee instanceof Employee) && BREncryption::checkAuthUser($user, $this->validated('password'))) {
+            //check if user has a employee profile if not fail.
             RateLimiter::clear($this->throttleKey());
+
             //remove other sessions
             if (config(key: 'session.driver') === 'database') {
                 DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
@@ -49,7 +56,7 @@ class LoginRequest extends FormRequest
             }
 
             //new session
-            Auth::login($user, $user->can(\App\Enums\Core\PermissionEnum::UsersSessions));
+            Auth::login($user, $user->can(PermissionEnum::UsersSessions));
             $this->session()->regenerate();
             activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $this->getClientIp());
             return;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Ticket;
 
-use App\Models\CodeDetail;
+use App\Models\Core\CodeDetail;
 use App\Services\StaticListsService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -18,11 +18,22 @@ class NewChannelTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ticket_id' => ['required', 'string', 'max:100'],
-            'ticket_title' => ['required', 'string', 'max:255'],
-            'ticket_description' => ['required', 'string'],
-            'ticket_category' => ['required'],
-        ];
+                'ticket_id'          => [
+                                         'required',
+                                         'string',
+                                         'max:100',
+                                        ],
+                'ticket_title'       => [
+                                         'required',
+                                         'string',
+                                         'max:255',
+                                        ],
+                'ticket_description' => [
+                                         'required',
+                                         'string',
+                                        ],
+                'ticket_category'    => ['required'],
+               ];
     }
 
     /**
@@ -34,8 +45,6 @@ class NewChannelTicketRequest extends FormRequest
         if ($category instanceof CodeDetail) {
             return $category;
         }
-        throw ValidationException::withMessages([
-            'ticket_category' => 'Category may be invalid',
-        ]);
+        throw ValidationException::withMessages(['ticket_category' => 'Category may be invalid']);
     }
 }

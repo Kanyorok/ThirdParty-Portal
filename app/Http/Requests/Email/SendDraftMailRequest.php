@@ -3,12 +3,11 @@
 namespace App\Http\Requests\Email;
 
 use App\Helpers\SystemHelper;
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SendDraftMailRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -17,16 +16,22 @@ class SendDraftMailRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mail_cc' => ['nullable', 'array', 'max:20'],
-            'mail_content' => ['required', 'string', 'min:5'],
-        ];
+                'mail_cc'      => [
+                                   'nullable',
+                                   'array',
+                                   'max:20',
+                                  ],
+                'mail_content' => [
+                                   'required',
+                                   'string',
+                                   'min:5',
+                                  ],
+               ];
     }
 
     public function messages(): array
     {
-        return [
-            'mail_content.min' => 'Write something about it.',
-        ];
+        return ['mail_content.min' => 'Write something about it.'];
     }
 
 

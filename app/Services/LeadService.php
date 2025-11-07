@@ -3,18 +3,19 @@
 namespace App\Services;
 
 use App\Enums\Core\RoleEnum;
-use App\Enums\GenderEnum;
+use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\LeadTypeEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
-use App\Models\BulkNotification;
-use App\Models\CodeDetail;
-use App\Models\Lead;
-use App\Models\LeadUser;
-use App\Models\Locality;
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
+use App\Models\Communication\BulkNotification;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\Locality;
+use App\Models\CRM\Lead;
+use App\Models\CRM\LeadUser;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -67,13 +68,13 @@ class LeadService
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                 'dbl_click_url' => function (Lead $lead) {
                     return route('leads.show', $lead->LeadID);
-                }
+                },
             ])->rawColumns(['Name', 'photo'])->make();
     }
 
     public static function company(
         string   $name, string $email, string $phone, string $website, Carbon $last_contact, User $manager, User $actor,
-        Locality $location = null, CodeDetail $industry = null, CodeDetail $source = null, CodeDetail $customerType = null, string $notes = ''
+        Locality $location, CodeDetail $industry = null, CodeDetail $source = null, CodeDetail $customerType = null, string $notes = ''
     ): self
     {
         $service = self::_create($name, '', $email, $phone, $website, '', $last_contact, LeadTypeEnum::Company, GenderEnum::Other, $actor, $notes, $location, $industry, $source, $customerType);
@@ -84,8 +85,10 @@ class LeadService
     }
 
     private static function _create(
-        string     $name, string $other_names, string $email, string $phone, string $website, string $job_title, Carbon $last_contact, LeadTypeEnum $type,
-        GenderEnum $gender, User $actor, string $notes, Locality $location = null, CodeDetail $industry = null, CodeDetail $source = null, CodeDetail $customerType = null): self
+        string       $name, string $other_names, string $email, string $phone, string $website, string $job_title, Carbon $last_contact,
+        LeadTypeEnum $type, GenderEnum $gender, User $actor, string $notes, Locality $location, CodeDetail $industry = null,
+        CodeDetail   $source = null, CodeDetail $customerType = null
+    ): self
     {
         $lead = new Lead();
         $lead->fill([
@@ -96,7 +99,8 @@ class LeadService
             "Gender" => $gender->value,
             "Status" => LeadStatusEnum::Warm->value,
             "RelationshipManagerID" => $actor->Id,
-            "LocationID" => $location?->ID,
+            "LocationID" => $location->ID,
+            'CountryId' => $location->CountryId,
             "Industry" => $industry?->ID,
             "Source" => $source?->ID,
             "JobTitle" => $job_title,
@@ -106,11 +110,13 @@ class LeadService
             "Type" => $type->value,
             'Notes' => $notes,
             'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id
+            'ModifiedBy' => $actor->Id,
         ])->save();
 
         $service = (new self($lead));
         $service->activity($lead->Name . ' added by ' . $actor->UserID, now(), $actor);
+
+        activity()->causedBy($actor)->performedOn($lead)->event('create')->log('created a new lead (L.' . $lead->LeadID . ')');
 
         return $service->addWatcher($actor, RoleEnum::Admin, $actor, false);
     }
@@ -138,7 +144,7 @@ class LeadService
             $leadUser->fill([
                 'Role' => $role->value,
                 'ModifiedBy' => $actor->Id,
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ])->save();
 
             if ($notify) {
@@ -147,11 +153,14 @@ class LeadService
                     return [$user->Name => $user->Email];
                 });
 
-                CRMEmailService::createTeam($watcher, 'Notification: Added as Watchers to a Lead',
+                CRMEmailService::createTeam(
+                    $watcher,
+                    'Notification: Added as Watchers to a Lead',
                     '<p>You have been added as watchers to <a  href="' . route('leads.show', $this->lead->LeadID) . '">' . $this->lead->Name . ' (' . $this->lead->Type->name . ')</a>.</p>
                        <p>As watchers, you will receive updates and notifications about any changes, or progress related to this lead. </p>
                         <p>Please feel free to review the details and provide any necessary input to ensure a smooth pipeline.</p>',
-                    SystemHelper::user(), $cc->toArray()
+                    SystemHelper::user(),
+                    $cc->toArray()
                 );
             }
 
@@ -175,11 +184,13 @@ class LeadService
         $leadUser->fill([
             'Role' => $role->value,
             'ModifiedBy' => $actor->Id,
-            'ModifiedOn' => now()
+            'ModifiedOn' => now(),
         ])->save();
 
         if ($notify) {
-            CRMEmailService::createUser(user: $watcher, subject: 'Notification: Added as a Watcher to a Lead ',
+            CRMEmailService::createUser(
+                user: $watcher,
+                subject: 'Notification: Added as a Watcher to a Lead ',
                 body: '<p>You have been added as watcher to <a  href="' . route('leads.show', $this->lead->LeadID) . '">' . $this->lead->Name . ' (' . $this->lead->Type->name . ')</a>.</p>
                        <p>As watchers, you will receive updates and notifications about any changes, or progress related to this lead. </p>
                         <p>Please feel free to review the details and provide any necessary input to ensure a smooth pipeline.</p>',
@@ -203,7 +214,7 @@ class LeadService
 
 
         $this->lead->lock('WITH(NOLOCK)')->update([
-            'RelationshipManagerID' => $assignee->Id
+            'RelationshipManagerID' => $assignee->Id,
         ]);
 
         $service = new UserService($assignee);
@@ -224,7 +235,8 @@ class LeadService
 
         return $this->sendMessage(
             'Hello ' . $this->lead->Name . ', your account has been ' . $action . ' to ' . $assignee->Name . '. They will contact you soon. Thank you.',
-            $actor, 'account ' . $action . ' to ' . $assignee->UserID
+            $actor,
+            'account ' . $action . ' to ' . $assignee->UserID
         );
     }
 
@@ -262,7 +274,8 @@ class LeadService
 
     public static function individual(
         string     $name, string $other_names, string $email, string $phone, string $job_title, Carbon $last_contact,
-        GenderEnum $gender, User $manager, User $actor, Locality $location = null, CodeDetail $industry = null, CodeDetail $source = null, CodeDetail $customerType = null, string $notes = ''
+        GenderEnum $gender, User $manager, User $actor, Locality $location, CodeDetail $industry = null,
+        CodeDetail $source = null, CodeDetail $customerType = null, string $notes = ''
     ): self
     {
         $service = self::_create($name, $other_names, $email, $phone, '', $job_title, $last_contact, LeadTypeEnum::Individual, $gender, $actor, $notes, $location, $industry, $source, $customerType);
@@ -305,10 +318,11 @@ class LeadService
 
         $leadUser->forceFill([
             'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
+            'DeletedBy' => $actor->Id,
         ])->save();
 
-        $service->sendEmail('Notification: Removed as Watchers from Lead ' . $this->lead->Name,
+        $service->sendEmail(
+            'Notification: Removed as Watchers from Lead ' . $this->lead->Name,
             '<p>You have been removed as watchers from Lead ' . $this->lead->Name . '. As a result, you will no longer receive updates or notifications related to this lead.</p>
                 <p>Thank you for your continued support and collaboration.</p>'
         );

@@ -5,13 +5,14 @@ namespace App\Console\Commands;
 use App\Enums\LeadStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Models\BR\Client;
-use App\Models\Lead;
+use App\Models\CRM\Lead;
 use App\Services\BR\ClientService;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class WonLeadProcessingCommand extends Command
 {
@@ -54,7 +55,7 @@ class WonLeadProcessingCommand extends Command
                     $lead->update([
                         'ArchivedOn' => now(),
                         'ArchivedBy' => $actor->Id,
-                        'ApplicationID' => $client->ClientID
+                        'ApplicationID' => $client->ClientID,
                     ]);
                     //change all configurations
                     $lead->calls()->update([
@@ -86,7 +87,7 @@ class WonLeadProcessingCommand extends Command
                         "PartyID" => $client->ClientID,
                     ]);
                 });
-            } catch (Exception|\Throwable $e) {
+            } catch (Exception|Throwable $e) {
                 Log::error('Could not migrate contacts details lead (' . $lead->LeadID . ') to client (' . $client->ClientID . ')');
                 Log::error($e);
             }

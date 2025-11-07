@@ -20,20 +20,71 @@ class UpdateProductDevelopmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => ['sometimes', 'required', 'string', 'max:255'],
-            'TargetGroup' => ['sometimes', 'required', 'string', 'max:255'],
-            'Notes' => ['sometimes', 'required', 'string', 'max:5000'],
-            'Regulatory' => ['sometimes', 'required', 'string', 'max:5000'],
-            'Justification' => ['sometimes', 'required', 'string', 'max:5000'],
-            'Risks' => ['sometimes', 'required', 'string', 'max:5000'],
-            'RiskStrategies' => ['sometimes', 'required', 'string', 'max:5000'],
-            'User_ID' => ['sometimes', 'required', Rule::exists('t_Users', 'UserID')],
-            'StageId' => ['sometimes', 'required', Rule::exists('t_CRMCodeDetails', 'ID')->where(function (Builder $query) {
-                return $query->where('CodeID', StaticListsService::ProductDevelopmentStages);
-            })],
-            'Income' => ['sometimes', 'required', 'numeric'],
-            'Revenue' => ['sometimes', 'required', 'numeric'],
-        ];
+                'Name'           => [
+                                     'sometimes',
+                                     'required',
+                                     'string',
+                                     'max:255',
+                                    ],
+                'TargetGroup'    => [
+                                     'sometimes',
+                                     'required',
+                                     'string',
+                                     'max:255',
+                                    ],
+                'Notes'          => [
+                                     'sometimes',
+                                     'required',
+                                     'string',
+                                     'max:5000',
+                                    ],
+                'Regulatory'     => [
+                                     'sometimes',
+                                     'required',
+                                     'string',
+                                     'max:5000',
+                                    ],
+                'Justification'  => [
+                                     'sometimes',
+                                     'required',
+                                     'string',
+                                     'max:5000',
+                                    ],
+                'Risks'          => [
+                                     'sometimes',
+                                     'required',
+                                     'string',
+                                     'max:5000',
+                                    ],
+                'RiskStrategies' => [
+                                     'sometimes',
+                                     'required',
+                                     'string',
+                                     'max:5000',
+                                    ],
+                'User_ID'        => [
+                                     'sometimes',
+                                     'required',
+                                     Rule::exists('t_Users', 'UserID'),
+                                    ],
+                'StageId'        => [
+                                     'sometimes',
+                                     'required',
+                    Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
+                                                        return $query->where('CodeID', StaticListsService::ProductDevelopmentStages);
+                                     }),
+                                    ],
+                'Income'         => [
+                                     'sometimes',
+                                     'required',
+                                     'numeric',
+                                    ],
+                'Revenue'        => [
+                                     'sometimes',
+                                     'required',
+                                     'numeric',
+                                    ],
+               ];
     }
 
     /**
@@ -58,7 +109,7 @@ class UpdateProductDevelopmentRequest extends FormRequest
     protected function cleanField(mixed $field): mixed
     {
         if (in_array($field, ['Income', 'Revenue'])) {
-            return (float)$this->validated($field);
+            return (float) $this->validated($field);
         }
         return str_replace(PHP_EOL, '', $this->validated($field));
     }

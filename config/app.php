@@ -13,10 +13,10 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'BR CRM'),
+    'name' => env('APP_NAME', 'Nimble ERP'),
 
-    'versioning'=>[
-        'version' => '0.9.1'
+    'versioning' => [
+        'version' => '0.0.1'
     ],
 
     /*
@@ -43,7 +43,7 @@ return [
     |
     */
 
-    'debug' => (bool) env('APP_DEBUG', false),
+    'debug' => (bool)env('APP_DEBUG', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -127,4 +127,14 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    // ✅ Add this block below
+    'currencies' => [
+        'KES' => 'Kenyan Shilling',
+        'USD' => 'US Dollar',
+        'EUR' => 'Euro',
+        'GBP' => 'British Pound',
+        'ZAR' => 'South African Rand',
+    ],
 ];
+
+

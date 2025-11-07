@@ -4,15 +4,15 @@ namespace App\Traits\Controller;
 
 use App\Enums\MeetingStatusEnum;
 use App\Enums\ScheduleStatusEnum;
-use App\Models\Board;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Discussion;
-use App\Models\DiscussionUser;
-use App\Models\Lead;
-use App\Models\Meeting;
-use App\Models\Notes;
-use App\Models\Schedule;
-use App\Models\User;
+use App\Models\CRM\Discussion;
+use App\Models\CRM\DiscussionUser;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Meeting;
+use App\Models\CRM\Notes;
+use App\Models\CRM\Schedule;
+use App\Models\ThirdParies\Board;
 use App\Services\ActivityService;
 use App\Services\MeetingService;
 use Carbon\Carbon;
@@ -31,16 +31,21 @@ trait MeetingTrait
      */
     public function meetings(Builder|BelongsToMany|\Illuminate\Database\Eloquent\Builder $query): JsonResponse
     {
-        return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
+                $tz = config('app.timezone');
+                return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
             ->editColumn('StartOn', function (Meeting $meeting) {
-                return $meeting->StartOn?->format('F d, Y h:i A');
+                                $tz = config('app.timezone');
+                                return $meeting->StartOn?->format('F d, Y h:i A') . " ({$tz})";
             })->editColumn('EndOn', function (Meeting $meeting) {
-                return $meeting->EndOn?->format('F d, Y h:i A');
+                                $tz = config('app.timezone');
+                                return $meeting->EndOn?->format('F d, Y h:i A') . " ({$tz})";
             })->editColumn('Title', function (Meeting $meeting) {
-                return '<details><summary>' . $meeting->Title . '</summary>
-                  <p><b>Location: ' . $meeting->Location . '</b></p>
-                  <p><b>Durarion: ' . $meeting->EndOn->diffForHumans($meeting->StartOn, CarbonInterface::DIFF_ABSOLUTE, parts: 2, short: true) . '</b></p>
-                </details>';
+                                $tz = config('app.timezone');
+                                return '<details><summary>' . $meeting->Title . '</summary>
+                                    <p><b>Location: ' . $meeting->Location . '</b></p>
+                                    <p><b>Duration: ' . $meeting->EndOn->diffForHumans($meeting->StartOn, CarbonInterface::DIFF_ABSOLUTE, parts: 2, short: true) . '</b></p>
+                                    <p><small class="text-muted">Timezone: ' . e($tz) . '</small></p>
+                                </details>';
             })->editColumn('StatusID', function (Meeting $meeting) {
                 return $meeting->StatusID->name;
             })->setRowClass(function (Meeting $meeting) {
@@ -49,13 +54,13 @@ trait MeetingTrait
                 }
                 return '';
             })->setRowData([
-                'dbl_click_url' => function (Meeting $meeting) {
-                    if ($meeting->Type === Board::getPrimaryKey()) {
-                        return route('board-meetings.show', $meeting->MeetingID);
-                    }
-                    return '';
-                }
-            ])->rawColumns(['Title'])->make();
+                            'dbl_click_url' => function (Meeting $meeting) {
+                                if ($meeting->Type === Board::getPrimaryKey()) {
+                                    return route('board-meetings.show', $meeting->MeetingID);
+                                }
+                                return '';
+                            },
+                           ])->rawColumns(['Title'])->make();
     }
 
     public function startClientMeeting(Client $client, string $title, string $location, Carbon $start, User $actor, Meeting $meeting = null, Schedule $schedule = null): Meeting
@@ -72,8 +77,8 @@ trait MeetingTrait
 
             if ($schedule instanceof Schedule) {
                 $schedule->update([
-                    'ScheduleStatusID' => ScheduleStatusEnum::Success,
-                ]);
+                                   'ScheduleStatusID' => ScheduleStatusEnum::Success,
+                                  ]);
                 //sync users and Clients
             }
 
@@ -95,8 +100,8 @@ trait MeetingTrait
 
             if ($schedule instanceof Schedule) {
                 $schedule->update([
-                    'ScheduleStatusID' => ScheduleStatusEnum::Success,
-                ]);
+                                   'ScheduleStatusID' => ScheduleStatusEnum::Success,
+                                  ]);
 
                 //sync users and Leads for attendance.
             }
@@ -110,48 +115,48 @@ trait MeetingTrait
         return DB::transaction(static function () use ($UserIDs, $location, $title, $PartyID, $discussion, $notes, $end, $actor, $meeting) {
 
             $meeting->update([
-                'Location' => $location,
-                'Title' => $title,
-                'EndOn' => $end,
-                'StatusID' => MeetingStatusEnum::Completed->value,
-            ]);
+                              'Location' => $location,
+                              'Title'    => $title,
+                              'EndOn'    => $end,
+                              'StatusID' => MeetingStatusEnum::Completed->value,
+                             ]);
 
             $meeting->meetingUsers()->delete();
             (new MeetingService($meeting))->attachUser($UserIDs, now(), $actor);
 
             $discussionID = Discussion::insertGetId([
-                'SourceType' => Meeting::getPrimaryKey(),
-                'SourceTypeID' => $meeting->MeetingID,
-                "Party" => $meeting->Type,
-                "PartyID" => $PartyID,
-                'Discussion' => $discussion,
-                'CreatedBy' => $actor->Id,
-                'ModifiedBy' => $actor->Id,
-                'CreatedOn' => $end,
-                'ModifiedOn' => $end,
-            ]);
+                                                     'SourceType'   => Meeting::getPrimaryKey(),
+                                                     'SourceTypeID' => $meeting->MeetingID,
+                                                     "Party"        => $meeting->Type,
+                                                     "PartyID"      => $PartyID,
+                                                     'Discussion'   => $discussion,
+                                                     'CreatedBy'    => $actor->Id,
+                                                     'ModifiedBy'   => $actor->Id,
+                                                     'CreatedOn'    => $end,
+                                                     'ModifiedOn'   => $end,
+                                                    ]);
 
             DiscussionUser::create([
-                'DiscussionId' => $discussionID,
-                'UserID' => $actor->Id,
-                'CreatedBy' => $actor->Id,
-                'ModifiedBy' => $actor->Id,
-                'CreatedOn' => $end,
-                'ModifiedOn' => $end,
-            ]);
+                                    'DiscussionId' => $discussionID,
+                                    'UserID'       => $actor->Id,
+                                    'CreatedBy'    => $actor->Id,
+                                    'ModifiedBy'   => $actor->Id,
+                                    'CreatedOn'    => $end,
+                                    'ModifiedOn'   => $end,
+                                   ]);
 
             ActivityService::meeting($meeting, $PartyID, 'Meeting : ' . $meeting->Title, $actor);
 
             //create notes if any.
             if (is_string($notes)) {
                 Notes::create([
-                    'DiscussionID' => $discussionID,
-                    "Party" => $meeting->Type,
-                    "PartyID" => $PartyID,
-                    'Notes' => $notes,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                               'DiscussionID' => $discussionID,
+                               "Party"        => $meeting->Type,
+                               "PartyID"      => $PartyID,
+                               'Notes'        => $notes,
+                               'CreatedBy'    => $actor->Id,
+                               'ModifiedBy'   => $actor->Id,
+                              ]);
             }
             return $meeting;
         });

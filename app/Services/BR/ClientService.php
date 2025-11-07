@@ -3,8 +3,8 @@
 namespace App\Services\BR;
 
 use App\Enums\EmailPriorityEnum;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\User;
 use App\Services\CRMEmailService;
 use App\Services\SMSService;
 use Exception;
@@ -88,10 +88,10 @@ class ClientService
             })->editColumn('ClientID', function (Client $client) {
                 return '<a href="#" data-click_url="' . route('clients.summary', $client->ClientID) . '" data-summary_title="member summary" class="click-summary-data">' . $client->ClientID . '</a>';
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                'dbl_click_url' => function (Client $client) {
-                    return route('clients.show', $client->ClientID);
-                },
-            ])->rawColumns(['action', 'ClientID'])->make();
+                                                                                                   'dbl_click_url' => function (Client $client) {
+                                                                                                    return route('clients.show', $client->ClientID);
+                                                                                                   },
+                                                                                                  ])->rawColumns(['action', 'ClientID'])->make();
     }
 
     public static function fromPhone(string $phoneNo): ?self
@@ -109,7 +109,7 @@ class ClientService
             $phone1 = $phoneNo;
             $phone2 = Str::replaceFirst('+', '', $phoneNo);
             $phone3 = Str::replaceFirst('+254', '', $phoneNo);
-        } else if (Str::startsWith($phoneNo, '254')) {
+        } elseif (Str::startsWith($phoneNo, '254')) {
             $phone1 = '+' . $phoneNo;
             $phone2 = $phoneNo;
             $phone3 = Str::replaceFirst('+254', '', $phoneNo);

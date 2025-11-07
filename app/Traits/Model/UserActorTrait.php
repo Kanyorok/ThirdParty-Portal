@@ -2,7 +2,7 @@
 
 namespace App\Traits\Model;
 
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Spatie\Activitylog\ActivitylogServiceProvider;
@@ -10,15 +10,22 @@ use Spatie\Activitylog\Exceptions\InvalidConfiguration;
 
 trait UserActorTrait
 {
+    abstract public static function getPrimaryKey(): string;
+
+    public function getMorphClass(): string
+    {
+        return self::getPrimaryKey();
+    }
+
     /* public function getMorphClass()
      {
          return $this->primaryKey;
      }*/
 
-    public static function getPrimaryKey(): string
+    /*public static function getPrimaryKey(): string
     {
-        return (new self)->primaryKey;
-    }
+        return (new self())->primaryKey;
+    }*/
 
     public function creator(): BelongsTo
     {
@@ -43,5 +50,4 @@ trait UserActorTrait
     {
         return $this->morphMany(ActivitylogServiceProvider::determineActivityModel(), 'subject');
     }
-
 }

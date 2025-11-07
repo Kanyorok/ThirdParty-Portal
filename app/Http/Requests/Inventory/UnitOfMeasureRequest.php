@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Requests\Inventory;
+
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Inventory\ItemCategories;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+
+class UnitOfMeasureRequest extends FormRequest
+{
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules()
+    {
+        return [
+            'Code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('t_UOM', 'Code')->ignore($this->route('id')),
+            ],
+            'Name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_UOM', 'Name')->ignore($this->route('id')),
+            ],
+            'BaseUnit' => 'nullable|boolean',
+            'Active' => 'required|boolean',
+        ];
+    }
+
+    /**
+     * Get custom error messages for validator errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'Code.unique' => 'The Unit of Measure code already exists.',
+            'Name.unique' => 'The Unit of Measure name already exists.',
+        ];
+    }
+}

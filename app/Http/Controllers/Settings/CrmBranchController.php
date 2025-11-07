@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use App\Models\BR\Branch;
-use App\Models\CrmBranch;
-use App\Models\User;
+use App\Http\Requests\Settings\BranchRequest;
+
+//use App\Models\BR\Branch;
+use App\Models\Core\Branch;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,107 +14,106 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 use Yajra\DataTables\DataTables;
+
+#use App\Models\BR\Branch;
 
 class CrmBranchController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('ajax');
-        $this->authorizeResource(CrmBranch::class);
+        $this->middleware('ajax')->except('index');
+        // $this->authorizeResource(Branch::class);
     }
 
     /**
      * Display a listing of the resource.
      * @throws Exception
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse|View
     {
-        return Datatables::of(Branch::query()->select('OurBranchID', 'BranchName', 'Address1', 'Address2')->with('local'))->addIndexColumn()
-            ->addColumn('action', function (Branch $branch) {
-                return '<button type="button" data-click_url="' . route('branches.create', ['branch' => $branch->OurBranchID]) . '" data-summary_title="Branch Details" class="btn btn-primary btn-sm click-summary-data"><i class="fas fa-edit"></i></button>';
-            })->addColumn('Manager', function (Branch $branch) {
-                if ($branch->local instanceof CrmBranch && $branch->local->manager instanceof User) {
-                    return $branch->local->manager->Name;
-                }
-                return '<b class="text-danger">None<b>';
-            })->addColumn('Operation', function (Branch $branch) {
-                if ($branch->local instanceof CrmBranch && $branch->local->operation instanceof User) {
-                    return $branch->local->operation->Name;
-                }
-                return '<b class="text-danger">None<b>';
-            })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                'dbl_click_url' => function (Branch $branch) {
-                    return route('branches.create', ['branch' => $branch->OurBranchID]);
-                }, 'summary_title' => 'Branch Details'
-            ])->rawColumns(['action', 'Manager', 'Operation'])->make();
-
+        $this->authorize('viewAny', Branch::class);
+        if ($request->ajax()) {
+            return Datatables::of(Branch::query()->select('*'))->addIndexColumn()
+                ->addColumn('action', function (Branch $branch) {
+                    return '<button type="button" class="btn btn-primary btn-sm branch-action-update" data-info="' . $branch->BranchID . '~' . $branch->Name . '~' . $branch->Address . '~' . $branch->Address2 . '~' . $branch->Phone . '~' . $branch->Email . '"
+                       data-manager="' . $branch->manager?->UserID . '~' . $branch->manager?->Name . '" data-operation="' . $branch->operation?->UserID . '~' . $branch->operation?->Name . '" data-route="' . route('branches.update', [$branch->Id]) . '" ><i class="fas fa-edit"></i> edit</button>
+                         <button type="button" class="btn btn-danger btn-sm  branch-action-trash" data-info="' . $branch->BranchID . '~' . $branch->Name . '"  data-route="' . route('branches.destroy', [$branch->Id]) . '"><i class="fas fa-trash"></i> trash</button>';
+                })->addColumn('Manager', function (Branch $branch) {
+                    return $branch->manager?->Name;
+                })->editColumn('Address', function (Branch $branch) {
+                    return $branch->Address ?? '';
+                })->editColumn('Address2', function (Branch $branch) {
+                    return $branch->Address2 ?? '';
+                })->addColumn('Operation', function (Branch $branch) {
+                    return $branch->operation?->Name;
+                })->rawColumns(['action', 'Manager', 'Operation'])->make();
+        }
+        return view('settings.branches.index');
     }
 
     /**
      * Store a newly created resource in storage.
      * @throws ValidationException
      */
-    public function store(Request $request): JsonResponse
+    public function store(BranchRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'BranchID' => 'required',
-            'Manager' => 'nullable',
-            'Operation' => 'nullable',
-        ]);
-
-        $branch = Branch::query()->where('OurBranchID', $data['BranchID'])->first();
-        if (!$branch instanceof Branch) {
-            return $this->errored('branch error, refresh and try again');
-        }
-
-        $userID = null;
-        if ($request->has('Manager') && is_string($data['Manager'])) {
-            $user = User::query()->where('UserID', $data['Manager'])->first('Id');
-            if (!$user instanceof User) {
-                throw ValidationException::withMessages([
-                    'Manager' => 'Branch manager selected is invalid'
-                ]);
-            }
-            $userID = $user->Id;
-        }
-
-        $Operation = null;
-        if ($request->has('Operation') && is_string($data['Operation'])) {
-            $user = User::query()->where('UserID', $data['Operation'])->first('Id');
-            if (!$user instanceof User) {
-                throw ValidationException::withMessages([
-                    'Operation' => 'Operational manager selected is invalid'
-                ]);
-            }
-            $Operation = $user->Id;
-        }
-
+        $userID = $request->getManager()?->Id ?? null;
+        $Operation = $request->getOperation()?->Id ?? null;
+        $branchID = $request->getBranchID();
         $actor = $request->user();
         try {
-            DB::transaction(static function () use ($Operation, $actor, $branch, $userID) {
-                CrmBranch::query()->where('BranchID', $branch->OurBranchID)->update([
-                    'DeletedBy' => $actor->Id
+            DB::transaction(static function () use ($branchID, $Operation, $actor, $request, $userID) {
+                $crmBranch = Branch::create([
+                    'Name' => $request->string('Name'),
+                    'Address' => $request->string('Address', ''),
+                    'Address2' => $request->string('Address2', ''),
+                    'Phone' => $request->string('Phone', ''),
+                    'Email' => $request->string('Email', ''),
+                    'BranchID' => $branchID,
+                    'UserId' => $userID,
+                    'OperationId' => $Operation,
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                    'CreatedOn' => now(),
+                    'UpdatedOn' => now(),
                 ]);
-                CrmBranch::query()->where('BranchID', $branch->OurBranchID)->delete();
 
-                if (!is_null($Operation) || !is_null($userID)) {
-                    $crmBranch = CrmBranch::create([
-                        'BranchID' => $branch->OurBranchID,
-                        'UserId' => $userID,
-                        'ManagerId' => $Operation,
-                        'Name' => $branch->BranchName,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedBy' => $actor->Id,
-                        'CreatedOn' => now(),
-                        'UpdatedOn' => now(),
-                    ]);
-                    activity()->causedBy($actor)->performedOn($crmBranch->refresh())->event('update')->log('updated branch managers ' . $branch->BranchName);
-                }
-
+                activity()->causedBy($actor)->performedOn($crmBranch->refresh())->event('create')->log('created a branch ' . $crmBranch->BranchID);
 
             });
-        } catch (Exception $e) {
+        } catch (Throwable|Exception $e) {
+            Log::error('Error creating branch failed: ' . $e->getMessage());
+            return $this->errored('unexpected error, try again later');
+        }
+
+        return $this->succeeded('branch added successfully');
+    }
+
+    public function update(BranchRequest $request, Branch $crmBranch): JsonResponse
+    {
+        $userID = $request->getManager()?->Id ?? null;
+        $Operation = $request->getOperation()?->Id ?? null;
+        $actor = $request->user();
+        try {
+            DB::transaction(static function () use ($crmBranch, $Operation, $actor, $request, $userID) {
+
+                $crmBranch->update([
+                    'Name' => $request->string('Name'),
+                    'Address' => $request->string('Address', ''),
+                    'Address2' => $request->string('Address2', ''),
+                    'Phone' => $request->string('Phone', ''),
+                    'Email' => $request->string('Email', ''),
+                    'UserId' => $userID,
+                    'OperationId' => $Operation,
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                activity()->causedBy($actor)->performedOn($crmBranch)->event('update')->log('updated branch ' . $crmBranch->BranchID);
+
+            });
+        } catch (Throwable|Exception $e) {
             Log::error('Error updating branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -121,22 +121,20 @@ class CrmBranchController extends Controller
         return $this->succeeded('branch updated successfully');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request): View|JsonResponse
+    public function destroy(Request $request, Branch $crmBranch): JsonResponse
     {
-        if (!$request->has('branch')) {
-            return $this->errored('invalid request');
-        }
-        $branch = Branch::query()->where('OurBranchID', $request->get('branch'))->with('local')->first();
-        if (!$branch instanceof Branch) {
-            return $this->errored('invalid branch');
+        try {
+            DB::transaction(static function () use ($request, $crmBranch) {
+                $crmBranch->forceFill([
+                    'DeletedOn' => now(),
+                    'DeletedBy' => $request->user()->Id,
+                ])->save();
+            });
+        } catch (Throwable|Exception $e) {
+            Log::error('Error trashing branch failed: ' . $e->getMessage());
+            return $this->errored('unexpected error, try again later');
         }
 
-
-        return view('settings.branches.create', compact('branch'))
-            ->with('local', $branch->local);
+        return $this->succeeded('branch trashed successfully');
     }
-
 }

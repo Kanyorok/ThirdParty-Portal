@@ -7,7 +7,7 @@ use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Feedback\SurveyQuestionsCollection;
 use App\Models\BR\Client;
-use App\Models\SurveyQuestionAnswer;
+use App\Models\CRM\SurveyQuestionAnswer;
 use App\Services\Feedback\SurveyService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -44,22 +44,16 @@ class SurveyController extends Controller
 
         $clientID = $request->get('clientID');
         if (!is_string($clientID)) {
-            throw ValidationException::withMessages([
-                'clientID' => 'clientID is required'
-            ]);
+            throw ValidationException::withMessages(['clientID' => 'clientID is required']);
         }
 
         if (!Client::query()->where('ClientID', $clientID)->exists()) {
-            throw ValidationException::withMessages([
-                'clientID' => 'clientID may be invalid'
-            ]);
+            throw ValidationException::withMessages(['clientID' => 'clientID may be invalid']);
         }
 
         $response = $request->get('response');
         if (!is_array($response)) {
-            throw ValidationException::withMessages([
-                'response' => 'please enter response'
-            ]);
+            throw ValidationException::withMessages(['response' => 'please enter response']);
         }
 
         $actor = SystemHelper::user();
@@ -75,8 +69,8 @@ class SurveyController extends Controller
                     $questionResponse = $answer['answers'][0]['value'];
                 } catch (Exception $exception) {
                     throw ValidationException::withMessages([
-                        $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.'
-                    ]);
+                                                             $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.',
+                                                            ]);
                 }
 
                 if (is_null($respondent)) {
@@ -91,35 +85,35 @@ class SurveyController extends Controller
                     $option = $question->answers()->where('Id', $questionResponse)->first();
                     if (!$option instanceof SurveyQuestionAnswer) {
                         throw ValidationException::withMessages([
-                            $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.'
-                        ]);
+                                                                 $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.',
+                                                                ]);
                     }
                     $idResponse = $option->Id;
                 } else {
                     throw ValidationException::withMessages([
-                        $question->SurveyQuestionId => $question->SurveyQuestionId . ' has an error, contact support.'
-                    ]);
+                                                             $question->SurveyQuestionId => $question->SurveyQuestionId . ' has an error, contact support.',
+                                                            ]);
                 }
 
                 $ans->add([
-                    'Party' => Client::getPrimaryKey(),
-                    'PartyID' => $clientID,
-                    'Source' => 'Channels',
-                    'Response' => $txtResponse,
-                    'SurveyQuestionAnswerID' => $idResponse,
-                    'SurveyQuestionID' => $question->Id,
-                    'CreatedOn' => $date,
-                    'ModifiedOn' => $date,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                           'Party'                  => Client::getPrimaryKey(),
+                           'PartyID'                => $clientID,
+                           'Source'                 => 'Channels',
+                           'Response'               => $txtResponse,
+                           'SurveyQuestionAnswerID' => $idResponse,
+                           'SurveyQuestionID'       => $question->Id,
+                           'CreatedOn'              => $date,
+                           'ModifiedOn'             => $date,
+                           'CreatedBy'              => $actor->Id,
+                           'ModifiedBy'             => $actor->Id,
+                          ]);
 
                 continue 2;
             }
 
             throw ValidationException::withMessages([
-                $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.'
-            ]);
+                                                     $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.',
+                                                    ]);
         }
 
         DB::table('t_SurveyQuestionResponses')->insert($ans->toArray());

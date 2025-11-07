@@ -16,10 +16,21 @@ class StartCallNewContactRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'call_initiated' => ['required', 'date_format:"H:i"'],
-            'Phone' => ['required', 'string', 'regex: /^[(2541)(2547)(01)(07)]+[0-9]{9}$/i'],
-            'Name' => ['required', 'string', 'max:255'],
-        ];
+                'call_initiated' => [
+                                     'required',
+                                     'date_format:"H:i"',
+                                    ],
+                'Phone'          => [
+                                     'required',
+                                     'string',
+                                     'regex: /^[(2541)(2547)(01)(07)]+[0-9]{9}$/i',
+                                    ],
+                'Name'           => [
+                                     'required',
+                                     'string',
+                                     'max:255',
+                                    ],
+               ];
     }
 
     /**
@@ -29,9 +40,7 @@ class StartCallNewContactRequest extends FormRequest
     {
         $current_start = Carbon::createFromFormat('H:i', $this->validated('call_initiated'));
         if (!$current_start instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'call_initiated' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['call_initiated' => 'invalid date format']);
         }
         if ($current_start->greaterThan(now())) {
             $current_start = now()->subMinute();

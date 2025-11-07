@@ -2,15 +2,17 @@
 
 namespace App\Events\Ticket;
 
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Ticket;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class ReopenTicketEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
@@ -19,5 +21,4 @@ class ReopenTicketEvent
     {
         //
     }
-
 }

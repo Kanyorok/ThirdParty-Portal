@@ -5,10 +5,11 @@ namespace App\Services;
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
-use App\Models\Comment;
-use App\Models\CRMImage;
-use App\Models\Social;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\Comment;
+use App\Models\CRM\Social;
+use App\Models\DMS\Image;
+use App\Services\DMS\ImageService;
 use App\Services\ThirdParty\FacebookService;
 use App\Services\ThirdParty\TwitterService;
 use Carbon\Carbon;
@@ -29,12 +30,20 @@ class SocialMediaService
     {
 
         $fbService = new FacebookService();
-        $service = self::createFromPublished($postObject->id, IntegrationsEnum::Facebook, ($postObject->message) ?? "",
-            $fbService->getViews($postObject->id) ?? 0
-            , $postObject->likes->summary->total_count, $postObject->comments->summary->total_count, Carbon::parse($postObject->created_time)->timezone(config('app.timezone')),
-            Carbon::parse($postObject->updated_time)->timezone(config('app.timezone')), json_encode($postObject), $actor);
+        $service = self::createFromPublished(
+            $postObject->id,
+            IntegrationsEnum::Facebook,
+            ($postObject->message) ?? "",
+            $fbService->getViews($postObject->id) ?? 0,
+            $postObject->likes->summary->total_count,
+            $postObject->comments->summary->total_count,
+            Carbon::parse($postObject->created_time)->timezone(config('app.timezone')),
+            Carbon::parse($postObject->updated_time)->timezone(config('app.timezone')),
+            json_encode($postObject),
+            $actor
+        );
 
-        if (filter_var($postObject->full_picture, FILTER_VALIDATE_URL) !== FALSE) {
+        if (filter_var($postObject->full_picture, FILTER_VALIDATE_URL) !== false) {
             $service->mediaFromUrl($postObject->full_picture, $actor, ExtensionsEnum::Jpeg->getMimeType());
         }
 
@@ -42,26 +51,34 @@ class SocialMediaService
     }
 
     protected static function createFromPublished(
-        string $Id, IntegrationsEnum $integration, string $content, int $views, int $likes, int $comments, Carbon $created, Carbon $updated, $response, User $actor): self
-    {
+        string $Id,
+        IntegrationsEnum $integration,
+        string $content,
+        int $views,
+        int $likes,
+        int $comments,
+        Carbon $created,
+        Carbon $updated,
+        $response,
+        User $actor
+    ): self {
         $id = Social::insertGetId([
-            'SocialID' => self::_ID(),
-            'RemoteId' => $Id,
-            'Type' => $integration->value,
-            'Content' => $content,
-            'LikesCount' => $likes,
-            'CommentsCount' => $comments,
-            'ViewsCount' => $views,
-            'Published_at' => $updated,
-            'Response' => $response,
-            'CreatedOn' => $created,
-            'CreatedBy' => $actor->Id,
-            'ModifiedOn' => $updated,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                   'SocialID'      => self::_ID(),
+                                   'RemoteId'      => $Id,
+                                   'Type'          => $integration->value,
+                                   'Content'       => $content,
+                                   'LikesCount'    => $likes,
+                                   'CommentsCount' => $comments,
+                                   'ViewsCount'    => $views,
+                                   'Published_at'  => $updated,
+                                   'Response'      => $response,
+                                   'CreatedOn'     => $created,
+                                   'CreatedBy'     => $actor->Id,
+                                   'ModifiedOn'    => $updated,
+                                   'ModifiedBy'    => $actor->Id,
+                                  ]);
 
         return new self(Social::query()->findOrFail($id));
-
     }
 
     protected static function _ID(): string
@@ -80,7 +97,7 @@ class SocialMediaService
         return $this->addImage(ImageService::createURL($url, Social::getPrimaryKey(), $this->social->Id, $actor, $MimeType)->image, $actor);
     }
 
-    public function addImage(CRMImage $image, User $actor): static
+    public function addImage(Image $image, User $actor): static
     {
         $this->social->images()->attach($image->ImageID, ['CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
         return $this;
@@ -89,9 +106,18 @@ class SocialMediaService
     public static function createFromTwitter(object $postObject, User $actor): void
     {
         $post = $postObject['tweet'];
-        $service = self::createFromPublished($post->id, IntegrationsEnum::Twitter, ($post->text) ?? "",
-            $post->public_metrics->impression_count, $post->public_metrics->like_count, $post->public_metrics->reply_count, Carbon::parse($post->created_at)->timezone(config('app.timezone')),
-            Carbon::parse($post->created_at)->timezone(config('app.timezone')), json_encode($postObject), $actor);
+        $service = self::createFromPublished(
+            $post->id,
+            IntegrationsEnum::Twitter,
+            ($post->text) ?? "",
+            $post->public_metrics->impression_count,
+            $post->public_metrics->like_count,
+            $post->public_metrics->reply_count,
+            Carbon::parse($post->created_at)->timezone(config('app.timezone')),
+            Carbon::parse($post->created_at)->timezone(config('app.timezone')),
+            json_encode($postObject),
+            $actor
+        );
 
         $medias = $postObject['media'];
         foreach ($medias as $media) {
@@ -105,7 +131,7 @@ class SocialMediaService
 
                 //save
                 foreach ($media->variants as $variant) {
-                    if (Str::contains($variant->content_type, "mp4") && (filter_var($variant->url, FILTER_VALIDATE_URL) !== FALSE)) {
+                    if (Str::contains($variant->content_type, "mp4") && (filter_var($variant->url, FILTER_VALIDATE_URL) !== false)) {
                         $service->mediaFromUrl($variant->url, $actor, $variant->content_type);
                         break;
                     }
@@ -124,17 +150,17 @@ class SocialMediaService
         }
         $social = new Social();
         $social->fill([
-            'SocialID' => self::_ID(),
-            'RemoteId' => '',
-            'Type' => $socialType->value,
-            'Content' => $content,
-            'LikesCount' => 0,
-            'CommentsCount' => 0,
-            'ViewsCount' => 0,
-            'Scheduled_at' => $scheduled_at,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                       'SocialID'      => self::_ID(),
+                       'RemoteId'      => '',
+                       'Type'          => $socialType->value,
+                       'Content'       => $content,
+                       'LikesCount'    => 0,
+                       'CommentsCount' => 0,
+                       'ViewsCount'    => 0,
+                       'Scheduled_at'  => $scheduled_at,
+                       'CreatedBy'     => $actor->Id,
+                       'ModifiedBy'    => $actor->Id,
+                      ])->save();
 
         return new self($social);
     }
@@ -177,6 +203,4 @@ class SocialMediaService
 
         return false;
     }
-
-
 }

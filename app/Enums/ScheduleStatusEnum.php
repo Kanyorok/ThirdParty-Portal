@@ -45,7 +45,6 @@ enum ScheduleStatusEnum: string
             self::Canceled, self::Success => false,
             default => true,
         };
-
     }
 
     public function cancelable(): bool
@@ -54,6 +53,5 @@ enum ScheduleStatusEnum: string
             self::Canceled, self::Success, self::PartialSuccess => false,
             default => true,
         };
-
     }
 }

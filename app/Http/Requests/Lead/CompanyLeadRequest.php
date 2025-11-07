@@ -18,13 +18,41 @@ class CompanyLeadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:250'],
-            'website' => ['required', 'string', 'url:http,https', 'active_url', 'max:250'],
-            'phone' => ['required', 'string', 'max:15', 'unique:App\Models\Lead,Phone'],
-            'email' => ['nullable', 'email:rfc,dns', 'max:250', 'unique:App\Models\Lead,Email'],
-            'last_contact' => ['nullable', 'date_format:"Y-m-d H:i"', 'before:now'],
-            'notes' => ['nullable', 'string', 'max:5000'],
-        ];
+                'name'         => [
+                                   'required',
+                                   'string',
+                                   'max:250',
+                                  ],
+                'website'      => [
+                                   'required',
+                                   'string',
+                                   'url:http,https',
+                                   'active_url',
+                                   'max:250',
+                                  ],
+                'phone'        => [
+                                   'required',
+                                   'string',
+                                   'max:15',
+                    'unique:App\Models\CRM\Lead,Phone',
+                                  ],
+                'email'        => [
+                                   'nullable',
+                                   'email:rfc,dns',
+                                   'max:250',
+                    'unique:App\Models\CRM\Lead,Email',
+                                  ],
+                'last_contact' => [
+                                   'nullable',
+                                   'date_format:"Y-m-d H:i"',
+                                   'before:now',
+                                  ],
+                'notes'        => [
+                                   'nullable',
+                                   'string',
+                                   'max:5000',
+                                  ],
+               ];
     }
 
     /**
@@ -36,12 +64,9 @@ class CompanyLeadRequest extends FormRequest
             try {
                 return Carbon::createFromFormat('Y-m-d H:i', $this->last_contact);
             } catch (Exception) {
-                throw ValidationException::withMessages([
-                    'last_contact' => 'invalid date format provided.'
-                ]);
+                throw ValidationException::withMessages(['last_contact' => 'invalid date format provided.']);
             }
         }
         return null;
     }
-
 }

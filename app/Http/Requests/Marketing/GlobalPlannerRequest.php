@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Marketing;
 
 use App\Enums\Marketing\PlannerTypeEnum;
-use App\Models\MarketingPlanner;
+use App\Models\CRM\MarketingPlanner;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -18,11 +18,23 @@ class GlobalPlannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => ['required', 'string', 'max:200'],
-            'plans' => ['required', 'array', 'min:1', 'max:500'],
-            'plans.*' => ['required'],
-            'Notes' => ['nullable', 'string'],
-        ];
+                'Name'    => [
+                              'required',
+                              'string',
+                              'max:200',
+                             ],
+                'plans'   => [
+                              'required',
+                              'array',
+                              'min:1',
+                              'max:500',
+                             ],
+                'plans.*' => ['required'],
+                'Notes'   => [
+                              'nullable',
+                              'string',
+                             ],
+               ];
     }
 
     /**
@@ -41,8 +53,8 @@ class GlobalPlannerRequest extends FormRequest
             }
 
             throw ValidationException::withMessages([
-                'plans' => 'plan ' . $id . ' is not valid',
-            ]);
+                                                     'plans' => 'plan ' . $id . ' is not valid',
+                                                    ]);
         }
 
         return $plans;

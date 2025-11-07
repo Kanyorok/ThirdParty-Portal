@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Settings\Users;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 

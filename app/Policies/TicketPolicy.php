@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Ticket;
-use App\Models\User;
-use App\Services\TicketService;
+use App\Enums\Core\RoleEnum;
+use App\Models\Auth\User;
+use App\Models\CRM\Ticket;
 
 class TicketPolicy
 {
@@ -22,7 +22,7 @@ class TicketPolicy
      */
     public function view(User $user, Ticket $ticket): bool
     {
-        if ((new TicketService($ticket))->checkOwnership($user)) {
+        if ($ticket->user($user)->exists()) {
             return true;
         }
         return $user->can(PermissionEnum::TicketRead->value);
@@ -33,7 +33,7 @@ class TicketPolicy
      */
     public function approve(User $user, Ticket $ticket): bool
     {
-        if ((int)$ticket->ModifiedBy === (int)$user->Id) {
+        if ((int) $ticket->ModifiedBy === (int) $user->Id) {
             return false;
         }
 
@@ -48,16 +48,21 @@ class TicketPolicy
         return $user->can(PermissionEnum::TicketWrite->value);
     }
 
+    public function assign(User $user, Ticket $ticket): bool
+    {
+        return $ticket->userRole($user, [RoleEnum::Admin->value])->exists();
+    }
+
     /**
      * Determine whether the user can update the model.
      */
     public function update(User $user, Ticket $ticket): bool
     {
-        if ((new TicketService($ticket))->checkOwnership($user)) {
+        return $ticket->userRole($user, [RoleEnum::Write->value, RoleEnum::Share->value, RoleEnum::Admin->value])->exists();
+        /*if () {
             return true;
         }
-
-        return $user->can(PermissionEnum::TicketUpdate->value);
+        return $user->can(PermissionEnum::TicketUpdate->value);*/
     }
 
     /**
@@ -65,11 +70,11 @@ class TicketPolicy
      */
     public function delete(User $user, Ticket $ticket): bool
     {
-        if ((new TicketService($ticket))->checkOwnership($user)) {
+        return $ticket->userRole($user, [RoleEnum::Admin->value])->exists();
+        /*if () {
             return true;
         }
-
-        return $user->can(PermissionEnum::TicketDelete->value);
+        return $user->can(PermissionEnum::TicketDelete->value);*/
     }
 
     /**

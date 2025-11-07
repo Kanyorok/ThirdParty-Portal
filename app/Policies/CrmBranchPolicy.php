@@ -3,25 +3,30 @@
 namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\CrmBranch;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
 
 class CrmBranchPolicy
 {
+    public function before(User $user, string $ability): bool
+    {
+        return $user->can(PermissionEnum::Branches->value);
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, CrmBranch $crmBranch): bool
+    public function view(User $user, Branch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
@@ -29,38 +34,38 @@ class CrmBranchPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, CrmBranch $crmBranch): bool
+    public function update(User $user, Branch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, CrmBranch $crmBranch): bool
+    public function delete(User $user, Branch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return $user->can(PermissionEnum::Branches->value);
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, CrmBranch $crmBranch): bool
+    public function restore(User $user, Branch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return false;
     }
 
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, CrmBranch $crmBranch): bool
+    public function forceDelete(User $user, Branch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Teams->value);
+        return false;
     }
 }

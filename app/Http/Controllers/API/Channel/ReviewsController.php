@@ -24,12 +24,30 @@ class ReviewsController extends Controller
     {
         try {
             $data = $request->validate([
-                'ratting' => ['required_without:review', 'integer', 'between:1,5'],
-                'review' => ['required_without:ratting', 'string', 'max:5000'],
-                'name' => ['nullable', 'string', 'max:200'],
-                'clientID' => ['nullable', 'string'],
-                'phoneNumber' => ['nullable', 'string'],
-            ]);
+                                        'ratting'     => [
+                                                          'required_without:review',
+                                                          'integer',
+                                                          'between:1,5',
+                                                         ],
+                                        'review'      => [
+                                                          'required_without:ratting',
+                                                          'string',
+                                                          'max:5000',
+                                                         ],
+                                        'name'        => [
+                                                          'nullable',
+                                                          'string',
+                                                          'max:200',
+                                                         ],
+                                        'clientID'    => [
+                                                          'nullable',
+                                                          'string',
+                                                         ],
+                                        'phoneNumber' => [
+                                                          'nullable',
+                                                          'string',
+                                                         ],
+                                       ]);
         } catch (ValidationException $e) {
             return $this->br_response(422, $e->getMessage(), $e->errors());
         }
@@ -38,9 +56,9 @@ class ReviewsController extends Controller
         $phoneNo = $request->get('phoneNumber');
         if (!is_string($clientID) && !is_string($phoneNo)) {
             return $this->br_response(422, 'clientID or phoneNumber  is required', [
-                'clientID' => 'clientID is required when phoneNumber is not provided',
-                'phoneNumber' => 'phoneNumber is required when clientID is not provided'
-            ]);
+                                                                                    'clientID'    => 'clientID is required when phoneNumber is not provided',
+                                                                                    'phoneNumber' => 'phoneNumber is required when clientID is not provided',
+                                                                                   ]);
         }
 
         $client = Client::query()->where('ClientID', $clientID)->orWhere(function (Builder $query) use ($phoneNo) {
@@ -48,9 +66,9 @@ class ReviewsController extends Controller
         })->first();
         if (!$client instanceof Client) {
             return $this->br_response(422, 'member id is not found', [
-                'clientID' => 'member id is not found',
-                'phoneNumber' => 'phoneNumber is not found'
-            ]);
+                                                                      'clientID'    => 'member id is not found',
+                                                                      'phoneNumber' => 'phoneNumber is not found',
+                                                                     ]);
         }
 
         $actor = SystemHelper::user();

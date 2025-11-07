@@ -2,25 +2,19 @@
 
 namespace App\Http\Controllers\Auth;
 
-
-use App\Enums\EmailStatusEnum;
 use App\Enums\LeadStatusEnum;
-use App\Enums\TicketStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Call;
-use App\Models\Campaign;
-use App\Models\Lead;
-use App\Models\Meeting;
-use App\Models\Schedule;
-use App\Models\ScheduleUser;
-use App\Models\Team;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Dashboard\DashboardWidget;
+use App\Models\Dashboard\UserDashboardWidget;
+use App\Models\Auth\User;
+use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetGLMaster;
+use App\Models\CRM\Lead;
+use App\Models\Procurement\DepartmentNeed;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Number;
 
 class DashboardController extends Controller
 {
@@ -33,56 +27,97 @@ class DashboardController extends Controller
      */
     public function __invoke(Request $request): View
     {
-        $actor = $request->user();
+    $actor = $request->user();
+    $actorId = $actor?->Id ?? 1;
         $data = [
-            'leads' => [
-                'line' => ['labels' => [], 'converted' => []],
-                'donut' => ['labels' => []],
-                'total' => 0,
+                 'leads'     => [
+                                 'line'  => [
+                                             'labels'    => [],
+                                             'converted' => [],
+                                            ],
+                                 'donut' => ['labels' => []],
+                                 'total' => 0,
+                                ],
+                 'campaigns' => [
+                                 'active' => 0,
+                                 'sent'   => 0,
+                                ],
+                 'schedule'  => [
+                                 'calls'        => 0,
+                                 'appointments' => 0,
+                                 'total'        => 0,
+                                ],
+                 'tickets'   => ['active' => 0],
+                ];
+
+        //Fetch Number of open budgets, Total GLS
+        $openBudgets = Budget::where('Status', 'draft')->count();
+        $totalGLS = BudgetGLMaster::count();
+
+    // Widgets: ensure base widgets exist
+    $this->ensureDefaultWidgets($actorId);
+
+        // Build simple stats for widgets
+        $needsTotal = DepartmentNeed::count();
+        $needsApproved = DepartmentNeed::where('Status', \App\Enums\Procurement\DepartmentNeedsEnum::Approved->value)->count();
+        $needsPending = DepartmentNeed::where('Status', \App\Enums\Procurement\DepartmentNeedsEnum::Pending->value)->count();
+
+        $stats = [
+            'needs_total' => $needsTotal,
+            'needs_approved' => $needsApproved,
+            'needs_pending' => $needsPending,
+            'pending_approvals' => [
+                ['title' => 'Department Needs', 'count' => $needsPending],
             ],
-            'campaigns' => ['active' => 0, 'sent' => 0],
-            'schedule' => ['calls' => 0, 'appointments' => 0, 'total' => 0],
-            'tickets' => ['active' => 0]
         ];
-        $total_leads = Lead::query()->where('t_Leads.RelationshipManagerID', $actor->Id)->count();
-        $active_campaigns = Campaign::query()->where('t_Campaigns.Status', EmailStatusEnum::Draft->value)->count();
-        /* $total_schedule = Schedule::query()->whereIn('t_Schedule.ScheduleID', ScheduleUser::query()->where('UserID', $request->user()->Id)->select('t_ScheduleUsers.ScheduleId'))
-             ->where('t_Schedule.StartOn', '>=', Carbon::now()->startOfDay())->count();*/
 
-        $schedule_calls = Schedule::query()->where('t_Schedule.Type', Call::getPrimaryKey())->where('t_Schedule.StartOn', '>=', Carbon::now())
-            ->whereIn('t_Schedule.ScheduleID', ScheduleUser::query()->where('UserID', $request->user()->Id)->select('t_ScheduleUsers.ScheduleId'))
-            ->count();
-        $schedule_meetings = Schedule::query()->where('t_Schedule.Type', Meeting::getPrimaryKey())->where('t_Schedule.StartOn', '>=', Carbon::now())
-            ->whereIn('t_Schedule.ScheduleID', ScheduleUser::query()->where('UserID', $request->user()->Id)->select('t_ScheduleUsers.ScheduleId'))
-            ->count();
-        $tickets_active = Ticket::query()->where('t_Tickets.Status', TicketStatusEnum::Active->value)->where(function (Builder $query) use ($actor) {
-            $query->where(function (Builder $query) use ($actor) {
-                $query->where('t_Tickets.Owner', User::getPrimaryKey())->where('t_Tickets.OwnerID', $actor->Id);
-            })->orWhere(function (Builder $query) use ($actor) {
-                $query->where('t_Tickets.Owner', Team::getPrimaryKey())
-                    ->whereIn('t_Tickets.OwnerID', $actor->teamUser()->select('t_TeamUser.TeamId'));
-                // dd($request->user()->teams()->select('t_TeamUser.TeamId')->get('TeamId'));
-            })->orWhere('t_Tickets.CreatedBy', $actor->Id
-            )->orWhere(function (Builder $query) use ($actor) {
-                $query->where('t_Tickets.Party', User::getPrimaryKey())->where('t_Tickets.PartyID', $actor->Id);
+        // Load available widgets (normalize keys for Blade) and current user layout
+    $availableWidgets = DashboardWidget::where('IsActive', true)->orderBy('Name')->get()
+        ->map(function($w){
+                return (object) [
+                    'key' => $w->Key,
+                    'name' => $w->Name,
+                    'view' => $w->View,
+            'module' => $w->Module ?? null,
+            'type' => $w->Type ?? null,
+            'endpoint' => $w->DataEndpoint ?? null,
+            'default_filters' => $w->DefaultFilters ? json_decode($w->DefaultFilters, true) : null,
+                    'default_w' => (int) $w->DefaultW,
+                    'default_h' => (int) $w->DefaultH,
+                ];
             });
-        })->count();
+        $layout = UserDashboardWidget::where('user_id', $actor->Id)->orderBy('sort_order')->get();
+        if ($layout->isEmpty()) {
+            // seed default layout for user (non-destructive; only if none)
+            $defaults = [
+                ['widget_key' => 'procurement_consolidation', 'w' => 6, 'h' => 1],
+                ['widget_key' => 'pending_approvals', 'w' => 6, 'h' => 1],
+            ];
+            $i = 0;
+            foreach ($defaults as $d) {
+                UserDashboardWidget::create([
+                    'user_id' => $actor->Id,
+                    'widget_key' => $d['widget_key'],
+                    'x' => 0,
+                    'y' => $i,
+                    'w' => $d['w'],
+                    'h' => $d['h'],
+                    'sort_order' => $i,
+                    'config' => [],
+                ]);
+                $i++;
+            }
+            $layout = UserDashboardWidget::where('user_id', $actor->Id)->orderBy('sort_order')->get();
+        }
 
-        data_set($data, 'tickets.active', Number::abbreviate($tickets_active, ($tickets_active > 999) ? 1 : 0));
-
-        data_set($data, 'campaigns.active', Number::abbreviate($active_campaigns, ($active_campaigns > 999) ? 1 : 0));
-        //  data_set($data, 'schedule.total', Number::abbreviate($total_schedule, ($total_schedule > 999) ? 1 : 0));
-        data_set($data, 'schedule.calls', Number::abbreviate($schedule_calls, ($schedule_calls > 999) ? 1 : 0));
-        data_set($data, 'schedule.appointments', Number::abbreviate($schedule_meetings, ($schedule_meetings > 999) ? 1 : 0));
-
-        data_set($data, 'leads.total', Number::abbreviate($total_leads, ($total_leads > 999) ? 1 : 0));
-        data_set($data, 'leads.donut.labels', [LeadStatusEnum::Warm->name, LeadStatusEnum::Hot->name]);
-
-        data_set($data, 'leads.line.converted', $this->converted($actor));
-        data_set($data, 'leads.line.labels', $this->months());
-
-
-        return view('auth.dashboard', compact('data'));
+        return view('auth.dashboard', compact(
+            'data',
+            'openBudgets',
+            'totalGLS',
+            'availableWidgets',
+            'layout',
+            'stats'
+        ));
     }
 
     protected function months(): array
@@ -104,14 +139,58 @@ class DashboardController extends Controller
             $dateTime->addMonth();
             $converted = 0;
             try {
-
                 $converted = Lead::withTrashed()->whereBetween('DeletedOn', [$dateTime->copy()->startOfMonth(), $dateTime->copy()->endOfMonth()])
                     ->where('Status', LeadStatusEnum::Won->value)->where('RelationshipManagerID', $actor->Id)->count();
-            } catch (\Exception) {
+            } catch (Exception) {
             }
             $data->add($converted);
         }
 
         return $data->toArray();
+    }
+
+    private function ensureDefaultWidgets(int $actorId): void
+    {
+        $defaults = [
+            [
+                'key' => 'procurement_consolidation',
+                'name' => 'Procurement Consolidation',
+                'description' => 'Summary of procurement needs',
+                'view' => 'dashboard.widgets.procurement_consolidation',
+                'module' => 'Procurement',
+                'type' => 'KPI',
+                'default_w' => 6,
+                'default_h' => 1,
+            ],
+            [
+                'key' => 'pending_approvals',
+                'name' => 'Pending Approvals',
+                'description' => 'Items waiting for your approval',
+                'view' => 'dashboard.widgets.pending_approvals',
+                'module' => 'Procurement',
+                'type' => 'Workflow',
+                'default_w' => 6,
+                'default_h' => 1,
+            ],
+        ];
+        foreach ($defaults as $w) {
+            DashboardWidget::updateOrCreate(
+                ['Key' => $w['key']],
+                [
+                    'Name' => $w['name'],
+                    'Description' => $w['description'],
+                    'View' => $w['view'],
+                    'Module' => $w['module'] ?? null,
+                    'Type' => $w['type'] ?? null,
+                    'DefaultW' => $w['default_w'],
+                    'DefaultH' => $w['default_h'],
+                    'IsActive' => true,
+                    'CreatedBy' => $actorId,
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => $actorId,
+                    'ModifiedOn' => now(),
+                ]
+            );
+        }
     }
 }

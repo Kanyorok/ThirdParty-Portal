@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Marketing;
 
-use App\Models\CodeDetail;
-use App\Models\CrmBranch;
+use App\Models\Core\Branch;
+use App\Models\Core\CodeDetail;
 use App\Services\StaticListsService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,7 +11,6 @@ use Illuminate\Validation\ValidationException;
 
 class PlannerRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -20,11 +19,24 @@ class PlannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => ['required', 'string', 'max:200'],
-            'Branch' => ['required', 'string'],
-            'Mode' => ['required', 'string'],
-            'Notes' => ['nullable', 'string'],
-        ];
+                'Name'   => [
+                             'required',
+                             'string',
+                             'max:200',
+                            ],
+                'Branch' => [
+                             'required',
+                             'string',
+                            ],
+                'Mode'   => [
+                             'required',
+                             'string',
+                            ],
+                'Notes'  => [
+                             'nullable',
+                             'string',
+                            ],
+               ];
     }
 
 
@@ -37,25 +49,21 @@ class PlannerRequest extends FormRequest
         if ($Mode instanceof CodeDetail) {
             return $Mode;
         }
-        throw ValidationException::withMessages([
-            'Mode' => 'Invalid Marketing Modes.',
-        ]);
+        throw ValidationException::withMessages(['Mode' => 'Invalid Marketing Modes.']);
     }
 
     /**
      * @throws ValidationException
      */
-    public function getBranch(): CrmBranch
+    public function getBranch(): Branch
     {
         $branch = $this->validated('Branch');
 
-        $branch = CrmBranch::query()->where('BranchID', $branch)->latest()->first();
-        if ($branch instanceof CrmBranch) {
+        $branch = Branch::query()->where('BranchID', $branch)->latest()->first();
+        if ($branch instanceof Branch) {
             return $branch;
         }
 
-        throw ValidationException::withMessages([
-            'Branch' => 'Branch is not found.',
-        ]);
+        throw ValidationException::withMessages(['Branch' => 'Branch is not found.']);
     }
 }

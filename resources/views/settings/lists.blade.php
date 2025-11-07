@@ -2,7 +2,7 @@
 
 @section('title','Static Lists')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="https://cdn.datatables.net/rowreorder/1.5.0/css/rowReorder.dataTables.css">
     <style>
         .select2-container {
@@ -51,6 +51,11 @@
                        href="#MeetingRoomsTab"
                        onclick="fetchMeetingRoomsTable();" role="tab">
                         Meeting Rooms
+                    </a>
+                    <a class="list-group-item list-group-item-action" data-bs-toggle="list"
+                       href="#CurrenciesTab"
+                       onclick="fetchCurrenciesTable();" role="tab">
+                        Currencies
                     </a>
                     <a class="list-group-item list-group-item-action" data-bs-toggle="list"
                        href="#{{ \App\Enums\LocalityTypeEnum::County->value }}Tab"
@@ -341,6 +346,29 @@
                         </div>
                     </div>
                 </div>
+                <div class="tab-pane fade" id="CurrenciesTab" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Currencies</h5>
+                        </div>
+                        <div class="card-body">
+                            <table id="currenciesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Symbol</th>
+                                    <th>Name</th>
+                                    <th>ISOnum</th>
+                                    <th>Decimal</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -475,13 +503,10 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
     <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/rowReorder.dataTables.js"></script>
     <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
-    <script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-    <script>let IndustriesTable = null, MarketingModes = null, CustomerResponses = null, LeadLossReason = null,
-            CustomerTypes = null, CountyTable = null, TicketCategoriesTable = null, CityTable = null, LocationIn = null,
-            ELocationIn = null, ProductDevelopmentStages = null, isBusy = false, testWindow = null;
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+    <script>let IndustriesTable = null, MarketingModes = null, CustomerResponses = null, LeadLossReason = null, CustomerTypes = null, CountyTable = null, TicketCategoriesTable = null, CityTable = null, LocationIn = null, ELocationIn = null, ProductDevelopmentStages = null, isBusy = false, testWindow = null;
         const $Modal = $('#listActionsModal'), Type = $('#listType'), ListUrl = "{{ route('code-lists.index') }}",
             LocationUrl = "{{ route('localities.index') }}";
         $(function () {
@@ -721,7 +746,7 @@
                     serverSide: true,
                     responsive: true,
                     ajax: {
-                        url: '{{ route('localities.index') }}?_code={{ \App\Enums\LocalityTypeEnum::County->value }}',
+                        url: "{{ route('localities.index') }}?_code={{ \App\Enums\LocalityTypeEnum::County->value }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -751,7 +776,7 @@
                     serverSide: true,
                     responsive: true,
                     ajax: {
-                        url: '{{ route('localities.index') }}?_code={{ \App\Enums\LocalityTypeEnum::City->value }}',
+                        url: "{{ route('localities.index') }}?_code={{ \App\Enums\LocalityTypeEnum::City->value }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -908,7 +933,7 @@
                     responsive: true,
                     // "order": [[3, 'asc']],
                     ajax: {
-                        url: '{{ route('meeting-room.index') }}',
+                        url: "{{ route('meeting-room.index') }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -923,6 +948,37 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading meeting rooms.");
+                    // console.log(er);
+                });
+            } else {
+                $('#meetingRoomsTable').DataTable().ajax.reload();
+            }
+        }
+        function fetchCurrenciesTable() {
+            if (!$.fn.DataTable.isDataTable('#currenciesTable')) {
+                $('#currenciesTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    // "order": [[3, 'asc']],
+                    ajax: {
+                        url: "{{ route('currencies.index') }}",
+                        error: function (jqXHR) {
+                            codeNotify(jqXHR.status);
+                        }
+                    },
+                    columns: [
+                        {data: "Code", name: 'Code'},
+                        {data: 'Symbol', name: 'Symbol'},
+                        {data: 'Name', name: 'Name'},
+                        {data: 'ISOnum', name: 'ISOnum'},
+                        {data: 'DecimalDigits', name: 'DecimalDigits'},
+                        {data: 'action', name: 'action', orderable: false, searchable: false},
+                    ], "oLanguage": {
+                        "sEmptyTable": "no currencies under this filter"
+                    }
+                }).on('error', function () {
+                    nWarning("an issue occurred while loading currenciess.");
                     // console.log(er);
                 });
             } else {

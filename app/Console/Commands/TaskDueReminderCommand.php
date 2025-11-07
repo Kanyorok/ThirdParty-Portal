@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Services\HRM\UserService;
 use App\Services\PartyService;
-use App\Services\UserService;
 use Illuminate\Console\Command;
 
 class TaskDueReminderCommand extends Command
@@ -35,7 +35,6 @@ class TaskDueReminderCommand extends Command
         })->get();
 
         foreach ($users as $user) {
-
             $body = '<p>Dear ' . $user->UserID . ',</p>';
             $body .= '<p>This is a courteous reminder that you have the following task(s) due today:</p>';
             $body .= '<ul>';
@@ -48,9 +47,11 @@ class TaskDueReminderCommand extends Command
             $body .= '<p>Thank you and have a productive day!</p>';
 
 
-            (new UserService($user))->sendEmail('Friendly Reminder: Task(s) Due Today ',
+            (new UserService($user))->sendEmail(
+                'Friendly Reminder: Task(s) Due Today ',
                 body: $body,
-                immediate: true);
+                immediate: true
+            );
         }
     }
 }

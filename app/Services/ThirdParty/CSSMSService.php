@@ -4,9 +4,10 @@ namespace App\Services\ThirdParty;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
-use App\Models\APICredential;
-use App\Models\CrmSMS;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\SMS;
+use App\Models\Settings\APICredential;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
@@ -41,9 +42,7 @@ class CSSMSService
     {
         return new Client([
             'base_uri' => "http://172.17.20.27:51107/SMSServiceAPI/api/",
-            'headers' => [
-                'Accept' => 'application/json',
-            ]
+            'headers' => ['Accept' => 'application/json'],
         ]);
     }
 
@@ -59,12 +58,12 @@ class CSSMSService
                     "UserID" => $sender_id,
                     "PassWD" => $password,
                     "UniqueID" => Str::uuid()->toString(),
-                ]
+                ],
             ]);
 
             $json_response = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
             return is_array($json_response) && array_key_exists('ResponseCode', $json_response) && $json_response['ResponseCode'] === '000';
-        } catch (GuzzleException|JsonException|\Exception|ErroredException) {
+        } catch (GuzzleException|JsonException|Exception|ErroredException) {
         }
         return false;
     }
@@ -100,26 +99,24 @@ class CSSMSService
         throw new ErroredException("Invalid phone number given ! ");
     }
 
-    public function sendMessage(CrmSMS $sms): bool
+    public function sendMessage(SMS $sms): bool
     {
         try {
             $response = $this->client->post('smsservice', [
                 'json' => [
                     'MessageText' => Str::of($sms->Content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
-                    'Msisdn' => self::formatKenyaCode($sms->Phone),
+                    'Msisdn' => "254706249023",//self::formatKenyaCode($sms->Phone),
                     "Priority" => $this->priority,
                     "MessageType" => $this->messageType,
                     "UserID" => $this->sender_id,
                     "PassWD" => $this->password,
                     "UniqueID" => $sms->SMSId,
-                ]
+                ],
             ]);
 
             $json_response = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
             if (is_array($json_response)) {
-                $sms->update([
-                    'Response' => $json_response
-                ]);
+                $sms->update(['Response' => $json_response]);
                 if (array_key_exists('ResponseCode', $json_response) && $json_response['ResponseCode'] === '000') {
                     return true;
                 }

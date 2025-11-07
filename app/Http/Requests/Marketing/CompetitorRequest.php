@@ -2,16 +2,21 @@
 
 namespace App\Http\Requests\Marketing;
 
-use App\Enums\LocalityTypeEnum;
-use App\Models\Competitor;
-use App\Models\User;
+use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
+use App\Models\Core\Country;
+use App\Models\Core\Locality;
+use App\Models\ThirdParies\Competitor;
 use App\Rules\isDomain;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Propaganistas\LaravelPhone\PhoneNumber;
+use Propaganistas\LaravelPhone\Rules\Phone;
 use Throwable;
 
 class CompetitorRequest extends FormRequest
@@ -24,32 +29,30 @@ class CompetitorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => ['required', 'string', 'max:250'],
-            'Location' => ['required', Rule::exists('t_Localities', 'ID')->where(function (Builder $query) {
-                return $query->where('LocationType', LocalityTypeEnum::City->value);
-            })],
-            'Website' => ['nullable', 'url', 'max:250', new isDomain],
-            'Phone' => ['nullable', 'string', 'max:250'],
-            'Email' => ['nullable', 'email', 'max:250'],
-            "CoreBusiness" => ['nullable', 'string', 'max:250'],
-            "Clients" => ['nullable', 'integer', 'min:1'],
-            "MarketShare" => ['nullable', 'string', 'max:250'],
+            'Name' => ['required', 'string', 'max:250',],
+            'Country' => ['required', Rule::exists('t_Countries', 'CountryCode')],
+            'Location' => ['required',],
+            'Website' => ['nullable', 'url', 'max:250', new isDomain(),],
+            'Phone' => ['nullable', (new Phone)->countryField('Country'),],
+            'Email' => ['nullable', 'email', 'max:250',],
+            "CoreBusiness" => ['nullable', 'string', 'max:250',],
+            "Clients" => ['nullable', 'integer', 'min:1',],
+            "MarketShare" => ['nullable', 'string', 'max:250',],
             /* "FinancialCapabilities" => ['nullable', 'string', 'max:7000'],
              "StrengthWeaknesses" => ['nullable', 'string', 'max:7000'],
              "CustomerPerception" => ['nullable', 'string', 'max:7000'],*/
-            'Notes' => ['nullable', 'string', 'max:5000'],
-            'image' => ['nullable', Rule::imageFile()->max('10mb')],
+            'Notes' => ['nullable', 'string', 'max:5000',],
+            'image' => ['nullable', Rule::imageFile()->max('10mb'),],
         ];
     }
 
-    public function getImage(): ?UploadedFile
+    public function messages(): array
     {
-        return $this->file('image');
+        return ['Phone.*' => 'invalid phone number provided.'];
     }
 
-
     /**
-     * @throws Throwable
+     * @throws ErroredException
      */
     public function save(User $actor, Competitor $competitor = null): Competitor
     {
@@ -57,16 +60,19 @@ class CompetitorRequest extends FormRequest
         $new = (is_null($competitor)) ? ['CreatedBy' => $actor->Id] : [];
         $competitor = (is_null($competitor)) ? new Competitor() : $competitor;
 
-        return DB::transaction(function () use ($new, $competitor, $image, $actor) {
+        $location = $this->getLocation();
 
+        try {
+            return DB::transaction(function () use ($new, $competitor, $image, $actor, $location) {
             $competitor->fill(array_merge([
                 "CompetitorName" => $this->validated('Name'),
-                "LocationID" => $this->validated('Location'),
+                "LocationID" => $location->ID,
+                'CountryId' => $location->CountryId,
                 "CoreBusiness" => $this->validated('CoreBusiness'),
                 "Clients" => $this->validated('Clients'),
                 "MarketShare" => $this->validated('MarketShare'),
                 "Email" => $this->validated('Email'),
-                "Phone" => $this->validated('Phone'),
+                "Phone" => $this->getPhoneNumber(),
                 "Website" => $this->validated('Website'),
                 'Notes' => $this->validated('Notes'),
                 'ModifiedBy' => $actor->Id,
@@ -85,6 +91,32 @@ class CompetitorRequest extends FormRequest
 
             return $competitor;
         });
+        } catch (Throwable $e) {
+            Log::error('Error for competitor request: ' . $e->getMessage());
+        }
+        throw new ErroredException('an expected error occurred.');
     }
 
+    public function getPhoneNumber(): string
+    {
+        return (new PhoneNumber($this->validated('Phone'), $this->validated('Country')))->formatE164();
+    }
+
+    public function getLocation(): Locality
+    {
+        $country = Country::query()->where('CountryCode', $this->validated('Country'))->first();
+        if ($country instanceof Country) {
+            $location = $country->localities()->where('ID', $this->validated('Location'))->first();
+            if ($location instanceof Locality) {
+                return $location;
+            }
+        }
+
+        throw ValidationException::withMessages(['Location' => 'Location is not a valid location.']);
+    }
+
+    public function getImage(): ?UploadedFile
+    {
+        return $this->file('image');
+    }
 }

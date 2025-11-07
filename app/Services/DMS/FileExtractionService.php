@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Services\DMS;
+
+use App\Enums\Core\ExtensionsEnum;
+use App\Exceptions\ErroredException;
+use App\Models\DMS\Document;
+use App\Services\DMS\Files\ImageOCR;
+use App\Services\DMS\Files\PdfExtraction;
+use App\Services\DMS\Files\SpreadsheetExtraction;
+use App\Services\DMS\Files\TextFileExtraction;
+use App\Services\DMS\Files\UnknownFileExtraction;
+use App\Services\DMS\Files\WordExtraction;
+use RuntimeException;
+
+class FileExtractionService
+{
+    protected ExtensionsEnum $extension;
+
+    public function __construct(protected Document $document)
+    {
+        $ex = $this->document->ext();
+        if (!$ex instanceof ExtensionsEnum) {
+            throw new RuntimeException('Invalid file extension');
+        }
+        $this->extension = $ex;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function searchAndTags(): bool
+    {
+        if ($this->extension->isText()) {
+            return (new TextFileExtraction($this->document))->processContent();
+        }
+        if ($this->extension->isImage()) {
+            return (new ImageOCR($this->document))->processContent();
+        }
+        if ($this->extension->isDocument()) {
+            return (new WordExtraction($this->document))->processContent();
+        }
+        if ($this->extension->isSpreadsheet()) {
+            return (new SpreadsheetExtraction($this->document))->processContent();
+        }
+        if ($this->extension->isPresentation()) {
+            return (new SpreadsheetExtraction($this->document))->processContent();
+        }
+        if ($this->extension->value === ExtensionsEnum::Pdf->value) {
+            return (new PdfExtraction($this->document))->processContent();
+        }
+
+        return (new UnknownFileExtraction($this->document))->processContent();
+    }
+
+
+}

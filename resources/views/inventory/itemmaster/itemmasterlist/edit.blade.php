@@ -1,0 +1,199 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Item')
+
+@section('content')
+
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="container bg-white shadow-sm rounded p-4">
+    <h4 class="mb-4">✏️ Edit Item Master</h4>
+
+    <form action="{{ route('itemmasterlist.update', $item->Id) }}" method="POST" enctype="multipart/form-data" id="itemMasterListForm">
+        @csrf
+        @method('PUT')
+
+        {{-- Row 1 --}}
+        <div class="row mb-3">
+            
+            <div class="col-md-4">
+                <label for="ItemName" class="form-label">Item Name</label>
+                <input type="text" name="ItemName" class="form-control" value="{{ old('ItemName', $item->ItemName) }}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="BarCode" class="form-label">Bar Code</label>
+                <input type="text" name="BarCode" class="form-control" value="{{ old('BarCode', $item->BarCode) }}" >
+            </div>
+            <div class="col-md-4">
+                <label for="ItemType" class="form-label">Item Type</label>
+                <select name="ItemType" class="form-select" required>
+                    <option disabled>Select Type</option>
+                    @foreach($itemTypes as $itemType)
+                        <option value="{{ $itemType->Id }}"
+                            {{ (old('ItemType', $item->ItemType) == $itemType->Id) ? 'selected' : '' }}>
+                            {{ $itemType->TypeName }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        {{-- Row 2 --}}
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="Category" class="form-label">Category</label>
+                <select name="Category" id="category" class="form-select" required>
+                    <option value="">-- Select Category --</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->Id }}" {{ optional($item->category->parent)->Id == $category->Id ? 'selected' : '' }}>
+                            {{ $category->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="SubCategory" class="form-label">Subcategory</label>
+                <select name="SubCategory" id="subcategory" class="form-select">
+                    <option value="">-- Select SubCategory --</option>
+                    @foreach($subcategories as $subcategory)
+                        <option value="{{ $subcategory->Id }}" {{ $item->Category == $subcategory->Id ? 'selected' : '' }}>
+                            {{ $subcategory->Name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
+                <select name="UOM" class="form-select" required>
+                    <option disabled>Select UOM</option>
+                    @foreach($uoms as $uom)
+                        <option value="{{ $uom->Id }}"
+                            {{ (old('UOM', $item->UOM) == $uom->Id) ? 'selected' : '' }}>
+                            {{ $uom->Code }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        {{-- Row 3 --}}
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="InventoryType" class="form-label">Inventory Type</label>
+                <select name="InventoryType" class="form-select" required>
+                    <option disabled>Select Inventory Type</option>
+                    @foreach($inventoryTypes as $inventoryType)
+                        <option value="{{ $inventoryType->Id }}"
+                            {{ (old('InventoryType', $item->InventoryType) == $inventoryType->Id) ? 'selected' : '' }}>
+                            {{ $inventoryType->Type }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="Status" class="form-label">Item Status</label>
+                <select class="form-select" name="Status">
+                    <option value="">Select Status</option>
+                    @foreach($status as $stat)
+                        <option value="{{ $stat->ID }}"
+                            {{ old('Status', $item->Status) == $stat->ID ? 'selected' : '' }}>
+                            {{ $stat->Description }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="ImageUpload" class="form-label">Item Image</label>
+                <input type="file" name="ImageUpload" class="form-control">
+                @if($item->image)
+                    <div class="mt-2" id="current-image-section">
+                        <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image" style="max-width:200px;">
+                        <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image</button>
+                    </div>
+                    <input type="hidden" name="remove_image" id="remove-image" value="0">
+                @endif
+            </div>
+        </div>
+
+        {{-- Document Upload --}}
+        <div class="mb-3 mt-3">
+            <label class="form-label">Supporting Documents</label>
+
+            {{-- Existing documents --}}
+            <div class="card-footer bg-light">
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+
+            {{-- Existing documents --}}
+             @forelse($item->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
+            
+            {{-- Upload new documents --}}
+            <div class="mb-3">
+                <label class="form-label">Upload Supporting Document</label>
+                <input type="file" name="Document" class="form-control">
+                <small class="text-muted">Attach inspection sheet, photos, or related files</small>
+            </div>
+        </div>
+
+        </div>
+
+
+        {{-- Full-width --}}
+        <div class="mb-3">
+            <label for="ItemDescription" class="form-label">Item Description</label>
+            <textarea name="ItemDescription" class="form-control" rows="3">{{ old('ItemDescription', $item->ItemDescription) }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+            Update Item
+        </button>
+    </form>
+</div>
+
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function () {
+        $('#remove-image-btn').on('click', function () {
+            $('#current-image-section').hide();
+            $('#remove-image').val('1');
+        });
+
+        $('#category').change(function () {
+            let categoryId = $(this).val();
+            $('#subcategory').html('<option value="">Loading...</option>');
+
+            $.ajax({
+                url: "{{ route('get.subcategories') }}",
+                type: 'GET',
+                data: { category_id: categoryId },
+                success: function (data) {
+                    $('#subcategory').html('<option value="">-- Select SubCategory --</option>');
+                    $.each(data, function (key, value) {
+                        $('#subcategory').append(`<option value="${value.Id}">${value.Name}</option>`);
+                    });
+                },
+                error: function () {
+                    $('#subcategory').html('<option value="">No subcategories found</option>');
+                }
+            });
+        });
+    });
+</script>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
+@endsection

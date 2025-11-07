@@ -6,6 +6,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/.vs
 .env
 .env.backup
 .env.production
@@ -21,3 +22,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+/storage/debugbar/
+
+!/storage/fonts/

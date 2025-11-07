@@ -3,12 +3,13 @@
 namespace App\Services;
 
 use App\Exceptions\ErroredException;
-use App\Models\CodeDetail;
-use App\Models\Comment;
-use App\Models\CRMImage;
-use App\Models\ProductDevelopment;
-use App\Models\ProductDevelopmentFeature;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\Comment;
+use App\Models\Core\CodeDetail;
+use App\Models\CRM\ProductDevelopment;
+use App\Models\CRM\ProductDevelopmentFeature;
+use App\Models\DMS\Image;
+use App\Services\DMS\ImageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -36,15 +37,15 @@ class ProductDevService
         }
 
         $product = ProductDevelopment::create([
-            'ProductID' => self::_ID(),
-            'Name' => $Name,
-            'TargetGroup' => $TargetGroup,
-            'User_ID' => $actor->Id,
-            'Notes' => $Notes,
-            'StageId' => $stage->ID,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                               'ProductID'   => self::_ID(),
+                                               'Name'        => $Name,
+                                               'TargetGroup' => $TargetGroup,
+                                               'User_ID'     => $actor->Id,
+                                               'Notes'       => $Notes,
+                                               'StageId'     => $stage->ID,
+                                               'CreatedBy'   => $actor->Id,
+                                               'ModifiedBy'  => $actor->Id,
+                                              ]);
 
         activity()->causedBy($actor)->performedOn($product)->event('create')->log('created product (' . Str::upper($product->ProductID) . ') for development.');
 
@@ -62,7 +63,7 @@ class ProductDevService
         return $slug;
     }
 
-    public function document(UploadedFile $file, User $actor): CRMImage
+    public function document(UploadedFile $file, User $actor): Image
     {
         $document = ImageService::createUpload($file, ProductDevelopment::getPrimaryKey(), $this->product->Id, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->product)->event('document')->log('added a document  ' . $document->Name . ' to Product Development ' . Str::upper($this->product->ProductID) . '.');
@@ -72,11 +73,11 @@ class ProductDevService
     public function addFeature(string $title, string $description, User $actor): ProductDevelopmentFeature
     {
         $feature = $this->product->features()->create([
-            'Feature' => $title,
-            'Description' => $description,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+                                                       'Feature'     => $title,
+                                                       'Description' => $description,
+                                                       'CreatedBy'   => $actor->Id,
+                                                       'ModifiedBy'  => $actor->Id,
+                                                      ]);
         activity()->causedBy($actor)->performedOn($this->product)->event('feature')->log('added a feature  ' . $title . ' to Product Development ' . Str::upper($this->product->ProductID) . '.');
 
         return $feature;
@@ -85,10 +86,10 @@ class ProductDevService
     public function updateFeature(ProductDevelopmentFeature $feature, string $title, string $description, User $actor): ProductDevelopmentFeature
     {
         $feature->fill([
-            'Feature' => $title,
-            'Description' => $description,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                        'Feature'     => $title,
+                        'Description' => $description,
+                        'ModifiedBy'  => $actor->Id,
+                       ])->save();
 
         return $feature;
     }
@@ -101,6 +102,5 @@ class ProductDevService
         }
 
         return CommentService::forProductDev($this->product, $description, $actor)->comment;
-
     }
 }

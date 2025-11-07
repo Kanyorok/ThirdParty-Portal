@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Models\Fleet;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetMaintenanceSchedule;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Models\Core\CodeDetail;
+use App\Models\ThirdParty\ThirdParties;
+
+class FleetRepairLog extends Model
+{
+    use UserActorTrait, SoftDeletes;
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_FleetRepairLogs';
+    protected $primaryKey = 'Id';
+    public $timestamps = false;
+
+
+    protected $fillable = [
+        'RepairID', 'VehicleID', 'ScheduleID', 'RepairType', 'RepairDate', 'VendorID', 'Cost',
+        'Description', 'Notes',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+        'DeletedOn',
+    ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'RepairId';
+
+    }
+
+
+    public function vehicle()
+    {
+        return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
+    }
+
+    public function repairType()
+    {
+        return $this->belongsTo(CodeDetail::class, 'RepairType', 'ID');
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(ThirdParties::class, 'VendorID', 'ID');
+    }
+
+    public function schedule()
+    {
+        return $this->belongsTo(FleetMaintenanceSchedule::class, 'ScheduleID', 'Id');
+    }
+}

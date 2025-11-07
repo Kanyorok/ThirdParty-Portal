@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\EmailStatusEnum;
-use App\Models\CrmSMS;
+use App\Models\Communication\SMS;
 use App\Services\SMSService;
 use Illuminate\Console\Command;
 
@@ -28,7 +28,7 @@ class ProcessQueuedSMSCommand extends Command
      */
     public function handle(): void
     {
-        $messages = CrmSMS::query()->where('Status', EmailStatusEnum::Queued)->get();
+        $messages = SMS::query()->where('Status', EmailStatusEnum::Queued)->get();
         foreach ($messages as $message) {
             (new SMSService($message))->send(true);
         }

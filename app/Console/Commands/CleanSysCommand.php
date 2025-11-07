@@ -3,14 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Helpers\SystemHelper;
-use App\Models\Competitor;
-use App\Models\MarketingList;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\MarketingList;
+use App\Models\ThirdParies\Competitor;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Storage;
 use Throwable;
 
 class CleanSysCommand extends Command
@@ -37,37 +38,37 @@ class CleanSysCommand extends Command
         $actor = SystemHelper::user();
         try {
             $this->_cleanTmp();
-        } catch (Exception|Throwable) {
+        } catch (Exception | Throwable) {
         }
 
         try {
             $this->_checkMarketingList($actor);
-        } catch (Exception|Throwable) {
+        } catch (Exception | Throwable) {
         }
 
         try {
             $this->_checkCompetitors($actor);
-        } catch (Exception|Throwable) {
+        } catch (Exception | Throwable) {
         }
     }
 
     protected function _cleanTmp(): void
     {
-        $tempFolder = storage_path('app/temp');
-        $files = scandir($tempFolder);
+        $tempFolder = Storage::disk('temp')->path('');
+          $files = scandir($tempFolder);
 
-        foreach ($files as $file) {
-            $filePath = $tempFolder . DIRECTORY_SEPARATOR . $file;
+          foreach ($files as $file) {
+              $filePath = $tempFolder . DIRECTORY_SEPARATOR . $file;
 
-            if (is_file($filePath)) {
-                $lastModified = filemtime($filePath);
-                $twoHoursAgo = now()->subHours(2)->timestamp;
+              if (is_file($filePath)) {
+                  $lastModified = filemtime($filePath);
+                  $twoHoursAgo = now()->subHours(2)->timestamp;
 
-                if ($lastModified < $twoHoursAgo) {
-                    unlink($filePath);
-                }
-            }
-        }
+                  if ($lastModified < $twoHoursAgo) {
+                      unlink($filePath);
+                  }
+              }
+          }
     }
 
 
@@ -80,7 +81,7 @@ class CleanSysCommand extends Command
 
                     activity()->performedOn($list)->causedBy($actor)->log('System cleared "Processing" status for MarketingList ID: ' . $list->slug);
                 });
-            } catch (Exception|Throwable $e) {
+            } catch (Exception | Throwable $e) {
                 Log::error('System cleared "Processing" status for MarketingList ID: ' . $list->slug . ' FAILED');
                 Log::error($e);
             }
@@ -96,7 +97,7 @@ class CleanSysCommand extends Command
 
                     activity()->performedOn($competitor)->causedBy($actor)->log('System cleared "Processing" status for Competitor ID: ' . $competitor->CompetitorID);
                 });
-            } catch (Exception|Throwable $e) {
+            } catch (Exception | Throwable $e) {
                 Log::error('System cleared "Processing" status for Competitor ID: ' . $competitor->CompetitorID . ' FAILED');
                 Log::error($e);
             }

@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\Core\IntegrationsEnum;
 use App\Enums\Core\SystemIntegrationEnum;
 use App\Helpers\SystemHelper;
-use App\Models\APICredential;
+use App\Models\Settings\APICredential;
 use Closure;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -43,7 +43,7 @@ class ChannelAuthMiddleware
             if (!is_string($key)) {
                 return $this->_fail('Invalid key in system');
             }
-        } catch (ConnectionException|InvalidParameterException|Exception $e) {
+        } catch (ConnectionException | InvalidParameterException | Exception $e) {
             return $this->_fail($e->getMessage());
         }
         if (md5($bearerToken) === $key) {
@@ -51,7 +51,6 @@ class ChannelAuthMiddleware
         }
 
         return $this->_fail('client: invalid key');
-
     }
 
     protected function _fail(string $reason): JsonResponse

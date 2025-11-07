@@ -4,11 +4,11 @@ namespace App\Services;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Helpers\SystemHelper;
-use App\Models\Comment;
-use App\Models\ProductDevelopment;
-use App\Models\Social;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Communication\Comment;
+use App\Models\CRM\ProductDevelopment;
+use App\Models\CRM\Social;
+use App\Models\CRM\Ticket;
 use Carbon\Carbon;
 use Illuminate\Support\Number;
 
@@ -21,32 +21,31 @@ class CommentService
     public function commenter(): array
     {
         if (($this->comment->creator->UserID === SystemHelper::ID) && (in_array($this->comment->CommentType, [Social::getPrimaryKey(), Comment::getPrimaryKey()], true))) {
-
             if ($this->comment->Source === IntegrationsEnum::Facebook->value) {
                 return [
-                    'name' => ($this->comment->Response?->from?->name) ?? 'facebook user',
-                    'avatar' => '<img src="https://deberepi.sirv.com/Social/facebook.png" width="36" height="36" class="rounded-circle me-2" alt="No Image"/>'
-                ];
+                        'name'   => ($this->comment->Response?->from?->name) ?? 'facebook user',
+                        'avatar' => '<img src="https://deberepi.sirv.com/Social/facebook.png" width="36" height="36" class="rounded-circle me-2" alt="No Image"/>',
+                       ];
             }
 
             if ($this->comment->Source === IntegrationsEnum::Twitter->value) {
                 return [
-                    'name' => ($this->comment->Response?->user?->name) ?? 'twitter user',
-                    'avatar' => '<img src="https://deberepi.sirv.com/Social/twitter.png" width="36" height="36" class="rounded-circle me-2" alt="No Image"/>'
-                ];
+                        'name'   => ($this->comment->Response?->user?->name) ?? 'twitter user',
+                        'avatar' => '<img src="https://deberepi.sirv.com/Social/twitter.png" width="36" height="36" class="rounded-circle me-2" alt="No Image"/>',
+                       ];
             }
 
             return [
-                'name' => 'unknown user',
-                'avatar' => '<img src="https://placehold.co/36/green/FFF?text=none" width="36" height="36" class="rounded-circle me-2" alt="No Image"/>'
-            ];
+                    'name'   => 'unknown user',
+                    'avatar' => '<img src="https://placehold.co/36/green/FFF?text=none" width="36" height="36" class="rounded-circle me-2" alt="No Image"/>',
+                   ];
         }
 
 
         return [
-            'avatar' => $this->comment->creator->getImage(' width="36" height="36" class="rounded-circle me-2"'),
-            'name' => $this->comment->creator->Name . ' (' . $this->comment->creator->UserID . ')'
-        ];
+                'avatar' => $this->comment->creator->getImage(' width="36" height="36" class="rounded-circle me-2"'),
+                'name'   => $this->comment->creator->Name . ' (' . $this->comment->creator->UserID . ')',
+               ];
     }
     public static function forTicket(Ticket $ticket, string $description, User $actor): CommentService
     {
@@ -72,15 +71,15 @@ class CommentService
     {
         $comment = new Comment();
         $comment->fill([
-            'CommentType' => $type,
-            'CommentTypeID' => $typeId,
-            'Notes' => $description,
-            'Response' => $response,
-            'RemoteId' => $remoteId,
-            'Source' => $source?->value,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                        'CommentType'   => $type,
+                        'CommentTypeID' => $typeId,
+                        'Notes'         => $description,
+                        'Response'      => $response,
+                        'RemoteId'      => $remoteId,
+                        'Source'        => $source?->value,
+                        'CreatedBy'     => $actor->Id,
+                        'ModifiedBy'    => $actor->Id,
+                       ])->save();
 
         return (new CommentService($comment->refresh()));
     }
@@ -108,12 +107,20 @@ class CommentService
         }
 
         return (now()->subDays(3)->lt($this->comment->CreatedOn));
-
     }
 
     public function extras(): array
     {
-        $data = ['likes' => ['numeric' => 0, 'string' => ''], 'comments' => ['numeric' => 0, 'string' => '']];
+        $data = [
+                 'likes'    => [
+                                'numeric' => 0,
+                                'string'  => '',
+                               ],
+                 'comments' => [
+                                'numeric' => 0,
+                                'string'  => '',
+                               ],
+                ];
         $likes = (is_int($this->comment->Response?->like_count)) ? $this->comment->Response?->like_count : 0;
         $comments = $this->comment->comments()->count();//(is_int($this->comment->Response?->comment_count)) ? $this->comment->Response?->comment_count : 0;
 

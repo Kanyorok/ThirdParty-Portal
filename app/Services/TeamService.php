@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Team;
-use App\Models\User;
+use App\Models\Auth\Team;
+use App\Models\Auth\User;
 
 class TeamService
 {
-    public const string MODULE = 'TEAMS';
+    public const MODULE = 'TEAMS';
     public function __construct(public Team $team)
     {
     }

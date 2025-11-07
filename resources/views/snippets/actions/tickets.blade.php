@@ -1,8 +1,10 @@
-<link rel="stylesheet" href="{{ asset('assets/plugins/summernote/summernote-bs5.min.css') }}">
-<script src="{{ asset('assets/plugins/summernote/summernote-bs5.min.js') }}"></script>
-<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-<script src="{{ asset('assets/plugins/select2/js/select2.full.min.js') }}"></script>
-<script src='{{ asset('assets/plugins/moment/moment-with-locales.js') }}'></script>
+@php use App\Enums\TicketSourceEnum; @endphp
+@php use App\Enums\TicketPriorityEnum; @endphp
+<link rel="stylesheet" href="{{ asset('assets/libs/summernote/summernote-bs5.min.css') }}">
+<script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+<script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
 <style>
     .select2-container {
         width: 100% !important;
@@ -20,7 +22,9 @@
                 <div class="onboarding-content with-gradient d-none modal-item" id="createPartyTicketModal">
                     <form method="post" id="createPartyTicketForm" class="row">
                         @csrf
-                        @if(isset($hidden)){!! $hidden !!} @endif
+                        @if(isset($hidden))
+                            {!! $hidden !!}
+                        @endif
                         <div class="mb-3 col-12">
                             <label class="form-label" for="ticket_title">Title <span
                                     class="text-danger">*</span></label>
@@ -45,13 +49,13 @@
                             <label for="ticket_source" class="form-label">Source <span
                                     class="text-danger">*</span></label>
                             <select class="form-control" name="ticket_source" id="ticket_source" required>
-                                @if(isset($source) && $source instanceof \App\Enums\TicketSourceEnum)
+                                @if(isset($source) && $source instanceof TicketSourceEnum)
                                     <option selected value="{{ $source->value }}">{{ $source->name }}</option>
                                 @else
-                                <option selected disabled>select a source</option>
-                                @foreach(\App\Enums\TicketSourceEnum::cases() as $ticket_source)
-                                    <option value="{{ $ticket_source->value }}">{{ $ticket_source->name }}</option>
-                                @endforeach
+                                    <option selected disabled>select a source</option>
+                                    @foreach(TicketSourceEnum::cases() as $ticket_source)
+                                        <option value="{{ $ticket_source->value }}">{{ $ticket_source->name }}</option>
+                                    @endforeach
                                 @endif
                             </select>
                             <p id="ticket_source_error" class="invalid-feedback d-none error col-12" role="alert"></p>
@@ -60,7 +64,7 @@
                             <label for="ticket_priority" class="form-label">Priority <span class="text-danger">*</span></label>
                             <select class="form-control" name="ticket_priority" id="ticket_priority" required>
                                 <option selected disabled>select a priority</option>
-                                @foreach(\App\Enums\TicketPriorityEnum::cases() as $ticket_priority)
+                                @foreach(TicketPriorityEnum::cases() as $ticket_priority)
                                     <option value="{{ $ticket_priority->value }}">{{ $ticket_priority->name }}</option>
                                 @endforeach
                             </select>
@@ -72,7 +76,8 @@
                                   role="alert"></span>
                             <textarea name="ticket_description" id="ticket_description" class="form-control" rows="4"
                                       maxlength="5000" minlength="2">@if(isset($content))
-                                    <br><hr>{!! $content !!} @endif</textarea>
+                                    <br><hr>{!! $content !!}
+                                @endif</textarea>
                         </div>
                         <div class="mb-3 col-sm-6 col-12">
                             <label for="ticket_user" class="form-label">Assignee <span

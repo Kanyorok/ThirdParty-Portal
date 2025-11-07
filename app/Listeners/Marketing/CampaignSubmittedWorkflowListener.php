@@ -6,9 +6,9 @@ use App\Enums\CampaignStatusEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Events\Marketing\CampaignSubmittedEvent;
 use App\Helpers\SystemHelper;
-use App\Models\Campaign;
-use App\Models\User;
-use App\Services\UserService;
+use App\Models\Auth\User;
+use App\Models\CRM\Campaign;
+use App\Services\HRM\UserService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\DB;
@@ -41,21 +41,21 @@ class CampaignSubmittedWorkflowListener implements ShouldQueue
                 }
 
                 $event->campaign->pendingWorkflows()->lock('WITH(NOLOCK)')->where('Stage', CampaignStatusEnum::Approval)->create([
-                    'Stage' => CampaignStatusEnum::Approval,
-                    'UserId' => $user->Id,
-                    'CreatedBy' => $event->actor->Id,
-                    'ModifiedBy' => $event->actor->Id,
-                ]);
+                                                                                                                                  'Stage'      => CampaignStatusEnum::Approval,
+                                                                                                                                  'UserId'     => $user->Id,
+                                                                                                                                  'CreatedBy'  => $event->actor->Id,
+                                                                                                                                  'ModifiedBy' => $event->actor->Id,
+                                                                                                                                 ]);
 
                 $this->_sendMail($user, $event->campaign);
             }
         });
-
     }
 
     protected function _sendMail(User $user, Campaign $campaign): void
     {
-        (new UserService($user))->sendEmail(subject: 'Campaign submitted review and approval',
+        (new UserService($user))->sendEmail(
+            subject: 'Campaign submitted review and approval',
             body: '<p>Hello</p><p>The campaign <b>' . $campaign->Label . '</b> has been submitted for your review. Click the link below to review</p>
                 <p><a href="' . route('campaigns.show', [$campaign->CampaignID]) . '"> campaign ' . $campaign->CampaignID . ' details</a></p>
                 <p>Kindly review and approve the campaign at your earliest convenience.</p>',

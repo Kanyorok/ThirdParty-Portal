@@ -4,9 +4,9 @@ namespace App\Traits\Controller;
 
 use App\Enums\CampaignStatusEnum;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Campaign;
-use App\Models\MarketingList;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\MarketingList;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
@@ -48,10 +48,10 @@ trait CampaignTrait
                 })->editColumn('Notes', function (Campaign $campaign) {
                     return Str::limit($campaign->Notes);
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                    'dbl_click_url' => function (Campaign $campaign) use ($list) {
-                        return ($list instanceof MarketingList) ? route('loans-campaigns.show', [$list->MarketingListID, $campaign->CampaignID]) : route('campaigns.show', [$campaign->CampaignID]);
-                    }
-                ])->rawColumns(['action'])->make();
+                                                                                                       'dbl_click_url' => function (Campaign $campaign) use ($list) {
+                                                                                                        return ($list instanceof MarketingList) ? route('loans-campaigns.show', [$list->MarketingListID, $campaign->CampaignID]) : route('campaigns.show', [$campaign->CampaignID]);
+                                                                                                       },
+                                                                                                      ])->rawColumns(['action'])->make();
         } catch (\Exception $e) {
         }
 

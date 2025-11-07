@@ -15,9 +15,9 @@ class PlannerActivitiesCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->transform(function ($activity) {
-                return new PlannerActivityResource($activity);
-            }),
-        ];
+                'data' => $this->collection->transform(function ($activity) {
+                    return new PlannerActivityResource($activity);
+                }),
+               ];
     }
 }

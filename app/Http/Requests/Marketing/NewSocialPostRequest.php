@@ -21,11 +21,26 @@ class NewSocialPostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Destination' => ['required', 'array', 'min:1'],
-            'Publish_On' => ['required', 'date_format:"Y-m-d H:i"'],
-            'Content' => ['required', 'string', 'max:300', 'min:2'],
-            'image' => ['required', Rule::imageFile()->max(5000)]
-        ];
+                'Destination' => [
+                                  'required',
+                                  'array',
+                                  'min:1',
+                                 ],
+                'Publish_On'  => [
+                                  'required',
+                                  'date_format:"Y-m-d H:i"',
+                                 ],
+                'Content'     => [
+                                  'required',
+                                  'string',
+                                  'max:300',
+                                  'min:2',
+                                 ],
+                'image'       => [
+                                  'required',
+                                  Rule::imageFile()->max(5000),
+                                 ],
+               ];
     }
 
     /**
@@ -43,15 +58,11 @@ class NewSocialPostRequest extends FormRequest
                 }
             } catch (ErroredException) {
             }
-            throw ValidationException::withMessages([
-                'Destination' => 'some of the selected options are invalid.',
-            ]);
+            throw ValidationException::withMessages(['Destination' => 'some of the selected options are invalid.']);
         }
 
         if ($types->isEmpty()) {
-            throw ValidationException::withMessages([
-                'Destination' => 'some of the selected options are invalid.',
-            ]);
+            throw ValidationException::withMessages(['Destination' => 'some of the selected options are invalid.']);
         }
         return $types;
     }
@@ -64,15 +75,10 @@ class NewSocialPostRequest extends FormRequest
         $start = Carbon::createFromFormat('Y-m-d H:i', $this->validated('Publish_On'));
         if ($start instanceof Carbon) {
             if ($start->lessThan(Carbon::now()->subMinutes(10))) {
-                throw ValidationException::withMessages([
-                    'Publish_On' => 'scheduled the future or now.',
-                ]);
+                throw ValidationException::withMessages(['Publish_On' => 'scheduled the future or now.']);
             }
             return $start;
         }
-        throw ValidationException::withMessages([
-            'Publish_On' => 'invalid date format',
-        ]);
+        throw ValidationException::withMessages(['Publish_On' => 'invalid date format']);
     }
 }
-

@@ -1,0 +1,21 @@
+services:
+    laravel:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile
+        container_name: BRERP
+        ports:
+            - "80:80"
+        volumes:
+            - .:/var/www
+            - logs:/var/www/logs
+            - files:/var/www/storage/app/files
+        working_dir: /var/www
+        networks:
+            - Applications
+networks:
+    Applications:
+        external: true
+volumes:
+    logs:
+    files:

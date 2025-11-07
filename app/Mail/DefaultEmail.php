@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\CrmEmail;
+use App\Models\Communication\Email;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
@@ -14,14 +14,15 @@ use Illuminate\Queue\SerializesModels;
 
 class DefaultEmail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     //, InteractsWithQueue;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(public CrmEmail $crmEmail)
+    public function __construct(public Email $crmEmail)
     {
         $this->priority($this->crmEmail->Priority->intPriority());
     }
@@ -31,10 +32,17 @@ class DefaultEmail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $to = collect($this->crmEmail->To)->flatten()->toArray();
+        $cc = collect($this->crmEmail->CC)->flatten()->toArray();
+        $bcc = collect($this->crmEmail->BCC)->flatten()->toArray();
+
+        // NEVER expose CC as a visible header. Merge any CC entries into BCC so they're hidden.
+        $mergedBcc = array_values(array_filter(array_merge($bcc, $cc)));
+
         return new Envelope(
-            to: collect($this->crmEmail->To)->flatten()->toArray(),
-            cc: collect($this->crmEmail->CC)->flatten()->toArray(),
-            bcc: $this->crmEmail->BCC,
+            to: $to,
+            cc: [],
+            bcc: $mergedBcc,
             subject: $this->crmEmail->Subject,
         );
     }
@@ -45,7 +53,7 @@ class DefaultEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.template',
+            view: 'crm.emails.template',
         );
     }
 

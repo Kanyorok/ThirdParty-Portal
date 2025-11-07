@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use App\Enums\Core\PermissionEnum;
 use App\Helpers\SystemHelper;
-use App\Models\User;
-use Carbon\Carbon;
+use App\Models\Auth\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
 use Spatie\Permission\Guard;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -15,78 +15,115 @@ use Spatie\Permission\Models\Role;
 class RolePermissionSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeds. 
      */
     public function run(): void
     {
-        $user = SystemHelper::user();
-        $date = now();
+    $actor = SystemHelper::user();
+        $now   = now();
         $guard = Guard::getDefaultName(User::class);
 
+        // Ensure baseline roles
         if (!Role::query()->where('name', 'Default')->exists()) {
             Role::create([
-                'name' => 'Default',
+                'name'       => 'Default',
                 'guard_name' => $guard,
-                'created_at' => $date,
-                'updated_at' => $date,
-                'CreatedBy' => $user->Id,
-                'ModifiedBy' => $user->Id,
+                'created_at' => $now,
+                'updated_at' => $now,
+                'CreatedBy'  => $actor->Id ?? 1,
+                'ModifiedBy' => $actor->Id ?? 1,
             ]);
         }
 
+        // createOrFirst avoids races/duplicates on name+guard
+        $adminRole = Role::query()->createOrFirst(
+            ['name' => 'admin', 'guard_name' => $guard],
+            ['CreatedBy' => $actor->Id ?? 1, 'ModifiedBy' => $actor->Id ?? 1]
+        );
 
-        $adminRole = Role::query()->createOrFirst(['name' => 'admin'], [
-            'CreatedBy' => $user->Id,
-            'ModifiedBy' => $user->Id
-        ]);
+        // --- Build permission rows (only those missing) ---
+        $table = config('permission.table_names.permissions');
 
+        $existing = DB::table($table)
+            ->where('guard_name', $guard)
+            ->pluck('name')
+            ->all();
+        $existing = array_flip($existing); // for O(1) existence checks
 
-        $permissions = collect([]);
-        // Create permission
-        foreach (PermissionEnum::values() as $permission) {
-            if (!Permission::query()->where('name', $permission)->exists()) {
-                $permissions->add([
-                    'name' => $permission,
+        $rows = [];
+        foreach (PermissionEnum::cases() as $perm) {
+            $name = $perm->value;
+            if (!isset($existing[$name])) {
+                $rows[] = [
+                    'name'       => $name,
+                    'ModuleId'   => $perm->module()->value,
                     'guard_name' => $guard,
-                    'created_at' => $date,
-                    'updated_at' => $date,
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
         }
 
-        if ($permissions->count() > 0) {
-            DB::table(config('permission.table_names.permissions'))->insert($permissions->toArray());
+        // --- Upsert permissions in chunks to avoid 2100-param limit ---
+        // 5 columns per row here => safe chunk ~400 rows
+        $chunkSize = 400;
 
-            // Assign permissions to roles
-            $adminRole->permissions()->syncWithPivotValues(DB::table(config('permission.table_names.permissions'))->select('id')->get()->pluck('id')->toArray()
-                , ['CreatedBy' => $user->Id, 'ModifiedBy' => $user->Id], false);
-
-
-            // Assign role to user
-            $users = User::all();
-            foreach ($users as $user) {
-                if (($user instanceof User) && $user->roles()->count() === 0) {
-                    $user->assignRole('admin');
+        if (!empty($rows)) {
+            DB::connection()->disableQueryLog();
+            DB::transaction(function () use ($table, $rows, $chunkSize) {
+                foreach (array_chunk($rows, $chunkSize) as $chunk) {
+                    // unique by (name, guard_name); update ModuleId/updated_at if re-running
+                    DB::table($table)->upsert(
+                        $chunk,
+                        ['name', 'guard_name'],
+                        ['ModuleId', 'updated_at']
+                    );
                 }
+            });
+        }
+
+        // Fetch ALL permission ids for this guard (existing + newly inserted)
+        $permissionIds = DB::table($table)
+            ->where('guard_name', $guard)
+            ->pluck('id')
+            ->all();
+
+        // --- Attach permissions to admin role in chunks ---
+        // Pivot likely: role_has_permissions (role_id, permission_id, + your audit cols)
+        // Each row binds ~2-6 params; stay well under 2100
+        $pivotValues = [
+            'CreatedBy'  => $actor->Id ?? 1,
+            'ModifiedBy' => $actor->Id ?? 1,
+        ];
+
+    foreach (array_chunk($permissionIds, 500) as $permChunk) {
+            // syncWithoutDetaching keeps existing links and adds missing ones
+            $attachPayload = [];
+            foreach ($permChunk as $pid) {
+                $attachPayload[$pid] = $pivotValues;
             }
+            $adminRole->permissions()->syncWithoutDetaching($attachPayload);
         }
 
-    }
-
-    protected function _add(PermissionEnum $add, string $guard, Carbon $date, User $user): void
-    {
-        $adminRole = Role::query()->where('name', 'admin')->first();
-
-        if (!Permission::query()->where('name', $add)->exists()) {
-            $permission = Permission::create([
-                'name' => $add,
-                'guard_name' => $guard,
-                'created_at' => $date,
-                'updated_at' => $date,
-            ]);
-
-            $adminRole->permissions()->attach($permission->id, ['CreatedBy' => $user->Id, 'ModifiedBy' => $user->Id], false);
-            // $adminRole->givePermissionTo($add);
-        }
+        // --- Attach admin role to any user with no roles (also chunked) ---
+        User::query()
+            ->whereDoesntHave('roles')
+            ->orderBy('Id')
+        ->chunkById(500, function ($users) use ($adminRole) {
+                $now = now();
+                $payload = [];
+                foreach ($users as $u) {
+                    // t_ModelRoles does not have CreatedBy/ModifiedBy; only use existing columns
+                    $payload[$adminRole->id] = [
+                        'BranchId'  => $u->BranchId ?? 1,
+                        'CreatedOn' => $now,
+                        'ModifiedOn'=> $now,
+                    ];
+                    // Attach per-user (keeps memory low and avoids giant param batches)
+            // Ensure morph type uses our alias key 'UserID'
+            $u->setRelation('roles', null); // prevent cached relations side-effects
+            $u->roles()->syncWithoutDetaching($payload);
+                }
+            });
     }
 }

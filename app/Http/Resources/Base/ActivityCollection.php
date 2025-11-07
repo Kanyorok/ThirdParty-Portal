@@ -15,9 +15,9 @@ class ActivityCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->transform(function ($activity) {
-                return new ActivityResource($activity->resource);
-            }),
-        ];
+                'data' => $this->collection->transform(function ($activity) {
+                    return new ActivityResource($activity->resource);
+                }),
+               ];
     }
 }

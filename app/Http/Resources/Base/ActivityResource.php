@@ -16,13 +16,13 @@ class ActivityResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->ActivityID,
-            'Content' => ActivityService::rendering($this->resource),
-            'Notes' => $this->Notes,
-            'dated' => [
-                'datetime' => $this->CreatedOn?->format('d-m-Y H:i:s'),
-                'string' => $this->CreatedOn?->diffForHumans(),
-            ],
-        ];
+                'id'      => $this->ActivityID,
+                'Content' => ActivityService::rendering($this->resource),
+                'Notes'   => $this->Notes,
+                'dated'   => [
+                              'datetime' => $this->CreatedOn?->format('d-m-Y H:i:s'),
+                              'string'   => $this->CreatedOn?->diffForHumans(),
+                             ],
+               ];
     }
 }

@@ -1,6 +1,14 @@
+@php use Carbon\Carbon; @endphp
+@php use App\Enums\Core\IntegrationsEnum; @endphp
+@php use EchoLabs\Prism\Enums\Provider; @endphp
 @extends('layouts.app')
 
-@section('title','Integrations Configuration')
+@section('title','Integrations Settings')
+
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="javascript:void(0);">Settings</a></li>
+@endsection
+
 @section('styles')
 
 @endsection
@@ -12,7 +20,7 @@
                     <h5 class="card-title mb-0">@yield('title')</h5>
                 </div>
                 <div class="list-group list-group-flush" role="tablist">
-                    @foreach(\App\Enums\Core\IntegrationsEnum::getAll() as $integration)
+                    @foreach(IntegrationsEnum::getAll() as $integration)
                         <a class="list-group-item list-group-item-action {{ ($loop->first)?'active':'' }}"
                            data-bs-toggle="list" href="#{{ $integration->value }}"
                            role="tab">
@@ -24,23 +32,162 @@
         </div>
         <div class="col-md-9 col-xl-10">
             <div class="tab-content">
-                @foreach(\App\Enums\Core\IntegrationsEnum::getAll() as $integration)
+                @foreach(IntegrationsEnum::getAll() as $integration)
                     <div class="tab-pane fade {{ ($loop->first)?'show active':'' }}" id="{{ $integration->value }}"
                          role="tabpanel">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">{{ $integration->description() }}
-                                    @if($integration->value === \App\Enums\Core\IntegrationsEnum::Facebook->value)
-                                    <span class="text-muted float-end text-decoration-underline text-primary click-summary-data"
-                                        data-click_url="{{ route('help') }}?help=integration_fb"
-                                        data-summary_title="Facebook Integration Help ?"
-                                        style="cursor: pointer;">Help ?</span>
+                                    @if($integration->value === IntegrationsEnum::Facebook->value)
+                                        <span
+                                            class="text-muted float-end text-decoration-underline text-primary click-summary-data"
+                                            data-click_url="{{ route('help') }}?help=integration_fb"
+                                            data-summary_title="Facebook Integration Help ?"
+                                            style="cursor: pointer;">Help ?</span>
                                     @endif
-                                 </h5>
+                                </h5>
                             </div>
                             <div class="card-body">
                                 @switch($integration->value)
-                                    @case(\App\Enums\Core\IntegrationsEnum::Email->value)
+                                    @case(IntegrationsEnum::Organization->value)
+                                        <form id="orgConfigurationForm" method="post"
+                                              action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
+                                            <input type="hidden" name="Integration" value="{{ $integration->value }}"
+                                                   class="d-none" style="display: none;">
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="Org_Name">Organization Name <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control config-org-form"
+                                                       id="Org_Name" disabled placeholder="e.g., Acme Corp" required
+                                                       value="{{ $orgConfig?->name }}"
+                                                       name="Org_Name">
+                                                <span id="Org_Name_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="Org_Motto">Motto</label>
+                                                <input type="text" class="form-control config-org-form"
+                                                       id="Org_Motto" disabled placeholder="e.g., Thinking.Crafting.Transforming"
+                                                       value="{{ $orgConfig?->motto }}"
+                                                       name="Org_Motto">
+                                                <span id="Org_Motto_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="Org_Logo">Logo (data URL)</label>
+                                                <input type="text" class="form-control config-org-form"
+                                                       id="Org_Logo" disabled placeholder="data:image/png;base64,... or existing path"
+                                                       name="Org_Logo">
+                                                <span id="Org_Logo_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                                <div class="mt-2">
+                                                    <input type="file" class="form-control config-org-form" id="Org_Logo_File" accept="image/*" disabled>
+                                                    <small class="text-muted">Select an image to auto-fill the field above.</small>
+                                                </div>
+                                                @if(isset($orgConfig->logo) && is_string($orgConfig->logo))
+                                                    <div class="mt-2">
+                                                        <img src="{{ asset($orgConfig->logo) }}" alt="Logo" style="height:48px" class="rounded bg-white p-1 border">
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <hr class="mb-3">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button type="button" class="btn btn-secondary d-none float-start"
+                                                            id="orgConfigurationCancelBtn">
+                                                        cancel
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary float-start"
+                                                            id="orgConfigurationEditBtn">
+                                                        edit config
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button type="submit" class="btn btn-success d-none float-end"
+                                                            id="orgConfigurationBtn">
+                                                        save changes
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        @break
+                                    @case(IntegrationsEnum::ReportService->value)
+                                        <form id="srsConfigurationForm" method="post"
+                                              action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
+                                            @if(is_string($srsConfig?->name))
+                                                <div class="col-12">
+                                                    <h3 class="text-center">User : <span
+                                                            class="text-decoration-underline">{{ $srsConfig?->name }}</span>
+                                                    </h3>
+                                                </div>
+                                            @endif
+                                            <input type="hidden" name="Integration" value="{{ $integration->value }}"
+                                                   class="d-none" style="display: none;">
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="SSRS_Host">Host <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control config-srs-form"
+                                                       id="SSRS_Host" disabled
+                                                       placeholder="{{ url('/') }}" required
+                                                       value="{{ $srsConfig?->host }}"
+                                                       name="SSRS_Host">
+                                                <span id="SSRS_Host_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="SSRS_Path">Path<span
+                                                        class="text-danger">*</span> </label>
+                                                <input type="text" class="form-control config-srs-form"
+                                                       id="SSRS_Path" disabled
+                                                       placeholder="Reports" required autocomplete="off"
+                                                       value="{{ $srsConfig?->path ?? "Reports" }}"
+                                                       name="SSRS_Path">
+                                                <span id="SSRS_Path_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="SSRS_Username">Username<span
+                                                        class="text-danger">*</span> </label>
+                                                <input type="text" class="form-control config-srs-form"
+                                                       id="SSRS_Username" disabled
+                                                       placeholder="SSRS Username" required autocomplete="off"
+                                                       name="SSRS_Username">
+                                                <span id="SSRS_Username_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="SSRS_Password"> Password<span
+                                                        class="text-danger">*</span></label>
+                                                <input type="password" class="form-control config-srs-form"
+                                                       id="SSRS_Password" disabled
+                                                       placeholder="SSRS Password" required autocomplete="off"
+                                                       name="SSRS_Password">
+                                                <span id="SSRS_Password_error"
+                                                      class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <hr class="mb-3">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button type="button" class="btn btn-secondary d-none float-start"
+                                                            id="srsConfigurationCancelBtn">
+                                                        cancel
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary float-start"
+                                                            id="srsConfigurationEditBtn">
+                                                        edit config
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button type="submit" class="btn btn-success d-none float-end"
+                                                            id="srsConfigurationBtn">
+                                                        save changes
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        @break
+                                    @case(IntegrationsEnum::Email->value)
                                         <form id="emailConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -186,7 +333,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::SMS->value)
+                                    @case(IntegrationsEnum::SMS->value)
                                         <form id="smsConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -256,7 +403,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::InfoBip->value)
+                                    @case(IntegrationsEnum::InfoBip->value)
                                         <form id="infoBipConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -315,7 +462,63 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::PBX->value)
+                                    @case(IntegrationsEnum::iTrack->value)
+                                        <form id="iTrackConfigurationForm" method="post"
+                                              action="{{ route('settings.integrations') }}" class="row"> @csrf
+                                            <input type="hidden" name="Integration" value="{{ $integration->value }}"
+                                                   class="d-none" style="display: none;">
+                                            <div class="mb-3 col-12">
+                                                <label class="form-label" for="iTrack_URl">Host <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control config-iTrack-form"
+                                                       id="iTrack_URl" disabled
+                                                       placeholder="https://www.itrack.top" required
+                                                       value="{{ $iTrackConfig?->host }}"
+                                                       name="iTrack_URl">
+                                                <span id="iTrack_URl_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="iTrack_Username">Username <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control config-iTrack-form"
+                                                       id="iTrack_Username" disabled placeholder="Username" required
+                                                       name="iTrack_Username">
+                                                <span id="iTrack_Username_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="iTrack_Password">Password <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="password" class="form-control config-iTrack-form"
+                                                       id="iTrack_Password" disabled autocomplete="off"
+                                                       placeholder="Password" required
+                                                       name="iTrack_Password">
+                                                <span id="iTrack_Password_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <hr class="mb-3">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button type="button" class="btn btn-secondary d-none float-start"
+                                                            id="iTrackConfigurationCancelBtn">
+                                                        cancel
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary float-start"
+                                                            id="iTrackConfigurationEditBtn">
+                                                        edit config
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button type="submit" class="btn btn-success d-none float-end"
+                                                            id="iTrackConfigurationBtn">
+                                                        save changes
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        @break
+                                    @case(IntegrationsEnum::PBX->value)
                                         <form id="3cxConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -355,7 +558,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::CoreBanking->value)
+                                    @case(IntegrationsEnum::CoreBanking->value)
                                         <form id="cbsConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -413,7 +616,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::Channels->value)
+                                    @case(IntegrationsEnum::Channels->value)
                                         <form id="channelConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -470,7 +673,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::Facebook->value)
+                                    @case(IntegrationsEnum::Facebook->value)
                                         <form id="facebookConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -519,7 +722,7 @@
                                                        name="FB_Page_Token">
                                                 @if(is_numeric($facebookConfig?->page_token_expires_at))
                                                     <p class="error text-info">Expires
-                                                        on: {{ \Carbon\Carbon::createFromFormat('U',$facebookConfig?->page_token_expires_at)->format('M d, Y H:i T') }} </p>
+                                                        on: {{ Carbon::createFromFormat('U',$facebookConfig?->page_token_expires_at)->format('M d, Y H:i T') }} </p>
                                                 @endif
                                                 <span id="FB_Page_Token_error" class="invalid-feedback d-none error"
                                                       role="alert"></span>
@@ -546,7 +749,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::Twitter->value)
+                                    @case(IntegrationsEnum::Twitter->value)
                                         <form id="twitterConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -639,7 +842,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::Website->value)
+                                    @case(IntegrationsEnum::Website->value)
                                         <form id="websiteConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -679,7 +882,7 @@
                                             </div>
                                         </form>
                                         @break
-                                    @case(\App\Enums\Core\IntegrationsEnum::LLM->value)
+                                    @case(IntegrationsEnum::LLM->value)
                                         <form id="llmConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
@@ -689,7 +892,7 @@
                                                         class="text-danger">*</span></label>
                                                 <select class="form-control  config-llm-form" name="LLM_Provider"
                                                         disabled id="LLM_Provider" required>
-                                                    @foreach(\EchoLabs\Prism\Enums\Provider::cases() as $case)
+                                                    @foreach(Provider::cases() as $case)
                                                         <option
                                                             value="{{ $case->value }}" {{ ($case->value===$llmConfig?->Provider)?'selected' :''}}>{{ $case->name }}</option>
                                                     @endforeach
@@ -749,6 +952,30 @@
 @section('scripts')
     <script>
         $(function () {
+            $("#orgConfigurationEditBtn").on('click', function () {
+                enable('org')
+            });
+            $("#orgConfigurationCancelBtn").on('click', function () {
+                disable('org');
+            });
+            $('form#orgConfigurationForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $("#orgConfigurationBtn"), false, false, true)) {
+                    disable('org');
+                }
+            });
+            $('#Org_Logo_File').on('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const dataUrl = evt.target.result;
+                    if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image/')) {
+                        $('#Org_Logo').val(dataUrl);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
             $("#emailConfigurationEditBtn").on('click', function () {
                 enable('email')
             });
@@ -837,6 +1064,32 @@
                 e.preventDefault();
                 if (await saveForm($(this), $("#cbsConfigurationBtn"), false, false, true)) {
                     disable('cbs');
+                }
+            });
+
+            $("#srsConfigurationEditBtn").on('click', function () {
+                enable('srs')
+            });
+            $("#srsConfigurationCancelBtn").on('click', function () {
+                disable('srs');
+            });
+            $('form#srsConfigurationForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $("#srsConfigurationBtn"), false, false, true)) {
+                    disable('srs');
+                }
+            });
+
+            $("#iTrackConfigurationEditBtn").on('click', function () {
+                enable('iTrack')
+            });
+            $("#iTrackConfigurationCancelBtn").on('click', function () {
+                disable('iTrack');
+            });
+            $('form#iTrackConfigurationForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $("#iTrackConfigurationBtn"), false, false, true)) {
+                    disable('iTrack');
                 }
             });
 

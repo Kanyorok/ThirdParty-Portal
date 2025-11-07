@@ -21,12 +21,20 @@ Schedule::command('app:get-twitter-posts-command')->hourlyAt(0)->withoutOverlapp
 
 Schedule::command('auth:clear-resets')->everySixHours()->withoutOverlapping()->runInBackground();
 
+Schedule::command('trips:start-pending')->everyMinute()->withoutOverlapping()->runInBackground();
+
+
 Schedule::command('app:won-lead-processing-command')->dailyAt('01:00')->withoutOverlapping()->runInBackground();
 
 Schedule::command('app:loan-assignment-command')->dailyAt('5:30')->withoutOverlapping()->runInBackground();
 Schedule::command('app:loan-re-assignment-command')->dailyAt('6:00')->withoutOverlapping()->runInBackground();
 
 Schedule::command('app:task-due-reminder-command')->dailyAt('08:40')->withoutOverlapping()->runInBackground();
+
+Schedule::command('app:task-due-reminder-command')->dailyAt('08:40')->withoutOverlapping()->runInBackground();
+
+
+Schedule::command('app:fleet-day-playback-command')->dailyAt('00:30')->withoutOverlapping()->runInBackground();
 
 //$schedule->command('')->everyFifteenMinutes();
 

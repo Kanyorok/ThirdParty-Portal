@@ -2,14 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
-use App\Models\Campaign;
-use App\Models\CampaignParty;
-use App\Models\Lead;
-use App\Models\Task;
-use App\Models\Ticket;
-use App\Models\User;
+use App\Models\Core\Task;
+use App\Models\CRM\Campaign;
+use App\Models\CRM\CampaignParty;
+use App\Models\CRM\Lead;
+use App\Models\CRM\Ticket;
+use App\Services\HRM\UserService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -43,18 +44,18 @@ class TaskService
         }
         $task = new Task();
         $task->fill([
-            "Party" => $Party,
-            "PartyID" => $PartyID,
-            "UserID" => $actor->Id,
-            "Dated" => $Due,
-            "Notes" => $Description,
-            'Source' => $Source,
-            'SourceID' => $SourceID,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ])->save();
+                     "Party"      => $Party,
+                     "PartyID"    => $PartyID,
+                     "UserID"     => $actor->Id,
+                     "Dated"      => $Due,
+                     "Notes"      => $Description,
+                     'Source'     => $Source,
+                     'SourceID'   => $SourceID,
+                     'CreatedBy'  => $actor->Id,
+                     'ModifiedBy' => $actor->Id,
+                    ])->save();
 
-        activity()->causedBy($actor)->performedOn($task)->event('create ')->log('created a task: ' . $task->TaskID);
+        activity()->causedBy($actor)->performedOn($task)->event('create')->log('created a task: ' . $task->TaskID);
 
         return new self($task);
     }
@@ -62,9 +63,9 @@ class TaskService
     public function setSource(string $Source, string $SourceID): static
     {
         $this->task->update([
-            'Source' => $Source,
-            'SourceID' => $SourceID
-        ]);
+                             'Source'   => $Source,
+                             'SourceID' => $SourceID,
+                            ]);
 
         return $this;
     }
@@ -127,15 +128,17 @@ class TaskService
         }
 
         $this->task->lock('WITH(NOLOCK)')->update([
-            "UserID" => $assignee->Id,
-        ]);
+                                                   "UserID" => $assignee->Id,
+                                                  ]);
 
-        (new UserService($assignee))->sendEmail('Task Assignment Notification ',
+        (new UserService($assignee))->sendEmail(
+            'Task Assignment Notification ',
             '<p>This is to inform you that a new task ([Task ID: #' . $this->task->TaskID . ']) with the following details. </p>
                     <p><b>Description</b>: ' . $this->task->Notes . '</p>
                     <p><b>Due Date </b>: ' . $this->task->Dated->format('M d, Y') . '</p>
                     <p>Please review the task and complete it by the given due date. You can access the tasks on the dashboard</p>
-                    <p>Thank you for your prompt attention to this matter.</p>');
+                    <p>Thank you for your prompt attention to this matter.</p>'
+        );
 
         return $this;
     }

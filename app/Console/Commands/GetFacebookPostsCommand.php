@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
-use App\Models\Social;
+use App\Models\CRM\Social;
 use App\Services\SocialMediaService;
 use App\Services\ThirdParty\FacebookService;
 use Carbon\Carbon;
@@ -68,6 +68,5 @@ class GetFacebookPostsCommand extends Command
 
             SocialMediaService::createFromFacebook($post, $actor);
         }
-
     }
 }

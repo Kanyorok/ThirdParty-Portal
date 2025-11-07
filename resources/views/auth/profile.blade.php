@@ -24,7 +24,6 @@
                     </div>
                     {!! $user->getImage('id="image_upload_preview" alt=".." class="img-fluid avatar-1 rounded-circle mb-2" width="128" height="128"') !!}
                     <h5 class="card-title mb-0">{{ $user->Name }}</h5>
-                    <div class="text-muted mb-2">{{ $user->roles()->first()?->name }}</div>
                 </div>
                 <div class="card-body">
                     <div class="text-center">
@@ -34,7 +33,7 @@
                                    style="display: none;" id="Upload_image">
                             <label for="Upload_image" class="btn btn-primary avatar-changed"
                                    type="button"><i
-                                    class="fas fa-image"></i><span> change photo</span></label>
+                                        class="fas fa-image"></i><span> change photo</span></label>
                             <button type="submit"
                                     class="btn btn-success uploadBtn avatar-change d-none"
                                     id="uploadBtn"><i class="fa fa-upload"></i> Upload & Save
@@ -88,18 +87,7 @@
                                            value="{{ $user->ClientID }}" name="ClientID">
                                     <span id="ClientID_error" class="invalid-feedback d-none error" role="alert"></span>
                                 </div>
-                                <div class="col-sm-6 col-12 mb-3">
-                                    <label for="Gender" class="form-label">Gender <span
-                                            class="text-danger">*</span></label>
-                                    <select class="form-control profile-form" name="Gender" disabled id="Gender"
-                                            required>
-                                        @foreach(App\Enums\GenderEnum::getAll() as $gender)
-                                            <option
-                                                value="{{ $gender->value }}" {{ ($gender->value===$user->Gender->value)?'selected' :''}}>{{ $gender->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p id="Gender_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                                </div>
+
                                 <div class="mb-3 col-md-6">
                                     <label class="form-label" for="Email">Email</label>
                                     <input type="Email" class="form-control  profile-form" id="Email" disabled
@@ -122,7 +110,7 @@
                                             id="userProfileCancelBtn">
                                         cancel
                                     </button>
-                                    <button type="button" class="btn btn-primar`y` float-start" id="userProfileEditBtn">
+                                    <button type="button" class="btn btn-primary float-start" id="userProfileEditBtn">
                                         edit profile
                                     </button>
                                 </div>
@@ -176,7 +164,7 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="{{asset('assets/plugins/jquery-form/jquery.form.min.js')}}"></script>
+    <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"
             integrity="sha512-6F1RVfnxCprKJmfulcxxym1Dar5FsT/V2jiEUvABiaEiFWoQ8yHvqRM/Slf0qJKiwin6IDQucjXuolCfCKnaJQ=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>

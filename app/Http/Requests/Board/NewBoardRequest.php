@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Board;
 
-use App\Models\Board;
 use App\Models\BR\Client;
-use App\Models\Committee;
+use App\Models\HRM\Committee;
+use App\Models\ThirdParies\Board;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -21,15 +21,35 @@ class NewBoardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ClientID' => ['required', 'string', 'max:200'],
-            'BoardCommittees' => ['required', 'array', 'min:1', 'max:20'],
-            'BoardCommittees.*' => ['required', Rule::exists('t_Committees', 'CommitteeID')],
-            'BoardMemberRole' => ['nullable', 'string', 'max:200'],
-            'BoardMemberNotes' => ['nullable', 'string', 'max:2000'],
-        ];
+                'ClientID'          => [
+                                        'required',
+                                        'string',
+                                        'max:200',
+                                       ],
+                'BoardCommittees'   => [
+                                        'required',
+                                        'array',
+                                        'min:1',
+                                        'max:20',
+                                       ],
+                'BoardCommittees.*' => [
+                                        'required',
+                                        Rule::exists('t_Committees', 'CommitteeID'),
+                                       ],
+                'BoardMemberRole'   => [
+                                        'nullable',
+                                        'string',
+                                        'max:200',
+                                       ],
+                'BoardMemberNotes'  => [
+                                        'nullable',
+                                        'string',
+                                        'max:2000',
+                                       ],
+               ];
     }
 
-    public function getCommittees():array
+    public function getCommittees(): array
     {
         return Committee::query()->whereIn('CommitteeID', $this->validated('BoardCommittees'))->select('Id')->pluck('Id')->toArray();
     }
@@ -39,15 +59,11 @@ class NewBoardRequest extends FormRequest
         $client = Client::query()->where('ClientID', $this->validated('ClientID'))->first();
         if ($client instanceof Client) {
             if (Board::query()->where('ClientID', $client->ClientID)->exists()) {
-                throw ValidationException::withMessages([
-                    'ClientID' => 'client already has a board member'
-                ]);
+                throw ValidationException::withMessages(['ClientID' => 'client already has a board member']);
             }
             return $client;
         }
-        throw ValidationException::withMessages([
-            'ClientID' => 'invalid Member Number'
-        ]);
+        throw ValidationException::withMessages(['ClientID' => 'invalid Member Number']);
     }
 
     public function generateID(): string
@@ -60,5 +76,4 @@ class NewBoardRequest extends FormRequest
 
         return $slug;
     }
-
 }

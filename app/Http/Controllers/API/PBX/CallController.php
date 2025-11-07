@@ -5,11 +5,11 @@ namespace App\Http\Controllers\API\PBX;
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Call\CallLogRequest;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Call;
-use App\Models\Contact;
-use App\Models\Lead;
-use App\Models\User;
+use App\Models\Communication\Call;
+use App\Models\CRM\Contact;
+use App\Models\CRM\Lead;
 use App\Services\BR\ClientService;
 use App\Services\Call\CallService;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,30 +26,30 @@ class CallController extends Controller
     {
         //Log::warning('3cx log: received call');
 
-        $phone= $request->validated('phonenumber');
+        $phone = $request->validated('phonenumber');
         $start = $request->getStart();
         $end = $request->getEnd();
         $query = Call::query();
-        $user = User::query()->where('ExtensionNo',$request->validated('AgentExtension'))->first();
-        if ($user instanceof User){
-            $query->where(function (Builder $query) use ($user){
-                $query->where('t_Calls.CreatedBy',$user->Id)->orWhere('t_Calls.UserID',$user->Id)->orWhere('t_Calls.ModifiedBy',$user->Id);
+        $user = User::query()->where('ExtensionNo', $request->validated('AgentExtension'))->first();
+        if ($user instanceof User) {
+            $query->where(function (Builder $query) use ($user) {
+                $query->where('t_Calls.CreatedBy', $user->Id)->orWhere('t_Calls.UserID', $user->Id)->orWhere('t_Calls.ModifiedBy', $user->Id);
             });
             $actor = $user;
-        }else{
-          $actor= SystemHelper::user();
+        } else {
+            $actor = SystemHelper::user();
         }
-        $query->whereBetween('t_Calls.StartOn',[$start->copy()->subHours(3),$start->copy()->addHours()])
+        $query->whereBetween('t_Calls.StartOn', [$start->copy()->subHours(3), $start->copy()->addHours()])
         ->where('t_Calls.CallTypeID', $request->getCallType()->value);
 
         $contact = ClientService::search(Client::query(), $phone)->first();
         if ($contact instanceof Client) {
-          $call = $query->where('t_Calls.PartyID',$contact->ClientID)->where('t_Calls.Party',Client::getPrimaryKey())->first();
-          $service = ($call instanceof Call)
+            $call = $query->where('t_Calls.PartyID', $contact->ClientID)->where('t_Calls.Party', Client::getPrimaryKey())->first();
+            $service = ($call instanceof Call)
               ? (new CallService($call))
-              : CallService::createClient($contact, $request->getCallStatus(),$request->getCallType(), $start,$actor);
+              : CallService::createClient($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor);
 
-            $service->end($end,$request->getCallStatus(),$actor,true)->setResponse($request->all());
+            $service->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
 
             return $this->succeeded('ok');
         }
@@ -58,12 +58,12 @@ class CallController extends Controller
             $query->where('Phone', $request->get('phone'))->orWhere('Phone', '+' . $request->get('phone'));
         })->first();
         if ($contact instanceof Lead) {
-            $call = $query->where('t_Calls.PartyID',$contact->LeadID)->where('t_Calls.Party',Lead::getPrimaryKey())->first();
+            $call = $query->where('t_Calls.PartyID', $contact->LeadID)->where('t_Calls.Party', Lead::getPrimaryKey())->first();
             $service = ($call instanceof Call)
                 ? (new CallService($call))
-                : CallService::createLead($contact, $request->getCallStatus(),$request->getCallType(), $start,$actor);
+                : CallService::createLead($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor);
 
-            $service->end($end,$request->getCallStatus(),$actor,true)->setResponse($request->all());
+            $service->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
 
             return $this->succeeded('ok');
         }
@@ -72,22 +72,21 @@ class CallController extends Controller
             $query->where('Phone', $request->get('phone'))->orWhere('Phone', '+' . $request->get('phone'));
         })->first();
         if ($contact instanceof Contact) {
-
             if ($contact->party instanceof Client) {
                 //check calls i the call logs for this client/
                 $call = $query->where(function (Builder $query) use ($contact) {
                     $query->where(function (Builder $query) use ($contact) {
-                        $query->where('t_Calls.PartyID',$contact->ContactID)->where('t_Calls.Party',Contact::getPrimaryKey());
+                        $query->where('t_Calls.PartyID', $contact->ContactID)->where('t_Calls.Party', Contact::getPrimaryKey());
                     })->orWhere(function (Builder $query) use ($contact) {
-                        $query->where('t_Calls.PartyID',$contact->party->ClientID)->where('t_Calls.Party',Client::getPrimaryKey());
+                        $query->where('t_Calls.PartyID', $contact->party->ClientID)->where('t_Calls.Party', Client::getPrimaryKey());
                     });
                 })->first();
 
                 $service = ($call instanceof Call)
                     ? (new CallService($call))
-                    : CallService::createClient($contact, $request->getCallStatus(),$request->getCallType(), $start,$actor);
+                    : CallService::createClient($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor);
 
-                $service->end($end,$request->getCallStatus(),$actor,true)->setResponse($request->all());
+                $service->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
 
                 return $this->succeeded('ok');
             }
@@ -95,45 +94,44 @@ class CallController extends Controller
             if ($contact->party instanceof Lead) {
                 $call = $query->where(function (Builder $query) use ($contact) {
                     $query->where(function (Builder $query) use ($contact) {
-                        $query->where('t_Calls.PartyID',$contact->ContactID)->where('t_Calls.Party',Contact::getPrimaryKey());
+                        $query->where('t_Calls.PartyID', $contact->ContactID)->where('t_Calls.Party', Contact::getPrimaryKey());
                     })->orWhere(function (Builder $query) use ($contact) {
-                        $query->where('t_Calls.PartyID',$contact->party->LeadID)->where('t_Calls.Party',Lead::getPrimaryKey());
+                        $query->where('t_Calls.PartyID', $contact->party->LeadID)->where('t_Calls.Party', Lead::getPrimaryKey());
                     });
                 })->first();
 
                 $service = ($call instanceof Call)
                     ? (new CallService($call))
-                    : CallService::createLead($contact, $request->getCallStatus(),$request->getCallType(), $start,$actor);
+                    : CallService::createLead($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor);
 
-                $service->end($end,$request->getCallStatus(),$actor,true)->setResponse($request->all());
+                $service->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
 
                 return $this->succeeded('ok');
             }
 
 
             //if($contact->PartyID == 0){//Unattached call
-            $call = $query->where('t_Calls.PartyID',$contact->ContactID)->where('t_Calls.Party',Contact::getPrimaryKey())->first();
+            $call = $query->where('t_Calls.PartyID', $contact->ContactID)->where('t_Calls.Party', Contact::getPrimaryKey())->first();
             $service = ($call instanceof Call)
                 ? (new CallService($call))
-                : CallService::createContact($contact, $request->getCallStatus(),$request->getCallType(), $start,$actor);
+                : CallService::createContact($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor);
 
-            $service->end($end,$request->getCallStatus(),$actor,true)->setResponse($request->all());
+            $service->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
             return $this->succeeded('ok');
-
         }
 
         //Create contact and attach contact directly
         $contact = Contact::create([
-            'Label'=> "Unattached Caller",
-            'Phone' => $phone,
-            'Party' => Contact::getPrimaryKey(),
-            'PartyID' => 0,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id
-        ]);
+                                    'Label'      => "Unattached Caller",
+                                    'Phone'      => $phone,
+                                    'Party'      => Contact::getPrimaryKey(),
+                                    'PartyID'    => 0,
+                                    'CreatedBy'  => $actor->Id,
+                                    'ModifiedBy' => $actor->Id,
+                                   ]);
 
-         CallService::createContact($contact, $request->getCallStatus(),$request->getCallType(), $start,$actor)
-            ->end($end,$request->getCallStatus(),$actor,true)->setResponse($request->all());
+         CallService::createContact($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor)
+            ->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
 
         return $this->succeeded('ok');
     }

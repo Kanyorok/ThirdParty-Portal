@@ -2,10 +2,10 @@
 
 namespace App\Models\BR;
 
-use App\Models\CrmSMS;
-use App\Models\DebtRecovery\LoanAssignment;
-use App\Models\Schedule;
-use App\Models\Task;
+use App\Models\Communication\SMS;
+use App\Models\Core\Task;
+use App\Models\CRM\DebtRecovery\LoanAssignment;
+use App\Models\CRM\Schedule;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,16 +22,16 @@ class DebtProduct extends Model
     protected $primaryKey = 'AccountID';//null;
 
     protected $casts = [
-        'MaturityDate' => 'datetime',
-        'processDate' => 'datetime',
-        'OutstandingBalance' => 'decimal:2',
-        'ArrearsAmount' => 'decimal:2',
-        'ArrearsDays' => 'integer'
-    ];
+                        'MaturityDate'       => 'datetime',
+                        'processDate'        => 'datetime',
+                        'OutstandingBalance' => 'decimal:2',
+                        'ArrearsAmount'      => 'decimal:2',
+                        'ArrearsDays'        => 'integer',
+                       ];
 
     public static function getPrimaryKey(): string
     {
-        return (new self)->getRouteKeyName();
+        return (new self())->getRouteKeyName();
     }
 
     public function getRouteKeyName(): string
@@ -71,7 +71,7 @@ class DebtProduct extends Model
 
     public function crmsms(): MorphMany
     {
-        return $this->morphMany(CrmSMS::class, 'source', 'Source', 'SourceID', 'AccountID');
+        return $this->morphMany(SMS::class, 'source', 'Source', 'SourceID', 'AccountID');
     }
 
     public function client(): BelongsTo

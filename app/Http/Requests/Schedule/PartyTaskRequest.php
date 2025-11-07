@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Schedule;
 
 use App\Helpers\SystemHelper;
-use App\Models\Task;
-use App\Models\User;
+use App\Models\Auth\User;
+use App\Models\Core\Task;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,8 +23,9 @@ class PartyTaskRequest extends FormRequest
     {
         return [
             'task_date' => 'required|date_format:"Y-m-d"',
-            'task_notes' => ['required', 'min:1', 'max:1000', 'string'],
-            'task_user' => [Rule::requiredIf($this->isMethod('POST')), 'string'],
+            'task_notes' => ['required', 'min:1', 'max:1000', 'string',],
+            'task_user' => [Rule::requiredIf($this->isMethod('POST')), 'string',
+            ],
         ];
     }
 
@@ -32,9 +33,7 @@ class PartyTaskRequest extends FormRequest
     {
         $user = User::query()->where('t_Users.UserID', Str::upper($this->validated('task_user')))->where('t_Users.UserID', '!=', SystemHelper::ID)->first(['Id', 'UserID']);
         if (!$user instanceof User) {
-            throw ValidationException::withMessages([
-                'task_user' => 'invalid user',
-            ]);
+            throw ValidationException::withMessages(['task_user' => 'invalid user']);
         }
 
         if ($user->Id === $this->user()->Id) {
@@ -42,9 +41,7 @@ class PartyTaskRequest extends FormRequest
         }
 
         if (!$this->user()->can('delegate', Task::class)) {
-            throw ValidationException::withMessages([
-                'task_user' => 'You cannot assign to another person',
-            ]);
+            throw ValidationException::withMessages(['task_user' => 'You cannot assign to another person']);
         }
         return $user;
     }
@@ -59,11 +56,9 @@ class PartyTaskRequest extends FormRequest
      */
     public function getDated(Carbon $current = null): Carbon
     {
-        $date = Carbon::createFromFormat('Y-m-d', $this->input('task_date'));
+        $date = Carbon::createFromFormat('Y-m-d', $this->string('task_date'));
         if (!$date instanceof Carbon) {
-            throw ValidationException::withMessages([
-                'task_date' => 'invalid date format',
-            ]);
+            throw ValidationException::withMessages(['task_date' => 'invalid date format']);
         }
 
         if (!$current instanceof Carbon) {//not an update
@@ -71,9 +66,7 @@ class PartyTaskRequest extends FormRequest
         }
 
         if ($date->lte($current->subDay())) {
-            throw ValidationException::withMessages([
-                'task_date' => 'has to be due in the future.',
-            ]);
+            throw ValidationException::withMessages(['task_date' => 'has to be due in the future.']);
         }
 
         return $date->endOfDay();

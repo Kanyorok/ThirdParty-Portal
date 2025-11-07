@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Enums\LocalityTypeEnum;
-use App\Models\Locality;
+use App\Models\Core\Locality;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
@@ -20,9 +20,17 @@ class LocalityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'place_name' => ['required', 'string', 'min:1', 'max:255'],
-            'place_in' => ['required', 'integer'],
-        ];
+                'place_name' => [
+                                 'required',
+                                 'string',
+                                 'min:1',
+                                 'max:255',
+                                ],
+                'place_in'   => [
+                                 'required',
+                                 'integer',
+                                ],
+               ];
     }
 
     /**
@@ -31,9 +39,7 @@ class LocalityRequest extends FormRequest
     public function getType(): string
     {
         if (!in_array($this->_type, LocalityTypeEnum::values(), true)) {
-            throw ValidationException::withMessages([
-                'place_name' => 'invalid Locality',
-            ]);
+            throw ValidationException::withMessages(['place_name' => 'invalid Locality']);
         }
 
         return $this->_type;
@@ -53,9 +59,7 @@ class LocalityRequest extends FormRequest
         }
 
         if ($query->where('Name', $this->validated('place_name'))->exists()) {
-            throw ValidationException::withMessages([
-                'place_name' => 'place already exists',
-            ]);
+            throw ValidationException::withMessages(['place_name' => 'place already exists']);
         }
 
         return $this->validated('place_name');
@@ -66,15 +70,13 @@ class LocalityRequest extends FormRequest
      */
     public function getLocatedIn(): ?int
     {
-        $place = (int)$this->place_in;
+        $place = (int) $this->place_in;
         if ($place === self::DefaultPlaceId) {
             return null;
         }
 
         if (!Locality::query()->where('ID', $place)->exists()) {
-            throw ValidationException::withMessages([
-                'place_in' => 'invalid place',
-            ]);
+            throw ValidationException::withMessages(['place_in' => 'invalid place']);
         }
         return $place;
     }
