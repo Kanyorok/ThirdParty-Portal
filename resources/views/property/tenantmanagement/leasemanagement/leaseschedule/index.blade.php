@@ -51,8 +51,10 @@
             @endforeach
             </tbody>
         </table>
-    @else
-        <p>No lease renewals registered yet.</p>
+        @else
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i> No lease renewals registered yet.
+        </div>
         @endif
         </div>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

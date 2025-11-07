@@ -146,8 +146,8 @@
                                     <span>No documents attached.</span>
                                 @endforelse
                             </div>
-                            <input type="file" name="Document[]" class="form-control" multiple>
-                            <small class="text-muted">e.g. upload Lease Document</small>
+                            <input type="file" name="Document[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+                            <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
                         </div>
 
                         <!-- Buttons -->

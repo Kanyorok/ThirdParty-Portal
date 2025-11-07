@@ -8,6 +8,7 @@
 
 <a href="{{ route('maintenancerequest.create') }}" class="btn btn-primary mb-3">New Request</a>
 <p><small>This is a list of raised maintenance requests</small></p>
+@if ($maintenancerequests->count())
   <table id='Maintenancerequest' class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
@@ -53,6 +54,11 @@
     @endforeach
     </tbody>
   </table>
+      @else
+    <div class="alert alert-info mt-3">
+      <i class="bi bi-info-circle me-2"></i>No maintenance request yet.
+        </div>
+    @endif
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

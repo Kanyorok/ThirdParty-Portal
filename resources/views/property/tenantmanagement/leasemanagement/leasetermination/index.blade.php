@@ -37,7 +37,9 @@
                 </tbody>
             </table>
         @else
-            <p>No termination record registered yet.</p>
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle me-2"></i>No termination record registered yet.
+            </div>
         @endif
     </div>
 

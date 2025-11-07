@@ -48,7 +48,9 @@
         </tbody>
       </table>
     @else
-      <p>No property invoices registered yet.</p>
+    <div class="alert alert-info mt-3">
+      <i class="bi bi-info-circle me-2"></i>No property invoices registered yet.
+        </div>
     @endif
   </div>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
