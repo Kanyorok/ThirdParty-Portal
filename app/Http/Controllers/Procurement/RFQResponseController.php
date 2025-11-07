@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\RFQResponse;
-use App\Models\procurement\RFQResponseItem;
+use App\Models\Procurement\RFQResponseItem;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
