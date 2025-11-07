@@ -12,6 +12,9 @@ use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQSupplierResponseEvaluation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Services\CRMEmailService;
+use App\Enums\EmailPriorityEnum;
 
 class RFQEvaluationController extends Controller
 {
@@ -51,7 +54,7 @@ class RFQEvaluationController extends Controller
                     // Determine SectionID and read weight from preloaded map; fallback to 0
                     $sectionId = $first->rfqCriteria?->SectionID ?? $first->rfqCriteriaUnscoped?->SectionID;
                     $weightsForRfq = $rfqSectionWeights[$evaluation->RFQId] ?? [];
-                    $sectionWeight = (float) ($sectionId ? ($weightsForRfq[$sectionId] ?? 0) : 0);
+                    $sectionWeight = (float)($sectionId ? ($weightsForRfq[$sectionId] ?? 0) : 0);
                     $maxScorePerCriteria = 10;
                     $maxTotal = $criteriaList->count() * $maxScorePerCriteria;
                     $actualTotal = $criteriaList->sum('Score');
@@ -99,7 +102,7 @@ class RFQEvaluationController extends Controller
     public function consolidated($rfqId, Request $request)
     {
         // Allow rfq override from query string (for embedded selector)
-        $rfqId = (int) ($request->input('rfq', $rfqId));
+        $rfqId = (int)($request->input('rfq', $rfqId));
 
         // Build list of RFQs that have evaluations (for RFQ picker)
         $evaluatedRfqs = RFQEvaluation::select('RFQId')
@@ -111,7 +114,7 @@ class RFQEvaluationController extends Controller
             ->values();
 
         // Default RFQ if invalid or missing
-        if (!$rfqId || !$evaluatedRfqs->pluck('Id')->contains((int) $rfqId)) {
+        if (!$rfqId || !$evaluatedRfqs->pluck('Id')->contains((int)$rfqId)) {
             $rfqId = $evaluatedRfqs->first()['Id'] ?? $rfqId;
         }
 
@@ -198,7 +201,7 @@ class RFQEvaluationController extends Controller
             $sectionColumns[] = [
                 'id' => $secId,
                 'name' => $sections[$secId]->SectionName ?? 'Section',
-                'weight' => (float) ($rfqSectionWeights[$secId] ?? 0),
+                'weight' => (float)($rfqSectionWeights[$secId] ?? 0),
                 'criteria' => $critList->map(fn($row) => [
                     'id' => $row->CriteriaID,
                     'name' => $row->criteria->CriteriaName ?? 'Criteria',
@@ -309,8 +312,8 @@ class RFQEvaluationController extends Controller
         // Notify supplier portal API
         try {
             $payload = [
-                'rfqId' => (int) $rfqId,
-                'supplierId' => (int) $supplierId,
+                'rfqId' => (int)$rfqId,
+                'supplierId' => (int)$supplierId,
                 'status' => 'Awarded',
                 'awardedOn' => now()->toISOString(),
                 'comments' => $request->input('Comments'),
@@ -330,6 +333,37 @@ class RFQEvaluationController extends Controller
             }
         } catch (\Throwable $e) {
             \Log::error('Supplier award notify exception', ['rfqId' => $rfqId, 'supplierId' => $supplierId, 'error' => $e->getMessage()]);
+        }
+
+        // Send award email to supplier (if email available)
+        try {
+            $responseRecord = \App\Models\Procurement\RFQResponse::where('RFQId', $rfqId)->where('SupplierId', $supplierId)->with('supplier.thirdParty')->first();
+            $recipientEmail = null;
+            $recipientName = null;
+            if ($responseRecord && $responseRecord->supplier && $responseRecord->supplier->thirdParty) {
+                $tp = $responseRecord->supplier->thirdParty;
+                $recipientEmail = $tp->Email ?? null;
+                $recipientName = $tp->ThirdPartyName ?? $tp->TradingName ?? null;
+            }
+
+            if ($recipientEmail && filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+                $actor = auth()->user();
+                $subject = "Award Notification: RFQ #{$rfqId} - {$award->Id}";
+                $body = "<p>Dear " . ($recipientName ?? 'Supplier') . ",</p>";
+                $body .= "<p>We are pleased to inform you that you have been awarded for RFQ <strong>" . ($award->RFQId ?? $rfqId) . "</strong>.</p>";
+                $body .= "<p>Comments: " . e($request->input('Comments') ?? '') . "</p>";
+                $body .= "<p>Please log in to the supplier portal for details.</p>";
+                $body .= "<p>Regards,<br>" . e(config('org.name')) . "</p>";
+
+                // Prepare to/to array format expected by createRaw: [ [ 'Name' => 'email' ] ]
+                $to = [[ $recipientName ?? $recipientEmail => $recipientEmail ]];
+
+                CRMEmailService::createRaw($actor, $subject, $body, $to, 'ThirdParty', (string)($responseRecord->supplier->thirdParty->Id ?? ''), [], [], EmailPriorityEnum::Normal)->send(true);
+            } else {
+                Log::warning('Award email not sent: no valid email for supplier', ['rfqId' => $rfqId, 'supplierId' => $supplierId]);
+            }
+        } catch (\Throwable $ex) {
+            Log::error('Error sending award email', ['error' => $ex->getMessage(), 'rfqId' => $rfqId, 'supplierId' => $supplierId]);
         }
 
         return back()->with('success', 'Award saved and supplier notified.');
@@ -434,7 +468,7 @@ class RFQEvaluationController extends Controller
 
         // Attach a pseudo relation `weighted_section` to each criteria row for serialization
         $criteriaRows->each(function ($row) use ($weightsBySection) {
-            $weight = (float) ($weightsBySection[$row->SectionID] ?? 0);
+            $weight = (float)($weightsBySection[$row->SectionID] ?? 0);
             $row->setRelation('weighted_section', ['Weight' => $weight]);
         });
 
@@ -447,7 +481,7 @@ class RFQEvaluationController extends Controller
 
         // Provide a simple map of SectionID => Weight as well for the frontend
         $sectionWeights = collect($weightsBySection)->map(function ($w) {
-            return (float) $w;
+            return (float)$w;
         })->toArray();
 
         return response()->json([

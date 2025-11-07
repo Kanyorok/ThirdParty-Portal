@@ -25,7 +25,7 @@ class BranchRequest extends FormRequest
             'Name' => ['required', 'string', 'max:255'],
             'Address' => ['nullable', 'string', 'max:255'],
             'Address2' => ['nullable', 'string', 'max:255'],
-            'Phone' => ['nullable', 'string', 'max:40'],
+            'Phone' => ['nullable', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'Email' => ['nullable', 'email', 'max:255'],
         ], $other);
     }

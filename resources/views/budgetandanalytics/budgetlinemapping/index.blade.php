@@ -3,6 +3,13 @@
 
 @section('content')
     <div class="container my-3">
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <!-- Card for Budget Lines -->
         <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
             <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
@@ -16,7 +23,8 @@
                 <!-- Budget Lines Table -->
                 <div class="table-responsive">
                     <p class="text-muted small mb-3">
-                        Below is a list of all existing budget lines with their departments, mapped GL accounts, and whether they are product-driven.
+                        Below is a list of all existing budget lines with their departments, mapped GL accounts, and
+                        whether they are product-driven.
                     </p>
                     <table class="table table-hover table-sm align-middle table-striped1"
                            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;font-size:13px">
@@ -41,12 +49,16 @@
                                     {{ $item->LineName }}
                                 </td>
                                 <td>{{ $item->department->Name ?? '-' }}</td>
-                                <td>{{ $item->glAccountType->Description ?? '-' }}</td>
+                                <td>{{ $item->GLAccountTypeID ?? '-' }}</td>
                                 <td>{{ $item->glSubType->Description ?? '-' }}</td>
                                 <td>
                                     @if($item->IsProductDriven)
                                         <a href="{{ route('budgetlinemapping.show', $item->Id) }}"
                                            class="badge bg-success text-decoration-none">Yes</a>
+                                        <a href="{{ route('budgetlinemapping.show', $item->Id) }}"
+                                           class="badge bg-info text-decoration-none">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
                                     @else
                                         <span class="badge bg-secondary">No</span>
                                     @endif
@@ -56,7 +68,8 @@
                                 </td>
                                 <td class="small text-start">
                                     @forelse($item->newGlAccounts as $gl)
-                                        <div>GL{{ $gl->Id }} – {{ $gl->Description }}</div>
+                                        <div>GL{{ $gl->Id }} – {{ $gl->AccountID }}</div>
+                                        <div>( {{ $gl->Description }} )</div>
                                     @empty
                                         <span class="text-muted">—</span>
                                     @endforelse
@@ -84,7 +97,8 @@
                                             <i class="fas fa-info-circle me-2 text-info"></i>
                                             No budget lines have been added yet.
                                         </p>
-                                        <a href="{{ route('budgetlinemapping.create') }}" class="btn btn-info px-4 py-2">
+                                        <a href="{{ route('budgetlinemapping.create') }}"
+                                           class="btn btn-info px-4 py-2">
                                             <i class="fas fa-plus-circle me-2"></i> Add Budget Line
                                         </a>
                                     </div>
@@ -133,6 +147,7 @@
             .table-responsive {
                 font-size: 0.875rem;
             }
+
             .btn-sm {
                 padding: 0.2rem 0.4rem;
             }

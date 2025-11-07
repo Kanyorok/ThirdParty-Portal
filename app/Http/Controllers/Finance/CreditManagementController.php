@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\CodeDetail;
 use App\Models\Finance\FinanceCreditManagement;
@@ -25,6 +26,7 @@ class CreditManagementController extends Controller
     }
     public function index(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceCreditManagementView, FinanceCreditManagement::class);
         $query = FinanceCreditManagement::select('Id','CustomerID','CreditLimit','Status','EffectiveFrom','ExpiryDate')
             ->with(['customer:Id,ThirdPartyName,RegistrationNumber,Email']);
 
@@ -59,8 +61,13 @@ class CreditManagementController extends Controller
             $query->where('CreditLimit', '<=', $request->get('credit_to'));
         }
 
-        $credits = $query->orderBy('Id', 'desc')
-            ->paginate(25)
+        $sortField = $request->sort_by ?? 'Id';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 25);
+        $credits = $query
+            ->paginate($perPage)
             ->appends($request->query())
             ->through(function (FinanceCreditManagement $c) {
                 $utilization = $this->creditService->calculateCustomerCreditUtilization($c->CustomerID);
@@ -84,11 +91,12 @@ class CreditManagementController extends Controller
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::FinanceCreditManagementCreate, FinanceCreditManagement::class);
         $paymentTerms = CodeDetail::select('Value','Description')
             ->where('CodeID', 'PaymentTerm')
             ->orderBy('Description')
             ->get();
-        return $customers = ThirdParties::select('Id','ThirdPartyName','RegistrationNumber','Email')
+         $customers = ThirdParties::select('Id','ThirdPartyName','RegistrationNumber','Email')
             ->orderBy('ThirdPartyName')
             ->get();
         return view('finance.accountsreceivable.creditmanagement.create', compact('paymentTerms','customers'));
@@ -96,6 +104,7 @@ class CreditManagementController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceCreditManagementCreate, FinanceCreditManagement::class);
         $validated = $request->validate([
             'CustomerID'   => 'required|integer|exists:t_ThirdParties,Id',
             'CreditLimit'  => 'required|numeric|min:0',
@@ -154,7 +163,8 @@ class CreditManagementController extends Controller
     }
 
     public function show($id){
-        $credit = FinanceCreditManagement::with(['customer:Id,ThirdPartyName,RegistrationNumber,Email'])
+        $this->authorize(PermissionEnum::FinanceCreditManagementView, FinanceCreditManagement::class);
+         $credit = FinanceCreditManagement::with(['customer:Id,ThirdPartyName,RegistrationNumber,Email'])
             ->findOrFail($id);
 
         $utilization = $this->creditService->calculateCustomerCreditUtilization($credit->CustomerID);
@@ -174,6 +184,7 @@ class CreditManagementController extends Controller
 
     public function history($id)
     {
+        $this->authorize(PermissionEnum::FinanceCreditManagementView, FinanceCreditManagement::class);
         $credit = FinanceCreditManagement::with(['customer:Id,ThirdPartyName,RegistrationNumber,Email'])
             ->findOrFail($id);
 
@@ -206,6 +217,7 @@ class CreditManagementController extends Controller
 
     public function edit($id)
     {
+        $this->authorize(PermissionEnum::FinanceCreditManagementUpdate, FinanceCreditManagement::class);
         $credit = FinanceCreditManagement::findOrFail($id);
         $paymentTerms = CodeDetail::select('Value','Description')
             ->where('CodeID', 'PaymentTerm')
@@ -219,6 +231,7 @@ class CreditManagementController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->authorize(PermissionEnum::FinanceCreditManagementUpdate, FinanceCreditManagement::class);
         $validated = $request->validate([
             'CustomerID'   => 'required|integer|exists:t_ThirdParties,Id',
             'CreditLimit'  => 'required|numeric|min:0',
@@ -285,6 +298,7 @@ class CreditManagementController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize(PermissionEnum::FinanceCreditManagementDelete, FinanceCreditManagement::class);
         $credit = FinanceCreditManagement::findOrFail($id);
         $credit->DeletedBy = Auth::id();
         $credit->save();

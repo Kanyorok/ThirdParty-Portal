@@ -14,32 +14,38 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant Name</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->TradingName  ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light"
+                           value="{{ $newtenant->thirdParty->ThirdPartyName  ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">ID / Registration No.</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->RegistrationNumber ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light"
+                           value="{{ $newtenant->thirdParty->RegistrationNumber ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Phone Number</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->Phone ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->Phone ?? '-' }}"
+                           readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Email Address</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->Email ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->Email ?? '-' }}"
+                           readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Country of Origin</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->Country ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light"
+                           value="{{ $newtenant->thirdParty->Country ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Postal Address</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->PhysicalAddress ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light"
+                           value="{{ $newtenant->thirdParty->PhysicalAddress ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -90,5 +96,5 @@
 @endsection
 
 @section('scripts')
- @include('snippets.actions.preview-files')
+    @include('snippets.actions.preview-files')
 @endsection

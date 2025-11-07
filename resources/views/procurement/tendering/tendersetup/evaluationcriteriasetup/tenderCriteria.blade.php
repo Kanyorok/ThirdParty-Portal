@@ -5,6 +5,17 @@
     <div class="container mt-4">
         <h4 class="mb-3">📑 {{$tender->TenderNo}} Criteria Form</h4>
 
+        @if(isset($filteredSections) && $filteredSections->isNotEmpty())
+            <div class="alert alert-warning">
+                <strong>Note:</strong> The following sections are not available for configuration because the base Section record is missing: 
+                <ul class="mb-0">
+                    @foreach($filteredSections as $fs)
+                        <li>{{ $fs }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{route('tender-criteria.store')}}" method="POST" enctype="multipart/form-data"
               id="sectionCriteriaForm">
             @csrf
@@ -13,23 +24,23 @@
             <input type="hidden" name="TenderId" value="{{ $TenderId }}">
 
             <table class="table">
-                @foreach ($tenderSections as $section)
+        @foreach ($tenderSections as $section)
                     <tr class="table-secondary section-row">
-                        <td class="fw-bold" colspan="2">{{ $section->sections->SectionName }}</td>
+            <td class="fw-bold" colspan="2">{{ $section->sections->SectionName ?? ('Section #'.$section->SectionID) }}</td>
                         <td>
                             <input type="number"
                                    class="form-control"
-                                   name="weights[{{ $section->sections->Id }}]"
+                   name="weights[{{ $section->sections->Id ?? $section->SectionID }}]"
                                    value="{{ number_format($section->Weight, 2) }}"
                                    step="0.01" min="0" max="100" required>
                         </td>
                     </tr>
 
-                    @foreach ($section->criteria as $criteria)
+            @foreach ($section->criteria as $criteria)
                         <tr class="criteria-row">
                             <td>
                                 <input type="checkbox"
-                                       name="criterias[{{ $section->sections->Id }}][]"
+                       name="criterias[{{ $section->sections->Id ?? $section->SectionID }}][]"
                                        value="{{ $criteria->Id }}"
                                     {{ $criteria->isChecked ? 'checked' : '' }}>
                             </td>

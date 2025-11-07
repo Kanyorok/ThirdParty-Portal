@@ -9,24 +9,24 @@
 @endsection
 
 @section('content')
-<div class="container mt-4">
+    <div class="container mt-4">
 
-    <!-- Header with Add Lease Button -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="{{ route('addlease.create') }}" class="btn btn-primary">
-            <i class="bi bi-file-earmark-plus me-1"></i> New Lease
-        </a>
-    </div>
+        <!-- Header with Add Lease Button -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{{ route('addlease.create') }}" class="btn btn-primary">
+                <i class="bi bi-file-earmark-plus me-1"></i> New Lease
+            </a>
+        </div>
 
-    <p class="text-muted">
-        <small>The list below consists of all lease agreements, both active and inactive.</small>
-    </p>
+        <p class="text-muted">
+            <small>The list below consists of all lease agreements, both active and inactive.</small>
+        </p>
 
-    @if($newleases->count())
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <table id="leaseagreement" class="table table-bordered table-striped table-hover align-middle mb-0">
-                    <thead class="table-light">
+        @if($newleases->count())
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <table id="leaseagreement" class="table table-bordered table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
                         <tr>
                             <th style="width: 5%">#</th>
                             <th>Lease No.</th>
@@ -38,13 +38,13 @@
                             <th>Due Date</th>
                             <th style="width: 25%">Actions</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         @foreach($newleases as $newlease)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $newlease->LeaseNumber ?? '-' }}</td>
-                                <td>{{ $newlease->tenant->thirdParty->TradingName ?? '-' }}</td>
+                                <td>{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                                 <td>
                                     {{ $newlease->property->PropertyName ?? '-' }}
                                     @if($newlease->property && $newlease->IsActive === 'Inactive')
@@ -76,8 +76,8 @@
                                         @if($newlease->invoices()->exists())
                                             <button class="btn btn-sm btn-secondary" disabled>In Use</button>
                                         @else
-                                            <form action="{{ route('addlease.destroy', $newlease->Id) }}" 
-                                                  method="POST" 
+                                            <form action="{{ route('addlease.destroy', $newlease->Id) }}"
+                                                  method="POST"
                                                   onsubmit="return confirm('Are you sure you want to delete this lease?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -88,17 +88,17 @@
                                 </td>
                             </tr>
                         @endforeach
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    @else
-        <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle me-2"></i> No lease agreements registered yet.
-        </div>
-    @endif
+        @else
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle me-2"></i> No lease agreements registered yet.
+            </div>
+        @endif
 
-</div>
+    </div>
 @endsection
 
 @section('scripts')

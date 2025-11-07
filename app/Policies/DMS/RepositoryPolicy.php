@@ -2,6 +2,7 @@
 
 namespace App\Policies\DMS;
 
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Models\Auth\User;
@@ -14,7 +15,7 @@ class RepositoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true; //root
+        return $user->can(PermissionEnum::DMSView->value);
     }
 
     /**
@@ -30,7 +31,7 @@ class RepositoryPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSBulkUpload->value);
     }
 
     /**

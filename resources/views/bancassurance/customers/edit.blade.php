@@ -1,114 +1,128 @@
 @extends('layouts.app')
+
 @section('title', 'Edit Customer Profile')
 
 @section('content')
-    <div class="container mt-4">
-        <form method="POST" action="{{ route('bancassurance.customers.update', $customer->Id) }}"
-              enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
+<div class="container my-4" style="max-width: 900px;">
+    <form method="POST" action="{{ route('bancassurance.customers.update', $customer->Id) }}" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
 
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" name="FullName" class="form-control"
-                           value="{{ old('FullName', $customer->FullName) }}" required>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Referred By</label>
-                    <select name="ReferralID" class="form-select">
-                        <option value="">--Select a referral--</option>
-                        @foreach ($referrals as $referral)
-                            <option
-                                value="{{ $referral->Id }}" {{ $customer->ReferralID == $referral->Id ? 'selected' : '' }}>
-                                {{ $referral->ClientName }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">National ID</label>
-                    <input type="text" name="NationalID" class="form-control"
-                           value="{{ old('NationalID', $customer->NationalID) }}" required>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">KRA PIN</label>
-                    <input type="text" name="KRAPIN" class="form-control"
-                           value="{{ old('KRAPIN', $customer->KRAPIN) }}">
-                </div>
+        <div class="card shadow border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-normal">
+                    <i class="bi bi-person-badge-fill me-2"></i> Edit Customer Profile
+                </h5>
+                <a href="{{ route('bancassurance.customers.index') }}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Back
+                </a>
             </div>
 
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label class="form-label">Date of Birth</label>
-                    <input type="date" name="DateOfBirth" class="form-control"
-                           value="{{ old('DateOfBirth', \Carbon\Carbon::parse($customer->DateOfBirth)->format('Y-m-d')) }}">
-                </div>
+            <div class="card-body p-4">
 
-                <div class="col-md-3">
-                    <label class="form-label">Gender</label>
-                    <select name="Gender" class="form-select">
-                        <option value="">--Select Gender--</option>
-                        @foreach ($genders as $gender)
-                            <option value="{{ $gender->ID }}" {{ $customer->Gender == $gender->ID ? 'selected' : '' }}>
-                                {{ $gender->Description }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                <section class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="ThirdPartyId" class="form-label fw-medium text-muted">
+                                Customer <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control form-control-sm rounded-pill shadow-sm"
+                                   value="{{ $customer->thirdParty->ThirdPartyName }} — {{ $customer->thirdParty->Phone }}" disabled>
+                            <input type="hidden" name="ThirdPartyId" value="{{ $customer->ThirdPartyId }}">
+                        </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">Marital Status</label>
-                    <select name="MaritalStatus" class="form-select">
-                        <option value="">--Select Status--</option>
-                        @foreach ($maritalstatus as $status)
-                            <option
-                                value="{{ $status->ID }}" {{ $customer->MaritalStatus == $status->ID ? 'selected' : '' }}>
-                                {{ $status->Description }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                        <div class="col-md-6">
+                            <label for="ReferralID" class="form-label fw-medium text-muted">
+                                Client Referral Name
+                            </label>
+                            <select name="ReferralID" id="ReferralID" class="form-select form-select-sm rounded-pill shadow-sm">
+                                <option value="">-- Select a referral --</option>
+                                @foreach ($referrals as $referral)
+                                    <option value="{{ $referral->Id }}" {{ old('ReferralID', $customer->ReferralID) == $referral->Id ? 'selected' : '' }}>
+                                        {{ $referral->ClientName }} — {{ $referral->ClientPhone }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </section>
 
-                <div class="col-md-3">
-                    <label class="form-label">Occupation</label>
-                    <select name="Occupation" class="form-select">
-                        <option value="">--Select Occupation--</option>
-                        @foreach ($occupations as $occupation)
-                            <option
-                                value="{{ $occupation->ID }}" {{ $customer->Occupation == $occupation->ID ? 'selected' : '' }}>
-                                {{ $occupation->Description }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                <section>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="DateOfBirth" class="form-label fw-medium text-muted">
+                                Date of Birth <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" name="DateOfBirth" id="DateOfBirth"
+                                class="form-control form-control-sm rounded-pill shadow-sm"
+                                value="{{ old('DateOfBirth', $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('Y-m-d') : '') }}"
+                                required>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="Gender" class="form-label fw-medium text-muted">
+                                Gender <span class="text-danger">*</span>
+                            </label>
+                            <select name="Gender" id="Gender" class="form-select form-select-sm rounded-pill shadow-sm" required>
+                                <option value="">-- Select Gender --</option>
+                                @foreach ($genders as $gender)
+                                    <option value="{{ $gender->ID }}" {{ old('Gender', $customer->Gender) == $gender->ID ? 'selected' : '' }}>
+                                        {{ $gender->Description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="MaritalStatus" class="form-label fw-medium text-muted">
+                                Marital Status <span class="text-danger">*</span>
+                            </label>
+                            <select name="MaritalStatus" id="MaritalStatus" class="form-select form-select-sm rounded-pill shadow-sm" required>
+                                <option value="">-- Select Status --</option>
+                                @foreach ($maritalstatus as $status)
+                                    <option value="{{ $status->ID }}" {{ old('MaritalStatus', $customer->MaritalStatus) == $status->ID ? 'selected' : '' }}>
+                                        {{ $status->Description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="Occupation" class="form-label fw-medium text-muted">
+                                Employment Status
+                            </label>
+                            <select name="Occupation" id="Occupation" class="form-select form-select-sm rounded-pill shadow-sm">
+                                <option value="">-- Select Occupation --</option>
+                                @foreach ($occupations as $occupation)
+                                    <option value="{{ $occupation->ID }}" {{ old('Occupation', $customer->Occupation) == $occupation->ID ? 'selected' : '' }}>
+                                        {{ $occupation->Description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
             </div>
 
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label class="form-label">Phone</label>
-                    <input type="text" name="PhoneNumber" class="form-control"
-                           value="{{ old('PhoneNumber', $customer->PhoneNumber) }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="Email" class="form-control" value="{{ old('Email', $customer->Email) }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Address</label>
-                    <input type="text" name="Address" class="form-control"
-                           value="{{ old('Address', $customer->Address) }}">
-                </div>
-            </div>
-
-            <div class="text-end">
-                <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-save"></i> Update Profile
+            <div class="card-footer d-flex justify-content-between align-items-center bg-light py-3 px-4">
+                <a href="{{ route('bancassurance.customers.index') }}"
+                    class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left-circle me-2"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 fw-semibold"
+                    onclick="this.disabled=true; this.innerHTML='<i class=\'bi bi-arrow-repeat me-2 spin\'></i> Updating...'; this.form.submit();">
+                    <i class="bi bi-save me-2"></i> Update Profile
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
+</div>
+
+@push('styles')
+<style>
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+@endpush
 @endsection

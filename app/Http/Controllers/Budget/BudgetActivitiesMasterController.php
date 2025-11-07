@@ -40,10 +40,10 @@ class BudgetActivitiesMasterController extends Controller
             'Description' => 'nullable|string',
 
         ],
-        [
-            'BudgetLineID.required' => 'Budget Line is required.',
-            'ActivityName.required' => 'Activity Name is required.',
-            'Description.required' => 'Description is required.',
+            [
+                'BudgetLineID.required' => 'Budget Line is required.',
+                'ActivityName.required' => 'Activity Name is required.',
+                'Description.required' => 'Description is required.',
         ]);
         DB::beginTransaction();
         try {
@@ -102,7 +102,7 @@ class BudgetActivitiesMasterController extends Controller
                 //'ActivityCode' => $validated['ActivityCode'],
                 'ActivityName' => $validated['ActivityName'],
                 'Description' => $validated['Description'],
-                'IsActive' =>  $request->IsActive == 'on' ? true : false,
+                'IsActive' => $request->IsActive == 'on' ? true : false,
                 'ModifiedBy' => Auth::id(),
             ]);
 

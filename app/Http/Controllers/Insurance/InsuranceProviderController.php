@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Country;
 use App\Models\Insurance\InsuranceProduct;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,18 +16,25 @@ use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProviderRequest;
 
 class InsuranceProviderController extends Controller
 {
-    //
-    public function create()
+    public function index()
     {
-        //$this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
         $providers = InsuranceProvider::all();
 
-        return view('bancassurance.insurers.create', compact('providers'));
+        return view('bancassurance.insurers.index', compact('providers'));
+    }
+
+    public function create()
+    {
+        $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
+        $providers = InsuranceProvider::all();
+        $Countrys = Country::all();
+
+        return view('bancassurance.insurers.create', compact('providers', 'Countrys'));
     }
 
     public function store(InsuranceProviderRequest $request)
     {
-       // $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
+        $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
         $validated = $request->validated();
 
 
@@ -42,28 +50,18 @@ class InsuranceProviderController extends Controller
         return redirect()->route('bancassurance.insurers.index')->with('success', 'Insurance Provider registered.');
     }
 
-    public function index()
-    {
-        $providers = InsuranceProvider::all();
-
-        return view('bancassurance.insurers.index', compact('providers'));
-    }
-
     public function edit($Id)
     {
-        $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
         $provider = InsuranceProvider::findOrFail($Id);
+        $Countrys = Country::all();
 
-        return view('bancassurance.insurers.edit', compact('provider'));
+        return view('bancassurance.insurers.edit', compact('provider', 'Countrys'));
     }
 
     public function viewProducts($Id)
     {
-        $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
 
         $provider = InsuranceProvider::findOrFail($Id);
-
-        // Only fetch products linked to this provider
         $products = InsuranceProduct::where('InsuranceProviderID', $Id)->get();
 
         return view('bancassurance.insurers.products', compact('provider', 'products'));
@@ -111,6 +109,11 @@ class InsuranceProviderController extends Controller
         $this->authorize(PermissionEnum::InsuranceProviderDelete, InsuranceProvider::class);
         try {
             $provider = InsuranceProvider::findOrFail($Id);
+
+            if ($provider->getProductByProvider()->exists()) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'This Provider is in use and cannot be deleted.']);
+            }
             $provider->delete();
 
             return redirect()->route('bancassurance.insurers.index')
@@ -123,17 +126,5 @@ class InsuranceProviderController extends Controller
                 ->withInput();
         }
     }
-
-
-    // public function detachProduct($providerId, $productId)
-    // {
-    //     DB::table('t_InsuranceProviderProducts')
-    //         ->where('InsuranceProviderID', $providerId)
-    //         ->where('ProductID', $productId)
-    //         ->update(['IsActive' => 0]);
-
-    //     return redirect()->route('bancassurance.insurers.products', $providerId)->with('success', 'Product detached successfully.');
-    // }
-
 
 }

@@ -2,7 +2,7 @@
 @section('title', 'Schedule Maintenance')
 
 @section('content')
-  @if ($errors->any())
+    @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
                 @foreach($errors->all() as $error)
@@ -22,7 +22,7 @@
             <div class="row g-3">
                 <!-- Vehicle -->
                 <div class="col-md-6">
-                    <label for="VehicleID" class="form-label">Select Vehicle</label>
+                    <label for="VehicleID" class="form-label">Select Vehicle<span class="text-danger">*</span></label>
                     <select name="VehicleID" id="VehicleID" class="form-select" required>
                         <option value="">-- Select Vehicle --</option>
                         @foreach($vehicles as $vehicle)
@@ -36,7 +36,7 @@
 
                 <!-- Maintenance Type -->
                 <div class="col-md-6">
-                    <label for="MaintenanceType" class="form-label">Select Maintenance Type</label>
+                    <label for="MaintenanceType" class="form-label">Select Maintenance Type<span class="text-danger">*</span></label>
                     <select name="MaintenanceType" id="MaintenanceType" class="form-select" required>
                         <option value="">-- Select Maintenance Type --</option>
                         @foreach($maintenanceType as $type)
@@ -50,21 +50,39 @@
 
                 <!-- Scheduled Date -->
                 <div class="col-md-6">
-                    <label for="ScheduledDate" class="form-label">Scheduled Date</label>
+                    <label for="ScheduledDate" class="form-label">Scheduled Date<span class="text-danger">*</span></label>
                     <input type="date" name="ScheduledDate" id="ScheduledDate" class="form-control" required
                            value="{{ $schedule->ScheduledDate ?? '' }}">
                 </div>
 
                 <!-- Scheduled Mileage -->
-                <div class="col-md-6">
-                    <label for="ScheduledMileage" class="form-label">Scheduled Mileage (km)</label>
-                    <input type="number" name="ScheduledMileage" id="ScheduledMileage" class="form-control"
-                           placeholder="Enter mileage" value="{{ $schedule->ScheduledMileage ?? '' }}">
-                </div>
+            <div class="col-md-6">
+                <label for="ScheduledMileage" class="form-label">
+                    Scheduled Mileage (km)
+                </label>
+
+                <!-- Soft warning inline hint with info icon -->
+                @if(!isset($schedule))
+                    <div class="small text-warning bg-light p-2 rounded mb-1 d-flex align-items-center">
+                        <span class="me-1">ℹ️</span>
+                        <span>You can only set scheduled mileage when editing a record.</span>
+                    </div>
+                @endif
+
+                <input type="number"
+                    name="ScheduledMileage"
+                    id="ScheduledMileage"
+                    class="form-control"
+                    placeholder="Enter mileage"
+                    value="{{ $schedule->ScheduledMileage ?? '' }}"
+                    {{ isset($schedule) ? '' : 'disabled' }}>
+            </div>
+
+
 
                 <!-- Location -->
                 <div class="col-md-6">
-                    <label for="Location" class="form-label">Location</label>
+                    <label for="Location" class="form-label">Location<span class="text-danger">*</span></label>
                     <input type="text" name="Location" id="Location" class="form-control"
                            value="{{ $schedule->Location ?? '' }}">
                 </div>
@@ -79,7 +97,7 @@
                 <!-- Maintenance Status (read-only when editing) -->
                 @if(isset($schedule))
                     <div class="col-md-6">
-                        <label class="form-label">Maintenance Status</label>
+                        <label class="form-label">Maintenance Status<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" value="{{ $schedule->MaintenanceStatus }}" readonly>
                     </div>
                 @endif

@@ -17,6 +17,9 @@ class ModelRole extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ModelRoles';
+    // Primary key column name (custom)
+    protected $primaryKey = 'ModelRoleId';
+
     protected $fillable = ['model_id', 'model_type', 'role_id', 'BranchId',
         'CreatedBy', 'ModifiedBy', 'DeletedBy'];
 

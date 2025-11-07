@@ -17,7 +17,7 @@ class FinanceCreditAdjustment extends Model
 
     protected $table = 't_FinanceCreditAdjustments';
     protected $primaryKey = 'Id';
-    
+
     protected $fillable = [
         'CreditID',
         'CustomerID',
@@ -34,7 +34,7 @@ class FinanceCreditAdjustment extends Model
         'ApprovedOn',
         'EffectiveFrom',
         'Notes',
-        
+
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -112,7 +112,7 @@ class FinanceCreditAdjustment extends Model
 
     public function getStatusBadgeClass(): string
     {
-        return match($this->ApprovalStatus) {
+        return match ($this->ApprovalStatus) {
             'approved' => 'bg-success',
             'rejected' => 'bg-danger',
             'draft' => 'bg-warning text-dark',
@@ -122,7 +122,7 @@ class FinanceCreditAdjustment extends Model
 
     public function getAdjustmentTypeLabel(): string
     {
-        return match($this->AdjustmentType) {
+        return match ($this->AdjustmentType) {
             'increase' => 'Credit Increase',
             'decrease' => 'Credit Decrease',
             'revision' => 'Credit Revision',

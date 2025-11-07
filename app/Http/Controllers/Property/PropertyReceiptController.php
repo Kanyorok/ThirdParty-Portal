@@ -118,7 +118,7 @@ class PropertyReceiptController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyReceiptPrint, PropertyReceipt::class);
         $receipt = PropertyReceipt::with(['invoice.lease.tenant'])->findOrFail($Id);
-        $tenantName = optional(optional($receipt->invoice)->lease)->tenant->TenantName ?? 'N/A';
+        $tenantName = optional(optional($receipt->invoice)->lease)->tenant->ThirdPartyName ?? 'N/A';
  
                 $html = "
         <html>
@@ -135,7 +135,7 @@ class PropertyReceiptController extends Controller
         </head>
         <body onload='window.print();'>
         <h2>Tenant Payment Receipt</h2>
-        <p><strong>Tenant:</strong> {$receipt->invoice->lease->tenant->thirdParty->TradingName }</strong></p>
+        <p><strong>Tenant:</strong> {$receipt->invoice->lease->tenant->thirdParty->ThirdPartyName }</strong></p>
         <p><strong>Receipt No:</strong> {$receipt->ReferenceNo}</strong></p>
         <p><strong>Invoice No:</strong> " . ($receipt->invoice->InvoiceNumber ?? '-') . "</strong></p>
         <p><strong>Payment Date:</strong> {$receipt->PaymentDate}</p>

@@ -14,11 +14,11 @@
           <tr>
             <th>#</th>
             <th>Invoice</th>
-            <th>Tenant</th>
+              <th>Tenant</th>
             <th>Billing Month</th>
             <th>Payment Date</th>
             <th>Total Due</th>
-            <th>Current Pay</th>
+              <th>Current Pay</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -27,7 +27,7 @@
             <tr>
               <td>{{ $loop->iteration ?? '_' }}</td>
               <td>{{ $receipt->invoice->InvoiceNumber ?? '_' }}</td>
-              <th>{{ $receipt->invoice->lease->tenant->thirdParty->TradingName ?? '_' }}</td>
+                <th>{{ $receipt->invoice->lease->tenant->thirdParty->ThirdPartyName ?? '_' }}</td>
               <td>{{ $receipt->BillingMonth ?? '_' }}</td>
               <td>{{ $receipt->PaymentDate ? \Carbon\Carbon::parse($receipt->PaymentDate)->format('d/m/Y') : '-' }}</td>
               <td>{{ $receipt->Balance ?? '_' }}</td>
@@ -39,7 +39,7 @@
                   @csrf
                   @method('DELETE')
                   <button type="submit" class="btn btn-sm btn-danger"
-                    onclick="return confirm('Are you sure you want to delete this lease schedule?');">Return 
+                          onclick="return confirm('Are you sure you want to delete this lease schedule?');">Return
                   </button>
                 </form>
               </td>

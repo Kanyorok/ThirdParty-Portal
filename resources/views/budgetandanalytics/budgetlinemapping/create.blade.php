@@ -25,15 +25,15 @@
                 @method('POST')
                 <div class="row">
                     <!-- 🧾 Budget Line Entry -->
-{{--                    <div class="mb-3">--}}
-{{--                        <label class="form-label">Budget Line Category</label>--}}
-{{--                        <select class="form-select" name="BudgetLineCategoryID" required>--}}
-{{--                            <option selected disabled>-- Select Budget Line Category --</option>--}}
-{{--                            @foreach ($budgetCategories as $category)--}}
-{{--                                <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>--}}
-{{--                            @endforeach--}}
-{{--                        </select>--}}
-{{--                    </div>--}}
+                    {{--                    <div class="mb-3">--}}
+                    {{--                        <label class="form-label">Budget Line Category</label>--}}
+                    {{--                        <select class="form-select" name="BudgetLineCategoryID" required>--}}
+                    {{--                            <option selected disabled>-- Select Budget Line Category --</option>--}}
+                    {{--                            @foreach ($budgetCategories as $category)--}}
+                    {{--                                <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>--}}
+                    {{--                            @endforeach--}}
+                    {{--                        </select>--}}
+                    {{--                    </div>--}}
 
                     <div class="mb-3 col-md-6">
                         <label class="form-label">Budget Line Name</label>
@@ -138,7 +138,7 @@
             <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-success"
                     onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Submitting...'; this.form.submit(); }">
-                💾 Save Budget Line
+                Save Budget Line
             </button>
         </div>
             </form>

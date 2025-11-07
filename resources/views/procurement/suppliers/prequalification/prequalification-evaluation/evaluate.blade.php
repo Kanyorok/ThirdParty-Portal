@@ -23,6 +23,63 @@
                 <strong>Supplier:</strong> {{ $application->supplier->thirdParty->ThirdPartyName ?? 'N/A' }}
             </p>
 
+            @if(isset($documents) && $documents->count() > 0)
+            <div class="mb-4">
+                <h5 class="text-secondary mb-2">
+                    <i class="fas fa-paperclip me-2"></i>Supporting Documents
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>File</th>
+                                <th>Section</th>
+                                <th>Type</th>
+                                <th>Uploaded</th>
+                                <th style="width: 120px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($documents as $doc)
+                                @php
+                                    $d = $doc->dmsDocument;
+                                    $ver = $d?->current;
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="ti ti-file-text me-1 text-primary"></i>
+                                            <div>
+                                                <div class="fw-semibold">{{ $d?->Name ?? $ver?->Name ?? 'Document' }}</div>
+                                                <div class="text-muted small">{{ $ver?->Size ? number_format($ver->Size/1024,2).' KB' : '' }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ $doc->SectionID ?? '-' }}</td>
+                                    <td>{{ $doc->FileType ?? '-' }}</td>
+                                    <td>{{ optional($doc->CreatedOn)->format('M d, Y H:i') }}</td>
+                                    <td>
+                                        @if($d)
+                                            <a target="_blank" href="{{ url('/dms/document/'.$d->DocumentId.'/preview') }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-eye me-1"></i> Preview
+                                            </a>
+                                        @else
+                                            <span class="text-muted">N/A</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @else
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="ti ti-info-circle me-2"></i>
+                    <div>No supporting documents uploaded for this application.</div>
+                </div>
+            @endif
+
             @if($isReadonly)
                 <div class="alert alert-warning d-flex align-items-center" role="alert">
                     <i class="fas fa-exclamation-triangle me-2"></i>
@@ -46,7 +103,19 @@
 
                 @foreach ($sections as $section)
                 <div class="mb-4">
-                    <h5 class="text-secondary">{{ $section->masterSection->SectionName }} <small class="text-muted ms-2">({{ $section->Weight }}%)</small></h5>
+                    @php
+                        $sectionCriteria = ($section->criteria instanceof \Illuminate\Support\Collection)
+                            ? $section->criteria
+                            : collect($section->criteria);
+                        $hasCriteria = $sectionCriteria->isNotEmpty();
+                    @endphp
+                    <h5 class="text-secondary">
+                        {{ $section->masterSection->SectionName }}
+                        <small class="text-muted ms-2">({{ $section->Weight }}%)</small>
+                        @unless($hasCriteria)
+                            <span class="badge bg-warning text-dark ms-2">No criteria configured</span>
+                        @endunless
+                    </h5>
                     <hr class="mt-1">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-sm">
@@ -64,6 +133,11 @@
                                         ? $section->criteria->unique('CriteriaId')->values()
                                         : collect($section->criteria)->unique('CriteriaId')->values();
                                 @endphp
+                                @if($criteriaList->isEmpty())
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-3">No criteria available for this section.</td>
+                                    </tr>
+                                @endif
                                 @foreach ($criteriaList as $criteria)
                                 @php
                                 $existing = $existingEvaluations->get($criteria->CriteriaId);
@@ -71,7 +145,7 @@
                                 @endphp
                                 <tr>
                                     <td>
-                                        <strong>{{ $criteria->masterCriteria->CriteriaName }}</strong>
+                                        <strong>{{ $criteria->masterCriteria->CriteriaName ?? ($criteria->CriteriaId ? 'Criteria #'.$criteria->CriteriaId : 'Criteria') }}</strong>
                                         <!-- <small class="d-block text-muted">{{ $criteria->masterCriteria->Description }}</small> -->
                                     </td>
                                     <td>10</td>

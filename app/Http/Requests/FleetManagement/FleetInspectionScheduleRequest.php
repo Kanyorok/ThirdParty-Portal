@@ -26,7 +26,7 @@ class FleetInspectionScheduleRequest extends FormRequest
             'VehicleID' => 'required|integer|exists:t_FleetVehicles,Id',
             'InspectionType' => 'required|string',
             'InspectionDate' => 'required|date',
-            'DueDate' => 'required|date',
+            'DueDate' => 'required|date|after_or_equal:InspectionDate',
             'Inspector' => 'required|integer|exists:t_Employees,Id',
             'Status' => 'required|integer|exists:t_CodeDetails,ID',
             'Remarks' => 'nullable|string',
@@ -34,4 +34,17 @@ class FleetInspectionScheduleRequest extends FormRequest
         ];
     }
 
+
+
+/**
+     * Custom error messages for validation.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'DueDate.after_or_equal' => '⚠️📅 Due date must be on or after the inspection date.',
+        ];
+    }
 }

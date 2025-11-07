@@ -21,43 +21,43 @@ class BankBranchController extends Controller
     }
 
     // Show the form for creating a new branch
-public function create(Request $request)
-{
-    $bank = null;
-    if ($request->filled('bankId')) {
-         $bank = \App\Models\Finance\Bank::with(['country'])->find($request->query('bankId'));
+    public function create(Request $request)
+    {
+        $bank = null;
+        if ($request->filled('bankId')) {
+            $bank = \App\Models\Finance\Bank::with(['country'])->find($request->query('bankId'));
+        }
+        return view('finance.bankbranch.create', compact('bank'));
     }
-    return view('finance.bankbranch.create', compact('bank'));
-}
 
     // Store the new branch
-public function store(Request $request)
-{
-    $request->validate([
-        'BankID'     => 'required|integer|exists:t_Banks,BankID',
-        'BranchName' => 'required|string|max:200',
-        'BranchCode' => 'nullable|string|max:50',
-        'Address1'   => 'nullable|string|max:200',
-        'Address2'   => 'nullable|string|max:200',
-        'CityID'     => 'nullable|integer',
-        'CountryID'  => 'nullable|integer',
-        'ZipCode'    => 'nullable|string|max:20',
-        'Phone'      => 'nullable|string|max:50',
-        'EmailID'    => 'nullable|email|max:150',
-        'IsActive'   => 'nullable|boolean',
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'BankID' => 'required|integer|exists:t_Banks,BankID',
+            'BranchName' => 'required|string|max:200',
+            'BranchCode' => 'nullable|string|max:50',
+            'Address1' => 'nullable|string|max:200',
+            'Address2' => 'nullable|string|max:200',
+            'CityID' => 'nullable|integer',
+            'CountryID' => 'nullable|integer',
+            'ZipCode' => 'nullable|string|max:20',
+            'Phone' => 'nullable|string|max:50',
+            'EmailID' => 'nullable|email|max:150',
+            'IsActive' => 'nullable|boolean',
+        ]);
 
-    $branch = new \App\Models\Finance\BankBranch($request->only([
-        'BankID','BranchCode','BranchName','Address1','Address2',
-        'CityID','CountryID','ZipCode','Phone','EmailID'
-    ]));
-    // Default Active on create
-    $branch->IsActive = 1;
-    $branch->save();
+        $branch = new \App\Models\Finance\BankBranch($request->only([
+            'BankID', 'BranchCode', 'BranchName', 'Address1', 'Address2',
+            'CityID', 'CountryID', 'ZipCode', 'Phone', 'EmailID'
+        ]));
+        // Default Active on create
+        $branch->IsActive = 1;
+        $branch->save();
 
-    return redirect()->route('finance.bankbranch.bybank', $branch->BankID)
-        ->with('success', 'Branch created.');
-}
+        return redirect()->route('finance.bankbranch.bybank', $branch->BankID)
+            ->with('success', 'Branch created.');
+    }
 
     // Show the branch details (resource route → single param)
     public function show($id)
@@ -67,40 +67,40 @@ public function store(Request $request)
     }
 
     // Edit the specified branch
-public function edit($id)
-{
-    $branch = \App\Models\Finance\BankBranch::findOrFail($id);
-    $bank   = \App\Models\Finance\Bank::find($branch->BankID);
-    return view('finance.bankbranch.edit', compact('branch','bank'));
-}
+    public function edit($id)
+    {
+        $branch = \App\Models\Finance\BankBranch::findOrFail($id);
+        $bank = \App\Models\Finance\Bank::find($branch->BankID);
+        return view('finance.bankbranch.edit', compact('branch', 'bank'));
+    }
 
 
     // Update the specified branch
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'BranchName' => 'required|string|max:200',
-        'BranchCode' => 'nullable|string|max:50',
-        'Address1'   => 'nullable|string|max:200',
-        'Address2'   => 'nullable|string|max:200',
-        'CityID'     => 'nullable|integer',
-        'CountryID'  => 'nullable|integer',
-        'ZipCode'    => 'nullable|string|max:20',
-        'Phone'      => 'nullable|string|max:50',
-        'EmailID'    => 'nullable|email|max:150',
-        'IsActive'   => 'nullable|boolean',
-    ]);
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'BranchName' => 'required|string|max:200',
+            'BranchCode' => 'nullable|string|max:50',
+            'Address1' => 'nullable|string|max:200',
+            'Address2' => 'nullable|string|max:200',
+            'CityID' => 'nullable|integer',
+            'CountryID' => 'nullable|integer',
+            'ZipCode' => 'nullable|string|max:20',
+            'Phone' => 'nullable|string|max:50',
+            'EmailID' => 'nullable|email|max:150',
+            'IsActive' => 'nullable|boolean',
+        ]);
 
-    $branch = \App\Models\Finance\BankBranch::findOrFail($id);
-    $branch->fill($request->only([
-        'BranchCode','BranchName','Address1','Address2',
-        'CityID','CountryID','ZipCode','Phone','EmailID'
-    ]));
-    $branch->save();
+        $branch = \App\Models\Finance\BankBranch::findOrFail($id);
+        $branch->fill($request->only([
+            'BranchCode', 'BranchName', 'Address1', 'Address2',
+            'CityID', 'CountryID', 'ZipCode', 'Phone', 'EmailID'
+        ]));
+        $branch->save();
 
-    return redirect()->route('finance.bankbranch.bybank', $branch->BankID)
-        ->with('success', 'Branch updated.');
-}
+        return redirect()->route('finance.bankbranch.bybank', $branch->BankID)
+            ->with('success', 'Branch updated.');
+    }
 
     // Delete the specified branch (resource route → single param)
     public function destroy($id)
@@ -126,7 +126,7 @@ public function update(Request $request, $id)
     public function getCities(Request $request): JsonResponse
     {
         $countryId = $request->integer('countryId');
-        $term = trim((string) $request->get('q', ''));
+        $term = trim((string)$request->get('q', ''));
 
         $query = Locality::query()->where('IsActive', 1);
 
@@ -138,7 +138,7 @@ public function update(Request $request, $id)
             $query->where('Name', 'like', "%{$term}%");
         }
 
-        $localities = $query->orderBy('Name')->get(['ID','Name']);
+        $localities = $query->orderBy('Name')->get(['ID', 'Name']);
 
         return response()->json($localities);
     }

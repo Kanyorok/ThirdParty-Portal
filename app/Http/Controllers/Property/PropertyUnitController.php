@@ -28,7 +28,7 @@ class PropertyUnitController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
-        $lineentries = PropertyRegistry::with(['getBlockByProperty.floor'])->where('IsActive',true)->get();
+        $lineentries = PropertyRegistry::with(['getBlockByProperty.floor'])->where('IsActive', true)->get();
         return view('property.propertyregistry.structuralmapping.addunit.create', compact('lineentries'));
     }
 
@@ -61,7 +61,6 @@ class PropertyUnitController extends Controller
                 $validated['CurrentStatus'] ? 1 : 0,
                 $validated['Remarks'] ?? '',
                 auth()->user()
-
             );
             return redirect()->route('addunit.index')->with('success', 'property unit Added successfully');
         } catch (\Exception $e) {
@@ -74,15 +73,30 @@ class PropertyUnitController extends Controller
     public function edit($id)
     {
         $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
-        
-        $unit = PropertyUnit::findOrFail($id);
-        $floors = PropertyFloor::all();
-        $blocks = PropertyBlock::all();
-        $properties = PropertyRegistry::all();
-        $lineentries = PropertyRegistry::with('getBlockByProperty.floor')->get();
 
-        return view('property.propertyregistry.structuralmapping.addunit.edit', compact('blocks', 'properties', 'lineentries', 'unit', 'floors'));
+        $unit = PropertyUnit::findOrFail($id);
+
+        // Get the property for this unit
+        $propertyId = $unit->PropertyID;
+        $blockId = $unit->BlockID;
+
+        // Filtered collections
+        $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+        $floors = PropertyFloor::where('BlockID', $blockId)->get();
+
+        // For property dropdown (same as create)
+        $lineentries = PropertyRegistry::with(['getBlockByProperty.floor'])
+            ->where('IsActive', true)
+            ->get();
+
+        return view('property.propertyregistry.structuralmapping.addunit.edit', compact(
+            'unit',
+            'blocks',
+            'floors',
+            'lineentries'
+        ));
     }
+
 
     public function update(Request $request, $id)
     {
@@ -139,9 +153,9 @@ class PropertyUnitController extends Controller
 
             if ($unit->unitlease()->exists()) {
                 return redirect()->back()
-                ->withErrors(['error' => 'This Property unit is in use and cannot be deleted.']);
+                    ->withErrors(['error' => 'This Property unit is in use and cannot be deleted.']);
             }
-            
+
             $unit->delete();
 
             return redirect()->route('addunit.index')

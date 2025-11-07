@@ -3,6 +3,36 @@
 @section('title','Dashboard')
 
 @section('content')
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="mb-0">My Dashboard</h4>
+            <div>
+                <button id="add-widget" class="btn btn-sm btn-primary">Add widget</button>
+                <button id="save-layout" class="btn btn-sm btn-outline-secondary">Save layout</button>
+            </div>
+        </div>
+        <div id="widget-picker" class="mb-2" style="display:none">
+            <select id="available-widgets" class="form-select form-select-sm" style="max-width:320px;display:inline-block"></select>
+            <button id="add-selected" class="btn btn-sm btn-success">Add</button>
+        </div>
+    <div id="dashboard-grid" class="row g-3">
+            @php
+        $widgetsByKey = collect($availableWidgets ?? [])->keyBy('key');
+            @endphp
+            @foreach(($layout ?? []) as $slot)
+                @php $def = $widgetsByKey[$slot->widget_key] ?? null; @endphp
+                <div class="col-md-{{ $slot->w ?? ($def->default_w ?? 6) }}" data-key="{{ $slot->widget_key }}" data-w="{{ $slot->w }}" data-h="{{ $slot->h }}">
+                    @if($def)
+                        @include($def->view, ['stats' => ($stats ?? [])])
+                    @else
+                        <div class="card"><div class="card-body">Unknown widget: {{ $slot->widget_key }}</div></div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    <hr class="my-4"/>
+    </div>
+
     <div class="row">
         <div class="col-md-6 col-xxl-3">
             <div class="card">
@@ -228,8 +258,76 @@
         </div>
     </div>
 @endsection
+
 @section('scripts')
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    <script>
+        (function(){
+            const grid = document.getElementById('dashboard-grid');
+            const addBtn = document.getElementById('add-widget');
+            const saveBtn = document.getElementById('save-layout');
+            const picker = document.getElementById('widget-picker');
+            const select = document.getElementById('available-widgets');
+            const addSelectedBtn = document.getElementById('add-selected');
+
+            async function fetchAvailable(){
+                const res = await fetch("{{ route('user-dashboard.widgets') }}");
+                const json = await res.json();
+                return json;
+            }
+
+            function renderPicker(available){
+                select.innerHTML = '';
+                available.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w.key; opt.textContent = `${w.name}${w.module? ' · '+w.module : ''}${w.type? ' · '+w.type : ''}`;
+                    select.appendChild(opt);
+                });
+            }
+
+            function addWidgetElement(widget){
+                const col = document.createElement('div');
+                col.className = `col-md-${widget.default_w || 6}`;
+                col.dataset.key = widget.key;
+                col.dataset.w = widget.default_w || 6;
+                col.dataset.h = widget.default_h || 1;
+                col.innerHTML = `<div class="card"><div class="card-body">Added widget: ${widget.name}. Save layout to persist.</div></div>`;
+                grid.appendChild(col);
+            }
+
+            addBtn?.addEventListener('click', async ()=>{
+                picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+                if (picker.style.display === 'block'){
+                    const data = await fetchAvailable();
+                    renderPicker(data.available || []);
+                }
+            });
+            addSelectedBtn?.addEventListener('click', async ()=>{
+                const data = await fetchAvailable();
+                const key = select.value;
+                const found = (data.available||[]).find(w=>w.key===key);
+                if(found) addWidgetElement(found);
+            });
+
+            saveBtn?.addEventListener('click', async ()=>{
+                const items = Array.from(grid.querySelectorAll('[data-key]'));
+                const payload = { widgets: items.map((el, idx)=>({
+                    widget_key: el.dataset.key,
+                    x: 0, y: idx, w: parseInt(el.dataset.w||'6'), h: parseInt(el.dataset.h||'1'), sort_order: idx,
+                })) };
+                const res = await fetch("{{ route('user-dashboard.widgets.save') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify(payload)
+                });
+                if(res.ok){
+                    location.reload();
+                } else {
+                    alert('Failed to save layout');
+                }
+            });
+        })();
+    </script>
     <script>
         const converted = {!! json_encode(data_get($data,'leads.line.converted')) !!},
             labels = {!! json_encode(data_get($data,'leads.line.labels')) !!},
@@ -330,6 +428,32 @@
             }
         }
 
+        // Minimal client-side save of order and sizes (cols) using current DOM
+        document.getElementById('saveDashboardLayout').addEventListener('click', function() {
+            const grid = document.getElementById('dashboardGrid');
+            const items = Array.from(grid.children);
+            const payload = items.map((el, idx) => ({
+                widget_key: el.getAttribute('data-key'),
+                x: parseInt(el.getAttribute('data-x') || '0', 10),
+                y: idx, // simple stacking by order
+                w: parseInt(el.getAttribute('data-w') || '6', 10),
+                h: parseInt(el.getAttribute('data-h') || '1', 10),
+                sort_order: idx,
+                config: {}
+            }));
+            fetch("{{ route('user-dashboard.widgets.save') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ widgets: payload })
+            }).then(r => r.json()).then(resp => {
+                if (resp.status === 'ok') {
+                    alert('Layout saved');
+                }
+            }).catch(() => alert('Failed to save layout'));
+        });
     </script>
 @endsection
 

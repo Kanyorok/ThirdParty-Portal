@@ -25,6 +25,9 @@ use Illuminate\Support\Facades\DB;
 
 class CodeDetailSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
         $date = now();
@@ -238,6 +241,12 @@ class CodeDetailSeeder extends Seeder
             //['CodeID' => 'PaymentType', 'Description' => 'Scheduled', 'Value' => 'S'],
 
             // Termination Reason
+            // Tender Status codes
+            ['CodeID' => 'TenderStatus', 'Description' => 'Draft', 'Value' => 'dr'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Published', 'Value' => 'pb'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Closed', 'Value' => 'cl'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Opening In Progress', 'Value' => 'opening_in_progress'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Awarded', 'Value' => 'aw'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Relocation', 'Value' => 'R'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],
@@ -249,6 +258,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
+
+            // Approval WorkFlow Documents
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PR', 'Description' => 'Requisition'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PO', 'Description' => 'Purchase Order'],
 
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
@@ -363,12 +376,36 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimType','Description' => 'Medical', 'Value' => 'M'],
             ['CodeID' => 'ClaimType','Description' => 'Other', 'Value' => 'O'],
 
+            //Insurance Cover Type
+            ['CodeID' => 'CoverType','Description' => 'Comprehensive', 'Value' => 'C'],
+            ['CodeID' => 'CoverType','Description' => 'InPatient', 'Value' => 'I'],
+            ['CodeID' => 'CoverType','Description' => 'OutPatient', 'Value' => 'O'],
+
+            //Insurance Contributor Types
+            ['CodeID' => 'ContributorType','Description' => 'Employee', 'Value' => 'I'],
+            ['CodeID' => 'ContributorType','Description' => 'Employer', 'Value' => 'C'],
+
             //Insurance Claim Status
             ['CodeID' => 'ClaimStatus','Description' => 'Initiated', 'Value' => 'I'],
             ['CodeID' => 'ClaimStatus','Description' => 'Under Assessment', 'Value' => 'U'],
             ['CodeID' => 'ClaimStatus','Description' => 'Approved', 'Value' => 'A'],
             ['CodeID' => 'ClaimStatus','Description' => 'Rejected', 'Value' => 'R'],
             ['CodeID' => 'ClaimStatus','Description' => 'Paid', 'Value' => 'P'],
+
+            //MedicalContributorStatus
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Active', 'Value' => 'A'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Inactive', 'Value' => 'I'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Suspended', 'Value' => 'S'],
+
+            // Beneficiary Relationship
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Spouse', 'Value' => 'S'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Child', 'Value' => 'C'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Parent', 'Value' => 'P'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Sibling', 'Value' => 'S'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Relative', 'Value' => 'R'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Friend', 'Value' => 'F'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Legal Guardian', 'Value' => 'LG'],
 
             // PolicyTypeId
             ['CodeID' => 'PolicyTypeId', 'Description' => 'Life Insurance', 'Value' => 'L'],
@@ -518,6 +555,18 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
 
 
+            ['CodeID' => 'FleetUOM', 'Description' => 'Sufficient', 'Value' => 'SU'],
+            ['CodeID' => 'FleetUOM', 'Description' => 'Insufficient', 'Value' => 'IN'],
+            ['CodeID' => 'FleetUOM', 'Description' => 'Excess', 'Value' => 'EX'],
+
+
+            //Fuel UOMs
+            ['CodeID' => 'FuelUOM', 'Description' => '1/4', 'Value' => 'Q'],
+            ['CodeID' => 'FuelUOM', 'Description' => '2/4', 'Value' => 'H'],
+            ['CodeID' => 'FuelUOM', 'Description' => '3/4', 'Value' => 'Q'],
+            ['CodeID' => 'FuelUOM', 'Description' => '4/4', 'Value' => 'F'],
+
+
             //Vehicle Request Status
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Pending', 'Value' => 'pe'],
@@ -545,18 +594,26 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetRepairType', 'Description' => 'Normal', 'Value' => 'NO'],
             ['CodeID' => 'FleetRepairType', 'Description' => 'Emergency', 'Value' => 'EM'],
 
+            //Trip Statuses
+            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'AP'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'RE'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'OG'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'CO'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'CA'],
+
             //Maintenance Status
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Acknowledged', 'Value' => 'AC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Completed', 'Value' => 'CO'],
 
 
-             //Vehicle Availability Status
+            //Vehicle Availability Status
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
 
-             //Driver Availability Status
+            //Driver Availability Status
 
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
@@ -588,20 +645,20 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Yearly', 'Value' => 'y','DisplayOrder'=>0],
 
             // Legal Execution Status
-            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Pending',  'Value' => 'P'],
-            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Signed',   'Value' => 'S'],
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Signed', 'Value' => 'S'],
             ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Archived', 'Value' => 'A'],
 
             //Legal Document Type
             ['CodeID' => 'LegalDocumentType', 'Description' => 'Contract', 'Value' => 'C'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'Lease',    'Value' => 'L'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'NDA',      'Value' => 'N'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'MOU',      'Value' => 'M'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'Lease', 'Value' => 'L'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'NDA', 'Value' => 'N'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'MOU', 'Value' => 'M'],
 
             //Legal Case Status
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Open',      'Value' => 'O'],
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Closed',    'Value' => 'C'],
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed',  'Value' => 'A'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Open', 'Value' => 'O'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Closed', 'Value' => 'C'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed', 'Value' => 'A'],
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Dismissed', 'Value' => 'D'],
 
 

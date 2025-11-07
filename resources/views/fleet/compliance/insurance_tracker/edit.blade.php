@@ -23,10 +23,10 @@
                 </select>
             </div>
 
-            <div class="mb-3">
+                        <div class="mb-3">
                 <label for="PolicyNumber" class="form-label">Policy Number</label>
-                <input type="number" class="form-control" name="PolicyNumber"
-                       value="{{ old('PolicyNumber', $record->PolicyNumber) }}" required>
+                <input type="text" class="form-control" name="PolicyNumber"
+                    value="{{ old('PolicyNumber', $record->PolicyNumber) }}" required>
             </div>
 
             <div class="mb-3">

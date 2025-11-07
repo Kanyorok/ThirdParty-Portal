@@ -45,172 +45,177 @@
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
-                                    <tr>
-                                        <th>Contract Details</th>
-                                        <th>Tender Information</th>
-                                        <th>Supplier</th>
-                                        <th>Contract Value</th>
-                                        <th>Duration</th>
-                                        <th>Status</th>
-                                        <th class="text-center">Actions</th>
-                                    </tr>
+                                <tr>
+                                    <th>Contract Details</th>
+                                    <th>Tender Information</th>
+                                    <th>Supplier</th>
+                                    <th>Contract Value</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($activeContracts as $contract)
-                                        <tr>
-                                            <td>
+                                @forelse($activeContracts as $contract)
+                                    <tr>
+                                        <td>
+                                            <div>
+                                                <strong class="text-success">{{ $contract->ContractRef }}</strong>
+                                                @if($contract->ContractApprovedOn)
+                                                    <div class="text-muted small">
+                                                        Approved: {{ $contract->ContractApprovedOn->format('d/m/Y') }}
+                                                    </div>
+                                                @endif
+                                                @if($contract->PaymentTerms)
+                                                    <div class="text-muted small">
+                                                        <i class="fas fa-credit-card me-1"></i>
+                                                        {{ Str::limit($contract->PaymentTerms, 30) }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($contract->tender)
                                                 <div>
-                                                    <strong class="text-success">{{ $contract->ContractRef }}</strong>
-                                                    @if($contract->ContractApprovedOn)
+                                                    <strong>{{ $contract->tender->TenderNo }}</strong>
+                                                    <div class="text-muted small">
+                                                        {{ Str::limit($contract->tender->Title, 50) }}
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        {{ $contract->tender->OpeningDate?->format('d/m/Y') }}
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($contract->winningSupplier)
+                                                <div>
+                                                    <strong>{{ $contract->winningSupplier->SupplierName }}</strong>
+                                                    @if($contract->winningSupplier->ContactPerson)
                                                         <div class="text-muted small">
-                                                            Approved: {{ $contract->ContractApprovedOn->format('d/m/Y') }}
+                                                            <i class="fas fa-user me-1"></i>
+                                                            {{ $contract->winningSupplier->ContactPerson }}
                                                         </div>
                                                     @endif
-                                                    @if($contract->PaymentTerms)
+                                                    @if($contract->winningSupplier->PhoneNumber)
                                                         <div class="text-muted small">
-                                                            <i class="fas fa-credit-card me-1"></i>
-                                                            {{ Str::limit($contract->PaymentTerms, 30) }}
+                                                            <i class="fas fa-phone me-1"></i>
+                                                            {{ $contract->winningSupplier->PhoneNumber }}
                                                         </div>
                                                     @endif
                                                 </div>
-                                            </td>
-                                            <td>
-                                                @if($contract->tender)
-                                                    <div>
-                                                        <strong>{{ $contract->tender->TenderNo }}</strong>
-                                                        <div class="text-muted small">
-                                                            {{ Str::limit($contract->tender->Title, 50) }}
-                                                        </div>
-                                                        <div class="text-muted small">
-                                                            <i class="fas fa-calendar me-1"></i>
-                                                            {{ $contract->tender->OpeningDate?->format('d/m/Y') }}
-                                                        </div>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($contract->ContractValue)
+                                                <strong class="text-success">
+                                                    {{ number_format($contract->ContractValue, 2) }}
+                                                </strong>
+                                                <div class="text-muted small">
+                                                    {{ is_object($contract->tender->Currency) ? $contract->tender->Currency->Code : ($contract->tender->Currency ?? 'KES') }}
+                                                </div>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($contract->ContractStartDate && $contract->ContractEndDate)
+                                                <div class="small">
+                                                    <div class="text-success">
+                                                        <i class="fas fa-play me-1"></i>
+                                                        {{ $contract->ContractStartDate->format('d/m/Y') }}
                                                     </div>
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($contract->winningSupplier)
-                                                    <div>
-                                                        <strong>{{ $contract->winningSupplier->SupplierName }}</strong>
-                                                        @if($contract->winningSupplier->ContactPerson)
-                                                            <div class="text-muted small">
-                                                                <i class="fas fa-user me-1"></i>
-                                                                {{ $contract->winningSupplier->ContactPerson }}
-                                                            </div>
-                                                        @endif
-                                                        @if($contract->winningSupplier->PhoneNumber)
-                                                            <div class="text-muted small">
-                                                                <i class="fas fa-phone me-1"></i>
-                                                                {{ $contract->winningSupplier->PhoneNumber }}
-                                                            </div>
-                                                        @endif
+                                                    <div class="text-danger">
+                                                        <i class="fas fa-stop me-1"></i>
+                                                        {{ $contract->ContractEndDate->format('d/m/Y') }}
                                                     </div>
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($contract->ContractValue)
-                                                    <strong class="text-success">
-                                                        {{ number_format($contract->ContractValue, 2) }}
-                                                    </strong>
-                                                    <div class="text-muted small">
-                                                        {{ is_object($contract->tender->Currency) ? $contract->tender->Currency->Code : ($contract->tender->Currency ?? 'KES') }}
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($contract->ContractStartDate && $contract->ContractEndDate)
-                                                    <div class="small">
-                                                        <div class="text-success">
-                                                            <i class="fas fa-play me-1"></i>
-                                                            {{ $contract->ContractStartDate->format('d/m/Y') }}
+                                                    @php
+                                                        $now = now();
+                                                        $daysRemaining = $now->diffInDays($contract->ContractEndDate, false);
+                                                    @endphp
+                                                    @if($daysRemaining > 0)
+                                                        <div class="text-info">
+                                                            {{ $daysRemaining }} days remaining
                                                         </div>
-                                                        <div class="text-danger">
-                                                            <i class="fas fa-stop me-1"></i>
-                                                            {{ $contract->ContractEndDate->format('d/m/Y') }}
+                                                    @elseif($daysRemaining < 0)
+                                                        <div class="text-warning">
+                                                            Expired {{ abs($daysRemaining) }} days ago
                                                         </div>
-                                                        @php
-                                                            $now = now();
-                                                            $daysRemaining = $now->diffInDays($contract->ContractEndDate, false);
-                                                        @endphp
-                                                        @if($daysRemaining > 0)
-                                                            <div class="text-info">
-                                                                {{ $daysRemaining }} days remaining
-                                                            </div>
-                                                        @elseif($daysRemaining < 0)
-                                                            <div class="text-warning">
-                                                                Expired {{ abs($daysRemaining) }} days ago
-                                                            </div>
-                                                        @else
-                                                            <div class="text-warning">Expires today</div>
-                                                        @endif
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted">Duration not set</span>
-                                                @endif
-                                            </td>
-                                            <td>
+                                                    @else
+                                                        <div class="text-warning">Expires today</div>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <span class="text-muted">Duration not set</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                                 <span class="badge {{ $contract->contract_status_badge['class'] }}">
                                                     {{ $contract->contract_status_badge['text'] }}
                                                 </span>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group" role="group">
-                                                    <a href="{{ route('lpo.create.contract', $contract->Id) }}" 
-                                                       class="btn btn-sm btn-success" title="Create LPO from Contract">
-                                                        <i class="fas fa-plus-circle"></i> Create LPO
-                                                    </a>
-                                                    
-                                                    <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle dropdown-toggle-split" 
-                                                            data-bs-toggle="dropdown" title="More Actions">
-                                                        <span class="visually-hidden">Toggle Dropdown</span>
-                                                    </button>
-                                                    <ul class="dropdown-menu">
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('lpo.create.contract', $contract->Id) }}"
+                                                   class="btn btn-sm btn-success" title="Create LPO from Contract">
+                                                    <i class="fas fa-plus-circle"></i> Create LPO
+                                                </a>
+
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-info dropdown-toggle dropdown-toggle-split"
+                                                        data-bs-toggle="dropdown" title="More Actions">
+                                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                           href="{{ route('contracts.lifecycle.view', $contract->Id) }}">
+                                                            <i class="fas fa-eye me-2"></i>View Contract
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item"
+                                                                onclick="showContractSummary({{ $contract->Id }})">
+                                                            <i class="fas fa-info-circle me-2"></i>Contract Summary
+                                                        </button>
+                                                    </li>
+                                                    @if($contract->DeliveryTerms)
                                                         <li>
-                                                            <a class="dropdown-item" href="{{ route('contracts.lifecycle.view', $contract->Id) }}">
-                                                                <i class="fas fa-eye me-2"></i>View Contract
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <button type="button" class="dropdown-item" 
-                                                                    onclick="showContractSummary({{ $contract->Id }})">
-                                                                <i class="fas fa-info-circle me-2"></i>Contract Summary
+                                                            <button type="button" class="dropdown-item"
+                                                                    onclick="showDeliveryTerms('{{ addslashes($contract->DeliveryTerms) }}')">
+                                                                <i class="fas fa-truck me-2"></i>Delivery Terms
                                                             </button>
                                                         </li>
-                                                        @if($contract->DeliveryTerms)
-                                                            <li>
-                                                                <button type="button" class="dropdown-item" 
-                                                                        onclick="showDeliveryTerms('{{ addslashes($contract->DeliveryTerms) }}')">
-                                                                    <i class="fas fa-truck me-2"></i>Delivery Terms
-                                                                </button>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center py-5">
-                                                <i class="fas fa-file-contract fa-3x text-muted mb-3"></i>
-                                                <h6 class="text-muted">No Active Contracts Available</h6>
-                                                <p class="text-muted">No executed contracts available for LPO creation at this time.</p>
-                                                <div class="mt-3">
-                                                    <a href="{{ route('contracts.lifecycle.index') }}" class="btn btn-primary me-2">
-                                                        <i class="fas fa-plus"></i> Manage Contracts
-                                                    </a>
-                                                    <a href="{{ route('lpo.origination.award-based') }}" class="btn btn-outline-warning">
-                                                        <i class="fas fa-trophy"></i> Try Award-Based LPO
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
+                                                    @endif
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <i class="fas fa-file-contract fa-3x text-muted mb-3"></i>
+                                            <h6 class="text-muted">No Active Contracts Available</h6>
+                                            <p class="text-muted">No executed contracts available for LPO creation at
+                                                this time.</p>
+                                            <div class="mt-3">
+                                                <a href="{{ route('contracts.lifecycle.index') }}"
+                                                   class="btn btn-primary me-2">
+                                                    <i class="fas fa-plus"></i> Manage Contracts
+                                                </a>
+                                                <a href="{{ route('lpo.origination.award-based') }}"
+                                                   class="btn btn-outline-warning">
+                                                    <i class="fas fa-trophy"></i> Try Award-Based LPO
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -304,7 +309,8 @@
                                 <hr>
                                 <div class="small text-muted">
                                     <i class="fas fa-lightbulb me-1"></i>
-                                    <strong>Tip:</strong> Use contract-based LPOs for recurring purchases covered under framework agreements.
+                                    <strong>Tip:</strong> Use contract-based LPOs for recurring purchases covered under
+                                    framework agreements.
                                 </div>
                             </div>
                         </div>
@@ -362,7 +368,7 @@
                 </div>
             `;
             modal.show();
-            
+
             // TODO: Implement AJAX call to fetch contract details
             setTimeout(() => {
                 document.getElementById('contractSummaryContent').innerHTML = `
@@ -371,7 +377,7 @@
                 `;
             }, 1000);
         }
-        
+
         function showDeliveryTerms(terms) {
             const modal = new bootstrap.Modal(document.getElementById('deliveryTermsModal'));
             document.getElementById('deliveryTermsContent').innerHTML = `

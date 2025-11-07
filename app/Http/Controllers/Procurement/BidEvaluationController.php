@@ -18,11 +18,11 @@ class BidEvaluationController extends Controller
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-        
+
         // Get tenders with responsive bids ready for evaluation
-        $tenders = Tender::whereHas('submissions', function($query) {
-                $query->where('BidStatus', 'responsive');
-            })
+        $tenders = Tender::whereHas('submissions', function ($query) {
+            $query->where('BidStatus', 'responsive');
+        })
             ->select('Id', 'TenderNo', 'Title', 'OpeningDate', 'SubmissionDeadline')
             ->orderBy('OpeningDate', 'desc')
             ->get();
@@ -40,12 +40,12 @@ class BidEvaluationController extends Controller
                     ->where('IsResponsive', true)
                     ->orderBy('BidAmount')
                     ->get();
-                
+
                 $evaluationSummary = $this->getEvaluationSummary($responsiveBids);
             }
         }
 
-        return view('procurement.tendering.bidopeningandevaluation.evaluation.index', 
+        return view('procurement.tendering.bidopeningandevaluation.evaluation.index',
             compact('tenders', 'selectedTender', 'responsiveBids', 'evaluationSummary'));
     }
 
@@ -55,7 +55,7 @@ class BidEvaluationController extends Controller
     public function updateScores(Request $request, $bidId)
     {
         $this->authorize(PermissionEnum::BidSubmissionWrite);
-        
+
         $request->validate([
             'technical_score' => 'required|numeric|min:0|max:100',
             'financial_score' => 'required|numeric|min:0|max:100',
@@ -92,7 +92,7 @@ class BidEvaluationController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 
+            return redirect()->back()->with('success',
                 "Evaluation completed for {$bid->SupplierName}. Total Score: " . ($technicalScore + $financialScore));
 
         } catch (\Exception $e) {
@@ -108,7 +108,7 @@ class BidEvaluationController extends Controller
     {
         $evaluatedBids = $bids->where('BidStatus', 'evaluated');
         $awardedBid = $bids->where('BidStatus', 'awarded')->first();
-        
+
         return [
             'total_responsive' => $bids->count(),
             'pending_evaluation' => $bids->where('BidStatus', 'responsive')->count(),

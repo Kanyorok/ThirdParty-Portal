@@ -16,13 +16,20 @@
   <nav class="pc-sidebar">
     <div class="navbar-wrapper">
       <div class="m-header">
+        @php
+          $org = \App\Models\Settings\APICredential::query()->where('Integration', \App\Enums\Core\IntegrationsEnum::Organization->value)->latest('Id')->first();
+          $branding = $org?->Configuration;
+          $logo = is_object($branding) && isset($branding->logo) ? $branding->logo : 'assets/img/carft.png';
+          $name = is_object($branding) && isset($branding->name) ? $branding->name : config('app.name');
+          $motto = is_object($branding) && isset($branding->motto) ? $branding->motto : 'Thinking.Crafting.Transforming';
+        @endphp
         <a href="{{ route('home') }}" class="b-brand text-primary d-flex align-items-center">
-          <img src="{{ asset('assets/img/carft.png') }}" class="img-fluid" alt="logo" width="58" height="48">
+          <img src="{{ asset($logo) }}" class="img-fluid" alt="logo" width="58" height="48">
           <div class="ms-3">
             <div class="h2 mb-0 text-decoration-none">
-              {{ config('app.name') }}
+              {{ $name }}
             </div>
-            <div class="small text-muted text-center">Thinking.Crafting.Transforming</div>
+            <div class="small text-muted text-center">{{ $motto }}</div>
           </div>
         </a>
       </div>
@@ -198,8 +205,8 @@
         <div class="col my-1">
           <p class="m-0">@include('layouts._partials._copyright')</p>
         </div>
-        <div class="col-auto my-1 d-flex align-items-center gap-3">
-          <span id="footer-datetime" class="text-muted small"></span>
+          <div class="col-auto my-1 d-flex align-items-center gap-3">
+              <span id="footer-datetime" class="text-muted small"></span>
           {{-- <ul class="list-inline footer-link mb-0">
                     <li class="list-inline-item"><a
                             href="../../external.html?link=https://ableproadmin.com/index.html">Home</a></li>
@@ -225,34 +232,35 @@
   @stack('scripts')
 
   <script>
-    window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() ? '/' . request()->path() : '/');
+      window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() ? '/' . request()->path() : '/');
   </script>
   <script type="module">
-    import { SidebarState } from '/js/sidebarState.js';
-    SidebarState.init({
-      rootSelector: 'nav.pc-sidebar',
-      itemSelector: 'li.pc-item',
-      linkSelector: 'a.pc-link',
-      submenuSelector: '.pc-submenu',
-      activeItemClass: 'active',
-      expandedItemClass: 'pc-trigger',
-      userKey: '{{ auth()->id() ?? "guest" }}'
-    });
-    document.addEventListener('partial:loaded', () => SidebarState.restore());
+      import {SidebarState} from '/js/sidebarState.js';
+
+      SidebarState.init({
+          rootSelector: 'nav.pc-sidebar',
+          itemSelector: 'li.pc-item',
+          linkSelector: 'a.pc-link',
+          submenuSelector: '.pc-submenu',
+          activeItemClass: 'active',
+          expandedItemClass: 'pc-trigger',
+          userKey: '{{ auth()->id() ?? "guest" }}'
+      });
+      document.addEventListener('partial:loaded', () => SidebarState.restore());
   </script>
 
   <script>
-    // Footer DateTime (user timezone in browser)
-    (function updateFooterDateTime() {
-      const el = document.getElementById('footer-datetime');
-      if (!el) return;
-      const now = new Date();
-      // Format: YYYY-MM-DD HH:MM:SS (24h)
-      const pad = n => n.toString().padStart(2, '0');
-  const formatted = `${pad(now.getDate())}-${pad(now.getMonth()+1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-      el.textContent = `System Time: ${formatted}`;
-      setTimeout(updateFooterDateTime, 1000);
-    })();
+      // Footer DateTime (user timezone in browser)
+      (function updateFooterDateTime() {
+          const el = document.getElementById('footer-datetime');
+          if (!el) return;
+          const now = new Date();
+          // Format: YYYY-MM-DD HH:MM:SS (24h)
+          const pad = n => n.toString().padStart(2, '0');
+          const formatted = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+          el.textContent = `System Time: ${formatted}`;
+          setTimeout(updateFooterDateTime, 1000);
+      })();
 
     // Keep sidebar static: load only #mainBodyContent for internal sidebar navigation
     (function() {
@@ -326,10 +334,13 @@
           window.scrollTo(0, 0);
           // execute any scripts inside the loaded fragment
           runScripts(target);
-          // Persist active route (using current pathname after pushState)
-          try { sessionStorage.setItem('activeSidebarRoute', new URL(url, location.href).pathname); } catch(e) {}
+            // Persist active route (using current pathname after pushState)
+            try {
+                sessionStorage.setItem('activeSidebarRoute', new URL(url, location.href).pathname);
+            } catch (e) {
+            }
           // dispatch a helpful event for page-specific init
-          document.dispatchEvent(new CustomEvent('partial:loaded', { detail: { url } }));
+            document.dispatchEvent(new CustomEvent('partial:loaded', {detail: {url}}));
         } catch (err) {
           console.error('AJAX navigate failed, falling back', err);
           window.location.href = url;
@@ -359,8 +370,11 @@
           if ((ev.button && ev.button !== 0) || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
 
           ev.preventDefault();
-          // Pre-store intended active route in case of fast navigation or failure
-          try { sessionStorage.setItem('activeSidebarRoute', new URL(href, location.href).pathname); } catch(e) {}
+            // Pre-store intended active route in case of fast navigation or failure
+            try {
+                sessionStorage.setItem('activeSidebarRoute', new URL(href, location.href).pathname);
+            } catch (e) {
+            }
           ajaxNavigate(href);
         });
       }
@@ -386,100 +400,122 @@
         const sidebar = document.querySelector('nav.pc-sidebar');
         if (!sidebar) return;
         const navRoot = sidebar.querySelector('.pc-navbar') || sidebar;
-        // Backfill any pc-link anchors missing data-route (e.g. stale cached navbar)
-        navRoot.querySelectorAll('a.pc-link:not([data-route])').forEach(a => {
-          try { a.setAttribute('data-route', new URL(a.getAttribute('href'), location.href).pathname); } catch(e) {}
-        });
-        // collect anchors with route info
-        const anchors = Array.from(navRoot.querySelectorAll('a[data-route]'));
-        if(!anchors.length){
-          // emergency fallback collect pc-link anchors
-          navRoot.querySelectorAll('a.pc-link').forEach(a=>{
-            if(!a.dataset.route){
-              try { a.dataset.route = new URL(a.href, location.href).pathname; } catch(e){}
-            }
+          // Backfill any pc-link anchors missing data-route (e.g. stale cached navbar)
+          navRoot.querySelectorAll('a.pc-link:not([data-route])').forEach(a => {
+              try {
+                  a.setAttribute('data-route', new URL(a.getAttribute('href'), location.href).pathname);
+              } catch (e) {
+              }
           });
-        }
-        const current = normalizePath(location.pathname);
-
-        // Attempt using data-route exact match
-        let match = anchors.find(a => normalizePath(a.dataset.route) === current);
-
-        // Longest prefix fallback
-        if(!match){
-          let best = null; let bestLen = 0;
-          anchors.forEach(a => {
-            const p = normalizePath(a.dataset.route);
-            if(current.startsWith(p) && p.length > bestLen && p !== '/') { best = a; bestLen = p.length; }
-          });
-          match = best;
-        }
-
-        // sessionStorage fallback (e.g. internal partial nav without URL change affecting pathname)
-        if(!match){
-          const stored = sessionStorage.getItem('activeSidebarRoute');
-            if(stored){
-              match = anchors.find(a => normalizePath(a.dataset.route) === normalizePath(stored));
-            }
-        }
-
-        // Strategy:
-        // 1. Exact match
-        // 2. Longest prefix match (deepest path) excluding '/'
-        // 3. If still none, try ignoring trailing segments (walk up)
-        let exact = null;
-        let bestPrefix = null;
-        for (const a of anchors) {
-          let p;
-          try { p = normalizePath(a.href); } catch(e) { continue; }
-          if (p === current) { exact = a; break; }
-          if (current.startsWith(p) && p !== '/') {
-            if (!bestPrefix || p.length > normalizePath(bestPrefix.href).length) {
-              bestPrefix = a;
-            }
-          }
-        }
-  // existing variable name adjustments removed
-
-        // If still no match, progressively trim current path
-        if (!match) {
-          const segments = current.split('/').filter(Boolean);
-            while (segments.length > 1 && !match) {
-              segments.pop();
-              const candidate = '/' + segments.join('/');
-              match = anchors.find(a => {
-                try { return normalizePath(a.href) === candidate; } catch(e){ return false; }
+          // collect anchors with route info
+          const anchors = Array.from(navRoot.querySelectorAll('a[data-route]'));
+          if (!anchors.length) {
+              // emergency fallback collect pc-link anchors
+              navRoot.querySelectorAll('a.pc-link').forEach(a => {
+                  if (!a.dataset.route) {
+                      try {
+                          a.dataset.route = new URL(a.href, location.href).pathname;
+                      } catch (e) {
+                      }
+                  }
               });
-            }
-        }
+          }
+          const current = normalizePath(location.pathname);
+
+          // Attempt using data-route exact match
+          let match = anchors.find(a => normalizePath(a.dataset.route) === current);
+
+          // Longest prefix fallback
+          if (!match) {
+              let best = null;
+              let bestLen = 0;
+              anchors.forEach(a => {
+                  const p = normalizePath(a.dataset.route);
+                  if (current.startsWith(p) && p.length > bestLen && p !== '/') {
+                      best = a;
+                      bestLen = p.length;
+                  }
+              });
+              match = best;
+          }
+
+          // sessionStorage fallback (e.g. internal partial nav without URL change affecting pathname)
+          if (!match) {
+              const stored = sessionStorage.getItem('activeSidebarRoute');
+              if (stored) {
+                  match = anchors.find(a => normalizePath(a.dataset.route) === normalizePath(stored));
+              }
+          }
+
+          // Strategy:
+          // 1. Exact match
+          // 2. Longest prefix match (deepest path) excluding '/'
+          // 3. If still none, try ignoring trailing segments (walk up)
+          let exact = null;
+          let bestPrefix = null;
+          for (const a of anchors) {
+              let p;
+              try {
+                  p = normalizePath(a.href);
+              } catch (e) {
+                  continue;
+              }
+              if (p === current) {
+                  exact = a;
+                  break;
+              }
+              if (current.startsWith(p) && p !== '/') {
+                  if (!bestPrefix || p.length > normalizePath(bestPrefix.href).length) {
+                      bestPrefix = a;
+                  }
+              }
+          }
+          // existing variable name adjustments removed
+
+          // If still no match, progressively trim current path
+          if (!match) {
+              const segments = current.split('/').filter(Boolean);
+              while (segments.length > 1 && !match) {
+                  segments.pop();
+                  const candidate = '/' + segments.join('/');
+                  match = anchors.find(a => {
+                      try {
+                          return normalizePath(a.href) === candidate;
+                      } catch (e) {
+                          return false;
+                      }
+                  });
+              }
+          }
 
         if (!match) return;
 
         match.classList.add('active');
-  sessionStorage.setItem('activeSidebarRoute', match.dataset.route || '');
-        // Walk up and activate ancestors
+          sessionStorage.setItem('activeSidebarRoute', match.dataset.route || '');
+          // Walk up and activate ancestors
         let el = match.closest('.pc-item') || match.parentElement;
         while (el && el !== navRoot) {
           if (el.classList && el.classList.contains('pc-item')) {
             el.classList.add('active');
-            if (el.classList.contains('pc-hasmenu')) {
-              el.classList.add('pc-trigger'); // ensure its submenu is expanded
-            }
+              if (el.classList.contains('pc-hasmenu')) {
+                  el.classList.add('pc-trigger'); // ensure its submenu is expanded
+              }
           }
           el = el.parentElement;
         }
 
-        // Scroll only if not already visible
+          // Scroll only if not already visible
         try {
-          const rect = match.getBoundingClientRect();
-          const vpH = window.innerHeight || document.documentElement.clientHeight;
-          if (rect.top < 80 || rect.bottom > vpH - 40) {
-            match.scrollIntoView({behavior:'smooth', block:'center'});
-          }
-        } catch(e) {}
+            const rect = match.getBoundingClientRect();
+            const vpH = window.innerHeight || document.documentElement.clientHeight;
+            if (rect.top < 80 || rect.bottom > vpH - 40) {
+                match.scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+        } catch (e) {
+        }
       }
 
-      // SidebarState handles highlighting/expansion now.
+        // SidebarState handles highlighting/expansion now.
     })();
   </script>
 </body>

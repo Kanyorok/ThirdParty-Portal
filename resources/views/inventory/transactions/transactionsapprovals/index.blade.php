@@ -107,17 +107,37 @@
                             @if($transactionType == 'Stock Transfer')
                                 {{ $record->transferredBy->Name ?? 'N/A'}}
                             @elseif($transactionType == 'Stock Adjustment')
-                                {{-- CORRECTED LINE: Only display the user's Name via the relationship --}}
                                 {{ $record->adjustedBy->Name ?? 'N/A' }}
                             @else
                                 {{ $record->creator->name ?? 'N/A' }}
                             @endif
                         </td>
                         <td>
-                            @if($transactionType == 'Stock Transfer' && $statusEnum)
-                                <span class="badge bg-{{ $statusEnum->badgeColor() }}">{{ $statusEnum->label() }}</span>
+                            @php
+                                if ($transactionType == 'Stock Transfer' && $statusEnum) {
+                                    $statusDisplay = $statusEnum->label();
+                                    $badgeColor = $statusEnum->badgeColor();
+                                } 
+                                elseif ($transactionType == 'Stock Adjustment') {
+                                    $adjustmentStatusEnum = Transfers::tryFrom($record->Status) ?? null;
+                                    if ($adjustmentStatusEnum) {
+                                        $statusDisplay = $adjustmentStatusEnum->label();
+                                        $badgeColor = $adjustmentStatusEnum->badgeColor();
+                                    } else {
+                                        $statusDisplay = $record->Status ?? 'N/A';
+                                        $badgeColor = 'secondary';
+                                    }
+                                }
+                                else {
+                                    $statusDisplay = $record->Status ?? 'N/A';
+                                    $badgeColor = 'secondary';
+                                }
+                            @endphp
+                            
+                            @if(isset($statusDisplay) && isset($badgeColor))
+                                <span class="badge bg-{{ $badgeColor }}">{{ $statusDisplay }}</span>
                             @else
-                                {{ $record->Status ?? 'N/A' }}
+                                <span class="badge bg-secondary">{{ $record->Status ?? 'N/A' }}</span>
                             @endif
                         </td>
                         <td>

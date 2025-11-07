@@ -6,6 +6,7 @@ use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class FinanceCDNotes extends Model
 {
@@ -57,10 +58,18 @@ class FinanceCDNotes extends Model
     }
     protected static function booted()
     {
-        static::creating(function($note){
+        static::creating(function ($note) {
             $year = now()->year;
-            $lastId =self::max('Id')+1;
-            $note->CDNumber = $year.'-'.str_pad($lastId,6,'0', STR_PAD_LEFT);
+
+            // Generate a short unique random segment
+            $uniquePart = strtoupper(Str::random(4));
+
+            // Count entries created this year (optional, just for a meaningful sequence)
+            $count = self::whereYear('CreatedOn', $year)->count() + 1;
+
+            // Format: 2025-000123-AB9X
+            $note->CDNumber = sprintf('%s-%06d-%s', $year, $count, $uniquePart);
         });
     }
+
 }

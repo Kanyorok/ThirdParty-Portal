@@ -6,9 +6,10 @@
         <!-- Action Bar -->
         <div class="d-flex justify-content-between mb-2">
             <h5 class="mb-0 text-primary">
-                <i class="fas fa-percentage me-2"></i>  Rates
+                <i class="fas fa-percentage me-2"></i> Rates
             </h5>
-            <a href="javascript:void(0)" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#addRateModal">
+            <a href="javascript:void(0)" class="btn btn-info btn-sm" data-bs-toggle="modal"
+               data-bs-target="#addRateModal">
                 <i class="fas fa-plus me-1"></i> New Rate
             </a>
         </div>
@@ -41,7 +42,7 @@
                         <tr>
                             <th>#</th>
                             <th>Product</th>
-                            <th>Rate Type</th>
+                            {{--                            <th>Rate Type</th>--}}
                             <th>Rate Value (%)</th>
                             <th>Source</th>
                             <th class="text-center">Actions</th>
@@ -52,7 +53,7 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $item['Description']['Description'] ?? '-' }}</td>
-                                <td>{{ $item['RateTypeName'] ?? '-' }}</td>
+                                {{--                                <td>{{ $item['RateTypeName'] ?? '-' }}</td>--}}
                                 <td>{{ number_format($item['RateValue'], 2) }}</td>
                                 <td>{{ $item['Source'] ?? '-' }}</td>
                                 <td class="text-center">
@@ -118,35 +119,41 @@
                     <div class="modal-body">
                         <div class="row g-3">
                             <!-- Product -->
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label">Product</label>
                                 <select class="form-select" name="ProductTypeID" required>
                                     <option value="">-- Select Product --</option>
-                                    @foreach($productTypes as $product)
+                                    @forelse($productTypes as $product)
                                         <option value="{{ $product->Id }}">{{ $product->Name }}</option>
-                                    @endforeach
+                                    @empty
+                                        <option value="" disabled>No product types available. Map a budgetline to a
+                                            product to proceed.
+                                        </option>
+                                    @endforelse
                                 </select>
-                                @error('ProductTypeID') <div class="text-danger small">{{ $message }}</div> @enderror
+                                @error('ProductTypeID')
+                                <div class="text-danger small">{{ $message }}</div> @enderror
                             </div>
 
                             <!-- Rate Type -->
-                            <div class="col-md-6">
-                                <label class="form-label">Rate Type</label>
-                                <select class="form-select" name="RateTypeID" required>
-                                    <option value="">-- Select Rate Type --</option>
-                                    @foreach($rateTypes as $rate)
-                                        <option value="{{ $rate->Id }}">{{ $rate->RateTypeName }}</option>
-                                    @endforeach
-                                </select>
-                                @error('RateTypeID') <div class="text-danger small">{{ $message }}</div> @enderror
-                            </div>
+                            {{--                            <div class="col-md-6">--}}
+                            {{--                                <label class="form-label">Rate Type</label>--}}
+                            {{--                                <select class="form-select" name="RateTypeID" required>--}}
+                            {{--                                    <option value="">-- Select Rate Type --</option>--}}
+                            {{--                                    @foreach($rateTypes as $rate)--}}
+                            {{--                                        <option value="{{ $rate->Id }}">{{ $rate->RateTypeName }}</option>--}}
+                            {{--                                    @endforeach--}}
+                            {{--                                </select>--}}
+                            {{--                                @error('RateTypeID') <div class="text-danger small">{{ $message }}</div> @enderror--}}
+                            {{--                            </div>--}}
 
                             <!-- Rate Value -->
                             <div class="col-md-6">
                                 <label class="form-label">Rate Value (%)</label>
                                 <input type="number" step="0.01" class="form-control" name="RateValue"
                                        placeholder="e.g. 10.50" required>
-                                @error('RateValue') <div class="text-danger small">{{ $message }}</div> @enderror
+                                @error('RateValue')
+                                <div class="text-danger small">{{ $message }}</div> @enderror
                             </div>
 
                             <!-- Source -->
@@ -154,7 +161,8 @@
                                 <label class="form-label">Source</label>
                                 <input type="text" class="form-control" name="Source" placeholder="e.g. CBS, Manual"
                                        required>
-                                @error('Source') <div class="text-danger small">{{ $message }}</div> @enderror
+                                @error('Source')
+                                <div class="text-danger small">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>
@@ -176,7 +184,8 @@
 
     @foreach($driverRates as $item)
         <!-- Edit Rate Modal -->
-        <div class="modal fade" id="editRateModal-{{ $item['Id'] }}" tabindex="-1" aria-labelledby="editRateLabel-{{ $item['Id'] }}" aria-hidden="true">
+        <div class="modal fade" id="editRateModal-{{ $item['Id'] }}" tabindex="-1"
+             aria-labelledby="editRateLabel-{{ $item['Id'] }}" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content rounded-3 shadow">
                     <div class="modal-header">
@@ -193,25 +202,26 @@
                         <div class="modal-body">
                             <div class="row g-3">
                                 <!-- Product (readonly text) -->
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <label class="form-label">Product</label>
-                                    <input type="text" class="form-control" value="{{ $item['Description']['Description'] }}" readonly>
+                                    <input type="text" class="form-control"
+                                           value="{{ $item['Description']['Description'] }}" readonly>
                                     <!-- Hidden field to still hold ProductTypeID -->
                                     <input type="hidden" name="ProductTypeID" value="{{ $item['Description']['Id'] }}">
                                 </div>
 
                                 <!-- Rate Type -->
-                                <div class="col-md-6">
-                                    <label class="form-label">Rate Type</label>
-                                    <select class="form-select" name="RateTypeID" required>
-                                        <option value="">-- Select Rate Type --</option>
-                                        @foreach($rateTypes as $rate)
-                                            <option value="{{ $rate->Id }}" {{ $rate->RateTypeName === $item['RateTypeName'] ? 'selected' : '' }}>
-                                                {{ $rate->RateTypeName }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                {{--                                <div class="col-md-6">--}}
+                                {{--                                    <label class="form-label">Rate Type</label>--}}
+                                {{--                                    <select class="form-select" name="RateTypeID" required>--}}
+                                {{--                                        <option value="">-- Select Rate Type --</option>--}}
+                                {{--                                        @foreach($rateTypes as $rate)--}}
+                                {{--                                            <option value="{{ $rate->Id }}" {{ $rate->RateTypeName === $item['RateTypeName'] ? 'selected' : '' }}>--}}
+                                {{--                                                {{ $rate->RateTypeName }}--}}
+                                {{--                                            </option>--}}
+                                {{--                                        @endforeach--}}
+                                {{--                                    </select>--}}
+                                {{--                                </div>--}}
 
                                 <!-- Rate Value -->
                                 <div class="col-md-6">

@@ -17,7 +17,7 @@ class LegalIntellectualPropertyController extends Controller
     {
         $this->authorize(PermissionEnum::IntellectualPropertyView, LegalIntellectualProperty::class);
 
-        $records = LegalIntellectualProperty::all();
+        $records = LegalIntellectualProperty::orderByDesc('CreatedOn')->paginate(15);
         return view('legal.intellectual.index', compact('records'));
     }
 

@@ -57,17 +57,17 @@ class PropertyNewTenantService
     public static function update(
         PropertyNewTenant $propertyNewTenant,
         CodeDetail $TenantType,
-        ?string $Remarks,
-        bool $IsActive,
-        User $user,
+        ?string      $Remarks = null,
+        bool         $IsActive,
+        User         $user,
         UploadedFile $document = null
     ): self
     {
         // Update tenant details
         $propertyNewTenant->update([
             'TenantType' => $TenantType->ID,
-            'Remarks'    => $Remarks,
-            'IsActive'   => $IsActive,
+            'Remarks' => $Remarks,
+            'IsActive' => $IsActive,
             'ModifiedBy' => $user->Id,
         ]);
 

@@ -51,7 +51,18 @@ class RequisitionItemsController extends Controller
 //        $this->authorize('view',RequisitionLines::class);
         try{
             $requisitionId = $request->query('requisition_id');
+            // Attempt plan-aware fetch first
+            $planRef = null;
+            if ($requisitionId) {
+                $planRef = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
+            }
             $items = $this->itemService->getItemByType($type, $requisitionId);
+
+            // Fallback ONLY when no plan is attached to requisition.
+            // If a plan exists but has no items, do not fallback (should show empty list).
+            if ((!$items || (is_countable($items) && count($items) === 0)) && empty($planRef)) {
+                $items = $this->itemService->getItemByType($type, null);
+            }
             return response()->json([
                 'success' => true,
                 'data' => $items,
@@ -73,36 +84,62 @@ class RequisitionItemsController extends Controller
 
     public function getItemDetails(Request $request, $item): JsonResponse
     {
+        // Never return 500 here; always provide a safe JSON payload
+        if (empty($item)) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        // Extract requisition_id from query
+        $requisitionId = $request->query('requisition_id');
+        $planId = null;
+
+        if ($requisitionId) {
+            $planId = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
+        }
+
         try {
-            if (empty($item)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Item parameter is required',
-                ], 400);
-            }
-
-
-            // Extract requisition_id from query
-            $requisitionId = $request->query('requisition_id');
-            $planId = null;
-
-            if ($requisitionId) {
-                $planId = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
-            }
-
-            // Pass planId to the service
+            // Primary: plan-aware or generic details via service
             $details = $this->itemService->getItemDetails($item, $requisitionId, $planId);
+
+            // Normalize to collection/array and ensure a consistent 200 response
+            if (!$details) {
+                $details = collect([]);
+            }
 
             return response()->json([
                 'success' => true,
                 'data' => $details,
             ]);
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch items.',
+            // Log error and provide a best-effort fallback (generic lookup without plan)
+            Log::error('getItemDetails failed; returning safe fallback', [
+                'item' => $item,
+                'requisition_id' => $requisitionId,
+                'plan_id' => $planId,
                 'error' => $e->getMessage(),
-            ], 500);
+            ]);
+
+            try {
+                $fallback = $this->itemService->getItemDetails($item, null, null);
+                return response()->json([
+                    'success' => true,
+                    'data' => $fallback ?: collect([]),
+                ]);
+            } catch (Exception $inner) {
+                Log::error('Fallback getItemDetails also failed', [
+                    'item' => $item,
+                    'error' => $inner->getMessage(),
+                ]);
+
+                // Final safe response with empty data
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                ]);
+            }
         }
     }
 

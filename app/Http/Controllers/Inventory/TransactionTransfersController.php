@@ -14,6 +14,8 @@ use App\Models\Procurement\GoodsReceipt;
 use App\Services\Inventory\TransactionTransferService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
 use Throwable;
 
 class TransactionTransfersController extends Controller
@@ -27,14 +29,25 @@ class TransactionTransfersController extends Controller
 
     public function index()
     {
-        $transfers = TransactionTransfer::with(['items.item'])->latest()->get();
+        $branchId = Auth::user()->employee?->BranchId;
+
+        $transfers = TransactionTransfer::with(['items.item', 'fromBranch', 'toBranch'])
+            ->where(function ($q) use ($branchId) {
+                $q->where('FromBranch', $branchId)
+                    ->orWhere('ToBranch', $branchId);
+            })
+            ->get();
+
         return view('inventory.transactions.transfers.index', compact('transfers'));
     }
 
     public function create(Request $request)
     {
+        $branchId = Auth::user()->employee?->BranchId;
         $this->authorize('create', TransactionTransfer::class);
-        $users = User::all();
+        $users = User::whereHas('employee', function ($q) use ($branchId) {
+            $q->where('BranchId', $branchId);
+        })->get();
         return view('inventory.transactions.transfers.create', compact('users'));
     }
 
@@ -55,7 +68,7 @@ class TransactionTransfersController extends Controller
                     ? app(TransactionTransferService::class)->getHQBranchId()
                     : $validatedData['FromBranch'];
 
-                
+
             }
 
             $transfer = $this->service->createTransfer($validatedData);
@@ -66,7 +79,7 @@ class TransactionTransfersController extends Controller
                 ->with('success', 'Transfer created successfully.');
         } catch (Throwable $e) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
         }
@@ -84,10 +97,13 @@ class TransactionTransfersController extends Controller
 
     public function edit($Id)
     {
+        $branchId = auth()->user()->employee?->BranchId;
         $this->authorize('update', TransactionTransfer::class);
         $branches = Branch::all();
         $itemsMasterList = ItemMasterList::all();
-        $users = User::all();
+        $users = User::whereHas('employee', function ($q) use ($branchId) {
+            $q->where('BranchId', $branchId);
+        })->get();
 
         $transferitem = TransactionTransfer::with([
             'fromBranch', 'toBranch', 'creator', 'items.item', 'requisition'
@@ -121,13 +137,16 @@ class TransactionTransfersController extends Controller
         return redirect()->route('transactionstransfers.index')->with('success', 'Transfer deleted.');
     }
 
- 
 
     public function getRequisitionsByType($type)
     {
+        $branchId = Auth::user()->employee?->BranchId;
         if ($type === 'interbranch') {
             $requisitions = InterBranchRequisition::with(['fromBranch', 'toBranch'])
                 ->where('Status', 'Ap')
+                ->where(function ($q) use ($branchId) {
+                    $q->where('FromBranch', $branchId);
+                })
                 ->whereDoesntHave('transfer')
                 ->get();
         } elseif ($type === 'procurement') {
@@ -137,8 +156,8 @@ class TransactionTransfersController extends Controller
                     $q->where('RequisitionType', 'procurement');
                 })
                 ->get([
-                    'id', 
-                    'GRNID', 
+                    'id',
+                    'GRNID',
                     'TransferTo',
                     'ItemNo',
                     'ReceivedQTY',
@@ -149,6 +168,7 @@ class TransactionTransfersController extends Controller
 
         return response()->json($requisitions);
     }
+
     public function getRequisitionDetails(Request $request, $id)
     {
         try {
@@ -164,24 +184,24 @@ class TransactionTransfersController extends Controller
 
                 $items = $requisition->items->map(function ($item) {
                     return [
-                        'Id'            => $item->Id,
-                        'Item'          => $item->Item,
-                        'ItemCode'      => $item->item?->ItemCode ?? '',
-                        'ItemName'      => $item->item?->ItemName ?? '',
-                        'UnitCost'      => $item->item?->price?->ActualPrice ?? 0,
-                        'UOM'           => $item->UOM ?? $item->item?->UOM,
-                        'UOMCode'       => $item->item?->uom?->Code ?? 'N/A',
-                        'PriceID'       => $item->item?->ItemPrice,
-                        'ApprovedQty'   => $item->ApprovedQty ?? $item->Quantity,
+                        'Id' => $item->Id,
+                        'Item' => $item->Item,
+                        'ItemCode' => $item->item?->ItemCode ?? '',
+                        'ItemName' => $item->item?->ItemName ?? '',
+                        'UnitCost' => $item->item?->price?->ActualPrice ?? 0,
+                        'UOM' => $item->UOM ?? $item->item?->UOM,
+                        'UOMCode' => $item->item?->uom?->Code ?? 'N/A',
+                        'PriceID' => $item->item?->ItemPrice,
+                        'ApprovedQty' => $item->ApprovedQty ?? $item->Quantity,
                         'DispatchedQty' => $item->DispatchedQty ?? null,
                     ];
                 });
 
                 return response()->json([
-                    'Id'          => $requisition->Id,
+                    'Id' => $requisition->Id,
                     'from_branch' => $requisition->fromBranch,
-                    'to_branch'   => $requisition->toBranch,
-                    'items'       => $items,
+                    'to_branch' => $requisition->toBranch,
+                    'items' => $items,
                 ]);
             }
 
@@ -196,31 +216,31 @@ class TransactionTransfersController extends Controller
 
                 $items = $requisition->map(function ($gr) {
                     return [
-                        'Id'            => $gr->id,
-                        'Item'          => $gr->ItemNo,
-                        'ItemCode'      => $gr->item?->ItemCode ?? '',
-                        'ItemName'      => $gr->item?->ItemName ?? '',
-                        'UnitCost'      => $gr->item?->price?->ActualPrice ?? 0,
-                        'UOM'           => $gr->item?->UOM,
-                        'UOMCode'       => $gr->item?->uom?->Code ?? 'N/A',
-                        'PriceID'       => $gr->item?->ItemPrice,
-                        'ApprovedQty'   => $gr->POQTY,
+                        'Id' => $gr->id,
+                        'Item' => $gr->ItemNo,
+                        'ItemCode' => $gr->item?->ItemCode ?? '',
+                        'ItemName' => $gr->item?->ItemName ?? '',
+                        'UnitCost' => $gr->item?->price?->ActualPrice ?? 0,
+                        'UOM' => $gr->item?->UOM,
+                        'UOMCode' => $gr->item?->uom?->Code ?? 'N/A',
+                        'PriceID' => $gr->item?->ItemPrice,
+                        'ApprovedQty' => $gr->POQTY,
                         'DispatchedQty' => $gr->ReceivedQTY,
                     ];
                 });
 
                 return response()->json([
-                    'Id'          => $requisition->first()->GRNID,
+                    'Id' => $requisition->first()->GRNID,
                     'from_branch' => null,
-                    'to_branch'   => $requisition->first()->toBranch,
-                    'items'       => $items,
+                    'to_branch' => $requisition->first()->toBranch,
+                    'items' => $items,
                 ]);
             }
 
             return response()->json(['error' => 'Invalid type'], 400);
         } catch (Throwable $e) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
         }

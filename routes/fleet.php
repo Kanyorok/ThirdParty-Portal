@@ -18,13 +18,12 @@ use App\Http\Controllers\Fleet\FleetRunningCostController;
 use App\Http\Controllers\Fleet\FleetServiceAlertController;
 use App\Http\Controllers\Fleet\FleetTelematicsDeviceController;
 use App\Http\Controllers\Fleet\FleetTripLogController;
-use App\Http\Controllers\Fleet\FleetVehicleInspectionController;
 use App\Http\Controllers\Fleet\FleetVehicleAssignmentController;
+use App\Http\Controllers\Fleet\FleetVehicleInspectionController;
 use App\Http\Controllers\Fleet\FleetVehicleRequestController;
 use App\Http\Controllers\Fleet\VehicleController;
 use App\Http\Controllers\Fleet\VehicleDocumentController;
 use App\Http\Controllers\FleetManagement\ComplianceAndDocumentationController;
-use App\Http\Controllers\FleetManagement\ReportsController;
 use App\Http\Controllers\FleetManagement\DriverManagementController;
 use App\Http\Controllers\FleetManagement\FleetMakeController;
 use App\Http\Controllers\FleetManagement\FleetModelController;
@@ -33,6 +32,7 @@ use App\Http\Controllers\FleetManagement\FuelManagementController;
 use App\Http\Controllers\FleetManagement\FuelTypeController;
 use App\Http\Controllers\FleetManagement\InventoryOfSparePartsController;
 use App\Http\Controllers\FleetManagement\LicensingController;
+use App\Http\Controllers\FleetManagement\ReportsController;
 use App\Http\Controllers\FleetManagement\ServiceTrackingController;
 use App\Http\Controllers\FleetManagement\TripManagementController;
 use App\Http\Controllers\FleetManagement\UtilizationController;
@@ -71,8 +71,8 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::put('/fleetmake/{Id}', [FleetMakeController::class, 'update'])->name('fleetmake.update');
     Route::post('/fleetmake', [FleetMakeController::class, 'store'])->name('fleetmake.store');
     Route::delete('/fleetmake/{Id}', [FleetMakeController::class, 'destroy'])->name('fleetmake.destroy');
-    
-   
+
+
 
     // Route::resource('fleetmodel', FleetModelController::class);
     Route::get('/fleetmodel', [FleetModelController::class, 'index'])->name('fleetmodel.index');
@@ -130,6 +130,16 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::get('/assignments', [FleetVehicleAssignmentController::class, 'index'])->name('fleet.assignments.index');
     Route::get('/assignments/create', [FleetVehicleAssignmentController::class, 'create'])->name('fleet.assignments.create');
     Route::post('/assignments', [FleetVehicleAssignmentController::class, 'store'])->name('fleet.assignments.store');
+    Route::get('/assignments/{Id}/edit', [FleetVehicleAssignmentController::class, 'edit'])->name('fleet.assignments.edit');
+    Route::get('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'show'])->name('fleet.assignments.show');
+    Route::put('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'update'])->name('fleet.assignments.update');
+    Route::delete('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'destroy'])->name('fleet.assignments.destroy');
+    Route::get('/assignments/get-vehicles/{Id}', [FleetVehicleAssignmentController::class, 'getVehiclesByTrip'])->name('fleet.assignments.getVehicles');
+    Route::get('/assignments/get-inspection/{Id}', [FleetVehicleAssignmentController::class, 'getVehicleInspection'])->name('fleet.assignments.getInspection');
+    Route::get('/assignments/get-driver/{Id}', [FleetVehicleAssignmentController::class, 'getVehicleDriver'])->name('fleet.assignments.getDriver');
+
+
+
 
     // ==================== Fleet Vehicle Documents ====================
     Route::get('/documents', [VehicleDocumentController::class, 'index'])->name('fleet.documents.index');
@@ -207,11 +217,13 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::get('fleet/vehicles/available', [FleetTripLogController::class, 'getAvailableVehicles'])->name('fleet.vehicles.available');
     Route::get('fleet/drivers/available', [FleetTripLogController::class, 'getAvailablePermanentDrivers'])->name('fleet.drivers.available');
     Route::get('fleet/contracted_drivers/available', [FleetTripLogController::class, 'getAvailableContractedDrivers'])->name('fleet.contracted_drivers.available');
+    Route::patch('fleet/trip-logs/{Id}/approve', [FleetTripLogController::class, 'approve'])->name('fleet.trip_logs.approve');
+    Route::patch('fleet/trip-logs/{Id}/reject', [FleetTripLogController::class, 'reject'])->name('fleet.trip_logs.reject');
     
 
 
 
-     // ==================== Vehicle Inspections====================
+    // ==================== Vehicle Inspections====================
     Route::get('/vehicle_inspection', [FleetVehicleInspectionController::class, 'index'])->name('fleet.vehicle_inspection.index');
     Route::get('/vehicle_inspection/create', [FleetVehicleInspectionController::class, 'create'])->name('fleet.vehicle_inspection.create');
     Route::post('/vehicle_inspection', [FleetVehicleInspectionController::class, 'store'])->name('fleet.vehicle_inspection.store');
@@ -220,6 +232,9 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::put('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'update'])->name('fleet.vehicle_inspection.update');
     Route::delete('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'destroy'])->name('fleet.vehicle_inspection.destroy');
     Route::get('/vehicle_inspection/{Id}/posttrip', [FleetVehicleInspectionController::class, 'createPostTrip'])->name('fleet.vehicle_inspection.posttrip.create');
+    Route::get('/vehicle_inspection/get-driver/{Id}', [FleetVehicleInspectionController::class, 'getVehicleDriver'])->name('fleet.vehicle_inspection.getDriver');
+    Route::get('fleet/vehicle_inspection/get-last-mileage/{Id}', [FleetVehicleInspectionController::class, 'getLastMileage']);
+
 
 
 
@@ -277,7 +292,7 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::post('/running-costs', [FleetRunningCostController::class, 'store'])->name('fleet.running_costs.store');
 
     // ==================== GPS ====================
-    Route::get('/gps/live', [FleetGpsController::class, 'liveDashboard'])->name('fleet.gps.live_dashboard');
+    Route::get('tracking', [FleetGpsController::class, 'index'])->name('fleet.tracking.index');
     Route::get('/gps/movement-history', [FleetGpsController::class, 'movementHistory'])->name('fleet.gps.movement_history');
 
     // ==================== Telematics ====================

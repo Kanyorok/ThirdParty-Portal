@@ -4,6 +4,7 @@ namespace App\Policies\Procurement;
 
 use App\Models\Auth\User;
 use App\Models\Procurement\Requisitions;
+use App\Enums\Core\PermissionEnum;
 
 class RequisitionPolicy
 {
@@ -12,9 +13,7 @@ class RequisitionPolicy
      */
     public function viewAny(User $user): bool
     {
-//        return $user->can(PermissionEnum::RequisitionRead->value);
-
-        return true;
+        return $user->can(PermissionEnum::RequisitionRead->value);
     }
 
     /**
@@ -22,10 +21,7 @@ class RequisitionPolicy
      */
     public function view(User $user, Requisitions $requisition): bool
     {
-        //dd($requisition);
-//        return $user->can(PermissionEnum::RequisitionRead->value);
-
-        return true;
+        return $user->can(PermissionEnum::RequisitionRead->value);
     }
 
     /**
@@ -33,8 +29,7 @@ class RequisitionPolicy
      */
     public function create(User $user): bool
     {
-//        return $user->can(PermissionEnum::RequisitionWrite->value);
-        return true;
+        return $user->can(PermissionEnum::RequisitionWrite->value);
     }
 
     /**
@@ -42,7 +37,7 @@ class RequisitionPolicy
      */
     public function update(User $user, Requisitions $requisition): bool
     {
-        return true;
+        return $user->can(PermissionEnum::RequisitionUpdate->value);
     }
 
     /**
@@ -50,7 +45,7 @@ class RequisitionPolicy
      */
     public function delete(User $user, Requisitions $requisition): bool
     {
-        return true;
+        return $user->can(PermissionEnum::RequisitionDelete->value);
     }
 
     /**
@@ -58,7 +53,7 @@ class RequisitionPolicy
      */
     public function restore(User $user, Requisitions $requisition): bool
     {
-        return true;
+        return $user->can(PermissionEnum::RequisitionUpdate->value);
     }
 
     /**
@@ -66,6 +61,14 @@ class RequisitionPolicy
      */
     public function forceDelete(User $user, Requisitions $requisition): bool
     {
-        return true;
+        return $user->can(PermissionEnum::RequisitionDelete->value);
+    }
+
+    /**
+     * Approve a requisition.
+     */
+    public function approve(User $user, Requisitions $requisition): bool
+    {
+        return $user->can(PermissionEnum::RequisitionApproval->value);
     }
 }

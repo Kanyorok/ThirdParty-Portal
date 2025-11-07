@@ -2,7 +2,7 @@
  * HTMX Sidebar Navigation System
  * Handles sidebar state management, partial loading, and prevents full page reloads
  */
-(function() {
+(function () {
     'use strict';
 
     // Configuration
@@ -33,9 +33,9 @@
         setupMenuExpansion();
         restoreSidebarState();
         highlightActiveRoute();
-        
+
         // Initial load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             highlightActiveRoute();
             restoreSidebarState();
         });
@@ -44,11 +44,11 @@
     // Setup HTMX event handlers
     function setupHtmxEvents() {
         // Before request
-        document.body.addEventListener('htmx:beforeRequest', function(event) {
+        document.body.addEventListener('htmx:beforeRequest', function (event) {
             if (event.detail.target.id === 'mainBodyContent') {
                 state.isNavigating = true;
                 showLoader();
-                
+
                 // Optimistic UI update
                 const link = event.detail.elt;
                 if (link && link.classList.contains('sidebar-link')) {
@@ -59,35 +59,35 @@
         });
 
         // After request
-        document.body.addEventListener('htmx:afterRequest', function(event) {
+        document.body.addEventListener('htmx:afterRequest', function (event) {
             if (event.detail.target.id === 'mainBodyContent') {
                 state.isNavigating = false;
                 hideLoader();
-                
+
                 // Update active route
                 const newUrl = event.detail.xhr.responseURL || window.location.href;
                 state.activeRoute = new URL(newUrl).pathname;
-                
+
                 // Highlight active route and expand menus
                 setTimeout(() => {
                     highlightActiveRoute();
                     expandActiveMenus();
                     saveSidebarState();
                 }, 100);
-                
+
                 // Dispatch custom event for other scripts
                 document.dispatchEvent(new CustomEvent('partial:loaded', {
-                    detail: { url: newUrl, target: 'mainBodyContent' }
+                    detail: {url: newUrl, target: 'mainBodyContent'}
                 }));
             }
         });
 
         // Handle HTMX errors
-        document.body.addEventListener('htmx:responseError', function(event) {
+        document.body.addEventListener('htmx:responseError', function (event) {
             console.error('HTMX request failed:', event.detail);
             state.isNavigating = false;
             hideLoader();
-            
+
             // Fallback to full page reload
             const url = event.detail.xhr.responseURL || window.location.href;
             window.location.href = url;
@@ -96,13 +96,13 @@
 
     // Setup sidebar click handlers for optimistic UI updates
     function setupSidebarClickHandlers() {
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const link = event.target.closest(CONFIG.sidebarLinkSelector);
             if (!link) return;
 
             // Prevent default behavior for sidebar links
             event.preventDefault();
-            
+
             const href = link.getAttribute('href');
             if (!href || href === 'javascript:void(0)') return;
 
@@ -113,7 +113,7 @@
 
     // Setup menu expansion handlers
     function setupMenuExpansion() {
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const arrow = event.target.closest('.pc-arrow');
             if (!arrow) return;
 
@@ -165,14 +165,14 @@
             if (submenu) {
                 submenu.style.display = 'block';
                 submenu.classList.add('show');
-                
+
                 // Add trigger class to parent
                 const parentLink = currentItem.querySelector('.pc-link');
                 if (parentLink) {
                     currentItem.classList.add(CONFIG.triggerClass);
                 }
             }
-            
+
             // Move to parent item
             currentItem = currentItem.parentElement?.closest('.pc-item');
         }
@@ -182,7 +182,7 @@
     function highlightActiveRoute() {
         const currentPath = window.location.pathname;
         const sidebarLinks = document.querySelectorAll(`${CONFIG.sidebarSelector} ${CONFIG.sidebarLinkSelector}`);
-        
+
         let bestMatch = null;
         let bestScore = 0;
 
@@ -208,11 +208,11 @@
         if (currentPath === routePath) {
             return 100; // Exact match
         }
-        
+
         if (currentPath.startsWith(routePath + '/')) {
             return routePath.length; // Prefix match
         }
-        
+
         return 0;
     }
 
@@ -268,7 +268,7 @@
             const savedState = sessionStorage.getItem(CONFIG.sessionStorageKey);
             if (savedState) {
                 const state = JSON.parse(savedState);
-                
+
                 // Restore open menus
                 state.openMenus.forEach(route => {
                     const link = document.querySelector(`${CONFIG.sidebarSelector} a[data-route="${route}"]`);
@@ -291,7 +291,7 @@
 
     // Handle internal page links (like +Create Category buttons)
     function setupInternalLinkHandlers() {
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const link = event.target.closest('a');
             if (!link) return;
 
@@ -310,12 +310,12 @@
 
             // Add HTMX attributes to internal links
             event.preventDefault();
-            
+
             link.setAttribute('hx-get', href);
             link.setAttribute('hx-target', '#mainBodyContent');
             link.setAttribute('hx-push-url', 'true');
             link.setAttribute('hx-swap', 'innerHTML');
-            
+
             // Trigger HTMX request
             htmx.trigger(link, 'click');
         });

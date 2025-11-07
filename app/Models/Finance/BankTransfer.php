@@ -21,18 +21,18 @@ class BankTransfer extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FromBankAccountID','ToBankAccountID',
-        'DocDate','CurrencyID','ExchangeRate','Amount','AmountBase',
-        'ClearingGLAccountID','Reference','Narration','Status','IsActive',
-        'CreatedBy','ModifiedBy','DeletedBy',
+        'FromBankAccountID', 'ToBankAccountID',
+        'DocDate', 'CurrencyID', 'ExchangeRate', 'Amount', 'AmountBase',
+        'ClearingGLAccountID', 'Reference', 'Narration', 'Status', 'IsActive',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
-        'IsActive'     => 'boolean',
-        'Amount'       => 'decimal:2',
-        'AmountBase'   => 'decimal:2',
+        'IsActive' => 'boolean',
+        'Amount' => 'decimal:2',
+        'AmountBase' => 'decimal:2',
         'ExchangeRate' => 'decimal:6',
-        'DocDate'      => 'date',
+        'DocDate' => 'date',
     ];
 
     // ✅ Required by your codebase

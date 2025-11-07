@@ -113,5 +113,5 @@ class MarketingPlanner extends Model
         return $this->hasMany(MarketingPlannerActivity::class, 'PlannerId', 'Id');
     }
 
-    
+
 }

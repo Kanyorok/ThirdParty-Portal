@@ -4,78 +4,54 @@
 
 @section('content')
 <div class="container">
-    <h4 class="mb-4">Record Stock Consumption</h4>
 
     <form action="{{ route('stockconsumption.store') }}" method="POST">
         @csrf
 
         @if ($errors->any())
             <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
+                <ul>@foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+                    @endforeach</ul>
             </div>
         @endif
 
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="BranchID" class="form-label">Branch</label>
-                <select class="form-select @error('BranchID') is-invalid @enderror" name="BranchID" id="BranchID" required>
-                    <option value="">Select Branch</option>
-                    @foreach($branches as $branch)
-                        <option value="{{ $branch->Id }}" {{ old('BranchID') == $branch->Id ? 'selected' : '' }}>
-                            {{ $branch->Name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('BranchID')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+                <label class="form-label">Branch <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" value="{{ $branch->Name }}" readonly>
+                <input type="hidden" name="BranchID" value="{{ $branch->Id }}">
             </div>
 
             <div class="col-md-6">
-                <label for="StoreID" class="form-label">Store</label>
-                <select class="form-select @error('StoreID') is-invalid @enderror" name="StoreID" id="StoreID">
+                <label for="StoreID" class="form-label">Store <span class="text-danger">*</span></label>
+                <select class="form-select" name="StoreID" id="StoreID" required>
                     <option value="">Select Store</option>
+                    @foreach($stores as $store)
+                        <option value="{{ $store->Id }}" {{ old('StoreID') == $store->Id ? 'selected' : '' }}>
+                            {{ $store->StoreName }}
+                        </option>
+                    @endforeach
                 </select>
-                @error('StoreID')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
             </div>
         </div>
 
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="ItemID" class="form-label">Item</label>
-                <select class="form-select @error('ItemID') is-invalid @enderror" name="ItemID" id="ItemID" required>
+                <label for="ItemID" class="form-label">Item <span class="text-danger">*</span></label>
+                <select class="form-select" name="ItemID" id="ItemID" required>
                     <option value="">Select Item</option>
-                    @foreach($items as $item)
-                        <option
-                            value="{{ $item->Id }}"
-                            data-uom="{{ $item->uom->Code ?? 'Not Found' }}"
-                            data-uom-id="{{ $item->UOM ?? '' }}"
-                            {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
-                            {{ $item->ItemName }}
-                        </option>
-                    @endforeach
                 </select>
-                @error('ItemID')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
             </div>
 
             <div class="col-md-3">
-                <label for="Quantity" class="form-label">Quantity</label>
-                <input type="number" class="form-control @error('Quantity') is-invalid @enderror" name="Quantity" id="Quantity" value="{{ old('Quantity') }}" required>
-                @error('Quantity')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+                <label for="Quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="Quantity" id="Quantity" value="{{ old('Quantity') }}"
+                       required>
             </div>
 
             <div class="col-md-3">
-                <label class="form-label">Unit of Measure</label>
+                <label class="form-label">Unit of Measure <span class="text-danger">*</span></label>
                 <input type="text" id="UOM_Display" class="form-control" readonly>
                 <input type="hidden" name="UOM" id="UOM" value="{{ old('UOM') }}">
             </div>
@@ -83,60 +59,48 @@
 
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="IssuedToType" class="form-label">Issued To Type</label>
-                <select name="IssuedToType" id="IssuedToType" class="form-select @error('IssuedToType') is-invalid @enderror" required>
+                <label for="IssuedToType" class="form-label">Issued To Type <span class="text-danger">*</span></label>
+                <select name="IssuedToType" id="IssuedToType" class="form-select" required>
                     <option value="">Select Option</option>
                     @foreach ($types as $type)
-                        <option value="{{ $type->ID }}" {{ old('IssuedToType') == $type->ID ? 'selected' : '' }}>{{ $type->Description }}</option>
+                        <option value="{{ $type->ID }}" {{ old('IssuedToType') == $type->ID ? 'selected' : '' }}>
+                            {{ $type->Description }}
+                        </option>
                     @endforeach
                 </select>
-                @error('IssuedToType')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
             </div>
 
             <div class="col-md-6">
-                <label for="IssuedToID" class="form-label">Issued To</label>
-                <select name="IssuedToID" id="IssuedToID" class="form-select @error('IssuedToID') is-invalid @enderror" required>
+                <label for="IssuedToID" class="form-label">Issued To <span class="text-danger">*</span></label>
+                <select name="IssuedToID" id="IssuedToID" class="form-select" required>
                     <option value="">Select Recipient</option>
                 </select>
-                @error('IssuedToID')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
             </div>
         </div>
 
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="IssuedBy" class="form-label">Issued By</label>
-                <select name="IssuedBy" id="IssuedBy" class="form-select @error('IssuedBy') is-invalid @enderror" required>
+                <label for="IssuedBy" class="form-label">Issued By <span class="text-danger">*</span></label>
+                <select name="IssuedBy" id="IssuedBy" class="form-select" required>
                     <option value="">Select User</option>
                     @foreach($users as $user)
-                        <option value="{{ $user->Id }}" {{ old('IssuedBy') == $user->Id ? 'selected' : '' }}>{{ $user->Name }}</option>
+                        <option value="{{ $user->Id }}" {{ old('IssuedBy') == $user->Id ? 'selected' : '' }}>
+                            {{ $user->Name }}
+                        </option>
                     @endforeach
                 </select>
-                @error('IssuedBy')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
             </div>
 
             <div class="col-md-6">
-                <label for="IssuedOn" class="form-label">Issued On</label>
-                <input type="date" name="IssuedOn" id="IssuedOn" class="form-control @error('IssuedOn') is-invalid @enderror" value="{{ old('IssuedOn', now()->format('Y-m-d')) }}" required>
-                @error('IssuedOn')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+                <label for="IssuedOn" class="form-label">Issued On <span class="text-danger">*</span></label>
+                <input type="date" name="IssuedOn" id="IssuedOn" class="form-control"
+                       value="{{ old('IssuedOn', now()->format('Y-m-d')) }}" required>
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-12">
-                <label for="Remarks" class="form-label">Remarks</label>
-                <textarea class="form-control @error('Remarks') is-invalid @enderror" name="Remarks" id="Remarks" rows="3">{{ old('Remarks') }}</textarea>
-                @error('Remarks')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
+        <div class="mb-3">
+            <label for="Remarks" class="form-label">Remarks</label>
+            <textarea class="form-control" name="Remarks" id="Remarks" rows="3">{{ old('Remarks') }}</textarea>
         </div>
 
         <div class="mt-3">
@@ -150,96 +114,106 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
-        const oldBranchID = '{{ old('BranchID') }}';
-        const oldStoreID = '{{ old('StoreID') }}';
         const oldItemID = '{{ old('ItemID') }}';
         const oldIssuedToType = '{{ old('IssuedToType') }}';
         const oldIssuedToID = '{{ old('IssuedToID') }}';
 
-        function loadStores(branchId, oldStoreId) {
-            const storeSelect = $('#StoreID');
-            storeSelect.empty().append('<option value="">Select Store</option>');
-            if (!branchId) return;
+        let availableQty = 0;
 
+        function loadItems(storeId, oldItemId) {
+            let itemSelect = $('#ItemID');
+            itemSelect.empty().append('<option value="">Loading...</option>');
             $.ajax({
-                url: '{{ route("stockconsumption.getStores") }}',
+                url: '{{ route("stockconsumption.getItems") }}',
                 type: 'GET',
-                data: { BranchID: branchId },
-                beforeSend: function() {
-                    storeSelect.empty().append('<option>Loading...</option>');
-                },
-                success: function(data) {
-                    storeSelect.empty().append('<option value="">Select Store</option>');
-                    if (data.length === 0) {
-                        storeSelect.append('<option value="">No Stores Found</option>');
-                    } else {
-                        data.forEach(store => {
-                            storeSelect.append(`<option value="${store.Id}" ${store.Id == oldStoreId ? 'selected' : ''}>${store.StoreName}</option>`);
-                        });
-                    }
-                },
-                error: function() {
-                    storeSelect.empty().append('<option value="">Error loading stores</option>');
+                data: {StoreID: storeId},
+                success: function (data) {
+                    itemSelect.empty().append('<option value="">Select Item</option>');
+                    data.forEach(item => {
+                        itemSelect.append(`
+                        <option value="${item.Id}"
+                                data-uom="${item.UOMCode}"
+                                data-uom-id="${item.UOM}"
+                                data-currentqty="${item.CurrentQty}"
+                                ${item.Id == oldItemId ? 'selected' : ''}>
+                            ${item.ItemName}
+                        </option>`);
+                    });
+                    if (oldItemId) $('#ItemID').trigger('change');
                 }
             });
         }
 
         function loadIssuedToOptions(type, oldIssuedToId) {
             const recipientSelect = $('#IssuedToID');
-            recipientSelect.empty().append('<option value="">Select Recipient</option>');
-            if (!type) return;
-
+            recipientSelect.empty().append('<option value="">Loading...</option>');
             $.ajax({
                 url: '{{ route("stockconsumption.getIssuedToOptions") }}',
                 type: 'GET',
-                data: { type: type },
-                beforeSend: function() {
-                    recipientSelect.empty().append('<option>Loading...</option>');
-                },
-                success: function(data) {
+                data: {type: type},
+                success: function (data) {
                     recipientSelect.empty().append('<option value="">Select Recipient</option>');
-                    if (data.length > 0) {
-                        data.forEach(function (item) {
-                            // CORRECTED: Changed 'item.ID' to 'item.Id' to match the controller's JSON response
-                            recipientSelect.append(`<option value="${item.Id}" ${item.Id == oldIssuedToId ? 'selected' : ''}>${item.Name}</option>`);
-                        });
-                    } else {
-                        recipientSelect.append('<option value="">No recipients found</option>');
-                    }
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    console.error('AJAX error:', textStatus, errorThrown);
-                    recipientSelect.empty().append('<option value="">Error loading data</option>');
+                    data.forEach(item => {
+                        recipientSelect.append(`<option value="${item.Id}" ${item.Id == oldIssuedToId ? 'selected' : ''}>${item.Name}</option>`);
+                    });
                 }
             });
         }
 
-        // Event listener for Branch change
-        $('#BranchID').on('change', function () {
-            let branchId = $(this).val();
-            loadStores(branchId, null);
+        $('#StoreID').on('change', function () {
+            loadItems($(this).val(), null);
         });
 
-        // Event listener for IssuedToType change
-        $('#IssuedToType').on('change', function () {
-            const type = $(this).val();
-            loadIssuedToOptions(type, null);
-        });
-
-        // Set UOM display and hidden field based on selected item
+        // Item change event
         $('#ItemID').on('change', function () {
             let selectedOption = $(this).find('option:selected');
-            let uomName = selectedOption.data('uom') || 'Not Found';
-            let uomId = selectedOption.data('uom-id') || '';
+            $('#UOM_Display').val(selectedOption.data('uom') || '');
+            $('#UOM').val(selectedOption.data('uom-id') || '');
+            availableQty = parseFloat(selectedOption.data('currentqty')) || 0;
 
-            $('#UOM_Display').val(uomName);
-            $('#UOM').val(uomId);
+            // Reset quantity validation
+            $('#Quantity').val('').removeClass('is-invalid');
+            $('#qty-error').remove();
+            $('button[type="submit"]').prop('disabled', false);
+
+            // Update quantity placeholder with available stock
+            $('#Quantity').attr('placeholder', `Max: ${availableQty}`);
         });
 
-        // Restore old values on page load
-        if (oldBranchID) loadStores(oldBranchID, oldStoreID);
+        // Issued To Type change event
+        $('#IssuedToType').on('change', function () {
+            loadIssuedToOptions($(this).val(), null);
+        });
+
+        // Real-time quantity validation
+        $('#Quantity').on('input', function () {
+            let qty = parseInt($(this).val(), 10);
+            $(this).removeClass('is-invalid');
+            $('#qty-error').remove();
+            $('button[type="submit"]').prop('disabled', false);
+
+            if (qty > availableQty) {
+                $(this).addClass('is-invalid');
+                $(this).after(`<div id="qty-error" class="invalid-feedback">
+                Quantity exceeds available stock (${availableQty}).
+            </div>`);
+                $('button[type="submit"]').prop('disabled', true);
+            }
+        });
+
+        // Initial loads
+        loadItems($('#StoreID').val(), oldItemID);
         if (oldIssuedToType) loadIssuedToOptions(oldIssuedToType, oldIssuedToID);
-        if (oldItemID) $('#ItemID').trigger('change');
     });
 </script>
+
+<style>
+    .text-danger {
+        font-weight: bold;
+    }
+
+    .form-label {
+        font-weight: 500;
+    }
+</style>
 @endsection

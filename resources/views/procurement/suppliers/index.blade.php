@@ -89,25 +89,30 @@
                     url: '{{ route("suppliers.index") }}',
                 },
                 columns: [
-                    { data: 'Id', name: 'Id', orderable: false, searchable: false, className: 'text-center' },
-                    { data: 'ThirdPartyName', name: 'ThirdPartyName' },
-                    { data: 'TradingName', name: 'TradingName', render: d => d || 'N/A' },
+                    {data: 'Id', name: 'Id', orderable: false, searchable: false, className: 'text-center'},
+                    {data: 'ThirdPartyName', name: 'ThirdPartyName'},
+                    {data: 'TradingName', name: 'TradingName', render: d => d || 'N/A'},
                     { // Approval Status
                         data: 'ApprovalStatus',
                         name: 'ApprovalStatus',
-                        render: function(data){
+                        render: function (data) {
                             const label = data || 'Pending';
                             let cls = 'pending';
                             let icon = 'fas fa-clock';
-                            if (label === 'Approved') { cls = 'approved'; icon = 'fas fa-check-circle'; }
-                            else if (label === 'Rejected') { cls = 'rejected'; icon = 'fas fa-times-circle'; }
+                            if (label === 'Approved') {
+                                cls = 'approved';
+                                icon = 'fas fa-check-circle';
+                            } else if (label === 'Rejected') {
+                                cls = 'rejected';
+                                icon = 'fas fa-times-circle';
+                            }
                             return `<span class="status-pill ${cls}"><i class="${icon}"></i> ${label}</span>`;
                         }
                     },
                     { // Prequalified
                         data: 'Prequalified',
                         name: 'IsPrequalified',
-                        render: function(data){
+                        render: function (data) {
                             if (data === 'Yes') return '<span class="status-pill approved">Yes</span>';
                             if (data === 'No') return '<span class="status-pill rejected">No</span>';
                             return '<span class="status-pill pending">N/A</span>';
@@ -116,7 +121,53 @@
                     { data: 'category_names', name: 'category_names' },
                     { data: 'PrimaryContact', name: 'PrimaryContact', render: d => d || 'N/A' },
                     { data: 'PrimaryEmail', name: 'PrimaryEmail' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center',
+                        render: function (data) {
+                            if (!data) return '';
+                            try {
+                                const div = document.createElement('div');
+                                div.innerHTML = data;
+
+                                // Remove Edit and Delete buttons/links
+                                const toRemove = [];
+                                div.querySelectorAll('a, button').forEach(el => {
+                                    const text = (el.textContent || '').trim().toLowerCase();
+                                    const cls = (el.className || '').toLowerCase();
+                                    if (
+                                        text.includes('edit') ||
+                                        text.includes('delete') ||
+                                        cls.includes('btn-warning') || // common Edit style
+                                        cls.includes('btn-danger')   || // common Delete style
+                                        cls.includes('btn-edit')     ||
+                                        cls.includes('btn-delete')
+                                    ) {
+                                        toRemove.push(el);
+                                    }
+                                });
+                                toRemove.forEach(el => el.remove());
+
+                                // Remove any standalone delete forms if present
+                                div.querySelectorAll('form').forEach(form => {
+                                    const inner = (form.textContent || form.innerHTML || '').toLowerCase();
+                                    if (inner.includes('delete')) form.remove();
+                                });
+
+                                return div.innerHTML.trim();
+                            } catch (e) {
+                                // Fallback: strip by regex if DOM ops fail
+                                return String(data)
+                                    .replace(/<a[^>]*>\s*edit\s*<\/a>/gi, '')
+                                    .replace(/<button[^>]*>\s*delete\s*<\/button>/gi, '')
+                                    .replace(/<form[^>]*>.*?delete.*?<\/form>/gis, '');
+                            }
+                        }
+                    }
+
                 ],
                 dom: 'lfrtip',
                 pageLength: 10,

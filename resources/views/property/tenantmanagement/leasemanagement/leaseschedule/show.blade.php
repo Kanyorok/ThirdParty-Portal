@@ -14,38 +14,40 @@
             <div class="row g-3 text-dark">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Property</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ $leaseschedule->lease->property->PropertyName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Lease Number</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ $leaseschedule->lease->LeaseNumber ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant</label>
-                    <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaseschedule->lease->tenant->thirdParty->TradingName ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark"
+                           value="{{ $leaseschedule->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Payment Frequency</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ $leaseschedule->paymentFrequency->Description ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Start Date</label>
-                    <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d M Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark"
+                           value="{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}"
+                           readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date</label>
-                    <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d M Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark"
+                           value="{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') : '-' }}"
+                           readonly>
                 </div>
             </div><br>
 
@@ -55,25 +57,25 @@
             <div class="row g-3 text-dark">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Base Rent (KES)</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ number_format($leaseschedule->BaseRent, 2) }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Service Charge (KES)</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ $leaseschedule->ServiceCharge ? number_format($leaseschedule->ServiceCharge, 2) : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Parking Fee (KES)</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ $leaseschedule->ParkingFee ? number_format($leaseschedule->ParkingFee, 2) : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Other Charges (KES)</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ $leaseschedule->OtherCharges ? number_format($leaseschedule->OtherCharges, 2) : '-' }}" readonly>
                 </div>
             </div>

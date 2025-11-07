@@ -174,7 +174,10 @@
 
                 <div class="d-flex justify-content-between">
                     <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-outline-secondary">Back</a>
-                    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Adjustment</button>
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update
+                        Adjustment
+                    </button>
 
                 </div>
         </form>

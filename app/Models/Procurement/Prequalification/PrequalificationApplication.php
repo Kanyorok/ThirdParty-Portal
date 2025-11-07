@@ -75,11 +75,16 @@ class PrequalificationApplication extends Model
      */
     public function getApplicationNoAttribute(): string
     {
-        return (string) ($this->attributes['ApplicationID'] ?? '');
+        return (string)($this->attributes['ApplicationID'] ?? '');
     }
 
     public function categoryStatuses()
     {
         return $this->hasMany(ApplicationCategoryStatus::class, 'ApplicationId', 'ApplicationID');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(PrequalificationApplicationDocument::class, 'ApplicationID', 'ApplicationID');
     }
 }

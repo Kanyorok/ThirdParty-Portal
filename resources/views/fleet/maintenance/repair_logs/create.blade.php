@@ -2,7 +2,7 @@
 @section('title', 'Log Repair Entry')
 
 @section('content')
-  @if ($errors->any())
+    @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
                 @foreach($errors->all() as $error)
@@ -20,7 +20,7 @@
             <div class="row g-3">
                 <!-- Vehicle -->
                 <div class="col-md-6">
-                    <label for="VehicleID" class="form-label">Vehicle</label>
+                    <label for="VehicleID" class="form-label">Vehicle<span class="text-danger">*</span></label>
                     <select name="VehicleID" class="form-select" required>
                         <option value="">-- Select Vehicle --</option>
                         @foreach($vehicles as $vehicle)
@@ -36,7 +36,7 @@
 
                 <!-- Repair Type -->
                 <div class="col-md-6">
-                    <label for="RepairType" class="form-label">Repair Type</label>
+                    <label for="RepairType" class="form-label">Repair Type<span class="text-danger">*</span></label>
                     <select name="RepairType" class="form-select" required>
                         <option value="">-- Select Type --</option>
                         @foreach($repairType as $type)
@@ -52,7 +52,7 @@
 
                 <!-- Repair Date -->
                 <div class="col-md-6">
-                    <label for="RepairDate" class="form-label">Repair Date</label>
+                    <label for="RepairDate" class="form-label">Repair Date<span class="text-danger">*</span></label>
                     <input type="date" name="RepairDate" class="form-control" value="{{ old('RepairDate') }}" required>
                     @error('RepairDate')
                     <div class="text-danger small">{{ $message }}</div>
@@ -78,16 +78,24 @@
 
                 <!-- Vendor -->
                 <div class="col-md-6">
-                    <label for="Vendor" class="form-label">Vendor</label>
-                    <input type="text" name="Vendor" class="form-control" value="{{ old('Vendor') }}">
-                    @error('Vendor')
+                    <label for="Vendor" class="form-label">Vendor<span class="text-danger">*</span></label>
+                    <select name="VendorID" class="form-select">
+                        <option value="">-- Select Vendor --</option>
+                        @foreach($vendors as $vendor)
+                            <option value="{{ $vendor->Id }}" {{ old('VendorID') == $vendor->Id ? 'selected' : '' }}>
+                                {{ $vendor->ThirdPartyName }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('VendorID')
                     <div class="text-danger small">{{ $message }}</div>
                     @enderror
                 </div>
+                    
 
                 <!-- Cost -->
                 <div class="col-md-6">
-                    <label for="Cost" class="form-label">Cost (KES)</label>
+                    <label for="Cost" class="form-label">Cost (KES)<span class="text-danger">*</span></label>
                     <input type="number" step="0.01" name="Cost" class="form-control" value="{{ old('Cost') }}">
                     @error('Cost')
                     <div class="text-danger small">{{ $message }}</div>
@@ -96,7 +104,7 @@
 
                 <!-- Description -->
                 <div class="col-md-12">
-                    <label for="Description" class="form-label">Description</label>
+                    <label for="Description" class="form-label">Description<span class="text-danger">*</span></label>
                     <textarea name="Description" class="form-control" rows="3">{{ old('Description') }}</textarea>
                     @error('Description')
                     <div class="text-danger small">{{ $message }}</div>

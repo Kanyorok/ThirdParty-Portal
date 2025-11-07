@@ -36,17 +36,7 @@ hboard')
         </div>
     </div>
 
-    <!-- Persistent requirement banner: always visible and prominent -->
-    <div class="w-100 mb-3">
-        <div class="alert alert-danger fw-bold mb-0" role="alert">
-            <i class="fas fa-exclamation-triangle"></i>
-            REQUIRED: You must appoint the Tender Committee and set up Tender Criteria before performing evaluations.
-            <div class="mt-2">
-                <a href="/procurement/tendercommittee" class="btn btn-sm btn-outline-light me-2">Appoint Tender Committee</a>
-                <a href="/procurement/tenderevaluations" class="btn btn-sm btn-light">Set Up Tender Criteria</a>
-            </div>
-        </div>
-    </div>
+  
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">

@@ -105,13 +105,10 @@ enum PermissionEnum: string
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
     case UsersSessions = 'users-nonExpiringSessions';
-
-
     case MeetingRooms = 'meeting-locations';
 
     case BoardManage = 'board-members-manage';
     case BoardMeeting = 'board-members-meetings';
-
 
     case TaskCreate = 'tasks-create';
     case TaskDelegate = 'tasks-delegate';
@@ -487,6 +484,24 @@ enum PermissionEnum: string
     case BancassurancePaymentDelete = 'bancassurancepayment-delete';
     case BancassurancePaymentUpdate = 'bancassurancepayment-update';
 
+        // Medical Fund Management
+    case MedicalFundView = 'medicalfund-view';
+    case MedicalFundCreate = 'medicalfund-create';
+    case MedicalFundUpdate = 'medicalfund-update';
+    case MedicalFundDelete = 'medicalfund-delete';
+
+    // Medical Fund Contribution
+    case MedicalFundContributionView = 'medicalfundcontribution-view';
+    case MedicalFundContributionCreate = 'medicalfundcontribution-create';
+    case MedicalFundContributionUpdate = 'medicalfundcontribution-update'; 
+    case MedicalFundContributionDelete = 'medicalfundcontribution-delete';
+
+    // Medical Fund Beneficiary
+    case MedicalFundBeneficiaryView = 'medicalfundbeneficiary-view';
+    case MedicalFundBeneficiaryCreate = 'medicalfundbeneficiary-create';
+    case MedicalFundBeneficiaryUpdate = 'medicalfundbeneficiary-update';
+    case MedicalFundBeneficiaryDelete = 'medicalfundbeneficiary-delete';
+
 
         // Insurance Provider
     case InsuranceProviderView = 'insuranceprovider-view';
@@ -545,6 +560,35 @@ enum PermissionEnum: string
     case BudgetSetupUpdate = 'budgetSetup-update';
     case BudgetSetupDelete = 'budgetSetup-delete';
 
+    case BudgetActivityView = 'budgetActivity-view';
+    case BudgetActivityCreate = 'budgetActivity-create';
+    case BudgetActivityUpdate = 'budgetActivity-update';
+    case BudgetActivityDelete = 'budgetActivity-delete';
+
+    case NewBudgetView = 'newBudget-view';
+    case NewBudgetCreate = 'newBudget-create';
+    case NewBudgetUpdate = 'newBudget-update';
+    case NewBudgetDelete = 'newBudget-delete';
+
+    case BudgetProjectionView = 'budgetProjection-view';
+    case BudgetProjectionCreate = 'budgetProjection-create';
+    case BudgetProjectionUpdate = 'budgetProjection-update';
+    case BudgetProjectionDelete = 'budgetProjection-delete';
+
+    case BudgetEntryByLineView = 'budgetEntryByLine-view';
+    case BudgetEntryByLineCreate = 'budgetEntryByLine-create';
+    case BudgetEntryByLineUpdate = 'budgetEntryByLine-update';
+    case BudgetEntryByLineDelete = 'budgetEntryByLine-delete';
+
+    case BudgetReallocationView = 'budgetReallocation-view';
+    case BudgetReallocationCreate = 'budgetReallocation-create';
+    case BudgetReallocationUpdate = 'budgetReallocation-update';
+    case BudgetReallocationDelete = 'budgetReallocation-delete';
+
+    case BudgetConsolidationView = 'budgetConsolidation-view';
+    case ApproveNewBudget = 'approveNewBudget';
+    case ApproveReallocation = 'approveReallocation';
+
 
 /** ======================================== Document Management System ========================================*/
 
@@ -572,6 +616,12 @@ enum PermissionEnum: string
     case FinanceGeneralLedgerUpdate = 'financeGeneralLedger-update';
     case FinanceGeneralLedgerDelete = 'financeGeneralLedger-delete';
 
+        //GL Mapping
+    case FinanceGLMappingView = 'financeGLMapping-view';
+    case FinanceGLMappingCreate = 'financeGLMapping-create';
+    case FinanceGLMappingUpdate = 'financeGLMapping-update';
+    case FinanceGLMappingDelete = 'financeGLMapping-delete';
+
         //Accounts Payable
     case FinanceAccountsPayableView = 'financeAccountsPayable-view';
     case FinanceAccountsPayableCreate = 'financeAccountsPayable-create';
@@ -584,11 +634,46 @@ enum PermissionEnum: string
     case FinanceAccountsReceivableUpdate = 'financeAccountsReceivable-update';
     case FinanceAccountsReceivableDelete = 'financeAccountsReceivable-delete';
 
+        //Credit Note
+    case CreditNoteView = 'creditNote-view';
+    case CreditNoteCreate = 'creditNote-create';
+    case CreditNoteUpdate = 'creditNote-update';
+    case CreditNoteDelete = 'creditNote-delete';
+
+        //Payment Voucher
+    case PaymentVoucherView = 'paymentVoucher-view';
+    case PaymentVoucherCreate = 'paymentVoucher-create';
+    case PaymentVoucherUpdate = 'paymentVoucher-update';
+    case PaymentVoucherDelete = 'paymentVoucher-delete';
+
+        //Payment Processing
+    case PaymentProcessingView = 'paymentProcessing-view';
+    case PaymentProcessingCreate = 'paymentProcessing-create';
+    case PaymentProcessingUpdate = 'paymentProcessing-update';
+    case PaymentProcessingDelete = 'paymentProcessing-delete';
+
+        //Receivables - Receipt Posting
+    case ReceiptPostingView = 'receiptPosting-view';
+    case ReceiptPostingCreate = 'receiptPosting-create';
+    case ReceiptPostingUpdate = 'receiptPosting-update';
+    case ReceiptPostingDelete = 'receiptPosting-delete';
+
+        //Receivables - Debit Note
+    case DebitNoteView = 'debitNote-view';
+    case DebitNoteCreate = 'debitNote-create';
+    case DebitNoteUpdate = 'debitNote-update';
+    case DebitNoteDelete = 'debitNote-delete';
+
         //Tax Setting
     case FinanceTaxSettingView = 'financeTaxSetting-view';
     case FinanceTaxSettingCreate = 'financeTaxSetting-create';
     case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
+    
+    /*
+     *
+     * ========================================  Main Settings  ========================================
+     */
 
     //Credit Management
     case FinanceCreditManagementView='financeCreditManagement-view';
@@ -597,14 +682,14 @@ enum PermissionEnum: string
     case FinanceCreditManagementDelete='financeCreditManagement-delete';
 
     //Posting
-    case FinanceJournalPosting='financeJournal-posting';
-    case FinanceAPInvoicePosting='financeAPInvoice-posting';
-    case FinanceARInvoicePosting='financeARInvoice-posting';// AR Account Receivables
-    case FinanceCreditNotePosting='financeCreditNote-posting';
-    case FinanceDebitNotePosting='financeDebitNote-posting';
-    case FinanceVoucherPosting='financeVoucher-posting';
-    case FinancePaymentProcessingPosting='financePaymentProcessing-posting';
-    case FinanceReceiptPosting='financeReceipt-posting';
+    case FinanceJournalPosting='financeJournal-financeJournal';
+    case FinanceAPInvoicePosting='financeAPInvoice-financeAPInvoice';
+    case FinanceARInvoicePosting='financeARInvoice-financeARInvoice';// AR Account Receivables
+    case FinanceCreditNotePosting='financeCreditNote-financeCreditNote';
+    case FinanceDebitNotePosting='financeDebitNote-financeDebitNote';
+    case FinanceVoucherPosting='financeVoucher-financeVoucher';
+    case FinancePaymentProcessingPosting='financePaymentProcessing-financePaymentProcessing';
+    case FinanceReceiptPosting='financeReceipt-financeReceipt';
 
 
         /*
@@ -800,13 +885,27 @@ enum PermissionEnum: string
 
             /////////////////////////// Budget and Analytics  ///////////////////////
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete],
+            [self::BudgetActivityView, self::BudgetActivityCreate, self::BudgetActivityUpdate, self::BudgetActivityDelete],
+            [self::NewBudgetView, self::NewBudgetCreate, self::NewBudgetUpdate, self::NewBudgetDelete],
+            [self::BudgetProjectionView, self::BudgetProjectionCreate, self::BudgetProjectionUpdate, self::BudgetProjectionDelete],
+            [self::BudgetEntryByLineView, self::BudgetEntryByLineCreate, self::BudgetEntryByLineUpdate, self::BudgetEntryByLineDelete],
+            [self::BudgetReallocationView, self::BudgetReallocationCreate, self::BudgetReallocationUpdate, self::BudgetReallocationDelete],
+            [self::BudgetConsolidationView],
+            [self::ApproveNewBudget],
+            [self::ApproveReallocation],
 
 
             ///////////////////////  Finance  /////////////////////////////////////
             [self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete],
             [self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete],
+            [self::FinanceGLMappingView, self::FinanceGLMappingCreate, self::FinanceGLMappingUpdate, self::FinanceGLMappingDelete],
             [self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete],
             [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
+            [self::CreditNoteView, self::CreditNoteCreate, self::CreditNoteUpdate, self::CreditNoteDelete],
+            [self::PaymentVoucherView, self::PaymentVoucherCreate, self::PaymentVoucherUpdate, self::PaymentVoucherDelete],
+            [self::PaymentProcessingView, self::PaymentProcessingCreate, self::PaymentProcessingUpdate, self::PaymentProcessingDelete],
+            [self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete],
+            [self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete],
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
             [self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete],
             [self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting],
@@ -819,17 +918,20 @@ enum PermissionEnum: string
             [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
             [self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete],
             [self::PropertyAttachmentsView,self::PropertyAttachmentsCreate,self::PropertyAttachmentsUpdate,self::PropertyAttachmentsDelete],
-            [self::TenantMaintenanceCreate,self::TenantMaintenanceUpdate,self::TenantMaintenanceDelete,self::TenantMaintenanceView],
+            [self::TenantMaintenanceCreate, self::TenantMaintenanceUpdate, self::TenantMaintenanceDelete, self::TenantMaintenanceView],
             [self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView],
             [self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView],
             [self::PropertyLeaseTerminationCreate,self::PropertyLeaseTerminationUpdate,self::PropertyLeaseTerminationDelete,self::PropertyLeaseTerminationView],
-            [self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView,self::PropertyLeaseSchedulePrint],
+            [self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView, self::PropertyLeaseSchedulePrint],
             [self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView],
             [self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView],
-            [self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView, self::PropertyReceiptPrint],
+            [self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint],
             [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
             [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
+            
+            ///////////////////////  Settings  /////////////////////////////////////
+            // [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
 
               ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
@@ -855,16 +957,6 @@ enum PermissionEnum: string
             [self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView],
 
 
-            //Bank Assurance
-            [self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete],
-            [self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete],
-            [self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete],
-            [self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete],
-            [self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete],
-            [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
-            [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
-            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],
-
             //Fleet
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
             [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
@@ -881,6 +973,8 @@ enum PermissionEnum: string
             [self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge],
             [self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy],
 
+
+            //Bank Assurance
             [self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete],
             [self::BancassurancePolicyCreate, self::BancassurancePolicyView, self::BancassurancePolicyUpdate, self::BancassurancePolicyDelete],
             [self::BancassuranceCustomersCreate, self::BancassuranceCustomersView, self::BancassuranceCustomersUpdate, self::BancassuranceCustomersDelete],
@@ -889,6 +983,9 @@ enum PermissionEnum: string
             [self::BancassurancePremiumPaymentsView, self::BancassurancePremiumPaymentsCreate, self::BancassurancePremiumPaymentsUpdate, self::BancassurancePremiumPaymentsDelete],
             [self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete],
             [self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete],
+            [self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete],
+            [self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete],
+            [self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete],
             [self::BancassurancePaymentView, self::BancassurancePaymentCreate, self::BancassurancePaymentDelete, self::BancassurancePaymentUpdate],
             [self::InsuranceProviderView, self::InsuranceProviderCreate, self::InsuranceProviderUpdate, self::InsuranceProviderDelete],
             [self::InsuranceProductView, self::InsuranceProductCreate, self::InsuranceProductUpdate, self::InsuranceProductDelete],
@@ -955,6 +1052,7 @@ enum PermissionEnum: string
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
+            // self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete
             => ModulesEnum::Settings,
 
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
@@ -1048,6 +1146,9 @@ enum PermissionEnum: string
             self::InsurancePricingRuleView, self::InsurancePricingRuleCreate, self::InsurancePricingRuleUpdate, self::InsurancePricingRuleDelete,
             self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete,
             self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete,
+            self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete,
+            self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete,
+            self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete,
             self::BancassurancePaymentView, self::BancassurancePaymentCreate, self::BancassurancePaymentDelete, self::BancassurancePaymentUpdate,
             self::InsuranceClaimClosureView, self::InsuranceClaimClosureCreate, self::InsuranceClaimClosureUpdate, self::InsuranceClaimClosureDelete,
             self::CommissionRuleView, self::CommissionRuleCreate, self::CommissionRuleUpdate, self::CommissionRuleDelete
@@ -1056,15 +1157,29 @@ enum PermissionEnum: string
 
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
-            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete,
+            self::BudgetActivityView, self::BudgetActivityCreate, self::BudgetActivityUpdate, self::BudgetActivityDelete,
+            self::NewBudgetView, self::NewBudgetCreate, self::NewBudgetUpdate, self::NewBudgetDelete,
+            self::BudgetProjectionView, self::BudgetProjectionCreate, self::BudgetProjectionUpdate, self::BudgetProjectionDelete,
+            self::BudgetEntryByLineView, self::BudgetEntryByLineCreate, self::BudgetEntryByLineUpdate, self::BudgetEntryByLineDelete,
+            self::BudgetReallocationView, self::BudgetReallocationCreate, self::BudgetReallocationUpdate, self::BudgetReallocationDelete,
+            self::BudgetConsolidationView,
+            self::ApproveNewBudget,
+            self::ApproveReallocation
             => ModulesEnum::BudgetLine,
 
 
             ////////////////////   Finance   ////////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete,
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete,
+            self::FinanceGLMappingView, self::FinanceGLMappingCreate, self::FinanceGLMappingUpdate, self::FinanceGLMappingDelete,
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete,
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete,
+            self::CreditNoteView, self::CreditNoteCreate, self::CreditNoteUpdate, self::CreditNoteDelete,
+            self::PaymentVoucherView, self::PaymentVoucherCreate, self::PaymentVoucherUpdate, self::PaymentVoucherDelete,
+            self::PaymentProcessingView, self::PaymentProcessingCreate, self::PaymentProcessingUpdate, self::PaymentProcessingDelete,
+            self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete,
+            self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete,
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete,
             self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete,
             self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting,
@@ -1171,6 +1286,14 @@ enum PermissionEnum: string
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',
+            self::BudgetActivityView, self::BudgetActivityCreate, self::BudgetActivityUpdate, self::BudgetActivityDelete => 'Budget Activity',
+            self::NewBudgetView, self::NewBudgetCreate, self::NewBudgetUpdate, self::NewBudgetDelete => 'New Budget',
+            self::BudgetProjectionView, self::BudgetProjectionCreate, self::BudgetProjectionUpdate, self::BudgetProjectionDelete => 'Budget Projection',
+            self::BudgetEntryByLineView, self::BudgetEntryByLineCreate, self::BudgetEntryByLineUpdate, self::BudgetEntryByLineDelete => 'Budget Entry By Line',
+            self::BudgetReallocationView, self::BudgetReallocationCreate, self::BudgetReallocationUpdate, self::BudgetReallocationDelete => 'Budget Reallocation',
+            self::BudgetConsolidationView => 'Budget Consolidation',
+            self::ApproveNewBudget => 'Approve New Budget',
+            self::ApproveReallocation => 'Approve Reallocation',
 
             //Property Management
             self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete => 'Property Category',
@@ -1178,7 +1301,6 @@ enum PermissionEnum: string
             self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete => 'Property Registry',
             self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete => 'Property Structural Mapping',
             self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete => 'Property Attachments ',
-
             self::TenantMaintenanceCreate, self::TenantMaintenanceUpdate, self::TenantMaintenanceDelete, self::TenantMaintenanceView => 'Tenant Maintenance',
             self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView => 'Tenant Clearance',
             self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView => 'Property New Lease',
@@ -1204,6 +1326,9 @@ enum PermissionEnum: string
             self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete => 'Insurance Under Writting',
             self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete => 'Insurance Claim',
             self::BancassurancePaymentView, self::BancassurancePaymentCreate, self::BancassurancePaymentDelete, self::BancassurancePaymentUpdate => 'Insurance Payment',
+            self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete => 'Medical Fund',
+            self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete => 'Medical Fund Contribution',
+            self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete => 'Medical Fund Beneficiary',
             self::InsuranceProviderView, self::InsuranceProviderCreate, self::InsuranceProviderUpdate, self::InsuranceProviderDelete => 'Insurance Provider',
             self::InsuranceProductView, self::InsuranceProductCreate, self::InsuranceProductUpdate, self::InsuranceProductDelete => 'Insurance Product',
             self::InsuranceProductRiderView, self::InsuranceProductRiderCreate, self::InsuranceProductRiderUpdate, self::InsuranceProductRiderDelete => 'Insurance Product Rider',
@@ -1214,8 +1339,14 @@ enum PermissionEnum: string
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',
+            self::FinanceGLMappingView, self::FinanceGLMappingCreate, self::FinanceGLMappingUpdate, self::FinanceGLMappingDelete => 'GL Mapping',
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
+            self::CreditNoteView, self::CreditNoteCreate, self::CreditNoteUpdate, self::CreditNoteDelete => 'Credit Note',
+            self::PaymentVoucherView, self::PaymentVoucherCreate, self::PaymentVoucherUpdate, self::PaymentVoucherDelete => 'Payment Voucher',
+            self::PaymentProcessingView, self::PaymentProcessingCreate, self::PaymentProcessingUpdate, self::PaymentProcessingDelete => 'Payment Processing',
+            self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete => 'Receipt Posting',
+            self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete => 'Debit Note',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
             self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete=> 'Credit Management',
             self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting=> 'Transaction Postings',

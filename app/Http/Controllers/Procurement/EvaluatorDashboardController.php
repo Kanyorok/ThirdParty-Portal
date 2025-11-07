@@ -26,17 +26,17 @@ class EvaluatorDashboardController extends Controller
         // Get current user ID for committee membership check (committees store User ID, not Employee ID)
         $currentUserId = Auth::id();
 
-    // Determine if global setup is missing: committees or criteria
-    $needsCommitteeSetup = !TenderCommittee::where('IsActive', 1)->exists();
-    $needsCriteriaSetup = !TenderSection::where('IsActive', 1)->exists();
+        // Determine if global setup is missing: committees or criteria
+        $needsCommitteeSetup = !TenderCommittee::where('IsActive', 1)->exists();
+        $needsCriteriaSetup = !TenderSection::where('IsActive', 1)->exists();
 
-    // Get tenders where user is a committee member and has accepted (support dual mapping)
+        // Get tenders where user is a committee member and has accepted (support dual mapping)
         $tenderIds = TenderCommitteeMember::where(function ($q) use ($currentUserId) {
-                $q->where('UserID', $currentUserId)
-                  ->orWhereHas('userByEmployee', function ($uq) use ($currentUserId) {
-                      $uq->where('Id', $currentUserId);
-                  });
-            })
+            $q->where('UserID', $currentUserId)
+                ->orWhereHas('userByEmployee', function ($uq) use ($currentUserId) {
+                    $uq->where('Id', $currentUserId);
+                });
+        })
             ->where('IsActive', 1)
             ->where('Response', 1)
             ->pluck('TenderID');
@@ -56,7 +56,7 @@ class EvaluatorDashboardController extends Controller
             ->whereIn('Id', $tenderIds)
             ->whereHas('submissions', function ($query) {
                 $query->where('BidStatus', 'responsive')
-                      ->where('IsResponsive', true);
+                    ->where('IsResponsive', true);
             })
             ->get();
 
@@ -93,8 +93,8 @@ class EvaluatorDashboardController extends Controller
                     'total_weight' => $weightValidation ? $weightValidation['total_weight'] : 0,
                     'user_role' => $userRole,
                     'has_evaluated' => TenderCommitteeMember::where('TenderID', $tender->Id)
-                        ->where('UserID', $currentUserId)
-                        ->value('HasEvaluated') ?? false,
+                            ->where('UserID', $currentUserId)
+                            ->value('HasEvaluated') ?? false,
                     'bid_id' => $bid->Id,
                     'supplier_name' => $bid->SupplierName,
                     'supplier_id' => $bid->SupplierId,
@@ -106,8 +106,8 @@ class EvaluatorDashboardController extends Controller
                     'evaluation_status' => $evaluationStatus,
                     'evaluation_notes' => $bid->EvaluationNotes,
                     'can_evaluate' => $sectionsConfigured &&
-                                    ($weightValidation ? $weightValidation['is_valid'] : false) &&
-                                    $evaluationStatus['status'] !== 'non-responsive'
+                        ($weightValidation ? $weightValidation['is_valid'] : false) &&
+                        $evaluationStatus['status'] !== 'non-responsive'
                 ]);
             }
         }
@@ -133,14 +133,14 @@ class EvaluatorDashboardController extends Controller
         $currentUserId = Auth::id();
         $membership = DB::table('t_TenderCommitteeMembers as m')
             ->leftJoin('t_TenderCommittee as c', 'c.Id', '=', 'm.CommitteeID')
-            ->join('t_Users as u', function($join){
+            ->join('t_Users as u', function ($join) {
                 $join->on('u.Id', '=', 'm.UserID')
-                     ->orOn('u.EmployeeId', '=', 'm.UserID');
+                    ->orOn('u.EmployeeId', '=', 'm.UserID');
             })
             ->where('u.Id', $currentUserId)
-            ->where(function($q) use ($tenderId){
+            ->where(function ($q) use ($tenderId) {
                 $q->where('m.TenderID', $tenderId)
-                  ->orWhere('c.ReferenceId', $tenderId);
+                    ->orWhere('c.ReferenceId', $tenderId);
             })
             ->where('m.IsActive', 1)
             ->where('m.Response', 1)
@@ -158,6 +158,11 @@ class EvaluatorDashboardController extends Controller
 
         $tender = Tender::with(['tenderSections.sections.criteria', 'submissions'])
             ->findOrFail($tenderId);
+
+        // Filter out inactive or orphaned tender sections (missing related Section)
+        $tender->setRelation('tenderSections', $tender->tenderSections->filter(function ($ts) {
+            return ($ts->IsActive ?? true) && $ts->sections; // relation name 'sections'
+        })->values());
 
         // Get evaluation readiness
         $readiness = $tender->getEvaluationReadiness();

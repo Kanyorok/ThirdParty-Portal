@@ -26,7 +26,7 @@
                 <tr>
                     <td>{{ $loop->iteration ?? '-' }}</td>
                     <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>
-                    <td>{{ $leaseschedule->lease->tenant->thirdParty->TradingName ?? '-' }}</td>
+                    <td>{{ $leaseschedule->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->lease->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
                     <td>{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}</td>

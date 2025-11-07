@@ -24,13 +24,13 @@ class EnhancedGoodsReceipt extends Model
 
     protected $table = 't_GoodsReceipts';
     protected $primaryKey = 'id';
-    
+
     protected $fillable = [
         // Original fields
         'GRNID', 'POID', 'ReceivedDate', 'SupplierId', 'StoreID', 'ReceivedBy',
         'InspectionStatus', 'TransferStatus', 'ItemNo', 'POQTY', 'ReceivedQTY',
         'TransferTo', 'TagRequired', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
-        
+
         // Enhanced fields
         'OrderLineID', 'UnitPrice', 'TotalValue', 'ItemType', 'ProcessingStatus',
         'UpdatedStock', 'StockTransactionRef', 'CreatedJournalEntry', 'JournalEntryRef',
@@ -122,7 +122,7 @@ class EnhancedGoodsReceipt extends Model
     public function stockTransaction(): HasOne
     {
         return $this->hasOne(StockTransaction::class, 'ReferenceID', 'id')
-                    ->where('TransactionType', 'GRN');
+            ->where('TransactionType', 'GRN');
     }
 
     public function journalEntry(): HasOne
@@ -288,11 +288,11 @@ class EnhancedGoodsReceipt extends Model
     public function scopeReadyForPosting($query)
     {
         return $query->where('InspectionStatus', PostingEnum::Draft)
-                    ->where(function ($q) {
-                        $q->where('QualityStatus', self::QUALITY_PASSED)
-                          ->orWhere('QualityStatus', self::QUALITY_NOT_REQUIRED);
-                    })
-                    ->where('ReceivedQTY', '>', 0);
+            ->where(function ($q) {
+                $q->where('QualityStatus', self::QUALITY_PASSED)
+                    ->orWhere('QualityStatus', self::QUALITY_NOT_REQUIRED);
+            })
+            ->where('ReceivedQTY', '>', 0);
     }
 
     public function scopeByGRN($query, string $grnId)

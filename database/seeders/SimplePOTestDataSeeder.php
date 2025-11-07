@@ -11,29 +11,29 @@ class SimplePOTestDataSeeder extends Seeder
     public function run()
     {
         $this->command->info('🚀 Seeding Simple PO Test Data...');
-        
+
         // 1. Update existing awards to have proper contract statuses
         $this->updateExistingAwards();
-        
+
         // 2. Create additional awards for testing
         $this->createAdditionalAwards();
-        
+
         // 3. Update procurement plan items to have 'Direct' method
         $this->updateProcurementPlans();
-        
+
         // 4. Create additional tender items for existing tenders
         $this->createTenderItems();
-        
+
         // 5. Verify the data
         $this->verifyData();
-        
+
         $this->command->info('✅ Simple PO Test Data seeding completed!');
     }
-    
+
     private function updateExistingAwards()
     {
         $this->command->info("🔄 Updating existing awards...");
-        
+
         // Update the existing award to have better data for testing
         $updated = DB::table('t_TenderAwards')
             ->where('Id', 1)
@@ -49,31 +49,31 @@ class SimplePOTestDataSeeder extends Seeder
                 'ModifiedBy' => 1,
                 'ModifiedOn' => now(),
             ]);
-        
+
         if ($updated) {
             $this->command->info("  ✅ Updated award ID 1 to Active contract status");
         }
     }
-    
+
     private function createAdditionalAwards()
     {
         $this->command->info("🏆 Creating additional awards...");
-        
+
         // Get existing tenders and suppliers
         $tenders = DB::table('t_Tenders')->where('Id', '>', 1)->take(2)->get();
         $suppliers = DB::table('t_Suppliers')->take(3)->get();
-        
+
         $supplierIndex = 0;
         foreach ($tenders as $tender) {
             $existingAward = DB::table('t_TenderAwards')->where('TenderID', $tender->Id)->exists();
-            
+
             if (!$existingAward && isset($suppliers[$supplierIndex])) {
                 $supplier = $suppliers[$supplierIndex];
-                
+
                 // Create award with different contract statuses for testing
                 $contractStatuses = ['Draft', 'Active', 'Approved'];
                 $contractStatus = $contractStatuses[$supplierIndex % 3];
-                
+
                 $awardData = [
                     'TenderID' => $tender->Id,
                     'WinningSupplierID' => $supplier->Id,
@@ -97,19 +97,19 @@ class SimplePOTestDataSeeder extends Seeder
                     'CreatedOn' => now()->subDays(20 + $supplierIndex * 5),
                     'ModifiedOn' => now()->subDays(15 + $supplierIndex * 5),
                 ];
-                
+
                 DB::table('t_TenderAwards')->insert($awardData);
                 $this->command->info("  ✅ Created award for tender {$tender->TenderNo} (Status: {$contractStatus})");
-                
+
                 $supplierIndex++;
             }
         }
     }
-    
+
     private function updateProcurementPlans()
     {
         $this->command->info("📋 Updating procurement plan items...");
-        
+
         // Update existing plan items to have 'Direct' procurement method
         $updated = DB::table('t_PlanLineItem')
             ->where('ProcurementMethod', '107') // Update the existing numeric method
@@ -120,19 +120,19 @@ class SimplePOTestDataSeeder extends Seeder
                 'ModifiedBy' => 1,
                 'ModifiedOn' => now(),
             ]);
-        
+
         if ($updated > 0) {
             $this->command->info("  ✅ Updated {$updated} plan items to use 'Direct' procurement method");
         }
-        
+
         // Create additional plan line items for testing
         $plans = DB::table('t_ConsolidatedProcurementPlan')->take(1)->get();
-        
+
         foreach ($plans as $plan) {
             $existingItems = DB::table('t_PlanLineItem')
                 ->where('PlanID', $plan->PlanID)
                 ->count();
-            
+
             if ($existingItems < 3) {
                 $newItems = [
                     [
@@ -174,23 +174,23 @@ class SimplePOTestDataSeeder extends Seeder
                         'ModifiedOn' => now()->subDays(35),
                     ]
                 ];
-                
+
                 foreach ($newItems as $item) {
                     DB::table('t_PlanLineItem')->insert($item);
                 }
-                
+
                 $this->command->info("  ✅ Added line items to plan {$plan->PlanID}");
             }
         }
     }
-    
+
     private function createTenderItems()
     {
         $this->command->info("📦 Creating tender items...");
-        
+
         // Get all tenders and create items for those that don't have enough
         $tenders = DB::table('t_Tenders')->get();
-        
+
         $itemTemplates = [
             ['name' => 'Laptop Computers', 'desc' => 'Business grade laptops with 3-year warranty', 'qty' => 12],
             ['name' => 'Office Desks', 'desc' => 'Executive office desks with drawers', 'qty' => 8],
@@ -198,14 +198,14 @@ class SimplePOTestDataSeeder extends Seeder
             ['name' => 'Meeting Room Tables', 'desc' => 'Conference tables for 8-10 people', 'qty' => 4],
             ['name' => 'Filing Cabinets', 'desc' => 'Metal filing cabinets with locks', 'qty' => 10],
         ];
-        
+
         foreach ($tenders as $tender) {
             $existingItems = DB::table('t_TenderItems')->where('TenderID', $tender->Id)->count();
-            
+
             if ($existingItems < 2) {
                 // Add 2-3 items per tender
                 $itemsToAdd = array_slice($itemTemplates, 0, rand(2, 3));
-                
+
                 foreach ($itemsToAdd as $item) {
                     DB::table('t_TenderItems')->insert([
                         'TenderID' => $tender->Id,
@@ -219,28 +219,28 @@ class SimplePOTestDataSeeder extends Seeder
                         'ModifiedOn' => now()->subDays(30),
                     ]);
                 }
-                
+
                 $this->command->info("  ✅ Added items to tender {$tender->TenderNo}");
             }
         }
     }
-    
+
     private function verifyData()
     {
         $this->command->info("🔍 Verifying data for PO form...");
-        
+
         // Check awards
         $approvedAwards = DB::table('t_TenderAwards')
             ->where('AwardStatus', 'Approved')
             ->count();
         $this->command->info("  📊 Approved awards: {$approvedAwards}");
-        
+
         $activeContracts = DB::table('t_TenderAwards')
             ->where('AwardStatus', 'Approved')
             ->where('ContractStatus', 'Active')
             ->count();
         $this->command->info("  📊 Active contracts: {$activeContracts}");
-        
+
         // Check procurement plans
         $directPlanItems = DB::table('t_PlanLineItem')
             ->join('t_ConsolidatedProcurementPlan', 't_PlanLineItem.PlanID', '=', 't_ConsolidatedProcurementPlan.PlanID')
@@ -249,11 +249,11 @@ class SimplePOTestDataSeeder extends Seeder
             ->where('t_PlanLineItem.ExecutionStatus', '!=', 'Completed')
             ->count();
         $this->command->info("  📊 Direct procurement plan items: {$directPlanItems}");
-        
+
         // Check tender items
         $totalTenderItems = DB::table('t_TenderItems')->count();
         $this->command->info("  📊 Total tender items: {$totalTenderItems}");
-        
+
         if ($approvedAwards > 0 && $activeContracts > 0 && $directPlanItems > 0) {
             $this->command->info("✅ All data types are available for testing!");
         } else {

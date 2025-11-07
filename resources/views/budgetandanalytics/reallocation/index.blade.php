@@ -26,7 +26,7 @@
                             <th>To Line</th>
                             <th>Amount</th>
                             <th>Status</th>
-{{--                            <th class="text-center">Actions</th>--}}
+                            <th class="text-center">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -34,14 +34,16 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $r->budget->Name ?? '—' }}</td>
-{{--                                <td>{{ $r->fromLine->LineName ?? '—Null Line-' }}</td>--}}
+                                {{--                                <td>{{ $r->fromLine->LineName ?? '—Null Line-' }}</td>--}}
                                 <td>
                                     <div>{{ $r->fromLine->LineName ?? '—Null Line-' }}</div>
-                                    <small class="text-muted">{{ $r->fromLine->department->Name.' Dept' ?? '—No Department—' }}</small>
+                                    <small
+                                        class="text-muted">{{ $r->fromLine->department?->Name.' Dept' ?? '—No Department—' }}</small>
                                 </td>
                                 <td>
                                     <div>{{ $r->toLine->LineName ?? '—Null Line-' }}</div>
-                                    <small class="text-muted">{{ $r->toLine->department->Name.' Dept' ?? '—No Department—' }}</small>
+                                    <small class="text-muted">{{ $r->toLine->department?->Name.' Dept' ?? '—No Department—' }}</small>
+
                                 </td>
 
                                 <td>{{ number_format($r->Amount, 2) }}</td>
@@ -58,16 +60,15 @@
                                         {{ ucfirst($r->Status) }}
                                     </span>
                                 </td>
-{{--                                <td class="text-center">--}}
-{{--                                    <button type="button" class="btn btn-sm btn-outline-primary"--}}
-{{--                                            title="Review"--}}
-{{--                                            data-bs-toggle="modal"--}}
-{{--                                            data-bs-target="#reviewModal"--}}
-{{--                                            onclick="loadReallocationDetails({{ $r->id }})">--}}
-{{--                                        <i class="fas fa-eye"></i>--}}
-{{--                                    </button>--}}
+                                <td class="text-center">
+                                         <a href="{{ route('budgetandanalytics.reallocation.show', ['id' => $r->id]) }}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
 
-{{--                                </td>--}}
+                                </td>
+
                             </tr>
                         @empty
                             <tr>
@@ -126,9 +127,11 @@
             border: none;
             border-radius: 0.5rem;
         }
+
         .btn {
             font-size: 0.85rem;
         }
+
         .table-hover tbody tr:hover {
             background-color: #f8f9fa;
             transition: background-color 0.2s ease;

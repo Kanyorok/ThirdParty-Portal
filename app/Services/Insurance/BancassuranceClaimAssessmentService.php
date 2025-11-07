@@ -48,11 +48,12 @@ class BancassuranceClaimAssessmentService
 
     public static function update(
         BancassuranceClaimAssessment $assessment,
-        string $AssessmentComments,
-        float $AssessmentAmount,
-        CodeDetail $Decision,
-        User $user,
-    ): self {
+        string                       $AssessmentComments,
+        float                        $AssessmentAmount,
+        CodeDetail                   $Decision,
+        User                         $user,
+    ): self
+    {
         $assessment->update([
             'AssessmentComments' => $AssessmentComments,
             'AssessmentAmount' => $AssessmentAmount,

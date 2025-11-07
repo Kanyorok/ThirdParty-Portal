@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Budget;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Budget\BudgetActivity;
+use App\Models\Budget\BudgetDriver;
+use App\Models\Budget\BudgetDriverRates;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineCategories;
 use App\Models\Budget\BudgetLinesGLAccount;
+use App\Models\Budget\BudgetManualEntry;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
+use App\Models\Budget\BudgetProjection;
 use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +42,7 @@ class BudgetLineMappingController extends Controller
         $budgetCategories = BudgetLineCategories::all();
 
         //Pull the GLS
-        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description', 'GLAccountTypeID as GTType')->get();
+        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description', 'GLAccountTypeID as GTType','AccountID')->get();
 
         //Fetch Product type
         $productTypes = BudgetProductType::select('Id', 'Name')->get();
@@ -94,8 +99,8 @@ class BudgetLineMappingController extends Controller
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
         ],
-        [
-            'GLS.max' => 'You can only select one GL Account for each budget line.'
+            [
+                'GLS.max' => 'You can only select one GL Account for each budget line.'
         ]);
         try {
             DB::beginTransaction();
@@ -228,7 +233,7 @@ class BudgetLineMappingController extends Controller
         // Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
 
-         $validated = $request->validate([
+        $validated = $request->validate([
             //'BudgetLineCategoryID' => 'nullable|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
             'DepartmentID' => 'required|exists:t_Departments,Id',
@@ -240,9 +245,9 @@ class BudgetLineMappingController extends Controller
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
         ],
-         [
-             'GLS.max' => 'You can only select one GL Account for each budget line.'
-         ]);
+            [
+                'GLS.max' => 'You can only select one GL Account for each budget line.'
+            ]);
 
         try {
             DB::beginTransaction();
@@ -364,6 +369,17 @@ class BudgetLineMappingController extends Controller
         //Try deleting the Line and its associated mappings in BudgetLinesGLAccount
         DB::beginTransaction();
         try {
+            //Check if the line is mapped to any budget so that it prevents deletion.
+            $existActivity = BudgetActivity::where('BudgetLineId', $id)->exists();
+            $existLine = BudgetManualEntry::where('BudgetLineId', $id)->exists();
+            $existProjection = BudgetProjection::where('BudgetLineId', $id)->exists();
+
+            if ($existActivity || $existLine || $existProjection) {
+                return back()->with(
+                    'error',
+                    'Budget Line is mapped to a budget. Please unmap the budget line before deleting.'
+                );
+            }
             //find budgetline by id
             $budgetLine = BudgetLine::findOrFail($id);
             //Delete GLS assoc with the budget line
@@ -387,6 +403,7 @@ class BudgetLineMappingController extends Controller
             return redirect()->back()->with('success', 'Budget Line and its mappings deleted successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+            return $th->getMessage();
 
             Log::error('Failed to delete Budget Line: ' . $th->getMessage());
 

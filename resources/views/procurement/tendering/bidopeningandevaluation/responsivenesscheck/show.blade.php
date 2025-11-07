@@ -8,7 +8,8 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5>👁️ Bid Responsiveness Details</h5>
                         <div>
-                            <a href="{{ route('bidresponsiveness.edit', $bidResponsiveness) }}" class="btn btn-sm btn-primary">
+                            <a href="{{ route('bidresponsiveness.edit', $bidResponsiveness) }}"
+                               class="btn btn-sm btn-primary">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
                             <a href="{{ route('bid-responsiveness.index') }}" class="btn btn-sm btn-secondary">
@@ -47,30 +48,36 @@
                                 <h6 class="text-muted mb-3">Responsiveness Criteria</h6>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <div class="card border-left-{{ $bidResponsiveness->SubmittedTimely ? 'success' : 'danger' }}">
+                                        <div
+                                            class="card border-left-{{ $bidResponsiveness->SubmittedTimely ? 'success' : 'danger' }}">
                                             <div class="card-body text-center">
                                                 <h6>Timely Submission</h6>
-                                                <span class="badge bg-{{ $bidResponsiveness->SubmittedTimely ? 'success' : 'danger' }}">
+                                                <span
+                                                    class="badge bg-{{ $bidResponsiveness->SubmittedTimely ? 'success' : 'danger' }}">
                                                     {{ $bidResponsiveness->SubmittedTimely ? '✅ Yes' : '❌ No' }}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <div class="card border-left-{{ $bidResponsiveness->HasMandatoryDocuments ? 'success' : 'danger' }}">
+                                        <div
+                                            class="card border-left-{{ $bidResponsiveness->HasMandatoryDocuments ? 'success' : 'danger' }}">
                                             <div class="card-body text-center">
                                                 <h6>Mandatory Documents</h6>
-                                                <span class="badge bg-{{ $bidResponsiveness->HasMandatoryDocuments ? 'success' : 'danger' }}">
+                                                <span
+                                                    class="badge bg-{{ $bidResponsiveness->HasMandatoryDocuments ? 'success' : 'danger' }}">
                                                     {{ $bidResponsiveness->HasMandatoryDocuments ? '✅ Complete' : '❌ Missing' }}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <div class="card border-left-{{ $bidResponsiveness->IsEligible ? 'success' : 'danger' }}">
+                                        <div
+                                            class="card border-left-{{ $bidResponsiveness->IsEligible ? 'success' : 'danger' }}">
                                             <div class="card-body text-center">
                                                 <h6>Eligibility Criteria</h6>
-                                                <span class="badge bg-{{ $bidResponsiveness->IsEligible ? 'success' : 'danger' }}">
+                                                <span
+                                                    class="badge bg-{{ $bidResponsiveness->IsEligible ? 'success' : 'danger' }}">
                                                     {{ $bidResponsiveness->IsEligible ? '✅ Eligible' : '❌ Not Eligible' }}
                                                 </span>
                                             </div>
@@ -111,10 +118,11 @@
 @endsection
 
 <style>
-.border-left-success {
-    border-left: 4px solid #28a745 !important;
-}
-.border-left-danger {
-    border-left: 4px solid #dc3545 !important;
-}
+    .border-left-success {
+        border-left: 4px solid #28a745 !important;
+    }
+
+    .border-left-danger {
+        border-left: 4px solid #dc3545 !important;
+    }
 </style>

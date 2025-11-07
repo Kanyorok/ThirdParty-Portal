@@ -33,65 +33,65 @@
             <div class="card-body">
                 <table id="propertyunits" class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th>Property</th>
-                            <th>Block</th>
-                            <th>Floor</th>
-                            <th>Unit Code</th>
-                            <th>Size (sq.ft)</th>
-                            <th>Rentable?</th>
-                            <th>Status</th>
-                            <th>Remarks</th>
-                            <th style="width: 20%">Actions</th>
-                        </tr>
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th>Property</th>
+                        <th>Block</th>
+                        <th>Floor</th>
+                        <th>Unit Code</th>
+                        <th>Size (sq.ft)</th>
+                        <th>Rentable?</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                        <th style="width: 20%">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach($units as $unit)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $unit->property->PropertyName ?? '-'}}</td>
-                                <td>{{ $unit->blocks?->BlockName ?? 'N/A' }}</td>
-                                <td>{{ $unit->floors?->FloorLabel ?? 'N/A' }}</td>
-                                <td>{{ $unit->UnitCode ?? '-'}}</td>
-                                <td>{{ $unit->UnitSize ?? '-'}}</td>
-                                <td>
+                    @foreach($units as $unit)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $unit->property->PropertyName ?? '-'}}</td>
+                            <td>{{ $unit->blocks?->BlockName ?? 'N/A' }}</td>
+                            <td>{{ $unit->floors?->FloorLabel ?? 'N/A' }}</td>
+                            <td>{{ $unit->UnitCode ?? '-'}}</td>
+                            <td>{{ $unit->UnitSize ?? '-'}}</td>
+                            <td>
                                     <span class="badge bg-{{ $unit->IsRentable ? 'success' : 'secondary' }}">
                                         {{ $unit->IsRentable ? 'Yes' : 'No' }}
                                     </span>
-                                </td>
-                                <td>
+                            </td>
+                            <td>
                                     <span class="badge bg-{{ $unit->CurrentStatus ? 'success' : 'danger' }}">
                                         {{ $unit->CurrentStatus ? 'Vacant' : 'Occupied' }}
                                     </span>
-                                </td>
-                                <td>{{ $unit->Remarks ?? '-'}}</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('addunit.edit', $unit->Id) }}" 
-                                           class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
+                            </td>
+                            <td>{{ $unit->Remarks ?? '-'}}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('addunit.edit', $unit->Id) }}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
 
-                                        @if($unit->unitlease()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
+                                    @if($unit->unitlease()->exists())
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="bi bi-lock"></i> In Use
+                                        </button>
+                                    @else
+                                        <form action="{{ route('addunit.destroy', $unit->Id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this unit?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> Delete
                                             </button>
-                                        @else
-                                            <form action="{{ route('addunit.destroy', $unit->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this unit?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>

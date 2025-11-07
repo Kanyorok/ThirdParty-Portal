@@ -127,7 +127,7 @@ class ReceiptPostingService
     protected function handleExcessAmount(FinanceReceipt $receipt, float $excessAmount): void
     {
         $wallet = CustomerWallet::getOrCreateWallet($receipt->CustomerID);
-        
+
         $wallet->addFunds(
             $excessAmount,
             "Excess payment from receipt {$receipt->ReceiptNumber}",
@@ -158,9 +158,9 @@ class ReceiptPostingService
         // Check if customer has an active credit profile
         $creditProfile = FinanceCreditManagement::where('CustomerID', $customerId)
             ->where('Status', 'Approved')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('ExpiryDate', '>=', now()->toDateString())
-                      ->orWhereNull('ExpiryDate');
+                    ->orWhereNull('ExpiryDate');
             })
             ->first();
 
@@ -241,7 +241,7 @@ class ReceiptPostingService
         try {
             // Prepare GL entries for receipt
             $glEntries = $this->prepareReceiptGLEntries($receipt);
-            
+
             // Post to GL using existing transaction service
             $result = $this->transactionService->postTransactions($glEntries);
 
@@ -274,7 +274,7 @@ class ReceiptPostingService
     protected function prepareReceiptGLEntries(FinanceReceipt $receipt): array
     {
         $entries = [];
-        
+
         // Debit: Cash/Bank Account (based on payment method)
         $entries[] = [
             'TransactionDate' => $receipt->PostingDate,
@@ -331,7 +331,7 @@ class ReceiptPostingService
     {
         // This would typically come from a mapping table
         // For now, return default cash account
-        return match(strtolower($paymentMethod)) {
+        return match (strtolower($paymentMethod)) {
             'cash' => 1001, // Cash account
             'bank', 'bank_transfer' => 1002, // Bank account
             'mpesa', 'm-pesa' => 1003, // Mobile money account

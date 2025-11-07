@@ -71,14 +71,42 @@ class BidResponsivenessController extends Controller
             ], 403);
         }
 
-        // Get document details
+        // Get document details (support both legacy and DMS-backed formats)
         $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
-        $documents = array_map(function($doc) {
+
+        // Collect DMS document IDs when present and fetch in one query
+        $docIds = collect($encryptedDocs)
+            ->map(fn($d) => $d['document_id'] ?? null)
+            ->filter()
+            ->values()
+            ->all();
+
+        $dmsDocs = [];
+        if (!empty($docIds)) {
+            $dmsDocs = \App\Models\DMS\Document::whereIn('DocumentId', $docIds)
+                ->with('current')
+                ->get()
+                ->keyBy('DocumentId');
+        }
+
+        $documents = array_map(function($doc) use ($dmsDocs) {
+            $documentId = $doc['document_id'] ?? null;
+            $linked = $documentId && isset($dmsDocs[$documentId]) ? $dmsDocs[$documentId] : null;
+
+            $name = $linked?->Name
+                ?? ($doc['original_name'] ?? ($doc['original_filename'] ?? 'Unknown'));
+
+            $sizeBytes = $linked?->current?->Size ?? ($doc['file_size'] ?? null);
+            $uploadedAtVal = $linked?->getAttribute('CreatedOn');
+            $uploadedAt = $uploadedAtVal instanceof \Carbon\Carbon
+                ? $uploadedAtVal->format('d/m/Y H:i:s')
+                : ($uploadedAtVal ?: ($doc['uploaded_at'] ?? null));
+
             return [
-                'id' => $doc['id'] ?? 'unknown',
-                'filename' => $doc['original_filename'] ?? 'Unknown',
-                'size' => $this->formatFileSize($doc['file_size'] ?? 0),
-                'uploaded_at' => $doc['uploaded_at'] ?? null,
+                'id' => $documentId ?? ($doc['id'] ?? 'unknown'),
+                'filename' => $name,
+                'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
+                'uploaded_at' => $uploadedAt,
                 'can_view' => true
             ];
         }, $encryptedDocs);

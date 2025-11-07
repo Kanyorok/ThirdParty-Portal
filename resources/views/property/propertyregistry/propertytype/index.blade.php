@@ -24,47 +24,47 @@
             <div class="card-body">
                 <table id="propertytype" class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Description</th>
-                            <th style="width: 20%">Actions</th>
-                        </tr>
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th style="width: 20%">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach ($types as $Index => $type)
-                            <tr>
-                                <td>{{ $Index + 1 }}</td>
-                                <td>{{ $type->PropertyTypeName ?? '-' }}</td>
-                                <td>{{ $type->propertycategory->Name ?? '-' }}</td>
-                                <td>{{ $type->Description ?? '-' }}</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('propertytype.edit', $type->Id) }}" 
-                                           class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
+                    @foreach ($types as $Index => $type)
+                        <tr>
+                            <td>{{ $Index + 1 }}</td>
+                            <td>{{ $type->PropertyTypeName ?? '-' }}</td>
+                            <td>{{ $type->propertycategory->Name ?? '-' }}</td>
+                            <td>{{ $type->Description ?? '-' }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('propertytype.edit', $type->Id) }}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
 
-                                        @if($type->property()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
+                                    @if($type->property()->exists())
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="bi bi-lock"></i> In Use
+                                        </button>
+                                    @else
+                                        <form action="{{ route('propertytype.destroy', $type->Id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this type?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> Delete
                                             </button>
-                                        @else
-                                            <form action="{{ route('propertytype.destroy', $type->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this type?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>

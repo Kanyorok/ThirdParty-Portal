@@ -20,22 +20,47 @@ class PropertyNewTenantController extends Controller
     }
     public function index()
     {
-        $newtenants = PropertyNewTenant::with('type','thirdParty')->get();
+        $newtenants = PropertyNewTenant::with('type', 'thirdParty')->get();
         return view('property.tenantmanagement.tenantmaintenance.index', compact('newtenants'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::TenantMaintenanceCreate, PropertyNewTenant::class);
+
         $tenantTypes = CodeDetail::where('CodeID', 'TenantType')->get();
+
+        // Already assigned tenants
         $assignedTenantIds = PropertyNewTenant::pluck('ThirdPartyId')->toArray();
-        $tenants = ThirdParties::whereNotIn('Id', $assignedTenantIds)->get();
-        return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes','tenants'));
+
+        // // Fetch only tenants with active Tenant type
+        // $tenants = ThirdParties::whereHas('types', function ($q) {
+        //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
+        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
+        //         ->whereHas('category', function ($sub) {
+        //             $sub->where('Name', 'Tenant');
+        //         });
+        //     })
+        //     ->with(['types' => function ($q) {
+        //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
+        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
+        //         ->whereHas('category', function ($sub) {
+        //             $sub->where('Name', 'Tenant');
+        //         });
+        //     }])
+        //     ->whereNotIn('Id', $assignedTenantIds)
+        //     ->get();
+
+        $tenants = ThirdParties::all();
+
+        return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes', 'tenants'));
     }
+
 
     public function edit($id)
     {
         $this->authorize(PermissionEnum::TenantMaintenanceUpdate, PropertyNewTenant::class);
-        $tenants = PropertyNewTenant::with('type','thirdParty')->findOrFail($id);
+        $tenants = PropertyNewTenant::with('type', 'thirdParty')->findOrFail($id);
         $tenantTypes = CodeDetail::where('CodeID', 'TenantType')->get();
 
         return view('property.tenantmanagement.tenantmaintenance.edit', compact('tenants', 'tenantTypes'));
@@ -84,7 +109,7 @@ class PropertyNewTenantController extends Controller
         $this->service::update(
             $newtenant,
             $tenantTypeModel,
-            $data['Remarks'] ?? null,
+            $data['Remarks'] ?? '',
             $data['IsActive'],
             $request->user(),
             $document

@@ -88,7 +88,9 @@
                        placeholder="Optional">
             </div> --}}
 
-            <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Price</button>
+            <button type="submit" class="btn btn-success"
+                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Price
+            </button>
             <a href="{{ route('pricemanagement.index') }}" class="btn btn-secondary mt-3">Cancel</a>
         </form>
     </div>

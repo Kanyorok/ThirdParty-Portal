@@ -18,15 +18,21 @@ class PettyCashLine extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'VoucherID','GLAccountID','Description','Amount',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'VoucherID', 'GLAccountID', 'Description', 'Amount',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     protected $casts = [
         'Amount' => 'decimal:2',
     ];
 
-    public function voucher() { return $this->belongsTo(PettyCashVoucher::class, 'VoucherID','VoucherID'); }
+    public function voucher()
+    {
+        return $this->belongsTo(PettyCashVoucher::class, 'VoucherID', 'VoucherID');
+    }
 
-    public static function getPrimaryKey(): string { return 'LineID'; }
+    public static function getPrimaryKey(): string
+    {
+        return 'LineID';
+    }
 }

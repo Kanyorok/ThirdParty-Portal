@@ -52,7 +52,7 @@ class BancAssuranceReferral extends Model
 
     public function referredByEmployee()
     {
-        return $this->belongsTo(employee::class, 'ReferredBy', 'Id');
+        return $this->belongsTo(User::class, 'ReferredBy', 'Id');
     }
 
     public function modifiedByUser()
@@ -64,8 +64,14 @@ class BancAssuranceReferral extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
+
     public function employee()
     {
         return $this->belongsTo(user::class, 'ReferredBy', 'Id');
+    }
+
+    public function customerreferral()
+    {
+        return $this->hasOne(BancassuranceCustomer::class, 'ReferralID', 'Id');
     }
 }

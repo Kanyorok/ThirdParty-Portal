@@ -24,7 +24,7 @@
                     <select name="RequestType" class="form-select" required>
                         <option disabled value="">-- Select Request Type --</option>
                         @foreach($details as $item)
-                            <option value="{{ $item->Value }}" 
+                            <option value="{{ $item->Value }}"
                                 {{ $item->Value == $request->RequestType ? 'selected' : '' }}>
                                 {{ $item->Value }}
                             </option>
@@ -34,23 +34,24 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Entity Name</label>
-                    <input type="text" name="EntityName" 
-                           class="form-control" 
-                           value="{{ old('EntityName', $request->EntityName) }}" 
+                    <input type="text" name="EntityName"
+                           class="form-control"
+                           value="{{ old('EntityName', $request->EntityName) }}"
                            required>
                 </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Remarks</label>
-                <textarea name="Remarks" rows="3" class="form-control" required>{{ old('Remarks', $request->Remarks) }}</textarea>
+                <textarea name="Remarks" rows="3" class="form-control"
+                          required>{{ old('Remarks', $request->Remarks) }}</textarea>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mb-3">
                 <a href="{{ route('legal.search_requests.index') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-long-arrow-alt-left"></i> Back
                 </a>
-                <button type="submit" class="btn btn-info" 
+                <button type="submit" class="btn btn-info"
                         onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Updating...'; this.form.submit();}">
                     <i class="fas fa-save"></i> Update Request
                 </button>

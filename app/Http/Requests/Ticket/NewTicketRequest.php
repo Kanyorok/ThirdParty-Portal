@@ -4,11 +4,13 @@ namespace App\Http\Requests\Ticket;
 
 use App\Enums\TicketPriorityEnum;
 use App\Enums\TicketSourceEnum;
+use App\Http\Requests\Core\ShareRequest;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Services\StaticListsService;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
@@ -26,41 +28,16 @@ class NewTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'ticket_title'       => [
-                                         'required',
-                                         'string',
-                                         'max:255',
-                                        ],
-                'ticket_description' => [
-                                         'required',
-                                         'string',
-                                        ],
-                'ticket_category'    => ['required'],
-                'ticket_user'        => ['nullable'],
-                'ticket_watchers'    => [
-                                         'nullable',
-                                         'array',
-                                         'max:10',
-                                        ],
-                'ticket_source'      => [
-                                         'required',
-                                         Rule::enum(TicketSourceEnum::class),
-                                        ],
-                'ticket_priority'    => [
-                                         'nullable',
-                                         Rule::enum(TicketPriorityEnum::class),
-                                        ],
-                'ticket_start'       => [
-                                         'nullable',
-                                         'required_with:ticket_end',
-                                         'date_format:"Y-m-d"',
-                                        ],
-                'ticket_end'         => [
-                                         'nullable',
-                                         'required_with:ticket_start',
-                                         'date_format:"Y-m-d"',
-                                        ],
-               ];
+            'ticket_title' => ['required', 'string', 'max:255'],
+            'ticket_description' => ['required', 'string'],
+            'ticket_category' => ['required'],
+            'ticket_user' => ['nullable'],
+            'ticket_watchers' => ['nullable', 'array', 'max:10'],
+            'ticket_source' => ['required', Rule::enum(TicketSourceEnum::class)],
+            'ticket_priority' => ['nullable', Rule::enum(TicketPriorityEnum::class)],
+            'ticket_start' => ['nullable', 'required_with:ticket_end', 'date_format:"Y-m-d"'],
+            'ticket_end' => ['nullable', 'required_with:ticket_start', 'date_format:"Y-m-d"'],
+        ];
     }
 
     /**
@@ -113,7 +90,7 @@ class NewTicketRequest extends FormRequest
     {
         try {
             return TicketSourceEnum::fromValue($this->validated('ticket_source'));
-        } catch (\Exception) {
+        } catch (Exception) {
         }
         throw ValidationException::withMessages(['ticket_source' => 'invalid source']);
     }
@@ -125,32 +102,9 @@ class NewTicketRequest extends FormRequest
     {
         try {
             return TicketPriorityEnum::fromValue($this->validated('ticket_priority'));
-        } catch (\Exception) {
+        } catch (Exception) {
         }
         throw ValidationException::withMessages(['ticket_priority' => 'invalid ticket priority']);
-    }
-
-    /**
-     * @throws ValidationException
-     */
-    public function getAssignee(string $assignee = null): User|Team
-    {
-        $assignee = ($assignee) ?? $this->validated('ticket_user');
-        if (Str::startsWith($assignee, 't#')) {
-            $arr = explode('#', $assignee);
-            array_shift($arr);
-            $team = Team::query()->where('TeamID', implode('', $arr))->first();
-            if (($team instanceof Team) && $team->users()->count() > 0) {
-                return $team;
-            }
-            throw ValidationException::withMessages(['ticket_user' => 'invalid team or has no users']);
-        }
-
-        $user = User::query()->where('UserID', Str::upper($assignee))->first();
-        if ($user instanceof User) {
-            return $user;
-        }
-        throw ValidationException::withMessages(['ticket_user' => 'invalid user selected.']);
     }
 
     /**
@@ -174,13 +128,36 @@ class NewTicketRequest extends FormRequest
         }
         foreach ($watchers as $watcher) {
             try {
-                $actor = $this->getAssignee($watcher);
-            } catch (\Exception) {
+                $actor = (new ShareRequest())->getAssignee($watcher, 'ticket_watchers');
+            } catch (Exception) {
                 continue;
             }
 
             $Actors->add($actor);
         }
         return $Actors;
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function getAssignee(string $assignee = null): User|Team
+    {
+        $assignee = ($assignee) ?? $this->validated('ticket_user');
+        if (Str::startsWith($assignee, 't#')) {
+            $arr = explode('#', $assignee);
+            array_shift($arr);
+            $team = Team::query()->where('TeamID', implode('', $arr))->first();
+            if (($team instanceof Team) && $team->users()->count() > 0) {
+                return $team;
+            }
+            throw ValidationException::withMessages(['ticket_user' => 'invalid team or has no users']);
+        }
+
+        $user = User::query()->where('UserID', Str::upper($assignee))->first();
+        if ($user instanceof User) {
+            return $user;
+        }
+        throw ValidationException::withMessages(['ticket_user' => 'invalid user selected.']);
     }
 }

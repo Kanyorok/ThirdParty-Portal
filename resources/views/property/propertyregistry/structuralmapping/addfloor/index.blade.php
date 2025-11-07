@@ -24,49 +24,49 @@
             <div class="card-body">
                 <table id="propertyfloors" class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th>Property</th>
-                            <th>Block</th>
-                            <th>Floor Name</th>
-                            <th>Notes</th>
-                            <th style="width: 20%">Actions</th>
-                        </tr>
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th>Property</th>
+                        <th>Block</th>
+                        <th>Floor Name</th>
+                        <th>Notes</th>
+                        <th style="width: 20%">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach($floors as $floor)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $floor->property->PropertyName ?? '-'}}</td>
-                                <td>{{ $floor->block->BlockName ?? '-'}}</td>
-                                <td>{{ $floor->FloorLabel ?? '-'}}</td>
-                                <td>{{ $floor->FloorNotes ?? '-'}}</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('addfloor.edit', $floor->Id) }}" 
-                                           class="btn btn-sm btn-warning">
-                                           <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
+                    @foreach($floors as $floor)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $floor->property->PropertyName ?? '-'}}</td>
+                            <td>{{ $floor->block->BlockName ?? '-'}}</td>
+                            <td>{{ $floor->FloorLabel ?? '-'}}</td>
+                            <td>{{ $floor->FloorNotes ?? '-'}}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('addfloor.edit', $floor->Id) }}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
 
-                                        @if($floor->units()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
+                                    @if($floor->units()->exists())
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="bi bi-lock"></i> In Use
+                                        </button>
+                                    @else
+                                        <form action="{{ route('addfloor.destroy', $floor->Id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this floor?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> Delete
                                             </button>
-                                        @else
-                                            <form action="{{ route('addfloor.destroy', $floor->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this floor?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>

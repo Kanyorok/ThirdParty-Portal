@@ -23,13 +23,14 @@
 
         {{-- Row 1 --}}
         <div class="row mb-3">
-            <div class="col-md-4">
-                <label for="BarCode" class="form-label">Bar Code</label>
-                <input type="text" name="BarCode" class="form-control" value="{{ old('BarCode', $item->BarCode) }}" required>
-            </div>
+            
             <div class="col-md-4">
                 <label for="ItemName" class="form-label">Item Name</label>
                 <input type="text" name="ItemName" class="form-control" value="{{ old('ItemName', $item->ItemName) }}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="BarCode" class="form-label">Bar Code</label>
+                <input type="text" name="BarCode" class="form-control" value="{{ old('BarCode', $item->BarCode) }}" >
             </div>
             <div class="col-md-4">
                 <label for="ItemType" class="form-label">Item Type</label>
@@ -122,18 +123,31 @@
             </div>
         </div>
 
-        {{-- Row 4 --}}
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label for="DocumentUpload" class="form-label">Attached Document</label>
-                @if($item->DocumentUpload)
-                    <div class="mb-2">
-                        <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing Document</a>
-                    </div>
-                @endif
-                <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+        {{-- Document Upload --}}
+        <div class="mb-3 mt-3">
+            <label class="form-label">Supporting Documents</label>
+
+            {{-- Existing documents --}}
+            <div class="card-footer bg-light">
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+
+            {{-- Existing documents --}}
+             @forelse($item->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
+            
+            {{-- Upload new documents --}}
+            <div class="mb-3">
+                <label class="form-label">Upload Supporting Document</label>
+                <input type="file" name="Document" class="form-control">
+                <small class="text-muted">Attach inspection sheet, photos, or related files</small>
             </div>
         </div>
+
+        </div>
+
 
         {{-- Full-width --}}
         <div class="mb-3">
@@ -162,7 +176,7 @@
             $('#subcategory').html('<option value="">Loading...</option>');
 
             $.ajax({
-                url: "{{ route('inventory.getSubcategories') }}",
+                url: "{{ route('get.subcategories') }}",
                 type: 'GET',
                 data: { category_id: categoryId },
                 success: function (data) {
@@ -178,4 +192,8 @@
         });
     });
 </script>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

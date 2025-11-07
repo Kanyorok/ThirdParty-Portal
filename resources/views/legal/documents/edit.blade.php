@@ -40,7 +40,8 @@
                             <select name="DocumentType" id="DocumentType"
                                     class="form-select @error('DocumentType') is-invalid @enderror" required>
                                 @foreach ($docTypes as $type)
-                                    <option value="{{ $type->Description }}" @selected(old('DocumentType',$doc->DocumentType) === $type->Description)>
+                                    <option
+                                        value="{{ $type->Description }}" @selected(old('DocumentType',$doc->DocumentType) === $type->Description)>
                                         {{ $type->Description }}
                                     </option>
                                 @endforeach
@@ -71,13 +72,14 @@
                                    class="form-control @error('LinkedDMSDocID') is-invalid @enderror"
                                    accept=".pdf,.jpeg,.png,.docx,.xlsx">
                             <small class="text-muted">
-                                If you upload a file here, it will be added as a new version in DMS and linked to this record.
+                                If you upload a file here, it will be added as a new version in DMS and linked to this
+                                record.
                                 Existing files remain available unless explicitly removed.
-{{--                                @if($doc->LinkedDMSDocID)--}}
-{{--                                    <span class="badge bg-primary">{{ $doc->LinkedDMSDocID }}</span>--}}
-{{--                                @else--}}
-{{--                                    none--}}
-{{--                                @endif--}}
+                                {{--                                @if($doc->LinkedDMSDocID)--}}
+                                {{--                                    <span class="badge bg-primary">{{ $doc->LinkedDMSDocID }}</span>--}}
+                                {{--                                @else--}}
+                                {{--                                    none--}}
+                                {{--                                @endif--}}
                             </small>
                             @error('LinkedDMSDocID')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -97,14 +99,14 @@
 
                     {{-- Optional: let admins update statuses --}}
                     <div class="row mb-3">
-{{--                        <div class="col-md-6">--}}
-{{--                            <label for="ReviewStatus" class="form-label">Review Status</label>--}}
-{{--                            <select name="ReviewStatus" id="ReviewStatus" class="form-select">--}}
-{{--                                @foreach (['Draft','In Review','Approved','Rejected'] as $r)--}}
-{{--                                    <option value="{{ $r }}" @selected(old('ReviewStatus',$doc->ReviewStatus) === $r)>{{ $r }}</option>--}}
-{{--                                @endforeach--}}
-{{--                            </select>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="col-md-6">--}}
+                        {{--                            <label for="ReviewStatus" class="form-label">Review Status</label>--}}
+                        {{--                            <select name="ReviewStatus" id="ReviewStatus" class="form-select">--}}
+                        {{--                                @foreach (['Draft','In Review','Approved','Rejected'] as $r)--}}
+                        {{--                                    <option value="{{ $r }}" @selected(old('ReviewStatus',$doc->ReviewStatus) === $r)>{{ $r }}</option>--}}
+                        {{--                                @endforeach--}}
+                        {{--                            </select>--}}
+                        {{--                        </div>--}}
                         @if($doc->ExecutionStatus==='Pending')
                             <div class="col-md-12">
                                 <label for="ExecutionStatus" class="form-label">Execution Status</label>
@@ -120,7 +122,7 @@
                     <div class="text-end">
                         <button class="btn btn-success" id="postBtn" type="submit"
                                 onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Updating...';
-                                    this.form.submit();}"> <i class="fas fa-save me-1"></i> Update Document
+                                    this.form.submit();}"><i class="fas fa-save me-1"></i> Update Document
                         </button>
                     </div>
                 </form>

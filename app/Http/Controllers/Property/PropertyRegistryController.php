@@ -23,14 +23,14 @@ class PropertyRegistryController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
-        $properties = PropertyRegistry::with('type')->get();
+        $properties = PropertyRegistry::with('type')->orderBy('Id', 'desc')->get();
         return view('property.propertyregistry.registry.index', compact('properties'));
     }
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
         $lineentries = CategoryMaster::with('propertytypes')
-        ->where('Type', 'PropertyCategory')->get();
+            ->where('Type', 'PropertyCategory')->get();
         $countries = Country::all();
         return view('property.propertyregistry.registry.create', compact('lineentries', 'countries'));
     }
@@ -47,11 +47,17 @@ class PropertyRegistryController extends Controller
         return response()->json($localities);
     }
 
-    public function show($id){
+    public function show($id)
+    {
         $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
-        $property = PropertyRegistry::find($id);
-        return view('property.propertyregistry.registry.show',compact('property'));
+
+        $property = PropertyRegistry::with([
+            'getBlockByProperty.floor.units'
+        ])->findOrFail($id);
+
+        return view('property.propertyregistry.registry.show', compact('property'));
     }
+
 
     public function store(PropertyRegistryRequest $request)
     {
@@ -60,10 +66,10 @@ class PropertyRegistryController extends Controller
         $validated = $request->validated();
 
         $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-        $propertyType   = PropertyType::findOrFail($validated['PropertyType']);
-        $category       = CategoryMaster::findOrFail($validated['Category']);
-        $location       = Locality::findOrFail($validated['LocationId']);
-        $country        = Country::findOrFail($validated['CountryId']);
+        $propertyType = PropertyType::findOrFail($validated['PropertyType']);
+        $category = CategoryMaster::findOrFail($validated['Category']);
+        $location = Locality::findOrFail($validated['LocationId']);
+        $country = Country::findOrFail($validated['CountryId']);
 
         // Take first file (if any) for the initial create
         $firstFile = $request->file('file')[0] ?? null;
@@ -78,7 +84,7 @@ class PropertyRegistryController extends Controller
             $country,
             $location,
             $validated['Address'],
-            $validated['PropertyDescription'] ?? null,
+            $validated['PropertyDescription'] ?? '',
             $request->user(),
             $firstFile
         );
@@ -131,10 +137,10 @@ class PropertyRegistryController extends Controller
         $this->authorize(PermissionEnum::PropertyRegistryUpdate, PropertyRegistry::class);
         $validated = $request->validated();
         $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-        $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
-        $category        = CategoryMaster::findOrFail($validated['Category']);
-        $location        = Locality::findOrFail($validated['LocationId']);
-        $country        = Country::findOrFail($validated['CountryId']);
+        $propertyType = PropertyType::findOrFail($validated['PropertyType']);
+        $category = CategoryMaster::findOrFail($validated['Category']);
+        $location = Locality::findOrFail($validated['LocationId']);
+        $country = Country::findOrFail($validated['CountryId']);
 
         DB::beginTransaction();
 
@@ -196,14 +202,14 @@ class PropertyRegistryController extends Controller
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-         $this->authorize(PermissionEnum::PropertyRegistryDelete, PropertyRegistry::class);
+        $this->authorize(PermissionEnum::PropertyRegistryDelete, PropertyRegistry::class);
         try {
             $property = PropertyRegistry::findOrFail($id);
 
 
             if ($property->getBlockByProperty()->exists()) {
                 return redirect()->back()
-                ->withErrors(['error' => 'This Property is in use and cannot be deleted.']);
+                    ->withErrors(['error' => 'This Property is in use and cannot be deleted.']);
             }
 
             $property->delete();

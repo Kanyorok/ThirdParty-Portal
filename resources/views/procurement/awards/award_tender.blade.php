@@ -4,11 +4,26 @@
 
     <div class="container mt-4">
         @if($existingAward)
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> 
-                This tender has already been awarded to <strong>{{ $existingAward->winningSupplier->SupplierName }}</strong> 
-                on {{ $existingAward->AwardDate->format('d/m/Y') }}.
-                Status: <span class="badge {{ $existingAward->status_badge['class'] }}">{{ $existingAward->status_badge['text'] }}</span>
+            <div class="alert alert-info d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    This tender has already been awarded to 
+                    <strong>{{ $existingAward->winningSupplier->thirdParty->ThirdPartyName
+                        ?? $existingAward->winningSupplier->thirdParty->TradingName
+                        ?? $existingAward->winningSupplier->SupplierName
+                        ?? ('Supplier #'.$existingAward->WinningSupplierID) }}</strong>
+                    on {{ optional($existingAward->AwardDate)->format('d/m/Y') ?? optional($existingAward->CreatedOn)->format('d/m/Y') }}.
+                    Status: <span class="badge {{ $existingAward->status_badge['class'] }}">{{ $existingAward->status_badge['text'] }}</span>
+                </div>
+                @if($existingAward->AwardStatus === \App\Models\Procurement\TenderAward::STATUS_PENDING)
+                    <form action="{{ route('awards.cancel', $existingAward->Id) }}" method="POST" onsubmit="return confirm('Cancel this pending award and re-open for re-award?');">
+                        @csrf
+                        <input type="hidden" name="cancel_reason" value="Cancelled to re-award">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-times"></i> Cancel Award
+                        </button>
+                    </form>
+                @endif
             </div>
         @endif
 

@@ -14,7 +14,7 @@ class CashbookLine extends Model
     const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
-        'CashbookID','GLAccountID','Description','AmountDr','AmountCr'
+        'CashbookID', 'GLAccountID', 'Description', 'AmountDr', 'AmountCr'
     ];
 
     protected $casts = [
@@ -24,8 +24,12 @@ class CashbookLine extends Model
 
     protected static function booted()
     {
-        static::creating(function ($m) { $m->CreatedBy  = auth()->id(); });
-        static::updating(function ($m) { $m->ModifiedBy = auth()->id(); });
+        static::creating(function ($m) {
+            $m->CreatedBy = auth()->id();
+        });
+        static::updating(function ($m) {
+            $m->ModifiedBy = auth()->id();
+        });
     }
 
     public function header()

@@ -28,8 +28,7 @@ class FleetVehicleInspection extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'InspectionID','ParentInspectionID','InspectionTypeID','VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil', 'Fuel',
-        'Speedometer', 'Coolant', 'Reflector', 'FireExtinguisher' ,'FirstAidKit','SpareTyre', 'Spanner', 'Jack' ,'4XFloorMats' ,
+        'InspectionID', 'ParentInspectionID', 'InspectionTypeID', 'VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil', 'Fuel', 'Coolant', 'Reflector', 'FireExtinguisher', 'FirstAidKit', 'SpareTyre', 'Spanner', 'Jack', '4XFloorMats',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -58,20 +57,30 @@ class FleetVehicleInspection extends Model
         return $this->belongsTo(FleetVehicleInspection::class, 'ParentInspectionID');
     }
 
+    public function fuel()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Fuel', 'ID');
+    }
+
+    public function engineOil()
+    {
+        return $this->belongsTo(CodeDetail::class, 'EngineOil', 'ID');
+    }
+
+    public function coolant()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Coolant', 'ID');
+    }
+
     public function driver()
     {
         return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
     }
 
-    public function fuel()
-    {
-        return $this->belongsTo(FuelType::class, 'FuelType', 'Id');
-    }
-
     public function inspectionType()
     {
-        return $this->belongsTo(CodeDetail::class, 'InspectionTypeID', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'InspectionTypeID', 'ID');
     }
 
-    
+
 }

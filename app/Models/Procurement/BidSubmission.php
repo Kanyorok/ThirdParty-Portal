@@ -29,27 +29,27 @@ class BidSubmission extends Model
 
     protected $fillable = [
         'TenderRef',
-        'SupplierName', 
+        'SupplierName',
         'SupplierId',
         'SubmissionMode',
         'ReceivedAt',
         'RecordedBy',
         'Remarks',
-        'EncryptedDocuments', 
+        'EncryptedDocuments',
         'EncryptionKey',
         'EncryptionEnvelope',
         'SubmissionSource', // 'manual' or 'portal'
         'DocumentsAccessible', // Controls if documents can be viewed before ceremony
         'BidOpeningDate',
-        
+
         // Business fields for structured bids
         'BidAmount',
         'Currency',
         'ValidityPeriod',
-        'DeliveryPeriod', 
+        'DeliveryPeriod',
         'PaymentTerms',
         'BidStatus',
-        
+
         // Evaluation fields
         'TechnicalScore',
         'FinancialScore',
@@ -59,7 +59,7 @@ class BidSubmission extends Model
         'EvaluationNotes',
         'OpenedAt',
         'OpenedBy',
-        
+
         // Opening ceremony fields
         'CeremonyType',
         'CeremonyNotes',
@@ -67,7 +67,7 @@ class BidSubmission extends Model
         'ReadOutSummary',
         'BidSecurityPresent',
         'ReceivedOnTime',
-        
+
         // Enhanced responsiveness fields (aligned with t_BidResponsiveness)
         'SubmittedTimely',
         'HasMandatoryDocuments',
@@ -78,10 +78,10 @@ class BidSubmission extends Model
         'ResponsivenessCheckedAt',
         'ResponsivenessCheckedBy',
         'TenderSupplierID',
-        
+
         'CreatedBy',
         'CreatedOn',
-        'ModifiedBy', 
+        'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
     ];
@@ -93,7 +93,7 @@ class BidSubmission extends Model
         'OpenedAt' => 'datetime',
         'BidAmount' => 'decimal:2',
         'TechnicalScore' => 'decimal:2',
-        'FinancialScore' => 'decimal:2', 
+        'FinancialScore' => 'decimal:2',
         'TotalScore' => 'decimal:2',
         'IsResponsive' => 'boolean',
         'ValidityPeriod' => 'integer',
@@ -205,10 +205,10 @@ class BidSubmission extends Model
 
     public function isEvaluationComplete(): bool
     {
-        return $this->BidStatus === 'evaluated' && 
-               !is_null($this->TechnicalScore) && 
-               !is_null($this->FinancialScore) && 
-               !is_null($this->TotalScore);
+        return $this->BidStatus === 'evaluated' &&
+            !is_null($this->TechnicalScore) &&
+            !is_null($this->FinancialScore) &&
+            !is_null($this->TotalScore);
     }
 
     /**
@@ -286,7 +286,7 @@ class BidSubmission extends Model
             'DocumentsAccessible' => true,
             'BidStatus' => $this->BidStatus === 'draft' ? 'submitted' : $this->BidStatus
         ];
-        
+
         // Add ceremony details if provided
         if (isset($ceremonyDetails['ceremony_type'])) {
             $updateData['CeremonyType'] = $ceremonyDetails['ceremony_type'];
@@ -306,7 +306,7 @@ class BidSubmission extends Model
         if (isset($ceremonyDetails['received_on_time'])) {
             $updateData['ReceivedOnTime'] = $ceremonyDetails['received_on_time'];
         }
-        
+
         $this->update($updateData);
     }
 
@@ -338,12 +338,12 @@ class BidSubmission extends Model
     public function performDetailedResponsivenessCheck(array $criteria, string $overallRemarks = null, ?User $checkedBy = null): void
     {
         $checkedBy = $checkedBy ?? Auth::user();
-        
+
         // Determine overall responsiveness based on all criteria
         $isResponsive = ($criteria['submitted_timely'] ?? true) &&
-                        ($criteria['has_mandatory_documents'] ?? true) &&
-                        ($criteria['is_eligible'] ?? true);
-        
+            ($criteria['has_mandatory_documents'] ?? true) &&
+            ($criteria['is_eligible'] ?? true);
+
         $this->update([
             'SubmittedTimely' => $criteria['submitted_timely'] ?? null,
             'HasMandatoryDocuments' => $criteria['has_mandatory_documents'] ?? null,
@@ -402,7 +402,7 @@ class BidSubmission extends Model
         return $query->where('BidStatus', 'submitted');
     }
 
-    public function scopeOpened($query) 
+    public function scopeOpened($query)
     {
         return $query->whereNotNull('OpenedAt');
     }

@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Http\Requests\Settings;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class WorkFlowStageRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+
+        return [
+            'StageName' => 'required|string|max:255',
+            'EscalationLimit' => 'nullable|integer',
+            'WorkFlowId' => 'required|exists:t_WorkFlows,Id',
+            'WorkFlowTypeId' => 'nullable|exists:t_WorkFlowTypes,Id',
+            'WorkFlowLimitId' => 'nullable|exists:t_WorkFlowLimits,Id',
+            'PermissionId' => 'nullable|exists:t_Permissions,Id',
+            'Count' => 'nullable|integer',
+            'IsFinalStage' => ['nullable', 'boolean'],
+        ];
+    }
+}

@@ -12,7 +12,6 @@
         @endif
         <div class="row">
 
-            
 
             {{-- Left Side Panel: Driver Details --}}
             <div class="col-md-4">
@@ -22,18 +21,18 @@
             <hr>
 
 
-             {{-- Vehicle Images --}}
-       @if ($driver->image) 
-    <img src="data:{{ $driver->image->MIMEType }};base64,{{ $driver->image->Image }}"
-         alt="Driver Image"
-         class="img-fluid mb-3 rounded-circle border shadow"
-         style="width: 200px; height: 200px; object-fit: cover;">
-        @else
-            <img src="{{ asset('images/vehicle-placeholder.png') }}" 
-                alt="No Image"
-                class="img-fluid mb-3 rounded-circle border shadow"
-                style="width: 200px; height: 200px; object-fit: cover;">
-        @endif
+            {{-- Vehicle Images --}}
+            @if ($driver->image)
+                <img src="data:{{ $driver->image->MIMEType }};base64,{{ $driver->image->Image }}"
+                     alt="Driver Image"
+                     class="img-fluid mb-3 rounded-circle border shadow"
+                     style="width: 200px; height: 200px; object-fit: cover;">
+            @else
+                <img src="{{ asset('images/vehicle-placeholder.png') }}"
+                     alt="No Image"
+                     class="img-fluid mb-3 rounded-circle border shadow"
+                     style="width: 200px; height: 200px; object-fit: cover;">
+            @endif
 
 
             <dl class="row g-2">
@@ -183,17 +182,17 @@
                                                         data-id="{{ $assignment->Id }}">🗑️
                                                 </button>
 
-                                                {{-- Assign Inspection Button --}}
-                                                <a href="{{ route('fleet.driver_assignments.assign_inspection', $assignment->Id) }}"
-                                                   class="btn btn-sm btn-success">Assign Inspection</a>
+                                                {{-- Assign Inspection Button (commented out) --}}
+                                                {{-- <a href="{{ route('fleet.driver_assignments.assign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-success">Assign Inspection</a> --}}
 
-                                                {{-- Unassign Inspection Button --}}
-                                                <a href="{{ route('fleet.driver_assignments.unassign_inspection', $assignment->Id) }}"
-                                                   class="btn btn-sm btn-danger">Unassign Inspection</a>
+                                                {{-- Unassign Inspection Button (commented out) --}}
+                                                {{-- <a href="{{ route('fleet.driver_assignments.unassign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-danger">Unassign Inspection</a> --}}
 
                                                 {{-- Existing Unassign form (can be removed if using above buttons) --}}
-                                                {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
-                                                    method="POST" 
+                                                {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}"
+                                                    method="POST"
                                                     class="d-inline"
                                                     onsubmit="return confirmUnassign(event)">
                                                     @csrf
@@ -208,52 +207,48 @@
                                 </table>
                             </div>
                         </div>
-
-                        {{-- Trips Tab Content
                         <div class="tab-pane fade" id="trips">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h5>Trips</h5>
                             </div>
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
+                            <h5 class="mt-4">🚗 Assigned Trips</h5>
+
+                        @if ($driver->trips->isEmpty())
+                            <p>No trips assigned to this driver.</p>
+                        @else
+                            <table class="table table-hover">
+                                <thead>
                                     <tr>
-                                        <th>#</th>
                                         <th>Trip No</th>
-                                        <th>Vehicle</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Start Time</th>
-                                        <th>End Time</th>
-                                        <th>Start Location</th>
-                                        <th>End Location</th>
-                                        <th>Distance (Km)</th>
+                                        <th>Vehicle Type</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                        <th>Start</th>
+                                        <th>End</th>
                                     </tr>
-                                    </thead> --}}
-                                    {{-- <tbody id="tripsTable">
-                                    @foreach($trips as $trip)
+                                </thead>
+                                <tbody>
+                                    @foreach ($driver->trips as $trip)
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
                                             <td>{{ $trip->TripNo }}</td>
-                                            <td>{{ $trip->vehicle?->RegistrationNo ?? 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') }}</td>
-                                            <td>{{ $trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') : '—' }}</td>
-                                            <td>{{ $trip->StartTime }}</td>
-                                            <td>{{ $trip->EndTime }}</td>
-                                            <td>{{ $trip->StartLocation }}</td>
-                                            <td>{{ $trip->EndLocation }}</td>
-                                            <td>{{ $trip->DistanceCovered }}</td>
+                                            <td>{{ $trip->parentVehicleType->Description ?? '-' }}</td>
+                                            <td>{{ $trip->Purpose ?? '-' }}</td>
+                                            <td>{{ $trip->statusDetail->Description ?? '-' }}</td>
+                                            <td>{{ $trip->TripStartDate ?? '-' }}</td>
+                                            <td>{{ $trip->TripEndDate ?? '-' }}</td>
                                         </tr>
                                     @endforeach
-                                    </tbody>
-                                </table>
+                                </tbody>
+                            </table>
+                        @endif
                             </div>
-                        </div>
-                    </div>
+                        
                 </div>
             </div>
         </div>
-    </div> --}}
+    </div>
+    </div>
+    </div> 
     {{-- Add License Modal --}}
 
     <div class="modal fade" id="addLicenseModal" tabindex="-1">
@@ -651,16 +646,16 @@
             });
         });
 
-    function confirmUnassign(e) {
-        e.preventDefault(); // stop form submission
+        function confirmUnassign(e) {
+            e.preventDefault(); // stop form submission
 
-        if (confirm("Are you sure you want to unassign this vehicle?\n\n⚠️ Please first inspect the vehicle.")) {
-            // redirect to inspection create page instead
-            window.location.href = "{{ route('fleet.vehicle_inspection.create') }}";
+            if (confirm("Are you sure you want to unassign this vehicle?\n\n⚠️ Please first inspect the vehicle.")) {
+                // redirect to inspection create page instead
+                window.location.href = "{{ route('fleet.vehicle_inspection.create') }}";
+            }
+
+            return false; // always stop normal submit
         }
-
-        return false; // always stop normal submit
-    }
-</script>
+    </script>
 @endsection
 

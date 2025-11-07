@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceInvoiceEntry;
@@ -24,9 +25,10 @@ class InvoiceGenerationController extends Controller
         $this->creditService = $creditService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = FinanceInvoice::select([
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableView, FinanceInvoice::class);
+        $query = FinanceInvoice::select([
             'Id',
             'RequestID',
             'InvoiceNumber',
@@ -44,21 +46,49 @@ class InvoiceGenerationController extends Controller
                 'customer:Id,ThirdPartyName',
                 'source:ModuleID,Name',
                 'currency:Id,Code'
-            ])
-            ->orderByDesc('CreatedOn')
-            ->paginate(15);
+            ]);
+
+        if ($request->filled('request_id')) {
+            $query->where('RequestID', 'like', '%'.$request->request_id.'%');
+        }
+        if ($request->filled('invoice_number')) {
+            $query->where('InvoiceNumber', 'like', '%'.$request->invoice_number.'%');
+        }
+        if ($request->filled('customer')) {
+            $customer = $request->customer;
+            $query->whereHas('customer', function($q) use ($customer){
+                $q->where('ThirdPartyName', 'like', '%'.$customer.'%');
+            });
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('ApprovalStatus', $request->status);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('DueDate', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('DueDate', '<=', $request->date_to);
+        }
+
+        $sortField = $request->sort_by ?? 'CreatedOn';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 15);
+        $invoices = $query->paginate($perPage)->withQueryString();
 
         return view('finance.accountsreceivable.invoicegeneration.index', compact('invoices'));
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceInvoice::class);
         // Get customers with their credit information
         $customers = DB::table('t_ThirdParties as tp')
-            ->leftJoin('t_FinanceCreditManagement as fcm', function($join) {
+            ->leftJoin('t_FinanceCreditManagement as fcm', function ($join) {
                 $join->on('tp.Id', '=', 'fcm.CustomerID')
-                     ->where('fcm.Status', '=', 'Approved')
-                     ->whereRaw('fcm.EffectiveFrom <= GETDATE()')
-                     ->whereRaw('fcm.ExpiryDate >= GETDATE()');
+                    ->where('fcm.Status', '=', 'Approved')
+                    ->whereRaw('fcm.EffectiveFrom <= GETDATE()')
+                    ->whereRaw('fcm.ExpiryDate >= GETDATE()');
             })
             ->select([
                 'tp.Id',
@@ -76,6 +106,7 @@ class InvoiceGenerationController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceInvoice::class);
         $validated = $request->validate([
             'CustomerID' => 'required|integer|exists:t_ThirdParties,Id',
             'InvoiceTitle' => 'required|string|max:255',
@@ -163,7 +194,7 @@ class InvoiceGenerationController extends Controller
             return redirect()
                 ->route('invoicegeneration.show', $invoice->Id)
                 ->with('success', "Invoice {$invoiceNumber} created successfully" .
-                       ($validated['use_credit'] ? ' using customer credit.' : '.'));
+                    ($validated['use_credit'] ? ' using customer credit.' : '.'));
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -181,6 +212,7 @@ class InvoiceGenerationController extends Controller
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableView, FinanceInvoice::class);
         $invoice = FinanceInvoice::with([
             'customer.country',
             'source:ModuleID,Name',
@@ -192,7 +224,7 @@ class InvoiceGenerationController extends Controller
         $creditInfo = null;
         if ($invoice->CustomerID) {
             $creditSummary = $this->creditService->getCustomerCreditSummary($invoice->CustomerID);
-            
+
             if ($creditSummary['has_credit']) {
                 $creditInfo = [
                     'hasCredit' => true,
@@ -372,6 +404,7 @@ class InvoiceGenerationController extends Controller
      */
     private function checkCreditAvailability(int $customerId, float $invoiceAmount): array
     {
+        
         return $this->creditService->canApplyCredit($customerId, $invoiceAmount);
     }
 
@@ -394,11 +427,11 @@ class InvoiceGenerationController extends Controller
         if ($invoice->SourceTable === 't_RentInvoice' && $invoice->customer) {
             $customerName = $invoice->customer->ThirdPartyName;
 
-            $creditByName = FinanceCreditManagement::whereHas('customer', function($query) use ($customerName) {
+            $creditByName = FinanceCreditManagement::whereHas('customer', function ($query) use ($customerName) {
                 $query->where('ThirdPartyName', 'like', "%{$customerName}%");
             })
-            ->whereRaw('LOWER(Status) = ?', ['approved'])
-            ->first();
+                ->whereRaw('LOWER(Status) = ?', ['approved'])
+                ->first();
 
             if ($creditByName) {
                 return $creditByName->CustomerID;
@@ -467,7 +500,7 @@ class InvoiceGenerationController extends Controller
 
         if ($lastInvoice) {
             // Extract the sequence number and increment
-            $lastNumber = (int) substr($lastInvoice->InvoiceNumber, -4);
+            $lastNumber = (int)substr($lastInvoice->InvoiceNumber, -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;

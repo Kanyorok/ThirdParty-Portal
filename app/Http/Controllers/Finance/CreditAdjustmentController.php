@@ -33,21 +33,29 @@ class CreditAdjustmentController extends Controller
         return view('finance.accountsreceivable.creditadjustment.index', compact('adjustments'));
     }
 
-//    public function create(Request $request)
-//    {
-//        return $request;
-//        $creditProfiles = FinanceCreditManagement::with('customer:Id,ThirdPartyName')
-//            ->where('Status', 'Approved') // Updated to use Status column instead of ApprovalStatus
-//            ->get();
-//
-//        $selectedCredit = null;
-//        return $id;
-//        if ($creditId) {
-//            $selectedCredit = FinanceCreditManagement::with('customer')->find($creditId);
-//        }
-//
-//        return view('finance.accountsreceivable.creditadjustment.create', compact('creditProfiles', 'selectedCredit'));
-//    }
+    public function create(Request $request)
+    {
+        $creditProfiles = FinanceCreditManagement::with('customer:Id,ThirdPartyName')
+            ->where('Status', 'Approved')
+            ->get();
+
+        $selectedCredit = null;
+        $creditId = $request->get('creditId') ?? $request->get('id');
+
+        // Support bare numeric query like ?4
+        if (!$creditId) {
+            $rawQuery = $request->getQueryString();
+            if (is_string($rawQuery) && ctype_digit($rawQuery)) {
+                $creditId = (int) $rawQuery;
+            }
+        }
+
+        if ($creditId) {
+            $selectedCredit = FinanceCreditManagement::with('customer')->find($creditId);
+        }
+
+        return view('finance.accountsreceivable.creditadjustment.create', compact('creditProfiles', 'selectedCredit'));
+    }
 
 
     public function createWithId($creditId)
@@ -81,10 +89,10 @@ class CreditAdjustmentController extends Controller
             $creditProfile = FinanceCreditManagement::findOrFail($validated['CreditID']);
 
             // Calculate new credit limit
-            $currentLimit = (float) $creditProfile->CreditLimit;
-            $adjustmentAmount = (float) $validated['Amount'];
+            $currentLimit = (float)$creditProfile->CreditLimit;
+            $adjustmentAmount = (float)$validated['Amount'];
 
-            $newLimit = match($validated['AdjustmentType']) {
+            $newLimit = match ($validated['AdjustmentType']) {
                 'increase' => $currentLimit + $adjustmentAmount,
                 'decrease' => max(0, $currentLimit - $adjustmentAmount),
                 'revision' => $adjustmentAmount, // Amount is the new total limit
@@ -185,10 +193,10 @@ class CreditAdjustmentController extends Controller
             $creditProfile = $adjustment->creditProfile;
 
             // Recalculate new credit limit
-            $currentLimit = (float) $creditProfile->CreditLimit;
-            $adjustmentAmount = (float) $validated['Amount'];
+            $currentLimit = (float)$creditProfile->CreditLimit;
+            $adjustmentAmount = (float)$validated['Amount'];
 
-            $newLimit = match($validated['AdjustmentType']) {
+            $newLimit = match ($validated['AdjustmentType']) {
                 'increase' => $currentLimit + $adjustmentAmount,
                 'decrease' => max(0, $currentLimit - $adjustmentAmount),
                 'revision' => $adjustmentAmount,

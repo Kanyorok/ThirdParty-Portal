@@ -47,7 +47,7 @@ class PrequalificationProgressController extends Controller
                 'category_id' => $catStatus->CategoryId,
                 'category_name' => $catStatus->category?->CategoryName,
                 'status' => $catStatus->Status,
-                'progress_percent' => (float) $catStatus->ProgressPercent,
+                'progress_percent' => (float)$catStatus->ProgressPercent,
                 'stage' => $catStatus->Stage,
                 'stage_label' => $catStatus->StageLabel,
                 'updated_on' => optional($catStatus->ModifiedOn ?? $catStatus->CreatedOn)->toISOString(),
@@ -79,7 +79,7 @@ class PrequalificationProgressController extends Controller
             'rejection_reason' => 'nullable|string',
         ]);
 
-        $supplierId = (int) $validated['supplier_id'];
+        $supplierId = (int)$validated['supplier_id'];
         $userId = Auth::id();
 
         $application = PrequalificationApplication::where([
@@ -98,7 +98,7 @@ class PrequalificationProgressController extends Controller
             ]);
 
             $previousStatus = $row->Status;
-            $previousProgress = (float) ($row->ProgressPercent ?? 0);
+            $previousProgress = (float)($row->ProgressPercent ?? 0);
 
             $row->fill([
                 'Status' => $validated['status'],
@@ -120,7 +120,7 @@ class PrequalificationProgressController extends Controller
                 'PreviousStatus' => $previousStatus,
                 'NewStatus' => $row->Status,
                 'PreviousProgress' => $previousProgress,
-                'NewProgress' => (float) $row->ProgressPercent,
+                'NewProgress' => (float)$row->ProgressPercent,
                 'ChangedBy' => $userId,
                 'Notes' => $validated['notes'] ?? null,
                 'CreatedBy' => $userId,
@@ -144,15 +144,15 @@ class PrequalificationProgressController extends Controller
             ->limit(50)
             ->get();
 
-        $out = $apps->map(function($app){
+        $out = $apps->map(function ($app) {
             return [
                 'application_id' => $app->ApplicationID,
                 'round_id' => $app->RoundID,
                 'status' => $app->Status?->getLabel() ?? 'Submitted',
-                'categories' => $app->categoryStatuses->map(fn($cs)=>[
+                'categories' => $app->categoryStatuses->map(fn($cs) => [
                     'category_id' => $cs->CategoryId,
                     'status' => $cs->Status,
-                    'progress_percent' => (float) $cs->ProgressPercent,
+                    'progress_percent' => (float)$cs->ProgressPercent,
                 ])->values(),
             ];
         })->values();
@@ -165,7 +165,7 @@ class PrequalificationProgressController extends Controller
         $total = $categoryStatuses->count();
         $approved = $categoryStatuses->where('Status', 'A')->count();
         $rejected = $categoryStatuses->where('Status', 'R')->count();
-        $pending = $categoryStatuses->whereIn('Status', ['D','S','U','C'])->count();
+        $pending = $categoryStatuses->whereIn('Status', ['D', 'S', 'U', 'C'])->count();
         $overall = $total > 0 ? ($categoryStatuses->sum('ProgressPercent') / $total) : 0.0;
         return [
             'total_categories' => $total,

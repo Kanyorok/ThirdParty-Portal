@@ -56,7 +56,7 @@ class SupplierCategoryController extends Controller
 
     public function create()
     {
-        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id','Name']);
+        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id', 'Name']);
         return view('procurement.suppliers.supplier_categories.create', compact('itemCategories'));
     }
 
@@ -85,14 +85,14 @@ class SupplierCategoryController extends Controller
     public function edit(SupplierCategory $supplier_cat)
     {
         $supplier_cat->load('itemCategories');
-        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id','Name']);
+        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id', 'Name']);
         return view('procurement.suppliers.supplier_categories.edit', [
             'category' => $supplier_cat,
             'itemCategories' => $itemCategories,
         ]);
     }
 
-    public function update(UpdateSupplierCategoryRequest $request, SupplierCategory $supplierCategory)
+    public function update(UpdateSupplierCategoryRequest $request, SupplierCategory $supplier_cat)
     {
         $validatedData = array_merge($request->validated(), [
             'ModifiedBy' => Auth::id(),
@@ -103,17 +103,17 @@ class SupplierCategoryController extends Controller
             ->filter()->unique();
         unset($validatedData['item_category_ids']);
 
-        $supplierCategory->update($validatedData);
+        $supplier_cat->update($validatedData);
 
         if ($itemCategoryIds->isNotEmpty()) {
-            $supplierCategory->syncItemCategoriesWithAudit($itemCategoryIds->all(), Auth::id());
+            $supplier_cat->syncItemCategoriesWithAudit($itemCategoryIds->all(), Auth::id());
         } else if ($request->has('item_category_ids')) {
             // Treat as removing all (soft delete existing pivots)
-            $supplierCategory->syncItemCategoriesWithAudit([], Auth::id());
+            $supplier_cat->syncItemCategoriesWithAudit([], Auth::id());
         }
 
         if ($request->wantsJson()) {
-            return response()->json($supplierCategory->load('itemCategories'), 200);
+            return response()->json($supplier_cat->load('itemCategories'), 200);
         }
 
         return redirect()->route('proc.supplier-cat.index')->with('success', 'Supplier Category updated successfully.');

@@ -22,33 +22,47 @@
 
 @section('content')
     <div class="container mt-4">
+        @php
+            // Ensure newest (last) record appears first in the listing.
+            $isPaginator = isset($tenders) && method_exists($tenders, 'links');
+            if ($isPaginator) {
+                $tendersSorted = $tenders; // assume controller handled ordering for paginator
+            } else {
+                $tendersCollection = isset($tenders) ? collect($tenders) : collect();
+                if ($tendersCollection->isNotEmpty()) {
+                    // Prefer sorting by Id (descending) as a proxy for newest items
+                    $tendersSorted = $tendersCollection->sortByDesc(fn($t) => $t->Id ?? null)->values();
+                } else {
+                    $tendersSorted = $tendersCollection;
+                }
+            }
+        @endphp
+        @php
+            // Load TenderStatus descriptions from t_CodeDetails (Value -> Description)
+            $tenderStatusMap = [];
+            try {
+                $rows = \Illuminate\Support\Facades\DB::table('t_CodeDetails')->where('CodeID', 'TenderStatus')->get();
+                foreach ($rows as $r) {
+                    $tenderStatusMap[$r->Value] = $r->Description;
+                }
+            } catch (\Throwable $e) {
+                // ignore and fallback to enum displayName
+            }
+        @endphp
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="mb-0 text-primary"><i class="fas fa-list-alt me-2"></i>Initiated Tenders</h3>
-            <a href="{{ route('initiatetender.create') }}" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i> New Tender
-            </a>
+            @canWrite('tender')
+                <a href="{{ route('initiatetender.create') }}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i> New Tender
+                </a>
+            @endcanWrite
         </div>
 
         <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
             <i class="fa fa-info-circle me-2"></i>
-            <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.">
+            <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.'">
                 <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
-            </span>
         </div>
-
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
@@ -71,9 +85,9 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @forelse($tenders as $tender)
+                        @forelse($tendersSorted as $tender)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $isPaginator ? ($tenders->firstItem() + $loop->index) : $loop->iteration }}</td>
                                 <td>{{ $tender->TenderNo }}</td>
                                 <td>
                                     <a href="{{ route('initiatetender.show', $tender->Id) }}" title="View {{ $tender->Title }}">
@@ -140,40 +154,50 @@
                                     @endif
                                 </td>
                                 <td class="action-buttons">
-                                    <a href="{{ route('initiatetender.show', $tender->Id) }}" class="btn btn-sm btn-outline-info" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                    @canRead('tender')
+                                        <a href="{{ route('initiatetender.show', $tender->Id) }}" class="btn btn-sm btn-outline-info" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    @endcanRead
 
                                     @if ($tender->ApprovalStatus === \App\Enums\TenderApprovalStatusEnum::APPROVED)
                                         {{-- Approved: hide Edit and Delete actions --}}
                                     @elseif ($tender->ApprovalStatus === \App\Enums\TenderApprovalStatusEnum::REJECTED)
                                         {{-- Rejected: keep Edit disabled (read-only) --}}
-                                        <a href="{{ route('initiatetender.edit', $tender->Id) }}"
-                                           class="btn btn-sm btn-outline-primary disabled" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                                    onclick="return confirm('Are you sure you want to delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form>
+                                        @canUpdate('tender')
+                                            <a href="{{ route('initiatetender.edit', $tender->Id) }}"
+                                               class="btn btn-sm btn-outline-primary disabled" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endcanUpdate
+                                        @canDelete('tender')
+                                            <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                        onclick="return confirm('Are you sure you want to delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        @endcanDelete
                                     @else
                                         {{-- Other statuses: allow Edit and Delete --}}
-                                        <a href="{{ route('initiatetender.edit', $tender->Id) }}"
-                                           class="btn btn-sm btn-outline-primary" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                                    onclick="return confirm('Are you sure you want to delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form>
+                                        @canUpdate('tender')
+                                            <a href="{{ route('initiatetender.edit', $tender->Id) }}"
+                                               class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endcanUpdate
+                                        @canDelete('tender')
+                                            <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                        onclick="return confirm('Are you sure you want to delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        @endcanDelete
                                     @endif
                                 </td>
                             </tr>
@@ -209,11 +233,13 @@
             });
         });
 
-        // Dismiss alerts automatically after some time
-        window.setTimeout(function() {
-            $(".alert").fadeTo(500, 0).slideUp(500, function(){
-                $(this).remove();
-            });
-        }, 5000); // 5 seconds
+        // Auto-dismiss of alerts disabled to keep the initiated tender list and guidance visible.
+        // If you want alerts to auto-dismiss later, re-enable with a timeout value.
+        // Example re-enable (uncomment):
+        // window.setTimeout(function() {
+        //     $(".alert").fadeTo(500, 0).slideUp(500, function(){
+        //         $(this).remove();
+        //     });
+        // }, 5000);
     </script>
 @endpush

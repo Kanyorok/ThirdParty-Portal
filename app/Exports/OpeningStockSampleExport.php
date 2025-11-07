@@ -2,6 +2,8 @@
 
 namespace App\Exports;
 
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\Store;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -9,31 +11,70 @@ class OpeningStockSampleExport implements FromArray, WithHeadings
 {
     public function array(): array
     {
-        return [
-            ['1', '1', 'ITM-00001', '1', '1', '0', '1', '1', '1', '1', '5', '1', '3', '100000', '13/06/2025', '1'],
-        ];
+        // Load items with related stock + category
+        $items = ItemMasterList::with(['stockItems', 'category'])->get();
+
+        $data = [];
+
+        // ---- Item Rows ----
+        foreach ($items as $item) {
+            $stock = $item->stockItems->first();
+
+            $data[] = [
+                $item->ItemCode ?? '',
+                $item->ItemName ?? '',
+                $stock?->Saleable ?? 1,
+                $stock?->Purchasable ?? 1,
+                '', // left empty for user input (BranchName)
+                '', // left empty for user input (StoreName)
+                $item->stockItems->sum('CurrentQty') ?? 0,
+                $stock?->Min ?? 0,
+                $stock?->Reorder ?? 0,
+                $stock?->Max ?? 0,
+                $item->uom->Code ?? '',
+                $item->price->ActualPrice ?? NULL,
+                $stock?->LastReceived ?? now()->format('d/m/Y'),
+                $stock?->Status ?? 1,
+            ];
+        }
+
+        // ---- Spacer ----
+        $data[] = [];
+        $data[] = ['--- "1" Refers to Active or Yes and "0" refers to Inactive or No  ---'];
+        $data[] = ['--- Pricing Should Come from the Price Management Module  ---'];
+        // ---- Spacer ----
+        $data[] = [];
+        $data[] = ['--- Reference: Available Stores & Branches ---'];
+
+        // ---- Stores with Branch Names ----
+        $stores = Store::with('branch')->get();
+        foreach ($stores as $store) {
+            $data[] = [
+                'Branch' => $store->branch?->Name ?? 'N/A',
+                'Store' => $store->StoreName,
+            ];
+        }
+
+        return $data;
     }
 
     public function headings(): array
     {
         return [
-            'CategoryId',
-            'SubCategoryId',
             'ItemCode',
-            'BatchTracked',
-            'SerialTracked',
-            'Perishable',
+            'ItemName',
             'Saleable',
             'Purchasable',
-            'BranchId',
-            'StoreId',
+            'BranchName',   // blank for user input
+            'StoreName',    // blank for user input
             'QTY',
             'MinStockLevel',
             'ReorderQty',
             'MaxStockLevel',
+            'UOM',
+            'ItemPrice',
             'LastReceivedDate',
-            'IsActive'
+            'IsActive',
         ];
     }
 }
-

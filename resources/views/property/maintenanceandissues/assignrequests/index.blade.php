@@ -20,65 +20,95 @@
             <div class="card-body p-0">
                 <table class="table table-hover table-striped table-bordered align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Request Number</th>
-                            <th>Assignment Type</th>
-                            <th>Expected Start</th>
-                            <th>Expected Completion</th>
-                            <th>Priority Level</th>
-                            <th>Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
+                    <tr>
+                        <th>#</th>
+                        <th>Req Number</th>
+                        <th>Assignment Type</th>
+                        <th>Expected Start</th>
+                        <th>Expected Completion</th>
+                        <th>Priority Level</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach($assignments as $assignment)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $assignment->request->RequestNumber ?? 'N/A' }}</td>
-                                <td>{{ $assignment->assignmentType->Description ?? 'N/A' }}</td>
-                                <td>{{ Carbon::parse($assignment->ExpectedStartDate)->format('d/m/Y') }}</td>
-                                <td>{{ Carbon::parse($assignment->ExpectedCompletion)->format('d/m/Y') }}</td>
-                                <td>{{ $assignment->priorityLevel->Description ?? 'N/A' }}</td>
-                                <td>
+                    @foreach($assignments as $assignment)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $assignment->request->RequestNumber ?? 'N/A' }}</td>
+                            <td>{{ $assignment->assignmentType->Description ?? 'N/A' }}</td>
+                            <td>{{ Carbon::parse($assignment->ExpectedStartDate)->format('d/m/Y') }}</td>
+                            <td>{{ Carbon::parse($assignment->ExpectedCompletion)->format('d/m/Y') }}</td>
+                            <td>
+                                @if ($assignment->priorityLevel)
+                                    @php
+                                        $priority = $assignment->priorityLevel->Value; // C, H, M, L
+                                    @endphp
+
+                                    @switch($priority)
+                                        @case('C')
+                                            <span class="badge bg-danger">Critical</span>
+                                            @break
+
+                                        @case('H')
+                                            <span class="badge bg-warning text-dark">High</span>
+                                            @break
+
+                                        @case('M')
+                                            <span class="badge bg-info text-dark">Medium</span>
+                                            @break
+
+                                        @case('L')
+                                            <span class="badge bg-success">Low</span>
+                                            @break
+
+                                        @default
+                                            <span
+                                                class="badge bg-secondary">{{ $assignment->priorityLevel->Description }}</span>
+                                    @endswitch
+                                @else
+                                    <span class="badge bg-secondary">N/A</span>
+                                @endif
+                            </td>
+                            <td>
                                     <span class="badge bg-{{ $assignment->Status->badgeColor() }}">
                                         {{ $assignment->Status->label() }}
                                     </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex gap-1 justify-content-center flex-wrap">
-                                        <a href="{{ route('assignrequest.show', $assignment->Id) }}" 
-                                           class="btn btn-sm btn-primary">
-                                            <i class="bi bi-eye"></i> View
-                                        </a>
-                                        <a href="{{ route('assignrequest.edit', $assignment->Id) }}" 
-                                           class="btn btn-sm btn-info text-white">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </a>
-                                        <a href="{{ route('workcompletion.create') }}" 
-                                           class="btn btn-sm btn-success">
-                                            <i class="bi bi-check-circle"></i> Complete
-                                        </a>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                    <a href="{{ route('assignrequest.show', $assignment->Id) }}"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a href="{{ route('assignrequest.edit', $assignment->Id) }}"
+                                       class="btn btn-sm btn-info text-white">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    {{-- <a href="{{ route('workcompletion.create') }}"
+                                       class="btn btn-sm btn-success">
+                                        <i class="bi bi-check-circle"></i> Complete
+                                    </a> --}}
 
-                                        @if($assignment->taskcompletion()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
+                                    @if($assignment->taskcompletion()->exists())
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="bi bi-lock"></i> In Use
+                                        </button>
+                                    @else
+                                        <form action="{{ route('assignrequest.destroy', $assignment->Id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this maintenance assignment?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> Delete
                                             </button>
-                                        @else
-                                            <form action="{{ route('assignrequest.destroy', $assignment->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this maintenance assignment?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>

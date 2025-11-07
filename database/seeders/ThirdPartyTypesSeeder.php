@@ -28,8 +28,8 @@ class ThirdPartyTypesSeeder extends Seeder
         // Since original request: "generate TypeId as unique tenant starts with TE-... and supplier SU-..." we'll use a Code column fallback.
         // If the table lacks a Code column, we insert into TypeId as string; ensure schema supports it.
 
-    $existingColumns = DB::getSchemaBuilder()->getColumnListing('t_ThirdPartyTypes');
-    $useCodeColumn = in_array('Code', $existingColumns); // will be true after migration adding Code
+        $existingColumns = DB::getSchemaBuilder()->getColumnListing('t_ThirdPartyTypes');
+        $useCodeColumn = in_array('Code', $existingColumns); // will be true after migration adding Code
 
         $tenantCode = 'TE-0001';
         $supplierCode = 'SU-0001';
@@ -49,21 +49,21 @@ class ThirdPartyTypesSeeder extends Seeder
         }
 
         // Helper closure to upsert single record
-    $upsert = function (string $code, ?int $categoryId) use ($useCodeColumn, $now, $userId, $creditorRoleId, $debtorRoleId) {
+        $upsert = function (string $code, ?int $categoryId) use ($useCodeColumn, $now, $userId, $creditorRoleId, $debtorRoleId) {
             $table = DB::table('t_ThirdPartyTypes');
             if ($useCodeColumn) {
                 $exists = $table->where('Code', $code)->first();
                 if ($exists) {
                     $table->where('Code', $code)->update([
                         'FinanceRole' => $debtorRoleId,
-            'Type' => $categoryId,
+                        'Type' => $categoryId,
                         'ModifiedBy' => $userId,
                         'ModifiedOn' => $now,
                     ]);
                 } else {
                     $table->insert([
                         'Code' => $code,
-            'Type' => $categoryId,
+                        'Type' => $categoryId,
                         'FinanceRole' => $creditorRoleId,
                         'CreatedBy' => $userId,
                         'ModifiedBy' => $userId,
@@ -72,12 +72,12 @@ class ThirdPartyTypesSeeder extends Seeder
                     ]);
                 }
             } else {
-        // Should not happen now, but fallback to prevent failure
-        $this->command?->warn('Code column missing on t_ThirdPartyTypes; create the migration to add it.');
+                // Should not happen now, but fallback to prevent failure
+                $this->command?->warn('Code column missing on t_ThirdPartyTypes; create the migration to add it.');
             }
         };
 
-    $upsert($tenantCode, $tenantCategoryId);
-    $upsert($supplierCode, $supplierCategoryId);
+        $upsert($tenantCode, $tenantCategoryId);
+        $upsert($supplierCode, $supplierCategoryId);
     }
 }

@@ -41,12 +41,13 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('legal.obligations.show', $obligation->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                <a href="{{ route('legal.obligations.show', $obligation->Id) }}" class="btn btn-sm btn-info" title="View"><i class="fas fa-eye"></i></a>
                                 <button 
                                     type="button" 
                                     class="btn btn-sm btn-primary" 
                                     data-bs-toggle="modal" 
-                                    data-bs-target="#EditObligationsModal-{{$obligation->Id}}">
+                                    data-bs-target="#EditObligationsModal-{{$obligation->Id}}"
+                                    title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 {{-- <a href="{{ route('legal.obligations.edit', $obligation->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a> --}}
@@ -54,8 +55,9 @@
                                     class="btn btn-sm btn-danger custom-delete-btn"
                                     data-bs-toggle="modal"
                                     data-bs-target="#customDeleteConfirmModal"
-                                    data-name="{{$obligation->Title}}"   
-                                    data-route="{{ route('legal.obligations.destroy', $obligation->Id) }}">
+                                    data-name="{{$obligation->Title}}"
+                                    data-route="{{ route('legal.obligations.destroy', $obligation->Id) }}"
+                                    title="Delete">
                                     <i  class="fas fa-trash-alt"></i>
                                 </button>
                                 {{-- <a href="{{ route('legal.obligations.assignments.index', $obligation->ID) }}" class="btn btn-sm btn-info">👤 Assign</a> --}}
@@ -79,6 +81,9 @@
                     @endif
                 </tbody>
             </table>
+        </div>
+        <div class="d-flex justify-content-end align-items-center mt-3">
+            {{ $obligations->links() }}
         </div>
     </div>
 

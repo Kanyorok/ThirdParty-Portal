@@ -31,7 +31,7 @@
                                 <option value="">-- Select Tenant --</option>
                                 @foreach ($newtenants as $newtenant)
                                     <option value="{{ $newtenant->Id }}">
-                                        {{ $newtenant->thirdParty->TradingName ?? '-' }}
+                                        {{ $newtenant->thirdParty->ThirdPartyName ?? '-' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -103,7 +103,8 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Rent <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control charge-field" name="MonthlyRent" placeholder="e.g. 25000" required>
+                            <input type="number" class="form-control charge-field" name="MonthlyRent"
+                                   placeholder="e.g. 25000" required>
                         </div>
 
                         <div class="col-md-4">
@@ -113,17 +114,20 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Service Charge <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control charge-field" name="ServiceCharge" placeholder="e.g. 5000" required>
+                            <input type="number" class="form-control charge-field" name="ServiceCharge"
+                                   placeholder="e.g. 5000" required>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Parking Fee <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control charge-field" name="ParkingFee" placeholder="e.g. 1000" required>
+                            <input type="number" class="form-control charge-field" name="ParkingFee"
+                                   placeholder="e.g. 1000" required>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Other Charges <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control charge-field" name="OtherCharges" placeholder="e.g. 250" required>
+                            <input type="number" class="form-control charge-field" name="OtherCharges"
+                                   placeholder="e.g. 250" required>
                         </div>
 
                         <div class="col-md-4">
@@ -135,14 +139,14 @@
                     {{-- Due Day --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Due Day <span class="text-danger">*</span></label>
-                            <input 
-                                type="number" 
-                                class="form-control" 
-                                name="DueDay" 
-                                placeholder="Due should be between 1 and 28" 
-                                min="1" 
-                                max="28" 
+                            <label class="form-label">Due Date <span class="text-danger">*</span></label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                name="DueDay"
+                                placeholder="Due should be between 1 and 28"
+                                min="1"
+                                max="28"
                                 required
                             >
                             <small class="text-muted">Must be between 1 and 28</small>
@@ -152,10 +156,10 @@
                     {{-- Terms --}}
                     <div class="mb-3">
                         <label class="form-label">Special Terms & Conditions</label>
-                        <textarea 
-                            class="form-control" 
-                            rows="3" 
-                            name="SpecialTerms" 
+                        <textarea
+                            class="form-control"
+                            rows="3"
+                            name="SpecialTerms"
                             placeholder="Optional terms or notes..."
                         ></textarea>
                     </div>
@@ -170,11 +174,8 @@
                     {{-- Action Buttons --}}
                     <div class="d-flex gap-2">
                         <a href="{{ route('addlease.index') }}" class="btn btn-secondary">Cancel</a>
-                        <button 
-                            type="submit" 
-                            class="btn btn-success"
-                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"
-                        >
+                        <button type="submit" class="btn btn-success"
+                                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
                             Save Lease
                         </button>
                     </div>
