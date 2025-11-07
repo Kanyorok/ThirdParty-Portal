@@ -53,6 +53,13 @@ class LicensingService
             return LicenseResult::invalid('bad_signature');
         }
 
+        // Ensure the stored public key id matches configured one
+        $configuredKeyId = (string)config('licensing.public_key_id', '');
+        if ($configuredKeyId !== '' && strcasecmp($configuredKeyId, (string)$record->PublicKeyId) !== 0) {
+            $this->audit('kid_mismatch', 'PublicKeyId mismatch');
+            return LicenseResult::invalid('kid_mismatch');
+        }
+
         $publicKeyBase64 = (string)config('licensing.public_key_base64', '');
         if ($publicKeyBase64 === '') {
             Log::warning('Licensing public key missing in configuration');
@@ -83,7 +90,16 @@ class LicensingService
         }
 
         $now = CarbonImmutable::now('UTC');
-        $expiresAt = isset($data['expires_at']) ? CarbonImmutable::parse($data['expires_at']) : null;
+        // Accept expires_at as ISO string or epoch seconds
+        $expiresAt = null;
+        if (isset($data['expires_at'])) {
+            $exp = $data['expires_at'];
+            if (is_numeric($exp)) {
+                $expiresAt = CarbonImmutable::createFromTimestampUTC((int)$exp);
+            } else {
+                try { $expiresAt = CarbonImmutable::parse((string)$exp); } catch (\Throwable $e) { $expiresAt = null; }
+            }
+        }
         if (!$expiresAt) {
             $this->audit('bad_payload', 'Missing expires_at');
             return LicenseResult::invalid('bad_payload');
@@ -101,7 +117,7 @@ class LicensingService
             return LicenseResult::invalid('server_misconfigured');
         }
 
-        $payloadDbGuid = (string)($data['instance']['db_guid'] ?? '');
+    $payloadDbGuid = (string)($data['instance']['db_guid'] ?? '');
         if ($payloadDbGuid === '' || strcasecmp($payloadDbGuid, (string)$instance->DbGuid) !== 0) {
             $this->audit('wrong_instance', 'DbGuid mismatch');
             return LicenseResult::invalid('wrong_instance');
