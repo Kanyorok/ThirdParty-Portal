@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('t_StockItems', function (Blueprint $table) {
+            // Make the 'Store' column nullable
+            $table->foreignId('Store')->nullable()->change();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('t_StockItems', function (Blueprint $table) {
+            $table->dropUnique('sku_code_branch_store_unique');
+        });
+        Schema::table('t_StockItems', function (Blueprint $table) {
+            $table->foreignId('Store')->nullable(false)->change();
+        });
+
+        Schema::table('t_StockItems', function (Blueprint $table) {
+            $table->unique(['SKUCode', 'Branch', 'Store'], 'sku_code_branch_store_unique');
+        });
+    }
+};
