@@ -21,6 +21,7 @@ enum IntegrationsEnum: string
     case Facebook = 'sfb';
     case Twitter = 'xtw';
     case Website = 'web';
+    case CRDB = 'crdb';
     // Organization branding (name, motto, logo)
     case Organization = 'org';
     case LLM = 'llm';
@@ -42,6 +43,7 @@ enum IntegrationsEnum: string
             self::LLM => 'LLM (ai) Configuration',
             self::ReportService => "SQL Server Reporting Service",
             self::DMSCoreBanking => "DMS Core Banking",
+            self::CRDB => "Central Report Unit (CRU)",
         };
     }
 
