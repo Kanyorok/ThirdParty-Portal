@@ -10,12 +10,26 @@
 @endsection
 
 @section('styles')
-
+<style>
+    .integrations-sidebar {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+    .integrations-sidebar .list-group {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    .integrations-content {
+        position: relative;
+    }
+</style>
 @endsection
 @section('content')
     <div class="row">
         <div class="col-md-3 col-xl-2">
-            <div class="card">
+            <div class="card integrations-sidebar">
                 <div class="card-header">
                     <h5 class="card-title mb-0">@yield('title')</h5>
                 </div>
@@ -30,7 +44,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-9 col-xl-10">
+        <div class="col-md-9 col-xl-10 integrations-content">
             <div class="tab-content">
                 @foreach(IntegrationsEnum::getAll() as $integration)
                     <div class="tab-pane fade {{ ($loop->first)?'show active':'' }}" id="{{ $integration->value }}"
@@ -940,6 +954,62 @@
                                             </div>
                                         </form>
                                         @break
+                                    @case(IntegrationsEnum::CRDB->value)
+                                        <form id="crdbConfigurationForm" method="post"
+                                              action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
+                                            <input type="hidden" name="Integration" value="{{ $integration->value }}"
+                                                   class="d-none" style="display: none;">
+                                            <div class="mb-3 col-12">
+                                                <label class="form-label" for="CRDB_API_Key">API Key </label>
+                                                <div class="input-group">
+                                                    <input type="password" readonly class="form-control"
+                                                           id="CRDB_API_Key"
+                                                           placeholder="{{ isset($crdbConfig->Key) ? (isset($crdbConfig->KeyPrefix) && isset($crdbConfig->KeySuffix) ? $crdbConfig->KeyPrefix . '***' . $crdbConfig->KeySuffix . ' (generate new to view full key)' : 'API key exists (generate new to view)') : 'Generate a key to get started' }}"
+                                                           value=""
+                                                           data-actual-key=""
+                                                           data-key-prefix="{{ $crdbConfig->KeyPrefix ?? '' }}"
+                                                           data-key-suffix="{{ $crdbConfig->KeySuffix ?? '' }}">
+                                                    <button class="btn btn-secondary" type="button"
+                                                            id="crdbToggleKey"
+                                                            onclick="toggleCRDBKeyVisibility()"
+                                                            title="Show/Hide API Key">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-secondary" type="button"
+                                                            onclick="copyCRDBKey()"
+                                                            title="Copy API Key">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                                <small class="text-muted">Use this API key in your CRDB application for authentication. Include it in the Authorization header as: <code>Bearer {your_api_key}</code> and set the header <code>x-source: crdb</code></small>
+                                                @if(isset($crdbConfig->KeyPrefix) && isset($crdbConfig->KeySuffix))
+                                                    <div class="alert alert-warning mt-2" role="alert">
+                                                        <small><strong>Security Note:</strong> For security reasons, the full API key is not stored in the database. Only the first 3 and last 3 characters are saved for reference: <code>{{ $crdbConfig->KeyPrefix }}***{{ $crdbConfig->KeySuffix }}</code>. If you need the full key, generate a new one.</small>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="px-3">
+                                                <div class="alert alert-primary" role="alert">
+                                                    <div class="alert-message">
+                                                        <strong>Note!</strong> Generating a new key invalidates the current key. Make sure to update your CRDB application with the new key.
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <hr class="mb-1">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    &nbsp;
+                                                </div>
+                                                <div class="col-6">
+                                                    <button type="submit" class="btn btn-success float-end"
+                                                            id="crdbConfigurationBtn">
+                                                        generate New key
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        @break
                                 @endswitch
                             </div>
                         </div>
@@ -1122,7 +1192,84 @@
                     $('#PBX_API_Key').val(data.token);
                 }
             });
+            $('form#crdbConfigurationForm').submit(async function (e) {
+                e.preventDefault();
+                let data = await saveForm($(this), $('#crdbConfigurationBtn'), false, true, true)
+                if (data) {
+                    // Store the actual key temporarily in memory for this session only
+                    // This key is shown once and should be saved by the user immediately
+                    const actualKey = data.token;
+                    const maskedKey = maskAPIKey(actualKey);
+                    $('#CRDB_API_Key').attr('data-actual-key', actualKey);
+                    $('#CRDB_API_Key').val(maskedKey);
+                    $('#CRDB_API_Key').attr('type', 'password'); // Keep it as password type
+                    $('#crdbToggleKey i').removeClass('fa-eye-slash').addClass('fa-eye');
+                    
+                    // Show warning that key should be saved immediately
+                    nWarning('IMPORTANT: Save this API key immediately. It will not be shown again and cannot be retrieved from the system.');
+                }
+            });
         });
+
+        function maskAPIKey(key) {
+            if (!key || key.length < 6) return '******';
+            // Show first 3 and last 3 characters, mask the rest
+            const start = key.substring(0, 3);
+            const end = key.substring(key.length - 3);
+            const masked = '*'.repeat(Math.max(6, key.length - 6));
+            return start + masked + end;
+        }
+
+        function toggleCRDBKeyVisibility() {
+            const $input = $('#CRDB_API_Key');
+            const $icon = $('#crdbToggleKey i');
+            const actualKey = $input.attr('data-actual-key');
+            
+            if (!actualKey) {
+                // Try to get from stored prefix/suffix if available
+                const prefix = $('#CRDB_API_Key').data('key-prefix');
+                const suffix = $('#CRDB_API_Key').data('key-suffix');
+                if (prefix && suffix) {
+                    nWarning('Full API key is not available for security reasons. Only first 3 and last 3 characters are stored: ' + prefix + '***' + suffix);
+                } else {
+                    nWarning('No API key available. Generate a key first.');
+                }
+                return;
+            }
+            
+            if ($input.attr('type') === 'password') {
+                // Show actual key
+                $input.attr('type', 'text');
+                $input.val(actualKey);
+                $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                // Show masked key
+                $input.attr('type', 'password');
+                $input.val(maskAPIKey(actualKey));
+                $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        }
+
+        function copyCRDBKey() {
+            const actualKey = $('#CRDB_API_Key').attr('data-actual-key');
+            if (!actualKey) {
+                nWarning('No API key available in this session. Generate a new key to view and copy it.');
+                return;
+            }
+            
+            // Copy the actual key to clipboard
+            window.navigator.clipboard.writeText(actualKey).then(function() {
+                nSuccess('API key copied to clipboard successfully. Save it securely - it cannot be retrieved later.');
+            }).catch(function() {
+                // Fallback for older browsers
+                const $temp = $('<input>');
+                $('body').append($temp);
+                $temp.val(actualKey).select();
+                document.execCommand('copy');
+                $temp.remove();
+                nSuccess('API key copied to clipboard successfully. Save it securely - it cannot be retrieved later.');
+            });
+        }
 
         function disable(integration) {
             $("#" + integration + "ConfigurationCancelBtn").addClass('d-none');
