@@ -6,6 +6,7 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Module;
+use App\Services\Licensing\LicensingService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth as AuthFacade;
 use Illuminate\Support\Facades\Cache;
@@ -118,7 +119,17 @@ class ModuleService
     {
         $modules = Module::all();
 
-        $topLevelModules = $modules->whereNull('ParentID')->sortBy('ModuleID');
+        // Filter top-level modules by license (parent-only license; children inherit)
+        $license = app(LicensingService::class)->current();
+        $allowedIds = $license->isValid() ? $license->allowedModules : [];
+
+        $topLevelModules = $modules
+            ->whereNull('ParentID')
+            ->sortBy('ModuleID')
+            ->filter(static function ($m) use ($allowedIds, $modules) {
+                // Include if top-level ModuleID is licensed, or any ancestor (N/A for top-level)
+                return in_array((int)$m->ModuleID, $allowedIds, true);
+            });
 
         $navbar = collect();
 

@@ -1,0 +1,31 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('t_Budgets', function (Blueprint $table) {
+            $table->boolean('IsLimitSet')->default(false);
+            $table->boolean('IsReAllocated')->default(false);
+            $table->text('ApprovalOrRejectionReason')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('t_Budgets', function (Blueprint $table) {
+            $table->dropColumn('IsLimitSet');
+            $table->dropColumn('IsReAllocated');
+            $table->dropColumn('ApprovalOrRejectionReason');
+        });
+    }
+};

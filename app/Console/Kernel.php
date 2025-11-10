@@ -7,30 +7,31 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    // ✅ Register your custom Artisan commands
-    protected $commands = [
-    \App\Console\Commands\SeedGrnMappingCommand::class,
-    \App\Console\Commands\SendTenderReminders::class,
-    \App\Console\Commands\DebugNavbar::class,
-    ];
+	// ✅ Register your custom Artisan commands
+	protected $commands = [
+		\App\Console\Commands\SendTenderReminders::class,
+		\App\Console\Commands\LicenseImportCommand::class,
+		\App\Console\Commands\LicenseVerifyCommand::class,
+		\App\Console\Commands\LicenseInfoCommand::class,
+		\App\Console\Commands\SeedGrnMappingCommand::class,
+		\App\Console\Commands\SendTenderReminders::class,
+		\App\Console\Commands\DebugNavbar::class,
+	];
 
-    // ✅ Define your task scheduling here
-    protected function schedule(Schedule $schedule)
-    {
-        $schedule->command('tender:send-reminders')->dailyAt('15:00');
-    // $schedule->command('tender:send-reminders')->daily();
-     $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
-    $schedule->command('trips:start-pending')->everyMinute();
-
-    }
-
-    
-
+	// ✅ Define your task scheduling here
+	protected function schedule(Schedule $schedule)
+	{
+		$schedule->command('tender:send-reminders')->dailyAt('15:00');
+		// $schedule->command('tender:send-reminders')->daily();
+		$schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
+		$schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
+		$schedule->command('trips:start-pending')->everyMinute();
+	}
     // ✅ Register commands from the app/Console/Commands directory
     protected function commands()
     {
         $this->load(__DIR__.'/Commands');
 
-        require base_path('routes/console.php');
-    }
+		require base_path('routes/console.php');
+	}
 }
