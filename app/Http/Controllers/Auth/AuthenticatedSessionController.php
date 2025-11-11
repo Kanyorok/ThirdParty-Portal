@@ -44,13 +44,17 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $actor = $request->user();
         activity()
-            ->causedBy($request->user())
-            ->performedOn($request->user())
+            ->causedBy($actor)
+            ->performedOn($actor)
             ->event('authentication')
             ->log('Signed Out from ' . $request->getClientIp());
 
-        ModuleService::clearNavbarCache($request->user());
+        ModuleService::clearNavbarCache($actor);
+        $actor->update([
+            'BranchId' => null,
+        ]);
 
         Auth::guard('web')->logout();
 

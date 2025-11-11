@@ -38,13 +38,14 @@ class MarketingPlannerController extends Controller
      * Display a listing of the resource.
      * @throws Exception
      */
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): RedirectResponse|JsonResponse|View
     {
-        dd(session()->all());
+
         $this->authorize('viewAny', MarketingPlanner::class);
+        $actor = $request->user();
+        $branch = $actor->branch;
         if ($request->ajax()) {
             $query = MarketingPlanner::query()->where('Status', '!=', PlannerStatus::Merged);
-            $actor = $request->user();
 
             //check pending marketing plans on me.
             /*
@@ -64,7 +65,7 @@ class MarketingPlannerController extends Controller
             $query->where(function (Builder $query) use ($actor) {
                 $query->orWhere(function (Builder $query) use ($actor) {
                     $query->where('t_MarketingPlanner.Status', PlannerStatus::Draft->value)
-                        ->where('t_MarketingPlanner.OwnerId', $actor->Id);
+                        ->where('t_MarketingPlanner.OwnerId', $actor->Id)->where('t_MarketingPlanner.BranchId', $actor->BranchId);
                 })->orWhere(function (Builder $query) {
                     $query->where('t_MarketingPlanner.Status', PlannerStatus::Active->value);
                     /*   })->orWhere(function (Builder $query) use ($statuses) {
@@ -105,12 +106,18 @@ class MarketingPlannerController extends Controller
                                 },
                                ])->rawColumns(['action'])->make();
         }
-        return ((new UserService($request->user()))->isMarketingManager()) ?
-            view('crm.marketing.planner.index')
+
+        if ((new UserService($request->user()))->isMarketingManager($branch)) {
+            return view('crm.marketing.planner.index')
                 ->with('isMarketingManager', true)
-                ->with('plans', MarketingPlanner::query()->where('t_MarketingPlanner.Status', PlannerStatus::MarketingManager->value)->whereNull('t_MarketingPlanner.MasterPlannerId')->select(['t_MarketingPlanner.PlannerID', 't_MarketingPlanner.Name', 'BranchId'])->get())
-            : view('crm.marketing.planner.index')->with('isMarketingManager', false)
-                ->with('Branches', collect([])/*Branch::query()->get(['t_Branches.Name', 't_Branches.BranchID'])*/)
+                ->with('plans', MarketingPlanner::query()->where('t_MarketingPlanner.Status', PlannerStatus::MarketingManager->value)
+                    ->whereNull('t_MarketingPlanner.MasterPlannerId')->select(['t_MarketingPlanner.PlannerID', 't_MarketingPlanner.Name', 'BranchId'])->get());
+        }
+
+        $branches = (is_null($branch->ManagerId) && is_null($branch->UserId)) ? collect([]) : collect([$branch]);
+
+        return view('crm.marketing.planner.index')->with('isMarketingManager', false)
+            ->with('Branches', $branches)///*Branch::query()->get(['t_Branches.Name', 't_Branches.BranchID'])*/)
                 ->with('MarketingModes', StaticListsService::getList(StaticListsService::MarketingModes));
     }
 
@@ -126,7 +133,8 @@ class MarketingPlannerController extends Controller
         $mode = $request->getMode();
         $actor = $request->user();
 
-        if ((new UserService($actor))->isMarketingManager()) {
+
+        if ((new UserService($actor))->isMarketingManager($actor->branch)) {
             return $this->errored('you are the marketing manager, cannot create.');
         }
 
@@ -151,10 +159,9 @@ class MarketingPlannerController extends Controller
     public function show(Request $request, MarketingPlanner $planner): View
     {
         $this->authorize('view', $planner);
+        $planner->load(['branch']);
 
-        $Branches = Branch::query()->get(['BranchID', 'Name']); // <-- Add this
-
-        return view('crm.marketing.planner.show', compact('planner', 'Branches'))
+        return view('crm.marketing.planner.show', compact('planner'))
             ->with('canApprove', (new PlannerService($planner))->canApprove($request->user()));
     }
 
@@ -166,7 +173,7 @@ class MarketingPlannerController extends Controller
     {
         $this->authorize('create', MarketingPlanner::class);
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
-            ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('Status', PlannerStatus::Draft->value)->first();
+            ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('BranchId', $request->user()->BranchId)->where('Status', PlannerStatus::Draft->value)->first();
         if (!$planner instanceof MarketingPlanner) {
             return redirect()->route('marketing-planner.index')->with('fail', 'Cannot edit a plan already submitted');
         }
@@ -186,17 +193,16 @@ class MarketingPlannerController extends Controller
     {
         $this->authorize('create', MarketingPlanner::class);
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
-            ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('Status', PlannerStatus::Draft->value)->first();
+            ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('BranchId', $request->user()->BranchId)->where('Status', PlannerStatus::Draft->value)->first();
         if (!$planner instanceof MarketingPlanner) {
             return $this->errored('Cannot edit a plan already submitted');
         }
-        $branch = $request->getBranch();
         $mode = $request->getMode();
         $actor = $request->user();
 
         try {
-            DB::transaction(static function () use ($request, $planner, $branch, $mode, $actor) {
-                (new PlannerService($planner))->update($branch, $mode, $request->validated('Name'), ($request->validated('Notes')) ?? "", $actor);
+            DB::transaction(static function () use ($request, $planner, $mode, $actor) {
+                (new PlannerService($planner))->update($mode, $request->validated('Name'), ($request->validated('Notes')) ?? "", $actor);
                 activity()->causedBy($actor)->performedOn($planner)->event('update')->log('updated  marketing plan ' . $planner->PlannerID);
             });
         } catch (Exception|Throwable $e) {
@@ -216,7 +222,7 @@ class MarketingPlannerController extends Controller
         $this->authorize('create', MarketingPlanner::class);
         $actor = $request->user();
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
-            ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('Status', PlannerStatus::Draft->value)->first();
+            ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('BranchId', $request->user()->BranchId)->where('Status', PlannerStatus::Draft->value)->first();
         if (!$planner instanceof MarketingPlanner) {
             return $this->errored('cannot find that planner');
         }

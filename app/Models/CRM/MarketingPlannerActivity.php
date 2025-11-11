@@ -3,7 +3,7 @@
 namespace App\Models\CRM;
 
 use App\Models\Auth\User;
-use App\Models\BR\Branch;
+use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,9 +15,9 @@ class MarketingPlannerActivity extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_MarketingPlannerActivities';
     protected $primaryKey = 'Id';
@@ -26,30 +26,17 @@ class MarketingPlannerActivity extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'PlannerActivityID',
-                           'PlannerId',
-                           'Name',
-                           'Location',
-                           'Notes',
-                           'BranchId',
-                           'StartOn',
-                           'EndOn',
-                           'Budget',
-                           'Materials',
-                           'Actual',
-                           'MasterPlannerId',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                           'DeletedOn',
-                          ];
+        'PlannerActivityID', 'PlannerId', 'Name', 'Location', 'Notes', 'BranchId', 'StartOn', 'EndOn', 'Budget',
+        'Materials', 'Actual', 'MasterPlannerId',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn',
+    ];
 
     protected $casts = [
-                        'StartOn' => 'datetime',
-                        'EndOn'   => 'datetime',
-                        'Budget'  => 'decimal:2',
-                        'Actual'  => 'decimal:2',
-                       ];
+        'StartOn' => 'datetime',
+        'EndOn' => 'datetime',
+        'Budget' => 'decimal:2',
+        'Actual' => 'decimal:2',
+    ];
 
     public static function getPrimaryKey(): string
     {
@@ -71,7 +58,7 @@ class MarketingPlannerActivity extends Model
 
     public function branch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class, 'BranchId', 'OurBranchID');
+        return $this->belongsTo(Branch::class, 'BranchId', 'Id');
     }
 
     public function activityUsers(): HasMany

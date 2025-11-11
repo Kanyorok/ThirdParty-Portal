@@ -6,6 +6,7 @@ namespace App\Models\Auth;
 use App\Enums\Employee\GenderEnum;
 use App\Models\Communication\Email;
 use App\Models\Communication\SMS;
+use App\Models\Core\Branch;
 use App\Models\Core\Task;
 use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Models\CRM\Ticket;
@@ -195,11 +196,16 @@ class User extends Authenticatable
         return $this->hasMany(TeamUser::class, 'UserId', "Id");
     }
 
-    public function branchRoles()
+    public function branchRoles(): HasMany
     {
         return $this->hasMany(ModelRole::class, 'model_id')
             ->where('model_type', self::getPrimaryKey())
             ->with(['role', 'branch']);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'BranchId', 'Id');
     }
 
 
@@ -213,15 +219,41 @@ class User extends Authenticatable
         (new UserService($this))->sendPasswordResetNotification();
     }
 
+    /**
+     * Scopes a query to include models that have specific permissions, per current login branch.
+     *
+     * @param Builder $query The query builder instance.
+     * @param string|array $permissions The permission(s) to filter the query by. Can be a string of comma-separated values or an array of permission names.
+     * @return Builder The modified query builder instance.
+     */
     public function scopeHasPermission(Builder $query, string|array $permissions): Builder
     {
         if (is_string($permissions)) {
-            $permissions = explode(',', $permissions);
+            $permissions = array_map('trim', explode(',', $permissions));
         }
         return $query->whereHas('roles.permissions', function (Builder $query) use ($permissions) {
             $query->whereIn('name', $permissions);
         })->orWhereHas('permissions', function (Builder $query) use ($permissions) {
             $query->whereIn('name', $permissions);
+        });
+    }
+
+    public function scopeHasBranchPermissionRole(Builder $query, string|array $permissions, string|array $branches): Builder
+    {
+        if (is_string($permissions)) {
+            $permissions = array_map('trim', explode(',', $permissions));
+        }
+        if (is_string($branches)) {
+            $branches = array_map('trim', explode(',', $branches));
+        }
+
+
+        return $query->whereHas('branchRoles', function (Builder $query) use ($permissions, $branches) {
+            $query->where(function (Builder $q) use ($branches) {
+                $q->whereIn('t_ModelRoles.BranchId', $branches);
+            })->whereHas('role.permissions', function (Builder $q) use ($permissions) {
+                $q->whereIn('t_Permissions.name', $permissions);
+            });
         });
     }
 

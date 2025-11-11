@@ -8,7 +8,7 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\GlobalPlannerRequest;
 use App\Models\Auth\User;
-use App\Models\BR\Branch;
+use App\Models\Core\Branch;
 use App\Models\CRM\MarketingPlanner;
 use App\Services\Marketing\PlannerService;
 use Exception;
@@ -70,7 +70,7 @@ class GlobalPlannerController extends Controller
 
         return view('crm.marketing.planner.master.edit')
             ->with('planner', $planner)
-            ->with('Branches', Branch::all(['BranchName', 'OurBranchID']));
+            ->with('Branches', Branch::all(['Id', 'Name', 'BranchID']));
     }
 
     /**
