@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Finance\BankBranchController;
+use App\Http\Controllers\Admin\LicenseController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])->group(function () {
@@ -11,7 +12,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
 require __DIR__ . '/auth.php';
 
-Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function () {
+Route::middleware(['auth','license'])->namespace('App\Http\Controllers')->group(function () {
     // Customizable dashboard APIs
     Route::prefix('dashboard')->group(function() {
         Route::get('widgets', 'Dashboard\\UserDashboardController@widgets')->name('user-dashboard.widgets');
@@ -120,4 +121,11 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
     // ✅ Global Locality Endpoint
     Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
+});
+// Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/license', [LicenseController::class, 'index'])
+        ->name('admin.license.index');
+    Route::post('/admin/license', [LicenseController::class, 'store'])
+        ->name('admin.license.store');
 });

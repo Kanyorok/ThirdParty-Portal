@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HRM\EmployeeInternalCommitteeController;
 
-Route::namespace('HRM')->prefix('hrm')->group(function () {
+Route::middleware(['module:1000000'])->namespace('HRM')->prefix('hrm')->group(function () {
 
     Route::resource('departments', \App\Http\Controllers\HRM\DepartmentController::class)->except(['edit']);
 

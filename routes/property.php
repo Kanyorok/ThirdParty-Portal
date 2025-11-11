@@ -28,7 +28,7 @@ use App\Http\Controllers\Property\PropertyReceiptController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::namespace('Property')->prefix('property')->group(function () {
+Route::middleware(['module:500000'])->namespace('Property')->prefix('property')->group(function () {
 
 
     //category

@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev poppler-utils libicu-dev \
     libkrb5-dev libgssapi-krb5-2 \
     tesseract-ocr tesseract-ocr-eng libtesseract-dev \
+    build-essential wget libsodium-dev \
     build-essential wget libreoffice
 
 # Install libc-client from Debian Bookworm (needed for PHP IMAP)

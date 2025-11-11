@@ -40,7 +40,7 @@ use App\Http\Controllers\FleetManagement\VehicleManagementController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::namespace('Fleet')->prefix('fleet')->group(function () {
+Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group(function () {
     Route::namespace('Fleet')->name('fleet.')->group(function () {
 
         // ==================== Route Planner ====================
