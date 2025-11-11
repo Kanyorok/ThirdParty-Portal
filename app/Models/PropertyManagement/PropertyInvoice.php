@@ -28,6 +28,9 @@ class PropertyInvoice extends Model
         'InvoiceNotes',
         'ParkingFee',
         'Status',
+        'Description',
+        'Currency',
+        'Tax',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'

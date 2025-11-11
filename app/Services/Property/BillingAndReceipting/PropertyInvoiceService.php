@@ -4,6 +4,8 @@ namespace App\Services\Property\BillingAndReceipting;
 
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Models\Auth\User;
+use App\Models\Core\Currency;
+use App\Models\Finance\FinanceTaxType;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -28,6 +30,9 @@ class PropertyInvoiceService
         float  $OtherCharges = null,
         float  $ParkingFee = null,
         string $InvoiceNotes = null,
+        string $Description = null,
+        Currency $Currency,
+        FinanceTaxType    $Tax,
         PropertyInvoiceEnum $Status,
         User   $user
     ): self
@@ -52,7 +57,10 @@ class PropertyInvoiceService
                 'ServicesCharge' => $ServicesCharge,
                 'OtherCharges' => $OtherCharges,
                 'InvoiceNotes' => $InvoiceNotes,
-                'ParkingFee'    =>  $ParkingFee,
+                'ParkingFee'   =>  $ParkingFee,
+                'Description'  =>  $Description,
+                'Currency'     =>  $Currency->Id,
+                'Tax'          =>  $Tax->Id,
                 'Status' => PropertyInvoiceEnum::Pending->value,
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
@@ -65,15 +73,15 @@ class PropertyInvoiceService
             $thirdPartyID = PropertyNewTenant::find($tenantID)->ThirdPartyId;
             // Build Finance lines (include only non-zero lines)
             $lines = [];
-            $addLine = function (string $name, float $amount) use (&$lines, $Lease) {
+            $addLine = function (string $name, float $amount) use (&$lines, $Lease, $Description, $Tax) {
                 $amt = (int) round($amount);
                 if ($amt > 0) {
                     $lines[] = [
                         'InvoiceLineName' => $name,
-                        'Description'     => "Lease #{$Lease->Id}",
+                        'Description'     => "Lease #{$Lease->Id} - {$Description}",
                         'UnitCost'        => $amt,
                         'Quantity'        => 1,
-                        'Tax'             => null,
+                        'Tax'             => $Tax->Id,
                         'TaxID'           => null,
                         'TaxAmount'       => '0',
                         'Discount'        => 0,
@@ -94,7 +102,7 @@ class PropertyInvoiceService
                     'SourceTable' => 't_RentInvoice',
 
                     'ModuleID' => 500000,
-                    'CurrencyID' =>56,
+                    'CurrencyID' =>$Currency->Id,
                     'CustomerID' => $thirdPartyID ?? null,
 
                     'InvoiceID' => $invoice->Id,

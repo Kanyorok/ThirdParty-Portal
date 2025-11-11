@@ -7,6 +7,8 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\BillingAndReceipting\PropertyInvoiceRequest;
+use App\Models\Core\Currency;
+use App\Models\Finance\FinanceTaxType;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Services\Property\BillingAndReceipting\PropertyInvoiceService;
@@ -25,13 +27,29 @@ class PropertyInvoiceController extends Controller
         return view('property.billingandreceipting.invoicing.index', compact('invoices'));
     }
 
-    public function create(){
+    // public function create(){
+    //     $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+    //     $newleases = PropertyNewLease::where('IsActive', true)
+    //         ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
+    //         ->with('tenant')->get();
+    //     return view('property.billingandreceipting.invoicing.create', compact('newleases'));
+    // }
+    public function create()
+    {
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+
         $newleases = PropertyNewLease::where('IsActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
-            ->with('tenant')->get();
-        return view('property.billingandreceipting.invoicing.create', compact('newleases'));
+            ->with('tenant')
+            ->get();
+
+        // 👇 Add currencies and tax types from database
+        $currencies = Currency::all();
+        $taxTypes = FinanceTaxType::all();
+
+        return view('property.billingandreceipting.invoicing.create', compact('newleases', 'currencies', 'taxTypes'));
     }
+
 
     public function show($id)
     {
@@ -54,10 +72,13 @@ class PropertyInvoiceController extends Controller
         $validated['BillingMonth'],
         $validated['InvoiceDate'],
         $validated['RentAmount'],
-            $validated['ServicesCharge'] ?? 0,
-            $validated['OtherCharges'] ?? 0,
-            $validated['ParkingFee'] ?? 0,
-            $validated['InvoiceNotes'] ?? '',
+        $validated['ServicesCharge'] ?? 0,
+        $validated['OtherCharges'] ?? 0,
+        $validated['ParkingFee'] ?? 0,
+        $validated['InvoiceNotes'] ?? '',
+        $validated['Description'] ?? null,
+        $validated['Currency'] ?? null,
+        $validated['Tax'] ?? null,
         $Status,
         Auth::user()
     );

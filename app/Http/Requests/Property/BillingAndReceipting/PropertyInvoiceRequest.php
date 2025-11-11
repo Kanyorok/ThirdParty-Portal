@@ -30,6 +30,9 @@ class PropertyInvoiceRequest extends FormRequest
                 'OtherCharges' => 'nullable|numeric|regex:/^\d+(\.\d{1,2})?$/',
                 'ParkingFee' => 'nullable|numeric|regex:/^\d+(\.\d{1,2})?$/',
                 'InvoiceNotes' => 'nullable|string|max:100',
+                'Description' => 'nullable|string|max:255',
+                'Currency' => 'nullable|exists:t_Currencies,Id',
+                'Tax' => 'nullable|exists:t_FinanceTaxType,Id',
             ];
     }
 }
