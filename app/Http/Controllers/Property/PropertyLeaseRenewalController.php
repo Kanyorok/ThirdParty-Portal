@@ -65,7 +65,7 @@ class PropertyLeaseRenewalController extends Controller
             // Use the lease ID to get the full lease
             $lease = PropertyNewLease::findOrFail($leaseId);
             PropertyLeaseRenewalService::create(
-                $leaseId,                  // from DB
+                $leaseId,                
                 $paymentFrequencyId,
                 $validated['EndDateCurrentLease'],
                 $validated['NewStartDate'],

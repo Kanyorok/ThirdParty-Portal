@@ -101,7 +101,7 @@
                 <th>#</th>
                 <th>Date</th>
                 <th>Contributor</th>
-                <th>Type</th>
+                {{-- <th>Type</th> --}}
                 <th class="text-end">Amount</th>
                 <th>Notes</th>
                 <th class="text-end">Actions</th>
@@ -112,8 +112,11 @@
                 <tr>
                   <td>{{ $loop->iteration}}</td>
                   <td>{{ $c->ContributionDate ? \Carbon\Carbon::parse($c->ContributionDate)->format('d/m/Y') : '-' }}</td>
-                  <td>{{ $c->thirdParty->ThirdPartyName ?? '—' }}</td>
-                  <td>{{ $c->type->Description ?? '—' }}</td>
+                  <td>{{ $c->contributor->thirdParty->ThirdPartyName ?? '—' }}</td>
+                  {{-- <td>
+                    {{-- Prefer a human-friendly description from the contribution's type relation, fallback to raw value --}}
+                    {{-- {{ $c->type->Description ?? $c->ContributorType ?? '—' }}
+                  </td> --}}
                   <td class="text-end">{{ number_format((float)$c->Amount,2) }}</td>
                   <td>{{ $c->Notes ?? '—' }}</td>
                   <td class="text-end">
