@@ -193,12 +193,14 @@ enum PermissionEnum: string
     case PlanConsolidationWrite = 'planconsolidation-write';
     case PlanConsolidationUpdate = 'planconsolidation-update';
     case PlanConsolidationDelete = 'planconsolidation-delete';
+    case PlanConsolidationApproval = 'planconsolidation-approval';
 
         //Procument Plan- Plan Maintain
     case PlanMaintenanceRead = 'planmaintenance-read';
     case PlanMaintenanceWrite = 'planmaintenance-write';
     case PlanMaintenanceUpdate = 'planmaintenance-update';
     case PlanMaintenanceDelete = 'planmaintenance-delete';
+    case PlanMaintenanceApproval = 'planmaintenance-approval';
 
         //Procument Plan- Plan Manual Input
     case PlanManualInputRead = 'planmanualinput-read';
@@ -834,7 +836,7 @@ enum PermissionEnum: string
             [self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete],
             [self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete],
             [self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete],
-            [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
+            [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
             [self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy],
@@ -1008,14 +1010,14 @@ enum PermissionEnum: string
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
-            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
+            self::PlanConsolidationRead,self::PlanConsolidationApproval, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
             self::ProcurementMethodRead, self::ProcurementMethodWrite,
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval,
             self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete,
             self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete,
             self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete,
             self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete,
-            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete,
+            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete,self::PlanMaintenanceApproval,
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete,
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete,
             => ModulesEnum::Procurement,
@@ -1169,10 +1171,10 @@ enum PermissionEnum: string
             self::ListsView, self::ListsUpdate => 'System Codes',
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
-            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete, => 'Consolodidated Needs',
+            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete => 'Consolodidated Needs',
             self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
             self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete, => 'Plan Line Items',
-            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, => 'Plan Maintenance',
+            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval => 'Plan Maintenance',
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete, => 'Plan Manual Input',
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete, => 'Plan amendment',
             //Requisition

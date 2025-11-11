@@ -9,7 +9,7 @@ use App\Models\Procurement\DepartmentNeed;
 use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Database\Eloquent\Collection;
 use BackedEnum;  
-
+use Illuminate\Support\Facades\Log;
 class ApprovalWorkflow extends ApprovalWorkflowService
 {
     private string $codeId;
@@ -61,18 +61,23 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      * @throws ErroredException
      */
     public function approve($model, User $actor, BackedEnum $approvedStatus, string $remarks = 'Approved', string $statusColumn = 'Status'): bool
-    {
-        $status = self::codeDetail($approvedStatus, $this->codeId);
-        
-        return $this->approveAction(
-            $actor, 
-            $status, 
-            $model::getPrimaryKey(), 
-            $model->getKey(), 
-            $remarks, 
-            $statusColumn
-        );
-    }
+{
+    $status = self::codeDetail($approvedStatus, $this->codeId);
+
+    // Capture the result from approveAction
+    $result = $this->approveAction(
+        $actor,
+        $status,
+        $model::getPrimaryKey(),
+        $model->getKey(),
+        $remarks,
+        $statusColumn
+    );
+
+    // Return a boolean indicating success
+    return isset($result['success']) && $result['success'] === true;
+}
+
 
     /**
      * Reject a model (generic version).

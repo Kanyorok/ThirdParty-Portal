@@ -10,7 +10,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class PlanLineItem extends Model
 {
