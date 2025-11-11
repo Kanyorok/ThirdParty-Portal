@@ -40,6 +40,7 @@ class MarketingPlannerController extends Controller
      */
     public function index(Request $request): View|JsonResponse
     {
+        dd(session()->all());
         $this->authorize('viewAny', MarketingPlanner::class);
         if ($request->ajax()) {
             $query = MarketingPlanner::query()->where('Status', '!=', PlannerStatus::Merged);
@@ -109,7 +110,7 @@ class MarketingPlannerController extends Controller
                 ->with('isMarketingManager', true)
                 ->with('plans', MarketingPlanner::query()->where('t_MarketingPlanner.Status', PlannerStatus::MarketingManager->value)->whereNull('t_MarketingPlanner.MasterPlannerId')->select(['t_MarketingPlanner.PlannerID', 't_MarketingPlanner.Name', 'BranchId'])->get())
             : view('crm.marketing.planner.index')->with('isMarketingManager', false)
-                ->with('Branches', Branch::query()->get(['t_Branches.Name', 't_Branches.BranchID']))
+                ->with('Branches', collect([])/*Branch::query()->get(['t_Branches.Name', 't_Branches.BranchID'])*/)
                 ->with('MarketingModes', StaticListsService::getList(StaticListsService::MarketingModes));
     }
 

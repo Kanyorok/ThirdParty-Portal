@@ -10,7 +10,6 @@ use App\Models\Core\Task;
 use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Models\CRM\Ticket;
 use App\Models\HRM\Employee;
-use App\Models\Settings\ApprovalStage;
 use App\Services\HRM\UserService;
 use App\Traits\Controller\HasBranchRoles;
 use App\Traits\Model\ImageTrait;
@@ -21,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -31,9 +31,9 @@ class User extends Authenticatable
 {
     use ImageTrait, HasFactory, Notifiable, UserActorTrait, SoftDeletes, HasBranchRoles;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Users';
     protected $primaryKey = 'Id';
@@ -43,16 +43,17 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'UserID', 'Name', 'Email', 'Phone', 'ImageId', 'Linked', 'EmployeeId', 'Notes', 'Password', 'Email_Signature', 'ClientID', 'ExtensionNo',
-       'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'BranchId', 'login_at', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $hidden = [
-        'Password', 'remember_token', 'Linked', 'Email_Signature',
+        'Password', 'remember_token', 'Linked', 'Email_Signature', 'BranchId'
     ];
 
     protected $casts = [
         'Gender'    => GenderEnum::class,
         'Linked'    => 'bool',
+        'login_at' => 'datetime',
         'CreatedBy' => 'integer',
     ];
 
@@ -98,10 +99,6 @@ class User extends Authenticatable
         return $this->getPermissionsViaRoles()->contains('name', $permission);
     }
 
-    public function setEffectiveRole(string $roleName): void
-    {
-        $this->effectiveRole = Role::where('name', $roleName)->first();
-    }
 
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
     {
@@ -163,34 +160,28 @@ class User extends Authenticatable
         return $this->hasMany(LoanAssignment::class, 'UserId', 'Id');
     }
 
-    public function ApprovalStages(): HasMany
+    public function roles(): MorphToMany
     {
-        return $this->hasMany(ApprovalStage::class, 'CreatedBy', 'Id');
+        return $this->morphToMany(
+            config('permission.models.role'),
+            'model',
+            config('permission.table_names.model_has_roles'),
+            config('permission.column_names.model_morph_key'),
+            'role_id'
+        )->withPivot(['BranchId'/*, 'CreatedBy', 'ModifiedBy'*/])->withTimestamps()->where('t_ModelRoles.BranchId', $this->BranchId);
     }
 
-    public function role(): ?Role
+    public function role()
     {
-        // Return memory-injected role if available
-        if ($this->effectiveRole instanceof Role) {
-            return $this->effectiveRole;
-        }
+        return $this->roles()?->latest('id')->first();
+        /*
+          $branchRole =  ModelRole::where('model_id', $this->getKey())
+              ->where('model_type', self::getPrimaryKey())
+              ->where('BranchId', $this->BranchId)
+              ->with('role')
+              ->first();
 
-        $branchId = session('LoginBranchId');
-        if (!$branchId) {
-            return null; // Or fallback to default role() if needed
-        }
-
-        // Find branch-specific role via t_ModelRoles
-        $modelRole = ModelRole::where('model_id', $this->Id)
-            ->where('model_type', self::getPrimaryKey()) // resolves to 'UserID'
-            ->where('BranchId', $branchId)
-            ->first();
-
-        if (!$modelRole) {
-            return null;
-        }
-
-        return Role::find($modelRole->role_id);
+          return  $branchRole->role;*/
     }
 
     public function teams(): BelongsToMany
