@@ -82,19 +82,20 @@ class StockItemService
         });
     }
 
-    public function delete(StockItem $item): void
-    {
-        DB::transaction(function () use ($item) {
-            $skuCode = $item->SKUCode;
-            $item->delete();
 
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($item)
-                ->event('deleted')
-                ->log('Deleted Stock Item with SKUCode ' . $skuCode);
-        });
+    public function destroy(StockItem $item): void
+    {
+        $item->DeletedBy = auth()->id();
+        $item->save();
+        $item->delete();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($item)
+            ->event('delete')
+            ->log('Deleted Stock Item with SKUCode ' . $item->Id);
     }
+ 
 
 
     protected function generateSKUCode(int $Id, int $branchId, ?int $storeId): string

@@ -169,17 +169,14 @@
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading state
                     $deleteBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split text-white"></i>');
-                    
-                    // Submit the delete form
-                    $.ajax({
-                        url: "{{ url('sku') }}/" + itemId,
-                        type: 'POST',
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                            _method: 'DELETE'
-                        },
+                        $.ajax({
+                            url: "{{ url('inventory/sku') }}/" + itemId,
+                            type: 'POST',
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                _method: 'DELETE'
+                            },
                         success: function(response) {
                             Swal.fire({
                                 title: 'Deleted!',
@@ -187,7 +184,6 @@
                                 icon: 'success',
                                 confirmButtonColor: '#3085d6'
                             }).then(() => {
-                                // Reload the page to reflect changes
                                 location.reload();
                             });
                         },
