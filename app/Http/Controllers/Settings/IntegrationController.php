@@ -94,7 +94,7 @@ class IntegrationController extends Controller
             return $this->_reportServiceConfiguration($request->getSSRS_Host(), $request->validated('SSRS_Path'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
         }
 
-        if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value], true)) {
+        if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value, IntegrationsEnum::CRDB->value], true)) {
             return $this->_generateKey($request, $Integration);
         }
 
@@ -308,15 +308,26 @@ class IntegrationController extends Controller
         $key = base64_encode(Str::random(64));
         $actor = $request->user();
         try {
-            DB::transaction(static function () use ($Integration, $key, $actor) {
+            DB::transaction(function () use ($Integration, $key, $actor) {
                 APICredential::query()->where('Integration', $Integration->value)->update([
                     'DeletedBy' => $actor->Id,
                 ]);
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
+                $configuration = ['Key' => md5($key)];
+                
+                // For CRDB, store only first 3 and last 3 characters for masking display (security)
+                if ($Integration->value === IntegrationsEnum::CRDB->value) {
+                    $keyLength = strlen($key);
+                    if ($keyLength >= 6) {
+                        $configuration['KeyPrefix'] = substr($key, 0, 3);
+                        $configuration['KeySuffix'] = substr($key, -3);
+                    }
+                }
+
                 $crmIntegration = APICredential::create([
                     'Integration' => $Integration->value,
-                    'Configuration' => ['Key' => md5($key)],
+                    'Configuration' => $configuration,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
                 ]);
@@ -324,8 +335,11 @@ class IntegrationController extends Controller
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated ' . $Integration->description() . ' api key.');
             });
         } catch (Throwable|Exception $e) {
-            Log::error('Error updating ' . $Integration->description() . ' failed: ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
+            Log::error('Error updating ' . $Integration->description() . ' failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'integration' => $Integration->value,
+            ]);
+            return $this->errored('unexpected error, try again later: ' . (config('app.debug') ? $e->getMessage() : ''));
         }
 
         return $this->succeeded('key generated.', data: ['token' => $key]);
