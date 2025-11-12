@@ -85,10 +85,8 @@ class ItemMasterListController extends Controller
         $this->authorize('create', ItemMasterList::class);
 
         $validated = $request->validated();
-        $document = $request->file('Document');  // ✅ handled same as FleetDriver
+        $document = $request->file('Document');  
         $image = $request->file('ImageUpload');
-
-        // Get default Active status
         $validated['Status'] = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
