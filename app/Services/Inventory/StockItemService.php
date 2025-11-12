@@ -85,7 +85,11 @@ class StockItemService
 
     public function destroy(StockItem $item): void
     {
+
+       
+                
         $item->DeletedBy = auth()->id();
+        $item->Status = '0';
         $item->save();
         $item->delete();
 
@@ -100,7 +104,6 @@ class StockItemService
 
     protected function generateSKUCode(int $Id, int $branchId, ?int $storeId): string
     {
-        // Use 'NA' as a placeholder for the store segment if storeId is null
         $storeSegment = ($storeId !== null) ? str_pad($storeId, 2, '0', STR_PAD_LEFT) : 'NA';
 
         return 'SKU-' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '-' .
