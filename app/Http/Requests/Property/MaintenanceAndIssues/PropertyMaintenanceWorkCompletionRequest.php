@@ -29,7 +29,7 @@ class PropertyMaintenanceWorkCompletionRequest extends FormRequest
             'Cost' => 'nullable|integer',
             'FinalStatus' => 'required|exists:t_CodeDetails,ID',
             'Document' => 'nullable|array',
-            'Document.*' => 'file|max:9000',
+            'Document.*' => 'file|max:25000',
         ];
     }
 }

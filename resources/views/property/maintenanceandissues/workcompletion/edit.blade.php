@@ -99,7 +99,8 @@
 
                 <div class="mb-4">
                     <label class="form-label">Upload Resolution Evidence (Photos / Invoice)</label>
-                    <input type="file" class="form-control" name="Document[]">
+                    <input type="file" class="form-control" name="Document[]" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+                    <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
                     @error('Document') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
