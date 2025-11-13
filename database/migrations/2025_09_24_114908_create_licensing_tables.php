@@ -28,19 +28,6 @@ return new class extends Migration
             });
         }
 
-        // Instance fingerprinting table (guarded)
-        if (!Schema::hasTable('t_Instance')) {
-            Schema::create('t_Instance', function (Blueprint $table) {
-                $table->id('Id');
-                $table->uuid('DbGuid')->unique();
-                $table->string('HostFingerprint', 256);
-                $table->string('AppVersion', 32)->nullable();
-                $table->dateTime('CreatedOn')->default(DB::raw('SYSUTCDATETIME()'));
-                $table->dateTime('UpdatedOn')->nullable();
-                $table->index('DbGuid');
-            });
-        }
-
         // License audit log (guarded)
         if (!Schema::hasTable('t_LicenseAudit')) {
             Schema::create('t_LicenseAudit', function (Blueprint $table) {
@@ -71,7 +58,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('t_LicenseAudit');
-        Schema::dropIfExists('t_Instance');
         Schema::dropIfExists('t_Licenses');
 
         if (Schema::hasColumn('t_Modules', 'ModuleKey')) {

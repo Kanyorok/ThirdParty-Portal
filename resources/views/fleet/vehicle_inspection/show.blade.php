@@ -26,9 +26,9 @@
             <table class="table table-sm table-bordered">
                 <tr><th>Inspection Date</th><td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') }}</td></tr>
                 <tr><th>Mileage</th><td>{{ $inspection->Mileage }} Km/h</td></tr>
-                <tr><th>Fuel (Litres)</th><td>{{ $inspection->Fuel }} Ltr</td></tr>
-                <tr><th>Engine Oil</th><td>{{ $inspection->EngineOil }} Ltr</td></tr>
-                <tr><th>Coolant</th><td>{{ $inspection->Coolant }} Ltr</td></tr>
+                <tr><th>Fuel (Litres)</th><td>{{ $inspection->fuel->Description }} </td></tr>
+                <tr><th>Engine Oil</th><td>{{ $inspection->engineOil->Description }} </td></tr>
+                <tr><th>Coolant</th><td>{{ $inspection->coolant->Description }} </td></tr>
             </table>
 
             <h6 class="mt-3">🛡 Safety Equipment</h6>
@@ -53,7 +53,7 @@
                 <p class="text-muted mb-0">No documents uploaded.</p>
             @endforelse
         </div>
-        
+
             <div class="mt-2">
                         <a href="{{ route('fleet.vehicle_inspection.edit', $inspection->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('fleet.vehicle_inspection.destroy', $inspection->Id) }}"

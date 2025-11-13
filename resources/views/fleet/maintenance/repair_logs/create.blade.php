@@ -79,11 +79,19 @@
                 <!-- Vendor -->
                 <div class="col-md-6">
                     <label for="Vendor" class="form-label">Vendor<span class="text-danger">*</span></label>
-                    <input type="text" name="Vendor" class="form-control" value="{{ old('Vendor') }}">
-                    @error('Vendor')
+                    <select name="VendorID" class="form-select">
+                        <option value="">-- Select Vendor --</option>
+                        @foreach($vendors as $vendor)
+                            <option value="{{ $vendor->Id }}" {{ old('VendorID') == $vendor->Id ? 'selected' : '' }}>
+                                {{ $vendor->ThirdPartyName }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('VendorID')
                     <div class="text-danger small">{{ $message }}</div>
                     @enderror
                 </div>
+                    
 
                 <!-- Cost -->
                 <div class="col-md-6">

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Core\CodeDetail;
+use App\Models\Fleet\FleetVehicleAssignment;
 use App\Models\Fleet\Branch;
 use App\Models\Fleet\FuelType;
 use App\Models\FleetManagement\FleetMake;
@@ -92,54 +93,56 @@ class VehicleController extends Controller
      * Show vehicle details.
      */
     public function show($id)
-    {
-        $vehicle = FleetVehicle::with(['vehicleType', 'fuelType', 'branch', 'brand', 'model'])
-            ->findOrFail($id);
+{
+    $vehicle = FleetVehicle::with(['vehicleType', 'fuelType', 'branch', 'brand', 'model'])
+        ->findOrFail($id);
 
-        $this->authorize('view', $vehicle);
+    $this->authorize('view', $vehicle);
 
-        // // Trips
-        // $trips = FleetTripLog::with(['driverContracted', 'driverPermanent', 'driverType'])
-        //     ->where('VehicleID', $vehicle->Id)
-        //     ->orderByDesc('TripStartDate')
-        //     ->get();
+    // Get assignment TripNos for this vehicle
+    $assignmentTripNos = FleetVehicleAssignment::where('VehicleID', $vehicle->Id)
+        ->pluck('TripNo')
+        ->map(function ($tripNo) {
+            // Convert to string to match t_TripLogs.TripNo data type
+            return (string) $tripNo;
+        })
+        ->toArray();
 
-        // Drivers from trips, assignments, contracted assignments
-        $driverList = $this->getVehicleDrivers($vehicle->Id);
+    // Get trips using the converted TripNos
+    $trips = FleetTripLog::with(['statusDetail', 'parentTripType', 'parentVehicleType'])
+        ->whereIn('TripNo', $assignmentTripNos)
+        ->orderByDesc('TripStartDate')
+        ->get();
 
-        // Lookups
-        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-        $fuelTypes = FuelType::all();
-        $branches = Branch::all();
-        $brands = FleetMake::all();
-        $fleetModels = FleetModel::all();
+    // Rest of your code remains the same...
+    $driverList = $this->getVehicleDrivers($vehicle->Id);
+    $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+    $fuelTypes = FuelType::all();
+    $branches = Branch::all();
+    $brands = FleetMake::all();
+    $fleetModels = FleetModel::all();
+    $insuranceRecords = FleetInsuranceTracker::with(['insurance', 'insuranceStatus'])
+        ->where('VehicleID', $vehicle->Id)
+        ->orderByDesc('CoverageEndDate')
+        ->get();
+    $inspections = FleetInspectionSchedule::with(['inspectionStatus', 'inspector'])
+        ->where('VehicleID', $vehicle->Id)
+        ->orderByDesc('InspectionDate')
+        ->get();
+    $maintenanceLogs = FleetMaintenanceSchedule::with(['maintenanceType', 'maintenanceStatus'])
+        ->where('VehicleID', $vehicle->Id)
+        ->orderByDesc('ScheduledDate')
+        ->get();
+    $repairLogs = FleetRepairLog::with(['repairType', 'schedule'])
+        ->where('VehicleID', $vehicle->Id)
+        ->orderByDesc('RepairDate')
+        ->get();
 
-        // Vehicle related records
-        $insuranceRecords = FleetInsuranceTracker::with(['insurance', 'insuranceStatus'])
-            ->where('VehicleID', $vehicle->Id)
-            ->orderByDesc('CoverageEndDate')
-            ->get();
-
-        $inspections = FleetInspectionSchedule::with(['inspectionStatus', 'inspector'])
-            ->where('VehicleID', $vehicle->Id)
-            ->orderByDesc('InspectionDate')
-            ->get();
-
-        $maintenanceLogs = FleetMaintenanceSchedule::with(['maintenanceType', 'maintenanceStatus'])
-            ->where('VehicleID', $vehicle->Id)
-            ->orderByDesc('ScheduledDate')
-            ->get();
-
-        $repairLogs = FleetRepairLog::with(['repairType', 'schedule'])
-            ->where('VehicleID', $vehicle->Id)
-            ->orderByDesc('RepairDate')
-            ->get();
-
-        return view('fleet.vehicles.show', compact(
-            'vehicle', 'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 'driverList', 'insuranceRecords', 'inspections', 'repairLogs', 'maintenanceLogs'
-        ));
-    }
-
+    return view('fleet.vehicles.show', compact(
+        'vehicle', 'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 
+        'driverList', 'insuranceRecords', 'inspections', 'repairLogs', 'maintenanceLogs', 'trips'
+    ));
+}
     /**
      * Show edit form.
      */

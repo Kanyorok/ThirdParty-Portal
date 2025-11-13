@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Core\CodeDetail;
+use App\Models\ThirdParty\ThirdParties;
 
 class FleetRepairLog extends Model
 {
@@ -26,7 +27,7 @@ class FleetRepairLog extends Model
 
 
     protected $fillable = [
-        'RepairID', 'VehicleID', 'ScheduleID', 'RepairType', 'RepairDate', 'Vendor', 'Cost',
+        'RepairID', 'VehicleID', 'ScheduleID', 'RepairType', 'RepairDate', 'VendorID', 'Cost',
         'Description', 'Notes',
         'CreatedBy',
         'CreatedOn',
@@ -51,6 +52,11 @@ class FleetRepairLog extends Model
     public function repairType()
     {
         return $this->belongsTo(CodeDetail::class, 'RepairType', 'ID');
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(ThirdParties::class, 'VendorID', 'ID');
     }
 
     public function schedule()

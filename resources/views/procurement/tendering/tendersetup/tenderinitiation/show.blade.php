@@ -116,16 +116,20 @@
         @if (!$show)
             <div class="text-end mb-3">
                 <!-- Approve Button -->
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
-                        data-bs-target="#approveModal">
-                    Approve <i class="fa fa-check-circle text-success"></i>
-                </button>
+                @canApprove('tender')
+                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                            data-bs-target="#approveModal">
+                        Approve <i class="fa fa-check-circle text-success"></i>
+                    </button>
+                @endcanApprove
 
                 <!-- Reject Button -->
-                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
-                        data-bs-target="#rejectModal">
-                    Reject <i class="fa fa-times-circle text-danger"></i>
-                </button>
+                @canApprove('tender')
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                            data-bs-target="#rejectModal">
+                        Reject <i class="fa fa-times-circle text-danger"></i>
+                    </button>
+                @endcanApprove
                 @endif
 
                 <!-- Back Button -->
@@ -167,7 +171,9 @@
                     </div>
 
                     <div class="modal-footer">
+                        @canApprove('tender')
                         <button type="submit" class="btn btn-success">Confirm Approve</button>
+                        @endcanApprove
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
@@ -203,7 +209,9 @@
                     </div>
 
                     <div class="modal-footer">
+                        @canApprove('tender')
                         <button type="submit" class="btn btn-danger">Confirm Reject</button>
+                        @endcanApprove
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>

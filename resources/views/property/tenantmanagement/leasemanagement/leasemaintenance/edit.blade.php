@@ -4,6 +4,18 @@
 @section('title', 'Edit Lease Agreement')
 
 @section('content')
+
+    {{-- Validation Errors --}}
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="container mt-4">
 
         <form method="POST" action="{{ route('addlease.update', $newlease->Id) }}" enctype="multipart/form-data">
@@ -146,17 +158,18 @@
                                     <span>No documents attached.</span>
                                 @endforelse
                             </div>
-                            <input type="file" name="Document[]" class="form-control" multiple>
-                            <small class="text-muted">e.g. upload Lease Document</small>
+                            <input type="file" name="Document[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+                            <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
                         </div>
 
                         <!-- Buttons -->
+                        <div class="d-flex gap-2">
+                        <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary">Cancel</a>
                         <button type="submit" class="btn btn-success"
                                 onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update
                             Lease
                         </button>
-                        <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary">Cancel</a>
-
+                        </div>
                     </div>
                 </div>
         </form>

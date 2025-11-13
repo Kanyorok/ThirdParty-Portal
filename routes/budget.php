@@ -68,7 +68,7 @@ use App\Http\Controllers\Budget\BudgetReallocationController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::namespace('Budget')->prefix('budget')->group(function () {
+Route::middleware(['module:1200000'])->namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
     Route::resource('budgetperiod', BudgetPeriodController::class);
     Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class, 'attachGL'])->name('budgetperiod.attachGL');;
@@ -172,7 +172,7 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
 });
 
 
-Route::prefix('budgetandanalytics/limits')->name('budgetandanalytics.limits.')->group(function () {
+Route::middleware(['module:1200000'])->prefix('budgetandanalytics/limits')->name('budgetandanalytics.limits.')->group(function () {
     Route::get('/', [BudgetLineLedgerLimitController::class, 'index'])->name('index');
     Route::get('/create', [BudgetLineLedgerLimitController::class, 'create'])->name('create');
     Route::post('/store', [BudgetLineLedgerLimitController::class, 'store'])->name('store');
@@ -186,7 +186,7 @@ Route::prefix('budgetandanalytics/limits')->name('budgetandanalytics.limits.')->
     Route::post('/{id}/delete', [BudgetLineLedgerLimitController::class, 'destroy'])->name('destroy');
 });
 
-Route::prefix('budgetandanalytics/reallocation')
+Route::middleware(['module:1200000'])->prefix('budgetandanalytics/reallocation')
     ->name('budgetandanalytics.reallocation.')
     ->group(function () {
         Route::get('/', [BudgetReallocationController::class, 'index'])->name('index');
@@ -213,10 +213,10 @@ Route::prefix('budgetandanalytics/reallocation')
     });
 
 // Budget Approvals
-Route::prefix('budgetandanalytics/budget-approvals')->name('budgetandanalytics.budget-approvals.')->group(function () {
+Route::middleware(['module:1200000'])->prefix('budgetandanalytics/budget-approvals')->name('budgetandanalytics.budget-approvals.')->group(function () {
     Route::get('/approve', [BudgetPeriodController::class, 'approve'])->name('approve');
     Route::get('/reject', [BudgetPeriodController::class, 'reject'])->name('reject');
 });
 
 //Fetch Data for modal in the reallocation index
-Route::get('/budgetandanalytics/reallocation/{id}/details', [BudgetReallocationController::class, 'getDetails'])->name('budgetandanalytics.reallocation.details');
+Route::middleware(['module:1200000'])->get('/budgetandanalytics/reallocation/{id}/details', [BudgetReallocationController::class, 'getDetails'])->name('budgetandanalytics.reallocation.details');

@@ -266,10 +266,10 @@ Route::prefix('procurement')->name('api.procurement.')
 
         // Supplier RFQ endpoints (supplier portal)
         Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation']);
+    Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
-        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications']);
+    Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
 
 // Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage
@@ -296,4 +296,37 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     //     });
     // });
 
+});
+
+
+
+
+/***
+ *  This Are the API Routes for Central Report Unit C.R.U
+ */
+use App\Http\Controllers\API\CRDB\CRDBAuthController;
+use App\Http\Controllers\API\CRDB\CRDBGeneralLedgerController;
+
+// CRDB Authentication Routes (Public)
+Route::prefix('crdb')->group(function () {
+    Route::post('login', [CRDBAuthController::class, 'login'])->name('crdb.login');
+    Route::post('validate-token', [CRDBAuthController::class, 'validateToken'])->name('crdb.validate-token');
+});
+
+// CRDB API Routes (Protected - requires authentication)
+Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class)->group(function () {
+    // Add your CRDB API endpoints here
+    // Example:
+    Route::get('syncGeneralLedgers', [CRDBGeneralLedgerController::class, 'syncGeneralLedgers'])->name('syncGeneralLedgers');
+    // Route::get('data', [CRDBDataController::class, 'fetch']);
+    
+    // Health check for authenticated requests
+    Route::get('health', function () {
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now(),
+            'service' => 'CRDB API',
+            'authenticated' => true,
+        ]);
+    })->name('crdb.health');
 });

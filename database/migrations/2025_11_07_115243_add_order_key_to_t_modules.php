@@ -11,18 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_WorkFlowHistory', function (Blueprint $table) {
-            //
+        Schema::table('t_Modules', function (Blueprint $table) {
+            $table->integer('orderKey')->nullable()->default(0);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('t_WorkFlowHistory', function (Blueprint $table) {
-            //
+        Schema::table('t_Modules', function (Blueprint $table) {
+            $table->dropColumn('orderKey');
         });
     }
+
 };
