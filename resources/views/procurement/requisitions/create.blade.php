@@ -15,9 +15,11 @@
 @section('content')
     <div class="row mb-3">
         <div class="col-md-12 text-end">
+            @can('create', \App\Models\Procurement\Requisitions::class)
             <button class="btn btn-primary modal-create-item" type="button">
                 <i class="fas fa-plus-circle"></i> New Requisition
             </button>
+            @endcan
     </div>
     </div>
 
@@ -115,6 +117,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="onboarding-content with-gradient d-none modal-item" id="createRequisition">
+                        @can('create', \App\Models\Procurement\Requisitions::class)
                         <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
                             @csrf
 
@@ -181,6 +184,7 @@
                                 </button>
                             </div>
                         </form>
+                        @endcan
                     </div>
                 </div>
             </div>

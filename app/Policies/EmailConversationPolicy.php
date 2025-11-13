@@ -16,7 +16,7 @@ class EmailConversationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::EmailRead->value);
     }
 
     /**
@@ -48,7 +48,7 @@ class EmailConversationPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::EmailAssign->value);
     }
 
     /**

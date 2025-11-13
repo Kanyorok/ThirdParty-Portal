@@ -72,7 +72,7 @@
               $packages = $medical_fund->packages()->orderBy('Name')->get();
               $oldSelected = collect(old('package_ids', []))->map(fn($v)=>(int)$v)->toArray();
             @endphp
-
+{{-- @dd($packages) --}}
             @if($packages->count())
               <div class="col-12">
                 <hr class="mt-1 mb-2">
@@ -88,13 +88,13 @@
                           class="form-check-input pkg-box"
                           type="checkbox"
                           name="package_ids[]"
-                          value="{{ $pkg->ID }}"
-                          id="pkg{{ $pkg->ID }}"
+                          value="{{ $pkg->Id }}"
+                          id="pkg{{ $pkg->Id }}"
                           data-price="{{ (float)$pkg->Premium }}"
                           {{ $isChecked ? 'checked' : '' }}
                           {{ $pkg->IsCompulsory ? 'disabled' : '' }}
                         >
-                        <label class="form-check-label" for="pkg{{ $pkg->ID }}">
+                        <label class="form-check-label" for="pkg{{ $pkg->Id }}">
                           <span class="fw-semibold">{{ $pkg->Name }}</span>
                           — <span class="text-nowrap">{{ number_format((float)$pkg->Premium,2) }}</span>
                           @if($pkg->IsCompulsory)
@@ -107,7 +107,7 @@
                       </div>
                       {{-- Include hidden field for disabled (compulsory) packages --}}
                       @if($pkg->IsCompulsory)
-                        <input type="hidden" name="package_ids[]" value="{{ $pkg->ID }}">
+                        <input type="hidden" name="package_ids[]" value="{{ $pkg->Id }}">
                       @endif
                     </div>
                   @endforeach

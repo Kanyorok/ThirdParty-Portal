@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Route;
 
 //use App\Http\Controllers\Inventory\ReceiptController;
 
-Route::namespace('Inventory')->prefix('inventory')->group(function () {
+Route::middleware(['module:400000'])->namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
     Route::get('itemmasterlist/export', [ItemMasterListController::class, 'export'])
     ->name('itemmasterlist.export');

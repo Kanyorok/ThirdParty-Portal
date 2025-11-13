@@ -10,7 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        //
+        Schema::table('t_FleetVehicles', static function (Blueprint $table) {
+            $table->string('TrackerNo')->nullable()->after('RegistrationNo');
+        });
     }
 
     /**
@@ -18,6 +20,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        //
+        Schema::table('t_FleetVehicles', static function (Blueprint $table) {
+            $table->dropColumn('TrackerNo');
+        });
     }
 };

@@ -9,8 +9,8 @@ use App\Models\DMS\Image;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\UploadedFile;
 
 class ItemMasterListService
@@ -30,23 +30,19 @@ class ItemMasterListService
             // Handle category hierarchy
             $item->Category = $data['SubCategory'] ?? $data['Category'] ?? null;
 
-            // Handle image upload (as base64 in t_DMS_Images)
+            // Handle image upload
             if ($imageFile) {
                 $image = $this->storeImage($imageFile);
                 $item->ImageId = $image->ImageID;
             }
 
-            // Save first to generate the ID before using it for document & code
+            // Save to generate ID
             $item->save();
 
-            // Assign or auto-generate item code
-            if (!empty($data['ItemCode'])) {
-                $item->ItemCode = $data['ItemCode'];
-            } else {
-                $item->ItemCode = 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT);
-            }
+            // Generate or assign Item Code
+            $item->ItemCode = $data['ItemCode'] ?? 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT);
 
-            // Apply Inactive status if parent category is inactive
+            // Set inactive if parent category is inactive
             $category = ItemCategories::find($item->Category);
             $inactiveId = CodeDetail::where('CodeID', 'ItemStatus')
                 ->where('Description', 'Inactive')
@@ -58,14 +54,12 @@ class ItemMasterListService
 
             $item->save();
 
-            // Handle document using DMS attachment system (same pattern as FleetDriverService)
+            // Handle document attachment (if any)
             if ($document) {
-                // Remove old documents if any
                 foreach ($item->documents as $doc) {
                     $doc->delete();
                 }
 
-                // Attach new document with permission control
                 $item->newDocument(
                     ModulesEnum::Inventory,
                     $document,
@@ -85,6 +79,70 @@ class ItemMasterListService
     }
 
     /**
+     * Update an existing Item Master entry with category, image, and documents handling.
+     */
+    public function update(int $id, array $data, ?UploadedFile $imageFile = null, UploadedFile|array|null $document = null): ItemMasterList
+    {
+        return DB::transaction(function () use ($id, $data, $imageFile, $document) {
+            $item = ItemMasterList::findOrFail($id);
+
+            $item->fill($data);
+            $item->ModifiedBy = Auth::id();
+            $item->ModifiedOn = now();
+
+            // Handle category hierarchy update
+            $item->Category = $data['SubCategory'] ?? $data['Category'] ?? $item->Category;
+
+            // Handle image removal
+            if (!empty($data['remove_image']) && $data['remove_image'] == '1') {
+                if ($item->ImageId) {
+                    Image::destroy($item->ImageId);
+                }
+                $item->ImageId = null;
+            }
+
+            // Handle image replacement
+            if ($imageFile) {
+                if ($item->ImageId) {
+                    Image::destroy($item->ImageId);
+                }
+                $image = $this->storeImage($imageFile);
+                $item->ImageId = $image->ImageID;
+            }
+
+            $item->save();
+
+            // Handle document replacement (single or multiple)
+            if ($document) {
+                foreach ($item->documents as $doc) {
+                    $doc->delete();
+                }
+
+                $documents = is_array($document) ? $document : [$document];
+                foreach ($documents as $docFile) {
+                    if ($docFile instanceof UploadedFile) {
+                        $item->newDocument(
+                            ModulesEnum::Inventory,
+                            $docFile,
+                            [PermissionEnum::MasterListView->value],
+                            Auth::user()
+                        );
+                    }
+                }
+            }
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($item)
+                ->withProperties(['attributes' => $data])
+                ->event('updated')
+                ->log('Item updated');
+
+            return $item;
+        });
+    }
+
+    /**
      * Soft delete an item and remove its related media.
      */
     public function delete(ItemMasterList $item): void
@@ -94,12 +152,12 @@ class ItemMasterListService
             $item->DeletedOn = Carbon::now();
             $item->save();
 
-            // Delete linked image (if any)
+            // Delete linked image
             if ($item->ImageId) {
                 Image::destroy($item->ImageId);
             }
 
-            // Delete attached documents via DMS
+            // Delete attached documents
             foreach ($item->documents as $doc) {
                 $doc->delete();
             }

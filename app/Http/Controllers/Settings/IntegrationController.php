@@ -14,6 +14,7 @@ use App\Services\ThirdParty\AIService;
 use App\Services\ThirdParty\CSSMSService;
 use App\Services\ThirdParty\FacebookService;
 use App\Services\ThirdParty\InfobipService;
+use App\Services\ThirdParty\iTrackService;
 use App\Services\ThirdParty\SSRSService;
 use App\Services\ThirdParty\TwitterService;
 use EchoLabs\Prism\Enums\Provider;
@@ -21,6 +22,7 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -50,6 +52,10 @@ class IntegrationController extends Controller
 
         if ($Integration->value === IntegrationsEnum::InfoBip->value) {
             return $this->_infoBipConfiguration($request->validated('InfoBip_Host'), $request->validated('InfoBip_Email'), $request->validated('InfoBip_API_Key'), $request->user());
+        }
+
+        if ($Integration->value === IntegrationsEnum::iTrack->value) {
+            return $this->_iTrackConfiguration($request->getITrackUrl(), $request->validated('iTrack_Username'), $request->validated('iTrack_Password'), $request->user());
         }
 
         if ($Integration->value === IntegrationsEnum::LLM->value) {
@@ -88,8 +94,17 @@ class IntegrationController extends Controller
             return $this->_reportServiceConfiguration($request->getSSRS_Host(), $request->validated('SSRS_Path'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
         }
 
-        if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value], true)) {
+        if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value, IntegrationsEnum::CRDB->value], true)) {
             return $this->_generateKey($request, $Integration);
+        }
+
+        if ($Integration->value === IntegrationsEnum::Organization->value) {
+            return $this->_saveOrganizationBranding(
+                $request->validated('Org_Name'),
+                $request->validated('Org_Motto'),
+                $request->validated('Org_Logo'),
+                $request->user()
+            );
         }
 
         return $this->errored('integration not complete');
@@ -293,15 +308,26 @@ class IntegrationController extends Controller
         $key = base64_encode(Str::random(64));
         $actor = $request->user();
         try {
-            DB::transaction(static function () use ($Integration, $key, $actor) {
+            DB::transaction(function () use ($Integration, $key, $actor) {
                 APICredential::query()->where('Integration', $Integration->value)->update([
                     'DeletedBy' => $actor->Id,
                 ]);
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
+                $configuration = ['Key' => md5($key)];
+                
+                // For CRDB, store only first 3 and last 3 characters for masking display (security)
+                if ($Integration->value === IntegrationsEnum::CRDB->value) {
+                    $keyLength = strlen($key);
+                    if ($keyLength >= 6) {
+                        $configuration['KeyPrefix'] = substr($key, 0, 3);
+                        $configuration['KeySuffix'] = substr($key, -3);
+                    }
+                }
+
                 $crmIntegration = APICredential::create([
                     'Integration' => $Integration->value,
-                    'Configuration' => ['Key' => md5($key)],
+                    'Configuration' => $configuration,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
                 ]);
@@ -309,8 +335,11 @@ class IntegrationController extends Controller
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated ' . $Integration->description() . ' api key.');
             });
         } catch (Throwable|Exception $e) {
-            Log::error('Error updating ' . $Integration->description() . ' failed: ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
+            Log::error('Error updating ' . $Integration->description() . ' failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'integration' => $Integration->value,
+            ]);
+            return $this->errored('unexpected error, try again later: ' . (config('app.debug') ? $e->getMessage() : ''));
         }
 
         return $this->succeeded('key generated.', data: ['token' => $key]);
@@ -331,5 +360,57 @@ class IntegrationController extends Controller
             'name' => $DisplayName,
             'password' => Crypt::encryptString($password),
         ], $actor);
+    }
+
+    private function _iTrackConfiguration(string $Host, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
+    {
+        if (!iTrackService::testConfig($Host, $Username, $password)) {
+            throw ValidationException::withMessages([
+                'iTrack_Password' => ['invalid credentials'],
+                'iTrack_Username' => ['invalid credentials']
+            ]);
+        }
+        return $this->_saveData(IntegrationsEnum::iTrack, [
+            'host' => $Host,
+            'username' => $Username,
+            'password' => Crypt::encryptString($password),
+        ], $actor);
+    }
+
+    private function _saveOrganizationBranding(string $name, ?string $motto, ?string $logo, User $actor): JsonResponse
+    {
+        $path = null;
+        try {
+            if (is_string($logo) && str_starts_with($logo, 'data:image/')) {
+                // data URL: data:image/png;base64,xxxx
+                [$meta, $data] = explode(',', $logo, 2);
+                $ext = 'png';
+                if (preg_match('/data:image\/(\w+);base64/i', $meta, $m)) {
+                    $ext = strtolower($m[1]);
+                }
+                $binary = base64_decode($data, true);
+                if ($binary !== false) {
+                    $filename = 'branding/logo_' . Str::random(12) . '.' . $ext;
+                    // store publicly
+                    Storage::disk('public')->put($filename, $binary);
+                    $path = 'storage/' . $filename;
+                }
+            } elseif (is_string($logo) && $logo !== '') {
+                // treat as existing relative path (e.g., uploaded via separate endpoint)
+                $path = $logo;
+            }
+        } catch (Throwable $e) {
+            Log::warning('Org logo store failed: ' . $e->getMessage());
+        }
+
+        $payload = [
+            'name' => $name,
+            'motto' => $motto,
+        ];
+        if ($path) {
+            $payload['logo'] = $path;
+        }
+
+        return $this->_saveData(IntegrationsEnum::Organization, $payload, $actor);
     }
 }

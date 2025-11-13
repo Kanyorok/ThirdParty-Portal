@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Finance\BankBranchController;
+use App\Http\Controllers\Admin\LicenseController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])->group(function () {
@@ -11,7 +12,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
 require __DIR__ . '/auth.php';
 
-Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function () {
+Route::middleware(['auth','license'])->namespace('App\Http\Controllers')->group(function () {
     // Customizable dashboard APIs
     Route::prefix('dashboard')->group(function() {
         Route::get('widgets', 'Dashboard\\UserDashboardController@widgets')->name('user-dashboard.widgets');
@@ -42,6 +43,14 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
+        Route::get('workflows', 'WorkFlowController@index')->name('settings.workflows.index');
+        Route::post('workflows/create', 'WorkFlowController@store')->name('settings.workflows.store');
+        Route::get('workflows/delete/{id}', 'WorkFlowController@destroy')->name('settings.workflows.delete');
+        Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
+        Route::post('workflow-stages', 'WorkflowStagesController@store')->name('settings.workflow_stages.store');
+        Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
+        Route::get('workflow-limits', 'WorflowLimitsController@index')->name('settings.workflow_limits');
+        Route::post('workflow-limits', 'WorflowLimitsController@store')->name('settings.approval_workflow_limit.store');
 
         Route::get('integrations', 'SettingsController@integrations')->name('settings.integrations');
         Route::post('integrations', 'IntegrationController');
@@ -112,4 +121,11 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
     // ✅ Global Locality Endpoint
     Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
+});
+// Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/license', [LicenseController::class, 'index'])
+        ->name('admin.license.index');
+    Route::post('/admin/license', [LicenseController::class, 'store'])
+        ->name('admin.license.store');
 });

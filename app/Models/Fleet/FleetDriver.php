@@ -43,6 +43,38 @@ class FleetDriver extends Model
         return 'DrvId';
     }
 
+    public function assignments()
+    {
+        return $this->hasMany(FleetDriverAssignment::class, 'DriverID', 'Id');
+    }
+
+    public function vehicles()
+    {
+        return $this->hasManyThrough(
+            FleetVehicle::class,
+            FleetDriverAssignment::class,
+            'DriverID',
+            'Id',
+            'Id',
+            'VehicleID'
+        );
+    }
+
+    public function trips()
+    {
+        return $this->hasManyThrough(
+            FleetTripLog::class,
+            FleetVehicleAssignment::class,
+            'DriverID',
+            'Id',
+            'Id',
+            'TripNo'
+        )->whereNull('t_FleetVehicleAssignments.DeletedOn')
+        ->whereNull('t_TripLogs.DeletedOn');
+    }
+
+
+
     public function employmentType()
     {
         return $this->belongsTo(CodeDetail::class, 'EmploymentType', 'ID');

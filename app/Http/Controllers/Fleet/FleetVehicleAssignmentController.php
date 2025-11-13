@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 
 class FleetVehicleAssignmentController extends Controller
 {
@@ -35,16 +36,36 @@ class FleetVehicleAssignmentController extends Controller
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
 
-        return view('fleet.assignments.index', compact('assignments', 'assigners'));
+        // fetch approved parent trips for UI (so delete -> index also has approved trips)
+        $approvedStatusId = CodeDetail::where('CodeID', 'TripStatus')
+            ->where('Description', 'Approved')
+            ->value('ID');
+        $fleetTrips = FleetTripLog::whereNull('ParentTripID')
+            ->when($approvedStatusId, fn($q) => $q->where('Status', $approvedStatusId))
+            ->orderByDesc('TripStartDate')
+            ->get();
+
+        return view('fleet.assignments.index', compact('assignments','assigners','fleetTrips'));
     }
 
     /** Show create form */
     public function create()
     {
+        // Fetch the CodeDetail ID for TripStatus = Approved
+        $statusId = CodeDetail::where('CodeID', 'TripStatus')
+            ->where('Description', 'Approved')
+            ->value('ID');
+
         $fleetVehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
-        $fleetTrips = FleetTripLog::all();
+
+        // Only filter by status when we have a valid status id
+        $fleetTrips = FleetTripLog::whereNull('ParentTripID')
+            ->when($statusId, fn($q) => $q->where('Status', $statusId))
+            ->orderByDesc('TripStartDate')
+            ->get();
+
         $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.create', compact('fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
@@ -83,7 +104,14 @@ class FleetVehicleAssignmentController extends Controller
         $fleetVehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
-        $fleetTrips = FleetTripLog::all();
+
+        // fetch only approved parent trips for the edit form
+        $statusId = CodeDetail::where('Description', 'Approved')->value('ID');
+        $fleetTrips = FleetTripLog::whereNull('ParentTripID')
+            ->when($statusId, fn($q) => $q->where('Status', $statusId))
+            ->orderByDesc('TripStartDate')
+            ->get();
+
         $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.edit', compact('assignment', 'fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
@@ -145,15 +173,17 @@ class FleetVehicleAssignmentController extends Controller
         ]);
     }
 
-    public function getVehicleDriver($Id)
+    public function getVehicleDriver($vehicleId)
     {
-        $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
+        $vehicle = \App\Models\Fleet\FleetVehicle::with('fuelType')->find($vehicleId);
+
+        $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $vehicleId)
             ->whereNull('DeletedOn')
             ->latest('AssignmentDate')
             ->first();
 
         if (!$driverAssignment) {
-            $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
+            $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $vehicleId)
                 ->whereNull('DeletedOn')
                 ->latest('AssignmentDate')
                 ->first();
@@ -161,8 +191,11 @@ class FleetVehicleAssignmentController extends Controller
 
         return response()->json([
             'driverId' => $driverAssignment?->DriverID,
-            'driverName' => $driverAssignment?->driver?->FullName,
+            'driverName' => $driverAssignment?->driver?->FullName ?? 'No driver assigned',
+            'fuelTypeId' => $vehicle?->fuelType?->Id,
+            'fuelTypeName' => $vehicle?->fuelType?->FuelName,
         ]);
     }
+
 
 }

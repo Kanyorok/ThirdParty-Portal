@@ -128,38 +128,40 @@ class FleetDriverController extends Controller
     }
 
 
-      public function show($Id)
-        {
-            $this->authorize('view', FleetDriver::class);
-            $driver = FleetDriver::findOrFail($Id);
-            $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
-            $assignments = FleetDriverAssignment::where('DriverID', $Id)
-                ->with('vehicle')
-                ->orderByDesc('AssignmentDate')
-                ->get();
-            $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
-                ->where('Description', 'Active')
-                ->value('Id');
+   public function show($Id)
+    {
+        $this->authorize('view', FleetDriver::class);
 
-            $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
+        $driver = FleetDriver::with([
+            'assignments.vehicle',
+            'trips' 
+        ])->findOrFail($Id);
 
-            $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-                ->pluck('name', 'Id');
+        $licenses = \App\Models\Fleet\FleetDriverLicenseTracking::where('DriverID', $Id)->get();
 
+        $assignments = $driver->assignments()
+            ->with('vehicle')
+            ->orderByDesc('AssignmentDate')
+            ->get();
 
-            // $trips = FleetTripLog::with(['vehicle'])
-            //     ->where('DriverID', $driver->Id)
-            //     ->orderByDesc('TripStartDate')
-            //     ->get();
+        $activeStatusId = \App\Models\Core\CodeDetail::where('CodeID', 'VehicleStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
 
-            return view('fleet.drivers.show', compact(
-                'driver',
-                'licenses',
-                'assignments',
-                'vehicles',
-                'assigners'
-            ));
-        }
+        $vehicles = \App\Models\Fleet\FleetVehicle::where('Status', $activeStatusId)->get();
+
+        $assigners = \App\Models\HRM\Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
+
+        return view('fleet.drivers.show', compact(
+            'driver',
+            'licenses',
+            'assignments',
+            'vehicles',
+            'assigners'
+        ));
+    }
+
 
 
 

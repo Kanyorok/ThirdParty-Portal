@@ -33,6 +33,7 @@ class RequisitionsController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Requisitions::class);
 //        return view('procurement.requisitions.approval');
         try {
             $details = $this->service->fetchRequisition();
@@ -58,6 +59,7 @@ class RequisitionsController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', Requisitions::class);
         try {
             $user = Auth::user();
 
@@ -108,7 +110,7 @@ class RequisitionsController extends Controller
      */
     public function store(RequisitionRequest $request): JsonResponse
     {
-//       dd($request->user());
+        $this->authorize('create', Requisitions::class);
         try {
             $validatedData = $request->validated();
 
@@ -193,6 +195,8 @@ class RequisitionsController extends Controller
 
     public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
     {
+        $requisition = Requisitions::findOrFail($id);
+        $this->authorize('approve', $requisition);
         // Block APPROVE action if approval type is not configured for purchase requisitions
         if (strtolower($requisitionRequest->input('action')) === 'approve') {
             $approvalType = DB::table('t_ApprovalGroups')

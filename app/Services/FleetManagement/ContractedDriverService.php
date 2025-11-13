@@ -23,7 +23,7 @@ class ContractedDriverService
         $data['FullName'] = $data['FullName'] ?? null;
         $data['NationalID'] = $data['NationalID'] ?? null;
         $data['Phone'] = $data['Phone'] ?? null;
-        $data['Company'] = $data['Company'] ?? null;
+        $data['CompanyID'] = $data['CompanyID'] ?? null;
         $data['ContractStartDate'] = $data['ContractStartDate'] ?? null;
         $data['ContractEndDate'] = $data['ContractEndDate'] ?? null;
         $data['Notes'] = $data['Notes'] ?? null;

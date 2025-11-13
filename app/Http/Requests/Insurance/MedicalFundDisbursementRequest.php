@@ -25,8 +25,9 @@ class MedicalFundDisbursementRequest extends FormRequest
             'FundId'           => 'required|exists:t_MedicalFunds,Id',
             'ContributorId'    => 'nullable|exists:t_MedicalFundContributors,Id',
             'BeneficiaryId'    => 'required|exists:t_MedicalFundBeneficiaries,Id',
-            'CoverageID'       => 'nullable|exists:t_Coverages,Id',
-            'PackageID'        => 'nullable|exists:t_MedicalFundPackages,Id',
+            // use Id suffix to match form inputs and controller usage
+            'CoverageId'       => 'nullable|exists:t_Coverages,Id',
+            'PackageId'        => 'nullable|exists:t_MedicalFundPackages,Id',
             'DisbursementDate' => 'required|date',
             'Amount'           => 'required|numeric|min:0.01',
             'Purpose'          => 'nullable|string|max:500',

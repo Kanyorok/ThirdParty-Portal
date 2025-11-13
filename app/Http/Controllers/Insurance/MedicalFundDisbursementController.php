@@ -49,98 +49,109 @@ class MedicalFundDisbursementController extends Controller
     /**
      * Show form for creating a new disbursement.
      */
-    public function create(MedicalFund $medical_fund, Request $request)
-    {
-        $contributor   = null;
-        $contributors  = collect();
-        $beneficiaries = collect();
-        $coverages     = collect();
+public function create(MedicalFund $medical_fund, Request $request)
+{
+    $contributor   = null;
+    $contributors  = collect();
+    $beneficiaries = collect();
+    $coverages     = collect();
 
-        if ($cid = (int)$request->query('contributor')) {
-            $contributor = MedicalFundContributor::where('FundId', $medical_fund->Id)->find($cid);
+    if ($cid = (int)$request->query('contributor')) {
+        $contributor = MedicalFundContributor::where('FundId', $medical_fund->Id)->find($cid);
 
-            if ($contributor) {
-                $beneficiaries = $contributor->beneficiaries()->where('IsActive', true)->get()
-                    ->map(fn($b) => [
-                        'Id' => $b->Id,
-                        'FullName' => $b->FullName,
-                    ]);
+        if ($contributor) {
+            // Active beneficiaries
+            $beneficiaries = $contributor->beneficiaries()
+                ->where('IsActive', true)
+                ->get()
+                ->map(fn($b) => [
+                    'Id' => $b->Id,
+                    'FullName' => $b->FullName,
+                ]);
 
-                // Try the straightforward Eloquent path first (packages->coverages)
-                $rawCoverages = $contributor->packages()
-                    ->with('coverages')
-                    ->get()
-                    ->flatMap->coverages;
+            // Try Eloquent relationships first (packages -> coverages)
+            $rawCoverages = $contributor->packages()
+                ->with('coverages')
+                ->get()
+                ->flatMap->coverages;
 
-                // Normalize to array-like objects with a canonical Id property then dedupe
-                $coverages = $rawCoverages->map(function($c){
-                    return (object)[
-                        'Id' => $c->ID ?? $c->Id ?? null,
-                        'Name' => $c->Name ?? ($c->name ?? null),
-                        'pivot' => $c->pivot ?? null,
-                        '_orig' => $c,
-                    ];
-                })->filter(fn($c) => !is_null($c->Id))
-                  ->unique('Id')
-                  ->values();
+            $coverages = $rawCoverages->map(function ($c) {
+                return (object)[
+                    'Id' => $c->ID ?? $c->Id ?? null,
+                    'Name' => $c->Name ?? ($c->name ?? null),
+                    'pivot' => $c->pivot ?? null,
+                    '_orig' => $c,
+                ];
+            })->filter(fn($c) => !is_null($c->Id))
+              ->unique('Id')
+              ->values();
 
-                // Fallback: if relationships returned empty (possible pivot/column-name mismatches),
-                // query the pivot table directly and join to t_Coverages to get canonical rows.
-                if ($coverages->isEmpty()) {
-                    $packageIds = $contributor->packages()->pluck('Id')->filter()->values();
-                    if ($packageIds->isEmpty()) {
-                        $packageIds = $contributor->packages()->pluck('Id')->filter()->values();
-                    }
+            // Fallback: if Eloquent didn't return coverages (maybe due to pivot column mismatch)
+            if ($coverages->isEmpty()) {
+                // ✅ FIX: fully qualify Id column to avoid "ambiguous column name 'Id'"
+                $packageIds = $contributor->packages()
+                    ->pluck('t_MedicalFundPackages.Id')
+                    ->filter()
+                    ->values();
 
-                    if ($packageIds->isNotEmpty()) {
-                        $pivot = 't_MedicalFundPackageCoverages';
-                        $pkgCols = ['PackageId', 'PackageID'];
-                        $covCols = ['CoverageId', 'CoverageID'];
+                if ($packageIds->isNotEmpty()) {
+                    $pivot = 't_MedicalFundPackageCoverages';
+                    $pkgCols = ['PackageId', 'PackageID'];
+                    $covCols = ['CoverageId', 'CoverageID'];
 
-                        foreach ($pkgCols as $pkgCol) {
-                            foreach ($covCols as $covCol) {
-                                try {
-                                    $rows = \DB::table($pivot . ' as pc')
-                                        ->join('t_Coverages as c', 'pc.' . $covCol, '=', 'c.Id')
-                                        ->whereIn('pc.' . $pkgCol, $packageIds->all())
-                                        ->select('c.Id as Id', 'c.Name', 'pc.AnnualLimit', 'pc.PerVisitLimit', 'pc.WaitingPeriodDays', 'pc.Scope')
-                                        ->get();
+                    foreach ($pkgCols as $pkgCol) {
+                        foreach ($covCols as $covCol) {
+                            try {
+                                $rows = \DB::table($pivot . ' as pc')
+                                    ->join('t_Coverages as c', 'pc.' . $covCol, '=', 'c.Id')
+                                    ->whereIn('pc.' . $pkgCol, $packageIds->all())
+                                    ->select(
+                                        'c.Id as Id',
+                                        'c.Name',
+                                        'pc.AnnualLimit',
+                                        'pc.PerVisitLimit',
+                                        'pc.WaitingPeriodDays',
+                                        'pc.Scope'
+                                    )
+                                    ->get();
 
-                                    if ($rows->isNotEmpty()) {
-                                        $coverages = $rows->map(fn($r) => (object)[
-                                            'Id' => $r->ID,
-                                            'Name' => $r->Name,
-                                            'pivot' => (object)[
-                                                'AnnualLimit' => $r->AnnualLimit ?? null,
-                                                'PerVisitLimit' => $r->PerVisitLimit ?? null,
-                                                'WaitingPeriodDays' => $r->WaitingPeriodDays ?? null,
-                                                'Scope' => $r->Scope ?? null,
-                                            ],
-                                            '_orig' => $r,
-                                        ])->values();
+                                if ($rows->isNotEmpty()) {
+                                    $coverages = $rows->map(fn($r) => (object)[
+                                        'Id' => $r->Id,
+                                        'Name' => $r->Name,
+                                        'pivot' => (object)[
+                                            'AnnualLimit' => $r->AnnualLimit ?? null,
+                                            'PerVisitLimit' => $r->PerVisitLimit ?? null,
+                                            'WaitingPeriodDays' => $r->WaitingPeriodDays ?? null,
+                                            'Scope' => $r->Scope ?? null,
+                                        ],
+                                        '_orig' => $r,
+                                    ])->values();
 
-                                        break 2;
-                                    }
-                                } catch (\Throwable $e) {
-                                    // ignore and try next variant
+                                    break 2; // Stop searching once found
                                 }
+                            } catch (\Throwable $e) {
+                                // Ignore and continue trying alternative column variants
                             }
                         }
                     }
                 }
             }
-        } else {
-            $contributors = MedicalFundContributor::where('FundId', $medical_fund->Id)->get();
         }
-
-        return view('bancassurance.medical_fund_disbursements.create', compact(
-            'medical_fund',
-            'contributor',
-            'contributors',
-            'beneficiaries',
-            'coverages'
-        ));
+    } else {
+        // If no contributor selected, fetch all contributors under this fund
+        $contributors = MedicalFundContributor::where('FundId', $medical_fund->Id)->get();
     }
+
+    return view('bancassurance.medical_fund_disbursements.create', compact(
+        'medical_fund',
+        'contributor',
+        'contributors',
+        'beneficiaries',
+        'coverages'
+    ));
+}
+
 
     /**
      * Store a new medical fund disbursement using the service.
@@ -262,7 +273,8 @@ class MedicalFundDisbursementController extends Controller
         $waitingOk = true;
         $waitingMsg = null;
         if ($pivot->WaitingPeriodDays) {
-            $wpEnd = Carbon::parse($subscribedOn)->addDays($pivot->WaitingPeriodDays);
+            $waitingDays = (int)$pivot->WaitingPeriodDays;
+            $wpEnd = Carbon::parse($subscribedOn)->addDays($waitingDays);
             if ($onDate->lt($wpEnd)) {
                 $waitingOk = false;
                 $waitingMsg = 'Waiting period not satisfied until ' . $wpEnd->toDateString() . '.';

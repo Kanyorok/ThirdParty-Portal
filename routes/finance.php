@@ -67,7 +67,7 @@ use Illuminate\Support\Facades\Route;
 
 // Newly added
 
-Route::prefix('finance')->group(function () {
+Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
@@ -293,7 +293,7 @@ Route::prefix('finance')->group(function () {
 });
 
 // Receipts Posting routes
-Route::prefix('finance')->group(function () {
+Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::resource('receiptsposting', ReceiptsPostingController::class);
     Route::post('receiptsposting/{id}/approve', [ReceiptsPostingController::class, 'approve'])->name('receiptsposting.approve');
 
@@ -311,7 +311,7 @@ Route::get('finance/ar/receiptsposting/api/customers', [ReceiptsPostingControlle
 
 // Bank Routes
 
-Route::middleware('auth')->prefix('finance')->name('finance.')->group(function () {
+Route::middleware(['auth','module:1100000'])->prefix('finance')->name('finance.')->group(function () {
 
     // Banks => finance.bank.*
     Route::resource('bank', BankController::class)->names('bank');
@@ -335,12 +335,12 @@ Route::middleware('auth')->prefix('finance')->name('finance.')->group(function (
 });
 
 
-Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+Route::prefix('finance')->name('finance.')->middleware(['auth','module:1100000'])->group(function () {
     Route::resource('bankaccountsetup', BankAccountSetupController::class)
         ->names('bankaccountsetup'); // => finance.bankaccountsetup.*
 });
 
-Route::prefix('finance')->middleware('auth')->group(function () {
+Route::prefix('finance')->middleware(['auth','module:1100000'])->group(function () {
     Route::resource('cashbook', CashBookController::class); // cashbook.*
     Route::get('cashbook/create/receipt', [CashBookController::class, 'createReceipt'])->name('cashbook.create.receipt');
     Route::get('cashbook/create/payment', [CashBookController::class, 'createPayment'])->name('cashbook.create.payment');
@@ -353,7 +353,7 @@ Route::prefix('finance')->middleware('auth')->group(function () {
 });
 
 
-Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+Route::prefix('finance')->name('finance.')->middleware(['auth','module:1100000'])->group(function () {
     Route::resource('banktransfers', BankTransferController::class)->names([
         'index' => 'banktransfers.index',
         'create' => 'banktransfers.create',

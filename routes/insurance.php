@@ -33,7 +33,7 @@ use App\Http\Controllers\Insurance\MedicalFundPackageController;
 
 
 
-Route::namespace('Insurance')->prefix('insurance')->group(function () {
+Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance')->group(function () {
 
 
     Route::prefix('bancassurance/referrals')->name('bancassurance.referrals.')->group(function () {

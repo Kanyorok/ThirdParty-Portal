@@ -28,7 +28,7 @@ class FleetVehicleAssignmentRequest extends FormRequest
             'DriverID' => 'nullable|integer',
             'AssignedBy' => 'nullable|integer|exists:t_Employees,Id',
             'LastInspectionDate' => 'nullable|date',
-            'AssignmentDate' => 'required|date',
+            'AssignmentDate' => 'required|date|after_or_equal:LastInspectionDate',
             'Purpose' => 'nullable|string',
             'Notes' => 'nullable|string',
 

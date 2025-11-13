@@ -1,9 +1,40 @@
 @php use App\Enums\Core\PermissionEnum; @endphp
+<style>
+    #offcanvasMain { /* allow dynamic width via CSS var */ }
+    #offcanvasMain .offcanvas-resize-handle {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 6px;
+        height: 100%;
+        cursor: ew-resize;
+        z-index: 5;
+        background: transparent;
+    }
+    body.resizing-offcanvas { cursor: ew-resize; user-select: none; }
+    /* Slightly increase default width for better baseline */
+    @media (min-width: 576px) {
+        #offcanvasMain { --bs-offcanvas-width: 560px; }
+    }
+
+    /* Desktop-mode styling when offcanvas is wide enough */
+    #offcanvasMain.offcanvas-desktop .offcanvas-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--bs-body-bg);
+    }
+    #offcanvasMain.offcanvas-desktop .offcanvas-body {
+        padding: 1.5rem 2rem;
+    }
+    #offcanvasMain.offcanvas-desktop { border-left: 1px solid var(--bs-border-color); }
+</style>
 <div class="offcanvas offcanvas-end " {{--data-bs-scroll="true" data-bs-backdrop="false"--}} tabindex="-1"
      id="offcanvasMain" aria-labelledby="offcanvasMainLabel">
     <div class="offcanvas-header border-bottom border-1 pb-0"><h3 id="offcanvasMainLabel" class="h3 pb-1"></h3>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
+    <div class="offcanvas-resize-handle" title="Drag to resize"></div>
     <div class="offcanvas-body" id="offcanvasMainBody"></div>
 </div>
 <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
@@ -44,6 +75,65 @@
             }
 
             window.bsOffcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasMain'));
+            // Initialize resizable offcanvas width with persisted value
+            try {
+                const oc = document.getElementById('offcanvasMain');
+                const saved = parseInt(localStorage.getItem('offcanvasWidth') || '0', 10);
+                if (saved && saved > 320 && saved < window.innerWidth) {
+                    oc.style.setProperty('--bs-offcanvas-width', saved + 'px');
+                }
+
+                const DESKTOP_MIN = 900; // px threshold for desktop styling
+                function updateOffcanvasModeFromWidth(widthPx) {
+                    if (widthPx >= DESKTOP_MIN) {
+                        oc.classList.add('offcanvas-desktop');
+                    } else {
+                        oc.classList.remove('offcanvas-desktop');
+                    }
+                }
+                // Initialize mode from saved width or computed style
+                (function initMode() {
+                    let current = saved;
+                    if (!current) {
+                        const comp = getComputedStyle(oc).getPropertyValue('--bs-offcanvas-width');
+                        const n = parseInt((comp||'').toString().replace('px',''), 10);
+                        if (n) current = n;
+                    }
+                    if (current) updateOffcanvasModeFromWidth(current);
+                })();
+
+                let isResizing = false;
+                const handle = oc.querySelector('.offcanvas-resize-handle');
+                handle.addEventListener('mousedown', function (e) {
+                    isResizing = true;
+                    document.body.classList.add('resizing-offcanvas');
+                    e.preventDefault();
+                });
+                document.addEventListener('mouseup', function () {
+                    if (!isResizing) return;
+                    isResizing = false;
+                    document.body.classList.remove('resizing-offcanvas');
+                });
+                document.addEventListener('mousemove', function (e) {
+                    if (!isResizing) return;
+                    const total = window.innerWidth || document.documentElement.clientWidth;
+                    // offcanvas-end -> width spans from right edge to cursor x position
+                    let newWidth = total - e.clientX;
+                    const minW = 360, maxW = Math.floor(total * 0.95);
+                    if (newWidth < minW) newWidth = minW;
+                    if (newWidth > maxW) newWidth = maxW;
+                    oc.style.setProperty('--bs-offcanvas-width', newWidth + 'px');
+                    try { localStorage.setItem('offcanvasWidth', String(newWidth)); } catch (err) {}
+                    updateOffcanvasModeFromWidth(newWidth);
+                });
+                window.addEventListener('resize', function(){
+                    // Re-evaluate when window size changes to keep UX consistent
+                    const comp = getComputedStyle(oc).getPropertyValue('--bs-offcanvas-width');
+                    const n = parseInt((comp||'').toString().replace('px',''), 10);
+                    if (n) updateOffcanvasModeFromWidth(n);
+                });
+            } catch (e) {
+            }
             @if (session('status')) nSuccess('{!! session('status') !!} ');
             @endif
             @if (session('success')) nSuccess('{!! session('success') !!} ');

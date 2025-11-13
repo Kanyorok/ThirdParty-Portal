@@ -11,7 +11,7 @@ class PlanManualInputPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::PlanManualInputRead->value);
     }
 
 
