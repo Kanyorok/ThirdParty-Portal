@@ -13,7 +13,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('bancassurance.disbursements.update',$disbursement->ID) }}" method="POST">
+            <form action="{{ route('bancassurance.disbursements.update',$disbursement->Id) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -24,7 +24,7 @@
                         <label class="form-label">Beneficiary *</label>
                         <select name="BeneficiaryID" class="form-select" required>
                             @foreach($beneficiaries as $b)
-                                <option value="{{ $b->ID }}" @selected(old('BeneficiaryID',$disbursement->BeneficiaryID)==$b->ID)>{{ $b->FullName }}</option>
+                                <option value="{{ $b->ID }}" @selected(old('BeneficiaryID',$disbursement->BeneficiaryId)==$b->Id)>{{ $b->FullName }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -40,7 +40,7 @@
 
                 <div class="mt-3 d-flex gap-2">
                     <button class="btn btn-primary">Update</button>
-                    <a href="{{ route('bancassurance.medicalfunds.disbursements.index',$medical_fund->ID) }}" class="btn btn-outline-secondary">Back</a>
+                    <a href="{{ route('bancassurance.medicalfunds.disbursements.index',$medical_fund->Id) }}" class="btn btn-outline-secondary">Back</a>
                 </div>
             </form>
         </div>
