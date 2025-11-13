@@ -215,6 +215,7 @@
         e_schedule_task_date = flatpickr("#e_task_date", {
             enableTime: false,
             altInput: true,
+            allowInput: true,
             altFormat: "F j, Y",
             dateFormat: "Y-m-d",
         });
