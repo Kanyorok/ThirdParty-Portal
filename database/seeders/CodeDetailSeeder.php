@@ -581,6 +581,17 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'CategoryStatus', 'Description' => 'Active', 'Value' => 'Ac'],
             ['CodeID' => 'CategoryStatus', 'Description' => 'Inactive', 'Value' => 'In'],
 
+
+            //Inventory Type Status
+            ['CodeID' => 'InventoryTypeStatus', 'Description' => 'Durable', 'Value' => 'Du'],
+            ['CodeID' => 'InventoryTypeStatus', 'Description' => 'Perishable', 'Value' => 'Pe'],
+
+            //Item Type Status
+            ['CodeID' => 'ItemTypeStatus', 'Description' => 'Stock', 'Value' => 'Du'],
+            ['CodeID' => 'ItemTypeStatus', 'Description' => 'Fixed Asset', 'Value' => 'Fa'],
+            ['CodeID' => 'ItemTypeStatus', 'Description' => 'Services', 'Value' => 'Se'],
+            ['CodeID' => 'ItemTypeStatus', 'Description' => 'Intangibles', 'Value' => 'In'],
+
             //Inventory Item Status
             ['CodeID' => 'ItemStatus', 'Description' => 'Active', 'Value' => 'AC'],
             ['CodeID' => 'ItemStatus', 'Description' => 'Inactive', 'Value' => 'IN'],

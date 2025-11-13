@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\InventoryType;
 use App\Http\Requests\Inventory\InventoryTypeRequest;
 use App\Services\Inventory\InventoryTypeService;
+use App\Models\Core\CodeDetail;
 
 class InventoryTypeController extends Controller
 {
@@ -18,15 +19,21 @@ class InventoryTypeController extends Controller
 
     public function index()
     {
-        $types = InventoryType::all();
-        return view('inventory.itemmaster.inventorytype.index', compact('types'));
+        $types = InventoryType::with('type')->get();
+        $inventoryTypes = CodeDetail::where('CodeID', 'InventoryTypeStatus')->get();
+
+        return view('inventory.itemmaster.inventorytype.index', compact('types', 'inventoryTypes'));
     }
 
     public function create()
     {
         $this->authorize('create', InventoryType::class);
+        $types = InventoryType::with('type')->get();
+        $inventoryTypes = CodeDetail::where('CodeID', 'InventoryTypeStatus')
+            ->whereNotIn('ID', InventoryType::pluck('Type'))
+            ->get();
 
-        return view('inventory.itemmaster.inventorytype.create');
+        return view('inventory.itemmaster.inventorytype.create', compact('inventoryTypes'));
     }
 
     public function store(InventoryTypeRequest $request)
@@ -40,9 +47,12 @@ class InventoryTypeController extends Controller
 
     public function edit($id)
     {
-        $type = InventoryType::findOrFail($id);
+        $type = InventoryType::with('type')->findOrFail($id);
+        $inventoryTypes = CodeDetail::where('CodeID', 'InventoryTypeStatus')
+            ->whereNotIn('ID', InventoryType::pluck('Type'))
+            ->get();
         $this->authorize('update', $type);
-        return view('inventory.itemmaster.inventorytype.edit', compact('type'));
+        return view('inventory.itemmaster.inventorytype.edit', compact('type', 'inventoryTypes'));
     }
 
     public function update(InventoryTypeRequest $request, $id)

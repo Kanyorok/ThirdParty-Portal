@@ -7,6 +7,7 @@ use App\Models\Inventory\ItemType;
 use App\Http\Requests\Inventory\ItemTypeRequest;
 use App\Services\Inventory\ItemTypeService;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Core\CodeDetail;
 
 class ItemTypeController extends Controller
 {
@@ -20,15 +21,19 @@ class ItemTypeController extends Controller
 
     public function index()
     {
-        $itemtypes = ItemType::all();
-        return view('inventory.itemmaster.itemtype.index', compact('itemtypes'));
+        $itemTypes = ItemType::with('type')->get();
+        $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->get();
+        return view('inventory.itemmaster.itemtype.index', compact('itemTypes', 'itmTypes'));
     }
 
     public function create()
     {
-
         $this->authorize('create', ItemType::class);
-        return view('inventory.itemmaster.itemtype.create');
+        $itemtypes = ItemType::with('type')->get();
+        $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')
+            ->whereNotIn('ID', ItemType::pluck('TypeName'))
+            ->get();
+        return view('inventory.itemmaster.itemtype.create', compact('itmTypes'));
     }
 
     public function store(ItemTypeRequest $request)
@@ -41,14 +46,17 @@ class ItemTypeController extends Controller
 
     public function show($Id)
     {
-        $itemtype = ItemType::findOrFail($Id);
-        $this->authorize('view', $itemtype);
-        return response()->json($itemtype);
+        $itemtypes = ItemType::with('type')->get();
+        $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->get();
+        $this->authorize('view', $itemtypes);
+        return response()->json($itemtypes);
     }
 
     public function edit($Id)
     {
         $itemtype = ItemType::findOrFail($Id);
+        $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->whereNotIn('ID', ItemType::pluck('TypeName'))
+            ->get();
         $this->authorize('update', $itemtype);
         return response()->json($itemtype);
     }
