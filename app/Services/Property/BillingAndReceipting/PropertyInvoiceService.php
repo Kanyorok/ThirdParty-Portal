@@ -5,7 +5,7 @@ namespace App\Services\Property\BillingAndReceipting;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Currency;
-use App\Models\Finance\FinanceTaxType;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -37,10 +37,7 @@ class PropertyInvoiceService
         ?string $DescriptionParking = null,
         ?string $DescriptionOther = null,
         ?Currency $Currency = null,
-        ?FinanceTaxType $TaxRent = null,
-        ?FinanceTaxType $TaxService = null,
-        ?FinanceTaxType $TaxParking = null,
-        ?FinanceTaxType $TaxOther = null,
+        ?FinanceTaxRuleConfiguration $Tax = null,
         PropertyInvoiceEnum $Status,
         User   $user
     ): self
@@ -68,7 +65,7 @@ class PropertyInvoiceService
                 'ParkingFee'   =>  $ParkingFee,
                 'Description'  =>  $Description,
                 'Currency' =>  $Currency->Id ?? null,
-                'Tax' =>  $TaxRent->Id ?? null,
+                'Tax' =>  $Tax->Id ?? null,
                 'Status' => PropertyInvoiceEnum::Pending->value,
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
@@ -83,7 +80,7 @@ class PropertyInvoiceService
             $thirdPartyID = PropertyNewTenant::find($tenantID)->ThirdPartyId;
             // Build Finance lines (include only non-zero lines)
             $lines = [];
-            $addLine = function (string $name, float $amount, ?string $lineDescription, ?FinanceTaxType $LineTax) use (&$lines, $Lease) {
+            $addLine = function (string $name, float $amount, ?string $lineDescription, ?FinanceTaxRuleConfiguration $LineTax) use (&$lines, $Lease) {
                 $amt = (int) round($amount);
                 if ($amt > 0) {
                     $lines[] = [
@@ -91,18 +88,18 @@ class PropertyInvoiceService
                         'Description'     => trim("Lease #{$Lease->Id} $lineDescription" ?: "Lease #{$Lease->Id} {$name}"),
                         'UnitCost'        => $amt,
                         'Quantity'        => 1,
-                        'Tax'             => $LineTax->Id,
-                        'TaxID'           => null,
+                        'Tax'             => null,
+                        'TaxID'           => (string) ($LineTax->Id),
                         'TaxAmount'       => '0',
                         'Discount'        => 0,
                         'Total'           => $amt,
                     ];
                 }
             };
-            $addLine('Monthly Rent',  (float) $RentAmount, $DescriptionRent, $TaxRent);
-            $addLine('Service Charge',(float) $ServicesCharge, $DescriptionService, $TaxService);
-            $addLine('Parking Fee',   (float) $ParkingFee, $DescriptionParking, $TaxParking);
-            $addLine('Other Charges', (float) $OtherCharges, $DescriptionOther, $TaxOther);
+            $addLine('Monthly Rent',  (float) $RentAmount, $DescriptionRent, $Tax);
+            $addLine('Service Charge',(float) $ServicesCharge, $DescriptionService, $Tax);
+            $addLine('Parking Fee',   (float) $ParkingFee, $DescriptionParking, $Tax);
+            $addLine('Other Charges', (float) $OtherCharges, $DescriptionOther, $Tax);
 
             //dd($lines);
             if (!empty($lines)) {
@@ -113,7 +110,7 @@ class PropertyInvoiceService
                     'SourceTable' => 't_RentInvoice',
 
                     'ModuleID' => 500000,
-                    'CurrencyID' =>58,
+                    'CurrencyID' => $Currency->Id,
                     'CustomerID' => $thirdPartyID ?? null,
 
                     'InvoiceID' => $invoice->Id,
@@ -132,14 +129,7 @@ class PropertyInvoiceService
 
                 //dd($payload);
                 // Finance service will internally generate RequestID
-                //$result = $finance->intake($payload, true);
-                try {
-                    $result = $finance->intake($payload, true);
-                    dd($result);
-                } catch (\Throwable $e) {
-                    dd('Finance error', $e->getMessage(), $e->getTraceAsString());
-                }
-
+                $result = $finance->intake($payload, true);
 
                 
                 // Store only the RequestID back into t_RentInvoice

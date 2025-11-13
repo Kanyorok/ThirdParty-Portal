@@ -50,7 +50,28 @@
                     </div>
                 </div>
 
+                <!-- Global Currency & Tax -->
                 <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Currency<span class="text-danger">*</span></label>
+                        <select name="Currency" class="form-select" required>
+                            <option value="">-- Select Currency --</option>
+                            @foreach($currencies as $currency)
+                                <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Tax Type<span class="text-danger">*</span></label>
+                        <select name="Tax" class="form-select" required>
+                            <option value="">-- Select Tax Type --</option>
+                            @foreach($taxTypes as $tax)
+                                <option value="{{ $tax->Id }}">{{ $tax->taxType->TaxTypeName }} - {{ $tax->Rate}}%</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div class="col-md-12">
                         <label for="Description" class="form-label">Invoice Description</label>
                         <input 
@@ -60,7 +81,6 @@
                     </div>
                 </div>
 
-
                 <!-- Line Items Table -->
                 <div class="table-responsive mb-3">
                     <table class="table table-bordered align-middle text-center">
@@ -69,8 +89,6 @@
                                 <th>Line Item</th>
                                 <th>Description</th>
                                 <th>Amount</th>
-                                <th>Currency</th>
-                                <th>Tax</th>
                             </tr>
                         </thead>
 <tbody>
@@ -78,88 +96,24 @@
         <td>Rent</td>
         <td><input type="text" class="form-control" name="DescriptionRent" value="Rent Payment"></td>
         <td><input type="number" class="form-control amount" name="RentAmount" step="0.01" min="0" value="{{ old('RentAmount', 0) }}"></td>
-        <td>
-            <select name="CurrencyRent" class="form-select" required>
-                <option value="">-- Select Currency --</option>
-                @foreach($currencies as $currency)
-                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Symbol }}</option>
-                @endforeach
-            </select>
-        </td>
-        <td>
-            <select name="TaxRent" class="form-select" required>
-                <option value="">-- Select Tax Type --</option>
-                @foreach($taxTypes as $tax)
-                    <option value="{{ $tax->Id }}">{{ $tax->TaxTypeName }}</option>
-                @endforeach
-            </select>
-        </td>
     </tr>
 
     <tr>
         <td>Service Charge</td>
         <td><input type="text" class="form-control" name="DescriptionService" value="Monthly Service Charge"></td>
         <td><input type="number" class="form-control amount" name="ServicesCharge" step="0.01" min="0" value="{{ old('ServicesCharge', 0) }}"></td>
-        <td>
-            <select name="CurrencyService" class="form-select" required>
-                <option value="">-- Select Currency --</option>
-                @foreach($currencies as $currency)
-                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Symbol }}</option>
-                @endforeach
-            </select>
-        </td>
-        <td>
-            <select name="TaxService" class="form-select" required>
-                <option value="">-- Select Tax Type --</option>
-                @foreach($taxTypes as $tax)
-                    <option value="{{ $tax->Id }}">{{ $tax->TaxTypeName }}</option>
-                @endforeach
-            </select>
-        </td>
     </tr>
 
     <tr>
         <td>Parking Fee</td>
         <td><input type="text" class="form-control" name="DescriptionParking" value="Parking Space"></td>
         <td><input type="number" class="form-control amount" name="ParkingFee" step="0.01" min="0" value="{{ old('ParkingFee', 0) }}"></td>
-        <td>
-            <select name="CurrencyParking" class="form-select" required>
-                <option value="">-- Select Currency --</option>
-                @foreach($currencies as $currency)
-                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Symbol }}</option>
-                @endforeach
-            </select>
-        </td>
-        <td>
-            <select name="TaxParking" class="form-select" required>
-                <option value="">-- Select Tax Type --</option>
-                @foreach($taxTypes as $tax)
-                    <option value="{{ $tax->Id }}">{{ $tax->TaxTypeName }}</option>
-                @endforeach
-            </select>
-        </td>
     </tr>
 
     <tr>
         <td>Other Charges</td>
         <td><input type="text" class="form-control" name="DescriptionOther" value="Miscellaneous"></td>
         <td><input type="number" class="form-control amount" name="OtherCharges" step="0.01" min="0" value="{{ old('OtherCharges', 0) }}"></td>
-        <td>
-            <select name="CurrencyOther" class="form-select" required>
-                <option value="">-- Select Currency --</option>
-                @foreach($currencies as $currency)
-                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Symbol }}</option>
-                @endforeach
-            </select>
-        </td>
-        <td>
-            <select name="TaxOther" class="form-select" required>
-                <option value="">-- Select Tax Type --</option>
-                @foreach($taxTypes as $tax)
-                    <option value="{{ $tax->Id }}">{{ $tax->TaxTypeName }}</option>
-                @endforeach
-            </select>
-        </td>
     </tr>
 </tbody>
 

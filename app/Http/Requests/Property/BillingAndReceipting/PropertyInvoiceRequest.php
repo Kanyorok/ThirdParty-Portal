@@ -25,6 +25,8 @@ class PropertyInvoiceRequest extends FormRequest
             'Lease' => ['required', 'exists:t_LeaseCreation,Id'],
             'BillingMonth' => ['required', 'date'],
             'InvoiceDate' => ['required', 'date'],
+            'Currency' => ['required', 'exists:t_Currencies,Id'],
+            'Tax' => ['required', 'exists:t_FinanceTaxRuleConfiguration,Id'],
 
             // Line amounts
             'RentAmount' => ['required', 'numeric', 'min:0'],
@@ -38,19 +40,6 @@ class PropertyInvoiceRequest extends FormRequest
             'DescriptionParking' => ['nullable', 'string', 'max:255'],
             'DescriptionOther' => ['nullable', 'string', 'max:255'],
             'DescriptionRent' => ['nullable', 'string', 'max:255'],
-
-
-            // Currency fields
-            'CurrencyRent' => ['required', 'exists:t_Currencies,Id'],
-            'CurrencyService' => ['nullable', 'exists:t_Currencies,Id'],
-            'CurrencyParking' => ['nullable', 'exists:t_Currencies,Id'],
-            'CurrencyOther' => ['nullable', 'exists:t_Currencies,Id'],
-
-            // Tax fields
-            'TaxRent' => ['required', 'exists:t_FinanceTaxType,Id'],
-            'TaxService' => ['nullable', 'exists:t_FinanceTaxType,Id'],
-            'TaxParking' => ['nullable', 'exists:t_FinanceTaxType,Id'],
-            'TaxOther' => ['nullable', 'exists:t_FinanceTaxType,Id'],
 
             'InvoiceNotes' => ['nullable', 'string', 'max:500'],
         ];

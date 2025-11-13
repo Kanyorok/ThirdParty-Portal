@@ -77,11 +77,11 @@
                                                 <i class="bi bi-lock"></i>
                                             </button>
                                         @else
-                                            <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" 
+                                            {{-- <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" 
                                                class="btn btn-sm btn-warning" 
                                                title="Edit Invoice">
                                                 <i class="bi bi-pencil-square"></i>
-                                            </a>
+                                            </a> --}}
 
                                             <form action="{{ route('rentinvoice.destroy', $invoice->Id) }}" 
                                                   method="POST" 

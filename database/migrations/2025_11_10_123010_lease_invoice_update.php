@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('t_RentInvoice', function (Blueprint $table) {
             $table->string('Description')->nullable();
             $table->foreignId('Currency')->nullable()->constrained('t_Currencies','Id');
-            $table ->foreignId('Tax')->nullable()->constrained('t_FinanceTaxType','Id');
+            $table ->foreignId('Tax')->nullable()->constrained('t_FinanceTaxRuleConfiguration','Id');
         });
     }
 
