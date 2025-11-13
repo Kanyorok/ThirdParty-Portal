@@ -176,6 +176,10 @@ class CodeDetailSeeder extends Seeder
 
         // STATIC ENTRIES (from various modules)
         $static = [
+            //ThirdPartyType
+            ['CodeID' => 'PartyType', 'Description' => 'Individual', 'Value' => 'IN'],
+            ['CodeID' => 'PartyType', 'Description' => 'Cooperate', 'Value' => 'CO'],
+
             // Requisition Status
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Submitted For Approval', 'Value' => 'Su'],
