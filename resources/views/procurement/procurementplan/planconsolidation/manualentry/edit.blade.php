@@ -77,11 +77,12 @@
                 </div>
 
                 <div class="mb-3 col-md-6">
-                    <label for="budget_line_id" class="form-label">Budget Line</label>
-                    <select name="budget_line_id" id="budget_line_id" class="form-select" required>
+                    <label for="budget_line_id" class="form-label">Budget Line (Optional)</label>
+                    @php($selectedBudget = old('budget_line_id', $lineItem->BudgetLineID))
+                    <select name="budget_line_id" id="budget_line_id" class="form-select">
+                        <option value="" {{ empty($selectedBudget) ? 'selected' : '' }}>— No Budget Line —</option>
                         @foreach ($budgetLines as $budgetLine)
-                            <option
-                                value="{{ $budgetLine->Id }}" {{ $lineItem->BudgetLineID == $budgetLine->Id ? 'selected' : '' }}>
+                            <option value="{{ $budgetLine->Id }}" {{ (string)$selectedBudget === (string)$budgetLine->Id ? 'selected' : '' }}>
                                 {{ $budgetLine->LineName }}
                             </option>
                         @endforeach
