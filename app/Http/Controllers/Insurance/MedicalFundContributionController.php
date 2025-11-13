@@ -17,7 +17,8 @@ class MedicalFundContributionController extends Controller
 
     public function index(MedicalFund $medical_fund, Request $request)
     {
-        $q = $medical_fund->contributions()->newQuery();
+        // start a query for contributions and eager-load contributor and type to avoid N+1
+        $q = $medical_fund->contributions()->with(['contributor.thirdParty','type'])->newQuery();
 
 
         $contributor = null;
@@ -85,7 +86,7 @@ class MedicalFundContributionController extends Controller
     {
         $data = $request->validate([
             'ContributorType'  => ['required','string','max:50'],
-            'ContributorID'    => ['nullable','integer'],
+            'ContributorId'    => ['nullable','integer'],
             'Amount'           => ['required','numeric','min:0.01'],
             'ContributionDate' => ['required','date'],
             'Notes'            => ['nullable','string','max:500'],
@@ -94,13 +95,13 @@ class MedicalFundContributionController extends Controller
         $contribution->update($data);
 
         return redirect()
-            ->route('bancassurance.medicalfunds.contributions.index', $contribution->FundID)
+            ->route('bancassurance.medicalfunds.contributions.index', $contribution->FundId)
             ->with('success','Contribution updated.');
     }
 
     public function destroy(MedicalFundContribution $contribution)
     {
-        $fundId = $contribution->FundID;
+        $fundId = $contribution->FundId;
         $contribution->delete();
 
         return redirect()

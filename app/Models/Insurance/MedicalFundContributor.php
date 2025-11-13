@@ -30,10 +30,6 @@ class MedicalFundContributor extends Model
     /**
      * Cast date attributes to Carbon instances so blade can call ->format() safely.
      */
-    protected $casts = [
-        'EffectiveFrom' => 'datetime',
-        'EffectiveTo' => 'datetime',
-    ];
 
     public static function getPrimaryKey(): string
     {
@@ -75,10 +71,17 @@ class MedicalFundContributor extends Model
 
     public function packages() {
         return $this->belongsToMany(MedicalFundPackage::class, 't_MedicalFundContributorPackages', 'ContributorId', 'PackageId')
-        ->withPivot(['IsActive','SubscribedOn','IsPrimary']);
-  
+            ->withPivot([
+                'IsActive',
+                'SubscribedOn',
+                'IsPrimary',
+                'CreatedBy',
+                'CreatedOn',
+                'ModifiedBy',
+                'ModifiedOn'
+            ])->withTimestamps('CreatedOn', 'ModifiedOn');
     }
     public function primaryPackage() {
-    return $this->packages()->wherePivot('IsActive',1)->wherePivot('IsPrimary',1)->first();
+    return $this->packages()->wherePivot('IsActive',1)->wherePivot('IsPrimary',true)->first();
     }
 }
