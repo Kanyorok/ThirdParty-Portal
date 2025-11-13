@@ -50,6 +50,17 @@
                     </div>
                 </div>
 
+                <div class="row g-3 mb-3">
+                    <div class="col-md-12">
+                        <label for="Description" class="form-label">Invoice Description</label>
+                        <input 
+                            type="text" class="form-control" id="Description" name="Description" 
+                            placeholder="Enter a short description for this invoice"
+                            value="{{ old('Description') }}">
+                    </div>
+                </div>
+
+
                 <!-- Line Items Table -->
                 <div class="table-responsive mb-3">
                     <table class="table table-bordered align-middle text-center">
@@ -57,7 +68,7 @@
                             <tr>
                                 <th>Line Item</th>
                                 <th>Description</th>
-                                <th>Amount (KES)</th>
+                                <th>Amount</th>
                                 <th>Currency</th>
                                 <th>Tax</th>
                             </tr>
@@ -71,7 +82,7 @@
             <select name="CurrencyRent" class="form-select" required>
                 <option value="">-- Select Currency --</option>
                 @foreach($currencies as $currency)
-                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Name }}</option>
+                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Symbol }}</option>
                 @endforeach
             </select>
         </td>
@@ -79,7 +90,7 @@
             <select name="TaxRent" class="form-select" required>
                 <option value="">-- Select Tax Type --</option>
                 @foreach($taxTypes as $tax)
-                    <option value="{{ $tax->Id }}">{{ $tax->TaxName }} ({{ $tax->Rate }}%)</option>
+                    <option value="{{ $tax->Id }}">{{ $tax->TaxTypeName }}</option>
                 @endforeach
             </select>
         </td>
@@ -93,7 +104,7 @@
             <select name="CurrencyService" class="form-select" required>
                 <option value="">-- Select Currency --</option>
                 @foreach($currencies as $currency)
-                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Name }}</option>
+                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Symbol }}</option>
                 @endforeach
             </select>
         </td>
@@ -101,7 +112,7 @@
             <select name="TaxService" class="form-select" required>
                 <option value="">-- Select Tax Type --</option>
                 @foreach($taxTypes as $tax)
-                    <option value="{{ $tax->Id }}">{{ $tax->TaxName }} ({{ $tax->Rate }}%)</option>
+                    <option value="{{ $tax->Id }}">{{ $tax->TaxTypeName }}</option>
                 @endforeach
             </select>
         </td>
@@ -115,7 +126,7 @@
             <select name="CurrencyParking" class="form-select" required>
                 <option value="">-- Select Currency --</option>
                 @foreach($currencies as $currency)
-                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Name }}</option>
+                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Symbol }}</option>
                 @endforeach
             </select>
         </td>
@@ -123,7 +134,7 @@
             <select name="TaxParking" class="form-select" required>
                 <option value="">-- Select Tax Type --</option>
                 @foreach($taxTypes as $tax)
-                    <option value="{{ $tax->Id }}">{{ $tax->TaxName }} ({{ $tax->Rate }}%)</option>
+                    <option value="{{ $tax->Id }}">{{ $tax->TaxTypeName }}</option>
                 @endforeach
             </select>
         </td>
@@ -137,7 +148,7 @@
             <select name="CurrencyOther" class="form-select" required>
                 <option value="">-- Select Currency --</option>
                 @foreach($currencies as $currency)
-                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Name }}</option>
+                    <option value="{{ $currency->Id }}">{{ $currency->Code }} — {{ $currency->Symbol }}</option>
                 @endforeach
             </select>
         </td>
@@ -145,7 +156,7 @@
             <select name="TaxOther" class="form-select" required>
                 <option value="">-- Select Tax Type --</option>
                 @foreach($taxTypes as $tax)
-                    <option value="{{ $tax->Id }}">{{ $tax->TaxName }} ({{ $tax->Rate }}%)</option>
+                    <option value="{{ $tax->Id }}">{{ $tax->TaxTypeName }}</option>
                 @endforeach
             </select>
         </td>
@@ -158,7 +169,7 @@
                 <!-- Total Amount -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Total Amount (KES)</label>
+                        <label class="form-label fw-bold">Total Amount</label>
                         <input type="number" class="form-control bg-light fw-bold" name="TotalAmount" value="{{ old('TotalAmount', 0) }}" step="0.01" readonly>
                     </div>
                 </div>

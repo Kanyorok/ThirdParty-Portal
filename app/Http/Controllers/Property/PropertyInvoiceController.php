@@ -27,13 +27,6 @@ class PropertyInvoiceController extends Controller
         return view('property.billingandreceipting.invoicing.index', compact('invoices'));
     }
 
-    // public function create(){
-    //     $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
-    //     $newleases = PropertyNewLease::where('IsActive', true)
-    //         ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
-    //         ->with('tenant')->get();
-    //     return view('property.billingandreceipting.invoicing.create', compact('newleases'));
-    // }
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
@@ -58,16 +51,23 @@ class PropertyInvoiceController extends Controller
         return view('property.billingandreceipting.invoicing.show', compact('invoice'));
     }
 
-    public function store(PropertyInvoiceRequest $request)
-    {
+public function store(PropertyInvoiceRequest $request)
+{
+    $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+    $validated = $request->validated();
 
-        $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
-        $validated = $request->validated();
+    $Lease = PropertyNewLease::findOrFail($validated['Lease']);
 
-        $Lease = PropertyNewLease::findOrFail($validated['Lease']);
-        $Status = PropertyInvoiceEnum::Pending;
+    // Use Rent currency/tax as the main invoice reference
+    $Currency = Currency::findOrFail($validated['CurrencyRent']);
+    $Tax = FinanceTaxType::findOrFail($validated['TaxRent']);
 
-        PropertyInvoiceService::create(
+    $Status = PropertyInvoiceEnum::Pending;
+    $TaxService = isset($validated['TaxService']) ? FinanceTaxType::findOrFail($validated['TaxService']) : null;
+    $TaxParking = isset($validated['TaxParking']) ? FinanceTaxType::findOrFail($validated['TaxParking']) : null;
+    $TaxOther = isset($validated['TaxOther']) ? FinanceTaxType::findOrFail($validated['TaxOther']) : null;
+
+    PropertyInvoiceService::create(
         $Lease,
         $validated['BillingMonth'],
         $validated['InvoiceDate'],
@@ -76,15 +76,23 @@ class PropertyInvoiceController extends Controller
         $validated['OtherCharges'] ?? 0,
         $validated['ParkingFee'] ?? 0,
         $validated['InvoiceNotes'] ?? '',
-        $validated['Description'] ?? null,
-        $validated['Currency'] ?? null,
-        $validated['Tax'] ?? null,
+        $validated['Description'] ?? null, 
+        $validated['DescriptionRent'] ?? null,
+        $validated['DescriptionService'] ?? null,
+        $validated['DescriptionParking'] ?? null,
+        $validated['DescriptionOther'] ?? null,
+        $Currency,
+        $Tax,
+        $TaxService,
+        $TaxParking,
+        $TaxOther,
         $Status,
         Auth::user()
     );
 
-        return redirect()->route('rentinvoice.index')->with('success', 'Invoice created successfully');
-    }
+    return redirect()->route('rentinvoice.index')->with('success', 'Invoice created successfully');
+}
+
 
     public function edit($id)
     {
