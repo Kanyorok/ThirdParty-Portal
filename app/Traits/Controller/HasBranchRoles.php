@@ -2,9 +2,8 @@
 
 namespace App\Traits\Controller;
 
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Spatie\Permission\Traits\HasRoles as BaseHasRoles;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Traits\HasRoles as BaseHasRoles;
 
 trait HasBranchRoles
 {
@@ -40,14 +39,14 @@ trait HasBranchRoles
     /**
      * Optionally override Spatie's roles() if needed for additional logic.
      */
-    public function roles(): MorphToMany
-    {
-        return $this->morphToMany(
-            config('permission.models.role'),
-            'model',
-            config('permission.table_names.model_has_roles'),
-            config('permission.column_names.model_morph_key'),
-            'role_id'
-        )->withPivot(['BranchId', 'CreatedBy', 'ModifiedBy'])->withTimestamps();
-    }
+    /*   public function roles(): MorphToMany
+       {
+           return $this->morphToMany(
+               config('permission.models.role'),
+               'model',
+               config('permission.table_names.model_has_roles'),
+               config('permission.column_names.model_morph_key'),
+               'role_id'
+           )->withPivot(['BranchId', 'CreatedBy', 'ModifiedBy'])->withTimestamps();
+       }*/
 }

@@ -109,6 +109,10 @@ return [
         ),
     ],
 
+    'br' => [
+        'crypto' => env('CRYPTO_HELPER', storage_path('crypto/CryptoHelper')),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver
