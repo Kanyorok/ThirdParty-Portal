@@ -234,6 +234,14 @@
   <script>
       window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() ? '/' . request()->path() : '/');
   </script>
+  <script>
+    // Refresh Feather icons after partial content loads
+    document.addEventListener('partial:loaded', function(){
+      if (window.feather && typeof window.feather.replace === 'function') {
+        try { window.feather.replace(); } catch (e) {}
+      }
+    });
+  </script>
   <script type="module">
       import {SidebarState} from '/js/sidebarState.js';
 
