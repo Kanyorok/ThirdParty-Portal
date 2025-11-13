@@ -62,6 +62,7 @@
             altInput: true,
             minDate: moment().format('YYYY-MM-DD'),
             minuteIncrement: 1,
+            allowInput: true,
             altFormat: "F j, Y",
             dateFormat: "Y-m-d",
         });

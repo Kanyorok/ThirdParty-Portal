@@ -16,9 +16,10 @@
                         <label for="branch" class="form-label">Login Branch <span class="text-danger">*</span></label>
                         <select class="form-control @error('branch') is-invalid @enderror" id="branch" name="branch"
                                 required>
-                            <option value="" disabled {{ old('branch') ? '' : 'selected' }}>-- Select Branch --</option>
+                            <option disabled {{ old('branch') ? '' : 'selected' }}>-- Select Branch --</option>
                             @foreach ($branches as $branch)
-                                <option value="{{ $branch->Id }}" {{ old('branch') == $branch->Id ? 'selected' : '' }}>
+                                <option
+                                    value="{{ $branch->BranchID }}" {{ old('branch') === $branch->BranchID ? 'selected' : '' }}>
                                     {{ $branch->Name }}
                                 </option>
                             @endforeach

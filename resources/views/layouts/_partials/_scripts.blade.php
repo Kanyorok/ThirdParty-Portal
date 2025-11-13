@@ -44,8 +44,8 @@
 <script src="{{ asset('assets/js/plugins/i18next.min.js') }}"></script>
 <script src="{{ asset('assets/js/icon/custom-font.js') }}"></script>
 <script src="{{ asset('assets/js/script.js') }}"></script>
-<script src="{{ asset('assets/js/theme.js') }}"></script>
-<script src="{{ asset('assets/js/plugins/feather.min.js') }}"></script>
+                            dateFormat: 'd/m/Y',
+                            altFormat: 'd/m/Y',
 <script src="{{ asset('assets/libs/dataTables/dataTables.min.js') }}"></script>
 <script src="{{ asset('assets/libs/dataTables/bootstrap5.min.js') }}"></script>
 <script src="{{ asset('assets/libs/flatpickr/flatpickr.min.js') }}"></script>
