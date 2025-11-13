@@ -21,8 +21,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-#use App\Models\BR\Branch;
-
 class PlannerService
 {
     public function __construct(public MarketingPlanner $planner)
@@ -108,11 +106,10 @@ class PlannerService
         return in_array($actor->Id, $this->planner->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true) /*|| $actor->can(PermissionEnum::MarketingPlannerApproval->value)*/ ;
     }
 
-    public function update(Branch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): static
+    public function update(CodeDetail $Mode, string $Name, string $Notes, User $actor): static
     {
         $this->planner->update([
             'Name' => $Name,
-            'BranchId' => $branch->BranchID,
             'Notes' => $Notes,
             'Status' => PlannerStatus::Draft->value,
             'Modes' => $Mode->ID,
@@ -127,7 +124,7 @@ class PlannerService
         $planner->fill([
             'PlannerID' => self::_ID(),
             'Name' => $Name,
-            'BranchId' => $branch->BranchID,
+            'BranchId' => $branch->Id,
             'Notes' => $Notes,
             'Status' => PlannerStatus::Draft->value,
             'Type' => PlannerTypeEnum::BranchPlanner->value,
@@ -238,7 +235,7 @@ class PlannerService
      */
     public function managerWorkflowApprove(User $actor): static
     {
-        if (!$this->canApprove($actor) && !(new UserService($actor))->isMarketingManager()) {
+        if (!$this->canApprove($actor) && !(new UserService($actor))->isMarketingManager($actor->branch)) {
             throw new ErroredException('cannot approve, no permission');
         }
 
@@ -569,7 +566,7 @@ class PlannerService
             'Location' => $Location,
             'Notes' => $Notes,
             'Materials' => $Materials,
-            'BranchId' => ($branch instanceof Branch) ? $branch->OurBranchID : $this->planner->BranchId,
+            'BranchId' => ($branch instanceof Branch) ? $branch->Id : $this->planner->BranchId,
             'StartOn' => $start,
             'EndOn' => $end,
             'Budget' => $budget,

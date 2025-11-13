@@ -10,7 +10,7 @@ class UserPolicy
 {
     public function marketingManager(User $user): bool
     {
-        return ((new UserService($user))->isMarketingManager());
+        return ((new UserService($user))->isMarketingManager($user->branch));
     }
 
     public function ceo(User $user): bool

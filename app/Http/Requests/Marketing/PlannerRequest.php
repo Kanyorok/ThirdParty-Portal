@@ -19,24 +19,11 @@ class PlannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'Name'   => [
-                             'required',
-                             'string',
-                             'max:200',
-                            ],
-                'Branch' => [
-                             'required',
-                             'string',
-                            ],
-                'Mode'   => [
-                             'required',
-                             'string',
-                            ],
-                'Notes'  => [
-                             'nullable',
-                             'string',
-                            ],
-               ];
+            'Name' => ['required', 'string', 'max:200',],
+            'Branch' => ['required', 'string',],
+            'Mode' => ['required', 'string',],
+            'Notes' => ['nullable', 'string',],
+        ];
     }
 
 
@@ -57,13 +44,18 @@ class PlannerRequest extends FormRequest
      */
     public function getBranch(): Branch
     {
-        $branch = $this->validated('Branch');
-
-        $branch = Branch::query()->where('BranchID', $branch)->latest()->first();
+        $branch = $this->user()->branch;
         if ($branch instanceof Branch) {
+            if ((is_null($branch->ManagerId) && is_null($branch->UserId))) {
+                throw ValidationException::withMessages([
+                    'Branch' => 'Branch does not have a manager or operations manager.'
+                ]);
+            }
             return $branch;
         }
 
-        throw ValidationException::withMessages(['Branch' => 'Branch is not found.']);
+        throw ValidationException::withMessages([
+            'Branch' => 'Branch is not found.'
+        ]);
     }
 }

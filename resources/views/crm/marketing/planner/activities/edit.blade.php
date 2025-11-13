@@ -42,7 +42,7 @@
                 <select class="form-control" name="Branch" id="e_Branch" required>
                     @foreach($Branches as $Branch)
                         <option
-                            {{ ($Branch->OurBranchID===\Illuminate\Support\Str::squish($activity->BranchId))?'selected':'' }} value="{{ $Branch->OurBranchID }}">{{ $Branch->BranchName }}</option>
+                            {{ ($Branch->BranchID===$activity->BranchId)?'selected':'' }} value="{{ $Branch->BranchID }}">{{ $Branch->Name }}</option>
                     @endforeach
                 </select>
                 <p id="e_Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
