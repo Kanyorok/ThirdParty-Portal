@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('t_FinanceGLAccounts', function (Blueprint $table) {
-            $table->boolean('is_synced')->default(false);
+            $table->boolean('IsSynced')->default(false);
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_FinanceGLAccounts', function (Blueprint $table) {
-            $table->dropColumn('is_synced');
+            $table->dropColumn('IsSynced');
         });
     }
 };
