@@ -102,35 +102,36 @@
                     <p class="text-muted mb-4">Main contact person assigned to this third party.</p>
                     <div class="row g-4">
                         @php
-                        $details = [
-                        'Company Name' => $party->ThirdPartyName,
-                        'Trading Name' => $party->TradingName,
-                        'Business Type' => $party->BusinessType?->label(),
-                        'Registration Number' => $party->RegistrationNumber,
-                        'Tax PIN' => $party->TaxPIN,
-                        'VAT Number' => $party->VATNumber,
-                        'Country' => $party->Country,
-                        'Physical Address' => $party->PhysicalAddress,
-                        'Email' => $party->Email,
-                        'Phone' => $party->Phone,
-                        'Website' => $party->Website,
-                        'Primary Contact' => $primaryUser?->FullName,
-                        'Primary Email' => $primaryUser?->Email,
-                        'Approval Status' => $party->ApprovalStatus?->label(),
-                        'Operational Status' => $party->Status?->value,
-                        // New multi-type display: join Codes; fallback to legacy enum label
-                        'Third Party Types' => ($party->types && $party->types->count()) ? $party->types->pluck('Code')->filter()->unique()->join(', ') : $party->ThirdPartyType?->label(),
-                        'Is Prequalified' => $party->IsPrequalified,
-                        'Created On' => $party->CreatedOn?->format('d/m/Y H:i:s'),
-                        'Modified On' => $party->ModifiedOn?->format('d/m/Y H:i:s'),
-                        ];
+                            $details = [
+                                'Company Name' => $party->ThirdPartyName,
+                                'Trading Name' => $party->TradingName,
+                                'Business Type' => $party->BusinessType?->label(),
+                                'Registration Number' => $party->RegistrationNumber,
+                                'Tax PIN' => $party->TaxPIN,
+                                'VAT Number' => $party->VATNumber,
+                                'Country' => $party->Country,
+                                'Physical Address' => $party->PhysicalAddress,
+                                'Email' => $party->Email,
+                                'Phone' => $party->Phone,
+                                'Website' => $party->Website,
+                                'Primary Contact' => $primaryUser?->FullName,
+                                'Primary Email' => $primaryUser?->Email,
+                                'Approval Status' => $party->ApprovalStatus?->label(),
+                                'Operational Status' => $party->Status?->value,
+                                // New multi-type display: join Codes; fallback to legacy enum label
+                                'Third Party Types' => ($party->types && $party->types->count()) ? $party->types->pluck('Code')->filter()->unique()->join(', ') : $party->ThirdPartyType?->label(),
+                                'Is Prequalified' => $party->IsPrequalified,
+                                'Created On' => $party->CreatedOn?->format('d/m/Y H:i:s'),
+                                'Modified On' => $party->ModifiedOn?->format('d/m/Y H:i:s'),
+                            ];
                         @endphp
 
                         @foreach ($details as $label => $value)
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1 fw-semibold">Email</p>
-                            <p class="fw-bold">{{ $primaryUser?->Email ?? 'N/A' }}</p>
-                        </div>
+                            <div class="col-md-6 col-lg-4">
+                                <p class="text-muted mb-1 fw-semibold">{{ $label }}</p>
+                                <p class="fw-bold">{{ $value ?? 'N/A' }}</p>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 
