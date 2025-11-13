@@ -55,6 +55,22 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="From" class="form-label fw-medium">To (Date)</label>
+                        <input type="date" class="form-control rounded-3 @error('From') is-invalid @enderror"
+                               id="To" name="To" value="{{ old('To') }}" required>
+                        @error('To')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label for="Notes" class="form-label fw-medium">Notes</label>
+                        <textarea class="form-control rounded-3" placeholder="Remarks" name="Notes" rows="4"></textarea>
+                        @error('Notes')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
                     {{-- <!-- GL Selection Section -->
                     <h5 class="mt-4 mb-3 fw-bold text-primary">Select General Ledger Accounts</h5>
@@ -108,46 +124,46 @@
                     </div> --}}
 
 
-                    <div class="col-md-6 mb-3">
-                        <label for="glSubAccountType" class="form-label fw-medium">GL Subtype</label>
-                        <select class="form-select rounded-3" id="glSubAccountType" name="glSubAccountType" disabled>
-                            <option disabled selected>Select Subtype</option>
-                        </select>
-                    </div>
+                    {{--                    <div class="col-md-6 mb-3">--}}
+                    {{--                        <label for="glSubAccountType" class="form-label fw-medium">GL Subtype</label>--}}
+                    {{--                        <select class="form-select rounded-3" id="glSubAccountType" name="glSubAccountType" disabled>--}}
+                    {{--                            <option disabled selected>Select Subtype</option>--}}
+                    {{--                        </select>--}}
+                    {{--                    </div>--}}
 
-                    <div class="col-md-12 mb-3">
-                        <label for="glAccounts" class="form-label fw-medium">GL Accounts</label>
-                        <select class="form-select rounded-3" id="glAccounts" multiple size="8" disabled>
-                            <option disabled>Select GL Accounts</option>
-                        </select>
-                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
-                        <button type="button" class="btn btn-outline-primary mt-2 w-100 rounded-3" id="addGlButton"
-                                disabled>
-                            <i class="bi bi-plus-circle me-1"></i>Add Selected GLs
-                        </button>
-                    </div>
+                    {{--                    <div class="col-md-12 mb-3">--}}
+                    {{--                        <label for="glAccounts" class="form-label fw-medium">GL Accounts</label>--}}
+                    {{--                        <select class="form-select rounded-3" id="glAccounts" multiple size="8" disabled>--}}
+                    {{--                            <option disabled>Select GL Accounts</option>--}}
+                    {{--                        </select>--}}
+                    {{--                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>--}}
+                    {{--                        <button type="button" class="btn btn-outline-primary mt-2 w-100 rounded-3" id="addGlButton"--}}
+                    {{--                                disabled>--}}
+                    {{--                            <i class="bi bi-plus-circle me-1"></i>Add Selected GLs--}}
+                    {{--                        </button>--}}
+                    {{--                    </div>--}}
                 </div>
 
                 <!-- Selected GLs Table -->
-                <h6 class="mt-3 mb-2 fw-bold">Selected GL Accounts</h6>
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered rounded-3" id="selectedGlTable">
-                        <thead class="table-light">
-                        <tr>
-                            <th scope="col">Account ID</th>
-                            <th scope="col">Description</th>
-                            <th scope="col">Account Type</th>
-                            <th scope="col">Action</th>
-                        </tr>
-                        </thead>
-                        <tbody id="selectedGlBody">
-                        <!-- Selected GLs will be appended here -->
-                        </tbody>
-                    </table>
-                </div>
+                {{--                <h6 class="mt-3 mb-2 fw-bold">Selected GL Accounts</h6>--}}
+                {{--                <div class="table-responsive">--}}
+                {{--                    <table class="table table-hover table-bordered rounded-3" id="selectedGlTable">--}}
+                {{--                        <thead class="table-light">--}}
+                {{--                        <tr>--}}
+                {{--                            <th scope="col">Account ID</th>--}}
+                {{--                            <th scope="col">Description</th>--}}
+                {{--                            <th scope="col">Account Type</th>--}}
+                {{--                            <th scope="col">Action</th>--}}
+                {{--                        </tr>--}}
+                {{--                        </thead>--}}
+                {{--                        <tbody id="selectedGlBody">--}}
+                {{--                        <!-- Selected GLs will be appended here -->--}}
+                {{--                        </tbody>--}}
+                {{--                    </table>--}}
+                {{--                </div>--}}
 
-                <!-- Hidden input to store selected GLs -->
-                <input type="hidden" name="selected_gls" id="selected_gls" value="{{ old('selected_gls') }}">
+                {{--                <!-- Hidden input to store selected GLs -->--}}
+                {{--                <input type="hidden" name="selected_gls" id="selected_gls" value="{{ old('selected_gls') }}">--}}
 
                 <div class="modal-footer border-0 pt-4">
                     <button type="submit" class="btn btn-success"
