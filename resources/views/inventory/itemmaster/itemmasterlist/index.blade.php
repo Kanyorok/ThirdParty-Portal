@@ -93,8 +93,8 @@
                                 <td>{{ optional($item->price)->ActualPrice ?? '—' }}</td>
                                 <td>{{ optional($item->category)->Name ?? 'Uncategorized' }}</td>
                                 <td>{{ optional(optional($item->category)->parent)->Name ?? '—' }}</td>
-                                <td>{{ optional($item->itemType)->TypeName ?? '—' }}</td>
-                                <td>{{ optional($item->inventoryType)->Type ?? '—' }}</td>
+                                <td>{{ optional($item->itemType)->Description ?? 'N/A' }}</td>
+                                <td>{{ optional($item->inventoryType)->Description ?? 'N/A' }}</td>
                                 <td>{{ optional($item->uom)->Code ?? '—' }}</td>
                                 <td>
                                     @if ($item->status && $item->status->Description)

@@ -103,7 +103,7 @@ public function inUse(): bool
 
     public function itemType()
     {
-        return $this->belongsTo(ItemType::class, 'ItemType', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'ItemType', 'ID');
     }
 
     public function uom()
@@ -118,7 +118,7 @@ public function inUse(): bool
 
     public function inventoryType()
     {
-        return $this->belongsTo(InventoryType::class, 'InventoryType', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'InventoryType', 'ID');
     }
 
     public function stockItems()
