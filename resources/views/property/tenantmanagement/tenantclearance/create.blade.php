@@ -85,8 +85,8 @@
           <!-- Document Upload -->
           <div class="mb-3">
             <label class="form-label">Upload clearance Documents</label>
-            <input type="file" name="Document" class="form-control" multiple>
-            <small class="text-muted">e.g. Extra Clearance info</small>
+            <input type="file" name="Document" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+            <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
           </div>
 
           <div class="mb-3">

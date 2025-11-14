@@ -7,6 +7,23 @@ use App\Models\BR\BRUser;
 
 class BREncryption
 {
+    public static function decrypt(string $cipher, string $keyOne, string $keyTwo = ''): ?string
+    {
+        $cmd = config('app.br.crypto');
+
+        if (!file_exists($cmd) || !is_executable($cmd)) {
+            return null;
+        }
+
+        $cmd = config('app.br.crypto');
+        $output = shell_exec("{$cmd} UnLionStr {$cipher} {$keyOne} {$keyTwo}");
+        if (is_string($output) === false) {
+            return null;
+        }
+
+        return trim($output);
+    }
+
     public static function checkAuthBRUser(BRUser $user, #[\SensitiveParameter] string $password): bool
     {
         return self::isValid($user->OperatorID . $password, $user->Password);

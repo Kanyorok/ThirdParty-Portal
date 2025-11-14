@@ -62,15 +62,15 @@
                     <!-- Upload Documents -->
                     <div class="mb-3">
                         <label class="form-label">Upload Supporting Documents</label>
-                        <input type="file" name="Documents[]" class="form-control" multiple>
-                        <small class="text-muted">Leave blank if no new documents are needed.</small>
+                        <input type="file" name="Documents[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+                        <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
                     </div>
 
                     <!-- Remarks -->
                     <div class="mb-3">
                         <label class="form-label">Remarks</label>
                         <textarea name="Remarks" class="form-control" rows="3"
-                                  placeholder="Optional">{{ old('Remarks', $tenants->Remarks) }}</textarea>
+                        placeholder="Optional">{{ old('Remarks', $tenants->Remarks) }}</textarea>
                     </div>
 
                 </div>
