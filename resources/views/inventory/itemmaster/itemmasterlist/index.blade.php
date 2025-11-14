@@ -125,10 +125,9 @@
                                         </a>
 
                                         @if ($item->inUse())
-                                            <button class="btn btn-info btn-sm disabled" 
-                                                    title="Item is in use and cannot be deleted">
-                                                <i class="bi bi-lock"></i>
-                                            </button>
+                                            <span class="badge in-use-badge" title="Item is in use and cannot be deleted">
+                                                In Use
+                                            </span>
                                         @else
                                             <button type="button" 
                                                     class="btn btn-delete btn-sm delete-btn"
@@ -220,6 +219,20 @@
 .btn-delete:hover { background-color: #c82333 !important; }
 .bi { font-size: 0.875rem; color: white; }
 .badge { font-size: 0.75em; padding: 0.35em 0.65em; }
+
+/* NEW In Use Style */
+.in-use-badge {
+    background-color: #4680ff !important;
+    color: #ffffff !important;
+    font-weight: bold;
+    height: 30px;
+    min-width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+}
+
 .table-responsive { border-radius: 0.375rem; }
 </style>
 @endsection
