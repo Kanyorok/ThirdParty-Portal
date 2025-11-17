@@ -58,7 +58,7 @@ class PartyTaskRequest extends FormRequest
     {
         $date = Carbon::createFromFormat('Y-m-d', $this->string('task_date'));
         if (!$date instanceof Carbon) {
-            throw ValidationException::withMessages(['task_date' => 'invalid date format']);
+            throw ValidationException::withMessages(['task_date' => 'Invalid date format']);
         }
 
         if (!$current instanceof Carbon) {//not an update
@@ -66,7 +66,7 @@ class PartyTaskRequest extends FormRequest
         }
 
         if ($date->lte($current->subDay())) {
-            throw ValidationException::withMessages(['task_date' => 'has to be due in the future.']);
+            throw ValidationException::withMessages(['task_date' => 'Has to be due in the future.']);
         }
 
         return $date->endOfDay();

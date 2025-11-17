@@ -23,7 +23,8 @@
             <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
         </span>
     </div>
-    <form action="{{ route('initiatetender.store') }}" method="POST" enctype="multipart/form-data">
+  @canWrite('tender')
+  <form action="{{ route('initiatetender.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('POST')
 
@@ -118,7 +119,9 @@
                         onchange="loadPlanItemsForPlan()">
                         <option selected disabled>-- Choose Procurement Plan --</option>
                         @foreach ($procurementPlan as $item)
-                        <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
+                            @if (!$item->isUsed())
+                                <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
+                            @endif
                         @endforeach
                     </select>
         </div>
@@ -230,10 +233,11 @@
                     </div>
 
         <!-- Buttons -->
-        <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn btn-primary">Save Tender</button>
-                    </div>
-                </form>
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-primary">Save Tender</button>
+    </div>
+  </form>
+  @endcanWrite
 
 </div>
 <script>

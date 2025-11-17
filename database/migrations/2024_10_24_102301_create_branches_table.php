@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('t_Branches', static function (Blueprint $table) {
             $table->id('Id');
-            $table->string('Name'); //TODO: add unique constraint if needed
+            $table->string('Name'); 
             $table->string('BranchID')->unique();
             $table->string('Address')->nullable();
             $table->string('Address2')->nullable();

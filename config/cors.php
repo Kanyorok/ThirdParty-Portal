@@ -14,6 +14,9 @@ return [
         'http://192.168.10.109:3001',
         'http://172.17.40.52',
         'http://172.17.40.52:3001',
+		'http://41.139.239.161:3307',
+        'https://demo.craftsilicon.com:3308',
+        'http://172.16.2.23:3307'
     ],
 
     'allowed_origins_patterns' => [],

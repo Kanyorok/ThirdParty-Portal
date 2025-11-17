@@ -21,7 +21,7 @@ class MedicalFundPackage extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FundID','Name','CoverageDescription','Premium','IsCompulsory',
+        'FundId','Name','CoverageDescription','Premium','IsCompulsory',
         'CreatedBy','ModifiedBy','DeletedBy'
     ];
 
@@ -39,7 +39,15 @@ class MedicalFundPackage extends Model
             't_MedicalFundContributorPackages',
             'PackageId',
             'ContributorId'
-        )->withPivot(['IsActive','SubscribedOn']);
+        )->withPivot([
+            'IsActive',
+            'SubscribedOn',
+            'IsPrimary',
+            'CreatedBy',
+            'CreatedOn',
+            'ModifiedBy',
+            'ModifiedOn'
+        ])->withTimestamps('CreatedOn', 'ModifiedOn');
     }
    
 public function coverages() {

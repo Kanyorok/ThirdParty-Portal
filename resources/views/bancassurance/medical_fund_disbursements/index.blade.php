@@ -42,8 +42,8 @@
                         <tbody>
                         @foreach($disbursements as $i => $d)
                             <tr>
-                                <td>{{ $disbursements->firstItem() + $i }}</td>
-                                <td>{{ optional($d->DisbursementDate)->format('Y-m-d') }}</td>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ optional($d->DisbursementDate)->format('d/m/Y') }}</td>
                                 <td>{{ optional($d->beneficiary)->FullName ?? '—' }}</td>
                                 <td>{{ $d->Purpose ?? '—' }}</td>
                                 <td class="text-end">{{ number_format((float)$d->Amount,2) }}</td>
@@ -51,8 +51,8 @@
                                 <td>{{ optional($d->ApprovedOn)->format('Y-m-d H:i') ?? '—' }}</td>
                                 <td class="text-end">
                                     <div class="btn-group">
-                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('bancassurance.disbursements.edit', $d->ID) }}">Edit </a>
-                                        <form action="{{ route('bancassurance.disbursements.destroy', $d->ID) }}" method="POST" onsubmit="return confirm('Delete this disbursement?');">
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('bancassurance.disbursements.edit', $d->Id) }}">Edit </a>
+                                        <form action="{{ route('bancassurance.disbursements.destroy', $d->Id) }}" method="POST" onsubmit="return confirm('Delete this disbursement?');">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger">Delete</button>

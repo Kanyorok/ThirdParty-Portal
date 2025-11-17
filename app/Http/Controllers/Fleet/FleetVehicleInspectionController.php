@@ -39,7 +39,7 @@ class FleetVehicleInspectionController extends Controller
         $this->authorize('create', FleetVehicleInspection::class);
 
         $vehicles = FleetVehicle::all();
-        $fuels    = FuelType::all();
+        $fuels    = FuelType::where('IsActive', true)->get();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
         $engineOilUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
         $fuelUOMs = CodeDetail::where('CodeID', 'FuelUOM')->get();
@@ -56,13 +56,14 @@ class FleetVehicleInspectionController extends Controller
         $parentInspection = FleetVehicleInspection::with('inspectionType')->findOrFail($id);
 
         $vehicles = FleetVehicle::all();
-        $fuels    = FuelType::all();
+        $fuels    = FuelType::where('IsActive', true)->get();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
         $engineOilUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
         $fuelUOMs = CodeDetail::where('CodeID', 'FuelUOM')->get();
         $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
         return view('fleet.vehicle_inspection.create', [
+            'fuels'             => $fuels,
             'vehicles'          => $vehicles,
             'engineOilUOMs'     => $engineOilUOMs,
             'fuelUOMs'          => $fuelUOMs,
@@ -98,7 +99,7 @@ class FleetVehicleInspectionController extends Controller
     public function edit($id)
     {
         $this->authorize('edit', FleetVehicleInspection::class);
-
+        $fuels    = FuelType::where('IsActive', true)->get();
         $inspection = FleetVehicleInspection::findOrFail($id);
         $vehicles   = FleetVehicle::all();
         $drivers    = FleetDriver::all();
@@ -108,7 +109,7 @@ class FleetVehicleInspectionController extends Controller
         $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
 
-        return view('fleet.vehicle_inspection.edit', compact('inspection', 'vehicles', 'drivers', 'engineOilUOMs', 'fuelUOMs', 'coolantUOMs', 'inspectionTypes'));
+        return view('fleet.vehicle_inspection.edit', compact('inspection', 'vehicles', 'drivers', 'engineOilUOMs', 'fuelUOMs', 'coolantUOMs', 'inspectionTypes','fuels'));
     }
 
     public function update(FleetVehicleInspectionRequest $request, $id)

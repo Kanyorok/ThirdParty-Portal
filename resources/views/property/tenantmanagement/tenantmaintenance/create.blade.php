@@ -43,8 +43,8 @@
       <!-- Document Upload -->
       <div class="mb-3">
         <label class="form-label">Upload Supporting Documents</label>
-        <input type="file" name="Document" class="form-control" multiple>
-        <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
+        <input type="file" name="Document" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx" multiple>
+        <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx | Max size: 25MB</small>
       </div>
           <div>
               <label class="form-label">Remarks</label>

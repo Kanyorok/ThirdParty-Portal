@@ -40,12 +40,12 @@
 
             
             <div class="col-md-6">
-                <label for="Company" class="form-label">Company Name</label>
-                <select name="Company" class="form-select">
+                <label for="CompanyID" class="form-label">Company Name</label>
+                <select name="CompanyID" class="form-select">
                     <option value="">Select Company</option>
                     @foreach($companies as $company)
-                        <option value="{{ $company->Id }}" {{ old('Company') == $company->Id ? 'selected' : '' }}>
-                            {{ $company->SupplierName }}
+                        <option value="{{ $company->Id }}" {{ old('CompanyID') == $company->Id ? 'selected' : '' }}>
+                            {{ $company->ThirdPartyName }}
                         </option>
                     @endforeach
                 </select>

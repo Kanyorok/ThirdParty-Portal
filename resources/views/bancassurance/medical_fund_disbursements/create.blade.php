@@ -50,12 +50,14 @@
           </div>
           {{-- coverages debug removed --}}
           {{-- Coverage --}}
+          {{-- @dd($coverages) --}}
           <select name="CoverageId" id="CoverageId" class="form-select" required>
             <option value="">-- select coverage --</option>
             @if(isset($coverages) && $coverages->count())
               @foreach($coverages as $cov)
                 @php
-                  $covId = data_get($cov, 'Id') ?? data_get($cov, 'ID');
+                  // Accept both common key variants returned by Eloquent/pivot or raw queries
+                  $covId = data_get($cov, 'Id') ?? data_get($cov, 'ID') ?? ($cov->Id ?? $cov->ID ?? '');
                   $covName = data_get($cov, 'Name') ?? ($cov->Name ?? '');
                   $annual = data_get($cov, 'pivot.AnnualLimit') ?? data_get($cov, 'AnnualLimit') ?? '';
                   $pervisit = data_get($cov, 'pivot.PerVisitLimit') ?? data_get($cov, 'PerVisitLimit') ?? '';

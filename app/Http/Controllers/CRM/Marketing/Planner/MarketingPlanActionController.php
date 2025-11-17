@@ -6,7 +6,6 @@ use App\Enums\Marketing\PlannerStatus;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
-use App\Models\Core\Branch;
 use App\Models\CRM\MarketingPlanner;
 use App\Services\Marketing\PlannerService;
 use App\Traits\Controller\WorkflowTrait;
@@ -53,12 +52,10 @@ class MarketingPlanActionController extends Controller
             return $this->errored('plan has no activities');
         }
 
-        $branch = Branch::query()->where('BranchId', $planner->BranchId)->latest('Id')->with(['manager', 'operation'])->first();
-        if (!$branch instanceof Branch) {
-            return $this->errored('No Branch Manager in Branch.');
-        }
+        $branch = $planner->branch;
 
-        if ((!$branch->manager instanceof User && !$branch->operation instanceof User)) {
+
+        if ((!$branch?->manager instanceof User && !$branch?->operation instanceof User)) {
             return $this->errored('No Branch or Operation Manager in Branch.');
         }
 

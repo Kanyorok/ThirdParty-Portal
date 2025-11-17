@@ -281,6 +281,31 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Support\Facades\Blade::if('canRead', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'read');
+        });
+        \Illuminate\Support\Facades\Blade::if('canWrite', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'write');
+        });
+        \Illuminate\Support\Facades\Blade::if('canUpdate', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'update');
+        });
+        \Illuminate\Support\Facades\Blade::if('canDelete', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'delete');
+        });
+        \Illuminate\Support\Facades\Blade::if('canApprove', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'approve');
+        });
         Relation::morphMap([
 
             //Core

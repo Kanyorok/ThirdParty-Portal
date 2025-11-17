@@ -26,7 +26,7 @@ class PropertyNewTenantRequest extends FormRequest
             'TenantType' => 'required|exists:t_CodeDetails,ID',
             'Remarks' => 'nullable|string|max:255',
             'IsActive' => 'boolean',
-            'Document' => 'nullable|file|max:9048',
+            'Document' => 'nullable|file|max:25000|mimes:pdf,jpg,jpeg,png,docx',
         ];
     }
 }

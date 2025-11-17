@@ -12,6 +12,7 @@ use App\Models\Fleet\FleetTripLog;
 use App\Models\Core\CodeDetail;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\DocumentsTrait;
+use App\Models\ThirdParty\ThirdParties;
 
 
 class ContractedDriver extends Model
@@ -33,7 +34,7 @@ class ContractedDriver extends Model
         'FullName',
         'NationalID',
         'Phone',
-        'Company',
+        'CompanyID',
         'ContractStartDate',
         'ContractEndDate',
         'IsActive',
@@ -53,12 +54,14 @@ class ContractedDriver extends Model
 
     public function company()
     {
-        return $this->belongsTo(Supplier::class, 'Company', 'Id');
+        return $this->belongsTo(ThirdParties::class, 'CompanyID', 'Id');
     }
 
     public function tripLogs()
     {
-        return $this->hasMany(FleetTripLog::class, 'DriverID', 'Id');
+        return $this->hasMany(FleetTripLog::class, 'DriverNo', 'Id');
     }
+
+    
 
 }

@@ -207,52 +207,48 @@
                                 </table>
                             </div>
                         </div>
-
-                        {{-- Trips Tab Content
                         <div class="tab-pane fade" id="trips">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h5>Trips</h5>
                             </div>
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
+                            <h5 class="mt-4">🚗 Assigned Trips</h5>
+
+                        @if ($driver->trips->isEmpty())
+                            <p>No trips assigned to this driver.</p>
+                        @else
+                            <table class="table table-hover">
+                                <thead>
                                     <tr>
-                                        <th>#</th>
                                         <th>Trip No</th>
-                                        <th>Vehicle</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Start Time</th>
-                                        <th>End Time</th>
-                                        <th>Start Location</th>
-                                        <th>End Location</th>
-                                        <th>Distance (Km)</th>
+                                        <th>Vehicle Type</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                        <th>Start</th>
+                                        <th>End</th>
                                     </tr>
-                                    </thead> --}}
-                        {{-- <tbody id="tripsTable">
-                        @foreach($trips as $trip)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $trip->TripNo }}</td>
-                                <td>{{ $trip->vehicle?->RegistrationNo ?? 'N/A' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') }}</td>
-                                <td>{{ $trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') : '—' }}</td>
-                                <td>{{ $trip->StartTime }}</td>
-                                <td>{{ $trip->EndTime }}</td>
-                                <td>{{ $trip->StartLocation }}</td>
-                                <td>{{ $trip->EndLocation }}</td>
-                                <td>{{ $trip->DistanceCovered }}</td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($driver->trips as $trip)
+                                        <tr>
+                                            <td>{{ $trip->TripNo }}</td>
+                                            <td>{{ $trip->parentVehicleType->Description ?? '-' }}</td>
+                                            <td>{{ $trip->Purpose ?? '-' }}</td>
+                                            <td>{{ $trip->statusDetail->Description ?? '-' }}</td>
+                                            <td>{{ $trip->TripStartDate ?? '-' }}</td>
+                                            <td>{{ $trip->TripEndDate ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                            </div>
+                        
                 </div>
             </div>
         </div>
     </div>
-</div>
-</div>
-</div> --}}
+    </div>
+    </div> 
     {{-- Add License Modal --}}
 
     <div class="modal fade" id="addLicenseModal" tabindex="-1">
