@@ -39,7 +39,7 @@
                                     <div class="d-flex gap-1">
                                         {{-- View --}}
                                         <button type="button" class="btn btn-sm btn-info"
-                                            onclick="showItemModal('{{ $itemtype->type->Description }}', '{{ $itemtype->StockTracked ? 'Yes' : 'No' }}', '{{ $itemtype->RequiresTagging ? 'Yes' : 'No' }}', '{{ $itemtype->Active ? 'Yes' : 'No' }}')"
+                                            onclick="showItemModal('{{ $itemtype->type->Description ?? 'N/A' }}', '{{ $itemtype->StockTracked ? 'Yes' : 'No' }}', '{{ $itemtype->RequiresTagging ? 'Yes' : 'No' }}', '{{ $itemtype->Active ? 'Yes' : 'No' }}')"
                                             title="View">
                                             <i class="fas fa-eye"></i>
                                         </button>
@@ -109,7 +109,7 @@
                         <select class="form-select" id="editTypeName" name="TypeName" required>
                             <option value="">Select Item Type</option>
                             @foreach($itmTypes as $itmType)
-                                <option value="{{ $itmType->ID }}">{{ $itmType->Description }}</option>
+                                <option value="{{ $itmType->ID }}">{{ $itmType->Description ?? 'N/A' }}</option>
                             @endforeach
                         </select>
                     </div>
