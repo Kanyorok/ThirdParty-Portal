@@ -29,7 +29,7 @@ class MedicalFundPackageController extends Controller
     {
         // 1) validated data from request
         $data = $request->validated();
-        $data['FundID'] = $medical_fund->Id;
+        $data['FundId'] = $medical_fund->Id;
 
         // 2) create package
         $package = MedicalFundPackage::create($data);

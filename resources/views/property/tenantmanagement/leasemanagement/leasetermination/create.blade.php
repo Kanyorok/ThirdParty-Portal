@@ -61,8 +61,8 @@
                     <!-- Document Upload -->
                     <div class="mb-3">
                         <label class="form-label">Upload Supporting Documents<span class="text-danger">*</span></label>
-                        <input type="file" name="Document[]" class="form-control" multiple required>
-                        <small class="text-muted">e.g. Lease Document, Contract Termination Documents</small>
+                        <input type="file" name="Document[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple required>
+                        <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
                     </div>
 
                     <!-- Submit Button -->

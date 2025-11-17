@@ -26,12 +26,11 @@
                     </h2>
                     <p class="text-center">{{ $planner->Name }}</p>
                     <p class="text-center fw-bold">{{ $planner->Status->name }}</p>
-
-                    {{-- <hr>
-                     @include('snippets.behind_scenes',['model'=>$planner])--}}
-
                     <hr>
                     <p class="text-justify">{!! $planner->Notes !!}</p>
+
+                    <hr>
+                    @include('snippets.behind_scenes',['model'=>$planner])
 
                 </div>
             </div>
@@ -89,14 +88,10 @@
                                 <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3">
-                                <label for="Branch" class="form-label">Branch <span class="text-danger">*</span> <small
-                                        class="text-muted">Only Branches with Manager</small></label>
-                                <select class="form-control planner-form" disabled name="Branch" id="Branch" required>
-                                    @foreach($Branches as $Branch)
-                                        <option value="{{ $Branch->BranchID }}"
-                                            {{ (trim($planner->BranchId) === $Branch->BranchID)?'selected':'' }}
-                                        >{{ $Branch->Name }}</option>
-                                    @endforeach
+                                <label for="Branch" class="form-label">Branch</label>
+                                <select class="form-control" readonly="" name="Branch" id="Branch" required>
+                                    <option value="{{ $planner->branch->BranchID }}"
+                                            selected>{{ $planner->branch->Name }}</option>
                                 </select>
                                 <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>

@@ -36,7 +36,8 @@ class MedicalFundDisbursement extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'MedicalFundDisbursmentId';
+        // primary key column for this model is 'Id'
+        return 'Id';
     }
 
     /**

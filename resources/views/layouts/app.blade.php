@@ -44,7 +44,7 @@
               </div>
               <div class="flex-grow-1 ms-3 me-2">
                 <h6 class="mb-0">{{ auth()->user()->UserID }}</h6>
-                <small data-i18n="Administrator">{{ auth()->user()->role()?->name }}</small><br>
+                  <small data-i18n="Administrator">{{ session('LoginRoleName')??'?' }}</small><br>
                 <small data-i18n="Administrator">
                   {{ session('LoginBranchName') ? 'Branch: ' . session('LoginBranchName') : 'No branch selected' }}
                 </small>
@@ -233,6 +233,14 @@
 
   <script>
       window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() ? '/' . request()->path() : '/');
+  </script>
+  <script>
+    // Refresh Feather icons after partial content loads
+    document.addEventListener('partial:loaded', function(){
+      if (window.feather && typeof window.feather.replace === 'function') {
+        try { window.feather.replace(); } catch (e) {}
+      }
+    });
   </script>
   <script type="module">
       import {SidebarState} from '/js/sidebarState.js';
