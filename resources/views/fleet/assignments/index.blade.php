@@ -33,16 +33,16 @@
                 @forelse ($assignments as $item)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $item->trip->TripNo }}</td>
-                        <td>{{ $item->fleetVehicleType->Description ?? '-' }}</td>
-                        <td>{{ $item->vehicle->RegistrationNo }}</td>
-                        <td>{{ $item->driver->FullName ?? '-' }}</td>
-                        <td>{{ $item->LastInspectionDate ? \Carbon\Carbon::parse($item->LastInspectionDate)->format('d/m/Y') : '-' }}</td>
+                        <td>{{ $item->trip->TripNo ?? 'N/A' }}</td>
+                        <td>{{ $item->fleetVehicleType->Description ?? 'N/A' }}</td>
+                        <td>{{ $item->vehicle->RegistrationNo ?? 'N/A' }}</td>
+                        <td>{{ $item->driver->FullName ?? 'N/A' }}</td>
+                        <td>{{ $item->LastInspectionDate ? \Carbon\Carbon::parse($item->LastInspectionDate)->format('d/m/Y') : 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->AssignmentDate)->format('d/m/Y') }}</td>
                         <td>{{ $item->Purpose }}</td>
                         <td>{{ $item->Notes }}</td>
                         <td>
-                            {{ $item->assigner ? $item->assigner->LastName . ' ' . $item->assigner->FirstName : '-' }}
+                            {{ $item->assigner ? $item->assigner->LastName . ' ' . $item->assigner->FirstName : 'N/A' }}
                         </td>
                         <td>
                             <a href="{{ route('fleet.assignments.show', $item->Id) }}" class="btn btn-sm btn-info mb-1">Details</a>
