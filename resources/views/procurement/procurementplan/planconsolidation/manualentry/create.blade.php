@@ -1,5 +1,16 @@
 @extends('layouts.app')
 @section('title', 'Add Plan Item To Procurement Plan')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* Make disabled days clearly greyed out */
+        .flatpickr-day.flatpickr-disabled, .flatpickr-day.flatpickr-disabled:hover {
+            color: #9aa0a6;
+            background: #f1f3f4;
+            cursor: not-allowed;
+        }
+    </style>
+@endsection
 @section('content')
 
     <div class="card p-4 shadow rounded-4">
@@ -100,9 +111,10 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Expected Delivery Date</label>
-                <input type="date" name="expected_delivery_date"
+                <input type="date" id="expected-delivery-date" name="expected_delivery_date"
                        class="form-control @error('expected_delivery_date') is-invalid @enderror"
-                       value="{{ old('expected_delivery_date') }}" required>
+                       value="{{ old('expected_delivery_date') }}" required
+                       min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}">
                 @error('expected_delivery_date')
                 <div class="alert alert-danger mt-1">{{ $message }}</div>
                 @enderror
@@ -169,6 +181,30 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Flatpickr to visually grey out past dates and enforce min
+        if (window.flatpickr) {
+            flatpickr('#expected-delivery-date', {
+                dateFormat: 'Y-m-d',
+                minDate: 'today',
+                allowInput: true,
+                disableMobile: true
+            });
+        }
+
+        // Enforce non-past Expected Delivery Date on client side (handles client timezone)
+        const dateInput = document.getElementById('expected-delivery-date');
+        if (dateInput) {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            dateInput.min = todayStr; // ensure min respects client local date
+            if (dateInput.value && dateInput.value < todayStr) {
+                dateInput.value = todayStr;
+            }
+        }
+
         const itemSelect = document.getElementById('item-select');
         const uomDisplay = document.getElementById('display-uom');
         const uomIdInput = document.getElementById('unit_of_measure_id');
@@ -199,5 +235,6 @@
         }
     });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 @endsection

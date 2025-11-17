@@ -59,7 +59,7 @@
         <!-- Submit Buttons -->
         <div class="text-end">
             <button type="submit" class="btn btn-primary"> Save Assigned Methods</button>
-            <button type="button" class="btn btn-outline-secondary" onclick="window.history.back();">Cancel</button>
+            <button type="button" class="btn btn-outline-secondary" id="back-to-plan-btn">Back to Plan</button>
         </div>
     </form>
 </div>
@@ -71,6 +71,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const loadBtn = document.getElementById('load-items-btn');
             const planSelect = document.getElementById('approved-plan-select');
+            const backBtn = document.getElementById('back-to-plan-btn');
 
             loadBtn.addEventListener('click', function () {
                 const planId = planSelect.value;
@@ -119,6 +120,23 @@
                         alert('An error occurred while loading items.');
                     });
             });
+
+            // Reset screen to initial state: no plan selected and no items displayed
+            if (backBtn) {
+                backBtn.addEventListener('click', function () {
+                    // Reset dropdown to placeholder
+                    if (planSelect) {
+                        planSelect.selectedIndex = 0; // first option is placeholder and disabled
+                    }
+                    // Clear hidden plan id
+                    const hiddenPlanInput = document.getElementById('approved-plan-id-hidden');
+                    if (hiddenPlanInput) hiddenPlanInput.value = '';
+
+                    // Clear items table
+                    const tbody = document.getElementById('items-table-body');
+                    if (tbody) tbody.innerHTML = '';
+                });
+            }
         });
     </script>
 @endpush
