@@ -31,7 +31,7 @@
                         @foreach($itemTypes as $key => $itemtype)
                             <tr>
                                 <td>{{ $key + 1 }}</td>
-                                <td>{{ $itemtype->type->Description }}</td>
+                                <td>{{ $itemtype->type->Description ?? 'N/A' }}</td>
                                 <td>{!! $itemtype->StockTracked ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
                                 <td>{!! $itemtype->RequiresTagging ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
                                 <td>{!! $itemtype->Active ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
