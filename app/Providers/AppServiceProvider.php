@@ -105,7 +105,7 @@ use App\Models\Fleet\FleetVehicleRequest;
 use App\Models\FleetManagement\DriverManagement;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
-use App\Models\FleetManagement\VehicleRegistry;
+// use App\Models\FleetManagement\VehicleRegistry;
 use App\Models\HRM\Committee;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
@@ -447,8 +447,8 @@ class AppServiceProvider extends ServiceProvider
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,
-            VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
-            DriverManagement::getPrimaryKey() => DriverManagement::class,
+            // VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
+            // DriverManagement::getPrimaryKey() => DriverManagement::class,
             FleetMake::getPrimaryKey() => FleetMake::class,
             FleetModel::getPrimaryKey() => FleetModel::class,
             FleetVehicle::getPrimaryKey() => FleetVehicle::class,

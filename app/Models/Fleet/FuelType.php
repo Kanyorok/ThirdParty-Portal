@@ -32,6 +32,11 @@ class FuelType extends Model
         'DeletedOn'
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'FuelId';
+    }
+
     public function vehicles()
     {
         return $this->hasMany(FleetVehicle::class, 'FuelType', 'Id');
