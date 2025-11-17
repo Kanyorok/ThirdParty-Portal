@@ -151,6 +151,9 @@
                         ➕ Include Selected Items in Draft Plan
                     </button>
                 </div>
+
+                <!-- Hidden container for maintaining selected IDs across pages -->
+                <div id="selectedNeedsContainer" class="d-none"></div>
             @else
                 <div class="text-center text-muted">No approved needs match the selected filters.</div>
             @endif
@@ -202,69 +205,117 @@
 
                 if (newContainer && currentContainer) {
                     currentContainer.innerHTML = newContainer.innerHTML;
+                    // Reinit DataTable and event handlers after content swap
+                    initDataTable();
                     attachCheckboxEvents();
+                    applySelectionToVisibleRows();
                 }
             })
             .catch(err => console.error('Error fetching filtered needs:', err));
     }
 
-    // Enable/disable submit button depending on checkbox selection
-    function attachCheckboxEvents() {
-        const checkboxes = document.querySelectorAll('.need-checkbox');
-        const selectAll = document.getElementById('selectAll');
+    // Cross-page selection state using a Set
+    let selectedNeeds = new Set();
+
+    // Rebuild hidden inputs from selectedNeeds Set
+    function rebuildHiddenInputs() {
+        const container = document.getElementById('selectedNeedsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        selectedNeeds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_needs[]';
+            input.value = id;
+            container.appendChild(input);
+        });
+    }
+
+    // Update submit button enabled state based on selectedNeeds
+    function updateSubmitButtonState() {
         const submitBtn = document.getElementById('submitBtn');
-        const getBudgetSelectFor = (cb) => cb.closest('tr')?.querySelector('.budget-select');
+        if (submitBtn) submitBtn.disabled = selectedNeeds.size === 0;
+    }
 
-        if (!selectAll || checkboxes.length === 0) return;
+    // Enable/disable budget select for a row
+    function setBudgetSelectStateForRow(rowEl, enabled) {
+        const select = rowEl?.querySelector('.budget-select');
+        if (select) {
+            select.disabled = !enabled;
+            if (!enabled) select.selectedIndex = 0;
+        }
+    }
 
-        // Remove any existing event listeners by cloning (in case re-renders cause duplicates)
-        const newSelectAll = selectAll.cloneNode(true);
-        selectAll.parentNode.replaceChild(newSelectAll, selectAll);
-
-        newSelectAll.addEventListener('change', function () {
-            checkboxes.forEach(cb => {
-                cb.checked = newSelectAll.checked;
-                const select = getBudgetSelectFor(cb);
-                if (select) {
-                    select.disabled = !cb.checked;
-                    if (!cb.checked) select.selectedIndex = 0;
-                }
-            });
-            toggleSubmitButton();
+    // Apply selection state to current page rows (after DataTables draw)
+    function applySelectionToVisibleRows() {
+        document.querySelectorAll('#loadfromneedsTable tbody tr').forEach(tr => {
+            const cb = tr.querySelector('.need-checkbox');
+            if (!cb) return;
+            const id = cb.value;
+            cb.checked = selectedNeeds.has(id);
+            setBudgetSelectStateForRow(tr, cb.checked);
         });
 
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', () => {
-                if (!cb.checked) {
-                    newSelectAll.checked = false;
-                } else if (Array.from(checkboxes).every(c => c.checked)) {
-                    newSelectAll.checked = true;
-                }
-                const select = getBudgetSelectFor(cb);
-                if (select) {
-                    select.disabled = !cb.checked;
-                    if (!cb.checked) select.selectedIndex = 0;
-                }
-                toggleSubmitButton();
-            });
-        });
-
-        function toggleSubmitButton() {
-            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-            if (submitBtn) {
-                submitBtn.disabled = !anyChecked;
-            }
+        // Update Select All checkbox based on current page
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) {
+            const visibleCbs = Array.from(document.querySelectorAll('#loadfromneedsTable tbody .need-checkbox'));
+            selectAll.checked = visibleCbs.length > 0 && visibleCbs.every(c => c.checked);
         }
 
-        // Initialize selects on load
-        checkboxes.forEach(cb => {
-            const select = getBudgetSelectFor(cb);
-            if (select) {
-                select.disabled = !cb.checked;
-                if (!cb.checked) select.selectedIndex = 0;
+        updateSubmitButtonState();
+    }
+
+    // Attach delegated events for checkboxes and select-all, persists across pagination
+    function attachCheckboxEvents() {
+        const tableEl = document.getElementById('loadfromneedsTable');
+        if (!tableEl) {
+            updateSubmitButtonState();
+            rebuildHiddenInputs();
+            return;
+        }
+
+        // Delegated checkbox change
+        $(document).off('change.needsCheckbox').on('change.needsCheckbox', '#loadfromneedsTable tbody .need-checkbox', function () {
+            const cb = this;
+            const id = cb.value;
+            if (cb.checked) {
+                selectedNeeds.add(id);
+            } else {
+                selectedNeeds.delete(id);
+                // Uncheck header select-all when any unchecked
+                const selectAll = document.getElementById('selectAll');
+                if (selectAll) selectAll.checked = false;
             }
+            setBudgetSelectStateForRow(cb.closest('tr'), cb.checked);
+            rebuildHiddenInputs();
+            updateSubmitButtonState();
         });
-        toggleSubmitButton();
+
+        // Header select-all (current page only)
+        $(document).off('change.needsSelectAll').on('change.needsSelectAll', '#selectAll', function () {
+            const checked = this.checked;
+            const $rows = $('#loadfromneedsTable').DataTable ? $('#loadfromneedsTable').DataTable().rows({ page: 'current' }).nodes() : $('#loadfromneedsTable tbody tr');
+            $($rows).each(function () {
+                const cb = this.querySelector('.need-checkbox');
+                if (!cb) return;
+                cb.checked = checked;
+                const id = cb.value;
+                if (checked) {
+                    selectedNeeds.add(id);
+                } else {
+                    selectedNeeds.delete(id);
+                }
+                setBudgetSelectStateForRow(this, checked);
+            });
+            rebuildHiddenInputs();
+            updateSubmitButtonState();
+        });
+
+        // Initial sync for any pre-checked boxes on first render
+        document.querySelectorAll('#loadfromneedsTable tbody .need-checkbox:checked').forEach(cb => selectedNeeds.add(cb.value));
+        rebuildHiddenInputs();
+        applySelectionToVisibleRows();
     }
 
 
@@ -275,25 +326,39 @@
 
     // Initialize
     updateFiscalYear();
-    attachCheckboxEvents();
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <script>
-    $(document).ready(function () {
-        @if(!$approvedNeeds->isEmpty())
-        $('#loadfromneedsTable').DataTable({
+    // Initialize DataTable with hooks to reapply selection on page changes
+    function initDataTable() {
+        const $table = $('#loadfromneedsTable');
+        if ($table.length === 0) return;
+        // If already initialized, destroy and re-init to avoid duplicates
+        if ($.fn.DataTable.isDataTable($table)) {
+            $table.DataTable().off('draw');
+            $table.DataTable().destroy();
+        }
+        const dt = $table.DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,
             lengthChange: true,
-            language: {
-                emptyTable: ""
-            }
+            language: { emptyTable: "" }
         });
+        dt.on('draw', function () {
+            // Reapply selection and budget select states after page change
+            applySelectionToVisibleRows();
+        });
+    }
+
+    $(document).ready(function () {
+        @if(!$approvedNeeds->isEmpty())
+        initDataTable();
         @endif
         attachCheckboxEvents();
+        updateSubmitButtonState();
     });
 </script>
 @endsection

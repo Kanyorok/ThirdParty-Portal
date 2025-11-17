@@ -81,7 +81,7 @@
                     <th>Item</th>
                     <th>Branch</th>
                     <th>Qty</th>
-                    <th>Cost</th>
+                    <th>Unit Cost</th>
                     <th>Budget Line</th>
                     <th>Method</th>
                     <th>Schedule</th>
@@ -96,7 +96,7 @@
                     <td>{{ $item->item->ItemName ?? '—' }}</td>
                     <td>{{ $item->Branch->Name ?? '—' }}</td>
                     <td>{{ $item->MergedQty }}</td>
-                    <td>{{ number_format($item->EstimatedUnitCost, 0) }}</td>
+                    <td>{{ number_format((float) $item->EstimatedUnitCost, 2) }}</td>
                     <td>
                         @php $bl = $item->budgetline; @endphp
                         @if ($bl && !empty($bl->Description))

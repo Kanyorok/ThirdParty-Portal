@@ -22,9 +22,16 @@
                 @csrf
                 
                 <div class="mb-3">
+                    
                     <label for="Type" class="form-label">Inventory Type</label>
-                    <input type="text" class="form-control @error('Type') is-invalid @enderror" id="Type" name="Type" 
-                           value="{{ old('Type') }}" placeholder="e.g., Asset" required>
+                    <select class="form-select @error('Type') is-invalid @enderror" id="Type" name="Type" required>
+                        <option value="">Select Inventory Type</option>
+                        @foreach($inventoryTypes as $inventoryType)
+                            <option value="{{ $inventoryType->ID }}" {{ old('Type') == $inventoryType->ID ? 'selected' : '' }}>
+                                {{ $inventoryType->Description }}
+                            </option>
+                        @endforeach
+                    </select>
                     @error('Type')
                         <div class="invalid-feedback">
                             {{ $message }}
