@@ -43,7 +43,7 @@ class ContractedDriverService
             );
         }
         activity()
-            ->performedOn($driver)
+            ->performedOn($drivers)
             ->causedBy(Auth::user())
             ->log('Contracted Driver Created');
 
