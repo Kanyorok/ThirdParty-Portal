@@ -28,13 +28,17 @@ class UnitOfMeasureRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('t_UOM', 'Code')->ignore($this->route('Id')),
+                Rule::unique('t_UOM', 'Code')
+                    ->ignore($this->route('Id'))
+                    ->whereNull('DeletedOn'), // ← exclude soft-deleted records
             ],
             'Name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_UOM', 'Name')->ignore($this->route('Id')),
+                Rule::unique('t_UOM', 'Name')
+                    ->ignore($this->route('Id'))
+                    ->whereNull('DeletedOn'), // ← exclude soft-deleted records
             ],
             'BaseUnit' => 'nullable|boolean',
             'Active' => 'required|boolean',
