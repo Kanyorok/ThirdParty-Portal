@@ -5,6 +5,8 @@ namespace App\Models\Inventory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
+use App\Models\Core\CodeDetail;
 
 
 class InventoryType extends Model
@@ -40,5 +42,10 @@ class InventoryType extends Model
     public static function getPrimaryKey(): string
     {
         return 'InventoryTypesId';
+    }
+
+    public function type()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Type', 'ID');
     }
 }

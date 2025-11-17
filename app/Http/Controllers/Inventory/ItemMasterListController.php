@@ -30,81 +30,20 @@ class ItemMasterListController extends Controller
         $this->service = $service;
     }
 
-   public function index(Request $request)
+    public function index()
     {
-        if ($request->ajax()) {
-            $items = ItemMasterList::with([
-                'category.parent',
-                'itemType',
-                'inventoryType',
-                'uom',
-                'price',
-                'status'
-            ]);
+        $items = ItemMasterList::with([
+            'category.parent',
+            'itemType',
+            'inventoryType',
+            'uom',
+            'price',
+            'status'
+        ])->get();
 
-            return DataTables::of($items)
-                ->addIndexColumn()
-                ->addColumn('Category', fn($item) => optional($item->category)->Name ?? 'Uncategorized')
-                ->addColumn('ParentCategory', fn($item) => optional(optional($item->category)->parent)->Name ?? '—')
-                ->addColumn('ItemType', fn($item) => optional($item->itemType)->TypeName ?? '—')
-                ->addColumn('InventoryType', fn($item) => optional($item->inventoryType)->Type ?? '—')
-                ->addColumn('UOM', fn($item) => optional($item->uom)->Code ?? '—')
-                ->addColumn('Status', function ($item) {
-                    if ($item->status && $item->status->Description) {
-                        $desc = $item->status->Description;
-                        $badgeClass = match (strtolower($desc)) {
-                            'active'   => 'bg-success',
-                            'inactive' => 'bg-secondary',
-                            default    => 'bg-warning',
-                        };
-                        return '<span class="badge ' . $badgeClass . '">' . e($desc) . '</span>';
-                    }
-                    return '<span class="badge bg-warning">Unknown</span>';
-                })
-                ->addColumn('ItemPrice', fn($item) => optional($item->price)->ActualPrice ?? '—')
-                ->addColumn('Action', function ($item) {
-            $viewUrl   = route('itemmasterlist.show', $item->Id);
-            $editUrl   = route('itemmasterlist.edit', $item->Id);
-            $deleteUrl = route('itemmasterlist.destroy', $item->Id);
-
-            $actions = '
-                <div class="btn-group" role="group">
-                    <a href="' . $viewUrl . '" class="btn btn-sm btn-view" data-bs-toggle="tooltip" title="View Item">
-                        <i class="bi bi-eye"></i>
-                        
-                    </a>
-                    <a href="' . $editUrl . '" class="btn btn-sm btn-edit" data-bs-toggle="tooltip" title="Edit Item">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-            ';
-
-            if ($item->inUse()) {
-                $actions .= '
-                    <span class="btn btn-sm btn-info disabled" data-bs-toggle="tooltip" title="Item is in use and cannot be deleted">
-                        <i class="bi bi-lock"></i>
-                    </span>
-                ';
-            } else {
-                $actions .= '
-                    <button type="button" class="btn btn-sm btn-delete delete-btn" 
-                        data-bs-toggle="tooltip" title="Delete Item"
-                        data-item-id="' . $item->Id . '"
-                        data-item-name="' . e($item->ItemName) . '">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                ';
-            }
-
-            $actions .= '</div>';
-
-            return $actions;
-        })
-                ->rawColumns(['Status', 'Action'])
-                ->make(true);
-        }
-
-        return view('inventory.itemmaster.itemmasterlist.index');
+        return view('inventory.itemmaster.itemmasterlist.index', compact('items'));
     }
+
 
     public function create()
     {
@@ -115,10 +54,10 @@ class ItemMasterListController extends Controller
                 ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
                 ->get(),
             'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
-            'itemTypes' => ItemType::all(),
+            'itemTypes' => CodeDetail::where('CodeID', 'ItemTypeStatus')->orderBy('Value')->get(),
             'uoms' => UnitOfMeasure::all(),
             'price' => PriceManagement::all(),
-            'inventoryTypes' => InventoryType::all(),
+            'inventoryTypes' => CodeDetail::where('CodeID', 'InventoryTypeStatus')->orderBy('Value')->get(),
         ]);
     }
 
@@ -146,10 +85,8 @@ class ItemMasterListController extends Controller
         $this->authorize('create', ItemMasterList::class);
 
         $validated = $request->validated();
-        $document = $request->file('Document');  // ✅ handled same as FleetDriver
+        $document = $request->file('Document');  
         $image = $request->file('ImageUpload');
-
-        // Get default Active status
         $validated['Status'] = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
@@ -182,9 +119,9 @@ class ItemMasterListController extends Controller
             'subcategories' => ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)
                 ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
                 ->get(),
-            'itemTypes' => ItemType::all(),
+            'itemTypes' => CodeDetail::where('CodeID', 'ItemTypeStatus')->orderBy('Value')->get(),
             'uoms' => UnitOfMeasure::all(),
-            'inventoryTypes' => InventoryType::all(),
+            'inventoryTypes' => CodeDetail::where('CodeID', 'InventoryTypeStatus')->orderBy('Value')->get(),
             'priceManagement' => PriceManagement::all(),
         ]);
     }
