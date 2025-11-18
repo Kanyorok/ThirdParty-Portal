@@ -11,11 +11,15 @@ class CRDBGeneralLedgerController extends Controller
 {
     public function syncGeneralLedgers()
     {
-// Add error handling and debugging
+
+        for($i = 0; $i < 10; $i++) {
+
+        }
+
         try {
             // Check if the stored procedure exists and runs
             $data = DB::select("EXEC p_GLAccounts");
-            
+
             // Check if data is empty
             if (empty($data)) {
                 return response()->json([
@@ -25,7 +29,7 @@ class CRDBGeneralLedgerController extends Controller
                     'data' => []
                 ], 404);
             }
-            
+
             return response()->json([
                 'status' => 'ok',
                 'code' => 200,
@@ -33,9 +37,9 @@ class CRDBGeneralLedgerController extends Controller
                 'message' => 'General Ledger Fetched Successfully',
                 'data' => collect($data)
             ], 200);
-            
+
         } catch (\Exception $e) {
-        
+
             return response()->json([
                 'status' => 'error',
                 'code' => 500,
@@ -54,7 +58,7 @@ class CRDBGeneralLedgerController extends Controller
 
         try {
             $rows = DB::select("EXEC p_GetGLBalances");
-    
+
             if (empty($rows)) {
                 return response()->json([
                     'status' => 'empty',
@@ -63,7 +67,7 @@ class CRDBGeneralLedgerController extends Controller
                     'data' => null
                 ], 404);
             }
-    
+
             // Convert ALL numeric-looking values to string to preserve formatting
             $data = collect($rows)->map(function($row) {
                 $row->Balances        = number_format((float)$row->Balances, 6, '.', '');
@@ -71,7 +75,7 @@ class CRDBGeneralLedgerController extends Controller
                 $row->ForeignBalances = number_format((float)$row->ForeignBalances, 6, '.', '');
                 return $row;
             });
-    
+
             return response()->json([
                 'status' => 'ok',
                 'code' => 200,
@@ -79,7 +83,7 @@ class CRDBGeneralLedgerController extends Controller
                 'message' => 'General Ledger Balances Fetched Successfully',
                 'data' => $data
             ], 200);
-    
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -89,5 +93,5 @@ class CRDBGeneralLedgerController extends Controller
             ], 500);
         }
     }
-    
+
 }
