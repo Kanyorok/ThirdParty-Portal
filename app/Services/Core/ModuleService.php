@@ -38,7 +38,7 @@ class ModuleService
     public static function getNavbarCacheKey(User $user = null): string
     {
         if (!$user) {
-            $user = \Illuminate\Support\Facades\Auth::user();
+            $user = auth()->user();
         }
         if (!$user) {
             return 'guest-navbar-modules';

@@ -47,6 +47,7 @@
           </div>
         <div class="col-md-6">
             <label class="form-label">Upload File<span class="text-danger">*</span></label>
+            <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
             <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" required>
         </div>
       </div>

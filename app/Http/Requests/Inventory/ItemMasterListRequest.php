@@ -14,14 +14,15 @@ class ItemMasterListRequest extends FormRequest
 
     public function rules()
     {
-        $itemId = $this->route('Id'); // Use the parameter name from your route
+        // Your route uses "Id" as the parameter
+        $itemId = $this->route('Id') ?? $this->route('id');
 
         $rules = [
-            'ItemType' => 'required|exists:t_ItemTypes,Id',
+            'ItemType' => 'required|exists:t_CodeDetails,ID',
             'Category' => 'required|exists:t_ItemCategories,Id',
             'SubCategory' => 'nullable|exists:t_ItemCategories,Id',
             'UOM' => 'required|exists:t_UOM,Id',
-            'InventoryType' => 'required|exists:t_InventoryTypes,Id',
+            'InventoryType' => 'required|exists:t_CodeDetails,ID',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'Document' => 'nullable|file|max:2048',
             'Document.*' => 'nullable|file|max:2048',
@@ -31,28 +32,36 @@ class ItemMasterListRequest extends FormRequest
             'remove_image' => 'nullable|boolean',
         ];
 
-        // For creation
+        // If no item ID present => Creating mode
         if (!$itemId) {
-            $rules['BarCode'] = [
-                'nullable', // ✅ optional now
-                'regex:/^[A-Za-z0-9]+$/', // ✅ only letters & numbers
-                'max:255',
-                'unique:t_Items,BarCode',
-            ];
-            $rules['ItemName'] = 'required|string|max:255|unique:t_Items,ItemName';
-        } else {
-            // For update
             $rules['BarCode'] = [
                 'nullable',
                 'regex:/^[A-Za-z0-9]+$/',
                 'max:255',
-                Rule::unique('t_Items', 'BarCode')->ignore($itemId),
+                Rule::unique('t_Items', 'BarCode')->whereNull('DeletedOn'), // <- exclude soft-deleted
             ];
+
             $rules['ItemName'] = [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_Items', 'ItemName')->ignore($itemId),
+                Rule::unique('t_Items', 'ItemName')->whereNull('DeletedOn'), // <- exclude soft-deleted
+            ];
+        }
+        else {
+            // Update mode (ignore the current record)
+            $rules['BarCode'] = [
+                'nullable',
+                'regex:/^[A-Za-z0-9]+$/',
+                'max:255',
+                Rule::unique('t_Items', 'BarCode')->ignore($itemId, 'Id')->whereNull('DeletedOn'), // <- exclude soft-deleted
+            ];
+
+            $rules['ItemName'] = [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_Items', 'ItemName')->ignore($itemId, 'Id')->whereNull('DeletedOn'), // <- exclude soft-deleted
             ];
         }
 

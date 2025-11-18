@@ -115,18 +115,14 @@ class SKUController extends Controller
         }
     }
 
-    public function destroy($id)
+     public function destroy($id)
     {
         $item = StockItem::findOrFail($id);
         $this->authorize('destroy', $item);
-
-        try {
-            $this->stockItemService->delete($item);
-            return redirect()->route('sku.index')->with('success', '🗑️ Stock item deleted successfully!');
-        } catch (\Exception $e) {
-            return back()->withErrors('Failed to delete stock item: ' . $e->getMessage());
-        }
+        $this->stockItemService->destroy($item);
+        return redirect()->route('sku.index')->with('success', 'Stock item deleted successfully.');
     }
+
 
     public function getStores(Request $request)
     {

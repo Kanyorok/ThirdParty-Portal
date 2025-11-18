@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ajax' => \App\Http\Middleware\AjaxCheckMiddleware::class,
             'license' => \App\Http\Middleware\RequireLicense::class,
             'module' => \App\Http\Middleware\RequireModule::class,
+            'canAction' => \App\Http\Middleware\CanAction::class,
         ]);
 
         // Transform keys of requests that are not GET to snake_case

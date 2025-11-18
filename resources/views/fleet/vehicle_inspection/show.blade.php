@@ -53,7 +53,7 @@
                 <p class="text-muted mb-0">No documents uploaded.</p>
             @endforelse
         </div>
-        
+
             <div class="mt-2">
                         <a href="{{ route('fleet.vehicle_inspection.edit', $inspection->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('fleet.vehicle_inspection.destroy', $inspection->Id) }}"

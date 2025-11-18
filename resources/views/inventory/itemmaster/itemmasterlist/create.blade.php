@@ -53,8 +53,8 @@
                         <select name="ItemType" id="ItemType" class="form-select @error('ItemType') is-invalid @enderror" required>
                             <option value="" selected disabled>Select Type</option>
                             @foreach($itemTypes as $itemType)
-                                <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
-                                    {{ $itemType->TypeName }}
+                                <option value="{{ $itemType->ID }}" {{ old('ItemType') == $itemType->ID ? 'selected' : '' }}>
+                                    {{ $itemType->Description }}
                                 </option>
                             @endforeach
                         </select>
@@ -120,8 +120,8 @@
                         <select name="InventoryType" id="InventoryType" class="form-select @error('InventoryType') is-invalid @enderror" required>
                             <option value="" selected disabled>Select Inventory Type</option>
                             @foreach($inventoryTypes as $inventoryType)
-                                <option value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
-                                    {{ $inventoryType->Type }}
+                                <option value="{{ $inventoryType->ID }}" {{ old('InventoryType') == $inventoryType->ID ? 'selected' : '' }}>
+                                    {{ $inventoryType->Description }}
                                 </option>
                             @endforeach
                         </select>

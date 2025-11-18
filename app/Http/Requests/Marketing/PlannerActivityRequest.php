@@ -20,48 +20,15 @@ class PlannerActivityRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'activity_name'      => [
-                                         'required',
-                                         'string',
-                                         'max:200',
-                                        ],
-                'activity_location'  => [
-                                         'required',
-                                         'string',
-                                         'max:200',
-                                        ],
-                'activity_budget'    => [
-                                         'required',
-                                         'numeric',
-                                         'min:0',
-                                        ],
-                'activity_start'     => [
-                                         'required',
-                                         'date_format:"Y-m-d"',
-                                         'before_or_equal:activity_end',
-                                        ],
-                'activity_end'       => [
-                                         'required',
-                                         'date_format:"Y-m-d"',
-                                         'after_or_equal:activity_start',
-                                        ],
-                'activity_materials' => [
-                                         'nullable',
-                                         'string',
-                                         'max:5000',
-                                        ],
-                'activity_notes'     => [
-                                         'nullable',
-                                         'string',
-                                         'max:5000',
-                                        ],
-                'activity_users'     => [
-                                         'required',
-                                         'array',
-                                         'min:1',
-                                         'max:200',
-                                        ],
-               ];
+            'activity_name' => ['required', 'string', 'max:200'],
+            'activity_location' => ['required', 'string', 'max:200'],
+            'activity_budget' => ['required', 'numeric', 'min:0'],
+            'activity_start' => ['required', 'date_format:"Y-m-d"', 'before_or_equal:activity_end'],
+            'activity_end' => ['required', 'date_format:"Y-m-d"', 'after_or_equal:activity_start'],
+            'activity_materials' => ['nullable', 'string', 'max:5000'],
+            'activity_notes' => ['nullable', 'string', 'max:5000'],
+            'activity_users' => ['required', 'array', 'min:1', 'max:200'],
+        ];
     }
 
     /**

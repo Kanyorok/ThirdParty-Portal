@@ -11,11 +11,11 @@ use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use App\Models\BR\BRUser;
 use App\Models\Communication\BulkNotification;
-use App\Models\Communication\Email;
 use App\Models\Core\Branch;
 use App\Models\HRM\Employee;
 use App\Models\ThirdParies\Board;
 use App\Services\BR\CBSService;
+use App\Services\Core\BranchService;
 use App\Services\CRMEmailService;
 use App\Services\SMSService;
 use Carbon\Carbon;
@@ -31,7 +31,6 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Throwable;
 use Yajra\DataTables\DataTables;
-use App\Models\Auth\ModelRole;
 
 class UserService
 {
@@ -149,8 +148,11 @@ class UserService
         return $this;
     }
 
-    public function isMarketingManager(): bool
+    public function isMarketingManager(Branch $branch): bool
     {
+        if (!(new BranchService($branch))->isHQ()) {
+            return false;
+        }
         return self::marketingManagers(true)->where('Id', $this->user->Id)->exists();
     }
 

@@ -168,7 +168,7 @@
                                 <select class="form-control" name="Branch" id="Branch" required>
                                     <option selected disabled>Select a branch to add activity</option>
                                     @foreach($Branches as $Branch)
-                                        <option value="{{ $Branch->OurBranchID }}">{{ $Branch->BranchName }}</option>
+                                        <option value="{{ $Branch->BranchID }}">{{ $Branch->Name }}</option>
                                     @endforeach
                                 </select>
                                 <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
