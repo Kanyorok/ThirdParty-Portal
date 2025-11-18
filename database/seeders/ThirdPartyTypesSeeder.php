@@ -85,7 +85,7 @@ class ThirdPartyTypesSeeder extends Seeder
         $upsert($supplierCode, $supplierCategoryId,$supplierDescription);
 
         //Add manually the Descriptions
-//        DB::table('t_ThirdPartyTypes')->where('Code', $tenantCode)->update(['Description' => 'Tenant']);
-//        DB::table('t_ThirdPartyTypes')->where('Code', $supplierCode)->update(['Description' => 'Supplier']);
+        DB::table('t_ThirdPartyTypes')->where('Code', $tenantCode)->update(['Description' => 'Tenant']);
+        DB::table('t_ThirdPartyTypes')->where('Code', $supplierCode)->update(['Description' => 'Supplier']);
     }
 }
