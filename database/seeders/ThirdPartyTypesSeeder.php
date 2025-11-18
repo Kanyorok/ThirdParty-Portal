@@ -34,6 +34,9 @@ class ThirdPartyTypesSeeder extends Seeder
         $tenantCode = 'TE-0001';
         $supplierCode = 'SU-0001';
 
+        $tenantDescription = 'Tenant';
+        $supplierDescription = 'Supplier';
+
         // Resolve CategoryMaster IDs for Tenant (Name=Tenant, Type=TenantCategory) and Supplier (Name=Supplier, Type=SupplierCategory)
         $tenantCategoryId = DB::table('t_CategoryMaster')
             ->where('Name', 'Tenant')
@@ -49,7 +52,7 @@ class ThirdPartyTypesSeeder extends Seeder
         }
 
         // Helper closure to upsert single record
-        $upsert = function (string $code, ?int $categoryId) use ($useCodeColumn, $now, $userId, $creditorRoleId, $debtorRoleId) {
+        $upsert = function (string $code, ?int $categoryId,string $codeDesc) use ($useCodeColumn, $now, $userId, $creditorRoleId, $debtorRoleId) {
             $table = DB::table('t_ThirdPartyTypes');
             if ($useCodeColumn) {
                 $exists = $table->where('Code', $code)->first();
@@ -65,6 +68,7 @@ class ThirdPartyTypesSeeder extends Seeder
                         'Code' => $code,
                         'Type' => $categoryId,
                         'FinanceRole' => $creditorRoleId,
+                        'Description' => $codeDesc,
                         'CreatedBy' => $userId,
                         'ModifiedBy' => $userId,
                         'CreatedOn' => $now,
@@ -77,7 +81,11 @@ class ThirdPartyTypesSeeder extends Seeder
             }
         };
 
-        $upsert($tenantCode, $tenantCategoryId);
-        $upsert($supplierCode, $supplierCategoryId);
+        $upsert($tenantCode, $tenantCategoryId,$tenantDescription);
+        $upsert($supplierCode, $supplierCategoryId,$supplierDescription);
+
+        //Add manually the Descriptions
+//        DB::table('t_ThirdPartyTypes')->where('Code', $tenantCode)->update(['Description' => 'Tenant']);
+//        DB::table('t_ThirdPartyTypes')->where('Code', $supplierCode)->update(['Description' => 'Supplier']);
     }
 }
