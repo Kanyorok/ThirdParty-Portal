@@ -13,6 +13,7 @@ use BackedEnum;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Log;
 
@@ -1162,55 +1163,33 @@ private function getFinalApprovedStatus(string $workflowSource, string $table): 
 /**
  *  Determine fallback status by analyzing the table
  */
-private function determineFallbackStatus(string $table): string
+    private function determineFallbackStatus(string $table): string
 {
     try {
-        // Check if we can find common status values in the table
-        $sampleRecord = DB::table($table)
-            ->where('Status', '!=', '') // Exclude empty status
-            ->whereNotNull('Status')
-            ->select('Status')
-            ->first();
-            
-        if ($sampleRecord && in_array(strtolower($sampleRecord->Status), ['a', 'approved', 'complete'])) {
-            return $sampleRecord->Status;
-        }
-        
-        // Look for common patterns in the entire table
-        $commonStatuses = DB::table($table)
-            ->select('Status', DB::raw('COUNT(*) as count'))
-            ->whereNotNull('Status')
-            ->where('Status', '!=', '')
-            ->groupBy('Status')
-            ->orderBy('count', 'desc')
-            ->limit(5)
-            ->get();
-            
-        Log::info("Common statuses in table", [
-            'table' => $table,
-            'statuses' => $commonStatuses->toArray(),
-        ]);
-        
-        // Prefer 'a' if it exists, otherwise use the most common status
-        foreach ($commonStatuses as $status) {
-            if (in_array(strtolower($status->Status), ['a', 'approved', 'complete'])) {
-                return $status->Status;
+        // Convert table name to morph alias (adjust if needed)
+        $morphAlias = Str::snake($table); // e.g., 'department_needs'
+
+        // Load status mapping from config
+        $statusMapping = config("workflow.{$morphAlias}", []);
+
+        if (!empty($statusMapping)) {
+            // Prefer 'Approved' if defined
+            if (isset($statusMapping['Approved'])) {
+                return $statusMapping['Approved'];
             }
+
+            // Otherwise return the first mapped status
+            return reset($statusMapping);
         }
-        
-        // Return the most common status as fallback
-        if ($commonStatuses->isNotEmpty()) {
-            return $commonStatuses->first()->Status;
-        }
-        
+
     } catch (\Throwable $e) {
-        Log::error("Error determining fallback status", [
+        Log::error("Error determining fallback status from config", [
             'table' => $table,
             'error' => $e->getMessage(),
         ]);
     }
-    
-    // Final ultimate fallback
+
+    // Ultimate fallback if config is missing
     return 'a';
 }
 

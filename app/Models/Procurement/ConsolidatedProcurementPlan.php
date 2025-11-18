@@ -4,10 +4,13 @@ namespace App\Models\Procurement;
 
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Auth\User;
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsolidatedProcurementPlan extends Model
@@ -20,6 +23,7 @@ class ConsolidatedProcurementPlan extends Model
 
     protected $table = 't_ConsolidatedProcurementPlan';
     protected $primaryKey = 'PlanID';
+    
     protected $fillable = [
         'Title',
         'ReferenceNumber',
@@ -37,31 +41,95 @@ class ConsolidatedProcurementPlan extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'ConsolidatedProcurementPlanID';
+        return 'PlanID';
     }
+
     protected $dates = [
         'CreatedDate',
-        'SubmittedDate'
+        'SubmittedDate',
+        'CreatedOn',
+        'ModifiedOn',
+        'DeletedOn'
     ];
 
     protected $casts = [
         'Status' => ProcurementPlanStatusEnum::class,
     ];
-
+    
     public function workflows()
+{
+    return $this->morphMany(
+        Workflow::class,
+        'source',
+        'Source',   // morph type column
+        'SourceID'  // morph id column
+    );
+}
+
+    // Workflow relationships - commented out as not needed for approval workflow
+    // The approval workflow uses t_WorkFlowHistory and t_WorkFlowPending tables directly
+    // public function workflows(): MorphMany
+    // {
+    //     return $this->morphMany(Workflow::class, 'source', 'Source', 'SourceID');
+    // }
+
+    /**
+     * Get workflow history for this plan
+     */
+    public function workflowHistory()
     {
-        return $this->morphMany(Workflow::class, 'source', 'Source', 'SourceID');
+        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'PlanID')
+            ->where('Source', $this->getTable())
+            ->whereNull('DeletedOn')
+            ->orderBy('CreatedOn', 'desc');
     }
 
-    // Relationship with User for CreatedBy
-   public function createdBy()
+    /**
+     * Get pending approvers for this plan
+     */
+    public function workflowPending()
+    {
+        return $this->hasMany(WorkflowPending::class, 'SourceID', 'PlanID')
+            ->where('Source', $this->getTable())
+            ->whereNull('DeletedOn');
+    }
+
+    /**
+     * Get total amount from line items (for amount-based workflow routing)
+     * This is used by the workflow service to determine routing
+     */
+    public function getAmountAttribute(): float
+    {
+      // If lineItems are already loaded, use them
+       if ($this->relationLoaded('lineItems')) {
+        return $this->lineItems->sum(function ($item) {
+            $quantity = $item->MergedQty ?? $item->OriginalQTY ?? 0;
+            $unitCost = ($item->AdjustedCost > 0)
+                ? $item->AdjustedCost
+                : ($item->EstimatedUnitCost ?? 0);
+
+            return $quantity * $unitCost;
+        });
+    }
+
+    // DB query fallback
+    return (float) $this->lineItems()
+        ->selectRaw('SUM((COALESCE(MergedQty, OriginalQTY, 0)) * (CASE WHEN COALESCE(AdjustedCost, 0) > 0 THEN AdjustedCost ELSE COALESCE(EstimatedUnitCost, 0) END)) as total')
+        ->value('total') ?? 0.0;
+    }
+    
+
+    // User relationships
+    public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
+
     public function submittedBy()
     {
         return $this->belongsTo(User::class, 'SubmittedBy', 'Id');
     }
+
     public function modifiedBy()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
@@ -72,13 +140,24 @@ class ConsolidatedProcurementPlan extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
+    // Line items relationship
+    public function lineItems()
+    {
+        return $this->hasMany(PlanLineItem::class, 'PlanID', 'PlanID');
+    }
+
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
-    public function lineItems()
-    {
-        return $this->hasMany(PlanLineItem::class, 'PlanID');
-    }
 
+    /**
+     * Scope to get plans pending approval for a specific user
+     */
+    public function scopePendingApprovalFor($query, int $userId)
+    {
+        return $query->whereHas('workflowPending', function($q) use ($userId) {
+            $q->where('UserId', $userId);
+        })->where('Status', ProcurementPlanStatusEnum::Pending);
+    }
 }

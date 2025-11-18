@@ -58,7 +58,7 @@ class WorkFlowController extends Controller
                 throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
             }
 
-            $moduleId = DB::table('t_ModuleSources')
+            $moduleId = DB::table(table: 't_ModuleSources')
                 ->where('DocumentType', $tableName)
                 ->value('ModuleID');
 
@@ -70,7 +70,7 @@ class WorkFlowController extends Controller
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
                 'Source' => $tableName,
-                'IsFinalStage' => false, // Initialize as false
+                'FinalStage' => false, // Initialize as false
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
@@ -154,7 +154,7 @@ class WorkFlowController extends Controller
         $sourceOptions = array_flip(Relation::morphMap());
         $approvalTypes = DB::table('t_WorkFlowTypes')->get();
         $permissions = DB::table('t_Permissions')->get();
-        $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'Source')->get();
+        $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'WorkFlowStageId')->get();
 
         $stages = WorkFlowStage::where('WorkFlowId', $id)
             ->with(['type_name', 'workflow'])

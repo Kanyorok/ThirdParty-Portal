@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Core\Approval\CodeDetail;
 
+
+
 class PlanLineItem extends Model
 {
     use SoftDeletes, UserActorTrait;
@@ -121,4 +123,19 @@ class PlanLineItem extends Model
     {
         return $this->hasMany(\App\Models\Procurement\Order::class, 'PlanRef', 'LineItemID');
     }
+    /**
+     * Get the total amount for this line item
+     */
+    public function getTotalAmountAttribute(): float
+    {
+       $quantity = $this->MergedQty ?? $this->OriginalQTY ?? 0;
+
+    // Use AdjustedCost only if it is > 0
+    $unitCost = ($this->AdjustedCost > 0)
+        ? $this->AdjustedCost
+        : ($this->EstimatedUnitCost ?? 0);
+
+    return (float) $quantity * (float) $unitCost;
+    }
+
 }

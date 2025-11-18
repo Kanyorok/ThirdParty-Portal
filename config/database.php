@@ -110,6 +110,7 @@ return [
             'prefix_indexes' => true,
             'options' => [
                 // PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60,//s
+                
             ],
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),

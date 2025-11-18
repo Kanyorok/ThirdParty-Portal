@@ -88,12 +88,12 @@
             <div class="row mb-3" id="limitGroup" style="display: none;">
                 <div class="col-md-4">
                     <label class="form-label">Approval Limit (AMOUNT only)</label>
-                    <select name="WorkFlowLimitId" id="WorkflowLimitID" class="form-control select2">
+                    {{-- <select name="WorkFlowLimitId" id="WorkflowLimitID" class="form-control select2">
                         <option value="">Select WorkFlow Limit</option>
                         @foreach($workflowLimits as $limit)
                         <option value="{{ $limit->Id }}">{{ $limit->Source }}</option>
                         @endforeach
-                    </select>
+                    </select> --}}
                 </div>
             </div>
 
@@ -447,7 +447,18 @@ $(document).ready(function() {
                     renumberStages();
 
                     if (isFinal) {
-                        updateFormVisibility(false);
+                        // 1. Update the main workflow header details
+        $('dd.col-sm-9:eq(3) .badge').removeClass('bg-success').addClass('bg-secondary').text('No');
+
+        // 2. Update the client-side state and show the form
+        updateFormVisibility(false);
+
+        // Also re-check the global flag in case the PHP logic changed it (better safe)
+    if(res.workflow_is_final_after_delete === false && workflowHasFinalStage === true) {
+        // This handles cases where deleting a non-final stage was the last stage left
+        $('dd.col-sm-9:eq(3) .badge').removeClass('bg-success').addClass('bg-secondary').text('No');
+        updateFormVisibility(false);
+    }
                     }
 
                     if($('#stagesTable tr:not(#noStages)').length === 0){

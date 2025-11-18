@@ -42,9 +42,9 @@ class ApprovalWorkflow extends ApprovalWorkflowService
         return $this->submittedAction(
             $actor, 
             $status, 
-            $model,
-            $model::getPrimaryKey(),  // Assumes static method on model
-            $model->getKey(), 
+            $model, //model instance 
+            $model::getPrimaryKey() ?? $model->getMorphClass(),  // Source alis
+            $model->getKey(), //sourceID
             $remarks
         );
     }

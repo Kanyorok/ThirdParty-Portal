@@ -76,7 +76,7 @@ class DepartmentNeedsService
             );
 
             activity()
-                ->causedBy($actor)
+                ->causedBy(modelOrId: $actor)
                 ->performedOn($departmentNeed)
                 ->event('create')
                 ->log('Created and submitted Department Need ' . $departmentNeed->NeedID);

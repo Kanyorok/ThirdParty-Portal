@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Finance\BankBranchController;
+use App\Http\Controllers\Settings\WorflowLimitsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web','auth'])->group(function(){
@@ -47,8 +48,13 @@ Route::middleware(['web','auth'])->namespace('App\Http\Controllers')->group(func
         Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
         Route::post('workflow-stages', 'WorkflowStagesController@store')->name('settings.workflow_stages.store');
         Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
-        Route::get('workflow-limits', 'WorflowLimitsController@index')->name('settings.workflow_limits');
-        Route::post('workflow-limits', 'WorflowLimitsController@store')->name('settings.approval_workflow_limit.store');
+      
+        // Workflow Limits Routes
+        Route::get('workflow-limits', [WorflowLimitsController::class, 'index'])->name('settings.workflow_limits');
+Route::post('workflow-limits', [WorflowLimitsController::class, 'store'])->name('settings.workflow_limits.store');
+Route::delete('workflow-limits/{id}', [WorflowLimitsController::class, 'destroy'])->name('settings.workflow_limits.destroy');
+        
+
 
         Route::get('integrations', 'SettingsController@integrations')->name('settings.integrations');
         Route::post('integrations', 'IntegrationController');

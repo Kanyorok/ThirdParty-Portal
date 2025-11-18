@@ -41,9 +41,10 @@ return new class extends Migration {
         });
 
         Schema::create('t_WorkFlowLimits', static function (Blueprint $table) {
-            $table->id('Id');
-            $table->string('Source')->index();
+            $table->id(column: 'Id');
+           $table->string('Source')->index();
             $table->decimal('MaxAmount', 20, 4);
+            // $table->foreignId('WorkFlowStageId')->constrained('t_WorkFlowStages', 'Id');
             $table->foreignId('PermissionId')->constrained('t_Permissions', 'id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -71,7 +72,7 @@ return new class extends Migration {
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });
-
+         
         Schema::create('t_WorkFlowHistory', static function (Blueprint $table) {
             $table->id('Id');
             $table->string("Source")->comment('PrimaryKey');
@@ -79,7 +80,6 @@ return new class extends Migration {
             $table->string("Stage", 200);
             $table->decimal('Amount', 20, 4)->nullable();
             $table->longText('Notes')->nullable();
-            $table->boolean('isApproved')->nullable()->after('Notes')->comment('Null = not processed, 0 = rejected, 1 = approved');
             $table->foreignId('StatusId')->constrained('t_CodeDetails', 'ID');//todo add submitted default for this
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

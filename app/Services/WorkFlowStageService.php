@@ -58,7 +58,6 @@ class WorkFlowStageService
                 @EscalationLimit = ?, 
                 @WorkflowID = ?, 
                 @WorkflowTypeID = ?, 
-                @WorkflowLimitID = ?, 
                 @Count = ?, 
                 @StatusID = ?, 
                 @CreatedBy = ?, 
@@ -69,7 +68,7 @@ class WorkFlowStageService
                     $data['EscalationLimit'],
                     $data['WorkFlowId'],
                     $data['WorkFlowTypeId'],
-                    $data['WorkFlowLimitId'] ?? null,
+                  
                     $data['Count'] ?? null,
                     $data['StatusId'] ?? null,
                     $user->Id,
@@ -98,7 +97,7 @@ class WorkFlowStageService
 
             // If this is marked as final stage, update the workflow using Eloquent
             if ($isFinalStage) {
-                $workflow->IsFinalStage = true;
+                $workflow->FinalStage = true;
                 $workflow->ModifiedBy = $user->Id;
                 $workflow->ModifiedOn = now();
                 $workflow->save();
@@ -209,6 +208,7 @@ class WorkFlowStageService
                 'success' => true,
                 'was_final_stage' => $wasFinalStage,
                 'workflow_id' => $workflowId,
+                'workflow_is_final_after_delete' => $workflow->IsFinalStage,
                 'remaining_stages' => $remainingStages,
             ];
             

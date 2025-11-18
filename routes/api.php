@@ -327,5 +327,4 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     //         Route::get('supplier/applications/{application}', 'show')->middleware('can:view,application');
     //     });
     // });
-
 });

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('t_WorkflowPending', function (Blueprint $table) {
             //
+            $table->string('DocumentId')->nullable();
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('t_WorkflowPending', function (Blueprint $table) {
             //
+             $table->dropColumn('DocumentId');
         });
     }
 };

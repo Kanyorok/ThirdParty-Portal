@@ -70,4 +70,9 @@ class WorkflowStage extends Model
         return 'WorkFlowStageId';
     }
 
+      public function workflow_limits()
+    {
+        return $this->hasMany(\App\Models\Settings\WorkFlowLimit::class, 'WorkFlowStageId', 'Id');
+    }
+
     }

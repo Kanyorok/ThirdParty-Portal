@@ -3,6 +3,7 @@
 namespace App\Models\Settings;
 
 use App\Traits\Model\UserActorTrait;
+use App\Models\Core\Approval\Permission;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -18,11 +19,32 @@ class WorkFlowLimit extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Source', 'PermissionId', 'MaxAmount', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'WorkFlowStageId', 'PermissionId', 'MaxAmount', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
     {
-        return 'WorkFlowLimitId';
+        return 'Id';
+    }
+
+        public function workflow_stage()
+    {
+        return $this->belongsTo(WorkFlowStage::class, 'WorkFlowStageId', 'Id');
+    }
+
+    /**
+     * Relationship with Permission
+     */
+      public function permission()
+    {
+        return $this->belongsTo(Permission::class, 'PermissionId', 'id');
+    }
+
+    /**
+     * Scope to get only non-deleted records
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('DeletedOn');
     }
 }

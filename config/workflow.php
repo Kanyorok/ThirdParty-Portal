@@ -19,4 +19,11 @@ return [
         'Pending' => \App\Enums\Procurement\DepartmentNeedsEnum::Pending->value,    // 'p'
         'Submitted for Approval' => \App\Enums\Procurement\DepartmentNeedsEnum::Submitted->value,  // 's'
     ],
+
+    'PlanID' => [
+        'Approved' => \App\Enums\ProcurementPlanStatusEnum::Approved->value,  // 'Ap'
+        'Rejected' => \App\Enums\ProcurementPlanStatusEnum::Rejected->value,  // 'Re'
+        'Pending' => \App\Enums\ProcurementPlanStatusEnum::Pending->value,    // 'P'
+        'Submitted for Approval' => \App\Enums\ProcurementPlanStatusEnum::Submitted->value,  // 'Su'
+    ],
 ];

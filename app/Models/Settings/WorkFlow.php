@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
 use App\Models\Core\Module;
-use App\Models\Settings\WorkFlowType;
-use App\Models\Settings\WorkflowStage;
+use App\Models\Core\Approval\WorkFlowType;
+use App\Models\Core\Approval\WorkflowStage;
 
 class WorkFlow extends Model
 {
@@ -25,6 +25,7 @@ class WorkFlow extends Model
         'Name',
         'Source',
         'Description',
+        'IsFinalStage',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',

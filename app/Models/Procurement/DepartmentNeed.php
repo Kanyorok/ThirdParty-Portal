@@ -60,8 +60,8 @@ class DepartmentNeed extends Model
             Workflow::class, 
             'source', 
             'Source',      // Column name in t_Workflow table
-            'SourceID',    // ID column in t_Workflow table
-            'Id'           // Local key
+            id: 'SourceID',    // ID column in t_Workflow table
+            localKey: 'Id'           // Local key
         );
     }
 
