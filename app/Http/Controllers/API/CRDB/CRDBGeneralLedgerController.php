@@ -47,10 +47,15 @@ class CRDBGeneralLedgerController extends Controller
 
     public function syncGLBalances()
     {
+
+        for($i = 0; $i < 10; $i++) {
+
+        }
+
         try {
-            $data = DB::select("EXEC p_GetGLBalances");
-            // Check if data is empty
-            if (empty($data)) {
+            $rows = DB::select("EXEC p_GetGLBalances");
+    
+            if (empty($rows)) {
                 return response()->json([
                     'status' => 'empty',
                     'code' => 404,
@@ -58,14 +63,23 @@ class CRDBGeneralLedgerController extends Controller
                     'data' => null
                 ], 404);
             }
+    
+            // Convert ALL numeric-looking values to string to preserve formatting
+            $data = collect($rows)->map(function($row) {
+                $row->Balances        = number_format((float)$row->Balances, 6, '.', '');
+                $row->LocalBalances   = number_format((float)$row->LocalBalances, 6, '.', '');
+                $row->ForeignBalances = number_format((float)$row->ForeignBalances, 6, '.', '');
+                return $row;
+            });
+    
             return response()->json([
                 'status' => 'ok',
                 'code' => 200,
                 'count' => count($data),
                 'message' => 'General Ledger Balances Fetched Successfully',
-                'data' => collect($data)
+                'data' => $data
             ], 200);
-
+    
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -75,4 +89,5 @@ class CRDBGeneralLedgerController extends Controller
             ], 500);
         }
     }
+    
 }
