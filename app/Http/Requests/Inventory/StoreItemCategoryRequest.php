@@ -29,7 +29,8 @@ class StoreItemCategoryRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('t_ItemCategories', 'Name')
-                    ->where('ParentId', $this->ParentId),
+                    ->where('ParentId', $this->ParentId)
+                    ->whereNull('DeletedOn'), 
             ],
             'Description' => 'nullable|string',
             'ParentId' => 'nullable|exists:t_ItemCategories,Id',

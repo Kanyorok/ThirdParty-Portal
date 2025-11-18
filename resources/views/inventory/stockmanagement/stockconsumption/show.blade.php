@@ -16,7 +16,7 @@
             </div>
 
             <div class="col-md-6 mb-3">
-                <strong>Item:</strong> {{ $consumption->stockItem?->ItemName ?? 'N/A' }}
+                <strong>Item:</strong> {{ $consumption->item_name ?? 'N/A' }}
             </div>
 
             <div class="col-md-6 mb-3">
