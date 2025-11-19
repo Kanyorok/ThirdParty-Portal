@@ -138,7 +138,7 @@
                     @foreach($lineInfo as $index => $line)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ $line->ItemType }}</td>
+                            <td>{{ $line->ItemTypeName ?? 'N/A' }}</td>
                             <td>{{ $line->ItemName }}</td>
                             <td>{{ $line->Description }}</td>
                             <td>{{ $line->fQuantity }}</td>
