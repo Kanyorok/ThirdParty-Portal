@@ -68,17 +68,19 @@ class PurchaseOrderController extends Controller
     public function getDirectPlans(): JsonResponse
     {
         try {
+            $planTable = 't_ConsolidatedProcurementPlan';
+            $planIdCol = Schema::hasColumn($planTable, 'PlanID') ? 'PlanID' : (Schema::hasColumn($planTable, 'Id') ? 'Id' : 'PlanID');
             $plans = ConsolidatedProcurementPlan::query()
                 ->where('Status', ProcurementPlanStatusEnum::Approved)
                 ->with(['lineItems.procurementMode'])
                 ->whereHas('lineItems', function ($query) {
-                    $query->where('ExecutionStatus', 'Pending')
-                        ->whereHas('procurementMode', function ($sub) {
-                            $sub->where('Description', 'LIKE', '%Direct%');
-                        });
+                    // Require procurement method to be Direct; do not restrict by ExecutionStatus
+                    $query->whereHas('procurementMode', function ($sub) {
+                        $sub->whereRaw("LOWER(ISNULL(Description,'')) like '%direct%'");
+                    });
                 })
                 // Exclude plans that already have a fully approved Direct PO referencing them
-                ->whereRaw("NOT EXISTS (SELECT 1 FROM t_Orders o WHERE RTRIM(LTRIM(ISNULL(o.SourceType,'')))='DIRECT' AND o.DocStatus='a' AND o.SourceId = COALESCE(t_ConsolidatedProcurementPlan.PlanID, t_ConsolidatedProcurementPlan.Id))")
+                ->whereRaw("NOT EXISTS (SELECT 1 FROM t_Orders o WHERE RTRIM(LTRIM(ISNULL(o.SourceType,'')))='DIRECT' AND o.DocStatus='a' AND o.SourceId = t_ConsolidatedProcurementPlan.$planIdCol)")
                 // Some environments don't have an ApprovedOn column on t_ConsolidatedProcurementPlan.
                 // Order by best-available timestamp: SubmittedDate, then CreatedOn, then ModifiedOn.
                 ->orderByDesc(DB::raw("COALESCE(SubmittedDate, CreatedOn, ModifiedOn)"))
@@ -302,15 +304,39 @@ class PurchaseOrderController extends Controller
                 $awardedFromRFQAward = collect();
             }
 
-            // Only list RFQs awarded via t_RFQAward (source of truth)
-            $awardedRfqs = $awardedFromRFQAward->unique('Id')->values();
+            // Compute fully-approved PO references to exclude at load time
+            $approvedConvertedRFQIds = DB::table('t_Orders')
+                ->whereRaw("RTRIM(LTRIM(ISNULL(SourceType,'')))='RFQ'")
+                ->whereNotNull('SourceId')
+                ->where('DocStatus', 'a')
+                ->pluck('SourceId')
+                ->toArray();
+
+            $usedReferenceNumbers = DB::table('t_Orders')
+                ->whereNotNull('ExtOrdNum')
+                ->where('DocStatus', 'a')
+                ->pluck('ExtOrdNum')
+                ->map(function($v){ return is_null($v)?'':trim((string)$v); })
+                ->filter()
+                ->values()
+                ->toArray();
+
+            // Only list RFQs awarded via t_RFQAward (source of truth), excluding ones already converted by approved PO
+            $awardedRfqs = $awardedFromRFQAward
+                ->filter(function($r) use ($approvedConvertedRFQIds, $usedReferenceNumbers){
+                    $rfqNo = trim((string)($r->RFQNumber ?? ''));
+                    return !in_array($r->Id, $approvedConvertedRFQIds) && !in_array($rfqNo, $usedReferenceNumbers);
+                })
+                ->unique('Id')
+                ->values();
 
             // Fallback if needed
             // No fallback to non-awarded RFQs; dropdown must show only awarded RFQs
 
             $convertedRFQIds = DB::table('t_Orders')
-                ->where('SourceType', 'RFQ')
+                ->whereRaw("RTRIM(LTRIM(ISNULL(SourceType,'')))='RFQ'")
                 ->whereNotNull('SourceId')
+                ->where('DocStatus', 'a')
                 ->pluck('SourceId')
                 ->toArray();
 
@@ -328,6 +354,8 @@ class PurchaseOrderController extends Controller
                           ->orWhere('ta.ContractStatus', '')
                           ->orWhere('ta.ContractStatus', 'No Contract Required');
                     })
+                    // Exclude tenders that already have a fully approved Tender-based PO
+                    ->whereRaw("NOT EXISTS (SELECT 1 FROM t_Orders o WHERE RTRIM(LTRIM(ISNULL(o.SourceType,'')))='TENDER' AND o.DocStatus='a' AND o.SourceId = t.Id)")
                     ->select(
                         't.Id',
                         't.TenderNo',
@@ -345,8 +373,9 @@ class PurchaseOrderController extends Controller
             }
 
             $convertedTenderIds = DB::table('t_Orders')
-                ->where('SourceType', 'TENDER')
+                ->whereRaw("RTRIM(LTRIM(ISNULL(SourceType,'')))='TENDER'")
                 ->whereNotNull('SourceId')
+                ->where('DocStatus', 'a')
                 ->pluck('SourceId')
                 ->toArray();
 
@@ -993,6 +1022,8 @@ public function getRFQItems($rfqId)
                       ->orWhere('ta.ContractStatus', '')
                       ->orWhere('ta.ContractStatus', 'No Contract Required');
                 })
+                // Exclude tenders already converted to a fully approved PO
+                ->whereRaw("NOT EXISTS (SELECT 1 FROM t_Orders o WHERE RTRIM(LTRIM(ISNULL(o.SourceType,'')))='TENDER' AND o.DocStatus='a' AND o.SourceId = t.Id)")
                 ->select(
                     't.Id',
                     't.TenderNo',
