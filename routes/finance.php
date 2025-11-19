@@ -103,6 +103,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::resource('creditnote', CreditNoteController::class);
     Route::resource('debitnote', DebitNoteController::class);
     Route::resource('paymentprocessing', PaymentProcessingController::class);
+    Route::get('agingreport/suppliers/search', [AgingReportController::class, 'supplierLookup'])->name('agingreport.suppliers.lookup');
     Route::resource('agingreport', AgingReportController::class);
     // Receipts posting routes moved to separate group below to avoid conflicts
     Route::resource('creditmanagement', CreditManagementController::class);

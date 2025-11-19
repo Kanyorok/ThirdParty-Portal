@@ -625,15 +625,15 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1101300, 'Name' => 'Credit/Debit Note', 'Icon' => null, 'Description' => '', 'Route' => 'creditnote.index', 'ParentID' => 1101000],
             ['ModuleID' => 1101350, 'Name' => 'Payment Voucher', 'Icon' => null, 'Description' => '', 'Route' => 'paymentvoucher.index', 'ParentID' => 1101000],
             ['ModuleID' => 1101400, 'Name' => 'Payment Processing', 'Icon' => null, 'Description' => '', 'Route' => 'paymentprocessing.index', 'ParentID' => 1101000],
-//            ['ModuleID' => 1101600, 'Name' => 'Aging Report', 'Icon' => null, 'Description' => '', 'Route' => 'agingreport.index', 'ParentID' => 1101000],
+            ['ModuleID' => 1101600, 'Name' => 'Aging Report', 'Icon' => null, 'Description' => '', 'Route' => 'agingreport.index', 'ParentID' => 1101000],
             ['ModuleID' => 1102000, 'Name' => 'Accounts Receivable', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
 //            ['ModuleID' => 1102100, 'Name' => 'Customer Master', 'Icon' => null, 'Description' => '', 'Route' => 'customermaster.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102200, 'Name' => 'Invoice Generation', 'Icon' => null, 'Description' => '', 'Route' => 'invoicegeneration.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102300, 'Name' => 'Receipts Posting', 'Icon' => null, 'Description' => '', 'Route' => 'receiptsposting.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102350, 'Name' => 'Debit Note', 'Icon' => null, 'Description' => '', 'Route' => 'debitnote.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102400, 'Name' => 'Credit Management', 'Icon' => null, 'Description' => '', 'Route' => 'creditmanagement.index', 'ParentID' => 1102000],
-//            ['ModuleID' => 1102500, 'Name' => 'Aging Report', 'Icon' => null, 'Description' => '', 'Route' => 'agingreportar.index', 'ParentID' => 1102000],
-//            ['ModuleID' => 1102600, 'Name' => 'Customer Statement', 'Icon' => null, 'Description' => '', 'Route' => 'customerstatement.index', 'ParentID' => 1102000],
+            ['ModuleID' => 1102500, 'Name' => 'Aging Report', 'Icon' => null, 'Description' => '', 'Route' => 'agingreportar.index', 'ParentID' => 1102000],
+            ['ModuleID' => 1102600, 'Name' => 'Customer Statement', 'Icon' => null, 'Description' => '', 'Route' => 'customerstatement.index', 'ParentID' => 1102000],
 
 
             // Bank Management Routes
