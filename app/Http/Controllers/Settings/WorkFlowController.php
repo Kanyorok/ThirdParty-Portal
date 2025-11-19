@@ -70,7 +70,7 @@ class WorkFlowController extends Controller
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
                 'Source' => $tableName,
-                'FinalStage' => false, // Initialize as false
+                'FinalStage' => null, // Initialize as false
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
@@ -120,6 +120,8 @@ class WorkFlowController extends Controller
                 throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
             }
 
+            //auto-detect module
+
             $moduleId = DB::table('t_ModuleSources')
                 ->where('DocumentType', $tableName)
                 ->value('ModuleID');
@@ -148,20 +150,27 @@ class WorkFlowController extends Controller
 
     public function show($id)
     {
-        $approval = WorkFlow::findOrFail($id);
-        $approval->refresh();
-        
-        $sourceOptions = array_flip(Relation::morphMap());
-        $approvalTypes = DB::table('t_WorkFlowTypes')->get();
-        $permissions = DB::table('t_Permissions')->get();
-        $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'WorkFlowStageId')->get();
+       // Force fresh data from database
+    $approval = WorkFlow::findOrFail($id);
+    $approval->refresh(); // Ensure we have the latest data
+    
+    $sourceOptions = array_flip(Relation::morphMap());
+    $approvalTypes = DB::table('t_WorkFlowTypes')->get();
+    $permissions = DB::table('t_Permissions')->get();
+    $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'WorkFlowStageId')->get();
 
-        $stages = WorkFlowStage::where('WorkFlowId', $id)
-            ->with(['type_name', 'workflow'])
-            ->orderBy('Order')
-            ->get();
+    // Get stages with fresh data
+    $stages = WorkFlowStage::where('WorkFlowId', $id)
+        ->with(['type_name', 'workflow'])
+        ->orderBy('Order')
+        ->get();
 
-        return view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'));
+    // Force disable caching
+    return response()
+        ->view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'))
+        ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', '0');
     }
 
     public function destroy(string $id)
@@ -224,4 +233,66 @@ class WorkFlowController extends Controller
 
         return $instance->getTable();
     }
+
+  
+  public function getState($id)
+{
+    try {
+        $workflow = WorkFlow::findOrFail($id);
+        $workflow->refresh();
+        
+        // Get all stages with proper relationships
+        $stagesCollection = WorkFlowStage::where('WorkFlowId', $id)
+            ->with(['type_name', 'workflow'])
+            ->orderBy('Order')
+            ->get();
+        
+        // Map stages with proper final stage detection
+        $stages = $stagesCollection->map(function($stage) use ($workflow) {
+            // Check if this stage is marked as final stage
+            $isFinalStage = ($stage->StageName === $workflow->FinalStage);
+
+            
+            return [
+                'Id' => $stage->Id,
+                'StageName' => $stage->StageName,
+                'Order' => $stage->Order,
+                'type' => $stage->type_name ? [
+                    'TypeID' => $stage->type_name->TypeID,
+                    'Name' => $stage->type_name->Name,
+                ] : null,
+                'role_name' => $stage->role_name ?? '-',
+                'MaxAmount' => $stage->MaxAmount ?? '-',
+                'Count' => $stage->Count ?? null,
+                'IsFinalStage' => $isFinalStage,
+                'FinalStageName' => $workflow->FinalStage,
+                'EscalationLimit' => $stage->EscalationLimit,
+            ];
+        })->values();
+
+        return response()->json([
+            'status' => 'success',
+            'workflow' => [
+                'Id' => $workflow->Id,
+                'Name' => $workflow->Name,
+                'IsFinalStage' => $workflow->FinalStage ? true : false,
+                'Description' => $workflow->Description,
+                'Source' => $workflow->Source,
+            ],
+            'stages' => $stages,
+        ]);
+        
+    } catch (\Throwable $e) {
+        Log::error('Failed to fetch workflow state', [
+            'workflow_id' => $id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to fetch workflow state: ' . $e->getMessage(),
+        ], 500);
+    }
+}
 }

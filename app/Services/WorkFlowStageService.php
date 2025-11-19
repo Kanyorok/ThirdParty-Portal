@@ -13,42 +13,33 @@ use App\Exceptions\ErroredException;
 
 class WorkFlowStageService
 {
+    /**
+     * CREATE WORKFLOW STAGE
+     */
     public function createStage(array $data)
     {
         /** @var User $user */
         $user = Auth::user();
-        
-        if (!$user || !$user->Id) {
-            throw new ErroredException('User must be authenticated to create a workflow stage.');
+
+        if (!$user) {
+            throw new ErroredException('User not authenticated.');
         }
-        
+
         DB::beginTransaction();
-        
+
         try {
-            // Fetch workflow with fresh data from database
             $workflow = WorkFlow::findOrFail($data['WorkFlowId']);
 
-            // Validate final stage logic - Check if workflow already has a final stage
-            if ($workflow->IsFinalStage) {
-                throw new ErroredException('This workflow already has a final stage. You cannot add more stages to a workflow with a final stage.');
-            }
+            // Next stage order
+            $nextOrder = WorkFlowStage::where('WorkFlowId', $workflow->Id)->max('Order') + 1;
 
-            $isFinalStage = !empty($data['IsFinalStage']) && ($data['IsFinalStage'] == 1 || $data['IsFinalStage'] === true);
-
-            // Compute next order
-            $nextOrder = WorkFlowStage::where('WorkFlowId', $data['WorkFlowId'])->max('Order') + 1;
-
-            // Fetch ModuleID from t_ModuleSources based on workflow's Source
+            // Resolve module ID from source
             $moduleId = DB::table('t_ModuleSources')
                 ->where('DocumentType', $workflow->Source)
                 ->value('ModuleID');
 
             if (!$moduleId) {
-                Log::warning('No module found for workflow source', [
-                    'workflow_id' => $workflow->Id,
-                    'source' => $workflow->Source,
-                ]);
-                throw new ErroredException('No module found for this workflow. Please ensure the workflow has a valid document type configured.');
+                throw new ErroredException('Module not found for workflow source.');
             }
 
             // Execute stored procedure
@@ -61,251 +52,154 @@ class WorkFlowStageService
                 @Count = ?, 
                 @StatusID = ?, 
                 @CreatedBy = ?, 
-                @ModuleID = ?',
-                [
+                @ModuleID = ?', [
                     $nextOrder,
                     $data['StageName'],
                     $data['EscalationLimit'],
                     $data['WorkFlowId'],
                     $data['WorkFlowTypeId'],
-                  
                     $data['Count'] ?? null,
                     $data['StatusId'] ?? null,
                     $user->Id,
-                    $moduleId,
-                ]
-            );
+                    $moduleId
+                ]);
 
             $dto = WorkflowStageResult::fromDatabaseResult($results[0] ?? null);
 
-            // Handle errors returned by stored procedure
             if ($dto->isError()) {
-                Log::warning('Workflow stage creation failed', [
-                    'workflow_id' => $data['WorkFlowId'],
-                    'stage_name' => $data['StageName'],
-                    'user_id' => $user->id,
-                    'message' => $dto->message,
-                ]);
                 throw new ErroredException($dto->message);
             }
 
-            // Fetch the created stage
+            // Fetch stage created by stored procedure 
             $stage = WorkFlowStage::find($dto->newStageId);
             if (!$stage) {
-                throw new ErroredException('Stored procedure did not return a valid stage ID.');
+                throw new ErroredException('Stage creation failed.');
             }
 
-            // If this is marked as final stage, update the workflow using Eloquent
-            if ($isFinalStage) {
-                $workflow->FinalStage = true;
-                $workflow->ModifiedBy = $user->Id;
-                $workflow->ModifiedOn = now();
-                $workflow->save();
-                
-                // Refresh to get the latest state from database
-                $workflow->refresh();
-                
-                Log::info('Workflow marked as having final stage', [
-                    'workflow_id' => $workflow->Id,
-                    'stage_id' => $stage->Id,
-                    'is_final_stage' => $workflow->IsFinalStage,
-                ]);
+            /**
+             * UPDATE WORKFLOW FINAL STAGE NAME
+             * Only set if explicitly marked as final via checkbox
+             */
+            if (isset($data['IsFinalStage']) && $data['IsFinalStage']) {
+                $workflow->FinalStage = $stage->StageName;
+            } else {
+                // If no final stage exists and this isn't marked as final, ensure it's null
+                // (This is optional but ensures consistency if FinalStage was previously set incorrectly)
+                if (is_null($workflow->FinalStage)) {
+                    $workflow->FinalStage = null; // Already null, but explicit
+                }
+                // Note: We leave FinalStage unchanged if it was already set (e.g., from a previous final stage)
             }
 
-            // Add IsFinalStage property to stage for response (virtual attribute)
-            $stage->IsFinalStage = $isFinalStage;
+            $workflow->ModifiedBy = $user->Id;
+            $workflow->ModifiedOn = now();
+            $workflow->save();
 
-            // Log activity
-            activity()->causedBy($user)
-                ->performedOn($stage)
-                ->event('create')
-                ->log('Created approval workflow stage: ' . $data['StageName'] . ($isFinalStage ? ' (Final Stage)' : ''));
-
-            Log::info('Workflow stage created successfully', [
-                'stage_id' => $dto->newStageId,
-                'permission_id' => $dto->permissionId,
-                'user_id' => $user->id,
-                'module_id' => $moduleId,
-                'is_final' => $isFinalStage,
-                'workflow_has_final' => $workflow->IsFinalStage,
+            // Debug: Log the IsFinalStage value for troubleshooting
+            Log::info('Stage creation debug', [
+                'stage_name' => $stage->StageName,
+                'is_final_stage_checkbox' => $data['IsFinalStage'] ?? 'not set',
+                'final_stage_set_to' => $workflow->FinalStage,
             ]);
 
+            activity()
+                ->causedBy($user)
+                ->performedOn($stage)
+                ->event('create')
+                ->log("Created workflow stage: {$stage->StageName}");
+
             DB::commit();
-            
             // Reload stage with relationships
             $stage->load(['type_name', 'workflow']);
-            
+
             return [
                 'dto' => $dto,
                 'stage' => $stage
             ];
 
-        } catch (ErroredException $e) {
-            DB::rollBack();
-            throw $e;
-
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Unexpected error creating workflow stage', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw new ErroredException('An unexpected error occurred while creating the workflow stage.');
+            Log::error('Workflow stage creation error', [$e->getMessage()]);
+            throw new ErroredException('Error creating workflow stage.');
         }
     }
 
+    /**
+     * DELETE WORKFLOW STAGE
+     */
     public function deleteStage(int $id): array
     {
         DB::beginTransaction();
-        
-        try {
-            $stage = WorkFlowStage::findOrFail($id);
-            $workflowId = $stage->WorkFlowId;
-            $workflow = WorkFlow::findOrFail($workflowId);
-            $stageName = $stage->StageName;
-            
-            // Get the highest order (last stage)
-            $lastStage = WorkFlowStage::where('WorkFlowId', $workflowId)
-                ->orderBy('Order', 'desc')
-                ->first();
-            
-            // Check if we're deleting the last stage (which would be the final one if workflow has final stage)
-            $isDeletingLastStage = $lastStage && $lastStage->Id === $id;
-            $wasFinalStage = $workflow->IsFinalStage && $isDeletingLastStage;
-            
-            // Delete the stage
-            $stage->delete();
-            
-            // Get remaining stages count AFTER deletion
-            $remainingStages = WorkFlowStage::where('WorkFlowId', $workflowId)->count();
-            
-            // Reset IsFinalStage flag if we deleted the final stage or no stages remain
-            if ($workflow->IsFinalStage && ($wasFinalStage || $remainingStages === 0)) {
-                $workflow->IsFinalStage = false;
-                $workflow->ModifiedBy = Auth::id();
-                $workflow->ModifiedOn = now();
-                $workflow->save();
-                
-                // Refresh to confirm
-                $workflow->refresh();
-                
-                Log::info('Workflow IsFinalStage flag reset after stage deletion', [
-                    'workflow_id' => $workflowId,
-                    'deleted_stage_id' => $id,
-                    'was_last_stage' => $isDeletingLastStage,
-                    'remaining_stages' => $remainingStages,
-                    'is_final_stage' => $workflow->IsFinalStage,
-                ]);
-            }
 
-            activity()->performedOn($stage)
-                ->event('delete')
-                ->log('Deleted approval workflow stage: ' . $stageName . ($wasFinalStage ? ' (Was Final Stage)' : ''));
-
-            DB::commit();
-            
-            return [
-                'success' => true,
-                'was_final_stage' => $wasFinalStage,
-                'workflow_id' => $workflowId,
-                'workflow_is_final_after_delete' => $workflow->IsFinalStage,
-                'remaining_stages' => $remainingStages,
-            ];
-            
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Error deleting workflow stage', [
-                'stage_id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw $e;
-        }
-    }
-
-    public function updateStage(int $id, array $data): WorkFlowStage
-    {
-        DB::beginTransaction();
-        
         try {
             $stage = WorkFlowStage::findOrFail($id);
             $workflow = WorkFlow::findOrFail($stage->WorkFlowId);
-            
-            // Update the stage with provided data
-            $stage->update($data);
 
-            activity()->performedOn($stage)
-                ->event('update')
-                ->log('Updated approval workflow stage: ' . $stage->StageName);
+            $stageName = $stage->StageName;
+            $workflowId = $workflow->Id;
+            $wasFinalStage = ($stage->StageName === $workflow->FinalStage); // Check if this was the final stage
 
-            DB::commit();
-            return $stage;
-            
-        } catch (ErroredException $e) {
-            DB::rollBack();
-            throw $e;
-            
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Error updating workflow stage', [
-                'stage_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
-            throw new ErroredException('Failed to update workflow stage.');
-        }
-    }
-    
-    /**
-     * Remove final stage designation from workflow
-     */
-    public function removeFinalStageDesignation(int $workflowId): bool
-    {
-        DB::beginTransaction();
-        
-        try {
-            $workflow = WorkFlow::findOrFail($workflowId);
-            $workflow->IsFinalStage = false;
+            $stage->delete();
+
+            // Only recalculate FinalStage if the deleted stage was the final one
+            if ($wasFinalStage) {
+                $newFinal = WorkFlowStage::where('WorkFlowId', $workflowId)
+                    ->orderBy('Order', 'desc')
+                    ->first();
+
+                $workflow->FinalStage = $newFinal ? $newFinal->StageName : null;
+            }
+            // If it wasn't final, leave FinalStage unchanged
+
             $workflow->ModifiedBy = Auth::id();
             $workflow->ModifiedOn = now();
             $workflow->save();
-            
-            Log::info('Workflow final stage designation removed', [
-                'workflow_id' => $workflowId,
-            ]);
-            
+
+            activity()
+                ->performedOn($stage)
+                ->event('delete')
+                ->log("Deleted workflow stage: {$stageName}");
+
             DB::commit();
-            return true;
-            
+
+            return [
+                'success' => true,
+                'final_stage' => $workflow->FinalStage
+            ];
+
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
         }
     }
 
-    public function getStageById(int $id): WorkFlowStage
-    {
-        return WorkFlowStage::findOrFail($id);
-    }
-    
-    public function getWorkflowStages(int $workflowId): array
-    {
-        return WorkFlowStage::where('WorkFlowId', $workflowId)
-            ->orderBy('Order')
-            ->get()
-            ->toArray();
-    }
-    
     /**
-     * Check if workflow has a final stage
+     * UPDATE STAGE
      */
-    public function workflowHasFinalStage(int $workflowId): bool
+    public function updateStage(int $id, array $data): WorkFlowStage
     {
-        $workflow = WorkFlow::find($workflowId);
-        return $workflow ? $workflow->IsFinalStage : false;
+        DB::beginTransaction();
+
+        try {
+            $stage = WorkFlowStage::findOrFail($id);
+            $stage->update($data);
+
+            activity()
+                ->performedOn($stage)
+                ->event('update')
+                ->log("Updated workflow stage: {$stage->StageName}");
+
+            DB::commit();
+            return $stage;
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw new ErroredException('Failed to update workflow stage.');
+        }
     }
-    
+
     /**
-     * Get which stage is the final one (by checking order)
+     * GET FINAL STAGE (highest Order)
      */
     public function getFinalStage(int $workflowId): ?WorkFlowStage
     {
@@ -314,3 +208,4 @@ class WorkFlowStageService
             ->first();
     }
 }
+

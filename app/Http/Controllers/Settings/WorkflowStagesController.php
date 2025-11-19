@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\WorkFlowStageRequest;
 use App\Services\WorkFlowStageService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class WorkflowStagesController extends Controller
@@ -36,10 +35,10 @@ class WorkflowStagesController extends Controller
                 'Order' => $stage->Order,
                 'EscalationLimit' => $stage->EscalationLimit,
                 'WorkFlowId' => $stage->WorkFlowId,
-                'IsFinalStage' => (bool) $stage->IsFinalStage,
+                'IsFinalStage' => ($stage->StageName === $stage->workflow->FinalStage),
                 'MaxAmount' => $stage->MaxAmount ?? null,
                 'Count' => $stage->Count ?? null,
-                'type_name' => $stage->type_name ? [
+                'type' => $stage->type_name ? [
                     'TypeID' => $stage->type_name->TypeID,
                     'Name' => $stage->type_name->Name,
                 ] : null,
@@ -48,8 +47,10 @@ class WorkflowStagesController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Workflow stage created successfully' . ($stage->IsFinalStage ? ' (marked as final stage)' : ''),
+                'message' => 'Workflow stage created successfully' 
+    . (($stage->StageName === $stage->workflow->FinalStage) ? ' (final stage)' : ''),
                 'stage' => $stageData,
+                'workflow_has_final_stage' => (bool) $stage->workflow->IsFinalStage,
             ]);
 
         } catch (\App\Exceptions\ErroredException $e) {
@@ -79,17 +80,20 @@ class WorkflowStagesController extends Controller
     public function destroy(string $id): JsonResponse
     {
         try {
-            $this->stageService->deleteStage((int) $id);
+            // Call service and get the result array with all the metadata
+            $result = $this->stageService->deleteStage((int) $id);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Workflow stage deleted successfully.',
-            ]);
+          return response()->json([
+    'status' => 'success',
+    'message' => 'Workflow stage deleted successfully.',
+    'final_stage' => $result['final_stage']
+              ]);
 
         } catch (\Throwable $e) {
             Log::error('Failed to delete workflow stage', [
                 'stage_id' => $id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([

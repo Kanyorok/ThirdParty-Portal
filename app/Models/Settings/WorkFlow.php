@@ -25,14 +25,14 @@ class WorkFlow extends Model
         'Name',
         'Source',
         'Description',
-        'IsFinalStage',
+        'FinalStage',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
     ];
 
     protected $casts = [
-        'IsFinalStage' => 'boolean',
+        'FinalStage' => 'string',
     ];
 
     public static function getPrimaryKey(): string
@@ -54,5 +54,11 @@ class WorkFlow extends Model
    {
     return $this->belongsTo(Module::class, 'ModuleId');
    }
+
+    public function getIsFinalStageAttribute()
+    {
+        return !is_null($this->FinalStage);
+    }
+
 
 }

@@ -328,3 +328,6 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     //     });
     // });
 });
+
+//api routes for workflow stages
+Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Finance\BankBranchController;
 use App\Http\Controllers\Settings\WorflowLimitsController;
+use App\Http\Controllers\Settings\WorflowLimitController;
+use App\Http\Controllers\Settings\WorkflowController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web','auth'])->group(function(){
@@ -48,6 +50,12 @@ Route::middleware(['web','auth'])->namespace('App\Http\Controllers')->group(func
         Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
         Route::post('workflow-stages', 'WorkflowStagesController@store')->name('settings.workflow_stages.store');
         Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
+
+        Route::get('/settings/workflows/{id}/state', [WorkFlowController::class, 'getState'])->name('settings.workflows.state');
+
+        // Add POST alternative for delete to handle form submission
+Route::post('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy.post');
+Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
       
         // Workflow Limits Routes
         Route::get('workflow-limits', [WorflowLimitsController::class, 'index'])->name('settings.workflow_limits');
