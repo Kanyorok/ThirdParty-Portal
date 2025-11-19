@@ -77,6 +77,8 @@ class PurchaseOrderController extends Controller
                             $sub->where('Description', 'LIKE', '%Direct%');
                         });
                 })
+                // Exclude plans that already have a fully approved Direct PO referencing them
+                ->whereRaw("NOT EXISTS (SELECT 1 FROM t_Orders o WHERE RTRIM(LTRIM(ISNULL(o.SourceType,'')))='DIRECT' AND o.DocStatus='a' AND o.SourceId = COALESCE(t_ConsolidatedProcurementPlan.PlanID, t_ConsolidatedProcurementPlan.Id))")
                 // Some environments don't have an ApprovedOn column on t_ConsolidatedProcurementPlan.
                 // Order by best-available timestamp: SubmittedDate, then CreatedOn, then ModifiedOn.
                 ->orderByDesc(DB::raw("COALESCE(SubmittedDate, CreatedOn, ModifiedOn)"))
@@ -355,6 +357,8 @@ class PurchaseOrderController extends Controller
                 ->whereIn('ta.ContractStatus', ['Approved', 'Executed']) // Include both Approved and Executed contracts
                 ->whereNotNull('ta.ContractRef') // Must have a contract reference
                 ->where('ta.ContractRef', '!=', '') // Contract reference cannot be empty
+                // Exclude contracts that already have a fully approved Contract-based PO
+                ->whereRaw("NOT EXISTS (SELECT 1 FROM t_Orders o WHERE RTRIM(LTRIM(ISNULL(o.SourceType,'')))='CONTRACT' AND o.DocStatus='a' AND o.SourceId = ta.Id)")
                 ->orderByDesc('ta.ContractApprovedOn')
                 ->select(
                     'ta.Id as Id',
@@ -927,9 +931,23 @@ public function getRFQItems($rfqId)
     public function getAwardedRFQs(): JsonResponse
     {
         try {
-            // Exclude RFQs that already have POs by SourceId or whose RFQNumber appears in ExtOrdNum
-            $convertedIds = DB::table('t_Orders')->where('SourceType', 'RFQ')->whereNotNull('SourceId')->pluck('SourceId')->toArray();
-            $usedRefs = DB::table('t_Orders')->whereNotNull('ExtOrdNum')->pluck('ExtOrdNum')->map(function($v){ return is_null($v)?'':trim((string)$v); })->filter()->values()->toArray();
+            // Exclude ONLY RFQs for which a PO is already fully approved
+            // Fully approved POs are marked on t_Orders.DocStatus = 'a'
+            $approvedConvertedIds = DB::table('t_Orders')
+                ->where('SourceType', 'RFQ')
+                ->whereNotNull('SourceId')
+                ->where('DocStatus', 'a')
+                ->pluck('SourceId')
+                ->toArray();
+
+            $approvedUsedRefs = DB::table('t_Orders')
+                ->whereNotNull('ExtOrdNum')
+                ->where('DocStatus', 'a')
+                ->pluck('ExtOrdNum')
+                ->map(function($v){ return is_null($v)?'':trim((string)$v); })
+                ->filter()
+                ->values()
+                ->toArray();
 
             $q = DB::table('t_RFQAward as a')
                 ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
@@ -944,11 +962,11 @@ public function getRFQItems($rfqId)
                     DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
                 );
 
-            if (!empty($convertedIds)) {
-                $q->whereNotIn('r.Id', $convertedIds);
+            if (!empty($approvedConvertedIds)) {
+                $q->whereNotIn('r.Id', $approvedConvertedIds);
             }
-            if (!empty($usedRefs)) {
-                $q->whereNotIn('r.RFQNumber', $usedRefs);
+            if (!empty($approvedUsedRefs)) {
+                $q->whereNotIn('r.RFQNumber', $approvedUsedRefs);
             }
 
             $awarded = $q->get();
