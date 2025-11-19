@@ -393,11 +393,18 @@ class IntegrationController extends Controller
                     $filename = 'branding/logo_' . Str::random(12) . '.' . $ext;
                     // store publicly
                     Storage::disk('public')->put($filename, $binary);
+                    // Store as relative path without domain
                     $path = 'storage/' . $filename;
                 }
             } elseif (is_string($logo) && $logo !== '') {
-                // treat as existing relative path (e.g., uploaded via separate endpoint)
-                $path = $logo;
+                // If it's a full URL, extract just the path
+                if (str_starts_with($logo, 'http://') || str_starts_with($logo, 'https://')) {
+                    $parsed = parse_url($logo);
+                    $path = ltrim($parsed['path'] ?? '', '/');
+                } else {
+                    // Already a relative path
+                    $path = $logo;
+                }
             }
         } catch (Throwable $e) {
             Log::warning('Org logo store failed: ' . $e->getMessage());

@@ -23,20 +23,23 @@ class TransactionReceiptService
         return DB::transaction(function () use ($validatedData, $items) {
             $transfer = \App\Models\Inventory\TransactionTransfer::findOrFail($validatedData['TransferID']);
 
+            $deliveredValue = Transfers::Delivered->value;
+            $inTransitValue = Transfers::InTransit->value;
+
             $receipt = TransactionReceipt::create([
                 'TransferId' => $validatedData['TransferID'],
                 'ReceivedBy' => $validatedData['ReceivedBy'],
                 'ReceivedDate' => $validatedData['ReceivedDate'],
                 'GeneralRemarks' => $validatedData['GeneralRemarks'] ?? null,
-                'Status' => Transfers::Delivered,
+                'Status' => $deliveredValue,
                 'CreatedBy' => auth()->id(),
                 'CreatedOn' => now(),
                 'ModifiedBy' => auth()->id(),
                 'ModifiedOn' => now(),
             ]);
 
-            if ($transfer && ($transfer->Status == Transfers::InTransit || $transfer->Status === Transfers::InTransit->value)) {
-                $transfer->Status = Transfers::Delivered;
+            if ($transfer && ($transfer->Status == $inTransitValue || $transfer->Status === Transfers::InTransit->value)) {
+                $transfer->Status = $deliveredValue;
                 $transfer->save();
             }
 
@@ -49,7 +52,7 @@ class TransactionReceiptService
                 'Source' => 'TransactionReceipts',
                 'SourceID' => $receipt->Id,
                 'Stage' => Transfers::Delivered->label(),
-                'Status' => Transfers::Delivered->value,
+                'Status' => $deliveredValue,
                 'Notes' => 'Transaction Receipts Delivered',
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
@@ -61,6 +64,7 @@ class TransactionReceiptService
                 ['Source' => 'TransactionReceipts', 'SourceID' => $receipt->Id],
                 [
                     'Stage' => Transfers::Delivered->label(),
+                    'Status' => $deliveredValue,
                     'UserId' => Auth::id(),
                     'CreatedBy' => Auth::id(),
                     'CreatedOn' => now(),
@@ -73,14 +77,12 @@ class TransactionReceiptService
                 ->where('Description', 'Transaction Transfer')
                 ->value('ID');
 
-            $deliveredStatus = Transfers::Delivered->value;
-
             InventoryHold::where('Source', $sourceCodeId)
                 ->where('SourceID', $receipt->TransferId)
-                ->where('Status', Transfers::InTransit->value)
+                ->where('Status', $inTransitValue)
                 ->whereNull('DeletedOn')
                 ->update([
-                    'Status' => $deliveredStatus,
+                    'Status' => $deliveredValue,
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
                     'DeletedBy' => Auth::id(),
@@ -114,7 +116,6 @@ class TransactionReceiptService
             $storeId = $itemData['store_id'] ?? null;
             $itemId = $itemData['item'];
 
-            // ✅ Auto-create stock if not existing
             $stock = StockItem::where('ItemID', $itemId)
                 ->where('Branch', $toBranchId)
                 ->when($storeId, fn($q) => $q->where('Store', $storeId))
@@ -164,7 +165,6 @@ class TransactionReceiptService
                 'ModifiedOn' => now(),
             ]);
 
-            // ✅ Update Stock Quantity
             $stock->CurrentQty += $itemData['received_qty'];
             $stock->ModifiedBy = Auth::id();
             $stock->ModifiedOn = now();

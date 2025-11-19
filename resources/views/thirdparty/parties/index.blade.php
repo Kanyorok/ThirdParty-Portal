@@ -231,12 +231,12 @@
 @section('scripts')
 <script>
 $(function() {
-    const bulkActionUrl = "{{ route('thirdparty.parties.bulk-action') }}"; // replace if route name differs
+    const bulkActionUrl = "{{ route('thirdparty.parties.bulk-action', [], false) }}"; // relative URL to current host
     const table = $('#thirdPartiesTable').DataTable({
         processing: true,
         serverSide: true,
         ajax: {
-            url: "{{ route('thirdparty.parties.index') }}",
+            url: "{{ route('thirdparty.parties.index', [], false) }}",
             data: function(d) {
                 d.search = $('#filterFormQ').val();
                 d.type = $('#filterType').val();

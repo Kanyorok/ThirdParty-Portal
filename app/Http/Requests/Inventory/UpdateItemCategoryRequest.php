@@ -34,7 +34,8 @@ class UpdateItemCategoryRequest extends FormRequest
                 'max:255',
                 Rule::unique('t_ItemCategories', 'Name')
                     ->ignore($this->route('id'))
-                    ->where('ParentId', $this->ParentId),
+                    ->where('ParentId', $this->ParentId)
+                    ->whereNull('DeletedOn'),  
             ],
             'Description' => 'nullable|string',
             'ParentId' => 'nullable|exists:t_ItemCategories,Id',

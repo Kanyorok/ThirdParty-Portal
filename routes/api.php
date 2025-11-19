@@ -318,6 +318,7 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
     // Add your CRDB API endpoints here
     // Example:
     Route::get('syncGeneralLedgers', [CRDBGeneralLedgerController::class, 'syncGeneralLedgers'])->name('syncGeneralLedgers');
+    Route::get('syncGLBalances', [CRDBGeneralLedgerController::class, 'syncGLBalances'])->name('syncGLBalances');
     // Route::get('data', [CRDBDataController::class, 'fetch']);
     
     // Health check for authenticated requests

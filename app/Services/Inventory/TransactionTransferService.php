@@ -7,7 +7,6 @@ use App\Models\Core\Branch;
 use App\Models\Core\CodeDetail;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
-use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\TransactionTransfer;
@@ -34,18 +33,23 @@ public function getHQBranchId(): int
 
    public function createTransfer(array $data): TransactionTransfer
 {
-    $data['Status'] = Transfers::Pending;
+        // Resolve CodeDetail IDs for transfer statuses
+        $pendingStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Pending')->value('ID');
+        $inTransitStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
+        $rejectedStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Rejected')->value('ID');
+        $deliveredStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Delivered')->value('ID');
 
-    if ($data['RequisitionType'] === 'procurement') {
-        $requisition = GoodsReceipt::findOrFail($data['RequisitionId']);
-        $fromBranch = $this->getHQBranchId();
-        // FIX: Use the ToBranch from form data, not from requisition
-        $toBranch = $data['ToBranch']; // This should be the branch ID from the dropdown
-    } else {
-        $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
-        $fromBranch = $requisition->FromBranch;
-        $toBranch = $requisition->ToBranch;
-    }
+        $data['Status'] = $pendingStatusId ?? $data['Status'] ?? null;
+
+        if ($data['RequisitionType'] === 'procurement') {
+            $requisition = GoodsReceipt::findOrFail($data['RequisitionId']);
+            $fromBranch = $this->getHQBranchId();
+            $toBranch = $data['ToBranch']; // branch from form
+        } else {
+            $requisition = \App\Models\Inventory\InterBranchRequisition::findOrFail($data['RequisitionId']);
+            $fromBranch = $requisition->FromBranch;
+            $toBranch = $requisition->ToBranch;
+        }
 
     // Debug: Check what values we're getting
     Log::info('Transfer creation data:', [
@@ -77,13 +81,16 @@ public function getHQBranchId(): int
     $transfer->TransferId = $this->generateTransferId($transfer);
     $transfer->save();
 
+        // Use CodeDetail value/label in workflows
+        $code = CodeDetail::find($data['Status']);
+        $statusValue = $code->Value ?? $code->CodeValue ?? $code->Description ?? null;
 
         Workflow::create([
             'Source' => 'TransactionTransfer',
             'SourceID' => $transfer->Id,
-            'Stage' => Transfers::Pending->label(),
-            'Status' => Transfers::Pending->value,
-            'Notes' => 'Transaction Transfers Pending',
+            'Stage' => $data['Status'],
+            'Status' => $statusValue,
+            'Notes' => 'Transaction Transfer created (Pending)',
             'CreatedBy' => Auth::id(),
             'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
@@ -93,7 +100,8 @@ public function getHQBranchId(): int
         PendingWorkflow::updateOrCreate(
             ['Source' => 'TransactionTransfer', 'SourceID' => $transfer->Id],
             [
-                'Stage' => Transfers::Pending->label(),
+                'Stage' => $data['Status'],
+                'Status' => $statusValue,
                 'UserId' => Auth::id(),
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
@@ -204,7 +212,10 @@ public function getHQBranchId(): int
 
     try {
         $transfer = TransactionTransfer::with('items')->findOrFail($id);
-        $transfer->Status = Transfers::InTransit;
+
+        $inTransitStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
+
+        $transfer->Status = $inTransitStatusId;
         $transfer->ModifiedBy = Auth::id();
         $transfer->ModifiedOn = now();
         $transfer->save();
@@ -218,7 +229,6 @@ public function getHQBranchId(): int
                 throw new Exception("No stock found for Item {$item->Item} in branch {$transfer->FromBranch}");
             }
 
-            // ✅ STEP 1: Get last known balance BEFORE updating stock
             $lastBalance = StockTransaction::where('ItemID', $item->Item)
                 ->where('BranchID', $transfer->FromBranch)
                 ->orderByDesc('TransactionDate')
@@ -230,10 +240,9 @@ public function getHQBranchId(): int
             }
 
             $dispatchedQty = $item->DispatchedQty;
-            $newBalance = $lastBalance - $dispatchedQty; // new balance after dispatch
-            $totalCost = ($item->UnitCost ?? 0) * $dispatchedQty * -1; // negative for stock out
+            $newBalance = $lastBalance - $dispatchedQty;
+            $totalCost = ($item->UnitCost ?? 0) * $dispatchedQty * -1;
 
-            // ✅ STEP 2: Record StockTransaction BEFORE modifying StockItem
             $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
                 ->orderByDesc('id')
                 ->value('SKUID');
@@ -255,24 +264,22 @@ public function getHQBranchId(): int
                 'UOMID' => $item->uom->Id ?? null,
                 'QuantityIn' => 0,
                 'QuantityOut' => $dispatchedQty,
-                'BalanceQty' => $newBalance, // ✅ accurate, reflects pre-update balance - qty out
+                'BalanceQty' => $newBalance,
                 'TotalCost' => $totalCost,
                 'TransactionDate' => now(),
                 'ReferenceID' => $transfer->Id,
                 'Remarks' => 'Transfer to Branch ID ' . $transfer->ToBranch,
                 'CreatedBy' => Auth::id(),
-                'CreatedDate' => now(),
+                'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
 
-            // ✅ STEP 3: Now update the actual stock quantity
             $stockFrom->CurrentQty = $newBalance;
             $stockFrom->ModifiedBy = Auth::id();
             $stockFrom->ModifiedOn = now();
             $stockFrom->save();
 
-            // ✅ STEP 4: Log hold record for destination
             InventoryHold::create([
                 'ItemID' => $item->Item,
                 'BranchID' => $transfer->ToBranch,
@@ -282,7 +289,7 @@ public function getHQBranchId(): int
                 'Source' => CodeDetail::where('CodeID', 'Source')
                     ->where('Description', 'Transaction Transfer')->value('ID'),
                 'SourceID' => $transfer->Id,
-                'Status' => Transfers::InTransit->value,
+                'Status' => $inTransitStatusId,
                 'Remarks' => $item->Remarks,
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
@@ -291,12 +298,15 @@ public function getHQBranchId(): int
             ]);
         }
 
-        // ✅ Workflow updates remain unchanged
+        // workflow using CodeDetail info
+        $code = CodeDetail::find($inTransitStatusId);
+        $statusValue = $code->Value ?? $code->CodeValue ?? $code->Description ?? null;
+
         Workflow::create([
             'Source' => 'TransactionTransfer',
             'SourceID' => $transfer->Id,
-            'Stage' => Transfers::InTransit->label(),
-            'Status' => Transfers::InTransit->value,
+            'Stage' => $inTransitStatusId,
+            'Status' => $statusValue,
             'Notes' => 'Transaction Transfer Approved: stock deducted from origin branch',
             'CreatedBy' => Auth::id(),
             'CreatedOn' => now(),
@@ -306,7 +316,12 @@ public function getHQBranchId(): int
 
         PendingWorkflow::where('Source', 'TransactionTransfer')
             ->where('SourceID', $transfer->Id)
-            ->update(['Stage' => Transfers::InTransit->label()]);
+            ->update([
+                'Stage' => $inTransitStatusId,
+                'Status' => $statusValue,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
         activity()->performedOn($transfer)->causedBy(Auth::user())
             ->withProperties(['attributes' => $transfer->toArray()])
@@ -327,16 +342,21 @@ public function getHQBranchId(): int
     public function reject(int $id): void
     {
         $transfer = TransactionTransfer::findOrFail($id);
-        $transfer->Status = Transfers::Rejected;
+        $rejectedStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Rejected')->value('ID');
+
+        $transfer->Status = $rejectedStatusId;
         $transfer->ModifiedBy = Auth::id();
         $transfer->ModifiedOn = now();
         $transfer->save();
 
+        $code = CodeDetail::find($rejectedStatusId);
+        $statusValue = $code->Value ?? $code->CodeValue ?? $code->Description ?? null;
+
         Workflow::create([
             'Source' => 'TransactionTransfer',
             'SourceID' => $transfer->Id,
-            'Stage' => Transfers::Rejected->label(),
-            'Status' => Transfers::Rejected->value,
+            'Stage' => $rejectedStatusId,
+            'Status' => $statusValue,
             'Notes' => 'Transaction Transfer Rejected',
             'CreatedBy' => Auth::id(),
             'CreatedOn' => now(),
@@ -346,7 +366,7 @@ public function getHQBranchId(): int
 
         PendingWorkflow::where('Source', 'TransactionTransfer')
             ->where('SourceID', $transfer->Id)
-            ->update(['Stage' => Transfers::Rejected->label()]);
+            ->update(['Stage' => $rejectedStatusId, 'Status' => $statusValue]);
 
         activity()->performedOn($transfer)->causedBy(Auth::user())
             ->withProperties(['attributes' => $transfer->toArray()])
@@ -362,15 +382,11 @@ public function getHQBranchId(): int
 
     public function getApprovedTransfers()
     {
-        return TransactionTransfer::where('Status', Transfers::InTransit)
+        $inTransitId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
+
+        return TransactionTransfer::where('Status', $inTransitId)
             ->orderByDesc('CreatedOn')
-            ->get([
-                'Id', 
-                'TransferId', 
-                'TransferDate',
-                'FromBranch',
-                'ToBranch'
-            ]);
+            ->get(['Id', 'TransferId', 'TransferDate', 'FromBranch', 'ToBranch']);
     }
 
 

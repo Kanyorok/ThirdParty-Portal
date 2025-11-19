@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
         $this->call(FinanceGLTypeGroupSeeder::class);
         $this->call(FinanceGLSubAccountTypeSeeder::class);
         $this->call(FinanceGLAccountsSeeder::class);
-        // $this->call(FinanceSegmentOrderSeeder::class);
+        $this->call(FinanceSegmentOrderSeeder::class);
 //        $this->call(OrderLinesSeeder::class);
 //         $this->call(OrderSeeder::class);
 //         $this->call(GoodsReceiptsSeeder::class);

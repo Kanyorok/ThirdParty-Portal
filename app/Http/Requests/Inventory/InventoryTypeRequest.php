@@ -29,7 +29,7 @@ class InventoryTypeRequest extends FormRequest
     public function rules()
     {
         return [
-            'Type' => [
+            'Type' => [ 'exists:t_CodeDetails,ID',
                 'required',
                 'string',
                 'max:255',

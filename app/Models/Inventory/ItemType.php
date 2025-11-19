@@ -6,6 +6,9 @@ use App\Models\Procurement\Requisitions;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
+use App\Models\Core\CodeDetail;
+
 
 class ItemType extends Model
 {
@@ -52,5 +55,9 @@ class ItemType extends Model
     {
         return $this->hasMany(Requisitions::class, 'ItemTypeId', 'Id');
     }
-
+    
+    public function type()
+    {
+        return $this->belongsTo(CodeDetail::class, 'TypeName', 'ID');
+    }
 }
