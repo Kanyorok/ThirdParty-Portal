@@ -167,6 +167,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     });
 
 
+    Route::get('agingreportar/customers/search', [AgingReportARController::class, 'customerLookup'])->name('agingreportar.customers.lookup');
     Route::resource('agingreportar', AgingReportARController::class);
     Route::resource('customerstatement', CustomerStatementController::class);
     Route::resource('paymentvoucher', PaymentVoucherController::class);
