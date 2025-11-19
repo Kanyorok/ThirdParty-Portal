@@ -48,7 +48,6 @@
                 <th>Order Date</th>
                   <th>LPO No</th>
                 <th>Priority</th>
-                <th>Branch</th>
                 <th>Order Amount</th>
                 <th>Order Lines</th>
                 <th>Created By</th>
@@ -65,7 +64,6 @@
                     <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d/m/Y') }}</td>
                   <td>{{ $item->ExtOrdNum }}</td>
                   <td>{{ $item->Priority }}</td>
-                  <td>{{ $item->BranchID }}</td>
                   <td>{{ number_format($item->UnitPrice, 2) }}</td>
                   <td>{{ $item->ordercount }}</td>
                   <td>{{ $item->CreatedBy }}</td>

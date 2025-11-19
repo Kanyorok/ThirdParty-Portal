@@ -136,6 +136,8 @@ class OrderService
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
+            ->leftJoin(DB::raw('t_Branches AS bId WITH (NOLOCK)'), 'bId.Id', '=', 't_Orders.BranchID')
+            ->leftJoin(DB::raw('t_Branches AS bCode WITH (NOLOCK)'), 'bCode.BranchID', '=', 't_Orders.BranchID')
             ->select(DB::raw('
                 t_Orders.Id,
                 t_Orders.OrderDate,
@@ -145,6 +147,7 @@ class OrderService
                 t_Orders.CreatedOn,
                 t_Users.Name as CreatedBy,
                 t_Orders.BranchID,
+                COALESCE(bId.Name, bCode.Name) as BranchName,
                 SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
                 COUNT(t_OrderLines.Id) as ordercount,
                 t_Orders.OrdTotExcl,
@@ -161,6 +164,8 @@ class OrderService
                 't_Orders.CreatedOn',
                 't_Users.Name',
                 't_Orders.BranchID',
+                'bId.Name',
+                'bCode.Name',
                 't_Orders.OrdTotExcl',
                 't_Orders.OrdTotIncl',
                 't_Orders.OrdTotTax',
@@ -182,6 +187,8 @@ class OrderService
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
+            ->leftJoin(DB::raw('t_Branches AS bId WITH (NOLOCK)'), 'bId.Id', '=', 't_Orders.BranchID')
+            ->leftJoin(DB::raw('t_Branches AS bCode WITH (NOLOCK)'), 'bCode.BranchID', '=', 't_Orders.BranchID')
             ->select(DB::raw('
                 t_Orders.Id,
                 t_Orders.OrderDate,
@@ -191,6 +198,7 @@ class OrderService
                 t_Orders.CreatedOn,
                 t_Users.Name as CreatedBy,
                 t_Orders.BranchID,
+                COALESCE(bId.Name, bCode.Name) as BranchName,
                 SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
                 COUNT(t_OrderLines.Id) as ordercount,
                 t_Orders.OrdTotExcl,
@@ -207,6 +215,8 @@ class OrderService
                 't_Orders.CreatedOn',
                 't_Users.Name',
                 't_Orders.BranchID',
+                'bId.Name',
+                'bCode.Name',
                 't_Orders.OrdTotExcl',
                 't_Orders.OrdTotIncl',
                 't_Orders.OrdTotTax',
