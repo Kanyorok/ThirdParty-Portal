@@ -15,7 +15,7 @@ import {
     type ContentLayout,
     type ToggleOption,
 } from "@/lib/layout-constants";
-import { updateLayoutPreference } from "@/actions/server-actions";
+import { updateLayoutPreference } from "@/actions/dashboard-layout";
 
 type LayoutControlsProps = {
     readonly variant: SidebarVariant;

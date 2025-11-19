@@ -1,6 +1,8 @@
 import SignInForm from "@/components/signin/login-form";
 // import Image from "next/image";
 
+// TODO: Implement a proper landing page design
+
 export default function Home() {
   return (
     <div className="min-h-screen flex">

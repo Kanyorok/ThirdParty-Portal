@@ -1,9 +1,21 @@
-"use client"
-
 import { useEffect, ReactNode } from "react"
-import { useSession, signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
+
+interface CustomUser {
+    isActive: boolean
+    isApproved: boolean
+    [key: string]: any
+}
+
+interface CustomSession {
+    user?: CustomUser
+    accessToken?: string
+    expires: string
+}
+
+const useSession = () => ({ data: null, status: "loading" as const })
+const signOut = (options?: { callbackUrl?: string }) => { }
+const useRouter = () => ({ replace: (url: string) => { } })
 
 interface AuthGuardProps {
     children: ReactNode
@@ -11,70 +23,50 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, fallback }: AuthGuardProps) {
-    const { data: session, status } = useSession()
+    const { data: session, status } = useSession() as { data: CustomSession | null, status: "loading" | "authenticated" | "unauthenticated" }
     const router = useRouter()
 
     useEffect(() => {
-        // If session is loading, wait
-        if (status === "loading") return
+        if (status === "loading") {
+            return
+        }
 
-        // If no session, redirect to signin
         if (status === "unauthenticated" || !session) {
-            console.log('No valid session - redirecting to signin')
-            router.replace('/signin?error=SessionRequired')
+            router.replace("/signin?error=SessionRequired")
             return
         }
 
-        // If session exists but user is not active/approved, sign out and redirect
-        if (session.user && (!session.user.isActive || !session.user.isApproved)) {
-            console.log('User not active or approved - signing out')
-            signOut({ callbackUrl: '/signin?error=AccountNotApproved' })
+        const { user, accessToken } = session
+
+        if (!accessToken) {
+            signOut({ callbackUrl: "/signin?error=NoAccessToken" })
             return
         }
 
-        // If no access token, sign out
-        if (!session.accessToken) {
-            console.log('No access token - signing out')
-            signOut({ callbackUrl: '/signin?error=NoAccessToken' })
+        if (user && (!user.isActive || !user.isApproved)) {
+            signOut({ callbackUrl: "/signin?error=AccountNotApproved" })
             return
         }
-
     }, [session, status, router])
 
-    // Show loading while session is being fetched
     if (status === "loading") {
-        return (
-            fallback || (
-                <div className="flex min-h-screen items-center justify-center">
-                    <div className="flex items-center space-x-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm text-muted-foreground">Loading...</span>
-                    </div>
+        return fallback || (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50">
+                <div className="flex items-center space-x-3 p-6 bg-white shadow-xl rounded-xl border border-gray-200">
+                    <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                    <p className="text-base font-medium text-gray-700 font-sans">Authenticating Session...</p>
                 </div>
-            )
+            </div>
         )
     }
 
-    // If not authenticated, show nothing (redirect happening)
-    if (status === "unauthenticated" || !session) {
+    if (status === "unauthenticated" || !session || !session.accessToken || !session.user?.isActive || !session.user?.isApproved) {
         return null
     }
 
-    // If user not active/approved, show nothing (sign out happening)
-    if (!session.user?.isActive || !session.user?.isApproved) {
-        return null
-    }
-
-    // If no access token, show nothing (sign out happening)
-    if (!session.accessToken) {
-        return null
-    }
-
-    // All checks passed, render children
     return <>{children}</>
 }
 
-// Higher-order component version
 export function withAuth<P extends object>(Component: React.ComponentType<P>) {
     return function AuthenticatedComponent(props: P) {
         return (
@@ -84,5 +76,3 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
         )
     }
 }
-
-

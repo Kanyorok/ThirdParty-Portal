@@ -1,17 +1,18 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
-import { Button } from "@/components/common/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/common/dialog";
-import { Input } from "@/components/common/input";
-import { Label } from "@/components/common/label";
-import { Loader2, Save, X } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { toast } from "sonner"
+import { Button } from "@/components/common/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/common/dialog"
+import { Input } from "@/components/common/input"
+import { Label } from "@/components/common/label"
+import { Save, X } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { Spinner } from "@/components/common/spinner"
 
 const passwordSchema = z.object({
     currentPassword: z.string().min(8, "Current password must be at least 8 characters long."),
@@ -22,41 +23,34 @@ const passwordSchema = z.object({
         .regex(/[0-9]/, "New password must contain at least one number.")
         .regex(/[^a-zA-Z0-9]/, "New password must contain at least one special character."),
     confirmNewPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "New passwords do not match.",
+}).refine(data => data.newPassword === data.confirmNewPassword, {
+    message: "Passwords do not match.",
     path: ["confirmNewPassword"],
-});
+})
 
-type PasswordFormInputs = z.infer<typeof passwordSchema>;
+type PasswordFormInputs = z.infer<typeof passwordSchema>
 
 export function SecuritySettingsCard() {
-    const { data: session } = useSession();
-    const [isOpen, setIsOpen] = useState(false);
+    const { data: session } = useSession()
+    const [isOpen, setIsOpen] = useState(false)
 
-    const {
-        register,
-        handleSubmit,
-        reset,
-        formState: { errors, isSubmitting, isDirty },
-    } = useForm<PasswordFormInputs>({
+    const { register, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } = useForm<PasswordFormInputs>({
         resolver: zodResolver(passwordSchema),
         defaultValues: {
             currentPassword: '',
             newPassword: '',
             confirmNewPassword: '',
         },
-    });
+    })
 
     useEffect(() => {
-        if (!isOpen) {
-            reset();
-        }
-    }, [isOpen, reset]);
+        if (!isOpen) reset()
+    }, [isOpen, reset])
 
     const onSubmit = async (data: PasswordFormInputs) => {
         if (!session?.accessToken) {
-            toast.error("Authentication required to change password.");
-            return;
+            toast.error("Authentication required to change password.")
+            return
         }
 
         toast.promise(
@@ -66,29 +60,25 @@ export function SecuritySettingsCard() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${session.accessToken}`,
                 },
-                body: JSON.stringify({
-                    currentPassword: data.currentPassword,
-                    newPassword: data.newPassword,
-                    confirmNewPassword: data.confirmNewPassword,
-                }),
-            }).then(async (res) => {
-                const responseData = await res.json();
+                body: JSON.stringify(data),
+            }).then(async res => {
+                const responseData = await res.json()
                 if (!res.ok) {
-                    const errorMessage = responseData.message || "Failed to update password.";
-                    const errorDetails = responseData.errors ? Object.values(responseData.errors).flat().join('\n') : '';
-                    throw new Error(`${errorMessage}\n${errorDetails}`);
+                    const errorMessage = responseData.message || "Failed to update password."
+                    const errorDetails = responseData.errors ? Object.values(responseData.errors).flat().join('\n') : ''
+                    throw new Error(`${errorMessage}\n${errorDetails}`)
                 }
-                reset();
-                setIsOpen(false);
-                return responseData.message || 'Password updated successfully!';
+                reset()
+                setIsOpen(false)
+                return responseData.message || 'Password updated successfully!'
             }),
             {
                 loading: 'Updating password...',
-                success: (message) => message,
-                error: (error) => error.message,
+                success: message => message,
+                error: error => error.message,
             }
-        );
-    };
+        )
+    }
 
     return (
         <Card>
@@ -105,7 +95,9 @@ export function SecuritySettingsCard() {
                         <form onSubmit={handleSubmit(onSubmit)}>
                             <DialogHeader>
                                 <DialogTitle>Change Password</DialogTitle>
-                                <DialogDescription>Enter your current and new password. Click save when you're done.</DialogDescription>
+                                <DialogDescription>
+                                    Enter your current and new password. Click save when you're done.
+                                </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-6">
                                 <div className="space-y-2">
@@ -117,7 +109,9 @@ export function SecuritySettingsCard() {
                                     <Label htmlFor="newPassword">New Password</Label>
                                     <Input id="newPassword" type="password" {...register("newPassword")} />
                                     {errors.newPassword && <p className="text-sm text-destructive mt-1">{errors.newPassword.message}</p>}
-                                    <p className="text-xs text-muted-foreground mt-1">Min 8 chars, including uppercase, lowercase, number, and special character.</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Min 8 chars, including uppercase, lowercase, number, and special character.
+                                    </p>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
@@ -133,7 +127,7 @@ export function SecuritySettingsCard() {
                                 </DialogClose>
                                 <Button type="submit" disabled={isSubmitting || !isDirty}>
                                     {isSubmitting ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <Spinner className="mr-2 h-4 w-4 animate-spin" />
                                     ) : (
                                         <Save className="mr-2 h-4 w-4" />
                                     )}
@@ -145,5 +139,5 @@ export function SecuritySettingsCard() {
                 </Dialog>
             </CardContent>
         </Card>
-    );
+    )
 }

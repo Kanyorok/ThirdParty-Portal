@@ -1,17 +1,30 @@
+"use client"
+
+import { useState, useCallback } from "react"
 import { ThemeToggle } from "@/app/dashboard/theme-toggle"
-import { RegisterForm } from "@/components/signin/register-form"
+import UserTypeStep from "@/components/signin/usertype-step"
+import RegistrationFormStep from "@/components/signin/register-form"
+import { UserTypeValue } from "@/types/types"
+import { RegisterFormInputs } from "@/lib/validation"
 
 export default function UserRegister() {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100 dark:bg-zinc-950 relative">
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
+  const [userType, setUserType] = useState<UserTypeValue | null>(null)
 
-      <div className="w-full max-w-xl">
-        <RegisterForm />
-      </div>
+  const handleBack = useCallback(() => {
+    setUserType(null)
+  }, [])
+
+  const handleSubmit = useCallback((data: RegisterFormInputs) => {
+    console.log("Form Submitted", data)
+  }, [])
+
+  return (
+    <div className="w-full max-w-xl">
+      {!userType ? (
+        <UserTypeStep onSelect={setUserType} />
+      ) : (
+        <RegistrationFormStep userType={userType} onBack={handleBack} onSubmit={handleSubmit} />
+      )}
     </div>
   )
 }
-

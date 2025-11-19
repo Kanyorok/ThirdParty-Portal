@@ -1,8 +1,34 @@
-// lib/validation.ts
 import { z } from "zod";
 import { FieldErrors, FieldValues, DeepRequired } from "react-hook-form";
 
+const USER_TYPE_VALUES = ["tenant", "supplier"] as const;
+type UserTypeValue = typeof USER_TYPE_VALUES[number];
+
+const USER_TYPE_API_VALUES = ["T", "S"] as const;
+type UserTypeApiValue = typeof USER_TYPE_API_VALUES[number];
+
+const USER_TYPE_MAP: Record<UserTypeValue, UserTypeApiValue> = {
+    tenant: "T",
+    supplier: "S",
+} as const;
+
+const REVERSE_USER_TYPE_MAP: Record<UserTypeApiValue, UserTypeValue> = {
+    T: "tenant",
+    S: "supplier",
+} as const;
+
+export const userTypeSchema = z.enum(USER_TYPE_VALUES, {
+    required_error: "Select whether you are a tenant or supplier",
+    invalid_type_error: "Select a valid user type",
+});
+
+export const userTypeApiSchema = z.enum(USER_TYPE_API_VALUES, {
+    required_error: "User type is required",
+    invalid_type_error: "Invalid user type",
+});
+
 export const registerSchema = z.object({
+    userType: userTypeSchema,
     firstName: z.string().min(1, "First Name is required"),
     lastName: z.string().min(1, "Last Name is required"),
     email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -34,7 +60,7 @@ export type ThirdPartyDetailsFormInputs = {
     email: string;
     phone: string;
     website?: string;
-    thirdPartyType: "" | "S" | "T";
+    userType: UserTypeValue;
 };
 
 export const thirdPartyDetailsSchema = z.object({
@@ -49,15 +75,9 @@ export const thirdPartyDetailsSchema = z.object({
     email: z.string().email("Invalid email address").min(1, "Email is required"),
     phone: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number cannot exceed 15 digits"),
     website: z.string().url("Invalid URL format").optional().or(z.literal('')),
-    thirdPartyType: z.union([
-        z.literal(""),
-        z.enum(["S", "T"])
-    ]).refine(value => value !== "", {
-        message: "Third Party Type is required",
-    }),
+    userType: userTypeSchema,
 }) satisfies z.ZodType<ThirdPartyDetailsFormInputs>;
 
-// Re-exporting these for use in components/hooks
 export type LoginFormInputs = {
     email: string;
     password: string;
@@ -91,10 +111,10 @@ export type CompanyDetailsUpdateInputs = {
     vatNumber?: string;
     country: string;
     physicalAddress: string;
-    companyEmail: string; // Renamed to avoid conflict with user email in combined profile
-    companyPhone: string; // Renamed to avoid conflict with user phone in combined profile
+    companyEmail: string;
+    companyPhone: string;
     website?: string;
-    thirdPartyType: "" | "S" | "T";
+    userType: UserTypeValue;
     status: string;
     approvalStatus: string;
 };
@@ -111,17 +131,10 @@ export const companyDetailsUpdateSchema = z.object({
     companyEmail: z.string().email("Invalid email address").min(1, "Email is required"),
     companyPhone: z.string().min(1, "Phone Number is required").regex(/^\+?\d{10,15}$/, "Invalid phone number format"),
     website: z.string().url("Invalid URL format").optional().or(z.literal('')),
-    thirdPartyType: z.union([
-        z.literal(""),
-        z.enum(["S", "T"])
-    ]).refine(value => value !== "", {
-        message: "Third Party Type is required",
-    }),
+    userType: userTypeSchema,
     status: z.string().min(1, "Status is required"),
     approvalStatus: z.string().min(1, "Approval Status is required"),
 });
-
-// --- Form Utilities (moved from form-utils.ts into validation.ts as per your structure) ---
 
 type TouchedFields<T> = {
     [K in keyof T]?: T[K] extends object ? TouchedFields<T[K]> : boolean;
@@ -133,106 +146,106 @@ export const getFieldStatus = <T extends FieldValues>(
     touchedFields: TouchedFields<DeepRequired<T>>,
     watchedFields: T
 ): string => {
-    if (errors[fieldName] && touchedFields[fieldName]) {
-        return "error";
-    }
-    if (touchedFields[fieldName] && watchedFields[fieldName] !== "" && watchedFields[fieldName] !== null && watchedFields[fieldName] !== undefined && !errors[fieldName]) {
-        return "success";
-    }
+    const hasError = errors[fieldName] && touchedFields[fieldName];
+    const hasValue = watchedFields[fieldName] !== "" &&
+        watchedFields[fieldName] !== null &&
+        watchedFields[fieldName] !== undefined;
+    const isValid = touchedFields[fieldName] && hasValue && !errors[fieldName];
+
+    if (hasError) return "error";
+    if (isValid) return "success";
     return "default";
 };
 
+export const mapUserTypeToApi = (userType: UserTypeValue): UserTypeApiValue => {
+    return USER_TYPE_MAP[userType];
+};
+
+export const mapUserTypeFromApi = (apiUserType: UserTypeApiValue): UserTypeValue => {
+    return REVERSE_USER_TYPE_MAP[apiUserType];
+};
+
 export const transformRegisterFormDataForApi = (formData: RegisterFormInputs) => {
-    const { firstName, lastName, email, phone, password, confirmPassword } = formData;
     return {
-        FirstName: firstName,
-        LastName: lastName,
-        Email: email,
-        Phone: phone,
-        Password: password,
-        Password_confirmation: confirmPassword,
+        FirstName: formData.firstName,
+        LastName: formData.lastName,
+        Email: formData.email,
+        Phone: formData.phone,
+        Password: formData.password,
+        Password_confirmation: formData.confirmPassword,
+        ThirdPartyType: mapUserTypeToApi(formData.userType),
     };
 };
 
 export const transformThirdPartyDetailsForApi = (formData: ThirdPartyDetailsFormInputs) => {
-    const {
-        thirdPartyName, tradingName, businessType, registrationNumber,
-        taxPIN, vatNumber, country, physicalAddress, email,
-        phone, website, thirdPartyType,
-    } = formData;
-
-    const mappedThirdPartyType = (() => {
-        switch (thirdPartyType) {
-            case "S": return "S";
-            case "T": return "T";
-            default: return "";
-        }
-    })();
-
     return {
-        ThirdPartyName: thirdPartyName,
-        TradingName: tradingName,
-        BusinessType: businessType,
-        RegistrationNumber: registrationNumber,
-        TaxPIN: taxPIN,
-        VATNumber: vatNumber,
-        Country: country,
-        PhysicalAddress: physicalAddress,
-        Email: email,
-        Phone: phone,
-        Website: website,
-        ThirdPartyType: mappedThirdPartyType,
+        ThirdPartyName: formData.thirdPartyName,
+        TradingName: formData.tradingName,
+        BusinessType: formData.businessType,
+        RegistrationNumber: formData.registrationNumber,
+        TaxPIN: formData.taxPIN,
+        VATNumber: formData.vatNumber,
+        Country: formData.country,
+        PhysicalAddress: formData.physicalAddress,
+        Email: formData.email,
+        Phone: formData.phone,
+        Website: formData.website,
+        ThirdPartyType: mapUserTypeToApi(formData.userType),
     };
 };
 
-export const mapRegisterServerErrorsToFormFields = (serverErrors: Record<string, string[]>): Record<keyof RegisterFormInputs, string[]> => {
-    const mappedErrors: Record<keyof RegisterFormInputs, string[]> = {} as Record<keyof RegisterFormInputs, string[]>;
+type ServerErrorMap<T> = {
+    [key: string]: keyof T;
+};
 
-    const fieldMap: { [key: string]: keyof RegisterFormInputs } = {
-        FirstName: "firstName",
-        LastName: "lastName",
-        Email: "email",
-        Phone: "phone",
-        Password: "password",
-        Password_confirmation: "confirmPassword",
-    };
+const createErrorMapper = <T extends Record<string, any>>(
+    fieldMap: ServerErrorMap<T>
+) => {
+    return (serverErrors: Record<string, string[]>): Partial<Record<keyof T, string[]>> => {
+        const mappedErrors: Partial<Record<keyof T, string[]>> = {};
 
-    for (const serverField in serverErrors) {
-        if (Object.prototype.hasOwnProperty.call(serverErrors, serverField)) {
+        for (const serverField in serverErrors) {
+            if (!Object.prototype.hasOwnProperty.call(serverErrors, serverField)) {
+                continue;
+            }
+
             const clientField = fieldMap[serverField];
             if (clientField) {
                 mappedErrors[clientField] = serverErrors[serverField];
             }
         }
-    }
-    return mappedErrors;
-};
 
-export const mapThirdPartyServerErrorsToFormFields = (serverErrors: Record<string, string[]>): Record<keyof ThirdPartyDetailsFormInputs, string[]> => {
-    const mappedErrors: Record<keyof ThirdPartyDetailsFormInputs, string[]> = {} as Record<keyof ThirdPartyDetailsFormInputs, string[]>;
-
-    const fieldMap: { [key: string]: keyof ThirdPartyDetailsFormInputs } = {
-        ThirdPartyName: "thirdPartyName",
-        TradingName: "tradingName",
-        BusinessType: "businessType",
-        RegistrationNumber: "registrationNumber",
-        TaxPIN: "taxPIN",
-        VATNumber: "vatNumber",
-        Country: "country",
-        PhysicalAddress: "physicalAddress",
-        Email: "email",
-        Phone: "phone",
-        Website: "website",
-        ThirdPartyType: "thirdPartyType",
+        return mappedErrors;
     };
-
-    for (const serverField in serverErrors) {
-        if (Object.prototype.hasOwnProperty.call(serverErrors, serverField)) {
-            const clientField = fieldMap[serverField];
-            if (clientField) {
-                mappedErrors[clientField] = serverErrors[serverField];
-            }
-        }
-    }
-    return mappedErrors;
 };
+
+const registerFieldMap: ServerErrorMap<RegisterFormInputs> = {
+    FirstName: "firstName",
+    LastName: "lastName",
+    Email: "email",
+    Phone: "phone",
+    Password: "password",
+    Password_confirmation: "confirmPassword",
+    ThirdPartyType: "userType",
+};
+
+const thirdPartyFieldMap: ServerErrorMap<ThirdPartyDetailsFormInputs> = {
+    ThirdPartyName: "thirdPartyName",
+    TradingName: "tradingName",
+    BusinessType: "businessType",
+    RegistrationNumber: "registrationNumber",
+    TaxPIN: "taxPIN",
+    VATNumber: "vatNumber",
+    Country: "country",
+    PhysicalAddress: "physicalAddress",
+    Email: "email",
+    Phone: "phone",
+    Website: "website",
+    ThirdPartyType: "userType",
+};
+
+export const mapRegisterServerErrorsToFormFields = createErrorMapper<RegisterFormInputs>(registerFieldMap);
+export const mapThirdPartyServerErrorsToFormFields = createErrorMapper<ThirdPartyDetailsFormInputs>(thirdPartyFieldMap);
+
+export type { UserTypeValue, UserTypeApiValue };
+export { USER_TYPE_VALUES, USER_TYPE_API_VALUES, USER_TYPE_MAP, REVERSE_USER_TYPE_MAP };

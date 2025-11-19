@@ -1,61 +1,22 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import {
-    Save,
-    Loader2,
-    Info,
-    Edit,
-    XCircle,
-    Building2,
-    CheckCircle2,
-    Clock,
-    AlertCircle,
-    MapPin,
-    Mail,
-    Phone,
-    Globe,
-    FileText,
-    Percent,
-} from 'lucide-react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Button } from '@/components/common/button';
-import { Input } from '@/components/common/input';
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/common/form';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/common/select';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle
-} from '@/components/common/card';
 import { Badge } from '@/components/common/badge';
-import { Separator } from '@/components/common/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/card';
+import { Loader2, Building2, FileText, Percent, MapPin, Mail, Phone, Globe, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 
 export enum BusinessTypeEnum {
     Sole = 1,
-    Partnership = 2,
-    LLC = 3,
-    Corporation = 4,
-    NGO = 5,
+    Partnership,
+    LLC,
+    Corporation,
+    NGO,
 }
 
 const businessTypeOptions = [
@@ -67,18 +28,17 @@ const businessTypeOptions = [
 ];
 
 const thirdPartySchema = z.object({
-    id: z.number().optional(),
-    thirdPartyName: z.string().min(1, { message: 'Legal Name is required.' }),
+    thirdPartyName: z.string().min(1),
     tradingName: z.string().nullable().optional().transform(e => e === '' ? null : e),
-    businessType: z.coerce.number().min(1).int({ message: 'Invalid business type.' }),
-    registrationNumber: z.string().min(1, { message: 'Registration Number is required.' }),
-    taxPIN: z.string().min(1, { message: 'Tax PIN is required.' }),
+    businessType: z.coerce.number().min(1).int(),
+    registrationNumber: z.string().min(1),
+    taxPIN: z.string().min(1),
     vatNumber: z.string().nullable().optional().transform(e => e === '' ? null : e),
-    country: z.coerce.number().min(1).int({ message: 'Country is required.' }),
-    physicalAddress: z.string().min(1, { message: 'Physical Address is required.' }),
-    email: z.string().email({ message: 'Invalid email address.' }),
-    phone: z.string().min(1, { message: 'Phone number is required.' }).regex(/^\+?[0-9()\s-]+$/, { message: 'Invalid phone number format.' }),
-    website: z.string().url({ message: 'Invalid URL format.' }).nullable().optional().transform(e => e === '' ? null : e),
+    country: z.string().min(1),
+    physicalAddress: z.string().min(1),
+    email: z.string().email(),
+    phone: z.string().regex(/^\+?[0-9()\s-]+$/),
+    website: z.string().url().nullable().optional().transform(e => e === '' ? null : e),
 });
 
 type ThirdPartyInputs = z.infer<typeof thirdPartySchema>;
@@ -91,69 +51,35 @@ interface ThirdPartyProfile {
     registrationNumber: string;
     taxPIN: string;
     vatNumber: string | null;
-    country: number;
-    countryName?: string;
+    country: string;
     physicalAddress: string;
     email: string;
     phone: string;
     website: string | null;
-    createdOn: string;
-    modifiedOn: string | null;
     status: number;
-    thirdPartyType: number;
     approvalStatus: string;
 }
 
-interface Country {
-    id: number;
-    name: string;
-    code: string;
-    iso2: string;
-}
-
-const containerVariants: Variants = {
+const cardVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.5,
-            ease: [0.25, 0.46, 0.45, 0.94],
-            staggerChildren: 0.08
-        }
-    },
-    exit: {
-        opacity: 0,
-        y: -20,
-        transition: { duration: 0.3 }
-    }
-};
-
-const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.3 }
-    }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
 const FieldDisplay: React.FC<{ label: string; value: string | null | undefined; icon?: React.ElementType }> = ({ label, value, icon: Icon }) => (
-    <div className="space-y-1">
+    <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <div className="flex items-center gap-2 p-3 bg-muted rounded-lg border border-transparent group-hover:border-border transition-colors">
-            {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+        <div className="flex items-center gap-2 p-3 bg-white dark:bg-muted rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            {Icon && <Icon className="h-5 w-5 text-muted-foreground" />}
             <p className="font-semibold text-foreground break-words">{value || 'N/A'}</p>
         </div>
     </div>
 );
 
-export default function ThirdPartyDetailsForm() {
+export default function ThirdPartyDashboard() {
     const { data: session, status } = useSession();
-    const [thirdPartyDetails, setThirdPartyDetails] = useState<ThirdPartyProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [details, setDetails] = useState<ThirdPartyProfile | null>(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [countries, setCountries] = useState<Country[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const form = useForm<ThirdPartyInputs>({
         resolver: zodResolver(thirdPartySchema),
@@ -164,7 +90,7 @@ export default function ThirdPartyDetailsForm() {
             registrationNumber: '',
             taxPIN: '',
             vatNumber: '',
-            country: 1,
+            country: '',
             physicalAddress: '',
             email: '',
             phone: '',
@@ -172,519 +98,103 @@ export default function ThirdPartyDetailsForm() {
         },
     });
 
-    const thirdPartyId = session?.user?.thirdParty?.id;
-
-    const fetchCountries = useCallback(async () => {
+    const fetchDetails = async () => {
+        if (!session?.user?.thirdParty?.id) return setLoading(false);
+        setLoading(true);
         try {
-            const response = await fetch('/api/v1/countries');
-            if (!response.ok) {
-                throw new Error('Failed to fetch countries.');
-            }
-            const { data }: { data: Country[] } = await response.json();
-            setCountries(data);
-
-            // Set default country if form doesn't have one
-            if (data.length > 0 && !form.getValues('country')) {
-                form.setValue('country', data[0].id, { shouldValidate: true });
-            }
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Error fetching countries.';
-            toast.error(errorMessage);
-            console.error('Fetch countries error:', error);
-        }
-    }, [form]);
-
-    const fetchThirdPartyDetails = useCallback(async () => {
-        if (status === 'loading' || !thirdPartyId) {
-            setIsLoading(false);
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const response = await fetch(`/api/third-party-details`);
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to fetch third party details.');
-            }
-            const responseData: ThirdPartyProfile = await response.json();
-            setThirdPartyDetails(responseData);
-            form.reset({
-                id: responseData.id,
-                thirdPartyName: responseData.thirdPartyName || '',
-                tradingName: responseData.tradingName || '',
-                businessType: responseData.businessType,
-                registrationNumber: responseData.registrationNumber || '',
-                taxPIN: responseData.taxPIN || '',
-                vatNumber: responseData.vatNumber || '',
-                country: responseData.country || 1,
-                physicalAddress: responseData.physicalAddress || '',
-                email: responseData.email || '',
-                phone: responseData.phone || '',
-                website: responseData.website || '',
-            });
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Error fetching third party details.';
-            toast.error(errorMessage);
-            setThirdPartyDetails(null);
+            const res = await fetch(`/api/third-party-details`);
+            if (!res.ok) throw new Error((await res.json()).message || 'Failed to fetch');
+            const data: ThirdPartyProfile = await res.json();
+            setDetails(data);
+            form.reset({ ...data });
+        } catch (err: any) {
+            toast.error(err.message || 'Error fetching data');
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
-    }, [status, thirdPartyId, form]);
+    };
 
-    useEffect(() => {
-        if (status === 'authenticated') {
-            fetchCountries();
-            fetchThirdPartyDetails();
-        } else if (status === 'unauthenticated') {
-            setIsLoading(false);
-        }
-    }, [thirdPartyId, status, fetchCountries, fetchThirdPartyDetails]);
+    useEffect(() => { if (status === 'authenticated') fetchDetails(); }, [status]);
 
-    const handleFormSubmit = async (data: ThirdPartyInputs) => {
-        if (!thirdPartyId || !session?.accessToken) {
-            toast.error('Authentication or Third Party ID missing. Cannot save details.');
-            return;
-        }
-
-        const payload = { ...data };
-
+    const handleSubmit = async (data: ThirdPartyInputs) => {
+        if (!details) return;
         toast.promise(
             (async () => {
-                const response = await fetch(`/api/third-party-details`, {
+                const res = await fetch(`/api/third-party-details`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${session.accessToken}`,
-                    },
-                    body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.accessToken}` },
+                    body: JSON.stringify(data),
                 });
-
-                const responseData = await response.json();
-
-                if (!response.ok) {
-                    const errorMessage = responseData.message || 'Failed to update details.';
-                    const errorDetails = responseData.errors ? Object.values(responseData.errors).flat().join('\n') : '';
-                    throw new Error(`${errorMessage}\n${errorDetails}`);
-                }
-                await fetchThirdPartyDetails();
+                const resData = await res.json();
+                if (!res.ok) throw new Error(resData.message || 'Failed to update');
+                await fetchDetails();
                 setIsEditing(false);
-                return responseData.message || 'Third party details updated successfully!';
+                return 'Updated successfully!';
             })(),
-            {
-                loading: 'Updating details...',
-                success: (message) => message,
-                error: (error) => error.message,
-            }
+            { loading: 'Saving...', success: m => m, error: e => e.message }
         );
     };
 
-    const handleCancelEdit = () => {
-        setIsEditing(false);
-        if (thirdPartyDetails) {
-            form.reset({
-                id: thirdPartyDetails.id,
-                thirdPartyName: thirdPartyDetails.thirdPartyName || '',
-                tradingName: thirdPartyDetails.tradingName || '',
-                businessType: thirdPartyDetails.businessType,
-                registrationNumber: thirdPartyDetails.registrationNumber || '',
-                taxPIN: thirdPartyDetails.taxPIN || '',
-                vatNumber: thirdPartyDetails.vatNumber || '',
-                country: thirdPartyDetails.country || 1,
-                physicalAddress: thirdPartyDetails.physicalAddress || '',
-                email: thirdPartyDetails.email || '',
-                phone: thirdPartyDetails.phone || '',
-                website: thirdPartyDetails.website || '',
-            });
-        }
-    };
+    const cancelEdit = () => { setIsEditing(false); if (details) form.reset({ ...details }); };
 
-    const getBusinessTypeName = (value: BusinessTypeEnum) => {
-        const option = businessTypeOptions.find(opt => opt.value === value);
-        return option ? option.label : 'N/A';
-    };
-
-    const getApprovalStatus = (status: string) => {
+    const approvalBadge = (status: string) => {
         switch (status) {
-            case 'A':
-                return { label: 'Approved', variant: 'default', icon: CheckCircle2, className: 'bg-green-500/10 text-green-500 border-green-500/50' };
-            case 'R':
-                return { label: 'Rejected', variant: 'destructive', icon: AlertCircle, className: 'bg-red-500/10 text-red-500 border-red-500/50' };
-            default: // 'P'
-                return { label: 'Pending', variant: 'secondary', icon: Clock, className: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/50' };
+            case 'A': return { label: 'Approved', icon: CheckCircle2, color: 'bg-green-500/10 text-green-500' };
+            case 'R': return { label: 'Rejected', icon: AlertCircle, color: 'bg-red-500/10 text-red-500' };
+            default: return { label: 'Pending', icon: Clock, color: 'bg-yellow-500/10 text-yellow-500' };
         }
     };
 
-    const getActiveStatus = (status: number) => {
-        return status === 1
-            ? { label: 'Active', variant: 'default', className: 'bg-blue-500/10 text-blue-500 border-blue-500/50' }
-            : { label: 'Inactive', variant: 'secondary', className: 'bg-gray-500/10 text-gray-500 border-gray-500/50' };
-    };
+    const activeBadge = (status: number) => status === 1 ? { label: 'Active', color: 'bg-blue-500/10 text-blue-500' } : { label: 'Inactive', color: 'bg-gray-500/10 text-gray-500' };
 
-    if (status === 'loading') {
-        return (
-            <div className="flex justify-center items-center h-64 bg-background rounded-xl border shadow-sm">
-                <Loader2 className="animate-spin h-10 w-10 text-primary" />
-            </div>
-        );
-    }
-
-    if (!thirdPartyDetails && !isLoading) {
-        return (
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-muted-foreground/25 rounded-xl bg-muted/50 text-muted-foreground"
-            >
-                <Building2 className="h-16 w-16 mb-4 text-primary/50" />
-                <h3 className="text-2xl font-semibold mb-2">No Company Information Found</h3>
-                <p className="text-base text-center max-w-md">
-                    It looks like you haven&apos;t set up your company details yet. Please contact support if you believe this is an error.
-                </p>
-            </motion.div>
-        );
-    }
-
-    const approvalStatus = thirdPartyDetails ? getApprovalStatus(thirdPartyDetails.approvalStatus) : null;
-    const activeStatus = thirdPartyDetails ? getActiveStatus(thirdPartyDetails.status) : null;
+    if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-12 w-12 text-primary" /></div>;
+    if (!details) return <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">No company information found.</div>;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-            >
-                <Card className="overflow-hidden shadow-sm border-0 bg-gradient-to-br from-background to-muted/20">
-                    <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b p-6 flex flex-row items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Building2 className="h-7 w-7 text-primary" />
-                            <CardTitle className="text-2xl font-bold text-foreground">Company Information</CardTitle>
-                        </div>
-                        {!isLoading && !isEditing && thirdPartyDetails && (
-                            <Button
-                                onClick={() => setIsEditing(true)}
-                                size="lg"
-                                variant="outline"
-                                className="group border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
-                            >
-                                <Edit className="mr-2 h-5 w-5 group-hover:rotate-6 transition-transform" />
-                                Edit Details
-                            </Button>
-                        )}
-                    </CardHeader>
-
-                    <CardContent className="p-8">
-                        {isLoading ? (
-                            <div className="flex flex-col justify-center items-center h-96 space-y-4">
-                                <Loader2 className="animate-spin h-12 w-12 text-primary" />
-                            </div>
-                        ) : (
-                            <AnimatePresence mode="wait">
-                                {isEditing ? (
-                                    <motion.div
-                                        key="editing"
-                                        variants={containerVariants}
-                                        initial="hidden"
-                                        animate="visible"
-                                        exit="exit"
-                                    >
-                                        <Form {...form}>
-                                            <form
-                                                onSubmit={form.handleSubmit(handleFormSubmit)}
-                                                className="space-y-8"
-                                            >
-                                                <motion.div variants={itemVariants} className="space-y-6">
-                                                    <div className="flex items-center gap-4 mb-6">
-                                                        <h3 className="text-xl font-semibold text-foreground">General Information</h3>
-                                                        <Separator className="flex-grow" />
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="thirdPartyName"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Legal Company Name *</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input placeholder="e.g., Acme Innovations Ltd." className="h-11" {...field} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="tradingName"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Trading Name</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input placeholder="e.g., Acme Solutions" className="h-11" {...field} value={field.value ?? ''} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="businessType"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Business Type *</FormLabel>
-                                                                    <Select onValueChange={value => field.onChange(parseInt(value))} value={String(field.value)}>
-                                                                        <FormControl>
-                                                                            <SelectTrigger className="h-11">
-                                                                                <SelectValue placeholder="Select business type" />
-                                                                            </SelectTrigger>
-                                                                        </FormControl>
-                                                                        <SelectContent>
-                                                                            {businessTypeOptions.map((type) => (
-                                                                                <SelectItem key={type.value} value={String(type.value)}>
-                                                                                    {type.label}
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-                                                    </div>
-                                                </motion.div>
-
-                                                <motion.div variants={itemVariants} className="space-y-6">
-                                                    <div className="flex items-center gap-4 mb-6">
-                                                        <h3 className="text-xl font-semibold text-foreground">Registration & Tax</h3>
-                                                        <Separator className="flex-grow" />
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="registrationNumber"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Registration Number *</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input placeholder="e.g., PVT/20XX/XXXX" className="h-11" {...field} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="taxPIN"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Tax PIN *</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input placeholder="e.g., AXXXXXXXXX" className="h-11" {...field} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="vatNumber"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>VAT Number</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input placeholder="e.g., 0123456K" className="h-11" {...field} value={field.value ?? ''} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-                                                    </div>
-                                                </motion.div>
-
-                                                <motion.div variants={itemVariants} className="space-y-6">
-                                                    <div className="flex items-center gap-4 mb-6">
-                                                        <h3 className="text-xl font-semibold text-foreground">Contact & Location</h3>
-                                                        <Separator className="flex-grow" />
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="country"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Country *</FormLabel>
-                                                                    <Select onValueChange={value => field.onChange(parseInt(value))} value={String(field.value)}>
-                                                                        <FormControl>
-                                                                            <SelectTrigger className="h-11">
-                                                                                <SelectValue placeholder="Select country" />
-                                                                            </SelectTrigger>
-                                                                        </FormControl>
-                                                                        <SelectContent>
-                                                                            {countries.map((country) => (
-                                                                                <SelectItem key={country.id} value={String(country.id)}>
-                                                                                    {country.name}
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="physicalAddress"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Physical Address *</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input placeholder="e.g., 123 Main St, Nairobi" className="h-11" {...field} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="email"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Email Address *</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input type="email" placeholder="e.g., info@acme.com" className="h-11" {...field} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="phone"
-                                                            render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Phone Number *</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input type="tel" placeholder="e.g., +2547XXXXXXXX" className="h-11" {...field} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-
-                                                        <FormField
-                                                            control={form.control}
-                                                            name="website"
-                                                            render={({ field }) => (
-                                                                <FormItem className="md:col-span-2">
-                                                                    <FormLabel>Website</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input type="url" placeholder="e.g., https://www.examplewebsite.com" className="h-11" {...field} value={field.value ?? ''} />
-                                                                    </FormControl>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}
-                                                        />
-                                                    </div>
-                                                </motion.div>
-
-                                                <motion.div variants={itemVariants} className="flex justify-end gap-4 pt-6">
-                                                    <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={form.formState.isSubmitting}>
-                                                        <XCircle className="mr-2 h-4 w-4" />
-                                                        Cancel
-                                                    </Button>
-                                                    <Button type="submit" disabled={form.formState.isSubmitting}>
-                                                        {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                        <Save className="mr-2 h-4 w-4" />
-                                                        Save Changes
-                                                    </Button>
-                                                </motion.div>
-                                            </form>
-                                        </Form>
-                                    </motion.div>
-                                ) : (
-                                    <motion.div
-                                        key="viewing"
-                                        variants={containerVariants}
-                                        initial="hidden"
-                                        animate="visible"
-                                        exit="exit"
-                                        className="space-y-8"
-                                    >
-                                        <div className="flex items-center gap-4 mb-6">
-                                            <h3 className="text-xl font-semibold text-foreground">General Information</h3>
-                                            <Separator className="flex-grow" />
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            <FieldDisplay label="Legal Company Name" value={thirdPartyDetails?.thirdPartyName} icon={Building2} />
-                                            <FieldDisplay label="Trading Name" value={thirdPartyDetails?.tradingName} icon={Building2} />
-                                            <FieldDisplay label="Business Type" value={thirdPartyDetails ? getBusinessTypeName(thirdPartyDetails.businessType) : ''} icon={Info} />
-                                        </div>
-
-                                        <div className="flex items-center gap-4 mb-6 mt-8">
-                                            <h3 className="text-xl font-semibold text-foreground">Registration & Tax</h3>
-                                            <Separator className="flex-grow" />
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            <FieldDisplay label="Registration Number" value={thirdPartyDetails?.registrationNumber} icon={FileText} />
-                                            <FieldDisplay label="Tax PIN" value={thirdPartyDetails?.taxPIN} icon={Percent} />
-                                            <FieldDisplay label="VAT Number" value={thirdPartyDetails?.vatNumber} icon={Percent} />
-                                        </div>
-
-                                        <div className="flex items-center gap-4 mb-6 mt-8">
-                                            <h3 className="text-xl font-semibold text-foreground">Contact & Location</h3>
-                                            <Separator className="flex-grow" />
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <FieldDisplay label="Country" value={thirdPartyDetails?.countryName || countries.find(c => c.id === thirdPartyDetails?.country)?.name} icon={MapPin} />
-                                            <FieldDisplay label="Physical Address" value={thirdPartyDetails?.physicalAddress} icon={MapPin} />
-                                            <FieldDisplay label="Email Address" value={thirdPartyDetails?.email} icon={Mail} />
-                                            <FieldDisplay label="Phone Number" value={thirdPartyDetails?.phone} icon={Phone} />
-                                            <FieldDisplay label="Website" value={thirdPartyDetails?.website} icon={Globe} />
-                                        </div>
-
-                                        <div className="flex items-center gap-4 mb-6 mt-8">
-                                            <h3 className="text-xl font-semibold text-foreground">Status</h3>
-                                            <Separator className="flex-grow" />
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-medium text-muted-foreground">Approval Status</p>
-                                                {approvalStatus && (
-                                                    <Badge className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${approvalStatus.className}`}>
-                                                        <approvalStatus.icon className="h-4 w-4" />
-                                                        {approvalStatus.label}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-medium text-muted-foreground">Active Status</p>
-                                                {activeStatus && (
-                                                    <Badge className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${activeStatus.className}`}>
-                                                        {activeStatus.label === 'Active' ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                                                        {activeStatus.label}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        )}
-                    </CardContent>
-                </Card>
-            </motion.div>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+            <AnimatePresence>
+                <motion.div variants={cardVariants} initial="hidden" animate="visible">
+                    <Card className="hover:shadow-lg transition-shadow duration-300">
+                        <CardHeader><CardTitle className="flex items-center gap-2"><Building2 />General Information</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                            <FieldDisplay label="Legal Name" value={details.thirdPartyName} icon={Building2} />
+                            <FieldDisplay label="Trading Name" value={details.tradingName} icon={Building2} />
+                            <FieldDisplay label="Business Type" value={businessTypeOptions.find(b => b.value === details.businessType)?.label} />
+                        </CardContent>
+                    </Card>
+                </motion.div>
+                <motion.div variants={cardVariants} initial="hidden" animate="visible">
+                    <Card className="hover:shadow-lg transition-shadow duration-300">
+                        <CardHeader><CardTitle className="flex items-center gap-2"><FileText />Registration & Tax</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                            <FieldDisplay label="Registration Number" value={details.registrationNumber} icon={FileText} />
+                            <FieldDisplay label="Tax PIN" value={details.taxPIN} icon={Percent} />
+                            <FieldDisplay label="VAT Number" value={details.vatNumber} icon={Percent} />
+                        </CardContent>
+                    </Card>
+                </motion.div>
+                <motion.div variants={cardVariants} initial="hidden" animate="visible">
+                    <Card className="hover:shadow-lg transition-shadow duration-300">
+                        <CardHeader><CardTitle className="flex items-center gap-2"><MapPin />Contact & Location</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                            <FieldDisplay label="Country" value={details.country} icon={MapPin} />
+                            <FieldDisplay label="Address" value={details.physicalAddress} icon={MapPin} />
+                            <FieldDisplay label="Email" value={details.email} icon={Mail} />
+                            <FieldDisplay label="Phone" value={details.phone} icon={Phone} />
+                            <FieldDisplay label="Website" value={details.website} icon={Globe} />
+                        </CardContent>
+                    </Card>
+                </motion.div>
+                <motion.div variants={cardVariants} initial="hidden" animate="visible">
+                    <Card className="hover:shadow-lg transition-shadow duration-300">
+                        <CardHeader><CardTitle className="flex items-center gap-2">Status</CardTitle></CardHeader>
+                        <CardContent className="flex gap-3 flex-wrap">
+                            {(() => { const badge = approvalBadge(details.approvalStatus); const Icon = badge.icon; return <Badge className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold ${badge.color}`}><Icon className="h-4 w-4" />{badge.label}</Badge>; })()}
+                            <Badge className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold ${activeBadge(details.status).color}`}>{activeBadge(details.status).label}</Badge>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </AnimatePresence>
         </div>
     );
 }

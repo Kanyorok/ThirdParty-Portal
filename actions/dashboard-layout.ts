@@ -19,9 +19,9 @@ export async function updateLayoutPreference(key: LayoutKeys, value: string) {
 
         revalidatePath("/", "layout")
 
-        return { success: true }
+        return { success: true, key, value }
     } catch (error) {
         console.error("Failed to set layout preference cookie:", error)
-        throw new Error("Could not update layout preference.")
+        throw new Error("Could not update layout preference due to server error.")
     }
 }

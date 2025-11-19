@@ -1,6 +1,3 @@
-import { DefaultSession } from "next-auth"
-import { DefaultJWT } from "next-auth/jwt"
-
 interface UserProfile {
     id: number;
     userId: string;

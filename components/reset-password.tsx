@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from "@/components/common/alert"
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Shield, Loader2, Check, X } from "lucide-react"
 import { ContactSection } from "./common/contact-us"
 import { AuthHeader } from "./layout/auth-header"
-import { resetPassword, validateResetToken } from "@/actions/auth-actions"
+import { resetPassword, validateResetToken } from "@/actions/user-auth-actions"
 
 
 const resetPasswordSchema = z

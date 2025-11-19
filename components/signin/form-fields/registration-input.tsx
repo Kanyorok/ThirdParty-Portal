@@ -6,7 +6,7 @@ import { Input } from "@/components/common/input"
 import { FormField } from "@/components/signin/form-fields/login-fields"
 
 interface RegistrationInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  id: "firstName" | "lastName" | "email" | "phone"
+  id: "firstName" | "lastName" | "email" | "phone" | "userType"
   label: string
   status: string
   error?: FieldError

@@ -78,5 +78,3 @@ export interface CreateClarificationPayload {
     subject: string;
     message: string;
 }
-
-

@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from "@/components/common/alert"
 import { Mail, ArrowLeft, CheckCircle, AlertCircle, Clock, Shield, Loader2 } from "lucide-react"
 import { ContactSection } from "./common/contact-us"
 import { AuthHeader } from "./layout/auth-header"
-import { requestPasswordReset } from "@/actions/auth-actions"
+import { requestPasswordReset } from "@/actions/user-auth-actions"
 
 
 const forgotPasswordSchema = z.object({

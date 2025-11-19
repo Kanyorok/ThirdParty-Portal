@@ -19,7 +19,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit & { access
     const res = await fetch(url, { ...fetchOptions, headers, cache: "no-store" })
     const text = await res.text()
     if (!res.ok && !allowError) throw new Error(`API request failed: ${res.status} ${res.statusText} - ${text.slice(0, 200)}`)
-    try { return JSON.parse(text) } catch { throw new Error(`Invalid JSON from API at ${url}. Received: ${text.slice(0, 200)}`) }
+    try { return JSON.parse(text) } catch { throw new Error(`Invalid JSON at ${url}. Received: ${text.slice(0, 200)}`) }
 }
 
 export async function getRounds<T = unknown>(q?: Record<string, string | undefined>, accessToken?: string): Promise<T> {
@@ -41,7 +41,6 @@ export async function submitApplication(roundId: number, categoryIds: number[], 
     })
 }
 
-// Safer variant that returns status info without throwing on known handled errors
 export async function submitApplicationSafe(roundId: number, categoryIds: number[], accessToken: string) {
     const baseUrl = getBaseUrl()
     const url = `${baseUrl}/api/procurement/prequalification/applications`

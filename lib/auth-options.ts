@@ -3,9 +3,6 @@ import type { NextAuthOptions, User, Session } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 import type { BaseUser, ThirdParty, ThirdPartyTypeEntry } from "@/types/next-auth"
 
-const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
-const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "your-dev-secret-key-change-in-production"
-
 type ApiUser = BaseUser & { thirdParty?: ThirdParty | null; types?: ThirdPartyTypeEntry[] }
 
 type AuthResponse = {
@@ -14,6 +11,9 @@ type AuthResponse = {
   message?: string
   errors?: Record<string, string[]>
 }
+
+const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || ""
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -27,12 +27,13 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("MISSING_FIELDS: Email and password are required")
         }
+        if (!baseUrl) {
+          throw new Error("CONFIG: url not set")
+        }
 
-        const allowDevFallback = process.env.NEXT_PUBLIC_DEV_AUTH_FALLBACK === "1"
         let res: Response
         let text = ""
         try {
-          if (!baseUrl) throw new Error("CONFIG: NEXT_PUBLIC_EXTERNAL_API_URL not set")
           res = await fetch(`${baseUrl}/api/third-party-auth/login`, {
             method: "POST",
             headers: {
@@ -42,30 +43,23 @@ export const authOptions: NextAuthOptions = {
             body: JSON.stringify({ email: credentials.email, password: credentials.password }),
           })
           text = await res.text()
-        } catch (_err) {
-          if (allowDevFallback) {
-            const devUser: User = {
-              id: "dev-user-123",
-              email: credentials.email,
-              name: "Development User",
-              thirdPartyId: 3,
-              accessToken: "dev-mock-token",
-              isActive: true,
-              isApproved: true,
-              types: [{ id: 1, code: "SU-GENERAL", categoryId: 1 }],
-            } as unknown as User
-            return devUser
-          }
+        } catch (err) {
           throw new Error("NETWORK: Unable to reach authentication service")
         }
 
         const data = (text ? JSON.parse(text) : null) as Partial<AuthResponse> | null
         const message = data?.message
-        if (res.status === 422) throw new Error(`VALIDATION: ${message || "Validation failed"}`)
-        if (res.status === 403) throw new Error(`ACCOUNT_NOT_APPROVED: ${message || "Account pending approval"}`)
-        if (res.status === 401) throw new Error(`INVALID_CREDENTIALS: ${message || "Invalid email or password"}`)
-        if (!res.ok) throw new Error(`SERVER_ERROR: ${message || `Login failed (${res.status})`}`)
-        if (!data?.user || !data?.token) throw new Error("SERVER_ERROR: Malformed login response")
+
+        if (res.status === 401 || res.status === 422) {
+          // 401 (invalid credentials) and 422 (validation) -  to prevent user enumeration
+          throw new Error(`INVALID_CREDENTIALS: Invalid email or password.`)
+        }
+        if (res.status === 403) {
+          throw new Error(`ACCOUNT_NOT_APPROVED: ${message || "Account pending approval or inactive."}`)
+        }
+        if (!res.ok || !data?.user || !data?.token) {
+          throw new Error(`SERVER_ERROR: Login failed (${res.status}).`)
+        }
 
         const rawUser = data.user as ApiUser
         const rawTypes = Array.isArray(rawUser.types) ? rawUser.types : []
@@ -91,8 +85,8 @@ export const authOptions: NextAuthOptions = {
           createdOn: rawUser.createdOn,
           modifiedOn: rawUser.modifiedOn,
           thirdParty: rawUser.thirdParty,
-          accessToken: data.token!,
-        } as unknown as User
+          accessToken: data.token,
+        } as User
 
         return loggedIn
       },
@@ -109,12 +103,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }): Promise<JWT> {
       if (user) {
         const merged = { ...token, ...user }
-        return merged as unknown as JWT
+        return merged as JWT
       }
       return token as JWT
     },
     async session({ session, token }): Promise<Session> {
-      const t = token as unknown as BaseUser & { accessToken?: string }
+      const t = token as BaseUser & { accessToken?: string }
       session.user = {
         id: t.id,
         userId: t.userId,
@@ -135,7 +129,7 @@ export const authOptions: NextAuthOptions = {
         modifiedOn: t.modifiedOn,
         thirdParty: t.thirdParty,
       }
-      ;(session as unknown as { accessToken?: string }).accessToken = t.accessToken
+      session.accessToken = t.accessToken
       return session
     },
   },

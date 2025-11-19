@@ -1,264 +1,404 @@
 "use client"
 
+import React, { useState, useEffect, useCallback, Suspense } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/common/button"
-import { Input } from "@/components/common/input"
-import { AuthHeader } from "@/components/layout/auth-header"
-import { useForm } from "react-hook-form"
+import { useRouter, useSearchParams, ReadonlyURLSearchParams } from "next/navigation"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import React, { useEffect, useState, Suspense } from "react"
-import { Check, AlertCircle, Loader2, Sun, Moon } from "lucide-react"
-import { toast } from "sonner"
 import { signIn } from "next-auth/react"
-import { FormField } from "@/components/signin/form-fields/login-fields"
-import { PasswordField } from "@/components/signin/form-fields/pwd"
-import { useTheme } from "next-themes"
+import { toast } from "sonner"
+import { motion, AnimatePresence } from "framer-motion"
+import { Loader2, ChevronDown, AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react"
+import { Input } from "@/components/common/input"
+import { Button } from "@/components/common/button"
+// import { useTheme } from "next-themes"
+import { AuthHeader } from "../layout/auth-header"
+import { Spinner } from "@/components/common/spinner"
 
-// Zod schema for form validation
-const signInSchema = z.object({
-    email: z.string().email("Please enter a valid email address."),
-    password: z.string().min(1, "Password is required."),
+const USER_TYPES = [
+    { value: "tenant", label: "Tenant" },
+    { value: "supplier", label: "Supplier" },
+] as const
+
+const userTypeSchema = z.enum(USER_TYPES.map(t => t.value) as [string, ...string[]])
+const loginSchema = z.object({
+    email: z.string().email().min(1),
+    password: z.string().min(1)
 })
+const roleLoginSchema = loginSchema.extend({ userType: userTypeSchema })
+type RoleLoginFormInputs = z.infer<typeof roleLoginSchema>
 
-type SignInFormInputs = z.infer<typeof signInSchema>
+const ERROR_MESSAGES = {
+    SessionExpired: "Your session has expired. Please sign in again.",
+    SessionRequired: "Please sign in to access this page.",
+    AccountNotApproved: "Your account is not approved. Contact support.",
+    NoAccessToken: "Authentication error. Please sign in again.",
+    Configuration: "Authentication configuration error. Try again.",
+    CredentialsSignin: "Invalid email or password.",
+    INVALID_CREDENTIALS: "Invalid email or password.",
+    ACCOUNT_NOT_APPROVED: "Your account is pending approval.",
+    VALIDATION: "Please correct the highlighted fields.",
+    NETWORK: "Network issue. Retry.",
+    SERVER_ERROR: "Server error. Try again later.",
+    MISSING_FIELDS: "Email and password are required."
+} as const
 
-// Theme Toggle Component
-function ThemeToggle() {
-    const { theme, setTheme } = useTheme()
-    const isDark = theme === "dark"
+type ErrorCode = keyof typeof ERROR_MESSAGES
 
-    const toggleTheme = () => {
-        setTheme(isDark ? "light" : "dark")
+const ANIMATION_VARIANTS = {
+    fadeInUp: {
+        initial: { opacity: 0, y: 10 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.25 }
+    },
+    fadeInDown: {
+        initial: { opacity: 0, y: -10 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -10 }
+    },
+    fade: {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 }
     }
+}
+
+const FIELD_STYLES = {
+    base: "w-full p-3 border rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none transition focus:ring-2",
+    error: "border-red-600 dark:border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-400 dark:focus:ring-red-500",
+    success: "border-green-500 dark:border-green-600 focus:ring-green-300 dark:focus:ring-green-600",
+    default: "border-gray-300 dark:border-zinc-700 focus:ring-indigo-500 dark:focus:ring-indigo-600"
+}
+
+// TODO: Move this to the root layout
+
+// function ThemeToggle() {
+//     const { theme, setTheme } = useTheme()
+//     const toggle = useCallback(() => setTheme(theme === "dark" ? "light" : "dark"), [theme, setTheme])
+
+//     return (
+//         <motion.button
+//             whileHover={{ scale: 1.1 }}
+//             whileTap={{ scale: 0.95 }}
+//             onClick={toggle}
+//             className="p-2 rounded-full text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-800 transition"
+//         >
+//             {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+//         </motion.button>
+//     )
+// }
+
+function getFieldClassName(error?: string, touched?: boolean, value?: string) {
+    if (error) return `${FIELD_STYLES.base} ${FIELD_STYLES.error}`
+    if (touched && value) return `${FIELD_STYLES.base} ${FIELD_STYLES.success}`
+    return `${FIELD_STYLES.base} ${FIELD_STYLES.default}`
+}
+
+interface InputFieldProps {
+    id: string
+    label: string
+    type?: string
+    placeholder: string
+    value: string
+    error?: string
+    touched?: boolean
+    register: any
+    isPassword?: boolean
+    showPassword?: boolean
+    onTogglePassword?: () => void
+}
+
+function InputField({
+    id,
+    label,
+    type = "text",
+    placeholder,
+    value,
+    error,
+    touched,
+    register,
+    isPassword = false,
+    showPassword = false,
+    onTogglePassword
+}: InputFieldProps) {
+    const inputClasses = getFieldClassName(error, touched, value)
 
     return (
-        <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-        >
-            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
+        <motion.div {...ANIMATION_VARIANTS.fadeInUp}>
+            <label htmlFor={id} className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                {label}
+            </label>
+            <div className="relative">
+                <Input
+                    {...register}
+                    id={id}
+                    type={isPassword ? (showPassword ? "text" : "password") : type}
+                    placeholder={placeholder}
+                    className={inputClasses}
+                />
+                {isPassword && (
+                    <button
+                        type="button"
+                        onClick={onTogglePassword}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
+                    >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                )}
+                {touched && !error && value && !isPassword && (
+                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                )}
+            </div>
+            <AnimatePresence>
+                {error && (
+                    <motion.p {...ANIMATION_VARIANTS.fade} className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {error}
+                    </motion.p>
+                )}
+            </AnimatePresence>
+        </motion.div>
     )
+}
+
+interface UserTypeSelectFieldProps {
+    control: any
+    error?: string
+    touched?: boolean
+}
+
+function UserTypeSelectField({ control, error, touched }: UserTypeSelectFieldProps) {
+    return (
+        <motion.div {...ANIMATION_VARIANTS.fadeInUp}>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Login As
+            </label>
+            <Controller
+                name="userType"
+                control={control}
+                render={({ field }) => (
+                    <div className="relative">
+                        <select
+                            {...field}
+                            value={field.value || ""}
+                            className={`w-full p-3 border rounded-xl bg-transparent dark:text-gray-100 appearance-none ${error
+                                ? "border-red-600 dark:border-red-500"
+                                : "border-gray-300 dark:border-zinc-700 focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
+                                }`}
+                        >
+                            <option value="" disabled>Select your account type</option>
+                            {USER_TYPES.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    </div>
+                )}
+            />
+            <AnimatePresence>
+                {error && (
+                    <motion.p {...ANIMATION_VARIANTS.fade} className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {error}
+                    </motion.p>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    )
+}
+
+interface AlertBannerProps {
+    type: "error" | "success"
+    message: string
+}
+
+function AlertBanner({ type, message }: AlertBannerProps) {
+    const isError = type === "error"
+    const bgClass = isError
+        ? "bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-200"
+        : "bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-200"
+
+    const Icon = isError ? AlertCircle : CheckCircle
+
+    return (
+        <motion.div
+            {...ANIMATION_VARIANTS.fadeInDown}
+            className={`p-4 border rounded-xl flex gap-2 ${bgClass}`}
+        >
+            <Icon className="w-5 h-5" />
+            {message}
+        </motion.div>
+    )
+}
+
+function useSignInLogic(router: any, searchParams: ReadonlyURLSearchParams) {
+    const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
+    const urlError = searchParams.get("error")
+    const [authError, setAuthError] = useState<string | null>(null)
+    const [showPassword, setShowPassword] = useState(false)
+
+    const { register, handleSubmit, formState, watch, setError, clearErrors, control } = useForm<RoleLoginFormInputs>({
+        resolver: zodResolver(roleLoginSchema),
+        mode: "onTouched",
+        defaultValues: { email: "", password: "", userType: undefined }
+    })
+
+    const { errors, isSubmitting, touchedFields } = formState
+    const watched = watch()
+
+    useEffect(() => {
+        if (urlError) {
+            setAuthError(ERROR_MESSAGES[urlError as ErrorCode] || ERROR_MESSAGES.Configuration)
+        }
+    }, [urlError])
+
+    useEffect(() => {
+        if (authError && Object.values(watched).some(Boolean)) {
+            setAuthError(null)
+            clearErrors("root")
+        }
+    }, [watched, authError, clearErrors])
+
+    const onSubmit = async (data: RoleLoginFormInputs) => {
+        setAuthError(null)
+        clearErrors("root")
+
+        const result = await signIn("credentials", {
+            redirect: false,
+            email: data.email,
+            password: data.password,
+            userRole: data.userType,
+            callbackUrl
+        })
+
+        if (result?.error) {
+            const [code, msg] = result.error.split(":").map((x: string) => x.trim())
+            const errorCode = code || "CredentialsSignin"
+            setError("root", {
+                type: errorCode,
+                message: ERROR_MESSAGES[errorCode as ErrorCode] || msg || result.error
+            })
+        } else if (result?.ok) {
+            toast.success("Signed In", { description: "Redirecting..." })
+            setTimeout(() => router.push(result.url || callbackUrl), 300)
+        }
+    }
+
+    return {
+        register,
+        handleSubmit,
+        errors,
+        isSubmitting,
+        authError,
+        touchedFields,
+        showPassword,
+        setShowPassword,
+        onSubmit,
+        control,
+        watched
+    }
 }
 
 function SignInFormComponent() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
-    const error = searchParams.get("error")
-
-    const [showPassword, setShowPassword] = useState(false)
-    const [showSuccessMessage, setShowSuccessMessage] = useState(false)
-    const [authError, setAuthError] = useState<string | null>(null)
-
-    // Handle authentication errors from URL params
-    useEffect(() => {
-        if (error) {
-            switch (error) {
-                case 'SessionExpired':
-                    setAuthError('Your session has expired. Please sign in again.')
-                    break
-                case 'SessionRequired':
-                    setAuthError('Please sign in to access this page.')
-                    break
-                case 'AccountNotApproved':
-                    setAuthError('Your account is not approved or active. Please contact support.')
-                    break
-                case 'NoAccessToken':
-                    setAuthError('Authentication error. Please sign in again.')
-                    break
-                case 'Configuration':
-                    setAuthError('Authentication configuration error. Please try again.')
-                    break
-                case 'CredentialsSignin':
-                    setAuthError('Invalid email or password. Please try again.')
-                    break
-                default:
-                    setAuthError('Authentication error. Please try again.')
-            }
-        }
-    }, [error])
-
+    const [showSuccess, setShowSuccess] = useState(false)
     const {
         register,
         handleSubmit,
-        formState: { errors, isSubmitting, touchedFields },
-        setError,
-        watch,
-    } = useForm<SignInFormInputs>({
-        resolver: zodResolver(signInSchema),
-        mode: "onTouched",
-    })
-
-    // Clear auth error when user starts typing
-    const watchedFields = watch(['email', 'password'])
-    useEffect(() => {
-        if (authError && (watchedFields[0] || watchedFields[1])) {
-            setAuthError(null)
-        }
-    }, [watchedFields, authError])
-
-    const watchedPassword = watch("password")
+        errors,
+        isSubmitting,
+        authError,
+        showPassword,
+        setShowPassword,
+        onSubmit,
+        touchedFields,
+        control,
+        watched
+    } = useSignInLogic(router, searchParams)
 
     useEffect(() => {
         if (searchParams.get("registrationSuccess") === "true") {
-            setShowSuccessMessage(true)
-            const timer = setTimeout(() => setShowSuccessMessage(false), 5000)
+            setShowSuccess(true)
+            const timer = setTimeout(() => setShowSuccess(false), 5000)
             return () => clearTimeout(timer)
         }
     }, [searchParams])
 
-    const onSubmit = async (data: SignInFormInputs) => {
-        setAuthError(null) // Clear any previous auth errors
-        try {
-            const result = await signIn("credentials", {
-                redirect: false,
-                email: data.email,
-                password: data.password,
-                callbackUrl: callbackUrl,
-            })
-
-            if (result?.error) {
-                // Expect tagged format CODE: message
-                const raw = result.error
-                let code = "UNKNOWN"
-                let message = raw
-                const idx = raw.indexOf(":")
-                if (idx > -1) {
-                    code = raw.slice(0, idx).trim()
-                    message = raw.slice(idx + 1).trim()
-                } else if (raw === "CredentialsSignin") {
-                    code = "INVALID_CREDENTIALS"
-                    message = "Invalid email or password"
-                }
-                const friendly = (() => {
-                    switch (code) {
-                        case "INVALID_CREDENTIALS":
-                            return "Invalid email or password. Please try again."
-                        case "ACCOUNT_NOT_APPROVED":
-                            return message || "Your account is pending approval."
-                        case "VALIDATION":
-                            return message || "Please correct the highlighted fields."
-                        case "NETWORK":
-                            return "Network issue. Please retry."
-                        case "SERVER_ERROR":
-                            return message || "Server error. Please try again later."
-                        case "MISSING_FIELDS":
-                            return message || "Email and password are required."
-                        default:
-                            return message || "An unexpected error occurred. Please try again."
-                    }
-                })()
-                setError("root", { type: code, message: friendly })
-            } else if (result?.ok) {
-                // Show toast then navigate
-                toast.success("Successfully Signed In", {
-                    description: "Redirecting to dashboard...",
-                })
-                // Allow toast to paint before navigation
-                setTimeout(() => router.push(result.url || callbackUrl), 300)
-            }
-        } catch (error) {
-            setError("root", {
-                type: "manual",
-                message: "A network error occurred. Please check your connection.",
-            })
-        }
-    }
-
-    const fieldStatuses = {
-        email: errors.email ? "error" : touchedFields.email ? "success" : "default",
-        password: errors.password ? "error" : touchedFields.password ? "success" : "default",
-    }
+    const displayError = errors.root?.message || authError
 
     return (
-        <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="relative w-full max-w-xl bg-gray-50 dark:bg-zinc-900 rounded-xl p-8 sm:p-10 border border-gray-100 dark:border-zinc-800">
-                <AuthHeader isRegistration={false} />
-                {showSuccessMessage && (
-                    <div role="alert" aria-live="polite" className="p-4 mb-6 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-200 rounded-lg flex items-center justify-center">
-                        <Check className="h-5 w-5 mr-2" />
-                        Registration successful! Please log in.
-                    </div>
-                )}
-                {authError && (
-                    <div role="alert" aria-live="polite" className="p-4 mb-6 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 rounded-lg flex items-center">
-                        <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                        <span>{authError}</span>
-                    </div>
-                )}
-                <form className="space-y-6 mt-8" onSubmit={handleSubmit(onSubmit)}>
-                    <FormField
-                        status={fieldStatuses.email}
-                        label="Email Address"
-                        required
-                        error={errors.email?.message}
-                        id="email"
-                    >
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="john.doe@example.com"
-                            className={`w-full py-4 px-4 text-base border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 ${errors.email
-                                ? "border-red-300 bg-red-50 dark:bg-red-900 dark:border-red-700"
-                                : fieldStatuses.email === "success"
-                                    ? "border-green-300 bg-green-50 dark:bg-green-900 dark:border-green-700"
-                                    : "border-gray-200 hover:border-gray-300 dark:border-zinc-700 dark:hover:border-zinc-600"
-                                }`}
-                            {...register("email")}
-                            aria-invalid={!!errors.email}
-                            aria-describedby={errors.email ? "email-error" : undefined}
-                        />
-                    </FormField>
+        <div className="w-full space-y-6">
+            <AnimatePresence>
+                {displayError && <AlertBanner type="error" message={displayError} />}
+            </AnimatePresence>
 
-                    <PasswordField
-                        id="password"
-                        label="Password"
-                        placeholder="Enter your password"
-                        value={watchedPassword || ""}
-                        error={errors.password?.message}
-                        status={fieldStatuses.password}
-                        showPassword={showPassword}
-                        onTogglePassword={() => setShowPassword(!showPassword)}
-                        register={register("password")}
-                    />
+            <AnimatePresence>
+                {showSuccess && <AlertBanner type="success" message="Registration successful. Please log in." />}
+            </AnimatePresence>
 
-                    <div className="flex items-center justify-end">
-                        <Link href="/forgot-password" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-600">
-                            Forgot password?
-                        </Link>
-                    </div>
-                    {errors.root && (
-                        <div role="alert" aria-live="polite" className="p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg">
-                            <p className="text-red-800 dark:text-red-200 text-sm font-medium flex items-center">
-                                <AlertCircle className="h-4 w-4 mr-2" /> {errors.root.message}
-                            </p>
-                        </div>
+            <div className="space-y-5">
+                <UserTypeSelectField
+                    control={control}
+                    error={errors.userType?.message}
+                    touched={touchedFields.userType}
+                />
+
+                <InputField
+                    id="email"
+                    label="Email Address"
+                    type="email"
+                    placeholder="john.doe@example.com"
+                    value={watched.email}
+                    error={errors.email?.message}
+                    touched={touchedFields.email}
+                    register={register("email")}
+                />
+
+                <InputField
+                    id="password"
+                    label="Password"
+                    placeholder="Enter password"
+                    value={watched.password}
+                    error={errors.password?.message}
+                    touched={touchedFields.password}
+                    register={register("password")}
+                    isPassword
+                    showPassword={showPassword}
+                    onTogglePassword={() => setShowPassword(!showPassword)}
+                />
+
+                <Button
+                    type="button"
+                    onClick={handleSubmit(onSubmit)}
+                    disabled={isSubmitting}
+                    className="w-full p-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center justify-center gap-2"
+                >
+                    {isSubmitting ? (
+                        <>
+                            <Spinner className="size-6 text-blue-500" />
+                            <span>Signing In...</span>
+                        </>
+                    ) : (
+                        "Sign In"
                     )}
-                    <Button type="submit" className="w-full" disabled={isSubmitting}>
-                        {isSubmitting ? (
-                            <div className="flex items-center justify-center">
-                                <Loader2 className="animate-spin h-5 w-5 text-white mr-3" />
-                                Signing In...
-                            </div>
-                        ) : (
-                            "Sign In"
-                        )}
-                    </Button>
-                    <div className="text-center pt-4 text-base text-gray-600 dark:text-gray-400">
-                        Don't have an account?{" "}
-                        <Link
-                            href="/signup"
-                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                        >
-                            Create Account
-                        </Link>
-                    </div>
-                </form>
+                </Button>
+
+                <div className="flex justify-center">
+                    <Link href="/forgot-password" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                        Forgot password?
+                    </Link>
+                </div>
+            </div>
+
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+                Don't have an account?{" "}
+                <Link href="/signup" className="font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline transition duration-150">
+                    Create Account Today
+                </Link>
             </div>
         </div>
     )
@@ -266,8 +406,31 @@ function SignInFormComponent() {
 
 export default function SignInPage() {
     return (
-        <Suspense>
-            <SignInFormComponent />
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center">
+                <Loader2 className="animate-spin h-12 w-12 text-indigo-600" />
+            </div>
+        }>
+            <div className="flex flex-col min-h-screen items-center justify-center p-6">
+                {/* <div className="absolute top-4 right-4">
+                    <ThemeToggle />
+                </div> */}
+
+                <motion.div
+                    {...ANIMATION_VARIANTS.fade}
+                    className="w-full max-w-xl bg-transparent dark:bg-transparent dark:border-zinc-700 rounded-2xl p-10 backdrop-blur-xl"
+                >
+                    <div className="text-center mb-10">
+                        <motion.h1 {...ANIMATION_VARIANTS.fade} className="text-4xl font-extrabold text-gray-900 dark:text-white">
+                            <AuthHeader />
+                        </motion.h1>
+                        <motion.p {...ANIMATION_VARIANTS.fade} className="text-gray-600 dark:text-gray-400 mt-2">
+                            Use your Email and password to log in to the Self-Service Portal
+                        </motion.p>
+                    </div>
+                    <SignInFormComponent />
+                </motion.div>
+            </div>
         </Suspense>
     )
 }

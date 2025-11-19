@@ -3,115 +3,101 @@
 import React, { Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
 import { WelcomeHeader } from '@/components/dashboard/welcome-header'
 import { ErrorState } from '@/components/dashboard/error-state'
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
 import { RequestSummaryCards } from '@/components/request'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/card'
 import { containerVariants, itemVariants } from '@/lib/dashboard-animations'
 import SummaryCharts from '@/components/dashboard/summary-charts'
 import { usePageTitle } from '@/hooks/use-page-title'
+
+type DashboardLayoutProps = {
+    children: React.ReactNode
+    className?: string
+}
+
+const DashboardLayout = ({ children, className }: DashboardLayoutProps) => (
+    <div className={cn("min-h-screen bg-background", className)}>
+        <div className="max-w-7xl mx-auto p-4 md:p-8">
+            {children}
+        </div>
+    </div>
+)
 
 function DashboardContent() {
     const { data: session, status } = useSession()
 
     if (status === "loading") {
-        return <DashboardSkeleton />
+        return <DashboardLayout><DashboardSkeleton /></DashboardLayout>
     }
 
+    let errorMessage = null
     if (status === "unauthenticated") {
+        errorMessage = "You need to log in to access the dashboard."
+    } else if (status === "authenticated" && !session?.user) {
+        errorMessage = "There was an issue loading your profile data. Refresh the page or contact support."
+    }
+
+    if (errorMessage) {
         return (
-            <ErrorState
-                message="You need to be signed in to access this page. Please log in to continue."
-            />
+            <DashboardLayout>
+                <ErrorState message={errorMessage} />
+            </DashboardLayout>
         )
     }
 
-    if (status === "authenticated" && !session?.user) {
-        return (
-            <ErrorState
-                message="There was an issue loading your profile data. Please try refreshing the page or contact support."
-            />
-        )
-    }
+    const firstName =
+        session?.user?.firstName ||
+        session?.user?.name?.split(" ")[0] ||
+        "User"
 
-    if (status === "authenticated" && session?.user) {
-        const firstName =
-            session.user.firstName ||
-            session.user.name?.split(" ")[0] ||
-            "User"
+    return (
+        <DashboardLayout className="bg-gradient-to-br from-background via-background to-muted/10">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-10"
+            >
+                <motion.div variants={itemVariants}>
+                    <WelcomeHeader firstName={firstName} />
+                </motion.div>
 
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
-                <div className="max-w-7xl mx-auto p-4 md:p-8">
-                    <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="visible"
-                        className="space-y-12"
-                    >
-                        <WelcomeHeader firstName={firstName} />
-
-                        <motion.section
-                            variants={itemVariants}
-                            aria-labelledby="summary-heading"
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between">
-                                <h2
-                                    id="summary-heading"
-                                    className="text-2xl font-semibold text-foreground"
-                                >
-                                    Request Summary
-                                </h2>
-                            </div>
+                <motion.section
+                    variants={itemVariants}
+                    aria-labelledby="summary-heading"
+                >
+                    <Card className="shadow-none border-none bg-transparent mt-1">
+                        <CardHeader className="p-0">
+                            <CardTitle id="summary-heading">Key Metrics</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 pt-6">
                             <Suspense fallback={<DashboardSkeleton />}>
                                 <RequestSummaryCards />
                             </Suspense>
-                        </motion.section>
+                        </CardContent>
+                    </Card>
+                </motion.section>
 
-                        <motion.section
-                            variants={itemVariants}
-                            aria-labelledby="analytics-heading"
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between">
-                                <h2
-                                    id="analytics-heading"
-                                    className="text-2xl font-semibold text-foreground"
-                                >
-                                    Activity Analytics
-                                </h2>
-                            </div>
+                <motion.section
+                    variants={itemVariants}
+                    aria-labelledby="analytics-heading"
+                >
+                    <Card className="shadow-none border-none bg-transparent">
+                        <CardHeader className="p-0">
+                            <CardTitle id="analytics-heading">Activity Analytics</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 pt-6">
                             <Suspense fallback={<DashboardSkeleton />}>
                                 <SummaryCharts />
                             </Suspense>
-                        </motion.section>
-
-                        {/* <motion.section
-                            variants={itemVariants}
-                            aria-labelledby="tenders-heading"
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between">
-                                <h2
-                                    id="tenders-heading"
-                                    className="text-2xl font-semibold text-foreground"
-                                >
-                                    Recent Tenders
-                                </h2>
-                            </div>
-                            <Suspense fallback={<DashboardSkeleton />}>
-                                <TendersPage />
-                            </Suspense>
-                        </motion.section> */}
-                    </motion.div>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <ErrorState message="An unexpected error occurred. Please try refreshing the page." />
+                        </CardContent>
+                    </Card>
+                </motion.section>
+            </motion.div>
+        </DashboardLayout>
     )
 }
 
@@ -119,8 +105,6 @@ export default function DashboardPage() {
     usePageTitle('Dashboard')
 
     return (
-        <Suspense fallback={<DashboardSkeleton />}>
-            <DashboardContent />
-        </Suspense>
+        <DashboardContent />
     )
 }

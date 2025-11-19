@@ -1,4 +1,4 @@
-import packageJson from "../package.json";
+import packageJson from "@/package.json";
 
 export const CLIENT_APP_NAME = {
   name: "BR Portal",

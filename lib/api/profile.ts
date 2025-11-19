@@ -1,4 +1,4 @@
-import { getBaseUrl } from "../api-base";
+import { getBaseUrl } from "@/lib/api-base";
 
 const request = async (
     url: string,
@@ -6,7 +6,7 @@ const request = async (
     options: RequestInit = {}
 ) => {
     const API_BASE_URL = getBaseUrl();
-    if (!API_BASE_URL) throw new Error("API base URL is not defined");
+    if (!API_BASE_URL) throw new Error("Base URL is not defined");
 
     const isFormData = options.body instanceof FormData;
 
