@@ -64,7 +64,20 @@
                     <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d/m/Y') }}</td>
                   <td>{{ $item->ExtOrdNum }}</td>
                   <td>{{ $item->Priority }}</td>
-                  <td>{{ number_format($item->UnitPrice, 2) }}</td>
+                  @php
+                    $totalIncl = null;
+                    try {
+                      $totalIncl = $item->OrdTotIncl ?? null;
+                      if ($totalIncl === null) {
+                        $excl = $item->OrdTotExcl ?? null;
+                        $tax  = $item->OrdTotTax  ?? null;
+                        if ($excl !== null && $tax !== null) {
+                          $totalIncl = (float)$excl + (float)$tax;
+                        }
+                      }
+                    } catch (\Throwable $e) { $totalIncl = null; }
+                  @endphp
+                  <td>{{ number_format(($totalIncl ?? 0), 2) }}</td>
                   <td>{{ $item->ordercount }}</td>
                   <td>{{ $item->CreatedBy }}</td>
                     <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d/m/Y H:i') }}</td>
