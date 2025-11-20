@@ -507,11 +507,11 @@ class ModuleSeeder extends Seeder
                 // =========================================================
                 // Submenu: Policy & Training Repository
                 // =========================================================
-                ['ModuleID' => 808700, 'Name' => 'Policy & Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 808000, 'Route' => null],
+                // ['ModuleID' => 808700, 'Name' => 'Policy & Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 808000, 'Route' => null],
 
-                ['ModuleID' => 808710, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 808700, 'Route' => 'legal.compliance.policies.index'],
-                ['ModuleID' => 808720, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 808700, 'Route' => 'legal.compliance.trainings.index'],
-                ['ModuleID' => 808730, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 808700, 'Route' => 'legal.compliance.certifications.index'],
+                // ['ModuleID' => 808710, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 808700, 'Route' => 'legal.compliance.policies.index'],
+                // ['ModuleID' => 808720, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 808700, 'Route' => 'legal.compliance.trainings.index'],
+                // ['ModuleID' => 808730, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 808700, 'Route' => 'legal.compliance.certifications.index'],
 
                 // =========================================================
                 // Submenu: Compliance Analytics
@@ -633,7 +633,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1102350, 'Name' => 'Debit Note', 'Icon' => null, 'Description' => '', 'Route' => 'debitnote.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102400, 'Name' => 'Credit Management', 'Icon' => null, 'Description' => '', 'Route' => 'creditmanagement.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102500, 'Name' => 'Aging Report', 'Icon' => null, 'Description' => '', 'Route' => 'agingreportar.index', 'ParentID' => 1102000],
-            ['ModuleID' => 1102600, 'Name' => 'Customer Statement', 'Icon' => null, 'Description' => '', 'Route' => 'customerstatement.index', 'ParentID' => 1102000],
+            // ['ModuleID' => 1102600, 'Name' => 'Customer Statement', 'Icon' => null, 'Description' => '', 'Route' => 'customerstatement.index', 'ParentID' => 1102000],
 
 
             // Bank Management Routes
@@ -643,23 +643,23 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1103100, 'Name' => 'Bank Registry', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => 'finance.bank.index', 'ParentID' => 1103050],
             ['ModuleID' => 1103200, 'Name' => 'Bank Accounts', 'Icon' => '<i class="fas fa-piggy-bank"></i>', 'Description' => 'Manage organization bank accounts', 'Route' => 'finance.bankaccountsetup.index', 'ParentID' => 1103050],
 
-             ['ModuleID' => 1103300, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103050],
-             ['ModuleID' => 1103400, 'Name' => 'Bank Transfers', 'Icon' => '<i class="fas fa-right-left"></i>', 'Description' => '', 'Route' => 'finance.banktransfers.index', 'ParentID' => 1103050],
-             ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103050],
+            //  ['ModuleID' => 1103300, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103050],
+            //  ['ModuleID' => 1103400, 'Name' => 'Bank Transfers', 'Icon' => '<i class="fas fa-right-left"></i>', 'Description' => '', 'Route' => 'finance.banktransfers.index', 'ParentID' => 1103050],
+            //  ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103050],
 
 
-             ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
-             ['ModuleID' => 1103605, 'Name' => 'Cheques', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103600],
-             ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600],
+            //  ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+            //  ['ModuleID' => 1103605, 'Name' => 'Cheques', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103600],
+            //  ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600],
 
 
-             ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
-             ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
-             ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
-             ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
-             ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
-             ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
-             ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
+            //  ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+            //  ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
+            //  ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
+            //  ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
+            //  ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
+            //  ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
+            //  ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
 
             ['ModuleID' => 1104000, 'Name' => 'Tax Management', 'Icon' => '<i class="fas fa-exchange-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
             ['ModuleID' => 1104040, 'Name' => 'Jurisdiction Setup', 'Icon' => null, 'Description' => '', 'Route' => 'taxjurisdiction.index', 'ParentID' => 1104000],
