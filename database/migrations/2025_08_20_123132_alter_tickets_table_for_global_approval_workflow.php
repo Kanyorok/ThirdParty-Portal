@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\TicketStatusEnum;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\CRM\Ticket;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

@@ -26,8 +26,8 @@ class DepartmentNeedApprovalController extends Controller
 
     public function show(DepartmentNeed $department_need)
     {
-        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($Id);
-        $this->authorize('view', $need);
+        $this->authorize('view', $department_need);
+        $need = $department_need->load(['item.category', 'item.uom', 'creator']);
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
