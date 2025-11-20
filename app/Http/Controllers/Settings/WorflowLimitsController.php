@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\Settings\WorkFlowLimitRequest;
-use App\Models\Core\Approval\WorkFlowStage;
+use App\Models\Core\Approval\WorkflowStage;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Core\Approval\Permission;
 use App\Models\Settings\WorkFlowLimit;
@@ -22,20 +22,20 @@ class WorflowLimitsController extends Controller
         Log::info('Accessing WorkFlow Limits Index Page.');
         try {
             // Get workflow stages with AMT type
-            $workflowStages = WorkFlowStage::with(['workflow', 'type_name'])
-                ->whereHas('type_name', function($query) {
+            $workflowStages = WorkflowStage::with(['workflow', 'type_name'])
+                ->whereHas('type_name', function ($query) {
                     $query->where('TypeID', 'AMT');
                 })
                 ->whereNull('DeletedOn')
                 ->get()
-                ->map(function($stage) {
+                ->map(function ($stage) {
                     $stage->workflow_name = $stage->workflow->Name ?? 'N/A';
                     $stage->workflow_source = $stage->workflow->Source ?? 'N/A';
                     return $stage;
                 });
 
             $permissions = DB::table('t_Permissions')->get();
-            
+
             // Get existing limits - NOT grouped, just get all
             $limits = WorkFlowLimit::with(['workflow_stage.workflow', 'permission'])
                 ->whereNull('DeletedOn')
@@ -55,7 +55,7 @@ class WorflowLimitsController extends Controller
                 ->groupBy('WorkFlowStageId')
                 ->pluck('limit_count', 'WorkFlowStageId')
                 ->toArray();
-            
+
             Log::info('Data fetched successfully for WorkFlow Limits Index.', [
                 'stages_count' => $workflowStages->count(),
                 'total_limits' => $limits->count(),
@@ -63,12 +63,13 @@ class WorflowLimitsController extends Controller
             ]);
 
             // Pass the existingWorkflowStageIds to the view
-            return response() ->view('settings.approvals.workflowlimitsetup', 
-                compact('workflowStages', 'permissions', 'limits', 'limitsCountPerStage', 'existingWorkflowStageIds'))
-    ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-    ->header('Pragma', 'no-cache')
-    ->header('Expires', '0');
-
+            return response()->view(
+                'settings.approvals.workflowlimitsetup',
+                compact('workflowStages', 'permissions', 'limits', 'limitsCountPerStage', 'existingWorkflowStageIds')
+            )
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
         } catch (\Exception $e) {
             Log::error('Error fetching data for WorkFlow Limits Index.', [
                 'error_message' => $e->getMessage(),
@@ -82,7 +83,7 @@ class WorflowLimitsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(WorkFlowLimitRequest $request)
+    public function store(WorkFlowLimitRequest $request)
     {
         $validated = $request->validated();
         /** @var \App\Models\Auth\User $user */
@@ -106,9 +107,9 @@ class WorflowLimitsController extends Controller
         ]);
 
         // --- VALIDATE WORKFLOW STAGE (once) ---
-        $workflowStage = WorkFlowStage::with(['workflow', 'type_name'])
+        $workflowStage = WorkflowStage::with(['workflow', 'type_name'])
             ->where('Id', $stageId)
-            ->whereHas('type_name', function($query) {
+            ->whereHas('type_name', function ($query) {
                 $query->where('TypeID', 'AMT');
             })
             ->first();
@@ -182,12 +183,13 @@ class WorflowLimitsController extends Controller
                     $userId
                 ];
 
-                $result = DB::select('EXEC p_CreateWorkflowLimitWithPermission 
+                $result = DB::select(
+                    'EXEC p_CreateWorkflowLimitWithPermission 
                     @WorkFlowStageId = ?,
                     @MaxAmount = ?,
                     @PermissionName = ?,
                     @ModuleID = ?,
-                    @CreatedBy = ?', 
+                    @CreatedBy = ?',
                     $params
                 );
 
@@ -196,7 +198,7 @@ class WorflowLimitsController extends Controller
                 // --- SP RESULT PARSING ---
                 if (!empty($result) && isset($result[0]->Message)) {
                     $message = $result[0]->Message;
-                    
+
                     if (strpos($message, 'Error:') !== false) {
                         throw new \Exception($message);
                     }
@@ -242,15 +244,14 @@ class WorflowLimitsController extends Controller
             ]);
 
             // Prepare success message with details
-            $successMessages = array_map(function($limit) {
+            $successMessages = array_map(function ($limit) {
                 return sprintf('Tier %d: Amount %s | Permission: %s', $limit['tier'], number_format($limit['amount'], 2), $limit['permission']);
             }, $createdLimits);
 
             return redirect()->back()->with('success', 'Workflow limits created successfully! ' . implode('; ', $successMessages) . ' - Assign users to these permissions accordingly.');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::critical('Exception during multiple WorkFlow Limit creation.', [
                 'error_message' => $e->getMessage(),
                 'line' => $e->getLine(),
@@ -266,113 +267,111 @@ class WorflowLimitsController extends Controller
      * Remove the specified resource from storage.
      */
     /**
- * Remove the specified resource from storage.
- */
-public function destroy(string $Id, Request $request)
-{
-    Log::info('Attempting to delete WorkFlow Limit.', ['limit_id' => $Id]);
-    
-    try {
-        $limit = WorkFlowLimit::findOrFail($Id);
-        
-        /** @var \App\Models\Auth\User $user */
-        $user = Auth::user();
-        $userId = $user->Id ?? 'UNKNOWN';
-        
-        // Get workflow stage for logging
-        $workflowStage = $limit->workflow_stage;
-        $stageName = $workflowStage ? $workflowStage->StageName : 'Unknown';
-        $amount = $limit->MaxAmount;
-        $permissionName = $limit->permission->name ?? 'Unknown';
-        
-        DB::beginTransaction();
-        
-        // Soft delete the limit
-        $limit->update([
-            'DeletedBy' => $userId,
-            'DeletedOn' => now(),
-            'ModifiedBy' => $userId,
-            'ModifiedOn' => now(),
-        ]);
-        
-        Log::info('WorkFlow Limit soft deleted successfully.', [
-            'limit_id' => $Id,
-            'deleted_by' => $userId,
-            'stage_name' => $stageName,
-            'amount' => $amount,
-            'permission' => $permissionName
-        ]);
-        
-        // Log activity after deletion
-        activity()->causedBy($user)
-            ->performedOn($limit)
-            ->event('delete')
-            ->log(sprintf(
-                'Deleted workflow limit for stage: %s (Amount: %s, Permission: %s)',
-                $stageName,
-                number_format($amount, 2),
-                $permissionName
-            ));
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $Id, Request $request)
+    {
+        Log::info('Attempting to delete WorkFlow Limit.', ['limit_id' => $Id]);
 
-        DB::commit();
+        try {
+            $limit = WorkFlowLimit::findOrFail($Id);
 
-        $successMessage = sprintf(
-            'Workflow limit deleted successfully. Users with permission "%s" will no longer be able to approve at this amount level.',
-            $permissionName
-        );
+            /** @var \App\Models\Auth\User $user */
+            $user = Auth::user();
+            $userId = $user->Id ?? 'UNKNOWN';
 
-        // Check if request is AJAX
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => $successMessage
+            // Get workflow stage for logging
+            $workflowStage = $limit->workflow_stage;
+            $stageName = $workflowStage ? $workflowStage->StageName : 'Unknown';
+            $amount = $limit->MaxAmount;
+            $permissionName = $limit->permission->name ?? 'Unknown';
+
+            DB::beginTransaction();
+
+            // Soft delete the limit
+            $limit->update([
+                'DeletedBy' => $userId,
+                'DeletedOn' => now(),
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => now(),
             ]);
-        }
 
-        return redirect()->back()->with('success', $successMessage);
-        
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $mnfe) {
-        if (DB::transactionLevel() > 0) {
-            DB::rollBack();
+            Log::info('WorkFlow Limit soft deleted successfully.', [
+                'limit_id' => $Id,
+                'deleted_by' => $userId,
+                'stage_name' => $stageName,
+                'amount' => $amount,
+                'permission' => $permissionName
+            ]);
+
+            // Log activity after deletion
+            activity()->causedBy($user)
+                ->performedOn($limit)
+                ->event('delete')
+                ->log(sprintf(
+                    'Deleted workflow limit for stage: %s (Amount: %s, Permission: %s)',
+                    $stageName,
+                    number_format($amount, 2),
+                    $permissionName
+                ));
+
+            DB::commit();
+
+            $successMessage = sprintf(
+                'Workflow limit deleted successfully. Users with permission "%s" will no longer be able to approve at this amount level.',
+                $permissionName
+            );
+
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMessage
+                ]);
+            }
+
+            return redirect()->back()->with('success', $successMessage);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $mnfe) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
+            Log::warning('WorkFlow Limit not found for deletion.', ['limit_id' => $Id]);
+
+            $errorMessage = 'The specified workflow limit was not found.';
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $errorMessage
+                ], 404);
+            }
+
+            return redirect()->back()->withErrors(['error' => $errorMessage]);
+        } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
+            Log::critical('Error deleting WorkFlow Limit.', [
+                'limit_id' => $Id,
+                'error_message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $errorMessage = 'Failed to delete limit: ' . $e->getMessage();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $errorMessage
+                ], 500);
+            }
+
+            return redirect()->back()->withErrors(['error' => $errorMessage]);
         }
-        
-        Log::warning('WorkFlow Limit not found for deletion.', ['limit_id' => $Id]);
-        
-        $errorMessage = 'The specified workflow limit was not found.';
-        
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'error' => $errorMessage
-            ], 404);
-        }
-        
-        return redirect()->back()->withErrors(['error' => $errorMessage]);
-        
-    } catch (\Exception $e) {
-        if (DB::transactionLevel() > 0) {
-            DB::rollBack();
-        }
-        
-        Log::critical('Error deleting WorkFlow Limit.', [
-            'limit_id' => $Id,
-            'error_message' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        
-        $errorMessage = 'Failed to delete limit: ' . $e->getMessage();
-        
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'error' => $errorMessage
-            ], 500);
-        }
-        
-        return redirect()->back()->withErrors(['error' => $errorMessage]);
     }
-}
 
     /**
      * Get limits for a specific stage (AJAX endpoint)
@@ -385,7 +384,7 @@ public function destroy(string $Id, Request $request)
                 ->whereNull('DeletedOn')
                 ->orderBy('MaxAmount', 'asc')
                 ->get()
-                ->map(function($limit) {
+                ->map(function ($limit) {
                     return [
                         'Id' => $limit->Id,
                         'MaxAmount' => $limit->MaxAmount,
@@ -403,7 +402,6 @@ public function destroy(string $Id, Request $request)
                 'success' => true,
                 'limits' => $limits
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching limits for stage', [
                 'stage_id' => $stageId,

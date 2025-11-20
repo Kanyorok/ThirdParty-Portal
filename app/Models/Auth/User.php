@@ -39,12 +39,31 @@ class User extends Authenticatable
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'UserID', 'Name', 'Email', 'Phone', 'ImageId', 'Linked', 'EmployeeId', 'Notes', 'Password', 'Email_Signature', 'ClientID', 'ExtensionNo',
-        'BranchId', 'login_at', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'UserID',
+        'Name',
+        'Email',
+        'Phone',
+        'ImageId',
+        'Linked',
+        'EmployeeId',
+        'Notes',
+        'Password',
+        'Email_Signature',
+        'ClientID',
+        'ExtensionNo',
+        'BranchId',
+        'login_at',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $hidden = [
-        'Password', 'remember_token', 'Linked', 'Email_Signature', 'BranchId'
+        'Password',
+        'remember_token',
+        'Linked',
+        'Email_Signature',
+        'BranchId'
     ];
 
     protected $casts = [
@@ -161,11 +180,6 @@ class User extends Authenticatable
         return $this->hasMany(LoanAssignment::class, 'UserId', 'Id');
     }
 
-    public function roles(): MorphToMany
-    {
-        return $this->hasMany(ApprovalStage::class, 'CreatedBy', 'Id');
-    }
-
     //  FIXED: Use Id for polymorphic lookup
     public function role(): ?Role
     {
@@ -185,7 +199,7 @@ class User extends Authenticatable
             ->where('BranchId', $branchId)
             ->first();
 
-          return  $branchRole->role;*/
+        return  $modelRole?->role;
     }
 
     public function teams(): BelongsToMany

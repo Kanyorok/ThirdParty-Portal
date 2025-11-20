@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Auth\User;
-use App\Models\Core\Approval\WorkFlowStage;
+use App\Models\Core\Approval\WorkflowStage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\WorkFlow;
@@ -18,25 +18,25 @@ class WorkFlowStageService
      */
     public function createStage(array $data)
     {
-       $user = Auth::user();
-    if (!$user) {
-        throw new ErroredException('User not authenticated.');
-    }
-
-    DB::beginTransaction();
-    try {
-        $workflow = WorkFlow::findOrFail($data['WorkFlowId']);
-        $nextOrder = WorkFlowStage::where('WorkFlowId', $workflow->Id)->max('Order') + 1;
-
-        $moduleId = DB::table('t_ModuleSources')
-            ->where('DocumentType', $workflow->Source)
-            ->value('ModuleID');
-
-        if (!$moduleId) {
-            throw new ErroredException('Module not found for workflow source.');
+        $user = Auth::user();
+        if (!$user) {
+            throw new ErroredException('User not authenticated.');
         }
 
-        $results = DB::select('EXEC p_AddWorkflowStage2 
+        DB::beginTransaction();
+        try {
+            $workflow = WorkFlow::findOrFail($data['WorkFlowId']);
+            $nextOrder = WorkflowStage::where('WorkFlowId', $workflow->Id)->max('Order') + 1;
+
+            $moduleId = DB::table('t_ModuleSources')
+                ->where('DocumentType', $workflow->Source)
+                ->value('ModuleID');
+
+            if (!$moduleId) {
+                throw new ErroredException('Module not found for workflow source.');
+            }
+
+            $results = DB::select('EXEC p_AddWorkflowStage2 
             @Order = ?, 
             @StageName = ?, 
             @EscalationLimit = ?, 
@@ -57,59 +57,57 @@ class WorkFlowStageService
                 $moduleId
             ]);
 
-        $dto = WorkflowStageResult::fromDatabaseResult($results[0] ?? null);
-        if ($dto->isError()) {
-            throw new ErroredException($dto->message);
+            $dto = WorkflowStageResult::fromDatabaseResult($results[0] ?? null);
+            if ($dto->isError()) {
+                throw new ErroredException($dto->message);
+            }
+
+            $stage = WorkflowStage::find($dto->newStageId);
+            if (!$stage) {
+                throw new ErroredException('Stage creation failed.');
+            }
+
+            // === Create Permission for this Stage ===
+            $permissionName = 'workflow-stage-' . $stage->Id;
+            $permission = \App\Models\Core\Approval\Permission::firstOrCreate(
+                ['name' => $permissionName],
+                [
+                    'guard_name' => 'web',
+                    'ModuleId' => $moduleId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // Optional: Attach permission to default role(s)
+            // $defaultRoleId = 1; // admin role
+            // DB::table('t_RolePermissions')->updateOrInsert(
+            //     ['role_id' => $defaultRoleId, 'permission_id' => $permission->id]
+            // );
+
+            // Update FinalStage logic
+            if (!empty($data['IsFinalStage'])) {
+                $workflow->FinalStage = $stage->StageName;
+            }
+
+            $workflow->ModifiedBy = $user->Id;
+            $workflow->ModifiedOn = now();
+            $workflow->save();
+
+            DB::commit();
+
+            $stage->load(['type_name', 'workflow']);
+
+            return [
+                'dto' => $dto,
+                'stage' => $stage,
+                'permission' => $permission, // return permission for front-end reference
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Workflow stage creation error', [$e->getMessage()]);
+            throw new ErroredException('Error creating workflow stage.');
         }
-
-        $stage = WorkFlowStage::find($dto->newStageId);
-        if (!$stage) {
-            throw new ErroredException('Stage creation failed.');
-        }
-
-        // === Create Permission for this Stage ===
-        $permissionName = 'workflow-stage-' . $stage->Id;
-        $permission = \App\Models\Core\Approval\Permission::firstOrCreate(
-            ['name' => $permissionName],
-            [
-                'guard_name' => 'web',
-                'ModuleId' => $moduleId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
-        // Optional: Attach permission to default role(s)
-        // $defaultRoleId = 1; // admin role
-        // DB::table('t_RolePermissions')->updateOrInsert(
-        //     ['role_id' => $defaultRoleId, 'permission_id' => $permission->id]
-        // );
-
-        // Update FinalStage logic
-        if (!empty($data['IsFinalStage'])) {
-            $workflow->FinalStage = $stage->StageName;
-        }
-
-        $workflow->ModifiedBy = $user->Id;
-        $workflow->ModifiedOn = now();
-        $workflow->save();
-
-        DB::commit();
-
-        $stage->load(['type_name', 'workflow']);
-
-        return [
-            'dto' => $dto,
-            'stage' => $stage,
-            'permission' => $permission, // return permission for front-end reference
-        ];
-
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        Log::error('Workflow stage creation error', [$e->getMessage()]);
-        throw new ErroredException('Error creating workflow stage.');
-    }
-
     }
 
     /**
@@ -120,7 +118,7 @@ class WorkFlowStageService
         DB::beginTransaction();
 
         try {
-            $stage = WorkFlowStage::findOrFail($id);
+            $stage = WorkflowStage::findOrFail($id);
             $workflow = WorkFlow::findOrFail($stage->WorkFlowId);
 
             $stageName = $stage->StageName;
@@ -131,7 +129,7 @@ class WorkFlowStageService
 
             // Only recalculate FinalStage if the deleted stage was the final one
             if ($wasFinalStage) {
-                $newFinal = WorkFlowStage::where('WorkFlowId', $workflowId)
+                $newFinal = WorkflowStage::where('WorkFlowId', $workflowId)
                     ->orderBy('Order', 'desc')
                     ->first();
 
@@ -154,7 +152,6 @@ class WorkFlowStageService
                 'success' => true,
                 'final_stage' => $workflow->FinalStage
             ];
-
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
@@ -169,7 +166,7 @@ class WorkFlowStageService
         DB::beginTransaction();
 
         try {
-            $stage = WorkFlowStage::findOrFail($id);
+            $stage = WorkflowStage::findOrFail($id);
             $stage->update($data);
 
             activity()
@@ -179,7 +176,6 @@ class WorkFlowStageService
 
             DB::commit();
             return $stage;
-
         } catch (\Throwable $e) {
             DB::rollBack();
             throw new ErroredException('Failed to update workflow stage.');
@@ -191,9 +187,8 @@ class WorkFlowStageService
      */
     public function getFinalStage(int $workflowId): ?WorkFlowStage
     {
-        return WorkFlowStage::where('WorkFlowId', $workflowId)
+        return WorkflowStage::where('WorkFlowId', $workflowId)
             ->orderBy('Order', 'desc')
             ->first();
     }
 }
-
