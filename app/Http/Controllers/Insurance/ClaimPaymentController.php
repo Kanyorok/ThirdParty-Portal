@@ -47,16 +47,16 @@ class ClaimPaymentController extends Controller
         $ClaimId = BancassuranceClaim::findOrFail($validated['ClaimId']);
         $PaymentMethod = CodeDetail::findOrFail($validated['PaymentMethod']);
 
-    $payment = BancassuranceClaimPaymentService::create(
-        $ClaimId,
-        Carbon::parse($validated['PaymentDate']),
-        $validated['PaymentAmount'],
-        $validated['PaymentReference'],
-        $validated['Note'] ?? '',
-        $validated['PaidBy'],
-        $PaymentMethod,
-        $request->user(),
-    );
+        $payment = BancassuranceClaimPaymentService::create(
+            $ClaimId,
+            Carbon::parse($validated['PaymentDate']),
+            $validated['PaymentAmount'],
+            $validated['PaymentReference'],
+            $validated['Note'] ?? '',
+            $validated['PaidBy'],
+            $PaymentMethod,
+            $request->user(),
+        );
 
         // Optionally update status of claim to "Paid"
         DB::table('t_BancassuranceClaims')
@@ -70,5 +70,4 @@ class ClaimPaymentController extends Controller
         return redirect()->route('bancassurance.claims.payments.index')
             ->with('success', 'Payment processed successfully.');
     }
-
 }

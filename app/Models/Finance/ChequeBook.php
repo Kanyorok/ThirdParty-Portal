@@ -18,10 +18,10 @@ class ChequeBook extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'BankAccountID','BookName','Prefix','Suffix',
-        'StartNumber','EndNumber','NextLeafNumber',
-        'LeavesTotal','LeavesIssued','IsActive',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'BankAccountID', 'BookName', 'Prefix', 'Suffix',
+        'StartNumber', 'EndNumber', 'NextLeafNumber',
+        'LeavesTotal', 'LeavesIssued', 'IsActive',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     protected $casts = [
@@ -33,7 +33,13 @@ class ChequeBook extends Model
         'LeavesIssued' => 'integer',
     ];
 
-    public static function getPrimaryKey(): string { return 'ChequeBookID'; }
+    public static function getPrimaryKey(): string
+    {
+        return 'ChequeBookID';
+    }
 
-    public function bankAccount() { return $this->belongsTo(BankAccount::class, 'BankAccountID', 'AccountID'); }
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class, 'BankAccountID', 'AccountID');
+    }
 }

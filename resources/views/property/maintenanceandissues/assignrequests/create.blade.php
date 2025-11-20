@@ -78,7 +78,8 @@
                       <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
                           <option value="">--Select a technician--</option>
                           @foreach ($employees as $employee)
-                              <option value="{{ $employee->Id }}">{{ $employee->EmployeeID }} -- {{ $employee->FirstName }},{{ $employee->LastName }}</option>
+                              <option value="{{ $employee->Id }}">{{ $employee->EmployeeID }}
+                                  -- {{ $employee->FirstName }},{{ $employee->LastName }}</option>
                           @endforeach
                       </select>
                   </div>
@@ -117,7 +118,8 @@
                 <!-- Instructions -->
                 <div class="mb-3">
                     <label class="form-label">Instructions / Notes<span class="text-danger">*</span></label>
-                    <textarea class="form-control" rows="2" name="InstructionNotes" placeholder="Describe what needs to be done..." required></textarea>
+                    <textarea class="form-control" rows="2" name="InstructionNotes"
+                              placeholder="Describe what needs to be done..." required></textarea>
                 </div>
 
                 <!-- Submit -->

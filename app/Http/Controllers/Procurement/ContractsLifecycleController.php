@@ -20,7 +20,7 @@ class ContractsLifecycleController extends Controller
             ->whereIn('ContractStatus', ['Approved', 'Executed'])
             ->orderBy('ContractApprovedOn', 'desc')
             ->paginate(15);
-            
+
         return view('procurement.contracts.contractlifecycle.index', compact('contracts'));
     }
 
@@ -31,7 +31,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
-            
+
         return view('procurement.contracts.contractlifecycle.view', compact('contract'));
     }
 
@@ -42,7 +42,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
-            
+
         return view('procurement.contracts.contractlifecycle.execution', compact('contract'));
     }
 
@@ -53,7 +53,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
-            
+
         return view('procurement.contracts.contractlifecycle.amend', compact('contract'));
     }
 
@@ -70,10 +70,10 @@ class ContractsLifecycleController extends Controller
         ]);
 
         $contract = TenderAward::findOrFail($id);
-        
+
         // TODO: Create amendment record and update contract
         // For now, just redirect with success message
-        
+
         return redirect()->route('contracts.lifecycle.view', $id)
             ->with('success', 'Contract amendment submitted successfully.');
     }
@@ -85,7 +85,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
-            
+
         return view('procurement.contracts.contractlifecycle.terminate', compact('contract'));
     }
 
@@ -101,7 +101,7 @@ class ContractsLifecycleController extends Controller
         ]);
 
         $contract = TenderAward::findOrFail($id);
-        
+
         $contract->update([
             'ContractStatus' => 'Terminated',
             'TerminationReason' => $request->termination_reason,
@@ -109,7 +109,7 @@ class ContractsLifecycleController extends Controller
             'SettlementDetails' => $request->settlement_details,
             'ModifiedBy' => Auth::id(),
         ]);
-        
+
         return redirect()->route('contracts.lifecycle.index')
             ->with('success', 'Contract terminated successfully.');
     }

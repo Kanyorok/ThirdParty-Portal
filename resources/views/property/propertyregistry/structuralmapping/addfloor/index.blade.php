@@ -9,14 +9,14 @@
 <div class="container mt-4">
 
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-end align-items-center mb-3">
         <a href="{{ route('addfloor.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i> Add Floor
         </a>
     </div>
 
     <p class="text-muted">
-        <small>List of floors in property blocks.</small>
+        <small>This screen displays a list of all registered floors in property blocks.</small>
     </p>
 
     @if($floors->count())
@@ -37,29 +37,30 @@
                         @foreach($floors as $floor)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $floor->property->PropertyName ?? '-'}}</td>
-                                <td>{{ $floor->block->BlockName ?? '-'}}</td>
-                                <td>{{ $floor->FloorLabel ?? '-'}}</td>
-                                <td>{{ $floor->FloorNotes ?? '-'}}</td>
+                                <td>{{ $floor->property->PropertyName ?? '-' }}</td>
+                                <td>{{ $floor->block->BlockName ?? '-' }}</td>
+                                <td>{{ $floor->FloorLabel ?? '-' }}</td>
+                                <td>{{ $floor->FloorNotes ?? '-' }}</td>
                                 <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('addfloor.edit', $floor->Id) }}" 
-                                           class="btn btn-sm btn-warning">
-                                           <i class="bi bi-pencil-square"></i> Edit
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <a href="{{ route('addfloor.edit', $floor->Id) }}"
+                                           class="btn btn-sm btn-warning"
+                                           title="Edit Floor">
+                                            <i class="bi bi-pencil-square"></i>
                                         </a>
 
                                         @if($floor->units()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
+                                            <button class="btn btn-sm btn-secondary" title="Floor in Use">
+                                                <i class="bi bi-lock"></i>
                                             </button>
                                         @else
-                                            <form action="{{ route('addfloor.destroy', $floor->Id) }}" 
-                                                  method="POST" 
+                                            <form action="{{ route('addfloor.destroy', $floor->Id) }}"
+                                                  method="POST"
                                                   onsubmit="return confirm('Are you sure you want to delete this floor?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Delete Floor">
+                                                    <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
                                         @endif
@@ -73,7 +74,7 @@
         </div>
     @else
         <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle me-2"></i> No property floor registered yet.
+            <i class="bi bi-info-circle me-2"></i> No property floors registered yet.
         </div>
     @endif
 </div>

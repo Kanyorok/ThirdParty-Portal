@@ -22,14 +22,14 @@ class TenderSubmissionController extends Controller
     public function create()
     {
         $tenders = Tender::select('TenderNo')->get();
-        
+
         // Fix: Get supplier names from the related ThirdParty table
         $suppliers = Supplier::select('t_Suppliers.Id')
             ->join('t_ThirdParties', 't_Suppliers.ThirdPartyID', '=', 't_ThirdParties.Id')
             ->selectRaw('t_Suppliers.Id, COALESCE(t_ThirdParties.TradingName, t_ThirdParties.ThirdPartyName) as SupplierName')
             ->whereNull('t_Suppliers.DeletedOn')
             ->get();
-            
+
         $submissionModes = DB::table('t_CodeDetails')
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
@@ -71,9 +71,9 @@ public function store(Request $request)
 
         // Get supplier ID from supplier name
         $supplier = Supplier::join('t_ThirdParties', 't_Suppliers.ThirdPartyID', '=', 't_ThirdParties.Id')
-            ->where(function($query) use ($request) {
+            ->where(function ($query) use ($request) {
                 $query->where('t_ThirdParties.TradingName', $request->supplier_name)
-                      ->orWhere('t_ThirdParties.ThirdPartyName', $request->supplier_name);
+                    ->orWhere('t_ThirdParties.ThirdPartyName', $request->supplier_name);
             })
             ->whereNull('t_Suppliers.DeletedOn')
             ->select('t_Suppliers.Id')
@@ -118,7 +118,7 @@ public function store(Request $request)
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to store submission: ' . $e->getMessage()])
                 ->withInput();

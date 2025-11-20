@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Insurance\InsuranceProductRider;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Insurance\PremiumManagement\BancassurancePremiumPaymentsRequest;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Services\Insurance\PremiumManagement\BancassurancePremiumPaymentsService;
@@ -66,7 +64,7 @@ class PremiumController extends Controller
             $validated['Amount'],
             $PaymentMode,
             $validated['ReferenceNumber'],
-            $validated['Notes'],
+            $validated['Notes'] ?? '',
             Auth::user(),
         );
         return redirect()->route('bancassurance.premiums.index')->with('success', 'Premium payment recorded successfully.');
@@ -93,61 +91,59 @@ class PremiumController extends Controller
 
         return view('bancassurance.premiums.receipt', compact('payment'));
     }
+    // public function edit($Id)
+    //     {
+    //         $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);        $payment = BancassurancePremiumPayments::findOrFail($Id);
+    //         $policies= BancassurancePolicy::all();
+    //         $paymentModes = CodeDetail::where('CodeID', 'PaymentModes','payment')->get();
 
-    public function edit($Id)
-    {
-        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
-        $payment = BancassurancePremiumPayments::findOrFail($Id);
-        $policies = BancassurancePolicy::all();
-        $paymentModes = CodeDetail::where('CodeID', 'PaymentModes', 'payment')->get();
+    //         return view('bancassurance.premiums.edit', compact( 'policies', 'paymentModes','payment'));
+    //     }
 
-        return view('bancassurance.premiums.edit', compact('policies', 'paymentModes', 'payment'));
-    }
+    //     public function update(BancassurancePremiumPaymentsRequest $request, $id)
+    //     {
+    //         $this->authorize(PermissionEnum::BancassurancePremiumPaymentsUpdate, BancassurancePremiumPayments::class);
+    //         $validated = $request->validated();
 
-    public function update(BancassurancePremiumPaymentsRequest $request, $id)
-    {
-        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsUpdate, BancassurancePremiumPayments::class);
-        $validated = $request->validated();
+    //         DB::beginTransaction();
 
-        DB::beginTransaction();
+    //         try {
+    //                 $validated['PaymentDate'] = \Carbon\Carbon::parse($validated['PaymentDate'])->format('Y-m-d');
+    //             } catch (\Exception $e) {
+    //                 return back()->withErrors(['PaymentDate' => 'Invalid date format.'])->withInput();
+    //             }
 
-        try {
-            $validated['PaymentDate'] = \Carbon\Carbon::parse($validated['PaymentDate'])->format('Y-m-d');
-        } catch (\Exception $e) {
-            return back()->withErrors(['PaymentDate' => 'Invalid date format.'])->withInput();
-        }
+    //         try {
+    //             $payment = BancassurancePremiumPayments::findOrFail($id);
 
-        try {
-            $payment = BancassurancePremiumPayments::findOrFail($id);
+    //             $payment->update([
+    //                 'PolicyID' => $validated['PolicyID'],
+    //                 'CustomerID' => $validated['CustomerID'],
+    //                 'PaymentFrequency' => $validated['PaymentFrequency'],
+    //                 'PaymentDate' => $validated['PaymentDate'],
+    //                 'NextPaymentDate' => $validated['NextPaymentDate'],
+    //                 'Amount' => $validated['Amount'],
+    //                 'PaymentMode' => $validated['PaymentMode'],
+    //                 'ReferenceNumber' => $validated['ReferenceNumber'],
+    //                 'Notes' => $validated['Notes'],
+    //                 'ModifiedBy' => Auth::Id(),
+    //             ]);
 
-            $payment->update([
-                'PolicyID' => $validated['PolicyID'],
-                'CustomerID' => $validated['CustomerID'],
-                'PaymentFrequency' => $validated['PaymentFrequency'],
-                'PaymentDate' => $validated['PaymentDate'],
-                'NextPaymentDate' => $validated['NextPaymentDate'],
-                'Amount' => $validated['Amount'],
-                'PaymentMode' => $validated['PaymentMode'],
-                'ReferenceNumber' => $validated['ReferenceNumber'],
-                'Notes' => $validated['Notes'],
-                'ModifiedBy' => Auth::Id(),
-            ]);
+    //             DB::commit();
+    //             activity()
+    //                 ->performedOn($payment)
+    //                 ->causedBy(Auth::user())
+    //                 ->withProperties(['action' => 'update'])
+    //                 ->log('Updated Premium Payments');
 
-            DB::commit();
-            activity()
-                ->performedOn($payment)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Premium Payments');
+    //             return redirect()->route('bancassurance.premiums.index')->with('success', 'Premium Payments updated successfully');
+    //         } catch (\Throwable $th) {
+    //             DB::rollBack();
+    //             Log::error('Failed to Update Premium Payments:' . $th->getMessage());
 
-            return redirect()->route('bancassurance.premiums.index')->with('success', 'Premium Payments updated successfully');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to Update Premium Payments:' . $th->getMessage());
-
-            return back()->withErrors(['error' => 'Failed to update Premium Payments'])->withInput();
-        }
-    }
+    //             return back()->withErrors(['error' => 'Failed to update Premium Payments'])->withInput();
+    //         }
+    //     }
 
     public function destroy($id)
     {
@@ -166,8 +162,4 @@ class PremiumController extends Controller
                 ->withInput();
         }
     }
-
-
 }
-
-

@@ -8,61 +8,63 @@
   </div>
 
   <!-- Filters -->
-  <form method="GET" id="filterForm" class="row g-3 mb-3">
+    <form method="GET" id="filterForm" class="row g-3 mb-3">
     <div class="col-md-2">
-      <select name="branch" class="form-select" id="branchSelect">
+        <select name="branch" class="form-select" id="branchSelect">
         <option value="">All Branches</option>
-        @foreach($branches as $branch)
-          <option value="{{ $branch->Id }}" {{ request('branch') == $branch->Id ? 'selected' : '' }}>
-            {{ $branch->Description }}
-          </option>
-        @endforeach
+            @foreach($branches as $branch)
+                <option value="{{ $branch->Id }}" {{ request('branch') == $branch->Id ? 'selected' : '' }}>
+                    {{ $branch->Description }}
+                </option>
+            @endforeach
       </select>
     </div>
     <div class="col-md-2">
-      <select name="store" class="form-select" id="storeSelect">
+        <select name="store" class="form-select" id="storeSelect">
         <option value="">All Stores</option>
-        @foreach($stores as $store)
-          <option value="{{ $store->Id }}" {{ request('store') == $store->Id ? 'selected' : '' }}>
-            {{ $store->Description }}
-          </option>
-        @endforeach
+            @foreach($stores as $store)
+                <option value="{{ $store->Id }}" {{ request('store') == $store->Id ? 'selected' : '' }}>
+                    {{ $store->Description }}
+                </option>
+            @endforeach
       </select>
     </div>
     <div class="col-md-2">
-      <select name="item" class="form-select" id="itemSelect">
+        <select name="item" class="form-select" id="itemSelect">
         <option value="">All Items</option>
-        @foreach($items as $item)
-          <option value="{{ $item->Id }}" {{ request('item') == $item->Id ? 'selected' : '' }}>
-            {{ $item->Description }}
-          </option>
-        @endforeach
+            @foreach($items as $item)
+                <option value="{{ $item->Id }}" {{ request('item') == $item->Id ? 'selected' : '' }}>
+                    {{ $item->Description }}
+                </option>
+            @endforeach
       </select>
     </div>
     <div class="col-md-2">
-      <input type="date" name="from_date" class="form-control" id="fromDate" value="{{ request('from_date', now()->format('Y-m-01')) }}">
+        <input type="date" name="from_date" class="form-control" id="fromDate"
+               value="{{ request('from_date', now()->format('Y-m-01')) }}">
     </div>
     <div class="col-md-2">
-      <input type="date" name="to_date" class="form-control" id="toDate" value="{{ request('to_date', now()->format('Y-m-d')) }}">
+        <input type="date" name="to_date" class="form-control" id="toDate"
+               value="{{ request('to_date', now()->format('Y-m-d')) }}">
     </div>
-    <div class="col-md-2 text-end">
-      <button type="submit" class="btn btn-primary">🔄 Refresh</button>
-    </div>
-  </form>
+        <div class="col-md-2 text-end">
+            <button type="submit" class="btn btn-primary">🔄 Refresh</button>
+        </div>
+    </form>
 
   <div class="row">
     <!-- Stock Movement Grid -->
-    <div class="col-md-3">
-      <div class="card shadow rounded-4 mb-4">
+      <div class="col-md-3">
+          <div class="card shadow rounded-4 mb-4">
         <div class="card-header bg-light fw-bold">📋 Stock Movement Grid</div>
-        <div class="card-body p-2" id="movementContainer">
-          <!-- Dynamic grid content populated by JS -->
-        </div>
+              <div class="card-body p-2" id="movementContainer">
+                  <!-- Dynamic grid content populated by JS -->
+              </div>
       </div>
     </div>
 
     <!-- Stock Movement Charts -->
-    <div class="col-md-9">
+      <div class="col-md-9">
       <div class="card shadow rounded-4 mb-4">
         <div class="card-header bg-light fw-bold">📊 Quantity Movement Chart</div>
         <div class="card-body">
@@ -115,8 +117,8 @@
             },
             options: {
                 responsive: true,
-                plugins: { legend: { display: true } },
-                scales: { y: { beginAtZero: true, title: { display: true, text: 'Quantity' } } }
+                plugins: {legend: {display: true}},
+                scales: {y: {beginAtZero: true, title: {display: true, text: 'Quantity'}}}
             }
         });
 
@@ -132,21 +134,21 @@
             },
             options: {
                 responsive: true,
-                plugins: { legend: { display: true } },
-                scales: { y: { beginAtZero: true, title: { display: true, text: 'Value (KES)' } } }
+                plugins: {legend: {display: true}},
+                scales: {y: {beginAtZero: true, title: {display: true, text: 'Value (KES)'}}}
             }
         });
     }
 
     function updateUI() {
         const selectedItem = document.getElementById('itemSelect').value;
-        const data = selectedItem && movementData[selectedItem] 
-            ? movementData[selectedItem] 
+        const data = selectedItem && movementData[selectedItem]
+            ? movementData[selectedItem]
             : Object.values(movementData)[0] ?? {
-                label: 'No Data',
-                quantity: [0,0,0,0],
-                value: [0,0,0,0]
-            };
+            label: 'No Data',
+            quantity: [0, 0, 0, 0],
+            value: [0, 0, 0, 0]
+        };
 
         const movementContainer = document.getElementById('movementContainer');
         movementContainer.innerHTML =

@@ -15,9 +15,9 @@ class DocumentApiController extends Controller
     {
         try {
             $actor = $request->user();
-            $q = trim((string) $request->query('q', ''));
-            $page = max(1, (int) $request->query('page', 1));
-            $limit = max(1, min(50, (int) $request->query('limit', 20)));
+            $q = trim((string)$request->query('q', ''));
+            $page = max(1, (int)$request->query('page', 1));
+            $limit = max(1, min(50, (int)$request->query('limit', 20)));
 
             $query = Document::query()
                 ->whereHas('current')
@@ -73,7 +73,7 @@ class DocumentApiController extends Controller
                 'total' => $total,
                 'page' => $page,
                 'limit' => $limit,
-                'pages' => (int) ceil($total / $limit),
+                'pages' => (int)ceil($total / $limit),
             ]);
         } catch (\Throwable $e) {
             return response()->json([

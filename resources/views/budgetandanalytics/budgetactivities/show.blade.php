@@ -20,10 +20,10 @@
                     <tr class="text-start">
                         <th>#</th>
                         <th>Activity Name</th>
-{{--                        <th>Description</th>--}}
+                        {{--                        <th>Description</th>--}}
                         <th>Budget Line</th>
                         <th>Branch</th>
-{{--                        <th>Allocation Type</th>--}}
+                        {{--                        <th>Allocation Type</th>--}}
                         <th>Totals</th>
                         <th>Allocations</th>
                         <th class="text-center">Actions</th>
@@ -35,15 +35,16 @@
                         @php $total += $activity->FullAllocation; @endphp
                         <tr class="text-start">
                             <td>{{ $i + 1 }}</td>
-                            <td class="text-truncate" style="max-width: 200px;" title="{{ $activity->activity->ActivityName }}">
+                            <td class="text-truncate" style="max-width: 200px;"
+                                title="{{ $activity->activity->ActivityName }}">
                                 {{ $activity->activity->ActivityName }}
                             </td>
-{{--                            <td class="text-truncate" style="max-width: 200px;" title="{{ $activity->Description }}">--}}
-{{--                                {{ $activity->Description }}--}}
-{{--                            </td>--}}
+                            {{--                            <td class="text-truncate" style="max-width: 200px;" title="{{ $activity->Description }}">--}}
+                            {{--                                {{ $activity->Description }}--}}
+                            {{--                            </td>--}}
                             <td>{{ $activity->budgetLine->LineName ?? '-' }}</td>
                             <td>{{ $activity->branch->Name ?? '-' }}</td>
-{{--                            <td>{{ ucfirst($activity->AllocationType) }}</td>--}}
+                            {{--                            <td>{{ ucfirst($activity->AllocationType) }}</td>--}}
                             <td>{{ number_format($activity->FullAllocation, 2) }}</td>
                             <td>
                                 @if($activity->AllocationType === 'monthly' && $activity->allocations && count($activity->allocations))
@@ -54,11 +55,13 @@
                                     </button>
                                     {{-- Monthly Allocations Modal --}}
                                     <div class="modal fade" id="monthlyAllocModal-{{ $activity->Id }}" tabindex="-1"
-                                         aria-labelledby="monthlyAllocModalLabel-{{ $activity->Id }}" aria-hidden="true">
+                                         aria-labelledby="monthlyAllocModalLabel-{{ $activity->Id }}"
+                                         aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content rounded-3 shadow">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title" id="monthlyAllocModalLabel-{{ $activity->Id }}">
+                                                    <h5 class="modal-title"
+                                                        id="monthlyAllocModalLabel-{{ $activity->Id }}">
                                                         📆 Monthly Allocations
                                                     </h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
@@ -136,20 +139,24 @@
             background-color: #f8f9fa;
             transition: background-color 0.2s ease;
         }
+
         .table th, .table td {
             text-align: left;
             vertical-align: middle;
             padding: 0.5rem;
         }
+
         .text-truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .btn-sm {
             padding: 0.25rem 0.6rem;
             font-size: 0.8rem;
         }
+
         .card {
             border: none;
             border-radius: 0.5rem;

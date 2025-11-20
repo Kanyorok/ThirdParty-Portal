@@ -2,26 +2,17 @@
 
 namespace App\Models\Fleet;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\DMS\Image;
-
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Fleet\FuelType;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\GPSCoordinate;
+use App\Models\DMS\Image;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
-use App\Models\Core\CodeDetail;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Models\Fleet\FleetTripLog;
-use App\Models\Auth\User;
-use App\Models\Fleet\FleetMaintenanceSchedule;
-use App\Models\Fleet\FleetRepairLog;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 class FleetVehicle extends Model
@@ -31,12 +22,9 @@ class FleetVehicle extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
-
+    public $timestamps = false;
     protected $table = 't_FleetVehicles';
     protected $primaryKey = 'Id';
-    public $timestamps = false;
-
     protected $fillable = [
         'RegistrationNo',
         'VehicleType',
@@ -55,10 +43,10 @@ class FleetVehicle extends Model
         'VehicleStatus',
         'Color',
         'ImageId',
+        'TrackerNo',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn',
     ];
 
 
@@ -67,10 +55,10 @@ class FleetVehicle extends Model
         return 'VehicleId';
     }
 
-     public function image()
-{
-    return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
-}
+    public function image()
+    {
+        return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
+    }
 
 
     public function vehicleType()
@@ -78,6 +66,10 @@ class FleetVehicle extends Model
         return $this->belongsTo(CodeDetail::class, 'VehicleType', 'ID');
     }
 
+    public function coordinates(): MorphMany
+    {
+        return $this->morphMany(GPSCoordinate::class, 'source', "Source", "SourceID", $this->primaryKey);
+    }
 
     public function tripLogs()
     {

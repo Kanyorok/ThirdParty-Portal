@@ -11,11 +11,12 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\PriceManagement;
+use App\Traits\Model\DocumentsTrait;
 use App\Models\Core\CodeDetail;
 
 class ItemMasterList extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -31,6 +32,7 @@ class ItemMasterList extends Model
     }
 
     protected $fillable = [
+        'ItemCode',
         'BarCode',
         'ItemName',
         'ItemType',
@@ -40,7 +42,6 @@ class ItemMasterList extends Model
         'Status',
         'ImageId',
         'ItemDescription',
-        'DocumentUpload',
         'ItemPrice',
         'CreatedBy',
         'ModifiedBy',
@@ -60,7 +61,6 @@ class ItemMasterList extends Model
         'Status' => 'integer',
         'ImageId' => 'integer',
         'ItemDescription' => 'string',
-        'DocumentUpload' => 'string',
         'ItemPrice' => 'string',
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
@@ -103,7 +103,7 @@ public function inUse(): bool
 
     public function itemType()
     {
-        return $this->belongsTo(ItemType::class, 'ItemType', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'ItemType', 'ID');
     }
 
     public function uom()
@@ -118,7 +118,7 @@ public function inUse(): bool
 
     public function inventoryType()
     {
-        return $this->belongsTo(InventoryType::class, 'InventoryType', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'InventoryType', 'ID');
     }
 
     public function stockItems()

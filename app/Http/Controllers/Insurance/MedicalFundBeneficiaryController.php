@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\MedicalFundBeneficiaryRequest;
+use App\Models\Core\CodeDetail;
+use App\Models\Insurance\MedicalFundContributor;
 use App\Models\Insurance\MedicalFund;
 use App\Models\Insurance\MedicalFundBeneficiary;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use App\Services\Insurance\MedicalFundBeneficiaryService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 
 class MedicalFundBeneficiaryController extends Controller
 {
@@ -16,92 +19,148 @@ class MedicalFundBeneficiaryController extends Controller
         $this->middleware(['auth']);
     }
 
-    // Nested index: /bancassurance/medical-funds/{medical_fund}/beneficiaries
-    public function index(MedicalFund $medical_fund)
+    /**
+     * Display all beneficiaries under a given contributor.
+     */
+    public function index(MedicalFundContributor $contributor)
     {
-        $beneficiaries = $medical_fund->beneficiaries()->orderBy('ID','desc')->paginate(20);
-        return view('bancassurance.medical_fund_beneficiaries.index', compact('medical_fund','beneficiaries'));
+        $beneficiaries = $contributor->beneficiaries()
+            ->orderByDesc('Id')
+            ->paginate(10);
+
+        $medical_fund = $contributor->fund;
+
+        // dd($contributor);
+
+        return view('bancassurance.medical_fund_beneficiaries.index', compact(
+            'beneficiaries',
+            'contributor',
+            'medical_fund'
+        ));
     }
 
+    /**
+     * Show form for creating a new beneficiary.
+     */
+    public function create(MedicalFundContributor $contributor)
+    {
+        $medical_fund = $contributor->fund;
 
+        $relationships = CodeDetail::where('CodeID', 'BeneficiaryRelationship')
+            ->orderBy('Description')
+            ->get(['ID', 'Description']);
 
-public function create(MedicalFund $medical_fund)
-{
-    $relationships = collect();
-    try {
-        if (DB::getSchemaBuilder()->hasTable('t_BeneficiaryRelationships')) {
-            $relationships = DB::table('t_BeneficiaryRelationships')
-                ->where('IsActive',1)->orderBy('Name')->get(['Code','Name']);
+        return view('bancassurance.medical_fund_beneficiaries.create', compact(
+            'contributor',
+            'medical_fund',
+            'relationships'
+        ));
+    }
+
+    /**
+     * Store a new beneficiary.
+     */
+    public function store(MedicalFundBeneficiaryRequest $request, MedicalFund $medicalFund)
+    {
+        $validated = $request->validated();
+
+        $dateOfBirth = $request->filled('DateOfBirth')
+            ? Carbon::parse($request->DateOfBirth)
+            : null;
+
+        $relationship = CodeDetail::find($validated['Relationship'] ?? null);
+
+        // Use the MedicalFund provided by route-model binding
+        $fund = $medicalFund;
+
+        // Ensure we use the validated key name for NationalID (consistent with the request rules)
+        $nationalId = $validated['NationalID'] ?? $validated['NationalId'] ?? null;
+
+        // Create via service
+        $service = MedicalFundBeneficiaryService::create(
+            $fund,
+            $validated['FullName'],
+            $relationship,
+            $dateOfBirth,
+            $nationalId,
+            $validated['Contact'] ?? null,
+            $request->boolean('IsActive', true),
+            Auth::user()
+        );
+
+        // If ContributorId was passed from the form (e.g., contributor's show page), attach it
+        if (!empty($validated['ContributorId'])) {
+            $service->medicalFundBeneficiary->update(['ContributorId' => $validated['ContributorId']]);
         }
-    } catch (\Throwable $e) { /* ignore */ }
-
-    if ($relationships->isEmpty()) {
-        $relationships = collect([
-            (object)['Code'=>'SELF','Name'=>'Self'],
-            (object)['Code'=>'SPOUSE','Name'=>'Spouse'],
-            (object)['Code'=>'CHILD','Name'=>'Child'],
-            (object)['Code'=>'PARENT','Name'=>'Parent'],
-            (object)['Code'=>'GUARDIAN','Name'=>'Guardian'],
-            (object)['Code'=>'SIBLING','Name'=>'Sibling'],
-            (object)['Code'=>'OTHER','Name'=>'Other'],
-        ]);
-    }
-
-    return view('bancassurance.medical_fund_beneficiaries.create', compact('medical_fund','relationships'));
-}
-
-
-    public function store(Request $request, MedicalFund $medical_fund)
-    {
-        $data = $request->validate([
-            'FullName'     => ['required','string','max:255'],
-            'Relationship' => ['nullable','string','max:50'],
-            'DateOfBirth'  => ['nullable','date'],
-            'NationalID'   => ['nullable','string','max:50'],
-            'Contact'      => ['nullable','string','max:50'],
-            'IsActive'     => ['nullable','boolean'],
-        ]);
-
-        $data['FundID'] = $medical_fund->ID;
-        MedicalFundBeneficiary::create($data);
 
         return redirect()
-            ->route('bancassurance.medicalfunds.beneficiaries.index', $medical_fund->ID)
-            ->with('success','Beneficiary added.');
+            ->route('bancassurance.medicalfunds.show', $fund->Id)
+            ->with('success', 'Beneficiary added successfully.');
     }
 
-    // Shallow routes below (beneficiary param only)
+    /**
+     * Show form for editing a beneficiary.
+     */
     public function edit(MedicalFundBeneficiary $beneficiary)
     {
-        $medical_fund = $beneficiary->fund;
-        return view('bancassurance.medical_fund_beneficiaries.edit', compact('beneficiary','medical_fund'));
+        $contributor = $beneficiary->contributor;
+        $medical_fund = $contributor->fund;
+
+        $relationships = CodeDetail::where('CodeID', 'BeneficiaryRelationship')
+            ->orderBy('Description')
+            ->get(['ID', 'Description']);
+
+        return view('bancassurance.medical_fund_beneficiaries.edit', compact(
+            'beneficiary',
+            'contributor',
+            'medical_fund',
+            'relationships'
+        ));
     }
 
-    public function update(Request $request, MedicalFundBeneficiary $beneficiary)
+    /**
+     * Update a beneficiary record.
+     */
+    public function update(MedicalFundBeneficiaryRequest $request, MedicalFundBeneficiary $beneficiary)
     {
-        $data = $request->validate([
-            'FullName'     => ['required','string','max:255'],
-            'Relationship' => ['nullable','string','max:50'],
-            'DateOfBirth'  => ['nullable','date'],
-            'NationalID'   => ['nullable','string','max:50'],
-            'Contact'      => ['nullable','string','max:50'],
-            'IsActive'     => ['nullable','boolean'],
-        ]);
+        $validated = $request->validated();
 
-        $beneficiary->update($data);
+        $dateOfBirth = $request->filled('DateOfBirth')
+            ? Carbon::parse($request->DateOfBirth)
+            : null;
+
+        $relationship = CodeDetail::find($validated['RelationshipID']);
+
+        // ✅ Create service wrapper for this beneficiary
+        $service = new MedicalFundBeneficiaryService($beneficiary);
+
+        $service->update(
+            $validated['FullName'],
+            $relationship,
+            $dateOfBirth,
+            $validated['NationalId'] ?? null,
+            $validated['Contact'] ?? null,
+            $request->boolean('IsActive', true),
+            Auth::user()
+        );
 
         return redirect()
-            ->route('bancassurance.medicalfunds.beneficiaries.index', $beneficiary->FundID)
-            ->with('success','Beneficiary updated.');
+            ->route('bancassurance.contributors.show', $beneficiary->ContributorId)
+            ->with('success', 'Beneficiary updated successfully.');
     }
 
+    /**
+     * Delete a beneficiary.
+     */
     public function destroy(MedicalFundBeneficiary $beneficiary)
     {
-        $fundId = $beneficiary->FundID;
-        $beneficiary->delete();
+        $contributorId = $beneficiary->ContributorId;
+
+        $service = new MedicalFundBeneficiaryService($beneficiary);
+        $service->delete(Auth::user());
 
         return redirect()
-            ->route('bancassurance.medicalfunds.beneficiaries.index', $fundId)
-            ->with('success','Beneficiary removed.');
+            ->route('bancassurance.contributors.show', $contributorId)
+            ->with('success', 'Beneficiary deleted successfully.');
     }
 }

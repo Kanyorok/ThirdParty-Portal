@@ -10,5 +10,5 @@ class ComplianceControlObligation extends Model
     protected $primaryKey = 'Id';
     public $timestamps = false;
 
-    protected $fillable = ['ControlID','ObligationID'];
+    protected $fillable = ['ControlID', 'ObligationID'];
 }

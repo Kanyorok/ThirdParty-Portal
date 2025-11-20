@@ -8,6 +8,7 @@ use App\Models\Fleet\FleetRepairLog;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Core\CodeDetail;
+use App\Models\ThirdParty\ThirdParties;
 use App\Services\FleetManagement\FleetRepairLogService;
 
 class FleetRepairLogController extends Controller
@@ -39,6 +40,7 @@ class FleetRepairLogController extends Controller
     {
         $this->authorize('create', FleetRepairLog::class);
         $vehicles = FleetVehicle::all();
+        $vendors = ThirdParties::where('IsPrequalified', true)->get();
         $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
             ->orderBy('Value')
             ->get();
@@ -46,7 +48,7 @@ class FleetRepairLogController extends Controller
             ->orderByDesc('ScheduledDate')
             ->get();
 
-        return view('fleet.maintenance.repair_logs.create', compact('vehicles', 'schedules', 'repairType'));
+        return view('fleet.maintenance.repair_logs.create', compact('vehicles', 'schedules', 'repairType', 'vendors'));
     }
 
     /**
@@ -81,6 +83,7 @@ class FleetRepairLogController extends Controller
         $this->authorize('edit', FleetRepairLog::class);
         $repair = FleetRepairLog::with(['vehicle'])->findOrFail($id);
         $vehicles = FleetVehicle::all();
+        $vendors = ThirdParties::where('IsPrequalified', true)->get();
         $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
             ->orderBy('Value')
             ->get();
@@ -88,7 +91,7 @@ class FleetRepairLogController extends Controller
             ->orderByDesc('ScheduledDate')
             ->get();
 
-        return view('fleet.maintenance.repair_logs.edit', compact('repair', 'vehicles', 'schedules', 'repairType'));
+        return view('fleet.maintenance.repair_logs.edit', compact('repair', 'vehicles', 'schedules', 'repairType', 'vendors'));
     }
 
     /**

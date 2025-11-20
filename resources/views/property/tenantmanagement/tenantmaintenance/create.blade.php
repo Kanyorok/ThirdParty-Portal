@@ -10,15 +10,16 @@
       <!-- Tenant Type -->
 
       <div class="row g-3 mb-3">
-        <div class="col-md-5">
-          <label class="form-label">Tenant<span class="text-danger">*</span></label>
-          <select class="form-select" name="ThirdPartyId">
-                <option value="">-- Select the tenant --</option>
-                @foreach ($tenants as $tenant)
-                    <option value="{{ $tenant->Id }}"> Name: {{ $tenant->ThirdPartyName }} &nbsp; Phone: {{ $tenant->Phone }}</option>
-                @endforeach
-          </select>
-        </div>
+          <div class="col-md-5">
+              <label class="form-label">Tenant<span class="text-danger">*</span></label>
+              <select class="form-select" name="ThirdPartyId">
+                  <option value="">-- Select the tenant --</option>
+                  @foreach ($tenants as $tenant)
+                      <option value="{{ $tenant->Id }}"> Name: {{ $tenant->ThirdPartyName }} &nbsp;
+                          Phone: {{ $tenant->Phone }}</option>
+                  @endforeach
+              </select>
+          </div>
         <div class="col-md-3">
           <label class="form-label">Tenant Type<span class="text-danger">*</span></label>
             <select class="form-select" name="TenantType">
@@ -42,16 +43,18 @@
       <!-- Document Upload -->
       <div class="mb-3">
         <label class="form-label">Upload Supporting Documents</label>
-        <input type="file" name="Document" class="form-control" multiple>
-        <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
+        <input type="file" name="Document" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx" multiple>
+        <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx | Max size: 25MB</small>
       </div>
           <div>
               <label class="form-label">Remarks</label>
               <textarea name="Remarks" class="form-control" placeholder="Optional" rows="3"></textarea>
           </div>
       </div>
-      <a href="{{ route('addtenant.index') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Create Tenant</button>
+        <a href="{{ route('addtenant.index') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Create Tenant
+        </button>
     </form>
     </div>
   </div>

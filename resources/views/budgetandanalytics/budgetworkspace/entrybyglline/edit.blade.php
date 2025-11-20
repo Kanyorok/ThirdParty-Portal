@@ -20,18 +20,18 @@
                         <input type="hidden" name="BudgetID" value="{{ $entry->BudgetID }}">
                     </div>
 
-{{--                    <div class="col-md-6">--}}
-{{--                        <label class="form-label">Branch</label>--}}
-{{--                        <select class="form-select" name="BranchID" required>--}}
-{{--                            <option selected disabled>-- Select Branch --</option>--}}
-{{--                            @foreach ($branches as $item)--}}
-{{--                                <option--}}
-{{--                                    value="{{ $item->Id }}" {{$entry->BudgetID == $item->Id ? 'selected' : ''}}>{{ $item->Name }}</option>--}}
-{{--                            @endforeach--}}
-{{--                        </select>--}}
-{{--                    </div>--}}
+                    {{--                    <div class="col-md-6">--}}
+                    {{--                        <label class="form-label">Branch</label>--}}
+                    {{--                        <select class="form-select" name="BranchID" required>--}}
+                    {{--                            <option selected disabled>-- Select Branch --</option>--}}
+                    {{--                            @foreach ($branches as $item)--}}
+                    {{--                                <option--}}
+                    {{--                                    value="{{ $item->Id }}" {{$entry->BudgetID == $item->Id ? 'selected' : ''}}>{{ $item->Name }}</option>--}}
+                    {{--                            @endforeach--}}
+                    {{--                        </select>--}}
+                    {{--                    </div>--}}
 
-                <div class="mb-3 col-md-6">
+                    <div class="mb-3 col-md-6">
                     <label class="form-label">Budget Line</label>
                     <select name="BudgetLineID" class="form-select" required>
                         <option disabled selected>-- Select Budget Line --</option>

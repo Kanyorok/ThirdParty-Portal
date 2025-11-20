@@ -5,7 +5,7 @@
 <div class="card shadow p-1 rounded-4">
     <div class="card-body">
         <p class="text-muted">
-            Update the details of the Payables Invoice record below. 
+            Update the details of the Payables Invoice record below.
             Modify the necessary fields and save changes to ensure accurate documentation.
         </p>
 
@@ -40,7 +40,8 @@
                     <select id="VendorSelect" name="ThirdPartyID" class="form-select" required>
                         <option disabled value="">-- Select Vendor --</option>
                         @foreach($suppliers as $item)
-                            <option value="{{ $item->ThirdPartyID }}" {{ $invoice->SupplierID == $item->ThirdPartyID ? 'selected' : '' }}>
+                            <option
+                                value="{{ $item->ThirdPartyID }}" {{ $invoice->SupplierID == $item->ThirdPartyID ? 'selected' : '' }}>
                                 {{ $item->SupplierName }}
                             </option>
                         @endforeach

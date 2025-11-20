@@ -14,8 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Aliases for route middleware
         $middleware->alias([
-            'ajax' => \App\Http\Middleware\AjaxCheckMiddleware::class
+            'ajax' => \App\Http\Middleware\AjaxCheckMiddleware::class,
+            'license' => \App\Http\Middleware\RequireLicense::class,
+            'module' => \App\Http\Middleware\RequireModule::class,
+            'canAction' => \App\Http\Middleware\CanAction::class,
         ]);
 
         // Transform keys of requests that are not GET to snake_case

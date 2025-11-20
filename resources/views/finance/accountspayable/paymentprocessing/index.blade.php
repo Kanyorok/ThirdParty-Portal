@@ -86,20 +86,20 @@
                                        title="View Voucher">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('paymentprocessing.edit', $item->Id) }}"
-                                       class="btn btn-sm btn-outline-primary me-1"
-                                       title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('paymentvoucher.destroy', $item->Id) }}" method="POST"
-                                          style="display:inline;"
-                                          onsubmit="return confirm('Are you sure you want to delete this voucher?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
+{{--                                    <a href="{{ route('paymentprocessing.edit', $item->Id) }}"--}}
+{{--                                       class="btn btn-sm btn-outline-primary me-1"--}}
+{{--                                       title="Edit">--}}
+{{--                                        <i class="fas fa-edit"></i>--}}
+{{--                                    </a>--}}
+{{--                                    <form action="{{ route('paymentvoucher.destroy', $item->Id) }}" method="POST"--}}
+{{--                                          style="display:inline;"--}}
+{{--                                          onsubmit="return confirm('Are you sure you want to delete this voucher?')">--}}
+{{--                                        @csrf--}}
+{{--                                        @method('DELETE')--}}
+{{--                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">--}}
+{{--                                            <i class="fas fa-trash-alt"></i>--}}
+{{--                                        </button>--}}
+{{--                                    </form>--}}
                                 </td>
                             </tr>
                         @empty

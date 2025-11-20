@@ -92,6 +92,11 @@ enum ExtensionsEnum: string
         };
     }
 
+    public function canSign(): bool
+    {
+        return ($this === self::Pdf || $this->canCheckOut());
+    }
+
     public function canCheckOut(): bool
     {
         return ($this->isPresentation() || $this->isText() || $this->isSpreadsheet() || $this->isDocument());

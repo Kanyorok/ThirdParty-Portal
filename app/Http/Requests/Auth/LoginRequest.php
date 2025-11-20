@@ -3,9 +3,13 @@
 namespace App\Http\Requests\Auth;
 
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\ModelRole;
+use App\Models\Auth\Role;
 use App\Models\Auth\User;
+use App\Models\Core\Branch;
 use App\Models\HRM\Employee;
 use App\Services\BR\BREncryption;
+use App\Services\Core\ModuleService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,8 +32,32 @@ class LoginRequest extends FormRequest
         return [
             'UserID' => ['required', 'string'],
             'password' => ['required', 'string'],
-            'branch' => ['required', 'exists:t_Branches,Id'],
+            'branch' => ['required', 'string', 'max:200'],
         ];
+    }
+
+    public function getBranch(User $user): array
+    {
+        $branch = Branch::query()->where('BranchID', $this->string('branch'))->first();
+        if (!$branch instanceof Branch) {
+            throw ValidationException::withMessages([
+                'branch' => 'Branch not found or not authorized.',
+            ]);
+        }
+
+        $modelRole = ModelRole::query()->where('model_id', $user->Id)
+            ->where('model_type', User::getPrimaryKey())
+            ->where('BranchId', $branch->Id)->with('role')->first();
+
+        $role = $modelRole?->role;
+        if (!$modelRole instanceof ModelRole || !$role instanceof Role) {
+            throw ValidationException::withMessages([
+                'branch' => 'Branch not found or not authorized.',
+                //'branch' => 'You do not have access to the selected branch.',
+            ]);
+        }
+
+        return ['branch' => $branch, 'role' => $role];
     }
 
     /**
@@ -46,6 +74,8 @@ class LoginRequest extends FormRequest
             $query->where('UserID', $this->string('UserID')->upper()->toString())->orWhere('Email', $this->string('UserID')->lower()->toString());
         })->first();
         if ($user instanceof User && ($user->employee instanceof Employee) && BREncryption::checkAuthUser($user, $this->validated('password'))) {
+            $branchRole = $this->getBranch($user);
+
             //check if user has a employee profile if not fail.
             RateLimiter::clear($this->throttleKey());
 
@@ -55,10 +85,25 @@ class LoginRequest extends FormRequest
                     ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
             }
 
+            $user->fill([
+                'last_login_at' => now(),
+                'BranchId' => $branchRole['branch']->Id,
+            ])->save();
+
             //new session
-            Auth::login($user, $user->can(PermissionEnum::UsersSessions));
+            Auth::login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
             $this->session()->regenerate();
-            activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $this->getClientIp());
+
+            session([
+                'LoginBranchId' => $branchRole['branch']->Id,
+                'LoginBranchName' => $branchRole['branch']->Name,
+                'LoginRoleName' => $branchRole['role']->name,
+                'login_at' => $user->last_login_at,
+            ]);
+
+            activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $this->getClientIp() . ' as ' . $branchRole['role']->name . ' at ' . $branchRole['branch']->Name);
+
+            ModuleService::clearNavbarCache($user);
             return;
         }
 

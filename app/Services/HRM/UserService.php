@@ -11,11 +11,11 @@ use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use App\Models\BR\BRUser;
 use App\Models\Communication\BulkNotification;
-use App\Models\Communication\Email;
 use App\Models\Core\Branch;
 use App\Models\HRM\Employee;
 use App\Models\ThirdParies\Board;
 use App\Services\BR\CBSService;
+use App\Services\Core\BranchService;
 use App\Services\CRMEmailService;
 use App\Services\SMSService;
 use Carbon\Carbon;
@@ -31,7 +31,6 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Throwable;
 use Yajra\DataTables\DataTables;
-use App\Models\Auth\ModelRole;
 
 class UserService
 {
@@ -149,8 +148,11 @@ class UserService
         return $this;
     }
 
-    public function isMarketingManager(): bool
+    public function isMarketingManager(Branch $branch): bool
     {
+        if (!(new BranchService($branch))->isHQ()) {
+            return false;
+        }
         return self::marketingManagers(true)->where('Id', $this->user->Id)->exists();
     }
 
@@ -164,6 +166,11 @@ class UserService
     {
         // Assign system-level role using Spatie (optional if you're not using permission checks globally)
         $this->user->syncRolesWithBranch([$role->name], $branch->Id, $actor->Id);
+        // Flush Spatie permission cache to ensure immediate effect
+        try {
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        } catch (\Throwable $e) {
+        }
         // Log activity
         activity()
             ->causedBy($actor)
@@ -205,6 +212,7 @@ class UserService
 
     public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', $branch = null): static
     {
+        $originalBranchNumericId = $this->user->BranchId ?? null;
         $email_change = ($this->user->Email === $Email) ? null : $this->user->Email;
         $this->user->update([
             'UserID' => $UserID,
@@ -219,6 +227,22 @@ class UserService
             'ModifiedOn' => now(),
         ]);
         activity()->causedBy($this->user)->performedOn($this->user)->event('update')->log('Update user account');
+
+        // If branch changed and we maintain one-branch-per-user mapping, move the role mapping to new branch
+        if ($branch instanceof Branch) {
+            try {
+                // Move any existing model role entries for old branch to the new branch id
+                \App\Models\Auth\ModelRole::where('model_id', $this->user->Id)
+                    ->where('model_type', User::getPrimaryKey())
+                    ->where('BranchId', $originalBranchNumericId)
+                    ->update(['BranchId' => $branch->Id, 'ModifiedBy' => $actor->Id, 'ModifiedOn' => now()]);
+
+                // Flush permission cache for immediate effect
+                app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+            } catch (\Throwable $e) {
+                // non-blocking
+            }
+        }
 
         if (!is_null($email_change)) {
             $this->sendEmail(

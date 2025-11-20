@@ -41,10 +41,7 @@ class LegalCounselController extends Controller
             'CounselName' => 'required|string|max:255',
             'FirmName' => 'required|string|max:255',
             'Email' => 'required|email|max:255',
-            'Phone' => [
-                'required',
-                'regex:/^\+2547\d{8}$/', // must be +2547xxxxxxxx
-            ],
+            'Phone' => ['required', 'regex:/^\\+[1-9]\\d{7,14}$/'],
             'Role' => 'required|string|max:100',
             // 'Remarks' => 'nullable|string',
         ]);
@@ -117,14 +114,11 @@ class LegalCounselController extends Controller
 
         $data = $request->validate([
             'CounselName' => 'required|string|max:255',
-            'FirmName' => 'required|string|max:255',
-            'Email' => 'required|email|max:255',
-            'Phone' => [
-                'required',
-                'regex:/^\+2547\d{8}$/', // must be +2547xxxxxxxx
-            ],
-            'Role' => 'required|string|max:100',
-            'Remarks' => 'required|string',
+            'FirmName'    => 'required|string|max:255',
+            'Email'       => 'required|email|max:255',
+            'Phone'       => ['required', 'regex:/^\\+[1-9]\\d{7,14}$/'],
+            'Role'        => 'required|string|max:100',
+            'Remarks'     => 'required|string',
         ]);
         try {
 
@@ -209,6 +203,5 @@ class LegalCounselController extends Controller
 
             return back()->with('error', 'Error deleting Assigned counsel');
         }
-
     }
 }

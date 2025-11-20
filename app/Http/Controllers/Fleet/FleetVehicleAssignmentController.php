@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
 
 class FleetVehicleAssignmentController extends Controller
 {
@@ -22,7 +23,7 @@ class FleetVehicleAssignmentController extends Controller
     public function __construct(FleetVehicleAssignmentService $service)
     {
         $this->service = $service;
-        
+
     }
 
     /** Show all assignments */
@@ -33,18 +34,38 @@ class FleetVehicleAssignmentController extends Controller
             ->get();
 
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-            ->pluck('name', 'Id');    
+            ->pluck('name', 'Id');
 
-        return view('fleet.assignments.index', compact('assignments','assigners'));
+        // fetch approved parent trips for UI (so delete -> index also has approved trips)
+        $approvedStatusId = CodeDetail::where('CodeID', 'TripStatus')
+            ->where('Description', 'Approved')
+            ->value('ID');
+        $fleetTrips = FleetTripLog::whereNull('ParentTripID')
+            ->when($approvedStatusId, fn($q) => $q->where('Status', $approvedStatusId))
+            ->orderByDesc('TripStartDate')
+            ->get();
+
+        return view('fleet.assignments.index', compact('assignments','assigners','fleetTrips'));
     }
 
     /** Show create form */
     public function create()
     {
+        // Fetch the CodeDetail ID for TripStatus = Approved
+        $statusId = CodeDetail::where('CodeID', 'TripStatus')
+            ->where('Description', 'Approved')
+            ->value('ID');
+
         $fleetVehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
-        $fleetTrips = FleetTripLog::all();
+
+        // Only filter by status when we have a valid status id
+        $fleetTrips = FleetTripLog::whereNull('ParentTripID')
+            ->when($statusId, fn($q) => $q->where('Status', $statusId))
+            ->orderByDesc('TripStartDate')
+            ->get();
+
         $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.create', compact('fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
@@ -74,17 +95,24 @@ class FleetVehicleAssignmentController extends Controller
     }
 
     /** Show edit form */
-   public function edit($id)
+    public function edit($id)
     {
         $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
             ->where('Id', $id)
             ->firstOrFail();
 
         $fleetVehicles = FleetVehicle::all();
-            $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-                ->pluck('name', 'Id');
-            $fleetTrips = FleetTripLog::all();
-            $fleetInspections = FleetVehicleInspection::all();
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
+
+        // fetch only approved parent trips for the edit form
+        $statusId = CodeDetail::where('Description', 'Approved')->value('ID');
+        $fleetTrips = FleetTripLog::whereNull('ParentTripID')
+            ->when($statusId, fn($q) => $q->where('Status', $statusId))
+            ->orderByDesc('TripStartDate')
+            ->get();
+
+        $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.edit', compact('assignment', 'fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
     }
@@ -92,18 +120,18 @@ class FleetVehicleAssignmentController extends Controller
 
     /** Update an assignment */
     public function update(FleetVehicleAssignmentRequest $request, $id)
-{
-    try {
-        $assignment = FleetVehicleAssignment::findOrFail($id);
+    {
+        try {
+            $assignment = FleetVehicleAssignment::findOrFail($id);
 
-        $this->service->update($assignment, $request->validated());
+            $this->service->update($assignment, $request->validated());
 
-        return redirect()->route('fleet.assignments.index')
-            ->with('success', 'Vehicle assignment updated successfully.');
-    } catch (\Exception $e) {
-        return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
+            return redirect()->route('fleet.assignments.index')
+                ->with('success', 'Vehicle assignment updated successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
+        }
     }
-}
 
 
     /** Delete an assignment */
@@ -118,7 +146,6 @@ class FleetVehicleAssignmentController extends Controller
     }
 
 
-    
     /* ------------------ AJAX HELPERS ------------------ */
 
     public function getVehiclesByTrip($Id)
@@ -146,24 +173,29 @@ class FleetVehicleAssignmentController extends Controller
         ]);
     }
 
-public function getVehicleDriver($Id)
-{
-    $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
-        ->whereNull('DeletedOn')
-        ->latest('AssignmentDate')
-        ->first();
+    public function getVehicleDriver($vehicleId)
+    {
+        $vehicle = \App\Models\Fleet\FleetVehicle::with('fuelType')->find($vehicleId);
 
-    if (!$driverAssignment) {
-        $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
+        $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $vehicleId)
             ->whereNull('DeletedOn')
             ->latest('AssignmentDate')
             ->first();
+
+        if (!$driverAssignment) {
+            $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $vehicleId)
+                ->whereNull('DeletedOn')
+                ->latest('AssignmentDate')
+                ->first();
+        }
+
+        return response()->json([
+            'driverId' => $driverAssignment?->DriverID,
+            'driverName' => $driverAssignment?->driver?->FullName ?? 'No driver assigned',
+            'fuelTypeId' => $vehicle?->fuelType?->Id,
+            'fuelTypeName' => $vehicle?->fuelType?->FuelName,
+        ]);
     }
 
-    return response()->json([
-        'driverId'   => $driverAssignment?->DriverID,
-        'driverName' => $driverAssignment?->driver?->FullName, 
-    ]);
-}
 
 }

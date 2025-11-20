@@ -79,7 +79,8 @@
               <select name="rfq_id" class="form-select" required>
                 <option disabled selected>-- Select RFQ --</option>
                 @foreach ($rfqList as $rfq)
-                  <option value="{{ $rfq->Id }}" title="{{ $rfq->Comments ?? '' }}">{{ $rfq->RFQNumber }}-{{ $rfq->Comments ?? '' }}</option>
+                      <option value="{{ $rfq->Id }}" title="{{ $rfq->Comments ?? '' }}">{{ $rfq->RFQNumber }}
+                          -{{ $rfq->Comments ?? '' }}</option>
                 @endforeach
               </select>
             </div>
@@ -96,11 +97,11 @@
                 @foreach ($sections as $section)
                   <tr>
                     <td>
-                      <input type="checkbox" name="sections[]" value="{{ $section->Id }}">
+                        <input type="checkbox" name="sections[]" value="{{ $section->Id }}">
                     </td>
                     <td>{{ $section->SectionName }}</td>
                     <td>
-                      <input type="number" class="form-control" name="weights[{{ $section->Id }}]" step="0.01"
+                        <input type="number" class="form-control" name="weights[{{ $section->Id }}]" step="0.01"
                         value="0.00">
                     </td>
                   </tr>

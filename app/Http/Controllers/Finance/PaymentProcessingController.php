@@ -17,7 +17,7 @@ class PaymentProcessingController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentProcessingView, FinanceVoucher::class);
 
         $query = FinanceVoucher::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
@@ -58,7 +58,7 @@ class PaymentProcessingController extends Controller
 
     public function create(){
 
-        // $this->authorize('create', PaymentProcessing::class);
+        $this->authorize(PermissionEnum::PaymentProcessingCreate, FinanceVoucher::class);
         $vouchers = FinanceVoucher::select('Id', 'VoucherNo', 'InvoiceNo', 'TotAmnt')
             ->where('Status','Approved')
             ->get();
@@ -68,7 +68,7 @@ class PaymentProcessingController extends Controller
 
     public function show($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentProcessingView, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::with('invoice.supplier')->findOrFail($id);
         $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus','posted')->sum('TotalAmount');
@@ -77,7 +77,7 @@ class PaymentProcessingController extends Controller
     }
 
     public function postVoucher(Request $request, TransactionService $svc){
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceVoucher::class);
+        // $this->authorize(PermissionEnum::PaymentProcessingCreate, FinanceVoucher::class);
 
         $validated = $request->validate([
             'Reason' => 'required|string|max:255',
@@ -123,7 +123,7 @@ class PaymentProcessingController extends Controller
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
                     'ModuleID'          => $MODULE_ID,
-                    'ThirdPartyID'=>$invoice->ThirdPartyID,
+                    'ThirdPartyID' => $invoice->ThirdPartyID,
                     'IsScheduled'=>$isScheduled,
                     'VoucherID'=>$voucherID,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,

@@ -26,10 +26,24 @@ class ItemTypeRequest extends FormRequest
     public function rules()
     {
         return [
-            'TypeName' => 'required|string|max:255',
+            'TypeName' => ['required', 'exists:t_CodeDetails,ID',
+                'string',
+                'max:255',
+                Rule::unique('t_ItemTypes', 'TypeName')->ignore($this->route('Id')),
+            ],
             'StockTracked' => 'required|boolean',
             'RequiresTagging' => 'required|boolean',
             'Active' => 'nullable|boolean',
         ];
+
     }
+
+
+    public function messages()
+    {
+        return [
+            'TypeName.unique' => 'The Item Type already exists.',
+        ];
+    }
+
 }

@@ -18,8 +18,14 @@
         @csrf
     <div class="mb-3">
       <label for="typeName" class="form-label">Type Name</label>
-        <input type="text" class="form-control" id="typeName" name="TypeName"
-               placeholder="e.g., Asset, Stock, Non-Stock">
+       <select class="form-select @error('TypeName') is-invalid @enderror" id="TypeName" name="TypeName" required>
+                        <option value="">Select Item Type</option>
+                        @foreach($itmTypes as $itmType)
+                            <option value="{{ $itmType->ID }}" {{ old('TypeName') == $itmType->ID ? 'selected' : '' }}>
+                                {{ $itmType->Description }}
+                            </option>
+                        @endforeach
+                    </select>
     </div>
  <div class="form-check mb-2">
      <input type="hidden" name="StockTracked" value="0">
@@ -35,7 +41,9 @@
          <input class="form-check-input" type="checkbox" name="Active" value="1" id="Active" checked>
          <label class="form-check-label" for="Active">Is Active?</label>
     </div>
-    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save</button>
+     <button type="submit" class="btn btn-success"
+             onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save
+     </button>
   </form>
 </div>
 

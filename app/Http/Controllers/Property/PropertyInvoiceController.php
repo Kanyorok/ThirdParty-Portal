@@ -7,6 +7,8 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\BillingAndReceipting\PropertyInvoiceRequest;
+use App\Models\Core\Currency;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Services\Property\BillingAndReceipting\PropertyInvoiceService;
@@ -25,92 +27,138 @@ class PropertyInvoiceController extends Controller
         return view('property.billingandreceipting.invoicing.index', compact('invoices'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+
         $newleases = PropertyNewLease::where('IsActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
-            ->with('tenant')->get();
-        return view('property.billingandreceipting.invoicing.create', compact('newleases'));
+            ->with('tenant')
+            ->get();
+
+        // 👇 Add currencies and tax types from database
+        $currencies = Currency::all();
+        $taxTypes = FinanceTaxRuleConfiguration::all();
+
+        return view('property.billingandreceipting.invoicing.create', compact('newleases', 'currencies', 'taxTypes'));
     }
 
-    public function show($id)
-    {
-        $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
-        $invoice = PropertyInvoice::find($id);
-        return view('property.billingandreceipting.invoicing.show', compact('invoice'));
-    }
 
-    public function store(PropertyInvoiceRequest $request)
-    {
+public function show($id)
+{
+    $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
 
-        $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
-        $validated = $request->validated();
+    $invoice = PropertyInvoice::with([
+        'lease.tenant.thirdParty',
+        'currency',
+        'tax',
+        'createdByUser',
+        'modifiedByUser'
+    ])->findOrFail($id);
 
-        $Lease = PropertyNewLease::findOrFail($validated['Lease']);
-        $Status = PropertyInvoiceEnum::Pending;
+    return view('property.billingandreceipting.invoicing.show', compact('invoice'));
+}
 
-        PropertyInvoiceService::create(
+public function store(PropertyInvoiceRequest $request)
+{
+    $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+    $validated = $request->validated();
+
+    $Lease = PropertyNewLease::findOrFail($validated['Lease']);
+
+    // Use Rent currency/tax as the main invoice reference
+    $Currency = Currency::findOrFail($validated['Currency']);
+    $Tax = FinanceTaxRuleConfiguration::findOrFail($validated['Tax']);
+    $Status = PropertyInvoiceEnum::Pending;
+
+    PropertyInvoiceService::create(
         $Lease,
         $validated['BillingMonth'],
         $validated['InvoiceDate'],
         $validated['RentAmount'],
-            $validated['ServicesCharge'] ?? 0,
-            $validated['OtherCharges'] ?? 0,
-            $validated['ParkingFee'] ?? 0,
-            $validated['InvoiceNotes'] ?? '',
+        $validated['ServicesCharge'] ?? 0,
+        $validated['OtherCharges'] ?? 0,
+        $validated['ParkingFee'] ?? 0,
+        $validated['InvoiceNotes'] ?? '',
+        $validated['Description'] ?? null, 
+        $validated['DescriptionRent'] ?? null,
+        $validated['DescriptionService'] ?? null,
+        $validated['DescriptionParking'] ?? null,
+        $validated['DescriptionOther'] ?? null,
+        $Currency,
+        $Tax,
         $Status,
         Auth::user()
     );
 
-        return redirect()->route('rentinvoice.index')->with('success', 'Invoice created successfully');
-    }
+    return redirect()->route('rentinvoice.index')->with('success', 'Invoice created successfully');
+}
 
-    public function edit($id)
-    {
-        $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
-        $invoices = PropertyInvoice::findOrFail($id);
-        $leases = PropertyInvoice::all();
 
-        return view('property.billingandreceipting.invoicing.edit', compact('invoices', 'leases'));
-    }
+    // public function edit($id)
+    // {
+    //     $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
 
-    public function update(PropertyInvoiceRequest $request, $id)
-    {
-        $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
-        $validated = $request->validated();
+    //     $invoice = PropertyInvoice::with(['lease.tenant.thirdParty'])->findOrFail($id);
 
-        $Lease = PropertyNewLease::findOrFail($validated['Lease']);
+    //     $leases = PropertyNewLease::where('IsActive', true)
+    //         ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
+    //         ->with('tenant.thirdParty')
+    //         ->orderBy('LeaseNumber')
+    //         ->get();
 
-        DB::beginTransaction();
+    //     $currencies = Currency::orderBy('Code')->get();
+    //     $taxTypes = FinanceTaxRuleConfiguration::with('taxType')->get();
 
-        try {
-            $invoice = PropertyInvoice::findOrFail($id);
+    //     return view(
+    //         'property.billingandreceipting.invoicing.edit',
+    //         compact('invoice', 'leases', 'currencies', 'taxTypes')
+    //     );
+    // }
 
-            $invoice->update([
-                $Lease,
-                'BillingMonth' => $validated['BillingMonth'],
-                'InvoiceDate' => $validated['InvoiceDate'],
-                'RentAmount' => $validated['RentAmount'],
-                'ServicesCharge' => $validated['ServicesCharge'] ?? 0,
-                'ParkingFee' => $validated['ParkingFee'] ?? 0,
-                'OtherCharges' => $validated['OtherCharges'] ?? 0,
-                'InvoiceNotes' => $validated['InvoiceNotes'] ?? '',
-                'ModifiedBy' => Auth::Id(),
-            ]);
 
-            DB::commit();
-            activity()
-                ->performedOn($invoice)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Invoice  Details');
+    // public function update(PropertyInvoiceRequest $request, $id)
+    // {
+    //     $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
+    //     $validated = $request->validated();
 
-            return redirect()->route('rentinvoice.index')->with('success', 'Invoice updated successfully');
-        } catch (Throwable $th) {
-            DB::rollBack();
-            return back()->withErrors(['error' => $th->getMessage()])->withInput();
-        }
-    }
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $invoice = PropertyInvoice::findOrFail($id);
+    //         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
+
+    //         $invoice->update([
+    //             'Lease' => $Lease->Id,
+    //             'BillingMonth' => $validated['BillingMonth'],
+    //             'InvoiceDate' => $validated['InvoiceDate'],
+    //             'RentAmount' => $validated['RentAmount'],
+    //             'ServicesCharge' => $validated['ServicesCharge'] ?? 0,
+    //             'ParkingFee' => $validated['ParkingFee'] ?? 0,
+    //             'OtherCharges' => $validated['OtherCharges'] ?? 0,
+    //             'InvoiceNotes' => $validated['InvoiceNotes'] ?? '',
+    //             'ModifiedBy' => Auth::id(),
+    //         ]);
+
+    //         DB::commit();
+
+    //         activity()
+    //             ->performedOn($invoice)
+    //             ->causedBy(Auth::user())
+    //             ->withProperties(['action' => 'update'])
+    //             ->log('Updated Invoice Details');
+
+    //         return redirect()->route('rentinvoice.index')
+    //             ->with('success', 'Invoice updated successfully');
+
+    //     } catch (Throwable $th) {
+    //         DB::rollBack();
+    //         return back()
+    //             ->withErrors(['error' => $th->getMessage()])
+    //             ->withInput();
+    //     }
+    // }
+
 
     public function destroy($id)
     {
@@ -120,9 +168,9 @@ class PropertyInvoiceController extends Controller
             $invoice = PropertyInvoice::findOrFail($id);
 
             if ($invoice->receipts()->exists()) {
-            return redirect()->back()
-            ->withErrors(['error' => 'This Invoice is in use and cannot be deleted.']);
-            } 
+                return redirect()->back()
+                    ->withErrors(['error' => 'This Invoice is in use and cannot be deleted.']);
+            }
 
             $invoice->delete();
 

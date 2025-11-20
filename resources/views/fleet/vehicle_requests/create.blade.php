@@ -22,7 +22,7 @@
             <div class="row g-3">
                 {{-- Requested By --}}
                 <div class="col-md-6">
-                    <label for="RequestedBy" class="form-label">Requester</label>
+                    <label for="RequestedBy" class="form-label">Requester<span class="text-danger">*</span></label>
                     <select name="RequestedBy" id="RequestedBy" class="form-select" required>
                         <option value="">-- Select Requester --</option>
                         @foreach($requester as $id => $name)
@@ -33,13 +33,13 @@
 
                 {{-- Request Date --}}
                 <div class="col-md-6">
-                    <label for="RequestDate" class="form-label">Request Date</label>
+                    <label for="RequestDate" class="form-label">Request Date<span class="text-danger">*</span></label>
                     <input type="date" name="RequestDate" class="form-control" required>
                 </div>
 
                 {{-- Department --}}
                 <div class="col-md-6">
-                    <label for="Department" class="form-label">Department</label>
+                    <label for="Department" class="form-label">Department<span class="text-danger">*</span></label>
                     <select name="Department" class="form-select" required>
                         <option value="">-- Select Department --</option>
                         @foreach($departments as $dept)
@@ -50,7 +50,7 @@
 
                 {{-- Trip No --}}
                 <div class="col-md-6">
-                    <label for="TripNo" class="form-label">Trip No (Ongoing Trips)</label>
+                    <label for="TripNo" class="form-label">Trip No (Ongoing Trips)<span class="text-danger">*</span></label>
                     <select name="TripNo" id="TripNo" class="form-select">
                         <option value="">-- Select Trip --</option>
                         @foreach($trips as $trip)
@@ -69,38 +69,38 @@
 
                 {{-- Pickup Location --}}
                 <div class="col-md-6">
-                    <label for="FromLocation" class="form-label">Pickup Location</label>
+                    <label for="FromLocation" class="form-label">Pickup Location<span class="text-danger">*</span></label>
                     <input type="text" name="FromLocation" id="FromLocation" class="form-control" readonly>
                 </div>
 
                 {{-- Destination --}}
                 <div class="col-md-6">
-                    <label for="ToLocation" class="form-label">Destination</label>
+                    <label for="ToLocation" class="form-label">Destination<span class="text-danger">*</span></label>
                     <input type="text" name="ToLocation" id="ToLocation" class="form-control" readonly>
                 </div>
 
                 {{-- Trip Date (auto-filled with TripStartDate) --}}
                 <div class="col-md-4">
-                    <label for="TripDate" class="form-label">Trip Date</label>
+                    <label for="TripDate" class="form-label">Trip Date<span class="text-danger">*</span></label>
                     <input type="date" name="TripDate" id="TripDate" class="form-control" required readonly>
                 </div>
 
                 {{-- Vehicle Type (readonly + hidden ID) --}}
                 <div class="col-md-6">
-                    <label for="PreferredVehicleTypeName" class="form-label">Vehicle Type</label>
+                    <label for="PreferredVehicleTypeName" class="form-label">Vehicle Type<span class="text-danger">*</span></label>
                     <input type="text" id="PreferredVehicleTypeName" class="form-control" readonly>
                     <input type="hidden" name="PreferredVehicleType" id="PreferredVehicleTypeId">
                 </div>
 
                 {{-- Passengers Count --}}
                 <div class="col-md-6">
-                    <label for="PassengerCount" class="form-label">No. of Passengers</label>
+                    <label for="PassengerCount" class="form-label">No. of Passengers<span class="text-danger">*</span></label>
                     <input type="number" name="PassengerCount" class="form-control" min="1">
                 </div>
 
                 {{-- Purpose --}}
                 <div class="col-md-12">
-                    <label for="Purpose" class="form-label">Purpose</label>
+                    <label for="Purpose" class="form-label">Purpose<span class="text-danger">*</span></label>
                     <textarea name="Purpose" class="form-control" rows="3" required></textarea>
                 </div>
             </div>

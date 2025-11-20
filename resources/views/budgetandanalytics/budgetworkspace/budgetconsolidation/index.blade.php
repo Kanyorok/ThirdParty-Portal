@@ -7,7 +7,7 @@
         {{-- Header & Toolbar --}}
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
             <div>
-{{--                <h4 class="mb-1 text-primary">📊 Statement of Financial Position</h4>--}}
+                {{--                <h4 class="mb-1 text-primary">📊 Statement of Financial Position</h4>--}}
                 @if ($isSet)
                     <div class="text-muted">
                         <span class="me-2">{{ $budgetName }}</span> · <span>{{ $period }}</span>
@@ -41,7 +41,8 @@
         {{-- Budget Selector --}}
         <form action="{{ route('budgetconsolidation.index') }}" method="GET" class="mb-4">
             <label class="form-label fw-semibold me-2 mb-0">{{ $isSet ? 'Change Budget' : 'Select a Budget' }}</label>
-            <select name="BudgetLineID" class="form-select d-inline-block w-auto" required onchange="this.form.submit()">
+            <select name="BudgetLineID" class="form-select d-inline-block w-auto" required
+                    onchange="this.form.submit()">
                 <option disabled {{ !$isSet ? 'selected' : '' }}>-- Select Budget --</option>
                 @foreach ($budgets as $item)
                     <option value="{{ $item->Id }}" {{ ($budgetId ?? null) == $item->Id ? 'selected' : '' }}>
@@ -73,7 +74,8 @@
                 @php $categoryTotal = 0; $cardIndex++; $cardId = 'cat-'.$cardIndex; @endphp
 
                 <div class="card shadow-sm border-0 mb-3">
-                    <div class="card-header d-flex justify-content-between align-items-center bg-primary-subtle text-primary fw-semibold rounded-top py-2 px-3">
+                    <div
+                        class="card-header d-flex justify-content-between align-items-center bg-primary-subtle text-primary fw-semibold rounded-top py-2 px-3">
                         <div>{{ strtoupper($category) }}</div>
                         <button class="btn btn-outline-primary btn-sm" type="button"
                                 data-bs-toggle="collapse" data-bs-target="#{{ $cardId }}"
@@ -127,7 +129,9 @@
                                             @endphp
                                             <tr>
                                                 <td class="sticky-col text-start ps-3">{{ $entry['budgetLineName'] }}</td>
-                                                <td class="text-center bg-warning-subtle">{{ number_format($entry['rate'], 2) }}%</td>
+                                                <td class="text-center bg-warning-subtle">{{ number_format($entry['rate'], 2) }}
+                                                    %
+                                                </td>
 
                                                 @foreach($months as $m)
                                                     <td class="text-end">
@@ -153,7 +157,9 @@
                                         <tr class="table-secondary fw-semibold">
                                             <td class="sticky-col text-start ps-3">Subtotal – {{ $subTypeName }}</td>
                                             <td></td>
-                                            @foreach($months as $m) <td></td> @endforeach
+                                            @foreach($months as $m)
+                                                <td></td>
+                                            @endforeach
                                             <td class="text-end pe-2">{{ number_format($subTotal, 2) }}</td>
                                             <td></td>
                                             <td></td>
@@ -188,11 +194,11 @@
         </div>
 
         {{-- Grand Total --}}
-{{--        @if(!empty($data))--}}
-{{--            <div class="text-end fs-5 fw-bold text-success me-1 mt-3">--}}
-{{--                💰 Total Budget Cost: {{ number_format($grandTotal, 2) }}--}}
-{{--            </div>--}}
-{{--        @endif--}}
+        {{--        @if(!empty($data))--}}
+        {{--            <div class="text-end fs-5 fw-bold text-success me-1 mt-3">--}}
+        {{--                💰 Total Budget Cost: {{ number_format($grandTotal, 2) }}--}}
+        {{--            </div>--}}
+        {{--        @endif--}}
 
     </div>
 @endsection
@@ -200,50 +206,114 @@
 @section('styles')
     <style>
         /* Basics */
-        .legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle}
-        .consol-scroll{position:relative;overflow:auto}
-        .consol-scroll::after{ /* soft scroll shadow hint */
-            content:""; position:sticky; right:0; top:0; width:18px; height:100%;
-            background: linear-gradient(to left, rgba(0,0,0,.06), transparent);
-            pointer-events:none; float:right;
+        .legend-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            vertical-align: middle
         }
-        .consol-table th, .consol-table td{
+
+        .consol-scroll {
+            position: relative;
+            overflow: auto
+        }
+
+        .consol-scroll::after { /* soft scroll shadow hint */
+            content: "";
+            position: sticky;
+            right: 0;
+            top: 0;
+            width: 18px;
+            height: 100%;
+            background: linear-gradient(to left, rgba(0, 0, 0, .06), transparent);
+            pointer-events: none;
+            float: right;
+        }
+
+        .consol-table th, .consol-table td {
             vertical-align: middle;
             padding: .5rem;
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
         }
-        .consol-table th{text-align:center}
-        .consol-table td.text-start, .consol-table th.text-start{text-align:left}
-        .consol-table td.text-end, .consol-table th.text-end{text-align:right}
+
+        .consol-table th {
+            text-align: center
+        }
+
+        .consol-table td.text-start, .consol-table th.text-start {
+            text-align: left
+        }
+
+        .consol-table td.text-end, .consol-table th.text-end {
+            text-align: right
+        }
 
         /* Sticky header & first column */
-        .consol-table thead th{
-            position: sticky; top: 0; z-index: 3;
+        .consol-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 3;
             background: var(--bs-table-bg, #fff);
-            box-shadow: inset 0 -1px 0 rgba(0,0,0,.075);
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .075);
         }
-        .consol-table .sticky-col{
-            position: sticky; left: 0; z-index: 2; background: #fff;
-            box-shadow: 1px 0 0 rgba(0,0,0,.05);
+
+        .consol-table .sticky-col {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background: #fff;
+            box-shadow: 1px 0 0 rgba(0, 0, 0, .05);
         }
-        .table tbody tr:hover{ background-color:#f8f9fa; transition: background-color .15s ease }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color .15s ease
+        }
 
         /* Deliberate, modest color system aligned with earlier UIs */
-        .bg-primary-subtle{background: rgba(13,110,253,.08) !important;}
-        .text-primary{color:#0d6efd !important}
+        .bg-primary-subtle {
+            background: rgba(13, 110, 253, .08) !important;
+        }
+
+        .text-primary {
+            color: #0d6efd !important
+        }
 
         /* Delta badges */
-        .badge.delta-pos{background:#e9f7ef; color:#198754; border:1px solid #cbead6}
-        .badge.delta-neg{background:#fdecea; color:#dc3545; border:1px solid #f5c2c7}
-        .badge.delta-neu{background:#eff1f4; color:#6c757d; border:1px solid #dee2e6}
+        .badge.delta-pos {
+            background: #e9f7ef;
+            color: #198754;
+            border: 1px solid #cbead6
+        }
+
+        .badge.delta-neg {
+            background: #fdecea;
+            color: #dc3545;
+            border: 1px solid #f5c2c7
+        }
+
+        .badge.delta-neu {
+            background: #eff1f4;
+            color: #6c757d;
+            border: 1px solid #dee2e6
+        }
 
         /* Card rounding */
-        .card{border-radius:.6rem}
-        .card-header{border-top-left-radius:.6rem; border-top-right-radius:.6rem}
+        .card {
+            border-radius: .6rem
+        }
+
+        .card-header {
+            border-top-left-radius: .6rem;
+            border-top-right-radius: .6rem
+        }
 
         /* Tight 13px table font */
-        .consol-table{font-size:13px}
+        .consol-table {
+            font-size: 13px
+        }
     </style>
 @endsection
 
@@ -256,12 +326,12 @@
             const sections = document.querySelectorAll('#consolidationAccordion .collapse');
 
             expandAll?.addEventListener('click', () => {
-                sections.forEach(s => new bootstrap.Collapse(s, { show: true }));
+                sections.forEach(s => new bootstrap.Collapse(s, {show: true}));
                 document.querySelectorAll('#consolidationAccordion .card-header .collapse-text')
                     .forEach(el => el.textContent = 'Collapse');
             });
             collapseAll?.addEventListener('click', () => {
-                sections.forEach(s => new bootstrap.Collapse(s, { toggle: false }).hide());
+                sections.forEach(s => new bootstrap.Collapse(s, {toggle: false}).hide());
                 document.querySelectorAll('#consolidationAccordion .card-header .collapse-text')
                     .forEach(el => el.textContent = 'Expand');
             });
@@ -273,10 +343,11 @@
                 collapseEl?.addEventListener('hide.bs.collapse', () => btn.querySelector('.collapse-text').textContent = 'Expand');
                 collapseEl?.addEventListener('show.bs.collapse', () => btn.querySelector('.collapse-text').textContent = 'Collapse');
             });
+
             // Export helpers: serialize visible table into rows for server-side generation
             function buildExportRows() {
                 const rows = [];
-                const monthHeaders = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const monthHeaders = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                 document.querySelectorAll('#consolidationAccordion .card').forEach(card => {
                     const category = card.querySelector('.card-header div')?.textContent?.trim() || '';
                     card.querySelectorAll('.consol-scroll').forEach(section => {
@@ -299,7 +370,7 @@
                             // months occupy from col index 2 up to length-4
                             for (let i = 0; i < 12; i++) {
                                 const idx = 2 + i;
-                                row.months[i+1] = tds[idx]?.textContent?.trim() || '';
+                                row.months[i + 1] = tds[idx]?.textContent?.trim() || '';
                             }
                             rows.push(row);
                         });
@@ -313,13 +384,19 @@
                 form.method = 'POST';
                 form.action = url;
                 const token = document.createElement('input');
-                token.type = 'hidden'; token.name = '_token'; token.value = '{{ csrf_token() }}';
+                token.type = 'hidden';
+                token.name = '_token';
+                token.value = '{{ csrf_token() }}';
                 form.appendChild(token);
                 const bname = document.createElement('input');
-                bname.type = 'hidden'; bname.name = 'budgetName'; bname.value = @json($budgetName ?? 'Budget');
+                bname.type = 'hidden';
+                bname.name = 'budgetName';
+                bname.value = @json($budgetName ?? 'Budget');
                 form.appendChild(bname);
                 const payload = document.createElement('input');
-                payload.type = 'hidden'; payload.name = 'rows'; payload.value = JSON.stringify(data);
+                payload.type = 'hidden';
+                payload.name = 'rows';
+                payload.value = JSON.stringify(data);
                 form.appendChild(payload);
                 document.body.appendChild(form);
                 form.submit();

@@ -113,7 +113,7 @@ class ItemCategoryService
         // Cascade to child categories
         foreach ($category->children ?? [] as $child) {
             $child->update([
-                'Status'     => $statusId,
+                'Status' => $statusId,
                 'ModifiedBy' => auth()->id(),
                 'ModifiedOn' => now()
             ]);
@@ -124,7 +124,7 @@ class ItemCategoryService
         // Cascade to items under this category
         foreach ($category->items ?? [] as $item) {
             $item->update([
-                'Status'     => $statusId,
+                'Status' => $statusId,
                 'ModifiedBy' => auth()->id(),
                 'ModifiedOn' => now()
             ]);

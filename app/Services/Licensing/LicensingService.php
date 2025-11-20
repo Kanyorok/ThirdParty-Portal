@@ -2,370 +2,260 @@
 
 namespace App\Services\Licensing;
 
-use App\Models\Licensing\License;
 use App\Models\Licensing\Instance;
 use App\Models\Licensing\LicenseAudit;
+use App\Models\Licensing\LicenseRecord;
+use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class LicensingService
 {
-    private const CACHE_KEY = 'license_validation_result';
-    private const CACHE_DURATION = 300; // 5 minutes
-    private const NONCE_CACHE_KEY = 'license_max_nonce';
-    
-    private ?string $vendorPublicKey = null;
+    private const CACHE_KEY = 'licensing.current';
 
-    public function __construct()
-    {
-        // Load vendor public key from config/environment
-        $this->vendorPublicKey = config('licensing.vendor_public_key');
-    }
-
-    /**
-     * Verify and load current license
-     */
-    public function verifyAndLoad(): LicenseResult
-    {
-        try {
-            // Check cache first
-            $cached = Cache::get(self::CACHE_KEY);
-            if ($cached) {
-                return $cached;
-            }
-
-            $result = $this->performVerification();
-            
-            // Cache the result
-            Cache::put(self::CACHE_KEY, $result, self::CACHE_DURATION);
-            
-            return $result;
-            
-        } catch (\Exception $e) {
-            Log::error('License verification failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            LicenseAudit::logFailure(
-                LicenseAudit::EVENT_FAILED_SIGNATURE,
-                'Verification exception: ' . $e->getMessage()
-            );
-            
-            return LicenseResult::invalid('verification_error');
-        }
-    }
-
-    /**
-     * Perform actual license verification
-     */
-    private function performVerification(): LicenseResult
-    {
-        // Get latest active license
-        $license = License::latest()->first();
-        if (!$license) {
-            return LicenseResult::invalid('no_license');
-        }
-
-        $payload = $license->PayloadJson;
-        $signature = base64_decode($license->SignatureBase64);
-
-        // 1) Verify signature
-        if (!$this->verifySignature($payload, $signature)) {
-            LicenseAudit::logFailure(
-                LicenseAudit::EVENT_FAILED_SIGNATURE,
-                'Invalid signature',
-                $license->LicenseId
-            );
-            return LicenseResult::invalid('bad_signature');
-        }
-
-        $data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
-
-        // 2) Check expiry (with small leeway for clock skew)
-        if ($this->isExpired($data)) {
-            LicenseAudit::logFailure(
-                LicenseAudit::EVENT_EXPIRED,
-                'License expired',
-                $license->LicenseId
-            );
-            return LicenseResult::invalid('expired');
-        }
-
-        // 3) Verify instance binding
-        $instance = Instance::current();
-        if (!$this->verifyInstanceBinding($data, $instance)) {
-            LicenseAudit::logFailure(
-                LicenseAudit::EVENT_WRONG_INSTANCE,
-                'Instance binding failed',
-                $license->LicenseId
-            );
-            return LicenseResult::invalid('wrong_instance');
-        }
-
-        // 4) Check nonce for replay protection
-        if (!$this->verifyNonce($data)) {
-            LicenseAudit::logFailure(
-                LicenseAudit::EVENT_REPLAY_ATTEMPT,
-                'Replay or downgrade attempt',
-                $license->LicenseId
-            );
-            return LicenseResult::invalid('replay_or_downgrade');
-        }
-
-        // 5) Extract and validate modules
-        $allowedModules = $this->extractModules($data);
-
-        // Update license validation timestamp
-        $license->markAsValidated();
-
-        // Log successful validation
-        LicenseAudit::logValidated($license->LicenseId, $allowedModules);
-
-        Log::info('License validated successfully', [
-            'license_id' => $license->LicenseId,
-            'modules' => $allowedModules,
-            'tenant' => $data['tenant_name'] ?? 'Unknown'
-        ]);
-
-        return LicenseResult::ok($data, $allowedModules);
-    }
-
-    /**
-     * Verify Ed25519 signature
-     */
-    private function verifySignature(string $payload, string $signature): bool
-    {
-        if (!$this->vendorPublicKey) {
-            Log::error('No vendor public key configured');
-            return false;
-        }
-
-        if (!function_exists('sodium_crypto_sign_verify_detached')) {
-            Log::error('Sodium extension not available for signature verification');
-            return false;
-        }
-
-        try {
-            $publicKeyBinary = base64_decode($this->vendorPublicKey);
-            return sodium_crypto_sign_verify_detached($signature, $payload, $publicKeyBinary);
-        } catch (\Exception $e) {
-            Log::error('Signature verification failed', ['error' => $e->getMessage()]);
-            return false;
-        }
-    }
-
-    /**
-     * Check if license has expired
-     */
-    private function isExpired(array $data): bool
-    {
-        if (!isset($data['expires_at'])) {
-            return true;
-        }
-
-        try {
-            $expiryTime = Carbon::parse($data['expires_at'], 'UTC');
-            $now = Carbon::now('UTC');
-            
-            // Allow 30 seconds leeway for clock skew
-            return $now->greaterThan($expiryTime->addSeconds(30));
-        } catch (\Exception $e) {
-            return true;
-        }
-    }
-
-    /**
-     * Verify instance binding
-     */
-    private function verifyInstanceBinding(array $data, Instance $instance): bool
-    {
-        $licenseDbGuid = $data['instance']['db_guid'] ?? '';
-        $licenseFingerprint = $data['instance']['host_fingerprint'] ?? '';
-
-        if (!$licenseDbGuid || !$licenseFingerprint) {
-            return false;
-        }
-
-        // Check DB GUID match
-        if ($licenseDbGuid !== (string) $instance->DbGuid) {
-            return false;
-        }
-
-        // Check host fingerprint (with some tolerance for dynamic components)
-        return $instance->verifyFingerprint($licenseFingerprint);
-    }
-
-    /**
-     * Verify nonce for replay protection
-     */
-    private function verifyNonce(array $data): bool
-    {
-        $nonce = $data['nonce'] ?? 0;
-        $maxNonce = Cache::rememberForever(self::NONCE_CACHE_KEY, fn() => 0);
-
-        if ($nonce < $maxNonce) {
-            return false; // Replay or downgrade attempt
-        }
-
-        if ($nonce > $maxNonce) {
-            Cache::forever(self::NONCE_CACHE_KEY, $nonce);
-        }
-
-        return true;
-    }
-
-    /**
-     * Extract and validate modules
-     */
-    private function extractModules(array $data): array
-    {
-        $modules = $data['modules'] ?? [];
-        
-        // Ensure we have valid module keys
-        return collect($modules)
-            ->filter(fn($module) => is_string($module) && !empty($module))
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    /**
-     * Get current license result (cached)
-     */
     public function current(): LicenseResult
     {
-        return $this->verifyAndLoad();
-    }
-
-    /**
-     * Check if a specific module is licensed
-     */
-    public function hasModule(string $moduleKey): bool
-    {
-        $result = $this->current();
-        return $result->allows($moduleKey);
-    }
-
-    /**
-     * Check if a module ID is licensed (resolves parent module)
-     */
-    public function hasModuleId(int $moduleId): bool
-    {
-        $result = $this->current();
-        if (!$result->isValid()) {
-            return false;
+        // Bypass licensing in non-production environments
+        if ($this->shouldBypassLicensing()) {
+            return $this->getDevelopmentLicense();
         }
 
-        // Use the Module model to resolve the license key
-        $licenseKey = \App\Models\Core\Module::getLicenseKeyForModuleId($moduleId);
-        
-        if (!$licenseKey) {
-            return false;
+        /** @var CacheRepository $cache */
+        $cache = Cache::store();
+        $ttlSeconds = (int)config('licensing.cache_ttl_seconds', 300);
+        $cached = $cache->get(self::CACHE_KEY);
+        if ($cached instanceof LicenseResult) {
+            return $cached;
         }
 
-        return $result->allows($licenseKey);
+        $result = $this->verifyAndLoad();
+        $cache->put(self::CACHE_KEY, $result, $ttlSeconds);
+        return $result;
     }
 
-    /**
-     * Check if multiple module IDs are licensed
-     */
-    public function hasModuleIds(array $moduleIds): array
-    {
-        $result = $this->current();
-        if (!$result->isValid()) {
-            return array_fill_keys($moduleIds, false);
-        }
-
-        $permissions = [];
-        foreach ($moduleIds as $moduleId) {
-            $permissions[$moduleId] = $this->hasModuleId($moduleId);
-        }
-
-        return $permissions;
-    }
-
-    /**
-     * Invalidate license cache
-     */
     public function invalidateCache(): void
     {
         Cache::forget(self::CACHE_KEY);
     }
 
-    /**
-     * Import a new license
-     */
-    public function importLicense(string $licenseId, string $payloadJson, string $signatureBase64, string $publicKeyId): bool
+    public function verifyAndLoad(): LicenseResult
     {
-        try {
-            // Validate the license first
-            $signature = base64_decode($signatureBase64);
-            if (!$this->verifySignature($payloadJson, $signature)) {
-                return false;
-            }
+        $record = LicenseRecord::query()
+            ->where('Status', 1)
+            ->orderByDesc('Id')
+            ->first();
 
-            // Parse payload to validate structure
-            $payload = json_decode($payloadJson, true, 512, JSON_THROW_ON_ERROR);
-            if (!isset($payload['license_id'], $payload['modules'], $payload['expires_at'])) {
-                return false;
-            }
-
-            // Revoke any existing active licenses
-            License::where('Status', 1)->update(['Status' => 0]);
-
-            // Create new license
-            License::create([
-                'LicenseId' => $licenseId,
-                'PayloadJson' => $payloadJson,
-                'SignatureBase64' => $signatureBase64,
-                'PublicKeyId' => $publicKeyId,
-                'Status' => 1
-            ]);
-
-            // Invalidate cache to force re-validation
-            $this->invalidateCache();
-
-            LicenseAudit::logEvent(
-                LicenseAudit::EVENT_LICENSE_UPLOADED,
-                'New license imported',
-                $licenseId
-            );
-
-            return true;
-
-        } catch (\Exception $e) {
-            Log::error('License import failed', [
-                'license_id' => $licenseId,
-                'error' => $e->getMessage()
-            ]);
-            return false;
+        if (!$record) {
+            $this->audit('missing', 'No active license record');
+            return LicenseResult::invalid('missing');
         }
+
+        $payload = $record->PayloadJson;
+        $signature = base64_decode($record->SignatureBase64, true);
+        if ($signature === false) {
+            $this->audit('bad_signature', 'Signature not base64');
+            return LicenseResult::invalid('bad_signature');
+        }
+
+        // Ensure the stored public key id matches configured one
+        $configuredKeyId = (string)config('licensing.public_key_id', '');
+        if ($configuredKeyId !== '' && strcasecmp($configuredKeyId, (string)$record->PublicKeyId) !== 0) {
+            $this->audit('kid_mismatch', 'PublicKeyId mismatch');
+            return LicenseResult::invalid('kid_mismatch');
+        }
+
+        $publicKeyBase64 = (string)config('licensing.public_key_base64', '');
+        if ($publicKeyBase64 === '') {
+            Log::warning('Licensing public key missing in configuration');
+            return LicenseResult::invalid('server_misconfigured');
+        }
+
+        $publicKey = base64_decode($publicKeyBase64, true);
+        if ($publicKey === false) {
+            $this->audit('bad_key', 'Public key not base64');
+            return LicenseResult::invalid('server_misconfigured');
+        }
+
+        if (!function_exists('sodium_crypto_sign_verify_detached')) {
+            $this->audit('crypto_missing', 'libsodium not available');
+            return LicenseResult::invalid('server_misconfigured');
+        }
+
+        $ok = sodium_crypto_sign_verify_detached($signature, $payload, $publicKey);
+        if (!$ok) {
+            $this->audit('bad_signature', 'Signature verification failed');
+            return LicenseResult::invalid('bad_signature');
+        }
+
+        $data = json_decode($payload, true);
+        if (!is_array($data)) {
+            $this->audit('bad_payload', 'JSON decode failed');
+            return LicenseResult::invalid('bad_payload');
+        }
+
+        $now = CarbonImmutable::now('UTC');
+        // Accept expires_at as ISO string or epoch seconds
+        $expiresAt = null;
+        if (isset($data['expires_at'])) {
+            $exp = $data['expires_at'];
+            if (is_numeric($exp)) {
+                $expiresAt = CarbonImmutable::createFromTimestampUTC((int)$exp);
+            } else {
+                try {
+                    $expiresAt = CarbonImmutable::parse((string)$exp);
+                } catch (\Throwable $e) {
+                    $expiresAt = null;
+                }
+            }
+        }
+        if (!$expiresAt) {
+            $this->audit('bad_payload', 'Missing expires_at');
+            return LicenseResult::invalid('bad_payload');
+        }
+
+        $graceSeconds = (int)config('licensing.grace_period_seconds', 0);
+        if ($now->greaterThan($expiresAt->addSeconds($graceSeconds))) {
+            $this->audit('expired', 'License expired');
+            return LicenseResult::invalid('expired');
+        }
+
+        $instance = Instance::query()->orderBy('Id')->first();
+        if (!$instance) {
+            $this->audit('instance_missing', 't_Instance row missing');
+            return LicenseResult::invalid('server_misconfigured');
+        }
+
+        $payloadDbGuid = (string)($data['instance']['db_guid'] ?? '');
+        if ($payloadDbGuid === '' || strcasecmp($payloadDbGuid, (string)$instance->DbGuid) !== 0) {
+            $this->audit('wrong_instance', 'DbGuid mismatch');
+            return LicenseResult::invalid('wrong_instance');
+        }
+
+        $nonce = (int)($data['nonce'] ?? 0);
+        if ($nonce < (int)$instance->MaxSeenNonce) {
+            $this->audit('replay', 'Nonce lower than MaxSeenNonce');
+            return LicenseResult::invalid('replay_or_downgrade');
+        }
+
+        if ($nonce > (int)$instance->MaxSeenNonce) {
+            $instance->MaxSeenNonce = $nonce;
+            $instance->save();
+        }
+
+        $allowedModules = collect($data['modules'] ?? [])
+            ->map(static fn($v) => (int)$v)
+            ->unique()->values()->all();
+
+        $record->LastValidatedOn = $now->toDateTimeString();
+        $record->save();
+
+        $this->audit('validated', 'License valid');
+        return LicenseResult::ok($data, $allowedModules, $expiresAt->toIso8601String());
     }
 
     /**
-     * Get license status for admin display
+     * Check if licensing should be bypassed based on environment
      */
-    public function getStatus(): array
+    private function shouldBypassLicensing(): bool
     {
-        $result = $this->current();
-        $license = License::latest()->first();
+        // Check if LICENSING_BYPASS is explicitly set in environment
+        $bypass = config('licensing.bypass', false);
+        if ($bypass === true || $bypass === 'true' || $bypass === '1') {
+            return true;
+        }
 
-        return [
-            'valid' => $result->isValid(),
-            'error' => $result->getError(),
-            'tenant_name' => $result->getTenantName(),
-            'edition' => $result->getEdition(),
-            'modules' => $result->getAllowedModules(),
-            'expires_at' => $result->getExpiresAt(),
-            'days_until_expiry' => $result->getDaysUntilExpiry(),
-            'in_grace_period' => $result->isInGracePeriod(),
-            'max_users' => $result->getMaxUsers(),
-            'features' => $result->getFeatures(),
-            'limits' => $result->getLimits(),
-            'last_validated' => $license?->LastValidatedOn,
-            'created_on' => $license?->CreatedOn
+        // Auto-bypass for local and development environments
+        $env = app()->environment();
+        return in_array($env, ['local', 'development', 'dev', 'testing'], true);
+    }
+
+    /**
+     * Return a development license that's always valid
+     */
+    private function getDevelopmentLicense(): LicenseResult
+    {
+        // Development module IDs that should be enabled
+        $allowedModules = [
+            100000,   // Module 1
+            200000,   // Module 2
+            300000,   // Module 3
+            400000,   // Module 4
+            500000,   // Module 5
+            600000,   // Module 6
+            700000,   // Module 7
+            800000,   // Module 8
+            900000,   // Module 9
+            1000000,  // Module 10
+            1100000,  // Module 11
+            1200000,  // Module 12
+            9800000,  // Module 98
+            9900000,  // Module 99
         ];
+
+        // Create a development license with all required modules enabled
+        $developmentPayload = [
+            'tenant_name' => 'Development Environment',
+            'edition' => 'Development',
+            'max_users' => 999999,
+            'expires_at' => now()->addYears(100)->toIso8601String(),
+            'features' => [],
+            'limits' => [],
+            'modules' => $allowedModules,
+            'instance' => [
+                'db_guid' => 'dev-bypass'
+            ],
+            'nonce' => 0,
+        ];
+
+        return LicenseResult::ok(
+            $developmentPayload,
+            $allowedModules,
+            now()->addYears(100)->toIso8601String()
+        );
+    }
+
+    private function audit(string $event, ?string $detail = null): void
+    {
+        try {
+            LicenseAudit::create([
+                'Event' => $event,
+                'Detail' => $detail,
+                'EventAt' => now('UTC')->toDateTimeString(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::debug('License audit failed: ' . $e->getMessage());
+        }
+    }
+}
+
+final class LicenseResult
+{
+    public function __construct(
+        public readonly bool $valid,
+        public readonly ?array $payload,
+        public readonly array $allowedModules,
+        public readonly ?string $reason,
+        public readonly ?string $expiresAt
+    ) {}
+
+    public static function invalid(string $reason): self
+    {
+        return new self(false, null, [], $reason, null);
+    }
+
+    public static function ok(array $payload, array $allowedModules, string $expiresAt): self
+    {
+        return new self(true, $payload, $allowedModules, null, $expiresAt);
+    }
+
+    public function isValid(): bool
+    {
+        return $this->valid;
+    }
+
+    public function allows(int $moduleId): bool
+    {
+        return in_array($moduleId, $this->allowedModules, true);
     }
 }

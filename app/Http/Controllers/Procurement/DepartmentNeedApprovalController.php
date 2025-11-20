@@ -19,13 +19,15 @@ class DepartmentNeedApprovalController extends Controller
     //
     public function index()
     {
+        $this->authorize('viewAny', DepartmentNeed::class);
         $NeedsApprovalviews = DepartmentNeed::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
         return view('procurement.procurementplan.departmentneeds.approval.index', compact('NeedsApprovalviews'));
     }
 
     public function show(DepartmentNeed $department_need)
     {
-        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($department_need->Id);
+        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($Id);
+        $this->authorize('view', $need);
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
@@ -35,39 +37,39 @@ class DepartmentNeedApprovalController extends Controller
     {
         $departmentNeed = $department_need;
 
-    $this->authorize('approve', $departmentNeed);
+        $this->authorize('approve', $departmentNeed);
 
-    $lock = Cache::lock('approve-DepartmentNeeds-' . $departmentNeed->NeedID, 5);
-    if (!$lock->get()) {
+        $lock = Cache::lock('approve-DepartmentNeeds-' . $departmentNeed->NeedID, 5);
+        if (!$lock->get()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Department Needs has been approved, or another user is working on it.');
+        }
+
+        $actor = $request->user();
+
+        try {
+            DB::transaction(static function () use ($departmentNeed, $actor) {
+                $workflow = app(DepartmentNeedsWorkflow::class);
+
+                // Submit then approve using the new unified workflow service
+                $workflow->submit($departmentNeed, $actor, 'Submitted for approval');
+                $workflow->approve($departmentNeed, $actor, 'Approved');
+            });
+        } catch (\App\Exceptions\ErroredException $e) {
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
+        } catch (\Throwable | Exception $e) {
+            Log::error('Error approving department need: ' . $e->getMessage());
+            return redirect()
+                ->back()
+                ->with('error', 'Unexpected error, try again later.');
+        }
+
         return redirect()
-            ->back()
-            ->with('error', 'Department Needs has been approved, or another user is working on it.');
-    }
-
-    $actor = $request->user();
-
-    try {
-        DB::transaction(static function () use ($departmentNeed, $actor) {
-            $workflow = app(DepartmentNeedsWorkflow::class);
-
-            // Submit then approve using the new unified workflow service
-            $workflow->submit($departmentNeed, $actor, 'Submitted for approval');
-            $workflow->approve($departmentNeed, $actor, 'Approved');
-        });
-    } catch (\App\Exceptions\ErroredException $e) {
-        return redirect()
-            ->back()
-            ->with('error', $e->getMessage());
-    } catch (\Throwable|Exception $e) {
-        Log::error('Error approving department need: ' . $e->getMessage());
-        return redirect()
-            ->back()
-            ->with('error', 'Unexpected error, try again later.');
-    }
-
-    return redirect()
-        ->route('department-need-approval.index')
-        ->with('success', 'Department need submitted & approved successfully.');
+            ->route('department-need-approval.index')
+            ->with('success', 'Department need submitted & approved successfully.');
     }
 
 
@@ -103,6 +105,4 @@ class DepartmentNeedApprovalController extends Controller
             ->route('department-need-approval.index')
             ->with('success', 'Department needs rejected successfully.');
     }
-
 }
-

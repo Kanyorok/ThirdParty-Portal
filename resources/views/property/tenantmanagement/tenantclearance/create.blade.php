@@ -13,7 +13,7 @@
   @endif
   <div class="container mt-4">
 
-    <h4 class="fw-bold mb-3">Clearance Checklist</h4>
+      <h4 class="fw-bold mb-3">Clearance Checklist</h4>
 
     <form action="{{ route('tenantclearance.store') }}" method="POST" enctype="multipart/form-data">
       @csrf
@@ -27,7 +27,7 @@
                 <option>--Select the tenant</option>
                 @foreach ($newtenants as $newtenant)
                   <option value="{{ $newtenant->LeaseID }}">
-                    Name:{{ $newtenant->lease->tenant->thirdParty->TradingName }} &nbsp;&nbsp; LeaseNo:
+                      Name:{{ $newtenant->lease->tenant->thirdParty->TradingName }} &nbsp;&nbsp; LeaseNo:
                     {{ $newtenant->lease->LeaseNumber }}
                   </option>
                 @endforeach
@@ -85,8 +85,8 @@
           <!-- Document Upload -->
           <div class="mb-3">
             <label class="form-label">Upload clearance Documents</label>
-            <input type="file" name="Document" class="form-control" multiple>
-            <small class="text-muted">e.g. Extra Clearance info</small>
+            <input type="file" name="Document" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+            <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
           </div>
 
           <div class="mb-3">

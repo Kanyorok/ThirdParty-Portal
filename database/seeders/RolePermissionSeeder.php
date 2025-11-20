@@ -15,12 +15,12 @@ use Spatie\Permission\Models\Role;
 class RolePermissionSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeds. 
      */
     public function run(): void
     {
         $actor = SystemHelper::user();
-        $now = now();
+        $now   = now();
         $guard = Guard::getDefaultName(User::class);
 
         // Ensure baseline roles
@@ -113,14 +113,15 @@ class RolePermissionSeeder extends Seeder
                 $now = now();
                 $payload = [];
                 foreach ($users as $u) {
+                    // t_ModelRoles does not have CreatedBy/ModifiedBy; only use existing columns
                     $payload[$adminRole->id] = [
-                        'BranchId' => $u->BranchId ?? 1,
-                        'CreatedBy' => 1,
+                        'BranchId'  => $u->BranchId ?? 1,
                         'CreatedOn' => $now,
-                        'ModifiedBy' => 1,
                         'ModifiedOn' => $now,
                     ];
                     // Attach per-user (keeps memory low and avoids giant param batches)
+                    // Ensure morph type uses our alias key 'UserID'
+                    $u->setRelation('roles', null); // prevent cached relations side-effects
                     $u->roles()->syncWithoutDetaching($payload);
                 }
             });

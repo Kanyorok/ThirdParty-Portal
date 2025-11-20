@@ -31,7 +31,7 @@ class MaintenanceRequest extends FormRequest
             'Priority' => 'required|exists:t_CodeDetails,ID',
             'IssueDescription' => 'required|string|max:255',
             'Document' => 'nullable|array',
-            'Document.*' => 'file|max:9000',
+            'Document.*' => 'file|max:25000',
         ];
     }
 

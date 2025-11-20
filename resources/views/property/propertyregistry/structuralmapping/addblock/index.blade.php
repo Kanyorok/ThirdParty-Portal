@@ -9,14 +9,14 @@
 <div class="container mt-4">
 
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-end align-items-center mb-3">
         <a href="{{ route('addblock.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i> Add Block
         </a>
     </div>
 
     <p class="text-muted">
-        <small>List of blocks in properties.</small>
+        <small>This screen displays a list of all registered property blocks.</small>
     </p>
 
     @if($blocks->count())
@@ -36,25 +36,30 @@
                         @foreach($blocks as $block)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $block->property->PropertyName ?? '-'}}</td>
-                                <td>{{ $block->BlockName ?? '-'}}</td>
-                                <td>{{ $block->Description ?? '-'}}</td>
+                                <td>{{ $block->property->PropertyName ?? '-' }}</td>
+                                <td>{{ $block->BlockName ?? '-' }}</td>
+                                <td>{{ $block->Description ?? '-' }}</td>
                                 <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('addblock.edit', $block->Id) }}" 
-                                           class="btn btn-sm btn-warning">
-                                           <i class="bi bi-pencil-square"></i> Edit
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <a href="{{ route('addblock.edit', $block->Id) }}"
+                                           class="btn btn-sm btn-warning"
+                                           title="Edit Block">
+                                            <i class="bi bi-pencil-square"></i>
                                         </a>
 
                                         @if($block->floor()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>In Use</button>
+                                            <button class="btn btn-sm btn-secondary" title="Block in Use">
+                                                <i class="bi bi-lock"></i>
+                                            </button>
                                         @else
-                                            <form action="{{ route('addblock.destroy', $block->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this Block?');">
+                                            <form action="{{ route('addblock.destroy', $block->Id) }}"
+                                                  method="POST"
+                                                  onsubmit="return confirm('Are you sure you want to delete this block?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">Delete</button>
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Delete Block">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             </form>
                                         @endif
                                     </div>
@@ -67,7 +72,7 @@
         </div>
     @else
         <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle me-2"></i> No property block registered yet.
+            <i class="bi bi-info-circle me-2"></i> No property blocks registered yet.
         </div>
     @endif
 </div>

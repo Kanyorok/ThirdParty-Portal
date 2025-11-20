@@ -22,7 +22,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('t_StockAdjustmentItems', function (Blueprint $table) {
-             $table->dropForeign('Reason');
+            $table->dropForeign(['Reason']);
             $table->dropColumn('Reason');
         });
     }

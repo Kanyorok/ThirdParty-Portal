@@ -34,7 +34,8 @@
                         <select name="BudgetLineID" id="budgetLineSelect" class="form-select" required>
                             <option disabled selected>-- Select Budget Line --</option>
                             @foreach ($budgetLines as $item)
-                                <option value="{{ $item->Id }}" {{ $activity->BudgetLineID == $item->Id ? 'selected' : '' }}>
+                                <option
+                                    value="{{ $item->Id }}" {{ $activity->BudgetLineID == $item->Id ? 'selected' : '' }}>
                                     {{ $item->LineName }}
                                 </option>
                             @endforeach
@@ -70,7 +71,8 @@
                     {{-- Description --}}
                     <div class="col-md-12 mb-3">
                         <label class="form-label">Description</label>
-                        <textarea name="Description" class="form-control" rows="3" required>{{ old('Description', $activity->Description) }}</textarea>
+                        <textarea name="Description" class="form-control" rows="3"
+                                  required>{{ old('Description', $activity->Description) }}</textarea>
                         @error('Description') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
                 </div>

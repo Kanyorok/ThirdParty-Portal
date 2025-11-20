@@ -75,7 +75,5 @@ class StockAdjustment extends Model
     //     return 'Id';
     // }
 
-   
-
 
 }

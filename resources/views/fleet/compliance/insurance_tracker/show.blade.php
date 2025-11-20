@@ -53,11 +53,14 @@
 
                     <dt class="col-sm-5">Document:</dt>
                     <dd class="col-sm-6">
-                        @if($record->DocumentPath)
-                            <a href="{{ Storage::url($record->DocumentPath) }}" target="_blank">📄 View Document</a>
-                        @else
-                            No document uploaded.
-                        @endif
+                       
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+            @forelse($record->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
+
                     </dd>
                 </dl>
             </div>
@@ -68,4 +71,8 @@
             <a href="{{ route('fleet.insurance_tracker.index') }}" class="btn btn-secondary">Back</a>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

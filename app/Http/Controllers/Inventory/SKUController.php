@@ -24,12 +24,12 @@ class SKUController extends Controller
 
     public function index()
     {
-     $branchId = auth()->user()->employee?->BranchId;
+        $branchId = auth()->user()->employee?->BranchId;
         $this->authorize('viewAny', StockItem::class);
 
         $items = StockItem::with(['item', 'store', 'uom'])
-        ->where('Branch', $branchId)
-        ->get();
+            ->where('Branch', $branchId)
+            ->get();
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
@@ -52,7 +52,7 @@ class SKUController extends Controller
         $this->authorize('create', StockItem::class);
 
         $data = $request->validated();
-        $data['Status'] = 1; 
+        $data['Status'] = 1;
 
         try {
             $skuCode = $this->stockItemService->create($data);
@@ -115,18 +115,14 @@ class SKUController extends Controller
         }
     }
 
-    public function destroy($id)
+     public function destroy($id)
     {
         $item = StockItem::findOrFail($id);
         $this->authorize('destroy', $item);
-
-        try {
-            $this->stockItemService->delete($item);
-            return redirect()->route('sku.index')->with('success', '🗑️ Stock item deleted successfully!');
-        } catch (\Exception $e) {
-            return back()->withErrors('Failed to delete stock item: ' . $e->getMessage());
-        }
+        $this->stockItemService->destroy($item);
+        return redirect()->route('sku.index')->with('success', 'Stock item deleted successfully.');
     }
+
 
     public function getStores(Request $request)
     {
@@ -150,7 +146,6 @@ class SKUController extends Controller
         return response()->json($items);
     }
 
-    
 
     public function getItemDetails(Request $request)
     {

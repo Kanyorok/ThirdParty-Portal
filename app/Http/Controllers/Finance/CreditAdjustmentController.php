@@ -89,10 +89,10 @@ class CreditAdjustmentController extends Controller
             $creditProfile = FinanceCreditManagement::findOrFail($validated['CreditID']);
 
             // Calculate new credit limit
-            $currentLimit = (float) $creditProfile->CreditLimit;
-            $adjustmentAmount = (float) $validated['Amount'];
+            $currentLimit = (float)$creditProfile->CreditLimit;
+            $adjustmentAmount = (float)$validated['Amount'];
 
-            $newLimit = match($validated['AdjustmentType']) {
+            $newLimit = match ($validated['AdjustmentType']) {
                 'increase' => $currentLimit + $adjustmentAmount,
                 'decrease' => max(0, $currentLimit - $adjustmentAmount),
                 'revision' => $adjustmentAmount, // Amount is the new total limit
@@ -193,10 +193,10 @@ class CreditAdjustmentController extends Controller
             $creditProfile = $adjustment->creditProfile;
 
             // Recalculate new credit limit
-            $currentLimit = (float) $creditProfile->CreditLimit;
-            $adjustmentAmount = (float) $validated['Amount'];
+            $currentLimit = (float)$creditProfile->CreditLimit;
+            $adjustmentAmount = (float)$validated['Amount'];
 
-            $newLimit = match($validated['AdjustmentType']) {
+            $newLimit = match ($validated['AdjustmentType']) {
                 'increase' => $currentLimit + $adjustmentAmount,
                 'decrease' => max(0, $currentLimit - $adjustmentAmount),
                 'revision' => $adjustmentAmount,

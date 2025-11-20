@@ -21,5 +21,11 @@
 <link rel="stylesheet" href="{{ asset('assets/libs/dataTables/bootstrap5.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/notyf/notyf.min.css') }}">
+
+{{-- Added as it is used in Property and Insurance beautification --}}
+{{-- Include Bootstrap Icons --}}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+{{-- Include DataTables CSS --}}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @yield('styles')
 

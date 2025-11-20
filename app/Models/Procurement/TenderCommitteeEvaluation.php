@@ -88,15 +88,15 @@ class TenderCommitteeEvaluation extends Model
     {
         return $this->belongsTo(TenderCommitteeMember::class, 'MemberID', 'Id');
     }
-    
+
     public function section()
     {
-        return $this->belongsTo(\App\Models\procurement\Section::class, 'SectionID', 'Id');
+        return $this->belongsTo(\App\Models\Procurement\Section::class, 'SectionID', 'Id');
     }
-    
+
     public function criteria()
     {
-        return $this->belongsTo(\App\Models\procurement\Criteria::class, 'CriteriaID', 'Id');
+        return $this->belongsTo(\App\Models\Procurement\Criteria::class, 'CriteriaID', 'Id');
     }
 
     public static function getPrimaryKey(): string

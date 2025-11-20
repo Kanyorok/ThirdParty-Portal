@@ -18,245 +18,195 @@
     <div class="container bg-white shadow rounded p-4">
         <h4 class="mb-4">Edit Adjustment - {{ $adjustment->AdjustmentId }}</h4>
 
-        {{-- Ensure the form action points to the correct update route with the adjustment ID --}}
         <form method="POST" action="{{ route('transactionsadjustment.update', $adjustment->Id) }}">
             @csrf
-            @method('PUT') {{-- Essential for PUT requests --}}
+            @method('PUT')
 
             <div class="row mb-3">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="adjustmentDate" class="form-label">Adjustment Date</label>
                     <input type="date" class="form-control @error('AdjustmentDate') is-invalid @enderror"
                            id="adjustmentDate" name="AdjustmentDate"
-                           value="{{ old('AdjustmentDate', $adjustment->AdjustmentDate ? Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') : '') }}"
+                           value="{{ old('AdjustmentDate', $adjustment->AdjustmentDate ? \Carbon\Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') : now()->format('Y-m-d')) }}"
                            required>
                     @error('AdjustmentDate')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
+                    <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="col-md-4">
+
+                <div class="col-md-6">
                     <label for="branch" class="form-label">Branch</label>
-                    <select class="form-select @error('Branch') is-invalid @enderror" id="branch" name="Branch"
-                            required>
-                        <option disabled>Select Branch</option> {{-- Removed 'selected' from disabled option --}}
+                    <select id="branch" name="Branch" class="form-select @error('Branch') is-invalid @enderror" required>
+                        <option value="">Select Branch</option>
                         @foreach($branches as $branch)
-                            <option
-                                value="{{ $branch->Id }}" {{ old('Branch', $adjustment->Branch) == $branch->Id ? 'selected' : '' }}>
+                            <option value="{{ $branch->Id }}"
+                                {{ (old('Branch', $adjustment->Branch) == $branch->Id) ? 'selected' : '' }}>
                                 {{ $branch->Name }}
                             </option>
                         @endforeach
                     </select>
                     @error('Branch')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
+                    <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="col-md-4">
-                    <label for="reason" class="form-label">Adjustment Reason</label>
-                    <select class="form-select @error('Reason') is-invalid @enderror" id="reason" name="Reason"
-                            required>
-                        <option disabled selected>Select Reason</option>
-                        @foreach($reasons as $reason)
-                            <option
-                                value="{{ $reason->ID }}" {{ old('Reason', $adjustment->Reason) == $reason->ID ? 'selected' : '' }}>
-                                {{ $reason->Description }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('Reason')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
-                    @enderror
-                </div>
+            </div>
 
+            <h5 class="mb-3">Adjustment Items</h5>
 
-                <h5 class="mb-3">Adjustment Items</h5>
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Item Code</th>
+                        <th>Item Name</th>
+                        <th>UOM</th>
+                        <th>Unit Cost</th>
+                        <th>Current Qty</th>
+                        <th>Adjustment Qty</th>
+                        <th>New Qty</th>
+                        <th>Adjustment Reason</th>
+                        <th>Remarks</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @php
+                        $itemsToDisplay = old('items', $adjustment->items->map(function($item) {
+                            return [
+                                'Item' => $item->Item,
+                                'ItemCode' => $item->item?->ItemCode ?? '',
+                                'ItemName' => $item->item?->ItemName ?? '',
+                                'UOM' => $item->UOM ?? '',
+                                'UnitCost' => $item->UnitCost ?? 0,
+                                'CurrentQty' => $item->current_stock_qty ?? 0,
+                                'AdjustmentQty' => $item->AdjustmentQty,
+                                'Reason' => $item->Reason,
+                                'Remarks' => $item->Remarks,
+                            ];
+                        })->toArray());
+                    @endphp
 
-                <div class="table-responsive mb-3">
-                    <table class="table table-bordered align-middle">
-                        <thead class="table-light">
+                    @foreach ($itemsToDisplay as $index => $item)
                         <tr>
-                            <th>#</th>
-                            <th>Item Code</th>
-                            <th>Item Name</th>
-                            <th>Current Qty</th>
-                            <th>Adjustment Qty</th>
-                            <th>New Qty</th>
-                            <th>Remarks</th>
+                            <td>{{ $index + 1 }}</td>
+                            <td>
+                                <input type="text" class="form-control" value="{{ $item['ItemCode'] ?? '' }}" readonly>
+                                <input type="hidden" name="items[{{ $index }}][Item]" value="{{ $item['Item'] ?? '' }}">
+                                <input type="hidden" name="items[{{ $index }}][ItemCode]" value="{{ $item['ItemCode'] ?? '' }}">
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" value="{{ $item['ItemName'] ?? '' }}" readonly>
+                                <input type="hidden" name="items[{{ $index }}][ItemName]" value="{{ $item['ItemName'] ?? '' }}">
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" value="{{ $item['UOM'] ?? '' }}" readonly>
+                                <input type="hidden" name="items[{{ $index }}][UOM]" value="{{ $item['UOM'] ?? '' }}">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" value="{{ $item['UnitCost'] ?? 0 }}" readonly>
+                                <input type="hidden" name="items[{{ $index }}][UnitCost]" value="{{ $item['UnitCost'] ?? 0 }}">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control current-qty" value="{{ $item['CurrentQty'] ?? 0 }}" readonly>
+                                <input type="hidden" name="items[{{ $index }}][CurrentQty]" value="{{ $item['CurrentQty'] ?? 0 }}">
+                            </td>
+                            <td>
+                                <input type="number" step="any" name="items[{{ $index }}][AdjustmentQty]"
+                                       class="form-control adjustment-qty @error('items.' . $index . '.AdjustmentQty') is-invalid @enderror"
+                                       value="{{ $item['AdjustmentQty'] ?? '' }}" onchange="calculateNewQty(this)">
+                                <div class="invalid-feedback adjustment-qty-feedback">
+                                    @error('items.' . $index . '.AdjustmentQty') {{ $message }} @enderror
+                                </div>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control new-qty" readonly>
+                            </td>
+                            <td>
+                                <select name="items[{{ $index }}][Reason]" class="form-select @error('items.' . $index . '.Reason') is-invalid @enderror" required>
+                                    <option value="">Select Reason</option>
+                                    @foreach($reasons as $reason)
+                                        <option value="{{ $reason->ID }}" {{ (old("items.$index.Reason", $item['Reason'] ?? '') == $reason->ID) ? 'selected' : '' }}>
+                                            {{ $reason->Description }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="items[{{ $index }}][Remarks]"
+                                       class="form-control @error('items.' . $index . '.Remarks') is-invalid @enderror"
+                                       value="{{ old('items.' . $index . '.Remarks', $item['Remarks'] ?? '') }}" placeholder="Optional remarks">
+                                @error('items.' . $index . '.Remarks')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger remove-row">Remove</button>
+                            </td>
                         </tr>
-                        </thead>
-                        <tbody>
-                        {{-- Loop through items either from old input (if validation failed) or from the $adjustment object --}}
-                        @php
-                            $itemsToDisplay = old('items', $adjustment->items->map(function($item) {
-                                // Map existing items to a format consistent with old() for easier repopulation
-                                return [
-                                    'Item' => $item->Item,
-                                    'AdjustmentQty' => $item->AdjustmentQty,
-                                    'Remarks' => $item->Remarks,
-                                    'item_code' => $item->item->ItemCode ?? '', // Store for display
-                                    'item_name' => $item->item->ItemName ?? '', // Store for display
-                                    'current_stock_qty' => $item->stockItem->CurrentQty ?? 0, // Store for display/calculation
-                                ];
-                            })->toArray());
-                        @endphp
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
 
-                        @foreach ($itemsToDisplay as $index => $itemData)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>
-                                    <input type="text" class="form-control"
-                                           value="{{ $itemData['item_code'] ?? ($itemData['Item'] ?? '') }}" readonly>
-                                    <input type="hidden" name="items[{{ $index }}][Item]"
-                                           value="{{ $itemData['Item'] }}">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control" value="{{ $itemData['item_name'] ?? '' }}"
-                                           readonly>
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control current-qty"
-                                           value="{{ $itemData['current_stock_qty'] ?? 0 }}" readonly>
-                                </td>
-                                <td>
-                                    <input type="number" name="items[{{ $index }}][AdjustmentQty]"
-                                           class="form-control adjustment-qty @error('items.' . $index . '.AdjustmentQty') is-invalid @enderror"
-                                           value="{{ old('items.' . $index . '.AdjustmentQty', $itemData['AdjustmentQty']) }}"
-                                           onchange="calculateNewQty(this)" required>
-                                    @error('items.' . $index . '.AdjustmentQty')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                    @enderror
-                                </td>
-                                <td>
-                                    {{-- New Qty will be calculated by JS on load and input change --}}
-                                    <input type="number" class="form-control new-qty" readonly>
-                                </td>
-                                <td>
-                                    <input type="text" name="items[{{ $index }}][Remarks]"
-                                           class="form-control @error('items.' . $index . '.Remarks') is-invalid @enderror"
-                                           value="{{ old('items.' . $index . '.Remarks', $itemData['Remarks']) }}">
-                                    @error('items.' . $index . '.Remarks')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                    @enderror
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                </div>
+            <div class="mb-3">
+                <label class="form-label">Adjusted By</label>
+                <select name="AdjustedBy" class="form-select select2 @error('AdjustedBy') is-invalid @enderror" required>
+                    <option value="">-- Select User --</option>
+                    @foreach ($users as $user)
+                        <option value="{{ $user->Id }}" {{ (old('AdjustedBy', $adjustment->AdjustedBy) == $user->Id) ? 'selected' : '' }}>
+                            {{ $user->Name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('AdjustedBy')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
 
-                <div class="mb-3">
-                    <label for="AdjustedBy" class="form-label">Adjusted By</label>
-                    <select name="AdjustedBy" id="AdjustedBy"
-                            class="form-select select2 @error('AdjustedBy') is-invalid @enderror" required>
-                        <option value="">-- Select User --</option>
-                        @foreach ($users as $user)
-                            <option value="{{ $user->Id }}"
-                                {{ old('AdjustedBy', $adjustment->AdjustedBy) == $user->Id ? 'selected' : '' }}>
-                                {{ $user->Name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('AdjustedBy')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
-                    @enderror
-                </div>
-
-                <div class="d-flex justify-content-between">
-                    <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-outline-secondary">Back</a>
-                    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Adjustment</button>
-
-                </div>
+            <div class="d-flex justify-content-between">
+                <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-outline-secondary">Back</a>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Adjustment
+                </button>
+            </div>
         </form>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    {{-- Scripts: mirror create --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 
     <script>
         function calculateNewQty(input) {
             const row = input.closest('tr');
-            const currentQtyInput = row.querySelector('.current-qty');
-            const currentQty = parseFloat(currentQtyInput.value) || 0;
+            const currentQty = parseFloat(row.querySelector('.current-qty')?.value) || 0;
             const adjustmentQty = parseFloat(input.value) || 0;
             const newQty = currentQty + adjustmentQty;
+
             row.querySelector('.new-qty').value = newQty;
 
-            let feedbackDiv = row.querySelector('.adjustment-qty-feedback');
-            if (!feedbackDiv) {
-                feedbackDiv = document.createElement('div');
-                feedbackDiv.classList.add('invalid-feedback', 'adjustment-qty-feedback');
-                input.parentNode.appendChild(feedbackDiv);
-            }
-
+            const feedbackDiv = row.querySelector('.adjustment-qty-feedback');
             if (newQty < 0) {
                 input.classList.add('is-invalid');
-                feedbackDiv.style.display = 'block';
-                feedbackDiv.innerHTML = `New quantity (${newQty}) cannot be negative.`;
+                feedbackDiv.textContent = `New quantity (${newQty}) cannot be negative.`;
             } else {
                 input.classList.remove('is-invalid');
-                feedbackDiv.style.display = 'none';
-                feedbackDiv.innerHTML = '';
+                feedbackDiv.textContent = '';
             }
         }
 
-        function reapplyCalculationsAndErrors() {
-            document.querySelectorAll('tbody tr').forEach((row, index) => {
-                const adjustmentQtyInput = row.querySelector('.adjustment-qty');
-                const remarksInput = row.querySelector('[name="items[' + index + '][Remarks]"]');
+        // remove row button
+        $(document).on('click', '.remove-row', function () {
+            $(this).closest('tr').remove();
+        });
 
-                if (adjustmentQtyInput) {
-                    calculateNewQty(adjustmentQtyInput);
-
-                    const errors = @json($errors->toArray());
-                    if (errors.messages && errors.messages[`items.${index}.AdjustmentQty`]) {
-                        adjustmentQtyInput.classList.add('is-invalid');
-                        let feedbackDiv = row.querySelector('.adjustment-qty-feedback');
-                        if (!feedbackDiv) {
-                            feedbackDiv = document.createElement('div');
-                            feedbackDiv.classList.add('invalid-feedback', 'adjustment-qty-feedback');
-                            adjustmentQtyInput.parentNode.appendChild(feedbackDiv);
-                        }
-                        feedbackDiv.style.display = 'block';
-                        feedbackDiv.innerHTML = errors.messages[`items.${index}.AdjustmentQty`][0];
-                    }
-                }
-
-                if (remarksInput) {
-                    const errors = @json($errors->toArray());
-                    if (errors.messages && errors.messages[`items.${index}.Remarks`]) {
-                        remarksInput.classList.add('is-invalid');
-                        let feedbackDiv = row.querySelector('.remarks-feedback');
-                        if (!feedbackDiv) {
-                            feedbackDiv = document.createElement('div');
-                            feedbackDiv.classList.add('invalid-feedback', 'remarks-feedback');
-                            remarksInput.parentNode.appendChild(feedbackDiv);
-                        }
-                        feedbackDiv.style.display = 'block';
-                        feedbackDiv.innerHTML = errors.messages[`items.${index}.Remarks`][0];
-                    }
-                }
-            });
-        }
-
+        // handle dynamic branch reload (mirror create behavior)
         document.getElementById('branch').addEventListener('change', function () {
             const branchId = this.value;
-            if (!branchId) {
-                document.querySelector('tbody').innerHTML = ''; // Clear items if no branch selected
-                return;
-            }
+            if (!branchId) return;
 
             fetch(`/inventory/branch-stock/${branchId}`)
                 .then(response => response.json())
@@ -265,61 +215,76 @@
                     tbody.innerHTML = '';
 
                     data.forEach((stock, index) => {
-                        const newRow = document.createElement('tr');
-                        newRow.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>
-                            <input type="text" class="form-control" value="${stock.item?.ItemCode ?? ''}" readonly>
-                            <input type="hidden" name="items[${index}][Item]" value="${stock.ItemID}">
-                        </td>
-                        <td>
-                            <input type="text" class="form-control" value="${stock.item?.ItemName ?? ''}" readonly>
-                        </td>
-                        <td>
-                            <input type="number" class="form-control current-qty" value="${stock.CurrentQty}" readonly>
-                        </td>
-                        <td>
-                            <input type="number" class="form-control adjustment-qty"
-                                    name="items[${index}][AdjustmentQty]"
-                                    value="" {{-- Start empty for new items from AJAX --}}
-                        placeholder="+/-"
-                        onchange="calculateNewQty(this)">
-                <div class="invalid-feedback adjustment-qty-feedback"></div>
-            </td>
-            <td>
-                <input type="number" class="form-control new-qty" readonly>
-            </td>
-            <td>
-                <input type="text" class="form-control" name="items[${index}][Remarks]" placeholder="Optional remarks">
-                            <div class="invalid-feedback remarks-feedback"></div>
-                        </td>
-                    `;
-                        tbody.appendChild(newRow);
+                        const item = stock.item || {};
+                        const uom = stock.uom || {};
 
-                        newRow.querySelector('.adjustment-qty').addEventListener('input', function () {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>
+                                <input type="text" class="form-control" value="${item.ItemCode ?? ''}" readonly>
+                                <input type="hidden" name="items[${index}][Item]" value="${stock.ItemID}">
+                                <input type="hidden" name="items[${index}][ItemCode]" value="${item.ItemCode ?? ''}">
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" value="${item.ItemName ?? ''}" readonly>
+                                <input type="hidden" name="items[${index}][ItemName]" value="${item.ItemName ?? ''}">
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" value="${uom.Code ?? ''}" readonly>
+                                <input type="hidden" name="items[${index}][UOM]" value="${uom.Id ?? ''}">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" value="${stock.UnitCost}" readonly>
+                                <input type="hidden" name="items[${index}][UnitCost]" value="${stock.UnitCost}">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control current-qty" value="${stock.CurrentQty}" readonly>
+                                <input type="hidden" name="items[${index}][CurrentQty]" value="${stock.CurrentQty}">
+                            </td>
+                            <td>
+                                <input type="number" step="any" class="form-control adjustment-qty" name="items[${index}][AdjustmentQty]" placeholder="+/-" onchange="calculateNewQty(this)">
+                                <div class="invalid-feedback adjustment-qty-feedback"></div>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control new-qty" readonly>
+                            </td>
+                            <td>
+                                <select name="items[${index}][Reason]" class="form-select" required>
+                                    <option value="">Select Reason</option>
+                                    @foreach($reasons as $reason)
+                                        <option value="{{ $reason->ID }}">{{ $reason->Description }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="items[${index}][Remarks]" placeholder="Optional remarks">
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger remove-row">Remove</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+
+                        row.querySelector('.adjustment-qty').addEventListener('input', function () {
                             calculateNewQty(this);
                         });
                     });
-                    reapplyCalculationsAndErrors();
                 })
-                .catch(error => console.error('Error fetching items:', error));
+                .catch(error => console.error('Error fetching stock:', error));
         });
 
+        $(document).ready(function () {
+            $('.select2').select2({ placeholder: 'Select user', allowClear: true });
 
-        document.addEventListener('DOMContentLoaded', function () {
-            $('.select2').select2({
-                placeholder: 'Select user',
-                allowClear: true
-            });
-
-            const oldBranchId = "{{ old('Branch') }}";
-            if (oldBranchId && oldBranchId !== document.getElementById('branch').value) {
-                document.getElementById('branch').value = oldBranchId;
-                document.getElementById('branch').dispatchEvent(new Event('change'));
-            } else {
-                reapplyCalculationsAndErrors();
+            // trigger branch change to reload items when branch changed or on initial load if needed
+            const selectedBranch = "{{ old('Branch', $adjustment->Branch) }}";
+            if (selectedBranch) {
+                $('#branch').val(selectedBranch).trigger('change');
             }
-        });
 
+            // run initial calculations for existing rows
+            document.querySelectorAll('.adjustment-qty').forEach(input => calculateNewQty(input));
+        });
     </script>
 @endsection

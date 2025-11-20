@@ -50,7 +50,7 @@ class UserController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+    $validated = $request->validate([
             'Role' => ['required', 'string', 'max:20'],
             'Employee' => ['required', 'string', 'max:20'],
             'BranchId' => ['required', 'integer', 'exists:t_Branches,Id'],
@@ -66,9 +66,17 @@ class UserController extends Controller
             throw ValidationException::withMessages(['BranchId' => 'branch not found']);
         }
 
-        $employee = Employee::query()->doesntHave('user')->where('EmployeeID', $validated['Employee'])->first();
+        // Only allow employees without a linked user AND whose email isn't already used by another user
+        $employee = Employee::query()
+            ->doesntHave('user')
+            ->where('EmployeeID', $validated['Employee'])
+            ->whereNotNull('Email')
+            ->whereNotIn('Email', function ($q) {
+                $q->select('Email')->from('t_Users');
+            })
+            ->first();
         if (!$employee instanceof Employee) {
-            throw ValidationException::withMessages(['Employee' => 'employee not found.']);
+            throw ValidationException::withMessages(['Employee' => 'employee not found or already has an account/email in use.']);
         }
 
         $actor = $request->user();
@@ -81,6 +89,8 @@ class UserController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            return $this->errored('This email already exists for another user.');
         } catch (Throwable|Exception $e) {
             Log::error('Error create user ' . $e->getMessage());
             Log::error($e);
@@ -91,8 +101,17 @@ class UserController extends Controller
 
     public function create(): View
     {
+        // Exclude employees with existing user accounts and those whose email is already present in users
+        $employees = Employee::query()
+            ->doesntHave('user')
+            ->whereNotNull('Email')
+            ->whereNotIn('Email', function ($q) {
+                $q->select('Email')->from('t_Users');
+            })
+            ->get(['EmployeeID', 'FirstName', 'LastName']);
+
         return view('settings.users.create')
-            ->with('employees', Employee::doesntHave('user')->get(['EmployeeID', 'FirstName', 'LastName']))
+            ->with('employees', $employees)
             ->with('Roles', Role::all())
             ->with('branches', Branch::all());
     }

@@ -105,7 +105,7 @@ class PostingController extends Controller
             if (isset($line->Amount) && $line->Amount !== null) {
                 $derivedAmount = (float)$line->Amount;
             } else {
-                $debit  = (float)($line->Debit  ?? 0);
+                $debit = (float)($line->Debit ?? 0);
                 $credit = (float)($line->Credit ?? 0);
                 $derivedAmount = $debit !== 0.0 ? $debit : $credit;
             }
@@ -120,7 +120,7 @@ class PostingController extends Controller
                 'ModuleID' => 1100000,
                 'SourceTable' => 't_FinanceJournalEntries',
                 'GLAccountID' => $line->GLAccountID,
-                'BranchID' =>$line->BranchID ?? session('LoginBranchId', 1), // Fallback to 1 if unset
+                'BranchID' => $line->BranchID ?? session('LoginBranchId', 1), // Fallback to 1 if unset
                 'DepartmentID' => $line->DepartmentID,
                 'DRCR' => $isDebit ? 'DR' : 'CR',
                 'Amount' => $amountToStore,

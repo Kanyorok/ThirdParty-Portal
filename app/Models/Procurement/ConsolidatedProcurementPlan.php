@@ -6,6 +6,7 @@ use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Procurement\TenderItems;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -54,7 +55,7 @@ class ConsolidatedProcurementPlan extends Model
     }
 
     // Relationship with User for CreatedBy
-   public function createdBy()
+    public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
@@ -81,4 +82,17 @@ class ConsolidatedProcurementPlan extends Model
         return $this->hasMany(PlanLineItem::class, 'PlanID');
     }
 
+    /**
+     * Check if this procurement plan has been used in any tender
+     * 
+     * @return bool
+     */
+    public function isUsed(): bool
+    {
+        // Get all line item IDs for this plan
+        $lineItemIds = $this->lineItems()->pluck('LineItemID');
+
+        // Check if any of these line items are used in tender items
+        return TenderItems::whereIn('PlanItemID', $lineItemIds)->exists();
+    }
 }

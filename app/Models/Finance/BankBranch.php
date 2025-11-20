@@ -18,22 +18,26 @@ class BankBranch extends Model
     const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
-        'BankID','BranchCode','BranchName','Address1','Address2',
-        'CityID','CountryID','ZipCode','Phone','EmailID','IsActive',
+        'BankID', 'BranchCode', 'BranchName', 'Address1', 'Address2',
+        'CityID', 'CountryID', 'ZipCode', 'Phone', 'EmailID', 'IsActive',
         // 'CreatedBy','ModifiedBy','DeletedBy','DeletedOn',
     ];
 
     protected $casts = [
-        'IsActive'  => 'boolean',
+        'IsActive' => 'boolean',
         'CreatedOn' => 'datetime',
-        'ModifiedOn'=> 'datetime',
+        'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
 
     protected static function booted()
     {
-        static::creating(function ($m) { $m->CreatedBy  = auth()->id(); });
-        static::updating(function ($m) { $m->ModifiedBy = auth()->id(); });
+        static::creating(function ($m) {
+            $m->CreatedBy = auth()->id();
+        });
+        static::updating(function ($m) {
+            $m->ModifiedBy = auth()->id();
+        });
     }
 
     public function bank()

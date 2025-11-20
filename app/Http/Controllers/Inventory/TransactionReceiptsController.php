@@ -15,6 +15,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\CodeDetail;
 
 
 class TransactionReceiptsController extends Controller
@@ -35,22 +36,31 @@ class TransactionReceiptsController extends Controller
         return view('inventory.transactions.receipts.index', compact('receipts'));
     }
 
-   public function create()
+    public function create()
     {
         $this->authorize('create', TransactionReceipt::class);
 
+        // get branch id from logged-in user's employee record (guard if missing)
         $branchId = Auth::user()->employee->BranchId ?? null;
 
-        $transfers = TransactionTransfer::doesntHave('receipt')
-            ->with(['items.item'])
-            ->where('Status', Transfers::InTransit->value)
-           ->where('ToBranch', $branchId) 
-            ->get();
+        if (!$branchId) {
+            \Log::warning('TransactionReceiptsController::create - user has no employee->BranchId', ['user_id' => Auth::id()]);
+            $transfers = collect();
+        } else {
+            // Use enum value for "In Transit"
+            $inTransitValue = Transfers::InTransit->value;
+
+            $transfers = TransactionTransfer::doesntHave('receipt')
+                ->with(['items.item'])
+                ->where('ToBranch', $branchId)
+                ->where('Status', $inTransitValue)
+                ->get();
+        }
 
 
         $users = User::whereHas('employee', function ($q) use ($branchId) {
-                $q->where('BranchId', $branchId);
-            })
+            $q->where('BranchId', $branchId);
+        })
             ->get();
 
         return view('inventory.transactions.receipts.create', compact('transfers', 'users'));

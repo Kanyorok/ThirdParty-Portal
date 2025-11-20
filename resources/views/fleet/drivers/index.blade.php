@@ -37,7 +37,7 @@
                     <th>Status</th>
                     <th>Driver Availability</th>
                     <th>Actions</th>
-                    
+
                 </tr>
                 </thead>
                 <tbody>
@@ -57,25 +57,25 @@
                             @endif
                         </td>
                         <td>
-                        @if($driver->driverStatus)
-                            @php
-                                // Map status descriptions to badge colors
-                                $statusColors = [
-                                    'Available'     => 'success',
-                                    'AssignedTrip'  => 'warning',
-                                    'OnTrip'        => 'info',
-                                ];
+                            @if($driver->driverStatus)
+                                @php
+                                    // Map status descriptions to badge colors
+                                    $statusColors = [
+                                        'Available'     => 'success',
+                                        'AssignedTrip'  => 'warning',
+                                        'OnTrip'        => 'info',
+                                    ];
 
-                                $color = $statusColors[$driver->driverStatus->Description] ?? 'light';
-                            @endphp
+                                    $color = $statusColors[$driver->driverStatus->Description] ?? 'light';
+                                @endphp
 
-                            <span class="badge bg-{{ $color }}">
+                                <span class="badge bg-{{ $color }}">
                                 {{ $driver->driverStatus->Description }}
                             </span>
-                        @else
-                            <span class="badge bg-light text-dark">-</span>
-                        @endif
-                    </td>
+                            @else
+                                <span class="badge bg-light text-dark">-</span>
+                            @endif
+                        </td>
                         <td>
                             <a href="{{ route('fleet.drivers.show', $driver->Id) }}" class="btn btn-sm btn-info">👁️Details</a>
                         </td>

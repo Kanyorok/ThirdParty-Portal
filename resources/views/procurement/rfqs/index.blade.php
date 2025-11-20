@@ -33,9 +33,11 @@
         @endif
 
         <!-- Button to trigger modal -->
-        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createRFQModal">
-            + New RFQ
-        </button>
+        @can('create', \App\Models\Procurement\RFQ::class)
+            <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createRFQModal">
+                + New RFQ
+            </button>
+        @endcan
 
         @if($rfqs->count())
             <table class="table table-bordered table-striped">
@@ -113,6 +115,7 @@
     </div>
 
     <!-- Modal -->
+    @can('create', \App\Models\Procurement\RFQ::class)
     <div class="modal fade" id="createRFQModal" tabindex="-1" aria-labelledby="createRFQModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form method="POST" action="{{ route('rfqs.store') }}" class="modal-content">
@@ -129,7 +132,10 @@
                         <select name="RequisitionId" id="RequisitionId" class="form-select" required>
                             <option value="">-- Choose Requisition --</option>
                             @foreach($requisitions as $requisition)
-                                <option value="{{ $requisition->Id }}">{{ $requisition->RequisitionNo }} @if(!empty($requisition->PlanTitle)) - {{ $requisition->PlanTitle }} @endif</option>
+                                <option
+                                    value="{{ $requisition->Id }}">{{ $requisition->RequisitionNo }} @if(!empty($requisition->PlanTitle))
+                                        - {{ $requisition->PlanTitle }}
+                                    @endif</option>
                             @endforeach
                         </select>
                     </div>
@@ -166,6 +172,7 @@
 
         </div>
     </div>
+    @endcan
     <script>
         @if($errors->any())
         var createRFQModal = new bootstrap.Modal(document.getElementById('createRFQModal'));

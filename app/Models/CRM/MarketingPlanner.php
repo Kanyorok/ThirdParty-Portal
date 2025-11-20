@@ -5,7 +5,7 @@ namespace App\Models\CRM;
 use App\Enums\Marketing\PlannerStatus;
 use App\Enums\Marketing\PlannerTypeEnum;
 use App\Models\Auth\User;
-use App\Models\BR\Branch;
+use App\Models\Core\Branch;
 use App\Models\Core\CodeDetail;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
@@ -21,9 +21,9 @@ class MarketingPlanner extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_MarketingPlanner';
     protected $primaryKey = 'Id';
@@ -32,20 +32,8 @@ class MarketingPlanner extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'PlannerID',
-        'Name',
-        'Type',
-        'BranchId',
-        'OwnerId',
-        'MasterPlannerId',
-        'Notes',
-        'Status',
-        'Modes',
-        'StartOn',
-        'EndOn',
-        'CreatedBy',
-        'ModifiedBy',
-        'DeletedBy',
+        'PlannerID', 'Name', 'Type', 'BranchId', 'OwnerId', 'MasterPlannerId', 'Notes', 'Status', 'Modes', 'StartOn', 'EndOn',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
@@ -92,7 +80,7 @@ class MarketingPlanner extends Model
 
     public function branch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class, 'BranchId', 'OurBranchID');
+        return $this->belongsTo(Branch::class, 'BranchId', 'Id');
     }
 
     public function workflows(): MorphMany
@@ -113,5 +101,5 @@ class MarketingPlanner extends Model
         return $this->hasMany(MarketingPlannerActivity::class, 'PlannerId', 'Id');
     }
 
-    
+
 }

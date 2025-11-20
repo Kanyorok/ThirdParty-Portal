@@ -69,8 +69,9 @@ class BancAssuranceReferral extends Model
     {
         return $this->belongsTo(user::class, 'ReferredBy', 'Id');
     }
+
     public function customerreferral()
     {
-        return $this->belongsTo(BancassuranceCustomer::class, 'ReferralID', 'Id');
+        return $this->hasOne(BancassuranceCustomer::class, 'ReferralID', 'Id');
     }
 }

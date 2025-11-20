@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Set Commission Rule')
+
 @section('content')
 
 @if ($errors->any())
@@ -25,13 +26,11 @@
 
                 <!-- Row 1 -->
                 <div class="row g-3 mb-3">
-                    <!-- Rule Name -->
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Rule Name <span class="text-danger">*</span></label>
                         <input type="text" name="RuleName" class="form-control rounded-3" placeholder="Enter rule name" required>
                     </div>
 
-                    <!-- Product -->
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Product <span class="text-danger">*</span></label>
                         <select name="ProductId" class="form-select rounded-3" required>
@@ -42,7 +41,6 @@
                         </select>
                     </div>
 
-                    <!-- Policy Type -->
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Policy Type <span class="text-danger">*</span></label>
                         <select name="PolicyTypeId" class="form-select rounded-3" required>
@@ -56,20 +54,30 @@
 
                 <!-- Row 2 -->
                 <div class="row g-3 mb-3">
-                    <!-- Commission Rate -->
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Commission Rate (%) <span class="text-danger">*</span></label>
-                        <input type="number" name="CommissionRate" step="0.01" class="form-control rounded-3" placeholder="e.g. 5.00" required>
+                        <input 
+                            type="number" 
+                            name="CommissionRate" 
+                            step="0.01" 
+                            min="0" 
+                            class="form-control rounded-3 text-end" 
+                            placeholder="e.g. 5.00" 
+                            required>
                     </div>
 
-                    <!-- Fixed Amount -->
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Fixed Amount <span class="text-danger">*</span></label>
-                        <input type="amount" name="FixedAmount" id="FixedAmount" class="form-control rounded-3 text-end" 
-                        placeholder="e.g. 1,000.00" required onblur="formatDecimal(this)">
+                        <input 
+                            type="text" 
+                            name="FixedAmount" 
+                            id="FixedAmount" 
+                            class="form-control rounded-3 text-end" 
+                            placeholder="e.g. 1,000.00" 
+                            required 
+                            oninput="formatFixedAmount(this)">
                     </div>
 
-                    <!-- Applies To -->
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Applies To <span class="text-danger">*</span></label>
                         <select name="AppliesTo" class="form-select rounded-3" required>
@@ -103,20 +111,25 @@
     </div>
 </div>
 
-{{-- JS for decimal formatting --}}
+{{-- JS for FixedAmount formatting --}}
 <script>
-function formatDecimal(input) {
-    let value = input.value.replace(/,/g, '').trim();
-    if (value === '' || isNaN(value)) {
-        input.value = '';
-        return;
-    }
-    // Format with commas and 2 decimals
-    const formatted = parseFloat(value).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-    input.value = formatted;
+function formatFixedAmount(input) {
+    // remove commas and non-numeric characters except '.'
+    let value = input.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+    if (value === '') return input.value = '';
+
+    // split into whole + decimal parts
+    let parts = value.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); // add commas
+    if (parts[1]) parts[1] = parts[1].substring(0, 2); // limit 2 decimals
+    input.value = parts.join('.');
 }
+
+// before submit — strip commas to send a clean numeric value
+document.querySelector('form').addEventListener('submit', function() {
+    const fixedAmountInput = document.getElementById('FixedAmount');
+    fixedAmountInput.value = fixedAmountInput.value.replace(/,/g, '');
+});
 </script>
+
 @endsection

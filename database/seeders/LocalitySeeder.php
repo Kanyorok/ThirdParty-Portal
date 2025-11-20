@@ -64,7 +64,7 @@ class LocalitySeeder extends Seeder
             $this->command->info('Successfully loaded ' . count($countries) . ' countries.');
 
             $actor = SystemHelper::user();
-            $date  = now();
+            $date = now();
 
             // Filter to Africa and Asia only
             $allowedRegions = ['Africa', 'Asia'];
@@ -112,24 +112,24 @@ class LocalitySeeder extends Seeder
                 }
 
                 // Currency fields with fallbacks
-                $currencyCode   = $countryData['currency']         ?? null;
-                $currencySymbol = $countryData['currency_symbol']  ?? '';
-                $currencyName   = $countryData['currency_name']    ?? '';
+                $currencyCode = $countryData['currency'] ?? null;
+                $currencySymbol = $countryData['currency_symbol'] ?? '';
+                $currencyName = $countryData['currency_name'] ?? '';
 
                 $currencyId = $currencyCode ? $this->getCurrencyId($currencyCode, $currencySymbol) : null;
 
                 if (!$currencyId && $currencyCode) {
                     $currencyData = [
-                        'Name'          => $currencyName ?: $currencyCode,
-                        'Code'          => $currencyCode,
-                        'Symbol'        => $currencySymbol,
-                        'SymbolNative'  => $currencySymbol,
+                        'Name' => $currencyName ?: $currencyCode,
+                        'Code' => $currencyCode,
+                        'Symbol' => $currencySymbol,
+                        'SymbolNative' => $currencySymbol,
                         'DecimalDigits' => 2,
-                        'Rounding'      => 2,
-                        'CreatedOn'     => $date,
-                        'CreatedBy'     => $actor->Id,
-                        'ModifiedOn'    => $date,
-                        'ModifiedBy'    => $actor->Id,
+                        'Rounding' => 2,
+                        'CreatedOn' => $date,
+                        'CreatedBy' => $actor->Id,
+                        'ModifiedOn' => $date,
+                        'ModifiedBy' => $actor->Id,
                     ];
                     DB::table('t_Currencies')->updateOrInsert(
                         ['Code' => $currencyCode],
@@ -140,18 +140,18 @@ class LocalitySeeder extends Seeder
 
                 // Insert or update country
                 $countryInsertData = [
-                    'Name'        => $countryName,
-                    'CountryCode' => $countryData['iso2']     ?? '',
-                    'Iso3'        => $countryData['iso3']     ?? null,
-                    'PhoneCode'   => $countryData['phonecode'] ?? '',
-                    'Flag'        => $countryData['emoji']     ?? '',
-                    'CurrencyId'  => $currencyId,
-                    'IsActive'    => 1,
-                    'SortOrder'   => $index, // Kenya will be 0, others sequential within Africa+Asia
-                    'CreatedOn'   => $date,
-                    'CreatedBy'   => $actor->Id,
-                    'ModifiedOn'  => $date,
-                    'ModifiedBy'  => $actor->Id,
+                    'Name' => $countryName,
+                    'CountryCode' => $countryData['iso2'] ?? '',
+                    'Iso3' => $countryData['iso3'] ?? null,
+                    'PhoneCode' => $countryData['phonecode'] ?? '',
+                    'Flag' => $countryData['emoji'] ?? '',
+                    'CurrencyId' => $currencyId,
+                    'IsActive' => 1,
+                    'SortOrder' => $index, // Kenya will be 0, others sequential within Africa+Asia
+                    'CreatedOn' => $date,
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedOn' => $date,
+                    'ModifiedBy' => $actor->Id,
                 ];
 
                 DB::table('t_Countries')->updateOrInsert(
@@ -173,20 +173,20 @@ class LocalitySeeder extends Seeder
                         $stateType = $stateData['type'] ?? 'state';
 
                         $stateInsertData = [
-                            'Name'         => $stateName,
+                            'Name' => $stateName,
                             'LocationType' => $stateType,
                             'CreatedOn'    => $date,
-                            'LocalityID'   => null,          // parent is the country
-                            'CountryId'    => $countryId,
-                            'CreatedBy'    => $actor->Id,
+                            'LocalityID' => null,          // parent is the country
+                            'CountryId' => $countryId,
+                            'CreatedBy' => $actor->Id,
                             'ModifiedOn'   => $date,
-                            'ModifiedBy'   => $actor->Id,
+                            'ModifiedBy' => $actor->Id,
                         ];
 
                         DB::table('t_Localities')->updateOrInsert(
                             [
-                                'Name'         => $stateInsertData['Name'],
-                                'CountryId'    => $countryId,
+                                'Name' => $stateInsertData['Name'],
+                                'CountryId' => $countryId,
                                 'LocationType' => $stateInsertData['LocationType'],
                             ],
                             $stateInsertData
@@ -206,20 +206,20 @@ class LocalitySeeder extends Seeder
                             foreach ($cities as $cityData) {
                                 $cityName = $cityData['name'] ?? '(unknown city)';
                                 $cityInsertData = [
-                                    'Name'         => $cityName,
+                                    'Name' => $cityName,
                                     'LocationType' => 'city',
-                                    'CountryId'    => $countryId,
-                                    'LocalityID'   => $stateId,   // parent is the state
-                                    'CreatedOn'    => $date,
-                                    'CreatedBy'    => $actor->Id,
-                                    'ModifiedOn'   => $date,
-                                    'ModifiedBy'   => $actor->Id,
+                                    'CountryId' => $countryId,
+                                    'LocalityID' => $stateId,   // parent is the state
+                                    'CreatedOn' => $date,
+                                    'CreatedBy' => $actor->Id,
+                                    'ModifiedOn' => $date,
+                                    'ModifiedBy' => $actor->Id,
                                 ];
 
                                 DB::table('t_Localities')->updateOrInsert(
                                     [
-                                        'Name'       => $cityInsertData['Name'],
-                                        'CountryId'  => $countryId,
+                                        'Name' => $cityInsertData['Name'],
+                                        'CountryId' => $countryId,
                                         'LocalityID' => $stateId,
                                     ],
                                     $cityInsertData
@@ -293,7 +293,7 @@ class LocalitySeeder extends Seeder
             return;
         }
 
-        $currentUsage     = memory_get_usage(true);
+        $currentUsage = memory_get_usage(true);
         $targetLimitBytes = $this->parseMemoryLimit($originalLimit);
 
         if ($currentUsage > $targetLimitBytes) {
@@ -324,24 +324,27 @@ class LocalitySeeder extends Seeder
         }
 
         if (is_numeric($limit)) {
-            return (int) $limit;
+            return (int)$limit;
         }
 
-        $last  = strtolower(substr($limit, -1));
-        $value = (float) substr($limit, 0, -1);
+        $last = strtolower(substr($limit, -1));
+        $value = (float)substr($limit, 0, -1);
 
         switch ($last) {
-            case 'g': $value *= 1024;
+            case 'g':
+                $value *= 1024;
             // no break
-            case 'm': $value *= 1024;
+            case 'm':
+                $value *= 1024;
             // no break
-            case 'k': $value *= 1024;
+            case 'k':
+                $value *= 1024;
                 break;
             default:
-                $value = (float) $limit; // assume bytes if unit missing
+                $value = (float)$limit; // assume bytes if unit missing
         }
 
-        return (int) $value;
+        return (int)$value;
     }
 
     /**

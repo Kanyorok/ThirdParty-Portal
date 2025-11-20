@@ -75,9 +75,10 @@
                         </h5>
                         <div class="section-progress">
                             @php
+                                // Criteria list is already filtered server-side to only tender-selected ones
                                 $sectionCriteriaCount = $section->criteria->count();
                                 $sectionCompletedCount = $existingScores->filter(function($score) use ($section) {
-                                    return strpos($score->SectionID . '_' . $score->CriteriaID, $section->Id . '_') === 0;
+                                    return (int)$score->SectionID === (int)$section->Id;
                                 })->count();
                                 $sectionPercentage = $sectionCriteriaCount > 0 ? round(($sectionCompletedCount / $sectionCriteriaCount) * 100) : 0;
                             @endphp

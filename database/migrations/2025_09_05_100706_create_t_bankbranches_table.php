@@ -26,7 +26,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('ModifiedBy')->nullable();
             $table->dateTime('DeletedOn')->nullable();
             $table->unsignedBigInteger('DeletedBy')->nullable();
-            
+
             $table->foreign('BankID')->references('BankID')->on('t_Banks');
         });
     }

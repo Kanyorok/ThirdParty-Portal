@@ -4,7 +4,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="card shadow-sm rounded-3">
-        <div class="card-header bg-info text-dark">
+        <div class="card-header bg-primary text-dark">
             <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Commission Rule</h5>
         </div>
         <div class="card-body">
@@ -27,7 +27,7 @@
                         <select name="ProductId" class="form-select rounded-3" required>
                             <option value="">-- Select Product --</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->Id }}" 
+                                <option value="{{ $product->Id }}"
                                     {{ $rule->ProductId == $product->Id ? 'selected' : '' }}>
                                     {{ $product->Name }}
                                 </option>
@@ -41,7 +41,7 @@
                         <select name="PolicyTypeId" class="form-select rounded-3" required>
                             <option value="">-- Select Policy Type --</option>
                             @foreach ($policytypes as $policytype)
-                                <option value="{{ $policytype->ID }}" 
+                                <option value="{{ $policytype->ID }}"
                                     {{ $rule->PolicyTypeId == $policytype->ID ? 'selected' : '' }}>
                                     {{ $policytype->Description }}
                                 </option>
@@ -54,9 +54,11 @@
                 <div class="row g-3 mb-3">
                     <!-- Commission Rate -->
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">Commission Rate (%) <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Commission Rate (%) <span
+                                class="text-danger">*</span></label>
                         <input type="number" name="CommissionRate" step="0.01" class="form-control rounded-3"
-                               value="{{ old('CommissionRate', $rule->CommissionRate) }}" placeholder="e.g. 5.00" required>
+                               value="{{ old('CommissionRate', $rule->CommissionRate) }}" placeholder="e.g. 5.00"
+                               required>
                     </div>
 
                     <!-- Fixed Amount -->
@@ -72,7 +74,7 @@
                         <select name="AppliesTo" class="form-select rounded-3" required>
                             <option value="">-- Select Option --</option>
                             @foreach ($assignto as $assign)
-                                <option value="{{ $assign->ID }}" 
+                                <option value="{{ $assign->ID }}"
                                     {{ $rule->AppliesTo == $assign->ID ? 'selected' : '' }}>
                                     {{ $assign->Description }}
                                 </option>
@@ -85,7 +87,7 @@
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck"
-                               {{ $rule->IsActive ? 'checked' : '' }}>
+                            {{ $rule->IsActive ? 'checked' : '' }}>
                         <label class="form-check-label fw-semibold" for="primaryCheck">Is Active</label>
                     </div>
                 </div>

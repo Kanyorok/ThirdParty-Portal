@@ -97,25 +97,30 @@
                 <hr>
                 <h4>Supplier Quotations</h4>
                 <div id="supplierQuotationsPrint">
-                @foreach($rfqResponses as $response)
-                    <section class="supplier-quotation mb-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <h5>Supplier: {{ optional($response->supplier->thirdParty)->TradingName ?? $response->SupplierName ?? 'N/A' }}</h5>
-                                        <p class="mb-0">Response No: <strong>{{ $response->RFQResponseNumber }}</strong></p>
-                                        <p class="mb-0">Submitted: <strong>{{ optional($response->CreatedOn)->format('d/m/Y') ?? '' }}</strong></p>
+                    @foreach($rfqResponses as $response)
+                        <section class="supplier-quotation mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <h5>
+                                                Supplier: {{ optional($response->supplier->thirdParty)->TradingName ?? $response->SupplierName ?? 'N/A' }}</h5>
+                                            <p class="mb-0">Response No:
+                                                <strong>{{ $response->RFQResponseNumber }}</strong></p>
+                                            <p class="mb-0">Submitted:
+                                                <strong>{{ optional($response->CreatedOn)->format('d/m/Y') ?? '' }}</strong>
+                                            </p>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <p class="mb-0">RFQ: <strong>{{ $rfq->RFQNumber }}</strong></p>
+                                            <p class="mb-0">Requisition:
+                                                <strong>{{ optional($rfq->requisition)->RequisitionNo }}</strong></p>
+                                        </div>
                                     </div>
-                                    <div class="col-6 text-end">
-                                        <p class="mb-0">RFQ: <strong>{{ $rfq->RFQNumber }}</strong></p>
-                                        <p class="mb-0">Requisition: <strong>{{ optional($rfq->requisition)->RequisitionNo }}</strong></p>
-                                    </div>
-                                </div>
 
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered">
-                                        <thead>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead>
                                             <tr>
                                                 <th>#</th>
                                                 <th>Item</th>
@@ -125,23 +130,23 @@
                                                 <th>Unit Price</th>
                                                 <th>Total</th>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                        @php $sum = 0; @endphp
-                                        @foreach($response->items as $ri)
-                                            @php $sum += floatval($ri->TotalPayable ?? ($ri->QuotedPrice * $ri->Quantity)); @endphp
-                                            <tr>
-                                                <td>{{ $loop->iteration }}</td>
-                                                <td>{{ $ri->ItemName }}</td>
-                                                <td>{{ $ri->Description ?? '' }}</td>
-                                                <td class="text-end">{{ $ri->Quantity }}</td>
-                                                <td>{{ optional($ri->uom)->Name ?? $ri->UOM }}</td>
-                                                <td class="text-end">{{ number_format($ri->QuotedPrice, 2) }}</td>
-                                                <td class="text-end">{{ number_format($ri->TotalPayable ?? ($ri->QuotedPrice * $ri->Quantity), 2) }}</td>
-                                            </tr>
-                                        @endforeach
-                                        </tbody>
-                                        <tfoot>
+                                            </thead>
+                                            <tbody>
+                                            @php $sum = 0; @endphp
+                                            @foreach($response->items as $ri)
+                                                @php $sum += floatval($ri->TotalPayable ?? ($ri->QuotedPrice * $ri->Quantity)); @endphp
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>{{ $ri->ItemName }}</td>
+                                                    <td>{{ $ri->Description ?? '' }}</td>
+                                                    <td class="text-end">{{ $ri->Quantity }}</td>
+                                                    <td>{{ optional($ri->uom)->Name ?? $ri->UOM }}</td>
+                                                    <td class="text-end">{{ number_format($ri->QuotedPrice, 2) }}</td>
+                                                    <td class="text-end">{{ number_format($ri->TotalPayable ?? ($ri->QuotedPrice * $ri->Quantity), 2) }}</td>
+                                                </tr>
+                                            @endforeach
+                                            </tbody>
+                                            <tfoot>
                                             <tr>
                                                 <td colspan="6" class="text-end"><strong>Subtotal</strong></td>
                                                 <td class="text-end"><strong>{{ number_format($sum, 2) }}</strong></td>
@@ -152,27 +157,31 @@
                                             </tr>
                                             <tr>
                                                 <td colspan="6" class="text-end"><strong>Total Payable</strong></td>
-                                                <td class="text-end"><strong>{{ number_format($response->TotalPayable ?? $sum, 2) }}</strong></td>
+                                                <td class="text-end">
+                                                    <strong>{{ number_format($response->TotalPayable ?? $sum, 2) }}</strong>
+                                                </td>
                                             </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-
-                                <div class="row mt-3">
-                                    <div class="col-6">
-                                        <p class="mb-1"><strong>Delivery Time (days):</strong> {{ $response->DurationDays ?? 'N/A' }}</p>
-                                        <p class="mb-1"><strong>Currency:</strong> {{ $response->Currency ?? 'N/A' }}</p>
+                                            </tfoot>
+                                        </table>
                                     </div>
-                                    <div class="col-6 text-end">
-                                        <p class="mb-1">Authorized Signature: ________________________</p>
-                                        <p class="mb-1">Name: ________________________</p>
-                                        <p class="mb-1">Date: ________________________</p>
+
+                                    <div class="row mt-3">
+                                        <div class="col-6">
+                                            <p class="mb-1"><strong>Delivery Time
+                                                    (days):</strong> {{ $response->DurationDays ?? 'N/A' }}</p>
+                                            <p class="mb-1">
+                                                <strong>Currency:</strong> {{ $response->Currency ?? 'N/A' }}</p>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <p class="mb-1">Authorized Signature: ________________________</p>
+                                            <p class="mb-1">Name: ________________________</p>
+                                            <p class="mb-1">Date: ________________________</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
-                @endforeach
+                        </section>
+                    @endforeach
                 </div>
             @endif
         </div>
@@ -379,7 +388,10 @@
                 try {
                     // Use onafterprint to close the window when print dialog finishes
                     printWindow.onafterprint = function () {
-                        try { printWindow.close(); } catch (e) { /* ignore */ }
+                        try {
+                            printWindow.close();
+                        } catch (e) { /* ignore */
+                        }
                     };
 
                     // Focus then print
@@ -391,11 +403,17 @@
 
                     // As a safety, close after 20s in case onafterprint isn't fired
                     setTimeout(() => {
-                        try { printWindow.close(); } catch (e) { /* ignore */ }
+                        try {
+                            printWindow.close();
+                        } catch (e) { /* ignore */
+                        }
                     }, 20000);
                 } catch (err) {
                     console.error('Print error', err);
-                    try { printWindow.close(); } catch (e) { /* ignore */ }
+                    try {
+                        printWindow.close();
+                    } catch (e) { /* ignore */
+                    }
                 }
             };
 
@@ -403,7 +421,7 @@
             function escapeHtml(text) {
                 if (typeof text !== 'string') return text;
                 return text.replace(/[&<>"']/g, function (c) {
-                    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+                    return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
                 });
             }
 

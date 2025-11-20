@@ -2,6 +2,11 @@
 
 @section('title', 'Item Categories')
 
+@section('styles')
+    {{-- Font Awesome for icons --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@endsection
+
 @section('content')
     <div class="container mt-5">
         <div class="card shadow rounded-4">
@@ -45,25 +50,34 @@
                                     </td>
 
                                     <td>
-                                        <a href="{{ route('itemcategory.show', $category->Id) }}" class="btn btn-secondary btn-sm">View</a>
-                                        <a href="{{ route('itemcategory.edit', $category->Id) }}" class="btn btn-warning btn-sm">Edit</a>
+                                        <div class="d-flex gap-1 align-items-center">
+                                            <a href="{{ route('itemcategory.show', $category->Id ) }}" 
+                                               class="btn btn-sm btn-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ route('itemcategory.edit', $category->Id ) }}" 
+                                               class="btn btn-sm btn-warning" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
 
-                                        @if($category->inUse())
-                                            <span class="badge bg-info text-light">
-                                                <i class="fas fa-link me-1"></i> In Use
-                                            </span>
-                                        @else
-                                            <button type="button" class="btn btn-danger btn-sm"
-                                                onclick="confirmDelete('{{ $category->Id }}', this)">
-                                                Delete
-                                            </button>
-                                            <form id="delete-form-{{ $category->Id }}"
-                                                  action="{{ route('itemcategory.destroy', $category->Id) }}"
-                                                  method="POST" style="display:none;">
-                                                @csrf
-                                                @method('DELETE')
-                                            </form>
-                                        @endif
+                                            @if($category->inUse())
+                                                <span class="badge bg-info text-light">
+                                                    <i class="fas fa-link me-1"></i> In Use
+                                                </span>
+                                            @else
+                                                <button type="button" class="btn btn-sm btn-danger"
+                                                    onclick="confirmDelete('{{ $category->Id }}', this)"
+                                                    title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                <form id="delete-form-{{ $category->Id }}"
+                                                      action="{{ route('itemcategory.destroy', $category->Id ) }}"
+                                                      method="POST" style="display:none;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -99,25 +113,27 @@
         function confirmDelete(id, button) {
             if (confirm('⚠️ Are you sure you want to delete this category?')) {
                 button.disabled = true;
-                button.innerText = 'Submitting...';
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 document.getElementById('delete-form-' + id).submit();
             }
         }
     </script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        // Disable DataTables paging because we use Laravel server-side pagination.
-        $('#itemCategoryTbl').DataTable({
-            paging: false,
-            ordering: true,
-            searching: true,
-            lengthChange: false
+    <script>
+        $(document).ready(function () {
+            // Disable DataTables paging because we use Laravel server-side pagination.
+            $('#itemCategoryTbl').DataTable({
+                paging: false,
+                ordering: true,
+                searching: true,
+                lengthChange: false,
+                language: {
+                    emptyTable: "No categories found"
+                }
+            });
         });
-    });
-
-</script>
-
+    </script>
 @endsection

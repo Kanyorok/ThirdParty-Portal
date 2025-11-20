@@ -7,17 +7,25 @@
         <div class="auth-form">
             <div class="card my-5">
                 <form method="POST" action="{{ route('login') }}" class="card-body">@csrf
-                    <div class="text-center"><img src="{{ asset('assets/img/CBT-Logo.jpg') }}" height="100" width="120" alt="">
+                    @php
+                        $org = \App\Models\Settings\APICredential::query()->where('Integration', \App\Enums\Core\IntegrationsEnum::Organization->value)->latest('Id')->first();
+                        $branding = $org?->Configuration;
+                        $logo = is_object($branding) && isset($branding->logo) ? $branding->logo : 'assets/img/BRERP_Logo.png';
+                      
+                    @endphp
+                    <div class="text-center mb-4">
+                        <img src="{{ asset($logo) }}" alt="Logo" style="max-width: 100%; height: auto; max-height: 120px; object-fit: contain; margin-bottom: 12px;">
                     </div>
-                    <h4 class="text-center f-w-500 mb-3 mt-lg-5">Login with your USERID or Email </h4>
+                    <h4 class="text-center f-w-500 mb-3">Login with your USERID or Email </h4>
                     {{-- Branch Selection FIRST --}}
                     <div class="mb-3">
                         <label for="branch" class="form-label">Login Branch <span class="text-danger">*</span></label>
                         <select class="form-control @error('branch') is-invalid @enderror" id="branch" name="branch"
                                 required>
-                            <option value="" disabled {{ old('branch') ? '' : 'selected' }}>-- Select Branch --</option>
+                            <option disabled {{ old('branch') ? '' : 'selected' }}>-- Select Branch --</option>
                             @foreach ($branches as $branch)
-                                <option value="{{ $branch->Id }}" {{ old('branch') == $branch->Id ? 'selected' : '' }}>
+                                <option
+                                    value="{{ $branch->BranchID }}" {{ old('branch') === $branch->BranchID ? 'selected' : '' }}>
                                     {{ $branch->Name }}
                                 </option>
                             @endforeach
@@ -54,6 +62,9 @@
                     </div>--}}
                     <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                    <div class="text-center mt-4">
+                        <img src="{{ asset('assets/img/BRERP_Logo.png') }}" alt="BRERP Logo" style="max-width: 200px; height: auto; object-fit: contain; opacity: 0.8;">
                     </div>
                     {{--<div class="d-flex justify-content-between align-items-end mt-4"><h6 class="f-w-500 mb-0">Don't have
                             an Account?</h6><a href="register-v2.html" class="link-primary">Create Account</a></div>--}}

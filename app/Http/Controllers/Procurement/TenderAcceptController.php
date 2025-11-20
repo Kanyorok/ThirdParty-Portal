@@ -19,29 +19,33 @@ class TenderAcceptController extends Controller
         $currentEmployeeId = optional(Auth::user())->EmployeeId;
 
         // Tenders pending response
-        $tenders = TenderCommitteeMember::where(function($q) use ($currentUserId, $currentEmployeeId) {
-                $q->where('UserID', $currentUserId);
-                if ($currentEmployeeId) {
-                    $q->orWhere('UserID', $currentEmployeeId);
-                }
-            })
+        $tenders = TenderCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
+            $q->where('UserID', $currentUserId);
+            if ($currentEmployeeId) {
+                $q->orWhere('UserID', $currentEmployeeId);
+            }
+        })
             ->whereNotNull('TenderID')
             ->whereHas('tender')
-            ->where(function($q){ $q->whereNull('Response')->orWhere('Response', 0); })
-            ->with(['tender:Id,TenderNo,Title','createdBy:Id,Name'])
+            ->where(function ($q) {
+                $q->whereNull('Response')->orWhere('Response', 0);
+            })
+            ->with(['tender:Id,TenderNo,Title', 'createdBy:Id,Name'])
             ->get();
 
         // RFQs pending response (support both User.Id and legacy EmployeeId mapping)
-        $rfq = RFQCommitteeMember::where(function($q) use ($currentUserId, $currentEmployeeId) {
-                $q->where('UserID', $currentUserId);
-                if ($currentEmployeeId) {
-                    $q->orWhere('UserID', $currentEmployeeId);
-                }
-            })
+        $rfq = RFQCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
+            $q->where('UserID', $currentUserId);
+            if ($currentEmployeeId) {
+                $q->orWhere('UserID', $currentEmployeeId);
+            }
+        })
             ->whereNotNull('RFQID')
             ->whereHas('rfq')
-            ->where(function($q){ $q->whereNull('Response')->orWhere('Response', 0); })
-            ->with(['rfq:Id,RFQNumber','createdBy:Id,Name'])
+            ->where(function ($q) {
+                $q->whereNull('Response')->orWhere('Response', 0);
+            })
+            ->with(['rfq:Id,RFQNumber', 'createdBy:Id,Name'])
             ->get();
 
         return view('procurement.tendering.bidopeningandevaluation.memberresponse.index', compact('tenders','rfq'));
@@ -72,11 +76,11 @@ class TenderAcceptController extends Controller
 
         // Update tender committee response if submitted
         if ($request->filled('tender_id') && $request->filled('tender_response')) {
-            TenderCommitteeMember::where(function($q) use ($currentUserId) {
-                    $q->where('UserID', $currentUserId)
-                      ->orWhereHas('user', fn($uq) => $uq->where('Id', $currentUserId))
-                      ->orWhereHas('userByEmployee', fn($uq) => $uq->where('Id', $currentUserId));
-                })
+            TenderCommitteeMember::where(function ($q) use ($currentUserId) {
+                $q->where('UserID', $currentUserId)
+                    ->orWhereHas('user', fn($uq) => $uq->where('Id', $currentUserId))
+                    ->orWhereHas('userByEmployee', fn($uq) => $uq->where('Id', $currentUserId));
+            })
                 ->where('TenderID', $request->tender_id)
                 ->update([
                     'Response' => (int)$request->tender_response,
@@ -88,10 +92,10 @@ class TenderAcceptController extends Controller
 
         // Update RFQ committee response if submitted
         if ($request->filled('rfq_id') && $request->filled('rfq_response')) {
-            RFQCommitteeMember::where(function($q) use ($currentUserId) {
-                    $q->where('UserID', $currentUserId)
-                      ->orWhereHas('user', fn($uq) => $uq->where('Id', $currentUserId));
-                })
+            RFQCommitteeMember::where(function ($q) use ($currentUserId) {
+                $q->where('UserID', $currentUserId)
+                    ->orWhereHas('user', fn($uq) => $uq->where('Id', $currentUserId));
+            })
                 ->where('RFQID', $request->rfq_id)
                 ->update([
                     'Response' => (int)$request->rfq_response,

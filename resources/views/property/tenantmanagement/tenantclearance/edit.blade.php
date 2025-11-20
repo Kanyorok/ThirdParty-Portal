@@ -15,12 +15,12 @@
 
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
-                    
+
                     {{-- Tenant Info --}}
                     <div class="mb-3">
                         <label class="form-label">Tenant && Lease Info:</label> <br>
                         <label class="form-label">
-                            Tenant: {{ $clearancetenant->lease->tenant->thirdParty->TradingName  ?? '-' }} 
+                            Tenant: {{ $clearancetenant->lease->tenant->thirdParty->TradingName  ?? '-' }}
                             &nbsp;&nbsp; Lease No: {{ $clearancetenant->lease->LeaseNumber ?? '-' }}
                         </label>
                         <input type="hidden" name="LeaseId" value="{{ $clearancetenant->LeaseId }}">
@@ -31,8 +31,8 @@
                     <div class="mb-3">
                         <label class="form-label">Exit Date</label>
                         <input type="text" id="exit-date" name="ExitDate" class="form-control"
-                            value="{{ old('ExitDate', Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}"
-                            required>
+                               value="{{ old('ExitDate', Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}"
+                               required>
                     </div>
 
                     {{-- Final Inspection, Dues Cleared, Keys Returned (one row) --}}
@@ -40,24 +40,42 @@
                         <div class="col-md-4">
                             <label class="form-label">Final Inspection Done</label>
                             <select name="FinalInspection" class="form-select" required>
-                                <option value="1" {{ old('FinalInspection', $clearancetenant->FinalInspection) == 1 ? 'selected' : '' }}>Yes</option>
-                                <option value="0" {{ old('FinalInspection', $clearancetenant->FinalInspection) == 0 ? 'selected' : '' }}>No</option>
+                                <option
+                                    value="1" {{ old('FinalInspection', $clearancetenant->FinalInspection) == 1 ? 'selected' : '' }}>
+                                    Yes
+                                </option>
+                                <option
+                                    value="0" {{ old('FinalInspection', $clearancetenant->FinalInspection) == 0 ? 'selected' : '' }}>
+                                    No
+                                </option>
                             </select>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Dues Cleared</label>
                             <select name="AllDuesPaid" class="form-select" required>
-                                <option value="1" {{ old('AllDuesPaid', $clearancetenant->AllDuesPaid) == 1 ? 'selected' : '' }}>Yes</option>
-                                <option value="0" {{ old('AllDuesPaid', $clearancetenant->AllDuesPaid) == 0 ? 'selected' : '' }}>No</option>
+                                <option
+                                    value="1" {{ old('AllDuesPaid', $clearancetenant->AllDuesPaid) == 1 ? 'selected' : '' }}>
+                                    Yes
+                                </option>
+                                <option
+                                    value="0" {{ old('AllDuesPaid', $clearancetenant->AllDuesPaid) == 0 ? 'selected' : '' }}>
+                                    No
+                                </option>
                             </select>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Keys Returned</label>
                             <select name="KeysReturned" class="form-select" required>
-                                <option value="1" {{ old('KeysReturned', $clearancetenant->KeysReturned) == 1 ? 'selected' : '' }}>Yes</option>
-                                <option value="0" {{ old('KeysReturned', $clearancetenant->KeysReturned) == 0 ? 'selected' : '' }}>No</option>
+                                <option
+                                    value="1" {{ old('KeysReturned', $clearancetenant->KeysReturned) == 1 ? 'selected' : '' }}>
+                                    Yes
+                                </option>
+                                <option
+                                    value="0" {{ old('KeysReturned', $clearancetenant->KeysReturned) == 0 ? 'selected' : '' }}>
+                                    No
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -79,7 +97,7 @@
                     <div class="mb-3">
                         <label class="form-label">Additional Notes</label>
                         <textarea name="AdditionalNotes" class="form-control"
-                            rows="3">{{ old('AdditionalNotes', $clearancetenant->AdditionalNotes) }}</textarea>
+                                  rows="3">{{ old('AdditionalNotes', $clearancetenant->AdditionalNotes) }}</textarea>
                     </div>
 
                     {{-- Status --}}

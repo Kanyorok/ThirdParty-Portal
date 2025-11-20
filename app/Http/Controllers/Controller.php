@@ -23,7 +23,7 @@ abstract class Controller //implements HasMiddleware
      *
      * @var array
      */
-    protected $middleware = [];
+    protected array $middleware = [];
 
     /**
      * Register middleware on the controller.
@@ -49,7 +49,7 @@ abstract class Controller //implements HasMiddleware
      *
      * @return array
      */
-    public function getMiddleware()
+    public function getMiddleware(): array
     {
         return $this->middleware;
     }

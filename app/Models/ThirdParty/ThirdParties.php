@@ -4,6 +4,7 @@ namespace App\Models\ThirdParty;
 
 use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdPartyStatusEnum;
+use App\Models\Core\Country;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -35,16 +36,17 @@ class ThirdParties extends Model
         'RegistrationNumber',
         'TaxPIN',
         'VATNumber',
-        'Country',
         'CountryId',
         'PhysicalAddress',
         'Email',
         'Phone',
         'Website',
         'Status',
-        // 'ThirdPartyType' legacy column deprecated (kept temporarily for backward compatibility)
+        'ThirdPartyType', //legacy column deprecated (kept temporarily for backward compatibility)
         'IsPrequalified',
         'ApprovalStatus',
+        'IDNumber',
+        'PassportNo',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -122,7 +124,7 @@ class ThirdParties extends Model
 
     public function country(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Core\Country::class, 'CountryId', 'Id');
+        return $this->belongsTo(Country::class, 'CountryId', 'Id');
     }
 
     // New pivot relationship to multiple types

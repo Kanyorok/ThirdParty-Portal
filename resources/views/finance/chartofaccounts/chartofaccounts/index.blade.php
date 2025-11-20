@@ -182,15 +182,15 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
 
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger custom-delete-btn"
-                                                title="Delete"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#customDeleteConfirmModal"
-                                                data-name="{{ $item->GLName }}"
-                                                data-route="{{ route('chartofaccounts.destroy', $item->Id) }}">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+{{--                                        <button type="button"--}}
+{{--                                                class="btn btn-sm btn-outline-danger custom-delete-btn"--}}
+{{--                                                title="Delete"--}}
+{{--                                                data-bs-toggle="modal"--}}
+{{--                                                data-bs-target="#customDeleteConfirmModal"--}}
+{{--                                                data-name="{{ $item->GLName }}"--}}
+{{--                                                data-route="{{ route('chartofaccounts.destroy', $item->Id) }}">--}}
+{{--                                            <i class="fas fa-trash-alt"></i>--}}
+{{--                                        </button>--}}
                                     </td>
                                 </tr>
                             @endforeach

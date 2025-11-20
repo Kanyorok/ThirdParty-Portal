@@ -240,10 +240,10 @@
                                             {{ $isPosted ? 'disabled' : '' }}
                                             @if(!$isPosted)
                                                 data-bs-toggle="modal"
-                                                data-bs-target="#customDeleteConfirmModal"
-                                                data-name="{{ $recurring->RefNo ?? ('#'.$recurring->Id) }}"
-                                                data-route="{{ route('recurrentjournal.destroy', $recurring->Id) }}"
-                                            @endif
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{ $recurring->RefNo ?? ('#'.$recurring->Id) }}"
+                                            data-route="{{ route('recurrentjournal.destroy', $recurring->Id) }}"
+                                        @endif
                                     >
                                         <i class="fas fa-trash-alt"></i>
                                     </button>

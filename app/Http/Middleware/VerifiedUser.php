@@ -15,8 +15,8 @@ class VerifiedUser
         }
 
         // ThirdPartyUser model exposes helpers
-        $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool) ($user->IsActive ?? $user->isActive ?? false);
-        $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool) ($user->isApproved ?? false);
+        $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool)($user->IsActive ?? $user->isActive ?? false);
+        $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool)($user->isApproved ?? false);
 
         if (!$isActive) {
             return response()->json(['error' => 'Account inactive'], 403);

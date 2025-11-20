@@ -94,10 +94,12 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 mt-4">
+                        @canUpdate('tender')
                         <button type="submit" class="btn btn-primary"
                                 onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Edit
                             Tender Info
                         </button>
+                        @endcanUpdate
                     </div>
             </div>
             </form>
@@ -111,10 +113,12 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="card-title mb-3">📦 Items in this Tender</h5>
                 <h4></h4>
+                @canUpdate('tender')
                 <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
                         data-bs-target="#addItemModal">
                     + Add Item
                 </button>
+                @endcanUpdate
             </div>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
@@ -141,22 +145,26 @@
                             </td>
                             <td>PR/2025/211</td>
                             <td>
+                                @canUpdate('tender')
                                 <a href="#" class="btn btn-sm btn-outline-primary" title="Edit"
                                    data-bs-toggle="modal" data-bs-target="#editItemModal-{{$item->id}}">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                @endcanUpdate
+                                @canDelete('tender')
                                 <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
                                       style="display: inline;">
                                     @csrf
                                     @method('PATCH')
-                                    <input type="hidden" name="type" value='crudSupplier'>
+                                    <input type="hidden" name="type" value='crudItem'>
                                     <input type="hidden" name="crudType" value='deleteItem'>
                                     <input type="hidden" name="item_id" value="{{$item->id}}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            onclick="return confirm('Are you sure you want to delete Item \'{{ $tender->item?->ItemName }}\'? This action cannot be undone.')">
+                                            onclick="return confirm('Are you sure you want to delete Item \'{{ $item->item?->ItemName }}\'? This action cannot be undone.')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
+                                @endcanDelete
                             </td>
                         </tr>
                     @endforeach
@@ -177,8 +185,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="card-title mb-3">🏷️ Selected Suppliers (Restricted Tender)</h5>
                     <h4></h4>
+                    @canUpdate('tender')
                     <a href="#" class="btn btn-sm btn-success"
                        data-bs-toggle="modal" data-bs-target="#addSupplierModal">+ Add Supplier</a>
+                    @endcanUpdate
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
@@ -192,25 +202,27 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach ($suppliers as $item)
+            @foreach ($suppliers as $item)
                             <tr>
                                 <td>{{$loop->index+1}}</td>
-                                <td>{{$item->supplier->SupplierName}}</td>
-                                <td>{{$item->supplier->ContactEmail}}</td>
-                                <td>{{$item->supplier->ContactPhone}}</td>
+                <td>{{ $item->supplier->thirdParty->TradingName ?? $item->supplier->thirdParty->ThirdPartyName ?? '—' }}</td>
+                <td>{{ $item->supplier->thirdParty->Email ?? '—' }}</td>
+                <td>{{ $item->supplier->thirdParty->Phone ?? '—' }}</td>
                                 <td class="text-center">
+                                    @canDelete('tender')
                                     <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
                                           style="display: inline;">
                                         @csrf
                                         @method('PATCH')
-                                        <input type="hidden" name="type" value='crudItem'>
+                    <input type="hidden" name="type" value='crudSupplier'>
                                         <input type="hidden" name="crudType" value='deleteSupplier'>
-                                        <input type="hidden" name="supplier_id" value="{{$item->supplier->Id}}">
+                    <input type="hidden" name="supplier_id" value="{{$item->Id}}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                                onclick="return confirm('Are you sure you want to delete Supplier name: \'{{ $item->supplier->SupplierName }}\'? This action cannot be undone.')">
+                        onclick="return confirm('Are you sure you want to delete Supplier name: \'{{ $item->supplier->thirdParty->TradingName ?? $item->supplier->thirdParty->ThirdPartyName ?? 'Supplier' }}\'? This action cannot be undone.')">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
+                                    @endcanDelete
                                 </td>
                             </tr>
                         @endforeach
@@ -246,7 +258,7 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="item_id" class="form-label fw-bold">Item</label>
-                                <select name="item_id" name="item_id" id="item_id" class="form-select" required>
+                                <select name="item_id" id="item_id" class="form-select" required>
                                     <option selected>-- Select Item --</option>
                                     @foreach($otherItemsForThatTender as $item)
                                         <option value="{{ $item->Id }}">{{ $item->ItemName }}</option>
@@ -376,7 +388,7 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="item_id" class="form-label">Select Supplier</label>
-                                <select name="item_id" id="item_id" class="form-select" required>
+                                <select name="supplier_id" id="supplier_id" class="form-select" required>
                                     <option selected disabled>-- Select Supplier --</option>
                                     @foreach($otherSuppliers as $item)
                                         <option value="{{ $item->Id }}">{{ $item->SupplierName }}
@@ -389,7 +401,9 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
                             </button>
+                            @canUpdate('tender')
                             <button type="submit" class="btn btn-success">Add Supplier</button>
+                            @endcanUpdate
                         </div>
                     </form>
                 </div>

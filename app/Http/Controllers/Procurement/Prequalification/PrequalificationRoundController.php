@@ -89,13 +89,27 @@ class PrequalificationRoundController extends Controller
     {
         $validated = $request->validated();
         $isCreating = is_null($prequalificationRound);
+        $saveAsDraft = filter_var($request->input('save_as_draft'), FILTER_VALIDATE_BOOLEAN) || $request->input('save_as_draft') === '1';
+
+        // Prevent any modifications to expired rounds
+        if (!$isCreating) {
+            $now = now();
+            if ($prequalificationRound->EndDate && $prequalificationRound->EndDate < $now) {
+                return redirect()->route('prequalification.prequalification-rounds.index')
+                    ->with('error', 'This round has expired and can no longer be modified.');
+            }
+        }
 
         if ($isCreating) {
-            $validated['Status'] = $request->input('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Draft);
+            $incomingStatus = $request->input('Status');
+            $validated['Status'] = $saveAsDraft
+                ? \App\Enums\Procurement\PrequalificationRoundEnum::Draft
+                : ($incomingStatus ?? \App\Enums\Procurement\PrequalificationRoundEnum::Draft);
             $validated['CreatedBy'] = Auth::id();
             $validated['CreatedOn'] = now();
         } else {
-            $validated['Status'] = $request->input('Status', $prequalificationRound->Status->value);
+            $incomingStatus = $request->input('Status', $prequalificationRound->Status->value);
+            $validated['Status'] = $saveAsDraft ? \App\Enums\Procurement\PrequalificationRoundEnum::Draft : $incomingStatus;
             $validated['ModifiedBy'] = Auth::id();
             $validated['ModifiedOn'] = now();
         }
@@ -113,7 +127,9 @@ class PrequalificationRoundController extends Controller
 
             DB::commit();
 
-            $message = $isCreating ? 'Prequalification round created successfully.' : 'Prequalification round updated successfully.';
+            $message = $saveAsDraft
+                ? ($isCreating ? 'Draft round saved.' : 'Draft changes saved.')
+                : ($isCreating ? 'Prequalification round created successfully.' : 'Prequalification round updated successfully.');
             return redirect()->route('prequalification.prequalification-rounds.index')->with('success', $message);
         } catch (ValidationException $e) {
             DB::rollBack();
@@ -127,8 +143,8 @@ class PrequalificationRoundController extends Controller
 
     private function syncSectionsAndCriteria(PrequalificationRound $round, array $sections): void
     {
-    $now = now();
-    $userId = Auth::id();
+        $now = now();
+        $userId = Auth::id();
 
         // Filter only included sections
         $includedSectionsData = collect($sections)->filter(function ($section) {

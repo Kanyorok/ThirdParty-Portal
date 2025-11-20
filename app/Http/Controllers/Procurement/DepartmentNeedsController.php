@@ -25,6 +25,7 @@ class DepartmentNeedsController extends Controller
 
     public function create()
     {
+        $this->authorize('create', DepartmentNeed::class);
         // Relaxed filter: show all active items so users can key in estimated cost manually if price is missing
         $items = ItemMasterList::with(['category', 'uom', 'price'])
             ->whereNull('DeletedOn')
@@ -35,6 +36,7 @@ class DepartmentNeedsController extends Controller
 
     public function store(Request $request, DepartmentNeedsService $service)
     {
+        $this->authorize('create', DepartmentNeed::class);
         try {
             // Basic validation: estimated cost must be present and > 0
             $validated = $request->validate([
@@ -51,7 +53,7 @@ class DepartmentNeedsController extends Controller
                 ->whereNotNull('ItemPrice')
                 ->whereHas('price', function ($q) {
                     $q->whereNotNull('ActualPrice')
-                      ->where('ActualPrice', '>', 0);
+                        ->where('ActualPrice', '>', 0);
                 })
                 ->exists();
 
@@ -78,6 +80,7 @@ class DepartmentNeedsController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', DepartmentNeed::class);
         $departmentneedviews = DepartmentNeed::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.index', compact('departmentneedviews'));
     }
@@ -133,6 +136,8 @@ class DepartmentNeedsController extends Controller
 
     public function update(Request $request)
     {
+        // Authorize update if user can update Department Needs
+        $this->authorize('update', new DepartmentNeed());
         foreach ($request->Needs as $needData) {
             $need = DepartmentNeed::where('NeedID', $needData['NeedID'])->firstOrFail();
 
@@ -151,6 +156,7 @@ class DepartmentNeedsController extends Controller
 
     public function destroy($NeedID)
     {
+        $this->authorize('destroy', new DepartmentNeed());
         try {
             $needs = DepartmentNeed::where('NeedID', $NeedID)->get();
 

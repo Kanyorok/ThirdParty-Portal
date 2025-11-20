@@ -43,6 +43,7 @@ class FleetTripLog extends Model
         'DistanceCovered',
         'Purpose',
         'Notes',
+        'Status',
         'CreatedBy',
         'CreatedOn',
 
@@ -52,7 +53,23 @@ class FleetTripLog extends Model
     {
         return 'TripId';
     }
-   
+
+    public function vehicle()
+    {
+        return $this->belongsTo(\App\Models\Fleet\FleetVehicle::class, 'VehicleID', 'Id');
+    }
+    public function vehicleAssignments()
+    {
+        return $this->hasMany(FleetVehicleAssignment::class, 'TripNo', 'TripNo');
+    }
+
+
+    public function statusDetail()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
+    }
+
+
     public function parentTripType()
     {
         return $this->belongsTo(CodeDetail::class, 'TripType', 'ID');
@@ -77,7 +94,7 @@ class FleetTripLog extends Model
     {
         return $this->hasMany(FleetTripLog::class, 'ParentTripID', 'Id');
     }
-    
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
@@ -87,6 +104,4 @@ class FleetTripLog extends Model
     {
         return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
     }
-
-
 }

@@ -3,8 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         // Add a filtered UNIQUE index on (RFQId, SupplierId) where not soft-deleted
@@ -14,7 +13,8 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'uq_t_rfqresponse_rfq_supp
 BEGIN
     CREATE UNIQUE INDEX uq_t_rfqresponse_rfq_supplier ON dbo.t_RFQResponse (RFQId, SupplierId) WHERE DeletedOn IS NULL;
 END
-SQL);
+SQL
+            );
         } catch (\Throwable $e) {
             // Fallback: create non-unique composite index if filtered unique is not supported
             try {
@@ -23,8 +23,10 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_t_rfqresponse_rfq_supp
 BEGIN
     CREATE INDEX ix_t_rfqresponse_rfq_supplier ON dbo.t_RFQResponse (RFQId, SupplierId);
 END
-SQL);
-            } catch (\Throwable $ignored) {}
+SQL
+                );
+            } catch (\Throwable $ignored) {
+            }
         }
     }
 
@@ -36,8 +38,10 @@ IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'uq_t_rfqresponse_rfq_supplier
 BEGIN
     DROP INDEX uq_t_rfqresponse_rfq_supplier ON dbo.t_RFQResponse;
 END
-SQL);
-        } catch (\Throwable $e) {}
+SQL
+            );
+        } catch (\Throwable $e) {
+        }
 
         try {
             DB::statement(<<<SQL
@@ -45,8 +49,10 @@ IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_t_rfqresponse_rfq_supplier
 BEGIN
     DROP INDEX ix_t_rfqresponse_rfq_supplier ON dbo.t_RFQResponse;
 END
-SQL);
-        } catch (\Throwable $e) {}
+SQL
+            );
+        } catch (\Throwable $e) {
+        }
     }
 };
 

@@ -44,9 +44,11 @@
                 <div class="col-md-6">
                     <label for="budgetLine" class="form-label">Budget Line</label>
                     <select id="budgetLine" class="form-select" name="BudgetLineID" required>
-                        <option disabled value="" {{ old('BudgetLineID') ? '' : 'selected' }}>-- Select Budget Line --</option>
+                        <option disabled value="" {{ old('BudgetLineID') ? '' : 'selected' }}>-- Select Budget Line --
+                        </option>
                         @forelse($budgetLines as $budgetline)
-                            <option value="{{ $budgetline->Id }}" {{ old('BudgetLineID') == $budgetline->Id ? 'selected' : '' }}>
+                            <option
+                                value="{{ $budgetline->Id }}" {{ old('BudgetLineID') == $budgetline->Id ? 'selected' : '' }}>
                                 {{ $budgetline->LineName }}
                             </option>
                         @empty

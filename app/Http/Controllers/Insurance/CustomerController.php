@@ -65,7 +65,7 @@ class CustomerController extends Controller
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
 
-        $customer = BancassuranceCustomer::with('referrals.referredByEmployee','genders')->findOrFail($Id);
+        $customer = BancassuranceCustomer::with('referrals.referredByEmployee', 'genders')->findOrFail($Id);
 
         return view('bancassurance.customers.show', compact('customer'));
     }
@@ -133,6 +133,11 @@ class CustomerController extends Controller
         $this->authorize(PermissionEnum::BancassuranceCustomersDelete, BancassuranceCustomer::class);
         try {
             $customer = BancassuranceCustomer::findOrFail($id);
+
+                if ($customer->policies()->exists()) {
+                    return redirect()->back()
+                    ->withErrors(['error' => 'This customer is in use and cannot be deleted.']);
+                }  
             $customer->delete();
 
             return redirect()->route('bancassurance.customers.check')

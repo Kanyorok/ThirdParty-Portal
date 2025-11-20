@@ -96,7 +96,6 @@ class CommissionRuleController extends Controller
                 ->log('Updated rule');
 
             return redirect()->route('commissions.rules.index')->with('success', 'Rule updated successfully');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to Update rule:' . $th->getMessage());
@@ -122,7 +121,4 @@ class CommissionRuleController extends Controller
                 ->withInput();
         }
     }
-
-
 }
-

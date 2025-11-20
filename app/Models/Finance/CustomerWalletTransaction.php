@@ -82,7 +82,7 @@ class CustomerWalletTransaction extends Model
 
     public function getTransactionTypeColorAttribute()
     {
-        return match($this->TransactionType) {
+        return match ($this->TransactionType) {
             'deposit', 'refund' => 'text-success',
             'withdrawal' => 'text-danger',
             'adjustment' => 'text-warning',

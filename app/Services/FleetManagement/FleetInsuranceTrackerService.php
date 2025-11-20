@@ -70,27 +70,32 @@ class FleetInsuranceTrackerService
     }
 
 
-    /**
-     * Update an existing Fleet Vehicle
-     */
-    public function update(FleetInsuranceTracker $records, array $data): FleetInsuranceTracker
-    {
-        return DB::transaction(function () use ($records, $data) {
+   public function update(FleetInsuranceTracker $records, array $data): FleetInsuranceTracker
+{
+    return DB::transaction(function () use ($records, $data) {
 
-            $records->fill($data);
-            $records->ModifiedBy = Auth::id();
-            $records->ModifiedOn = now();
-            $records->save();
+        // Fill other attributes
+        $records->fill($data);
 
-            activity()
-                ->performedOn($records)
-                ->causedBy(Auth::user())
-                ->withProperties(['attributes' => $data])
-                ->log('Fleet Insurance Updated');
+        // ✅ Explicitly ensure PolicyNumber is updated
+        if (isset($data['PolicyNumber'])) {
+            $records->PolicyNumber = $data['PolicyNumber'];
+        }
 
-            return $records;
-        });
-    }
+        $records->ModifiedBy = Auth::id();
+        $records->ModifiedOn = now();
+        $records->save();
+
+        activity()
+            ->performedOn($records)
+            ->causedBy(Auth::user())
+            ->withProperties(['attributes' => $data])
+            ->log('Fleet Insurance Updated');
+
+        return $records;
+    });
+}
+
 
     /**
      * Soft delete a Fleet Vehicle

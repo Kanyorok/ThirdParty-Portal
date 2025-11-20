@@ -20,7 +20,7 @@ class LegalObligationController extends Controller
     {
         $this->authorize(PermissionEnum::LegalObligationView, LegalObligation::class);
 
-        $obligations = LegalObligation::all();
+        $obligations = LegalObligation::orderByDesc('CreatedOn')->paginate(15);
         $details = CodeDetail::select('Value')
             ->where('CodeID', 'LegalSourceTypes')
             ->get();

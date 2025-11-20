@@ -73,6 +73,7 @@ class PropertyRegistry extends Model
     {
         return $this->hasMany(PropertyAttachments::class, 'PropertyID', 'Id');
     }
+
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');

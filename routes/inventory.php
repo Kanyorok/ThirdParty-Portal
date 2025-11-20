@@ -32,9 +32,12 @@ use Illuminate\Support\Facades\Route;
 
 //use App\Http\Controllers\Inventory\ReceiptController;
 
-Route::namespace('Inventory')->prefix('inventory')->group(function () {
+Route::middleware(['module:400000'])->namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
-
+    Route::get('itemmasterlist/export', [ItemMasterListController::class, 'export'])
+    ->name('itemmasterlist.export');
+Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import'])
+    ->name('itemmasterlist.import');
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
     //Route::resource('itemmaster', ItemMasterController::class);
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
@@ -47,7 +50,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/get-subcategory', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
 
 
-
+    
     Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
     Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
     Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');

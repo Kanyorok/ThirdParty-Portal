@@ -90,8 +90,8 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody> 
-                @foreach($invoices as $invoice)
+            <tbody>
+            @foreach($invoices as $invoice)
                 @php
                     $tenant = $invoice->lease->tenant->thirdParty->ThirdPartyName  ?? 'N/A';
                     $property = $invoice->lease->property->PropertyName ?? 'N/A';

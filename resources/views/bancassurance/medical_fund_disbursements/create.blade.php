@@ -7,26 +7,26 @@
   @if($errors->any())
     <div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
   @endif
-
   <div class="card">
     <div class="card-body">
-      <form action="{{ route('bancassurance.medicalfunds.disbursements.store', ['medical_fund' => $medical_fund->ID]) }}" method="POST" id="disbForm">
+      <form action="{{ route('bancassurance.medicalfunds.disbursements.store', ['medical_fund' => $medical_fund->Id]) }}" method="POST" id="disbForm">
         @csrf
+        <input type="hidden" name="FundId" value="{{ $medical_fund->Id }}">
 
         <div class="row g-3">
           {{-- Contributor --}}
           <div class="col-md-6">
             @if(isset($contributor) && $contributor)
-              <input type="hidden" name="ContributorID" id="ContributorID" value="{{ $contributor->ID }}">
+              <input type="hidden" name="ContributorId" id="ContributorId" value="{{ $contributor->Id }}">
               <label class="form-label">Contributor</label>
-              <input type="text" class="form-control" value="{{ $contributor->FullName }}" disabled>
+              <input type="text" class="form-control" value="{{ $contributor->thirdParty->ThirdPartyName }}" disabled>
               <div class="form-text">Locked to this contributor.</div>
             @else
               <label class="form-label">Contributor *</label>
-              <select name="ContributorID" id="ContributorID" class="form-select" required>
+              <select name="ContributorId" id="ContributorId" class="form-select" required>
                 <option value="">-- select contributor --</option>
                 @foreach($contributors as $c)
-                  <option value="{{ $c->ID }}">{{ $c->FullName }}</option>
+                  <option value="{{ $c->Id }}">{{ $c->thirdParty->ThirdPartyName }}</option>
                 @endforeach
               </select>
             @endif
@@ -35,35 +35,46 @@
           {{-- Beneficiary --}}
           <div class="col-md-6">
             <label class="form-label">Beneficiary *</label>
-            <select name="BeneficiaryID" id="BeneficiaryID" class="form-select" required>
+            <select name="BeneficiaryId" id="BeneficiaryId" class="form-select" required>
               <option value="">-- select beneficiary --</option>
               @if(isset($beneficiaries) && $beneficiaries->count())
                 @foreach($beneficiaries as $b)
-                  <option value="{{ $b->ID }}">{{ $b->FullName }}</option>
+                  @php
+                    $bId = data_get($b, 'Id') ?? data_get($b, 'ID');
+                    $bName = data_get($b, 'FullName') ?? data_get($b, 'Fullname') ?? $b->FullName ?? '';
+                  @endphp
+                  <option value="{{ $bId }}">{{ $bName }}</option>
                 @endforeach
               @endif
             </select>
           </div>
-
+          {{-- coverages debug removed --}}
           {{-- Coverage --}}
-          <div class="col-md-6">
-            <label class="form-label">Coverage *</label>
-            <select name="CoverageID" id="CoverageID" class="form-select" required>
-              <option value="">-- select coverage --</option>
-              @if(isset($coverages) && $coverages->count())
-                @foreach($coverages as $cov)
-                  <option value="{{ $cov->ID }}"
-                          data-annual="{{ $cov->pivot->AnnualLimit ?? $cov->AnnualLimit ?? '' }}"
-                          data-pervisit="{{ $cov->pivot->PerVisitLimit ?? $cov->PerVisitLimit ?? '' }}"
-                          data-wait="{{ $cov->pivot->WaitingPeriodDays ?? $cov->WaitingPeriodDays ?? '' }}"
-                          data-scope="{{ $cov->pivot->Scope ?? $cov->Scope ?? 'PerBeneficiary' }}">
-                    {{ $cov->Name }}
-                  </option>
-                @endforeach
-              @endif
-            </select>
-            <div class="form-text">Only coverages allowed by the contributor’s active packages are listed.</div>
-          </div>
+          {{-- @dd($coverages) --}}
+          <select name="CoverageId" id="CoverageId" class="form-select" required>
+            <option value="">-- select coverage --</option>
+            @if(isset($coverages) && $coverages->count())
+              @foreach($coverages as $cov)
+                @php
+                  // Accept both common key variants returned by Eloquent/pivot or raw queries
+                  $covId = data_get($cov, 'Id') ?? data_get($cov, 'ID') ?? ($cov->Id ?? $cov->ID ?? '');
+                  $covName = data_get($cov, 'Name') ?? ($cov->Name ?? '');
+                  $annual = data_get($cov, 'pivot.AnnualLimit') ?? data_get($cov, 'AnnualLimit') ?? '';
+                  $pervisit = data_get($cov, 'pivot.PerVisitLimit') ?? data_get($cov, 'PerVisitLimit') ?? '';
+                  $wait = data_get($cov, 'pivot.WaitingPeriodDays') ?? data_get($cov, 'WaitingPeriodDays') ?? '';
+                  $scope = data_get($cov, 'pivot.Scope') ?? data_get($cov, 'Scope') ?? 'PerBeneficiary';
+                @endphp
+                <option value="{{ $covId }}"
+                        data-annual="{{ $annual }}"
+                        data-pervisit="{{ $pervisit }}"
+                        data-wait="{{ $wait }}"
+                        data-scope="{{ $scope }}">
+                  {{ $covName }}
+                </option>
+              @endforeach
+            @endif
+          </select>
+
 
           <div class="col-md-3">
             <label class="form-label">Date *</label>
@@ -112,7 +123,7 @@
 
         <div class="mt-3 d-flex gap-2">
           <button class="btn btn-primary">Save</button>
-          <a href="{{ route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Cancel</a>
+          <a href="{{ route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
       </form>
     </div>
@@ -126,9 +137,9 @@
   function getEl(id){ return document.getElementById(id); }
   function getVal(id){ const el = getEl(id); return el ? el.value : ''; }
 
-  const $contrib = getEl('ContributorID');
-  const $benef   = getEl('BeneficiaryID');
-  const $cov     = getEl('CoverageID');
+  const $contrib = getEl('ContributorId');
+  const $benef   = getEl('BeneficiaryId');
+  const $cov     = getEl('CoverageId');
   const $amt     = getEl('Amount');
   const $date    = getEl('DisbursementDate');
 
@@ -155,7 +166,7 @@
     $benef.innerHTML = '<option value="">Loading beneficiaries...</option>';
     $cov.innerHTML   = '<option value="">Loading coverages...</option>';
 
-    const url = `{{ route('bancassurance.medicalfunds.contributors.options', ['medical_fund' => $medical_fund->ID, 'contributor' => ':cid']) }}`
+    const url = `{{ route('bancassurance.medicalfunds.contributors.options', ['medical_fund' => $medical_fund->Id, 'contributor' => ':cid']) }}`
                   .replace(':cid', cid);
     try{
       const res = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
@@ -219,9 +230,9 @@
   }
 
   async function refreshLimits(){
-    const cid = getVal('ContributorID');
-    const bid = getVal('BeneficiaryID');
-    const cov = getVal('CoverageID');
+    const cid = getVal('ContributorId');
+    const bid = getVal('BeneficiaryId');
+    const cov = getVal('CoverageId');
     const dt  = getVal('DisbursementDate');
 
     if(!cid || !cov){ setDisplay(); return; }
@@ -275,7 +286,7 @@
   // Initial boot:
   // If contributor is pre-locked (hidden input), we must load options via AJAX now.
   @if(isset($contributor) && $contributor)
-    loadOptionsForContributor('{{ $contributor->ID }}');
+    loadOptionsForContributor('{{ $contributor->Id }}');
   @endif
 })();
 </script>

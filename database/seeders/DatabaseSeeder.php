@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(BranchSeeder::class);
         $this->call(CodeDetailSeeder::class);
         $this->call(SysFilterSeeder::class);
+        $this->call(DocumentValidationTypeSeeder::class);
         $this->call(CurrencySeeder::class);
         $this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);
@@ -66,9 +67,9 @@ class DatabaseSeeder extends Seeder
         $this->call(FinanceGLSubAccountTypeSeeder::class);
         $this->call(FinanceGLAccountsSeeder::class);
         $this->call(FinanceSegmentOrderSeeder::class);
-//        $this->call(OrderLinesSeeder::class);
-//         $this->call(OrderSeeder::class);
-//         $this->call(GoodsReceiptsSeeder::class);
+        //        $this->call(OrderLinesSeeder::class);
+        //         $this->call(OrderSeeder::class);
+        //         $this->call(GoodsReceiptsSeeder::class);
 
         $this->call(FinanceTransactionTypesSeeder::class);
         $this->call(FinanceModuleTransactionSeeder::class);
@@ -97,18 +98,16 @@ class DatabaseSeeder extends Seeder
         $this->call(BankBranchesSeeder::class);
 
 
-//         $this->call(RegulatoryObligationsSeeder::class);
-//         $this->call(ComplianceMastersSeeder::class);
-//         $this->call(ComplianceObligationsSeeder::class);
-//         $this->call(ComplianceControlsSeeder::class);
-//         $this->call(ComplianceIncidentsSeeder::class);
-//         $this->call(ComplianceFilingsSeeder::class);
+        //         $this->call(RegulatoryObligationsSeeder::class);
+        //         $this->call(ComplianceMastersSeeder::class);
+        //         $this->call(ComplianceObligationsSeeder::class);
+        //         $this->call(ComplianceControlsSeeder::class);
+        //         $this->call(ComplianceIncidentsSeeder::class);
+        //         $this->call(ComplianceFilingsSeeder::class);
 
         $this->call(financeroleseeder::class);
         $this->call(ThirdPartyTypesSeeder::class);
-        //$this->call(GoodsReceiptsSeeder::class);
-        $this->call(WorkFlowTypesSeeder::class);
-        $this->call(WorkflowSeeder::class);
+        $this->call(MedicalFundsCatalogSeeder::class);
         // $this->call(GRNPOSeeder::class);
     }
 }

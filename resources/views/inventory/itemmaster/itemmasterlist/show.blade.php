@@ -28,7 +28,7 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Item Type:</strong> {{ $item->itemType?->TypeName ?? 'N/A' }}</p>
+            <p><strong>Item Type:</strong> {{ $item->itemType?->Description ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Category:</strong> {{ $item->category?->Name ?? 'N/A' }}</p>
@@ -46,7 +46,7 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <p><strong>Inventory Type:</strong> {{ $item->inventoryType?->Type ?? 'N/A' }}</p>
+            <p><strong>Inventory Type:</strong> {{ $item->inventoryType?->Description ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Item Image:</strong></p>
@@ -64,12 +64,12 @@
             <p><strong>Item Description:</strong> {{ $item->ItemDescription ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
-            <p><strong>Document:</strong></p>
-            @if($item->DocumentUpload)
-                <a href="{{ asset('storage/' . $item->DocumentUpload) }}" class="btn btn-link" target="_blank">📄 View Document</a>
-            @else
-                <p>No document uploaded</p>
-            @endif
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+            @forelse($item->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
         </div>
         <div class="col-md-6">
             <p class="card-text"><strong>Status:</strong> {{ $item->status->Description ?? 'N/A' }}</p>
@@ -80,14 +80,26 @@
         <a href="{{ route('itemmaster.index') }}" class="btn btn-secondary">Back</a>
 
         <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">Edit Item</a>
-        <form action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST"
-              onsubmit="return confirm('⚠️ Are you sure you want to delete this Item?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-danger">Delete Item</button>
-        </form>
+        @if ($item->inUse())
+            <button class="btn btn-info" disabled title="Item is in use and cannot be deleted">
+                <i class="bi bi-lock"></i> Item In Use
+            </button>
+        @else
+            <form action="{{ route('itemmasterlist.destroy', $item->Id) }}" method="POST"
+                onsubmit="return confirm('⚠️ Are you sure you want to delete this Item?');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Delete Item
+                </button>
+            </form>
+        @endif
+
 
     </div>
 </div>
 
+@endsection
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

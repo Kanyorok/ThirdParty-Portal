@@ -50,7 +50,7 @@ class PropertyNewTenant extends Model
 
     public function thirdParty()
     {
-        return $this->belongsTo(ThirdParties::class, 'ThirdPartyId','Id');
+        return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
     }
 
 }

@@ -10,32 +10,28 @@ class Kernel extends ConsoleKernel
 {
     // ✅ Register your custom Artisan commands
     protected $commands = [
-        \\App\\Console\\Commands\\SeedGrnMappingCommand::class,
         \App\Console\Commands\SendTenderReminders::class,
-        \\App\\Console\\Commands\\SeedGrnMappingCommand::class,
+        \App\Console\Commands\LicenseImportCommand::class,
+        \App\Console\Commands\LicenseVerifyCommand::class,
+        \App\Console\Commands\LicenseInfoCommand::class,
+        \App\Console\Commands\SeedGrnMappingCommand::class,
+        \App\Console\Commands\SendTenderReminders::class,
+        \App\Console\Commands\DebugNavbar::class,
     ];
 
     // ✅ Define your task scheduling here
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('tender:send-reminders')->dailyAt('15:00');
-    // $schedule->command('tender:send-reminders')->daily();
-     $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
-
-      // Run p_ProcessWorkflowStages every minute to check and advance stages
-        $schedule->call(function () {
-            DB::statement('EXEC p_ProcessWorkflowStages');
-        })->everyMinute();
-        // Run p_EscalateOverdueWorkflows daily (or as needed)
-        $schedule->call(function () {
-            DB::statement('EXEC p_EscalateOverdueWorkflows @RunBy = 1');  // Use a system user ID, e.g., 1 for ERPSYS
-        })->daily();
+        // $schedule->command('tender:send-reminders')->daily();
+        $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
+        $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
+        $schedule->command('trips:start-pending')->everyMinute();
     }
-
     // ✅ Register commands from the app/Console/Commands directory
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

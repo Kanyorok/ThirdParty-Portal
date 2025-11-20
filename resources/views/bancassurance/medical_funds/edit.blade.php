@@ -1,37 +1,44 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Medical Funds')
+
 @section('content')
 <div class="container">
-    <h4>Edit Medical Fund</h4>
-
     @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
     @if($errors->any())
         <div class="alert alert-danger">
             <strong>There were validation errors:</strong>
             <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
         </div>
-    @endif>
+    @endif
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('bancassurance.medicalfunds.update', ['medical_fund' => $medical_fund->ID]) }}" method="POST">
+            <form action="{{ route('bancassurance.medicalfunds.update', ['medical_fund' => $medical_fund->Id]) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Fund Name *</label>
+                        <label class="form-label">Fund Name <span class="text-danger">*</span></label>
                         <input type="text" name="FundName" class="form-control" value="{{ old('FundName',$medical_fund->FundName) }}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Provider *</label>
-                        <select name="ProviderID" class="form-select" required>
+                        <label class="form-label">Provider <span class="text-danger">*</span></label>
+                        <select name="ProviderId" class="form-select" required>
                             @foreach($providers as $p)
-                                <option value="{{ $p->ID }}" @selected(old('ProviderID',$medical_fund->ProviderID)==$p->ID)>{{ $p->Name }}</option>
+                                <option value="{{ $p->Id }}" @selected(old('ProviderId',$medical_fund->ProviderId)==$p->Id)>{{ $p->Name ?? '-' }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Coverage Type</label>
-                        <input type="text" name="CoverageType" class="form-control" value="{{ old('CoverageType',$medical_fund->CoverageType) }}">
+                        <select name="CoverageType" class="form-select rounded-3" required>
+                            <option value="">-- Select Coverage Type --</option>
+                            @foreach ($coverageTypes as $ct)
+                                <option value="{{ $ct->ID }}" @selected(old('CoverageType', $medical_fund->CoverageType) == $ct->ID)>
+                                    {{ $ct->Description }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Coverage Limit</label>
@@ -64,7 +71,7 @@
                     <h6 class="card-title">Beneficiaries</h6>
                     <p class="text-muted mb-2">Manage fund beneficiaries.</p>
                     <a class="btn btn-sm btn-outline-secondary"
-                       href="{{ route('bancassurance.medicalfunds.beneficiaries.index', ['medical_fund' => $medical_fund->ID]) }}">
+                       href="{{ route('bancassurance.medicalfunds.beneficiaries.index', ['medical_fund' => $medical_fund->Id]) }}">
                        Open
                     </a>
                 </div>
@@ -77,7 +84,7 @@
                     <h6 class="card-title">Contributions</h6>
                     <p class="text-muted mb-2">Record & review contributions.</p>
                     <a class="btn btn-sm btn-outline-secondary"
-                       href="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->ID]) }}">
+                       href="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->Id]) }}">
                        Open
                     </a>
                 </div>
@@ -90,7 +97,7 @@
                     <h6 class="card-title">Disbursements</h6>
                     <p class="text-muted mb-2">Authorize & track disbursements.</p>
                     <a class="btn btn-sm btn-outline-secondary"
-                       href="{{ route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->ID]) }}">
+                       href="{{ route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->Id]) }}">
                        Open
                     </a>
                 </div>

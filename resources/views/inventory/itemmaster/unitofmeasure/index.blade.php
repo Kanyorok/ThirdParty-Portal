@@ -1,5 +1,9 @@
 @extends('layouts.app')
 @section('title', 'Unit Of Measure (UOM) List')
+@section('styles')
+    {{-- Font Awesome for icons --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@endsection
 @section('content')
 
     <div class="container mt-5">
@@ -32,18 +36,29 @@
                                 <td>{!! $unit->BaseUnit ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
                                 <td>{!! $unit->Active ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
                                 <td>
-                                    <a href="javascript:void(0);" class="btn btn-info btn-sm"
-                                       onclick="showUOMModal('{{ $unit->Code }}', '{{ $unit->Name }}', '{{ $unit->BaseUnit ? 1 : 0 }}', {{ $unit->Active ? 1 : 0 }})">Show</a>
-                                    <a href="javascript:void(0);" class="btn btn-warning btn-sm"
-                                       onclick="editUOMModal('{{ route('unitofmeasure.update', $unit->Id) }}', '{{ $unit->Code }}', '{{ $unit->Name }}', '{{ $unit->BaseUnit ? 1 : 0 }}', {{ $unit->Active ? 1 : 0 }})">Edit</a>
-                                    <a href="#" class="btn btn-danger btn-sm"
-                                       onclick="confirmDelete('{{ $unit->Id }}')">Delete</a>
-                                    <form id="delete-form-{{ $unit->Id }}"
-                                          action="{{ route('unitofmeasure.destroy', $unit->Id) }}" method="POST"
-                                          style="display:none;">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-info"
+                                           onclick="showUOMModal('{{ $unit->Code }}', '{{ $unit->Name }}', '{{ $unit->BaseUnit ? 1 : 0 }}', {{ $unit->Active ? 1 : 0 }})"
+                                           title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-warning"
+                                           onclick="editUOMModal('{{ route('unitofmeasure.update', $unit->Id) }}', '{{ $unit->Code }}', '{{ $unit->Name }}', '{{ $unit->BaseUnit ? 1 : 0 }}', {{ $unit->Active ? 1 : 0 }})"
+                                           title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                           onclick="confirmDelete('{{ $unit->Id }}')"
+                                           title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <form id="delete-form-{{ $unit->Id }}"
+                                              action="{{ route('unitofmeasure.destroy', $unit->Id) }}" method="POST"
+                                              style="display:none;">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -145,10 +160,11 @@
                 pageLength: 10,
                 ordering: true,
                 searching: true,
-                lengthChange: true
+                lengthChange: true,
+                language: {
+                    emptyTable: "No units of measure found"
+                }
             });
         });
     </script>
-
-
 @endsection

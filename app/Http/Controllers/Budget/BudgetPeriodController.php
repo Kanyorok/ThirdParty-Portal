@@ -128,15 +128,15 @@ class BudgetPeriodController extends Controller
             if (!empty($selectedGls)) {
                 foreach ($selectedGls as $gl) {
                     BudgetGLsAttachments::create([
-                        'BudgetID'        => $budget->Id,
-                        'GLID'            => $gl['AccountID'] ?? null, // fallback if missing
-                        'AccountID'       => $gl['AccountID'] ?? null,
-                        'Description'     => $gl['Description'] ?? null,
+                        'BudgetID' => $budget->Id,
+                        'GLID' => $gl['AccountID'] ?? null, // fallback if missing
+                        'AccountID' => $gl['AccountID'] ?? null,
+                        'Description' => $gl['Description'] ?? null,
                         'GLAccountTypeID' => $gl['GLAccountTypeID'] ?? null,
-                        'CreatedBy'       => Auth::id(),
-                        'CreatedOn'       => now(),
-                        'ModifiedBy'      => Auth::id(),
-                        'ModifiedOn'      => now(),
+                        'CreatedBy' => Auth::id(),
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
                     ]);
                 }
             }
@@ -364,7 +364,11 @@ class BudgetPeriodController extends Controller
                 $check = BudgetGLMasterAllocations::where('BudgetID', $budgetID)->first();
 
                 $now = Carbon::now();
+<<<<<<< HEAD
                 if ($check) {// Do some insert in the BudgetMasterAllocation
+=======
+                if  ($check)  { // Do some insert in the BudgetMasterAllocation
+>>>>>>> origin
                     //Get distinct values of all the branches id
                     $branchIDS = BudgetGLMasterAllocations::where('BudgetID', $budgetID)->distinct()->pluck('BranchID')->toArray();
                     //Insert the data based on the branches

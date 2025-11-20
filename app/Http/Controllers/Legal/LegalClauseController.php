@@ -17,7 +17,7 @@ class LegalClauseController extends Controller
     {
         $this->authorize(PermissionEnum::ContractView, LegalClause::class);
 
-        $clauses = LegalClause::all();
+        $clauses = LegalClause::orderByDesc('CreatedOn')->paginate(15);
         return view('legal.clauses.index', compact('clauses'));
     }
 
@@ -40,17 +40,14 @@ class LegalClauseController extends Controller
             'Title' => 'required|string|max:255',
             'ClauseType' => 'required|string|max:100',
             'Content' => 'required|string',
-            'Version' => 'required|string|max:50',
         ]);
 
-        $duplicates = LegalClause::where('Title', $validated['Title'])
+        // Auto-increment version number for the Title+ClauseType
+        $maxVersion = LegalClause::where('Title', $validated['Title'])
             ->where('ClauseType', $validated['ClauseType'])
-            ->where('Version', $validated['Version'])
-            ->exists();
-
-        if ($duplicates) {
-            return back()->with('error', 'This clause (same title, type, and version) already exists.');
-        }
+            ->max('Version');
+        $maxVersion = is_numeric($maxVersion) ? (int)$maxVersion : 0;
+        $version = $maxVersion + 1;
 
         try {
             DB::beginTransaction();
@@ -59,7 +56,7 @@ class LegalClauseController extends Controller
                 'Title' => $validated['Title'],
                 'ClauseType' => $validated['ClauseType'],
                 'Content' => $validated['Content'],
-                'Version' => $validated['Version'],
+                'Version' => $version,
                 'IsStandard' => $request->has('IsStandard') ? 'Yes' : 'No',
                 'ClauseDMSDocID' => $request->ClauseDMSDocID ?? null,
                 'CreatedBy' => Auth::id(),

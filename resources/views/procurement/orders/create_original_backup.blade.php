@@ -6,35 +6,43 @@
         .select2-container {
             width: 100% !important;
         }
+
         .origination-card {
             border: 2px solid #dee2e6;
             transition: all 0.3s ease;
             cursor: pointer;
         }
+
         .origination-card.selected {
             border-color: #007bff;
             background-color: #f8f9ff;
         }
+
         .origination-card:hover {
             border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
         }
+
         .form-section {
             display: none;
         }
+
         .form-section.active {
             display: block;
         }
+
         .source-info-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
+
         .item-row {
             border: 1px solid #e9ecef;
             margin-bottom: 10px;
             padding: 10px;
             border-radius: 5px;
         }
+
         .readonly-input {
             background-color: #f8f9fa !important;
         }
@@ -42,7 +50,7 @@
 @endsection
 
 @section('content')
-<div class="container-fluid">
+    <div class="container-fluid">
         <div class="d-flex justify-content-end align-items-center my-3">
             <a href="{{ route('purchaseOrder.index') }}" class="btn btn-secondary">
                 <i class="fa fa-arrow-left"></i> Back to Orders
@@ -64,28 +72,32 @@
             <div class="row mb-4">
                 <div class="col-md-4">
                     <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
-                    <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo" required>
+                    <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo"
+                            required>
                         <option selected disabled>Select RFQ</option>
                         @foreach($rfqs as $rfq)
-                            <option value="{{ $rfq->RFQNumber }}" {{ old('refNo') == $rfq->RFQNumber ? 'selected' : '' }}>{{ $rfq->RFQNumber ?? '' }}</option>
+                            <option
+                                value="{{ $rfq->RFQNumber }}" {{ old('refNo') == $rfq->RFQNumber ? 'selected' : '' }}>{{ $rfq->RFQNumber ?? '' }}</option>
                         @endforeach
                     </select>
                     @error('refNo')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-4">
                     <label>LPO Number <span class="text-danger">*</span></label>
-                    <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
+                    <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror"
+                           value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
                     @error('LPONo')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-4">
                     <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate') }}" required/>
+                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate"
+                           value="{{ old('pODate') }}" required/>
                     @error('pODate')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
@@ -94,12 +106,13 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <label>Supplier <span class="text-danger">*</span></label>
-                    <select class="form-control supplier @error('supplier') is-invalid @enderror" id="supplier" name="supplier" required>
+                    <select class="form-control supplier @error('supplier') is-invalid @enderror" id="supplier"
+                            name="supplier" required>
                         <option selected disabled>Select supplier</option>
                         {{-- Options will be populated by JS based on selected RFQ --}}
                     </select>
                     @error('supplier')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-6">
@@ -112,13 +125,14 @@
             <div class="row mb-4">
                 <div class="col-md-4 mt-2">
                     <label>Priority <span class="text-danger">*</span></label>
-                    <select class="form-control priority @error('priority') is-invalid @enderror" name="priority" required>
+                    <select class="form-control priority @error('priority') is-invalid @enderror" name="priority"
+                            required>
                         <option value="High" {{ old('priority') == 'High' ? 'selected' : '' }}>High</option>
                         <option value="Medium" {{ old('priority') == 'Medium' ? 'selected' : '' }}>Medium</option>
                         <option value="Low" {{ old('priority') == 'Low' ? 'selected' : '' }}>Low</option>
                     </select>
                     @error('priority')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-4 mt-2">
@@ -126,11 +140,12 @@
                     <select class="form-control terms @error('terms') is-invalid @enderror" name="terms" required>
                         <option selected disabled>Select Payment Term</option>
                         @foreach ($paymentTerms as $term)
-                            <option value="{{ $term->ID }}" {{ old('terms') == $term->ID ? 'selected' : '' }}>{{ $term->Description }}</option>
+                            <option
+                                value="{{ $term->ID }}" {{ old('terms') == $term->ID ? 'selected' : '' }}>{{ $term->Description }}</option>
                         @endforeach
                     </select>
                     @error('terms')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
@@ -191,7 +206,9 @@
                         <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
                                                       name="lineTotal[]" id="lineTotal" step="any" readonly></td>
                         <td class="text-center align-middle">
-                            <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
+                            <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i
+                                    class="fa fa-trash"></i> Remove
+                            </button>
                         </td>
                     </tr>
                     </tbody>
@@ -402,7 +419,6 @@
             });
 
 
-
             function calculateSummaryTotals() {
                 let exclusiveTotal = 0;
                 let totalTax = 0;
@@ -505,21 +521,21 @@
             }
         });
     </script>
-<script>
-    $(document).ready(function () {
-        $('#rfq-id').on('change', function () {
-            const rfqId = $(this).val();
-            if (!rfqId) return;
+    <script>
+        $(document).ready(function () {
+            $('#rfq-id').on('change', function () {
+                const rfqId = $(this).val();
+                if (!rfqId) return;
 
-            $.ajax({
-                url: `/purchase-order/rfq-items/${rfqId}`,
-                method: 'GET',
-                success: function (response) {
-                    const tbody = $('#item-rows');
-                    tbody.empty();
+                $.ajax({
+                    url: `/purchase-order/rfq-items/${rfqId}`,
+                    method: 'GET',
+                    success: function (response) {
+                        const tbody = $('#item-rows');
+                        tbody.empty();
 
-                    response.items.forEach((item, index) => {
-                        const row = `
+                        response.items.forEach((item, index) => {
+                            const row = `
                             <tr>
                                 <td>
                                     <input type="hidden" name="itemCode[]" value="${item.itemCode}">
@@ -547,35 +563,34 @@
                                     <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
                                 </td>
                             </tr>`;
-                        tbody.append(row);
-                    });
-                },
-                error: function () {
-                    alert('Failed to load RFQ items.');
-                }
+                            tbody.append(row);
+                        });
+                    },
+                    error: function () {
+                        alert('Failed to load RFQ items.');
+                    }
+                });
+            });
+
+            // Remove row handler
+            $(document).on('click', '.remove-row', function () {
+                $(this).closest('tr').remove();
+            });
+
+            // Live calculation of total (qty * unitPrice + tax - discount)
+            $(document).on('input', '.quantity, .unit-price, .tax, .discount', function () {
+                const row = $(this).closest('tr');
+                const qty = parseFloat(row.find('.quantity').val()) || 0;
+                const price = parseFloat(row.find('.unit-price').val()) || 0;
+                const tax = parseFloat(row.find('.tax').val()) || 0;
+                const discount = parseFloat(row.find('.discount').val()) || 0;
+
+                const subtotal = qty * price;
+                const total = subtotal + tax - discount;
+
+                row.find('.total').val(total.toFixed(2));
             });
         });
-
-        // Remove row handler
-        $(document).on('click', '.remove-row', function () {
-            $(this).closest('tr').remove();
-        });
-
-        // Live calculation of total (qty * unitPrice + tax - discount)
-        $(document).on('input', '.quantity, .unit-price, .tax, .discount', function () {
-            const row = $(this).closest('tr');
-            const qty = parseFloat(row.find('.quantity').val()) || 0;
-            const price = parseFloat(row.find('.unit-price').val()) || 0;
-            const tax = parseFloat(row.find('.tax').val()) || 0;
-            const discount = parseFloat(row.find('.discount').val()) || 0;
-
-            const subtotal = qty * price;
-            const total = subtotal + tax - discount;
-
-            row.find('.total').val(total.toFixed(2));
-        });
-    });
-</script>
-
+    </script>
 
 @endsection

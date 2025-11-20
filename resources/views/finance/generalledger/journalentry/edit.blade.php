@@ -4,31 +4,111 @@
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
-        .select2-container { width: 100% !important; }
-        .je-table { min-width: 1700px; border-collapse: separate; border-spacing: 0; }
-        .je-table th, .je-table td { vertical-align: middle; white-space: nowrap; }
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .je-table {
+            min-width: 1700px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .je-table th, .je-table td {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
         /* sticky disabled */
-        .je-sticky { position: static; background: #fff; z-index: auto; }
-        .je-sticky-col { left: auto; }
-        .je-sticky-gl { left: auto; }
-        .je-table thead th.je-sticky { background: #f8f9fa; z-index: auto; }
+        .je-sticky {
+            position: static;
+            background: #fff;
+            z-index: auto;
+        }
+
+        .je-sticky-col {
+            left: auto;
+        }
+
+        .je-sticky-gl {
+            left: auto;
+        }
+
+        .je-table thead th.je-sticky {
+            background: #f8f9fa;
+            z-index: auto;
+        }
+
         /* column widths */
-        .je-table th.col-gl, .je-table td.col-gl { min-width: 360px; }
-        .je-table th.col-branch, .je-table td.col-branch { min-width: 220px; }
-        .je-table th.col-dept, .je-table td.col-dept { min-width: 280px; }
-        .je-table th.col-drcr, .je-table td.col-drcr { min-width: 120px; text-align: center; }
-        .je-table th.col-amount, .je-table td.col-amount { min-width: 200px; text-align: right; }
-        .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; }
-        .je-table th.col-action, .je-table td.col-action { min-width: 120px; text-align: center; }
+        .je-table th.col-gl, .je-table td.col-gl {
+            min-width: 360px;
+        }
+
+        .je-table th.col-branch, .je-table td.col-branch {
+            min-width: 220px;
+        }
+
+        .je-table th.col-dept, .je-table td.col-dept {
+            min-width: 280px;
+        }
+
+        .je-table th.col-drcr, .je-table td.col-drcr {
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .je-table th.col-amount, .je-table td.col-amount {
+            min-width: 200px;
+            text-align: right;
+        }
+
+        .je-table th.col-narr, .je-table td.col-narr {
+            min-width: 420px;
+        }
+
+        .je-table th.col-action, .je-table td.col-action {
+            min-width: 120px;
+            text-align: center;
+        }
+
         /* inputs */
         .je-table .form-select,
         .je-table .form-control,
-        .je-table textarea { padding: 0.45rem 0.65rem; font-size: 0.875rem; }
-        .narration-input { min-height: 60px; resize: vertical; }
-        .totals-box { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; }
+        .je-table textarea {
+            padding: 0.45rem 0.65rem;
+            font-size: 0.875rem;
+        }
+
+        .narration-input {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .totals-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+
         /* match bootstrap for select2 */
-        .select2-container .select2-selection--single { height: calc(2.25rem + 2px); padding: 0.375rem 0.75rem; font-size: 1rem; border: 1px solid #ced4da; border-radius: 0.375rem; background-color: #fff; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 100%; top: 50%; transform: translateY(-50%); right: 0.75rem; }
+        .select2-container .select2-selection--single {
+            height: calc(2.25rem + 2px);
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            background-color: #fff;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 0.75rem;
+        }
     </style>
 @endsection
 
@@ -54,7 +134,8 @@
     <div class="container mt-0">
         <div class="card shadow rounded-4">
             <div class="card-header bg-light py-2 px-3 d-flex align-items-center">
-                <h6 class="mb-0 text-muted"><i class="fab fa-wpforms text-info me-1"></i> Edit {{ $journalEntry->RefNo }}</h6>
+                <h6 class="mb-0 text-muted"><i class="fab fa-wpforms text-info me-1"></i>
+                    Edit {{ $journalEntry->RefNo }}</h6>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ route('journalentry.update', $journalEntry->Id) }}" id="journalForm">
@@ -65,11 +146,13 @@
                     <div class="row mb-4 g-3">
                         <div class="col-md-4">
                             <label class="form-label">Journal Date</label>
-                            <input type="date" name="JournalDate" class="form-control" value="{{ \Carbon\Carbon::parse($journalEntry->Date)->format('Y-m-d') }}" required>
+                            <input type="date" name="JournalDate" class="form-control"
+                                   value="{{ \Carbon\Carbon::parse($journalEntry->Date)->format('Y-m-d') }}" required>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label">Description</label>
-                            <input type="text" name="Description" class="form-control" value="{{ $journalEntry->Description }}" placeholder="e.g., Loan Disbursement">
+                            <input type="text" name="Description" class="form-control"
+                                   value="{{ $journalEntry->Description }}" placeholder="e.g., Loan Disbursement">
                         </div>
                     </div>
 
@@ -97,9 +180,12 @@
                                     <input type="hidden" name="LineId[]" value="{{ $line->Id }}">
                                     <td class="col-gl je-sticky je-sticky-gl">
                                         <select name="GLAccount[]" class="form-select gl-account-select" required>
-                                            <option value="" disabled {{ !$line->GLAccountID ? 'selected' : '' }}>Select GL</option>
+                                            <option value="" disabled {{ !$line->GLAccountID ? 'selected' : '' }}>Select
+                                                GL
+                                            </option>
                                             @foreach($gls as $gl)
-                                                <option value="{{ $gl->Id }}" data-code="{{ $gl->GLCode }}" data-name="{{ $gl->GLName }}" {{ $gl->Id == $line->GLAccountID ? 'selected' : '' }}>
+                                                <option value="{{ $gl->Id }}" data-code="{{ $gl->GLCode }}"
+                                                        data-name="{{ $gl->GLName }}" {{ $gl->Id == $line->GLAccountID ? 'selected' : '' }}>
                                                     {{ $gl->GLCode }} ({{ $gl->GLName }})
                                                 </option>
                                             @endforeach
@@ -108,14 +194,16 @@
                                     <td class="col-branch">
                                         <select name="Branch[]" class="form-select" required>
                                             @foreach($branches as $branch)
-                                                <option value="{{ $branch->Id }}" {{ $branch->Id == $line->BranchID ? 'selected' : '' }}>{{ $branch->Name }}</option>
+                                                <option
+                                                    value="{{ $branch->Id }}" {{ $branch->Id == $line->BranchID ? 'selected' : '' }}>{{ $branch->Name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td class="col-dept">
                                         <select name="Department[]" class="form-select" required>
                                             @foreach($departments as $department)
-                                                <option value="{{ $department->Id }}" {{ $department->Id == $line->DepartmentID ? 'selected' : '' }}>{{ $department->Name }}</option>
+                                                <option
+                                                    value="{{ $department->Id }}" {{ $department->Id == $line->DepartmentID ? 'selected' : '' }}>{{ $department->Name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
@@ -128,13 +216,17 @@
                                     </td>
                                     <td class="col-amount">
                                         @php $amount = $isDebit ? $line->Debit*-1 : $line->Credit; @endphp
-                                        <input type="number" name="Amount[]" class="form-control amount-input text-end" step="0.01" value="{{ number_format((float)$amount, 2, '.', '') }}" required>
+                                        <input type="number" name="Amount[]" class="form-control amount-input text-end"
+                                               step="0.01" value="{{ number_format((float)$amount, 2, '.', '') }}"
+                                               required>
                                     </td>
                                     <td class="col-narr">
-                                        <textarea name="Narration[]" class="form-control narration-input" placeholder="Narration">{{ $line->Narration }}</textarea>
+                                        <textarea name="Narration[]" class="form-control narration-input"
+                                                  placeholder="Narration">{{ $line->Narration }}</textarea>
                                     </td>
                                     <td class="col-action text-center">
-                                        <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-line"
+                                                title="Remove">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </td>
@@ -158,7 +250,10 @@
 
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{{route('journalentry.index')}}" class="btn btn-secondary">Back</a>
-                        <button class="btn btn-success" id="postBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">Save Changes</button>
+                        <button class="btn btn-success" id="postBtn" type="submit"
+                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">
+                            Save Changes
+                        </button>
                     </div>
                 </form>
             </div>
@@ -169,24 +264,24 @@
 @section('scripts')
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
-        (function(){
+        (function () {
             const body = document.getElementById('journalBody');
             const totalDr = document.getElementById('totalDr');
             const totalCr = document.getElementById('totalCr');
             const postBtn = document.getElementById('postBtn');
             const balanceStatus = document.getElementById('balanceStatus');
 
-            function updateLineNumbers(){
-                if(!body) return;
+            function updateLineNumbers() {
+                if (!body) return;
                 const rows = body.querySelectorAll('tr');
                 rows.forEach((row, index) => {
                     const cell = row.querySelector('.line-number');
-                    if(cell) cell.textContent = index + 1;
+                    if (cell) cell.textContent = index + 1;
                 });
             }
 
-            function calculateTotals(){
-                if(!body || !totalDr || !totalCr || !balanceStatus || !postBtn) return;
+            function calculateTotals() {
+                if (!body || !totalDr || !totalCr || !balanceStatus || !postBtn) return;
                 let debit = 0, credit = 0, valid = true;
                 [...body.rows].forEach(row => {
                     const gl = row.querySelector('select[name="GLAccount[]"]')?.value;
@@ -212,11 +307,13 @@
             document.addEventListener('change', calculateTotals);
 
             const addRowBtn = document.getElementById('addRow');
-            if(addRowBtn){
+            if (addRowBtn) {
                 addRowBtn.addEventListener('click', () => {
-                    if (window.jQuery && $.fn.select2) { $('.gl-account-select').select2('destroy'); }
+                    if (window.jQuery && $.fn.select2) {
+                        $('.gl-account-select').select2('destroy');
+                    }
                     const firstRow = body?.querySelector('tr');
-                    if(!firstRow) return;
+                    if (!firstRow) return;
                     const clone = firstRow.cloneNode(true);
                     clone.querySelectorAll('input, select, textarea').forEach(el => {
                         if (el.tagName === 'INPUT') el.value = '';
@@ -224,7 +321,7 @@
                         if (el.tagName === 'TEXTAREA') el.value = '';
                     });
                     const hiddenId = clone.querySelector('input[name="LineId[]"]');
-                    if(hiddenId) hiddenId.value = '';
+                    if (hiddenId) hiddenId.value = '';
                     body.appendChild(clone);
                     if (window.jQuery && $.fn.select2) {
                         $('.gl-account-select').select2({
@@ -248,8 +345,8 @@
                 });
             }
 
-            if(body){
-                body.addEventListener('click', function(e){
+            if (body) {
+                body.addEventListener('click', function (e) {
                     if (e.target.closest && e.target.closest('.remove-line') && body.rows.length > 1) {
                         e.target.closest('tr').remove();
                         updateLineNumbers();

@@ -3,32 +3,24 @@
 namespace App\Http\Requests\FleetManagement;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class VehicleManagementRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        return [
-            'RegistrationNo' => 'required|string|max:255',
+        $vehicleId = $this->route('Id'); // use your route parameter (update mode)
+
+        $rules = [
             'VehicleType' => 'required|integer|exists:t_CodeDetails,ID',
             'Make' => 'nullable|integer|exists:t_FleetBrands,Id',
             'Model' => 'nullable|integer|exists:t_FleetModels,Id',
             'YearOfManufacture' => 'nullable|integer',
-            'ChassisNo' => 'nullable|string|max:100',
-            'EngineNo' => 'nullable|string|max:100',
             'FuelType' => 'required|integer|exists:t_FuelTypes,Id',
             'Capacity' => 'nullable|string|max:50',
             'OdometerReading' => 'nullable|numeric',
@@ -39,7 +31,60 @@ class VehicleManagementRequest extends FormRequest
             'Color' => 'nullable|string|max:15',
             'ImageFile' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'AssignedBranch' => 'required|integer|exists:t_Branches,Id',
-            //
+        ];
+
+        // ✅ For creation
+        if (!$vehicleId) {
+            $rules['RegistrationNo'] = [
+                'required',
+                'string',
+                'max:255',
+                'unique:t_FleetVehicles,RegistrationNo',
+            ];
+            $rules['ChassisNo'] = [
+                'nullable',
+                'string',
+                'max:100',
+                'unique:t_FleetVehicles,ChassisNo',
+            ];
+            $rules['EngineNo'] = [
+                'nullable',
+                'string',
+                'max:100',
+                'unique:t_FleetVehicles,EngineNo',
+            ];
+        } else {
+            // ✅ For update
+            $rules['RegistrationNo'] = [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_FleetVehicles', 'RegistrationNo')->ignore($vehicleId, 'Id'),
+            ];
+            $rules['ChassisNo'] = [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('t_FleetVehicles', 'ChassisNo')->ignore($vehicleId, 'Id'),
+            ];
+            $rules['EngineNo'] = [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('t_FleetVehicles', 'EngineNo')->ignore($vehicleId, 'Id'),
+            ];
+        }
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'RegistrationNo.unique' => '⚠️ A vehicle with this registration number already exists.',
+            'ChassisNo.unique' => '⚙️ The chassis number has already been taken.',
+            'EngineNo.unique' => '🚫 A vehicle with this engine number already exists.',
+            'FuelType.required' => '⛽ The fuel type field is required.',
         ];
     }
 }

@@ -5,11 +5,11 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
     <style>
-        /* Force table text to wrap instead of overflowing */
+        /* Improve readability for table text */
         #propertyunits td {
             white-space: normal !important;
             word-wrap: break-word;
-            max-width: 200px; /* optional: limit width so wrap actually happens */
+            max-width: 200px;
         }
     </style>
 @endsection
@@ -18,14 +18,14 @@
 <div class="container mt-4">
 
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-end align-items-center mb-3">
         <a href="{{ route('addunit.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i> Add Unit
         </a>
     </div>
 
     <p class="text-muted">
-        <small>The list below shows different units per floor.</small>
+        <small>This screen displays all registered property units per floor.</small>
     </p>
 
     @if($units->count())
@@ -50,41 +50,46 @@
                         @foreach($units as $unit)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $unit->property->PropertyName ?? '-'}}</td>
+                                <td>{{ $unit->property->PropertyName ?? '-' }}</td>
                                 <td>{{ $unit->blocks?->BlockName ?? 'N/A' }}</td>
                                 <td>{{ $unit->floors?->FloorLabel ?? 'N/A' }}</td>
-                                <td>{{ $unit->UnitCode ?? '-'}}</td>
-                                <td>{{ $unit->UnitSize ?? '-'}}</td>
+                                <td>{{ $unit->UnitCode ?? '-' }}</td>
+                                <td>{{ $unit->UnitSize ?? '-' }}</td>
+
                                 <td>
                                     <span class="badge bg-{{ $unit->IsRentable ? 'success' : 'secondary' }}">
                                         {{ $unit->IsRentable ? 'Yes' : 'No' }}
                                     </span>
                                 </td>
+
                                 <td>
                                     <span class="badge bg-{{ $unit->CurrentStatus ? 'success' : 'danger' }}">
                                         {{ $unit->CurrentStatus ? 'Vacant' : 'Occupied' }}
                                     </span>
                                 </td>
-                                <td>{{ $unit->Remarks ?? '-'}}</td>
+
+                                <td>{{ $unit->Remarks ?? '-' }}</td>
+
                                 <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('addunit.edit', $unit->Id) }}" 
-                                           class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil-square"></i> Edit
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <a href="{{ route('addunit.edit', $unit->Id) }}"
+                                           class="btn btn-sm btn-warning"
+                                           title="Edit Unit">
+                                            <i class="bi bi-pencil-square"></i>
                                         </a>
 
                                         @if($unit->unitlease()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
+                                            <button class="btn btn-sm btn-secondary" title="Unit in Use">
+                                                <i class="bi bi-lock"></i>
                                             </button>
                                         @else
-                                            <form action="{{ route('addunit.destroy', $unit->Id) }}" 
-                                                  method="POST" 
+                                            <form action="{{ route('addunit.destroy', $unit->Id) }}"
+                                                  method="POST"
                                                   onsubmit="return confirm('Are you sure you want to delete this unit?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Delete Unit">
+                                                    <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
                                         @endif
@@ -98,7 +103,7 @@
         </div>
     @else
         <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle me-2"></i> No property unit registered yet.
+            <i class="bi bi-info-circle me-2"></i> No property units registered yet.
         </div>
     @endif
 </div>

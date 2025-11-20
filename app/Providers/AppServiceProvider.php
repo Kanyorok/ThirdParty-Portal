@@ -53,11 +53,19 @@ use App\Models\CRM\Schedule;
 use App\Models\CRM\Social;
 use App\Models\CRM\Survey;
 use App\Models\CRM\Ticket;
+use App\Models\DMS\DMSSignature;
 use App\Models\DMS\DMSTags;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentAttribute;
+use App\Models\DMS\DocumentCheckOut;
+use App\Models\DMS\DocumentLegalHold;
 use App\Models\DMS\DocumentRelation;
+use App\Models\DMS\DocumentSignature;
+use App\Models\DMS\DocumentTaggingRules;
 use App\Models\DMS\DocumentTags;
+use App\Models\DMS\DocumentValidation;
+use App\Models\DMS\DocumentValidationAttribute;
+use App\Models\DMS\DocumentValidationType;
 use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
 use App\Models\DMS\LegalHold;
@@ -96,7 +104,7 @@ use App\Models\Fleet\FleetVehicleRequest;
 use App\Models\FleetManagement\DriverManagement;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
-use App\Models\FleetManagement\VehicleRegistry;
+// use App\Models\FleetManagement\VehicleRegistry;
 use App\Models\HRM\Committee;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
@@ -171,8 +179,10 @@ use App\Models\Settings\WorkFlowStage;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
+use App\Policies\DMS\DMSSignaturePolicy;
 use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
+use App\Policies\DMS\DocumentValidationTypePolicy;
 use App\Policies\DMS\LegalHoldPolicy;
 use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\FleetManagement\ContractedDriverPolicy;
@@ -222,6 +232,7 @@ use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
+use App\Policies\Procurement\RFQPolicy;
 use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyAttachmentsPolicy;
@@ -250,6 +261,8 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
 
+//use App\Policies\FleetManagement\DriverPolicy;
+
 //use App\Policies\Procurement\PrequalificationPeriodPolicy;
 
 
@@ -268,6 +281,31 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Support\Facades\Blade::if('canRead', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'read');
+        });
+        \Illuminate\Support\Facades\Blade::if('canWrite', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'write');
+        });
+        \Illuminate\Support\Facades\Blade::if('canUpdate', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'update');
+        });
+        \Illuminate\Support\Facades\Blade::if('canDelete', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'delete');
+        });
+        \Illuminate\Support\Facades\Blade::if('canApprove', function (string $submodule) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if (!$user) return false;
+            return \App\Services\Core\PermissionResolver::can($user, $submodule, 'approve');
+        });
         Relation::morphMap([
 
             //Core
@@ -385,23 +423,32 @@ class AppServiceProvider extends ServiceProvider
 
             //DMS
             DMSTags::getPrimaryKey() => DMSTags::class,
+            DMSSignature::getPrimaryKey() => DMSSignature::class,
             Document::getPrimaryKey() => Document::class,
             DocumentAttribute::getPrimaryKey() => DocumentAttribute::class,
+            DocumentCheckOut::getPrimaryKey() => DocumentCheckOut::class,
+            DocumentLegalHold::getPrimaryKey() => DocumentLegalHold::class,
             DocumentRelation::getPrimaryKey() => DocumentRelation::class,
+            DocumentSignature::getPrimaryKey() => DocumentSignature::class,
+            DocumentTaggingRules::getPrimaryKey() => DocumentTaggingRules::class,
             DocumentTags::getPrimaryKey() => DocumentTags::class,
+            DocumentValidation::getPrimaryKey() => DocumentValidation::class,
+            DocumentValidationAttribute::getPrimaryKey() => DocumentValidationAttribute::class,
+            DocumentValidationType::getPrimaryKey() => DocumentValidationType::class,
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
+            LegalHold::getPrimaryKey() => LegalHold::class,
             Repository::getPrimaryKey() => Repository::class,
 
-
-
             //Third Parties
+            // Allow resolving morph type 'ThirdParty' used by legacy data
+            'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,
-            VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
-            DriverManagement::getPrimaryKey() => DriverManagement::class,
+            // VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
+            // DriverManagement::getPrimaryKey() => DriverManagement::class,
             FleetMake::getPrimaryKey() => FleetMake::class,
             FleetModel::getPrimaryKey() => FleetModel::class,
             FleetVehicle::getPrimaryKey() => FleetVehicle::class,
@@ -443,7 +490,6 @@ class AppServiceProvider extends ServiceProvider
 
             //Fleet Management
 
-
             FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
             FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
             RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
@@ -453,7 +499,6 @@ class AppServiceProvider extends ServiceProvider
             FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
             FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
-
             FinanceInvoice::getPrimaryKey() => FinanceInvoice::class,
             FinanceInvoiceLine::getPrimaryKey() => FinanceInvoiceLine::class,
             FinanceCreditManagement::getPrimaryKey() => FinanceCreditManagement::class,
@@ -474,14 +519,29 @@ class AppServiceProvider extends ServiceProvider
 
         ]);
 
+        // Super-admin bypass: Admin roles can perform any ability
+        Gate::before(function ($user, string $ability = null, $arguments = null) {
+            try {
+                if ($user->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+            }
+            return null;
+        });
+
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
         Gate::policy(Repository::class, RepositoryPolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(DMSTags::class, DMSTagPolicy::class);
+        Gate::policy(DMSSignature::class, DMSSignaturePolicy::class);
+        Gate::policy(DocumentValidationType::class, DocumentValidationTypePolicy::class);
+
         Gate::policy(LegalHold::class, LegalHoldPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
+        Gate::policy(RFQ::class, RFQPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(DepartmentNeed::class, DepartmentNeedsPolicy::class);

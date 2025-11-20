@@ -3,6 +3,8 @@
 namespace App\Models\PropertyManagement;
 use App\Enums\Property\PropertyInvoiceEnum;
 
+use App\Models\Core\Currency;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -28,6 +30,9 @@ class PropertyInvoice extends Model
         'InvoiceNotes',
         'ParkingFee',
         'Status',
+        'Description',
+        'Currency',
+        'Tax',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
@@ -49,6 +54,15 @@ class PropertyInvoice extends Model
     {
         return $this->hasMany(PropertyReceipt::class, 'InvoiceID', 'Id');
     }
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'Currency', 'Id');
+    }
+    public function tax()
+    {
+        return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'Tax', 'Id');
+    }
+
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');

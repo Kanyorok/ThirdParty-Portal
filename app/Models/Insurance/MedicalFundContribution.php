@@ -2,16 +2,17 @@
 
 namespace App\Models\Insurance;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 class MedicalFundContribution extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, UserActorTrait;
 
     protected $table = 't_MedicalFundContributions';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'Id';
 
     public $timestamps = true;
     const CREATED_AT = 'CreatedOn';
@@ -19,32 +20,34 @@ class MedicalFundContribution extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FundID','ContributorType','ContributorID','Amount','ContributionDate','Notes',
+        'FundId','ContributorType','ContributorId','Amount','ContributionDate','Notes',
         'CreatedBy','ModifiedBy','DeletedBy'
     ];
 
-    protected $casts = [
-        'Amount'          => 'decimal:2',
-        'ContributionDate'=> 'date',
-        'CreatedOn'       => 'datetime',
-        'ModifiedOn'      => 'datetime',
-        'DeletedOn'       => 'datetime',
-    ];
-
-    protected static function booted()
+    public static function getPrimaryKey(): string
     {
-        static::creating(function ($m) { $m->CreatedBy = Auth::id(); $m->ModifiedBy = Auth::id(); });
-        static::updating(function ($m) { $m->ModifiedBy = Auth::id(); });
-        static::deleting(function ($m) { $m->DeletedBy = Auth::id(); $m->save(); });
+        return 'MedicalFundContributionId';
     }
+
 
     public function fund()
     {
-        return $this->belongsTo(MedicalFund::class, 'FundID', 'ID');
+        // align with other models which use FundId -> Id
+        return $this->belongsTo(MedicalFund::class, 'FundId', 'Id');
     }
 
     public function contributor()
     { 
-        return $this->belongsTo(MedicalFundContributor::class, 'ContributorID','ID'); 
+        // contributions table uses ContributorId (matching other models)
+        return $this->belongsTo(MedicalFundContributor::class, 'ContributorId','Id'); 
+    }
+
+    /**
+     * Optional relation to code detail describing the contributor/type for this contribution.
+     * This allows displaying a human-friendly description for the ContributorType field.
+     */
+    public function type()
+    {
+        return $this->belongsTo(\App\Models\Core\CodeDetail::class, 'ContributorType', 'ID');
     }
 }

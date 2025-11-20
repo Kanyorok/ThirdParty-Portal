@@ -44,38 +44,38 @@
             <div class="card-body">
                 <table id="propertycategory" class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th style="width: 20%">Actions</th>
-                        </tr>
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th style="width: 20%">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach ($categories as $category)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $category->Name ?? '-'}}</td>
-                                <td>{{ $category->Description ?? '-' }}</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('propertycategories.update', $category->Id) }}" 
-                                           class="btn btn-sm btn-warning">Edit</a>
-                                        @if($category->propertytypes()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>In Use</button>
-                                        @else
-                                            <form action="{{ route('propertycategory.destroy', $category->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this category?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">Delete</button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                    @foreach ($categories as $category)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $category->Name ?? '-'}}</td>
+                            <td>{{ $category->Description ?? '-' }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('propertycategories.update', $category->Id) }}"
+                                       class="btn btn-sm btn-warning">Edit</a>
+                                    @if($category->propertytypes()->exists())
+                                        <button class="btn btn-sm btn-secondary" disabled>In Use</button>
+                                    @else
+                                        <form action="{{ route('propertycategory.destroy', $category->Id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>
