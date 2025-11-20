@@ -35,7 +35,7 @@ class WorkflowSeeder extends Seeder
             'EscalationLimit' => 10,
             'WorkFlowId' => $ticketWorkFlow->Id,
             'WorkFlowTypeId' => WorkFlowType::query()->where('TypeID', 'CNT')->firstOrFail()->Id,
-            'WorkFlowLimitId' => null,
+            // 'WorkFlowLimitId' => null,
             'PermissionId' => Permission::query()->where('name', PermissionEnum::TicketApproval->value)->firstOrFail()->id,
             'Count' => 1,
             'CreatedBy' => $actor->Id,

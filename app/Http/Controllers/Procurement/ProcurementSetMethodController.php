@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItem;
 use App\Services\Procurement\ProcurementPlan\ProcurementMethodService;

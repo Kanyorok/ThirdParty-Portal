@@ -4,8 +4,8 @@ namespace App\Models\Core;
 
 use App\Enums\WorkflowStatus;
 use App\Traits\Model\UserActorTrait;
-use App\Models\Workflow\WorkflowType;
-use App\Models\Workflow\WorkflowStage;
+use App\Models\Core\Approval\WorkflowType;
+use App\Models\Core\Approval\WorkflowStage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -25,6 +25,7 @@ class Workflow extends Model
         'Name',
         'Source',
         'WorkflowTypeId',
+        'IsFinalStage',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -35,6 +36,7 @@ class Workflow extends Model
 
     protected $casts = [
         'CreatedOn' => 'datetime',
+        'IsFinalStage' => 'boolean',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];

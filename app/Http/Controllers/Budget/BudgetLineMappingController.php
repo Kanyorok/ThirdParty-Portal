@@ -17,7 +17,7 @@ use App\Models\Budget\BudgetManualEntry;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -333,14 +333,13 @@ class BudgetLineMappingController extends Controller
     {
         //$subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
         $subTypes = DB::table('t_BudgetGLSubTypes')
-            ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')->where('GLAccountTypeID', $typeId)
-            ->get();
+                    ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')->where('GLAccountTypeID', $typeId)
+                    ->get();
         return response()->json($subTypes);
     }
 
-    public function getGLTypes($typeId)
-    {
-        $glTypes = BudgetGLMaster::where('GLSubAccountTypeID', $typeId)->get();
+    public function getGLTypes($typeId){
+        $glTypes=BudgetGLMaster::where('GLSubAccountTypeID',$typeId)->get();
         return response()->json($glTypes);
     }
 

@@ -4,12 +4,22 @@ namespace App\Services\Procurement\ProcurementPlan;
 
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Auth\User;
+use App\Services\Procurement\DepartmentNeedsWorkflow;
+use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Models\Core\ApprovalLimits;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class DepartmentNeedsService
 {
+    protected ApprovalWorkflow $workflow;
+
+    public function __construct(ApprovalWorkflow $workflow)
+    {
+        $this->workflow = $workflow;
+    }
+
     public function create(array $data, User $actor): DepartmentNeed
     {
         $branchId = session('LoginBranchId');
@@ -20,7 +30,11 @@ class DepartmentNeedsService
         $existing = DepartmentNeed::where('BranchID', $branchId)
             ->where('DepartmentID', $departmentId)
             ->where('ItemID', $itemId)
-            ->where('Status', \App\Enums\Procurement\DepartmentNeedsEnum::Pending)
+            ->where(
+                'Status',
+                DepartmentNeedsEnum::Pending,
+                DepartmentNeedsEnum::Submitted->value
+            )
             ->first();
 
         if ($existing) {
@@ -29,29 +43,24 @@ class DepartmentNeedsService
 
         // Generate NeedID safely (robust to deletions and concurrent requests)
         $prefix = 'NEED-';
-        $padLen = 5;
+        $lastNEED = DepartmentNeed::where('NeedID', 'like', $prefix . '%')
+            ->orderBy('Id', 'desc')
+            ->first();
+        $lastNumber = $lastNEED ? intval(substr($lastNEED->NeedID, strlen($prefix))) : 0;
+        $newNEEDNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
-        $departmentNeed = null;
-        $lock = Cache::lock('departmentneeds-next-needid', 5);
-    $lock->block(5, function () use (&$departmentNeed, $prefix, $padLen, $branchId, $departmentId, $itemId, $data, $actor) {
-            // Compute the max numeric part from both prefixed and legacy numeric NeedIDs
-            $maxNo = DB::table('t_DepartmentNeeds')
-                ->selectRaw("MAX(TRY_CONVERT(int, REPLACE(NeedID, ?, ''))) as max_no", [$prefix])
-                ->value('max_no');
-
-            $nextNo = ((int) ($maxNo ?? 0)) + 1;
-            $newNeedId = $prefix . str_pad($nextNo, $padLen, '0', STR_PAD_LEFT);
-
-            // Create inside the lock to avoid race conditions
+        DB::beginTransaction();
+        try {
+            // Create with Pending status - workflow will be initiated immediately
             $departmentNeed = DepartmentNeed::create([
-                'NeedID' => $newNeedId,
+                'NeedID' => $newNEEDNumber,
                 'BranchID' => $branchId,
                 'DepartmentID' => $departmentId,
                 'ItemID' => $itemId,
                 'RequestedQty' => $data['RequestedQty'],
                 'EstimatedUnitCost' => $data['EstimatedUnitCost'],
                 'Justification' => $data['Justification'],
-                'Status' => $data['Status'],
+                'Status' =>  DepartmentNeedsEnum::Pending->value, // Start as sub,iited for approval 
                 'FiscalYear' => $data['FiscalYear'],
                 'PriorityLevel' => $data['PriorityLevel'],
                 'IsEmergency' => $data['IsEmergency'],
@@ -59,19 +68,28 @@ class DepartmentNeedsService
                 'ModifiedBy' => $actor->Id,
                 'RequestedDate' => $data['RequestedDate'],
             ]);
-        });
 
-        if (!$departmentNeed) {
-            throw new \RuntimeException('Failed to generate a unique NeedID. Please try again.');
+            // Submit to workflow (this creates WorkflowHistory and WorkflowPending)
+            $this->workflow->submit(
+                $departmentNeed,
+                $actor,
+                DepartmentNeedsEnum::Pending,  // Required: Pending status enum
+                'Submitted for approval'
+
+            );
+
+            activity()
+                ->causedBy(modelOrId: $actor)
+                ->performedOn($departmentNeed)
+                ->event('create')
+                ->log('Created and submitted Department Need ' . $departmentNeed->NeedID);
+
+            DB::commit();
+
+            return $departmentNeed;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
-
-        activity()
-            ->causedBy($actor)
-            ->performedOn($departmentNeed)
-            ->event('create')
-            ->log('Created Department Needs ' . $departmentNeed->NeedID);
-
-        return $departmentNeed;
     }
-
 }

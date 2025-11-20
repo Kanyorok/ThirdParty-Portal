@@ -9,6 +9,7 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
+use App\Services\Workflow\ApprovalWorkflow;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;
@@ -253,6 +254,7 @@ use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
+
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -271,9 +273,13 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
+    public function register():void 
+
     {
-        //
+         $this->app->bind(ApprovalWorkflow::class, function ($app) {
+        return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
+    });
+    
     }
 
     /**
@@ -352,6 +358,7 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
+          
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,

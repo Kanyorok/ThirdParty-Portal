@@ -91,17 +91,21 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::post('department-needs/{NeedID}/submit', [DepartmentNeedsController::class, 'submit'])
         ->name('department-needs.submit');
 
-    Route::resource('approvals/department-need', DepartmentNeedApprovalController::class)->only([
-        'index',
-        'show',
-        'update',
-        'destroy'
-    ])->names([
-        'index' => 'department-need-approval.index',
-        'show' => 'department-need-approval.show',
-        'update' => 'department-need-approval.update',
-        'destroy' => 'department-need-approval.destroy'
-    ]);
+
+    // Department Need Approvals (Maker-Checker)
+    Route::middleware('auth')->group(function () {
+        Route::resource('approvals/department-need', DepartmentNeedApprovalController::class)->only([
+            'index',
+            'show',
+            'update',
+            'destroy'
+        ])->names([
+            'index' => 'department-need-approval.index',
+            'show' => 'department-need-approval.show',
+            'update' => 'department-need-approval.update',
+            'destroy' => 'department-need-approval.destroy'
+        ]);
+    });
 
 
     //this route is static affecting orders\create.blade.php & requisitions\show
@@ -421,7 +425,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::resource('planvsactual', PlanvsActualController::class);
     Route::resource('planfromneeds', PlanFromNeedsController::class);
     Route::resource('planmanualinput', PlanManualInputController::class);
-    Route::resource('submitplan', SubmitForApprovalController::class);
+    Route::resource('submitplan', ProcurementSubmitPlanController::class);
     Route::resource('ammendplan', PlanEditController::class);
     Route::resource('approvalinbox', PlanApprovalInboxController::class);
     Route::resource('executiondashboard', PlanExectionDashboardController::class);
