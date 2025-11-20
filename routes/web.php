@@ -53,9 +53,9 @@ Route::middleware(['web','auth'])->namespace('App\Http\Controllers')->group(func
 
         Route::get('/settings/workflows/{id}/state', [WorkFlowController::class, 'getState'])->name('settings.workflows.state');
 
-        // Add POST alternative for delete to handle form submission
-Route::post('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy.post');
-Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
+//         // Add POST alternative for delete to handle form submission
+// Route::post('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy.post');
+// Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
       
         // Workflow Limits Routes
         Route::get('workflow-limits', [WorflowLimitsController::class, 'index'])->name('settings.workflow_limits');

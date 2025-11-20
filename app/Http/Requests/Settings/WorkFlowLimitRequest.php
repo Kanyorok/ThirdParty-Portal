@@ -24,7 +24,8 @@ class WorkFlowLimitRequest extends FormRequest
         return [
             'WorkFlowStageId' => 'required|exists:t_WorkFlowStages,Id',
             'Permission' => 'required|integer',
-            'AmountLimit' => 'required|numeric|min:1', 
+            'AmountLimit' => ['required', 'array', 'min:1'],
+        'AmountLimit.*' => ['required', 'numeric', 'min:0', 'distinct'],
         ]; 
     }
 }

@@ -418,63 +418,59 @@ $(document).ready(function() {
     });
 
     // AJAX delete stage
-    $(document).on('submit', '.deleteStageForm', function(e){
-        e.preventDefault();
-        
-        const isFinal = $(this).data('is-final') == '1';
-        let confirmMsg = 'Are you sure you want to delete this stage?';
-        
-        if (isFinal) {
-            confirmMsg = 'This is the FINAL stage. Deleting it will allow you to add more stages. Are you sure?';
-        }
-        
-        if(!confirm(confirmMsg)) return;
-
-        const deleteBtn = $(this).find('button');
-        const originalText = deleteBtn.html();
-        deleteBtn.prop('disabled', true).html('...');
-
-        let id = $(this).data('id');
-        $.ajax({
-            url: `/settings/workflow_stages/${id}`,
-            method: 'POST',
-            data: $(this).serialize(),
-            success: function(res){
-                deleteBtn.prop('disabled', false).html(originalText);
-                
-                if(res.status === 'success'){
-                    $(`#stage-${id}`).remove();
-                    renumberStages();
-
-                    if (isFinal) {
-                        // 1. Update the main workflow header details
-        $('dd.col-sm-9:eq(3) .badge').removeClass('bg-success').addClass('bg-secondary').text('No');
-
-        // 2. Update the client-side state and show the form
-        updateFormVisibility(false);
-
-        // Also re-check the global flag in case the PHP logic changed it (better safe)
-    if(res.workflow_is_final_after_delete === false && workflowHasFinalStage === true) {
-        // This handles cases where deleting a non-final stage was the last stage left
-        $('dd.col-sm-9:eq(3) .badge').removeClass('bg-success').addClass('bg-secondary').text('No');
-        updateFormVisibility(false);
+   $(document).on('submit', '.deleteStageForm', function(e){
+    e.preventDefault();
+    
+    const isFinal = $(this).data('is-final') == '1';
+    let confirmMsg = 'Are you sure you want to delete this stage?';
+    
+    if (isFinal) {
+        confirmMsg = 'This is the FINAL stage. Deleting it will allow you to add more stages. Are you sure?';
     }
-                    }
+    
+    if(!confirm(confirmMsg)) return;
 
-                    if($('#stagesTable tr:not(#noStages)').length === 0){
-                        $('#stagesTable').append('<tr id="noStages"><td colspan="7" class="text-center text-muted">No stages added yet.</td></tr>');
-                    }
-                    alert(res.message);
-                } else {
-                    alert(res.message || 'Failed to delete stage');
+    const deleteBtn = $(this).find('button');
+    const originalText = deleteBtn.html();
+    deleteBtn.prop('disabled', true).html('...');
+
+    let id = $(this).data('id');
+
+    // Get CSRF token
+    const token = $('meta[name="csrf-token"]').attr('content');
+
+    $.ajax({
+        url: `/settings/workflow-stages/${id}`, // matches the POST route
+        method: 'POST',
+        data: $(this).serialize() + `&_method=DELETE&_token=${token}`, // add CSRF token
+        success: function(res){
+            deleteBtn.prop('disabled', false).html(originalText);
+            
+            if(res.status === 'success'){
+                $(`#stage-${id}`).remove();
+                renumberStages();
+
+                if (isFinal) {
+                    $('dd.col-sm-9:eq(3) .badge').removeClass('bg-success').addClass('bg-secondary').text('No');
+                    updateFormVisibility(false);
                 }
-            },
-            error: function(){ 
-                deleteBtn.prop('disabled', false).html(originalText);
-                alert('Error deleting stage'); 
+
+                if($('#stagesTable tr:not(#noStages)').length === 0){
+                    $('#stagesTable').append('<tr id="noStages"><td colspan="7" class="text-center text-muted">No stages added yet.</td></tr>');
+                }
+                alert(res.message);
+            } else {
+                alert(res.message || 'Failed to delete stage');
             }
-        });
+        },
+        error: function(err){ 
+            deleteBtn.prop('disabled', false).html(originalText);
+            console.error(err); // log full error
+            alert('Error deleting stage'); 
+        }
     });
+});
+
 
     // Enhanced page event handling
     $(window).on('beforeunload', function() {
