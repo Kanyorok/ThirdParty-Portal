@@ -16,6 +16,11 @@ class LicensingService
 
     public function current(): LicenseResult
     {
+        // Bypass licensing in non-production environments
+        if ($this->shouldBypassLicensing()) {
+            return $this->getDevelopmentLicense();
+        }
+
         /** @var CacheRepository $cache */
         $cache = Cache::store();
         $ttlSeconds = (int)config('licensing.cache_ttl_seconds', 300);
@@ -97,7 +102,11 @@ class LicensingService
             if (is_numeric($exp)) {
                 $expiresAt = CarbonImmutable::createFromTimestampUTC((int)$exp);
             } else {
-                try { $expiresAt = CarbonImmutable::parse((string)$exp); } catch (\Throwable $e) { $expiresAt = null; }
+                try {
+                    $expiresAt = CarbonImmutable::parse((string)$exp);
+                } catch (\Throwable $e) {
+                    $expiresAt = null;
+                }
             }
         }
         if (!$expiresAt) {
@@ -117,7 +126,7 @@ class LicensingService
             return LicenseResult::invalid('server_misconfigured');
         }
 
-    $payloadDbGuid = (string)($data['instance']['db_guid'] ?? '');
+        $payloadDbGuid = (string)($data['instance']['db_guid'] ?? '');
         if ($payloadDbGuid === '' || strcasecmp($payloadDbGuid, (string)$instance->DbGuid) !== 0) {
             $this->audit('wrong_instance', 'DbGuid mismatch');
             return LicenseResult::invalid('wrong_instance');
@@ -145,6 +154,67 @@ class LicensingService
         return LicenseResult::ok($data, $allowedModules, $expiresAt->toIso8601String());
     }
 
+    /**
+     * Check if licensing should be bypassed based on environment
+     */
+    private function shouldBypassLicensing(): bool
+    {
+        // Check if LICENSING_BYPASS is explicitly set in environment
+        $bypass = config('licensing.bypass', false);
+        if ($bypass === true || $bypass === 'true' || $bypass === '1') {
+            return true;
+        }
+
+        // Auto-bypass for local and development environments
+        $env = app()->environment();
+        return in_array($env, ['local', 'development', 'dev', 'testing'], true);
+    }
+
+    /**
+     * Return a development license that's always valid
+     */
+    private function getDevelopmentLicense(): LicenseResult
+    {
+        // Development module IDs that should be enabled
+        $allowedModules = [
+            100000,   // Module 1
+            200000,   // Module 2
+            300000,   // Module 3
+            400000,   // Module 4
+            500000,   // Module 5
+            600000,   // Module 6
+            700000,   // Module 7
+            800000,   // Module 8
+            900000,   // Module 9
+            1000000,  // Module 10
+            1100000,  // Module 11
+            1200000,  // Module 12
+            9800000,  // Module 98
+            9900000,  // Module 99
+        ];
+
+        // Create a development license with all required modules enabled
+        $developmentPayload = [
+            'tenant_name' => 'Development Environment',
+            'edition' => 'Development',
+            'max_users' => 999999,
+            'expires_at' => now()->addYears(100)->toIso8601String(),
+            'features' => [],
+            'limits' => [],
+            'modules' => $allowedModules,
+            'instance' => [
+                'db_guid' => 'dev-bypass'
+            ],
+            'nonce' => 0,
+        ];
+
+        return LicenseResult::ok(
+            $developmentPayload,
+            $allowedModules,
+            now()->addYears(100)->toIso8601String()
+        );
+    }
+
     private function audit(string $event, ?string $detail = null): void
     {
         try {
@@ -154,7 +224,7 @@ class LicensingService
                 'EventAt' => now('UTC')->toDateTimeString(),
             ]);
         } catch (\Throwable $e) {
-            Log::debug('License audit failed: '.$e->getMessage());
+            Log::debug('License audit failed: ' . $e->getMessage());
         }
     }
 }
@@ -167,8 +237,7 @@ final class LicenseResult
         public readonly array $allowedModules,
         public readonly ?string $reason,
         public readonly ?string $expiresAt
-    ) {
-    }
+    ) {}
 
     public static function invalid(string $reason): self
     {
@@ -190,4 +259,3 @@ final class LicenseResult
         return in_array($moduleId, $this->allowedModules, true);
     }
 }
-
