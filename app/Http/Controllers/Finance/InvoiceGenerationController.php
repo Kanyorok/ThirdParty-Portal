@@ -9,6 +9,9 @@ use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTransaction;
 use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceCreditMovement;
+use App\Models\Finance\FinanceInvoiceLine;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
+use App\Models\Finance\InvoiceTax;
 use App\Services\Finance\TransactionService;
 use App\Services\Finance\CreditCalculationService;
 use Illuminate\Http\Request;
@@ -281,7 +284,7 @@ class InvoiceGenerationController extends Controller
 
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
-                    'ModuleID'          => $MODULE_ID,
+                    'ModuleID'          => $invoice->ModuleID ?? $MODULE_ID,
                     'ThirdPartyID'      => $invoice->CustomerID,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,
                     'TransactionType'   => 'Account Receivables Invoice',
@@ -318,15 +321,29 @@ class InvoiceGenerationController extends Controller
                         'ModifiedOn'     => now(),
                     ]);
 
-                    // If credit was applied to this invoice, update the credit movement
-                    if ($invoice->UseCredit) {
-                        FinanceCreditMovement::where('ReferenceType', 'invoice')
-                            ->where('ReferenceID', $invoice->Id)
-                            ->update([
-                                'Notes' => "Credit applied to invoice #{$invoice->InvoiceNumber} - Invoice posted to GL",
-                                'ModifiedBy' => Auth::id(),
-                                'ModifiedOn' => now(),
-                            ]);
+                    //Pull all the taxes for that invoice distinctly from the t_FinanceInvoiceLines table
+                    $invoiceTaxes = FinanceInvoiceLine::where('InvoiceID', $invoice->Id)
+                        ->select('TaxID')
+                        ->distinct()
+                        ->get();
+                    foreach ($invoiceTaxes as $tax) {
+                        //Get more Tax info using the TaxID from the t_FinanceTaxRuleConfiguration table
+                        $taxRule = FinanceTaxRuleConfiguration::find($tax->TaxID);
+                        //Calculate the TaxAmount based on the TaxRate and the TotalAmount of the invoice
+                        $taxAmount = $invoice->TotalAmount * ($taxRule->Rate / 100);
+                        InvoiceTax::create([
+                            'ARInvoiceID' => $invoice->Id,
+                            'TaxID' => $tax->TaxID,
+                            'TaxAmount' => $taxAmount,
+                            'TaxPercentage' => $taxRule->Rate,
+                            'AmountPaid' => 0,
+                            'SourceType' => 'AR',
+                            'Sourcetable' => 't_FinanceInvoices',
+                            'CreatedBy' => Auth::id(),
+                            'CreatedOn' => now(),
+                            'ModifiedBy' => Auth::id(),
+                            'ModifiedOn' => now(),
+                        ]);
                     }
                 }
 
@@ -404,7 +421,7 @@ class InvoiceGenerationController extends Controller
      */
     private function checkCreditAvailability(int $customerId, float $invoiceAmount): array
     {
-        
+
         return $this->creditService->canApplyCredit($customerId, $invoiceAmount);
     }
 
