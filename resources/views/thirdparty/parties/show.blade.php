@@ -133,7 +133,7 @@
                                     @if (is_bool($value))
                                         {{ $value ? 'Yes' : 'No' }}
                                     @elseif ($value instanceof \Carbon\CarbonInterface)
-                                        {{ $value->format('d/m/Y H:i:s') }}
+                                        {{ appDate($value) }}
                                     @else
                                         {{ $value ?? 'N/A' }}
                                     @endif
@@ -180,12 +180,12 @@
 
                         <div class="col-md-6 col-lg-4">
                             <p class="text-muted mb-1 fw-semibold">Created On</p>
-                            <p class="fw-bold">{{ $party->CreatedOn?->format('d/m/Y') ?? 'N/A' }}</p>
+                            <p class="fw-bold">{{ $party->CreatedOn ? appDate($party->CreatedOn) : 'N/A' }}</p>
                         </div>
 
                         <div class="col-md-6 col-lg-4">
                             <p class="text-muted mb-1 fw-semibold">Modified On</p>
-                            <p class="fw-bold">{{ $party->ModifiedOn?->format('d/m/Y') ?? 'N/A' }}</p>
+                            <p class="fw-bold">{{ $party->ModifiedOn ? appDate($party->ModifiedOn) : 'N/A' }}</p>
                         </div>
                     </div>
                 </div>

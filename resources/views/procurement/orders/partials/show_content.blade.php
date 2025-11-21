@@ -109,7 +109,7 @@
             </div>
             <div class="col-md-4 mb-2">
                 <span class="label">Date:</span>
-                {{ isset($orderInfo->OrderDate) ? Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : 'N/A' }}
+                {{ isset($orderInfo->OrderDate) ? Carbon::parse($orderInfo->OrderDate)->format('d M Y') : 'N/A' }}
             </div>
             <div class="col-md-4 mb-2">
                 <span class="label">Reference Number:</span> {{ $orderInfo->ExtOrdNum ?? 'N/A' }}
