@@ -57,7 +57,7 @@ class WorkFlow extends Model
 
     public function getIsFinalStageAttribute()
     {
-        return !is_null($this->FinalStage);
+        return !empty($this->FinalStage);
     }
 
 

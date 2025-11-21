@@ -35,10 +35,10 @@
 
         <dt class="col-sm-3">Has Final Stage</dt>
         <dd class="col-sm-9">
-            <span class="badge {{ $approval->IsFinalStage ? 'bg-success' : 'bg-secondary' }}">
-                {{ $approval->IsFinalStage ? 'Yes' : 'No' }}
-            </span>
-        </dd>
+    <span class="badge {{ !empty($approval->FinalStage) ? 'bg-success' : 'bg-secondary' }}">
+        {{ !empty($approval->FinalStage) ? 'Yes' : 'No' }}
+    </span>
+</dd>
 
         <dt class="col-sm-3">Created By</dt>
         <dd class="col-sm-9">{{ optional($approval->createdByUser)->Name ?? 'N/A' }}</dd>
@@ -53,7 +53,7 @@
      <div class="card shadow p-4 rounded-4 mt-4" id="stageFormCard">
         <h4 class="mb-4">➕ Add Approval Stage</h4>
 
-        @if($approval->IsFinalStage)
+        @if(!empty($approval->FinalStage))
         <div class="alert alert-warning">
             <strong>⚠️ Notice:</strong> This workflow already has a final stage. You cannot add more stages until you remove the final stage designation.
         </div>
