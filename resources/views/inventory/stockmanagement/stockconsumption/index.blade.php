@@ -49,20 +49,7 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $consumption->ConsumptionNo }}</td>
-                    <td>
-<<<<<<< HEAD
-                        {{ $consumption->item_name ?? 'N/A' }}
-=======
-                        {{-- Try different approaches --}}
-                        {{ $consumption->item_name ?? 'N/A' }} {{-- Using the accessor --}}
-
-                        {{-- OR --}}
-                        {{-- {{ $consumption->stockItem?->ItemName ?? $consumption->item?->item?->ItemName ?? 'N/A' }} --}}
-
-                        {{-- OR --}}
-                        {{-- {{ $consumption->masterItem?->ItemName ?? 'N/A' }} --}}
->>>>>>> dev
-                    </td>
+                    <td>{{ $consumption->item_name ?? 'N/A' }}</td>
                     <td>{{ $consumption->Quantity }}</td>
                     <td>{{ optional($consumption->uom)->Name }}</td>
                     <td>{{ optional($consumption->branch)->Name }}</td>

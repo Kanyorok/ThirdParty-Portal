@@ -113,7 +113,8 @@
 
                     <div class="mb-3">
                         <label class="form-label">Upload New Documents</label>
-                        <input type="file" name="file[]" class="form-control" multiple>
+                        <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+                        <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
                         <div class="form-text">You may upload multiple files. Existing documents are shown below.</div>
                         <div class="p-2 border rounded bg-light mt-2">
                             @forelse($property->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)

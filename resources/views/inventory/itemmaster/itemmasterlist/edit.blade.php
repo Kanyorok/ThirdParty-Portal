@@ -37,9 +37,9 @@
                 <select name="ItemType" class="form-select" required>
                     <option disabled>Select Type</option>
                     @foreach($itemTypes as $itemType)
-                        <option value="{{ $itemType->Id }}"
-                            {{ (old('ItemType', $item->ItemType) == $itemType->Id) ? 'selected' : '' }}>
-                            {{ $itemType->TypeName }}
+                        <option value="{{ $itemType->ID }}"
+                            {{ (old('ItemType', $item->ItemType) == $itemType->ID) ? 'selected' : '' }}>
+                            {{ $itemType->Description }}
                         </option>
                     @endforeach
                 </select>
@@ -91,9 +91,9 @@
                 <select name="InventoryType" class="form-select" required>
                     <option disabled>Select Inventory Type</option>
                     @foreach($inventoryTypes as $inventoryType)
-                        <option value="{{ $inventoryType->Id }}"
-                            {{ (old('InventoryType', $item->InventoryType) == $inventoryType->Id) ? 'selected' : '' }}>
-                            {{ $inventoryType->Type }}
+                        <option value="{{ $inventoryType->ID }}"
+                            {{ (old('InventoryType', $item->InventoryType) == $inventoryType->ID) ? 'selected' : '' }}>
+                            {{ $inventoryType->Description }}
                         </option>
                     @endforeach
                 </select>

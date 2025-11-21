@@ -43,7 +43,7 @@ class PropertyRegistryRequest extends FormRequest
             'Address' => 'required|string|max:100',
             'PropertyDescription' => 'nullable|string|max:1000',
             'file' => 'nullable|array',
-            'file.*' => 'file|max:9000',
+            'file.*' => 'file|max:25000',
             'IsActive' => 'nullable|boolean',
         ];
     }

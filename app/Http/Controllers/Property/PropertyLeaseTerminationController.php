@@ -29,7 +29,7 @@ class PropertyLeaseTerminationController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyLeaseTerminationCreate, PropertyLeaseTermination::class);
-        $newtenants = PropertyNewLease::where('IsActive', '1')->get();
+        $newtenants = PropertyNewLease::where('IsActive', true)->get();
         $terminationReasons = CodeDetail::where('CodeID', 'TerminationReason')->get();
         return view('property.tenantmanagement.leasemanagement.leasetermination.create', compact('newtenants', 'terminationReasons'));
     }
