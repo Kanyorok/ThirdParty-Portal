@@ -147,9 +147,14 @@ class ItemMasterListService
      */
     public function delete(ItemMasterList $item): void
     {
-        DB::transaction(function () use ($item) {
+        $inactiveId = CodeDetail::where('CodeID', 'ItemStatus')
+                ->where('Description', 'Inactive')
+                ->value('Id');
+        DB::transaction(function () use ($item, $inactiveId) {
+            $item->Status = $inactiveId;
             $item->DeletedBy = Auth::id();
             $item->DeletedOn = Carbon::now();
+            
             $item->save();
 
             // Delete linked image

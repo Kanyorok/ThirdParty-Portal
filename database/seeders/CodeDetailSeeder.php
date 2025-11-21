@@ -497,6 +497,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'IssuedToType', 'Description' => 'Employee', 'Value' => 'E'],
             ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
 
+
+            ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'PE'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'IT'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'DE'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Rejected', 'Value' => 'RJ'],
+
             // Fleet Management
 
             ['CodeID' => 'EmploymentStatus', 'Description' => 'Retired', 'Value' => 'RE'],
@@ -560,6 +566,17 @@ class CodeDetailSeeder extends Seeder
             //Inventory Categories Status
             ['CodeID' => 'CategoryStatus', 'Description' => 'Active', 'Value' => 'Ac'],
             ['CodeID' => 'CategoryStatus', 'Description' => 'Inactive', 'Value' => 'In'],
+
+
+            //Inventory Type Status
+            ['CodeID' => 'InventoryTypeStatus', 'Description' => 'Durable', 'Value' => 'Du'],
+            ['CodeID' => 'InventoryTypeStatus', 'Description' => 'Perishable', 'Value' => 'Pe'],
+
+            //Item Type Status
+            ['CodeID' => 'ItemTypeStatus', 'Description' => 'Stock', 'Value' => 'Du'],
+            ['CodeID' => 'ItemTypeStatus', 'Description' => 'Fixed Asset', 'Value' => 'Fa'],
+            ['CodeID' => 'ItemTypeStatus', 'Description' => 'Services', 'Value' => 'Se'],
+            ['CodeID' => 'ItemTypeStatus', 'Description' => 'Intangibles', 'Value' => 'In'],
 
             //Inventory Item Status
             ['CodeID' => 'ItemStatus', 'Description' => 'Active', 'Value' => 'AC'],
