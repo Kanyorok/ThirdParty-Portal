@@ -331,6 +331,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 505000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],
             ['ModuleID' => 505100, 'Name' => 'Property Type', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertytype.index'],
             ['ModuleID' => 505200, 'Name' => 'Property Category', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertycategory.index'],
+            ['ModuleID' => 505300, 'Name' => 'Property Rates & Pricing', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertyrateandpricing.index'],
 
             // First level - Reports
             ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'property-reports.index'],

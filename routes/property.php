@@ -14,6 +14,8 @@ use App\Http\Controllers\Property\PropertyMaintenanceRequestController;
 use App\Http\Controllers\Property\PropertyMaintenanceWorkCompletionController;
 use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
+use App\Http\Controllers\Property\PropertyRateAndPricingControllert;
+use App\Http\Controllers\Property\PropertyRatesAndPricingControllert;
 use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
@@ -81,7 +83,21 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
 
     //Property Settings
     Route::resource('propertysettings', PropertyUnitController::class);
-    //Route::get('propertysettings', [PropertyRegistryController::class,'index'])->name('propertysettings.index');
+    
+
+    //Property Rate and Pricing
+    Route::get('propertyrateandpricing', [PropertyRateAndPricingControllert::class, 'index'])->name('propertyrateandpricing.index');
+    Route::get('propertyrateandpricing/create', [PropertyRateAndPricingControllert::class, 'create'])->name('propertyrateandpricing.create');
+    Route::post('propertyrateandpricing', [PropertyRateAndPricingControllert::class, 'store'])->name('propertyrateandpricing.store');
+    Route::get('Propertyrateandpricing/show/{Id}', [PropertyRateAndPricingControllert::class, 'show'])->name('propertyrateandpricing.show');
+    Route::get('propertyrateandpricing/edit/{Id}', [PropertyRateAndPricingControllert::class, 'edit'])->name('propertyrateandpricing.edit');
+    Route::put('propertyrateandpricing/edit/{Id}', [PropertyRateAndPricingControllert::class, 'update'])->name('propertyrateandpricing.update');
+    Route::delete('propertyrateandpricing/delete/{Id}', [PropertyRateAndPricingControllert::class, 'destroy'])->name('propertyrateandpricing.destroy');
+
+    Route::get('/propertyrateandpricing/blocks/{PropertyId}', [PropertyRateAndPricingControllert::class, 'getBlockByProperty'])->name('getblockbyproperty.rate');
+    Route::get('/propertyrateandpricing/floors/{BlockId}', [PropertyRateAndPricingControllert::class, 'getFloorByBlock'])->name('getfloorbyblock.rate');
+    Route::get('/propertyrateandpricing/Units/{FloorId}', [PropertyRateAndPricingControllert::class, 'getUnitsByFloor'])->name('getunitsbyfloor.rate');
+
 
     //Route::resource('addfloor', PropertyFloorController::class);
     Route::get('propertyaddfloor', [PropertyFloorController::class, 'index'])->name('addfloor.index');

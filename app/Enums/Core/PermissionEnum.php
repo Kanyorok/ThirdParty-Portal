@@ -331,11 +331,18 @@ enum PermissionEnum: string
     case PropertyRegistryView = 'propertyregistry-view';
 
 
-        //Property Block
+        //Property Structure
     case PropertyStructuralCreate = 'propertystructural-create';
     case PropertyStructuralUpdate = 'propertystructural-update';
     case PropertyStructuralDelete = 'propertystructural-delete';
     case PropertyStructuralView = 'propertystructural-view';
+
+
+    //Pricing and Rates
+    case PropertyRateAndPricingCreate = 'propertyrateandpricing-create';
+    case PropertyRateAndPricingUpdate = 'propertyrateandpricing-update';
+    case PropertyRateAndPricingDelete = 'propertyrateandpricing-delete';
+    case PropertyRateAndPricingView = 'propertyrateandpricing-view';
 
 
         //Property Attachments
@@ -909,26 +916,6 @@ enum PermissionEnum: string
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
             [self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete],
             [self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting],
-
-
-
-            //Property Management
-            [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
-            [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
-            [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
-            [self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete],
-            [self::PropertyAttachmentsView,self::PropertyAttachmentsCreate,self::PropertyAttachmentsUpdate,self::PropertyAttachmentsDelete],
-            [self::TenantMaintenanceCreate, self::TenantMaintenanceUpdate, self::TenantMaintenanceDelete, self::TenantMaintenanceView],
-            [self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView],
-            [self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView],
-            [self::PropertyLeaseTerminationCreate,self::PropertyLeaseTerminationUpdate,self::PropertyLeaseTerminationDelete,self::PropertyLeaseTerminationView],
-            [self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView, self::PropertyLeaseSchedulePrint],
-            [self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView],
-            [self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView],
-            [self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint],
-            [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
-            [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
-            [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
             
             ///////////////////////  Settings  /////////////////////////////////////
             // [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
@@ -955,6 +942,7 @@ enum PermissionEnum: string
             [self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView],
             [self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView],
+            [self::PropertyRateAndPricingCreate,self::PropertyRateAndPricingUpdate,self::PropertyRateAndPricingDelete,self::PropertyRateAndPricingView],
 
 
             //Fleet
@@ -1129,7 +1117,8 @@ enum PermissionEnum: string
             self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint,
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView,
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView,
-            self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView
+            self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView,
+            self::PropertyRateAndPricingCreate,self::PropertyRateAndPricingUpdate,self::PropertyRateAndPricingDelete,self::PropertyRateAndPricingView
             => ModulesEnum::Property,
            // default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
@@ -1312,6 +1301,7 @@ enum PermissionEnum: string
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
+            self::PropertyRateAndPricingCreate,self::PropertyRateAndPricingUpdate,self::PropertyRateAndPricingDelete,self::PropertyRateAndPricingView => 'Property Rate And Pricing',
 
             //dms
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
