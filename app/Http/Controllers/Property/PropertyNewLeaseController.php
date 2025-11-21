@@ -14,6 +14,7 @@ use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use DateTime;
 
 class PropertyNewLeaseController extends Controller
@@ -209,6 +210,19 @@ class PropertyNewLeaseController extends Controller
     }
 
         return redirect()->route('addlease.index')->with('success', 'Lease updated successfully.');
+    }
+
+    public function leaseOfferLetter($Id)
+    {
+        $lease = PropertyNewLease::with(['tenant.thirdParty', 'property', 'block', 'floor', 'unit', 'code'])->findOrFail($Id);
+
+        // Optionally generate PDF
+        $pdf = Pdf::loadView('property.tenantmanagement.leasemanagement.leasemaintenance.letter', compact('lease'));
+
+        return $pdf->download("Lease_Offer_{$lease->LeaseNumber}.pdf");
+
+        // OR display in browser as HTML
+        // return view('property.tenantmanagement.leasemanagement.leasemaintenance.letter', compact('lease'));
     }
 
 

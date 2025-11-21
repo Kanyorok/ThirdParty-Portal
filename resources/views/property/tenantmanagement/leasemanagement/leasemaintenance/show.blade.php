@@ -12,6 +12,11 @@
             <h6 class="mb-3 text-dark">Lease Information</h6>
             <hr>
             <div class="row g-3 text-dark">
+                <a href="{{ route('addlease.offer', $newlease->Id) }}" class="btn btn-primary mt-3">
+                    Generate Lease Offer Letter
+                </a>
+
+
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Lease Number</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->LeaseNumber ?? '-' }}" readonly>

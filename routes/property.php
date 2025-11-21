@@ -151,6 +151,9 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty.lease');
     Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock.lease');
     Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor.lease');
+    Route::get('lease-offer/{Id}', [PropertyNewLeaseController::class, 'leaseOfferLetter'])->name('addlease.offer');
+
+    
 
 
     //Route::resource('terminatelease', PropertyLeaseTerminationController::class);
