@@ -1,21 +1,41 @@
 services:
     laravel:
-        build:
-            context: .
-            dockerfile: docker/Dockerfile
+        # 1. Use a specific image tag, not 'build'
+        # In production, you do not build from source on the client's machine.
+        # You run a pre-built image that you created on your machine.
+        image: my-app/brerp:v1.0.0 
+        
         container_name: BRERP
+        restart: always
+        
         ports:
             - "80:80"
+            
+        # 2. Restrict Volumes
+        # CRITICAL: We REMOVED "- .:/var/www"
+        # We only mount directories that need to persist data.
         volumes:
-            - .:/var/www
-            - logs:/var/www/logs
-            - files:/var/www/storage/app/files
-        working_dir: /var/www
+            # Persist logs so they don't vanish on restart
+            - logs:/var/www/storage/logs
+            
+            # Persist user uploads/files
+            - files:/var/www/storage/app
+            
+            # (Optional) If you need to let them edit specific config without
+            # giving them the .env file, you can mount a specific override file,
+            # but typically you want to rely on the internal baked config.
+            
+        # 3. Security Hardening
+        # Prevent the container from running as root if possible (already handled in Dockerfile by user www-data)
+        # read_only: true # Advanced: Uncomment this to make the filesystem immutable (requires explicit tmpfs mounts for cache)
+
         networks:
             - Applications
+
 networks:
     Applications:
         external: true
+
 volumes:
     logs:
     files:

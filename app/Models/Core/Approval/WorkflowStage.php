@@ -5,10 +5,15 @@ namespace App\Models\Core\Approval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Settings\WorkFlowLimit;
+use App\Models\Settings\WorkFlowType;
+use Spatie\Permission\Models\Permission;
+use App\Models\Core\CodeDetail;
+use App\Models\Settings\Workflow;
 
 class WorkflowStage extends Model
 {
-   
+
     use SoftDeletes;
 
     protected $table = 't_WorkFlowStages';
@@ -45,7 +50,7 @@ class WorkflowStage extends Model
     ];
 
     // Fixed relationships
-     public function type_name(): BelongsTo
+    public function type_name(): BelongsTo
     {
         return $this->belongsTo(WorkFlowType::class, 'WorkFlowTypeId', 'Id');
     }
@@ -59,20 +64,19 @@ class WorkflowStage extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'StatusId', 'ID');
     }
-    
-     public function workflow(): BelongsTo
-     {
+
+    public function workflow(): BelongsTo
+    {
         return $this->belongsTo(Workflow::class, 'WorkFlowId', 'Id');
     }
 
-      public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return 'WorkFlowStageId';
     }
 
-      public function workflow_limits()
+    public function workflow_limits()
     {
         return $this->hasMany(\App\Models\Settings\WorkFlowLimit::class, 'WorkFlowStageId', 'Id');
     }
-
-    }
+}
