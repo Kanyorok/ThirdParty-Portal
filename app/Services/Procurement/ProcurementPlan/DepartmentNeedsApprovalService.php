@@ -17,7 +17,7 @@ class DepartmentNeedsApprovalService
        public function submit(User $actor): static
     {
           $remarks = 'User Submitted';
-        (new DepartmentNeedsWorkflowService())->submit($this->departmentNeeds, $actor, $remarks);
+        (new DepartmentNeedsWorkflow())->submit($this->departmentNeeds, $actor, $remarks);
         activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('submit')->log('Submitted ' . $this->departmentNeeds->NeedID . ' for approval.');
         return $this;
     }
@@ -25,7 +25,7 @@ class DepartmentNeedsApprovalService
     {
         $permissionId = $actor->Id;
          $remarks = 'Department Need Approved';  // Or get from elsewhere
-        (new DepartmentNeedsWorkflowService())->approve($this->departmentNeeds, $actor, $remarks);
+        (new DepartmentNeedsWorkflow())->approve($this->departmentNeeds, $actor, $remarks);
         // Additional logging 
         activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('approved')->log('Approved Department Needs ' . $this->departmentNeeds->NeedID);
         return $this;
@@ -33,7 +33,7 @@ class DepartmentNeedsApprovalService
 
     public function workflowReject(User $actor, string $reason): static
     {
-        (new DepartmentNeedsWorkflowService())->reject($this->departmentNeeds, $actor, $reason);
+        (new DepartmentNeedsWorkflow())->reject($this->departmentNeeds, $actor, $reason);
         activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('reject')->log('Rejected Department Needs ' . $this->departmentNeeds->NeedID);
         return $this;
     }

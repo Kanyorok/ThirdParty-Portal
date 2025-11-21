@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Services\Core\WorkflowActionService;
 use App\Exceptions\ErroredException;
+use App\Services\Procurement\ProcurementPlan\DepartmentNeedsWorkflow;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\DepartmentNeed;
 use App\Services\Workflow\ApprovalWorkflow;
@@ -42,20 +43,23 @@ class DepartmentNeedApprovalController extends Controller
     public function show(DepartmentNeed $department_need)
     {
         $this->authorize('view', $department_need);
-        $need = $department_need->load(['item.category', 'item.uom', 'creator']);
-        return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
-        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($department_need->Id);
 
-        // Maker-checker: Check if the current user can approve (excludes submitter, requires pending)
-        $user = Auth::user();
-        $canApprove = $this->workflow->canApproveModel($need, $user);
-        Log::info("Can approve for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));  // Uncommented for debugging
+    // Load relations
+    $need = $department_need->load(['item.category', 'item.uom', 'creator']);
 
-        return view('procurement.procurementplan.departmentneeds.approval.show', [
-            'need' => $need,
-            'canApprove' => $canApprove,  // Pass to view for conditional buttons
-            'history' => $this->workflow->historyForModel($need),  // Use injected workflow
-        ]);
+    // Current user
+    $user = Auth::user();
+
+    // Maker-checker: can this user approve?
+    $canApprove = $this->workflow->canApproveModel($need, $user);
+
+    Log::info("Can approve for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
+
+    return view('procurement.procurementplan.departmentneeds.approval.show', [
+        'need'       => $need,
+        'canApprove' => $canApprove,
+        'history'    => $this->workflow->historyForModel($need),
+    ]);
     }
 
     /**
@@ -81,7 +85,7 @@ class DepartmentNeedApprovalController extends Controller
                 $workflow = app(DepartmentNeedsWorkflow::class);
 
                 // Submit then approve using the new unified workflow service
-                $workflow->submit($departmentNeed, $actor, 'Submitted for approval');
+                // $workflow->submit($departmentNeed, $actor, 'Submitted for approval');
                 $workflow->approve($departmentNeed, $actor, 'Approved');
             });
         } catch (\App\Exceptions\ErroredException $e) {
