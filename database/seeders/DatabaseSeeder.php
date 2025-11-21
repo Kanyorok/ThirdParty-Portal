@@ -1,11 +1,11 @@
 <?php
-
+ 
 namespace Database\Seeders;
-
+ 
 use Illuminate\Database\Seeder;
-
+ 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-
+ 
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -20,15 +20,13 @@ class DatabaseSeeder extends Seeder
         $this->call(SysFilterSeeder::class);
         $this->call(DocumentValidationTypeSeeder::class);
         $this->call(CurrencySeeder::class);
-        $this->call(LocalitySeeder::class);
+        //$this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(CommitteeSeeder::class);
         $this->call(DepartmentSeeder::class);
         $this->call(EmployeeSeeder::class);
         $this->call(ItemCategoriesSeeder::class);
-        $this->call(ItemTypeSeeder::class);
-        $this->call(InventoryTypeSeeder::class);
         $this->call(UnitOfMeasureSeeder::class);
         $this->call(ItemMasterListSeeder::class);
         // $this->call(DepartmentNeedsSeeder::class);
@@ -61,22 +59,22 @@ class DatabaseSeeder extends Seeder
         $this->call(PropertyBlockSeeder::class);
         $this->call(PropertyFloorSeeder::class);
         $this->call(PropertyUnitSeeder::class);
-
+ 
         //$this->call(TenantRegistrySeeder::class);
         $this->call(FinanceGLTypeGroupSeeder::class);
         $this->call(FinanceGLSubAccountTypeSeeder::class);
         $this->call(FinanceGLAccountsSeeder::class);
         $this->call(FinanceSegmentOrderSeeder::class);
-        //        $this->call(OrderLinesSeeder::class);
-        //         $this->call(OrderSeeder::class);
-        //         $this->call(GoodsReceiptsSeeder::class);
-
+//        $this->call(OrderLinesSeeder::class);
+//         $this->call(OrderSeeder::class);
+//         $this->call(GoodsReceiptsSeeder::class);
+ 
         $this->call(FinanceTransactionTypesSeeder::class);
         $this->call(FinanceModuleTransactionSeeder::class);
         $this->call(FinanceGlTransactionsMappingSeeder::class);
         // Ensure GRN transaction types and GL mappings (incl. GRN-SERVICE) are present
         $this->call(GRNTransactionTypesSeeder::class);
-
+ 
         $this->call(LegalClauseSeeder::class);
         $this->call(LegalCasesSeeder::class);
         $this->call(LegalCaseEvidenceSeeder::class);
@@ -92,19 +90,19 @@ class DatabaseSeeder extends Seeder
         $this->call(ComplianceControlsSeeder::class);
         $this->call(ComplianceIncidentsSeeder::class);
         $this->call(ComplianceFilingsSeeder::class);
-
+ 
         $this->call(SystemBankSettingSeeder::class);
         $this->call(BanksSeeder::class);
         $this->call(BankBranchesSeeder::class);
-
-
-        //         $this->call(RegulatoryObligationsSeeder::class);
-        //         $this->call(ComplianceMastersSeeder::class);
-        //         $this->call(ComplianceObligationsSeeder::class);
-        //         $this->call(ComplianceControlsSeeder::class);
-        //         $this->call(ComplianceIncidentsSeeder::class);
-        //         $this->call(ComplianceFilingsSeeder::class);
-
+ 
+ 
+//         $this->call(RegulatoryObligationsSeeder::class);
+//         $this->call(ComplianceMastersSeeder::class);
+//         $this->call(ComplianceObligationsSeeder::class);
+//         $this->call(ComplianceControlsSeeder::class);
+//         $this->call(ComplianceIncidentsSeeder::class);
+//         $this->call(ComplianceFilingsSeeder::class);
+ 
         $this->call(financeroleseeder::class);
         $this->call(ThirdPartyTypesSeeder::class);
         $this->call(MedicalFundsCatalogSeeder::class);
