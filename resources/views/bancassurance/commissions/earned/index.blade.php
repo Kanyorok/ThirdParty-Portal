@@ -82,8 +82,7 @@
                             <td>{{ $e->policy->PolicyNumber ?? '-'}}</td>
                             <td>{{ $e->claimtype->Description ?? 'N/A' }}</td>
                             <td class="text-end">{{ number_format($e->ClaimAmount, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($e->ClaimDate)->format('d/m/Y') }}</td>
-                            <td class="text-center">
+                            <td>{{ \Carbon\Carbon::parse($e->ClaimDate)->format('d M Y') }}</td>                           <td class="text-center">
                                 @if(strtolower($e->status->Description ?? '') === 'paid')
                                     <span class="badge bg-success status-badge">Paid</span>
                                 @else
@@ -92,7 +91,7 @@
                             </td>
                             <td class="text-center">
                                 @if(strtolower($e->status->Description ?? '') === 'paid')
-                                    <a href="{{ route('bancassurance.commissions.payouts.pay', $e->Id) }}" 
+                                    <a href="{{ route('bancassurance.commissions.payouts.pay', $e->Id) }}"
                                        class="btn btn-sm btn-success payout-btn">
                                         <i class="bi bi-cash-stack me-1"></i> Payout
                                     </a>

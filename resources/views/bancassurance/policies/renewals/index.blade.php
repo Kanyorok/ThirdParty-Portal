@@ -24,10 +24,9 @@
                             <td>{{ $loop->iteration }}</td>
                             <td><span class="fw-semibold text-primary">{{ $policy->PolicyNumber ?? '-' }}</span></td>
                             <td>{{ $policy->customer->thirdParty->ThirdPartyName ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
-                            <td><span class="badge bg-primary">{{ $policy->Status->label() ?? '-' }}</span></td>
+                            <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</td>                           <td><span class="badge bg-primary">{{ $policy->Status->label() ?? '-' }}</span></td>
                             <td class="text-center">
-                                <a href="{{ route('bancassurance.policies.renewalForm', $policy->Id) }}" 
+                                <a href="{{ route('bancassurance.policies.renewalForm', $policy->Id) }}"
                                    class="btn btn-sm btn-primary px-3">
                                     <i class="bi bi-arrow-clockwise me-1"></i> Renew
                                 </a>

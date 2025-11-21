@@ -53,7 +53,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Assignment Date</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                           value="{{ $assignment->AssignmentDate ? Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') : '-' }}" readonly>
+                           value="{{ $assignment->AssignmentDate ? Carbon::parse($assignment->AssignmentDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -77,13 +77,13 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Expected Start Date</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                           value="{{ $assignment->ExpectedStartDate ? Carbon::parse($assignment->ExpectedStartDate)->format('d/m/Y') : '-' }}" readonly>
+                           value="{{ $assignment->ExpectedStartDate ? Carbon::parse($assignment->ExpectedStartDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Expected Completion</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                           value="{{ $assignment->ExpectedCompletion ? Carbon::parse($assignment->ExpectedCompletion)->format('d/m/Y') : '-' }}" readonly>
+                           value="{{ $assignment->ExpectedCompletion ? Carbon::parse($assignment->ExpectedCompletion)->format('d M Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-12">
@@ -97,9 +97,9 @@
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
             <div>
                 Created by <strong>{{ $assignment->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $assignment->CreatedOn ? Carbon::parse($assignment->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $assignment->CreatedOn ? Carbon::parse($assignment->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by <strong>{{ $assignment->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $assignment->ModifiedOn ? Carbon::parse($assignment->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $assignment->ModifiedOn ? Carbon::parse($assignment->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
             <div>
                 <a href="{{ route('assignrequest.edit', $assignment->Id) }}" class="btn btn-sm btn-dark">Edit</a>

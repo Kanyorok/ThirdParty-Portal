@@ -38,8 +38,8 @@
                         <td>{{ $driver->company->ThirdPartyName ?? '—' }}</td>
                         <td>
                             @if($driver->ContractStartDate && $driver->ContractEndDate)
-                                {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d/m/Y') }} -
-                                {{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d/m/Y') }}
+                                {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }} -
+                                {{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}
                             @else
                                 —
                             @endif

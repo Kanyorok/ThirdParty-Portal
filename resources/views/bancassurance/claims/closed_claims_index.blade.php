@@ -43,7 +43,7 @@
 
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('bancassurance.claims.initiateClosureForm') }}" 
+        <a href="{{ route('bancassurance.claims.initiateClosureForm') }}"
            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> Initiate Closure
         </a>
@@ -91,8 +91,7 @@
                                     {{ $claim->FinalStatus->label() }}
                                 </span>
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($claim->ClosureDate)->format('d/m/Y') }}</td>
-                        </tr>
+                            <td>{{ \Carbon\Carbon::parse($claim->ClosureDate)->format('d M Y') }}</td>                        </tr>
                         @empty
                         <tr>
                             <td colspan="7" class="text-center text-muted py-4">

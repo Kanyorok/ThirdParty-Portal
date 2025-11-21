@@ -34,7 +34,7 @@
                             <option
                                 value="{{ $item->TenderNo }}" {{ (isset($tender) && $tender->TenderNo === $item->TenderNo) ? 'selected' : '' }}>
                                 {{ $item->TenderNo }} | {{ $item->Title }}
-                                <small>(Opening: {{ $item->OpeningDate->format('d/m/Y H:i') }})</small>
+                                <small>(Opening: {{ $item->OpeningDate->format('d M Y H:i') }})</small>
                             </option>
                         @endforeach
                     </select>
@@ -49,11 +49,11 @@
                     </div>
                     <div class="col-md-4">
                         <strong>Opening Date:</strong><br>
-                        <span class="badge bg-info">{{ $tender->OpeningDate->format('d/m/Y H:i') }}</span>
+                        <span class="badge bg-info">{{ $tender->OpeningDate->format('d M Y H:i') }}</span>
                     </div>
                     <div class="col-md-4">
                         <strong>Submission Deadline:</strong><br>
-                        <span class="badge bg-secondary">{{ $tender->SubmissionDeadline->format('d/m/Y H:i') }}</span>
+                        <span class="badge bg-secondary">{{ $tender->SubmissionDeadline->format('d M Y H:i') }}</span>
                     </div>
                 </div>
             @endif
@@ -154,7 +154,7 @@
                     @endif
                 </td>
                 <td>
-                    <strong>Received:</strong> {{ \Carbon\Carbon::parse($item->ReceivedAt)->format('d/m/Y H:i') }}<br>
+                    <strong>Received:</strong> {{ \Carbon\Carbon::parse($item->ReceivedAt)->format('d M Y H:i') }}<br>
                     <strong>Documents:</strong> {{ $item->document_count }} files<br>
                     <small class="text-muted">
                         @if($item->submission_timely ?? true)
@@ -178,7 +178,7 @@
                 <td>{!! $item->status_badge !!}</td>
                 <td>
                     @if($item->OpenedAt)
-                        <strong>Opened:</strong> {{ $item->OpenedAt->format('d/m/Y H:i') }}<br>
+                        <strong>Opened:</strong> {{ $item->OpenedAt->format('d M Y H:i') }}<br>
                         <strong>By:</strong> {{ $item->openedByUser->name ?? 'Unknown' }}<br>
                         @if($item->CeremonyType)
                             <span class="badge bg-info">{{ ucfirst($item->CeremonyType) }} Opening</span>

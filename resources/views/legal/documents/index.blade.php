@@ -114,7 +114,7 @@
                                 </td>
                                 <td>
                                     @if($doc->CreatedOn)
-                                        {{ \Carbon\Carbon::parse($doc->CreatedOn)->format('d/m/Y H:i') }}
+                                        {{ \Carbon\Carbon::parse($doc->CreatedOn)->format('d M Y H:i') }}
                                     @else
                                         —
                                     @endif

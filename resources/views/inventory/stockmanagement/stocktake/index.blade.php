@@ -26,9 +26,9 @@
           <td>{{$stock->branch->Name ?? '-'}}</td>
           <td>{{$stock->store->StoreName ?? '-'}}</td>
           <td>{{$stock->countedby->Name ?? 'N/A'}}</td>
-          <td>{{ \Carbon\Carbon::parse($stock->CountDate)->format('d/m/Y') ?? '-'}}</td>
+          <td>{{ \Carbon\Carbon::parse($stock->CountDate)->format('d M Y') ?? '-'}}</td>
           <td>{{$stock->createdby->Name ?? '-'}}</td>
-          <td>{{ \Carbon\Carbon::parse($stock->CreatedOn)->format('d/m/Y') ?? '-'}}</td>
+          <td>{{ \Carbon\Carbon::parse($stock->CreatedOn)->format('d M Y') ?? '-'}}</td>
         <td>
             <a href="{{ route('stocktake.show', $stock->Id) }}" class="btn btn-sm btn-info">View</a>
             <a href="{{ route('stocktake.edit', $stock->Id) }}" class="btn btn-sm btn-warning">Edit</a>

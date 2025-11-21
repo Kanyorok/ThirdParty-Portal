@@ -35,7 +35,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">Date of Birth</label>
-                    <input type="text" class="form-control bg-light" value="{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d M Y') : '-' }}" readonly>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">Gender</label>
@@ -80,12 +80,12 @@
                     <div class="d-flex flex-wrap justify-content-between">
                         <div> <strong>Created By:</strong> {{ $customer->createdByUser->Name }}
                         <span class="ms-3"><strong>Created On:</strong>
-                        {{ \Carbon\Carbon::parse($customer->CreatedOn)->format('d/m/Y') }}</span>
+                        {{ \Carbon\Carbon::parse($customer->CreatedOn)->format('d M Y') }}</span>
                     </div>
                     <div>
                         <strong>Modified By:</strong> {{$customer->modifiedByUser->Name }}
                         <span class="ms-3"><strong>Modified On:</strong>
-                        {{ \Carbon\Carbon::parse($customer->ModifiedOn)->format('d/m/Y') }}</span>
+                        {{ \Carbon\Carbon::parse($customer->ModifiedOn)->format('d M Y') }}</span>
                     </div>
                 </div>
             </div>

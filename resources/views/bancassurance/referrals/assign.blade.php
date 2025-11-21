@@ -55,8 +55,7 @@
                                 <td class="text-center">{{ $loop->iteration }}</td>
                                 <td>{{ $referral->ClientName ?? '-' }}</td>
                                 <td>{{ $referral->insuranceProduct->Description ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') }}</td>
-                                <td>
+                                <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d M Y') }}</td>                               <td>
                                     <span class="badge bg-secondary">{{ $referral->Status->Label() }}</span>
                                 </td>
                                 <td style="min-width:180px;">

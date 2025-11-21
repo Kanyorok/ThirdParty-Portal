@@ -98,7 +98,7 @@
                                 <td>{{ $customer->thirdParty->Phone ?? '-' }}</td>
                                 <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
                                 <td>
-                                    {{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-' }}
+                                    {{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d M Y') : '-' }}
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm" role="group">

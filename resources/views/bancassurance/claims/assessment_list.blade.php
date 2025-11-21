@@ -52,7 +52,7 @@
 
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('bancassurance.claims.index') }}" 
+        <a href="{{ route('bancassurance.claims.index') }}"
            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> New Assessment
         </a>
@@ -86,8 +86,7 @@
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td>{{ $assessment->ClaimId ?? '-' }} _ {{ $assessment->claim->policy->PolicyNumber ?? '-' }}</td>
                             <td>{{ $assessment->assessedby->Name ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($assessment->AssessmentDate)->format('d/m/Y') }}</td>
-                            <td>{{ number_format($assessment->AssessmentAmount, 2) }}</td>
+                            <td>{{ \Carbon\Carbon::parse($assessment->AssessmentDate)->format('d M Y') }}</td>                           <td>{{ number_format($assessment->AssessmentAmount, 2) }}</td>
                             <td class="text-center">
                                 <span class="badge bg-primary">
                                     {{ $assessment->decision->Description ?? '-' }}
@@ -96,7 +95,7 @@
                             <td>{{ Str::limit($assessment->AssessmentComments, 40) ?? '-' }}</td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}" 
+                                    <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}"
                                        class="btn btn-outline-info rounded-pill px-2" title="View">
                                         <i class="bi bi-eye"></i> View
                                     </a>
@@ -104,7 +103,7 @@
                                     @if($assessment->claimpaiyments()->exists())
                                         <button class="btn btn-secondary rounded-pill px-2" disabled>Paid</button>
                                     @else
-                                        <a href="{{ route('bancassurance.claims.assessment_edit', $assessment->Id) }}" 
+                                        <a href="{{ route('bancassurance.claims.assessment_edit', $assessment->Id) }}"
                                            class="btn btn-outline-primary rounded-pill px-2" title="Edit">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>

@@ -23,7 +23,7 @@
 
             <div class="col-md-6">
                 <strong>Scheduled Date:</strong>
-                <p>{{ \Carbon\Carbon::parse($schedule->ScheduledDate)->format('d/m/Y') }}</p>
+                <p>{{ \Carbon\Carbon::parse($schedule->ScheduledDate)->format('d M Y') }}</p>
             </div>
 
             <div class="col-md-6">

@@ -38,7 +38,7 @@
 
     {{-- ✅ Initiate Payment --}}
     <div class="d-flex justify-content-end mb-3">
-        <a href="{{ route('bancassurance.claims.payments.initiate') }}" 
+        <a href="{{ route('bancassurance.claims.payments.initiate') }}"
            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> Initiate Payment
         </a>
@@ -68,8 +68,7 @@
                             <td>{{ $pay->claim->policy->customer->ThirdParty->ThirdPartyName ?? '-'}}</td>
                             <td>{{ $pay->claim->claimtype->Description ?? '-'}}</td>
                             <td class="text-end">{{ number_format($pay->PaymentAmount, 2) ?? '-'}}</td>
-                            <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d/m/Y') }}</td>
-                            <td>{{ $pay->PaymentReference ?? '-'}}</td>
+                            <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d M Y') }}</td>                           <td>{{ $pay->PaymentReference ?? '-'}}</td>
                         </tr>
                         @empty
                         <tr>

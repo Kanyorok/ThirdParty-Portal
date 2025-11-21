@@ -38,7 +38,7 @@
 
                 <div class="col-md-3">
                     <label class="form-label fw-medium text-muted">Customer</label>
-                    <input type="text" name="customer" value="{{ request('customer') }}" 
+                    <input type="text" name="customer" value="{{ request('customer') }}"
                            class="form-control rounded-pill shadow-sm" placeholder="e.g. John Doe">
                 </div>
 
@@ -79,11 +79,9 @@
                             <td>{{ $policy->insurer->Name ?? '—' }}</td>
                             <td class="text-end">{{ number_format($policy->SumAssured, 2) }}</td>
                             <td class="text-end">{{ number_format($policy->PremiumAmount, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
-                            <td>
-                                <span class="badge 
-                                    @if($policy->Status->value === 'approved') bg-success 
+                            <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d M Y') }}</td>                           <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</td>                           <td>
+                                <span class="badge
+                                    @if($policy->Status->value === 'approved') bg-success
                                     @elseif($policy->Status->value === 'pending') bg-warning text-dark
                                     @elseif($policy->Status->value === 'rejected') bg-danger
                                     @else bg-secondary

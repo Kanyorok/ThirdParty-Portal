@@ -169,8 +169,7 @@
                                         <tr data-id="{{ $assignment->Id }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $assignment->vehicle?->RegistrationNo?? '' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') }}</td>
-                                            <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d M Y') }}</td>                                           <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d M Y') : '—' }}</td>
                                             <td>{{ $assignment->Purpose ?: '—' }}</td>
                                             <td>{{ $assignment->assignedBy?->LastName ?? '—' }}</td>
                                             <td>{{ $assignment->Notes ?: '—' }}</td>
@@ -242,13 +241,13 @@
                             </table>
                         @endif
                             </div>
-                        
+
                 </div>
             </div>
         </div>
     </div>
     </div>
-    </div> 
+    </div>
     {{-- Add License Modal --}}
 
     <div class="modal fade" id="addLicenseModal" tabindex="-1">

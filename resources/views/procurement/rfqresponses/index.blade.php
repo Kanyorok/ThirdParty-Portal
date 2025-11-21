@@ -62,8 +62,7 @@
                                 Delivered {{ abs($daysRemaining) }} day{{ abs($daysRemaining) > 1 ? 's' : '' }} ago
                             @endif
                         </td>
-                        <td>{{ $deliveryDate->format('d/m/Y') }}</td>
-                        <td>
+                        <td>{{ $deliveryDate->format('d M Y') }}</td>                       <td>
                             @if($response->CreatedBy == auth()->id())
                                 Manual
                             @else

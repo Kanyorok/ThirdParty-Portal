@@ -41,7 +41,7 @@
                                     {{ $item->Status->label() ?? '-' }}
                                 </span>
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($item->CreatedAt)->format('d/m/Y') ?? '-' }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->CreatedAt)->format('d M Y') ?? '-' }}</td>
                             <td class="text-center">
                                 <a href="{{ route('bancassurance.policies.feedbackForm', $item->Id) }}" 
                                    class="btn btn-sm btn-outline-primary">

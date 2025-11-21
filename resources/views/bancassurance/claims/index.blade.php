@@ -52,11 +52,11 @@
 
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="{{ route('bancassurance.claims.create') }}" 
+        <a href="{{ route('bancassurance.claims.create') }}"
            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> Initiate New Claim
         </a>
-        <a href="{{ route('bancassurance.claims.closed') }}" 
+        <a href="{{ route('bancassurance.claims.closed') }}"
            class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
             View Closed Claims
         </a>
@@ -92,15 +92,14 @@
                             <td>{{ $claim->claimtype->Description ?? '-'}}</td>
                             <td>{{ $claim->ClaimReason ?? '-'}}</td>
                             <td>{{ number_format($claim->ClaimAmount, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d/m/Y') }}</td>
-                            <td class="text-center">
+                            <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d M Y') }}</td>                           <td class="text-center">
                                 <span class="badge bg-primary">
                                     {{ $claim->status->Description ?? '-' }}
                                 </span>
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('bancassurance.claims.assessForm', $claim->Id) }}" 
+                                    <a href="{{ route('bancassurance.claims.assessForm', $claim->Id) }}"
                                        class="btn btn-outline-info rounded-pill px-2" title="Assess Claim">
                                         <i class="bi bi-check-circle"></i> Assess
                                     </a>

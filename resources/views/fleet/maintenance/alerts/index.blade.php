@@ -30,7 +30,7 @@
                             <td>{{ $schedule->maintenanceType->Description ?? 'General Service' }}</td>
                             <td>{{ $schedule->Notes ?? '-' }}</td>
                             <td>{{ $schedule->ScheduledMileage ?? '-' }}</td>
-                            <td>{{ $schedule->ScheduledDate ? \Carbon\Carbon::parse($schedule->ScheduledDate)->format('d/m/Y') : '-' }}</td>
+                            <td>{{ $schedule->ScheduledDate ? \Carbon\Carbon::parse($schedule->ScheduledDate)->format('d M Y') : '-' }}</td>
                             <td>
                                 @if ($schedule->alert && $schedule->alert->IsAcknowledged)
                                     <span class="badge bg-success">Acknowledged</span>

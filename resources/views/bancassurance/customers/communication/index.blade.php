@@ -101,7 +101,7 @@
 
     {{-- ✅ Header --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('bancassurance.customers.communication.create') }}" 
+        <a href="{{ route('bancassurance.customers.communication.create') }}"
            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> New Communication Log
         </a>
@@ -132,8 +132,7 @@
                         @forelse($logs as $log)
                             <tr>
                                 <td>{{ $log->customers->thirdParty->ThirdPartyName ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($log->ContactDate)->format('d/m/Y') }}</td>
-                                <td>{{ $log->contacttypes->Description ?? '-' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($log->ContactDate)->format('d M Y') }}</td>                               <td>{{ $log->contacttypes->Description ?? '-' }}</td>
                                 <td>{{ $log->Summary ?? '-' }}</td>
                                 <td>{{ $log->employees->FirstName ?? '-' }}</td>
                                 <td>{{ $log->Notes ?? '-' }}</td>
@@ -146,8 +145,8 @@
                                         </a>
 
                                         {{-- 🗑️ Delete --}}
-                                        <form action="{{ route('bancassurance.customers.communication.destroy', $log->Id) }}" 
-                                              method="POST" 
+                                        <form action="{{ route('bancassurance.customers.communication.destroy', $log->Id) }}"
+                                              method="POST"
                                               onsubmit="return confirm('Are you sure you want to delete this contact?');"
                                               class="d-inline">
                                             @csrf

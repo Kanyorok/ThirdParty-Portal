@@ -106,8 +106,7 @@
                     <td>{{ $tenant ?? '-'}}</td>
                     <td>{{ $property ?? '-'}}</td>
                     <td>{{ $unit ?? '-'}}</td>
-                    <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') }}</td>
-                    <td>KES {{ number_format($due) }}</td>
+                    <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y') }}</td>                   <td>KES {{ number_format($due) }}</td>
                     <td>KES {{ number_format($paid) }}</td>
                     <td>
                         <span class="badge bg-{{ $status == 'Paid' ? 'success' : ($status == 'Partial' ? 'warning' : 'danger') }}">

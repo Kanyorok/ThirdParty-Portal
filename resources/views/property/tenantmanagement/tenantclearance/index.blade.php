@@ -43,7 +43,7 @@
                             <td>{{ $loop->iteration ?? '-' }}</td>
                             <td>{{ $clearancetenant->lease->tenant->thirdParty->TradingName ?? '-' }}</td>
                             <td>
-                                {{ $clearancetenant->ExitDate ? Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') : '-' }}
+                                {{ $clearancetenant->ExitDate ? Carbon::parse($clearancetenant->ExitDate)->format('d M Y') : '-' }}
                             </td>
                             <td>
                                 @if($clearancetenant->FinalInspection)

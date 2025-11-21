@@ -30,12 +30,12 @@
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label text-muted">Invoice Number</label>
-                    <input type="text" class="form-control bg-light" 
+                    <input type="text" class="form-control bg-light"
                            value="{{ $invoice->InvoiceNumber ?? '-' }}" readonly>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label text-muted">Tenant</label>
-                    <input type="text" class="form-control bg-light" 
+                    <input type="text" class="form-control bg-light"
                            value="{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}" readonly>
                 </div>
             </div>
@@ -44,18 +44,18 @@
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label class="form-label text-muted">Lease Number</label>
-                    <input type="text" class="form-control bg-light" 
+                    <input type="text" class="form-control bg-light"
                            value="{{ $invoice->lease->LeaseNumber ?? '-' }}" readonly>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted">Billing Month</label>
-                    <input type="text" class="form-control bg-light" 
+                    <input type="text" class="form-control bg-light"
                            value="{{ $invoice->BillingMonth ?? '-' }}" readonly>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted">Invoice Date</label>
-                    <input type="text" class="form-control bg-light" 
-                           value="{{ $invoice->InvoiceDate ? Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light"
+                           value="{{ $invoice->InvoiceDate ? Carbon::parse($invoice->InvoiceDate)->format('d M Y') : '-' }}" readonly>
                 </div>
             </div>
 
@@ -118,12 +118,12 @@
         <!-- Footer Metadata -->
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-muted">
             <div>
-                <i class="bi bi-person-circle"></i> 
+                <i class="bi bi-person-circle"></i>
                 Created by <strong>{{ $invoice->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $invoice->CreatedOn ? Carbon::parse($invoice->CreatedOn)->format('d/m/Y') : '-' }}</strong> 
+                on <strong>{{ $invoice->CreatedOn ? Carbon::parse($invoice->CreatedOn)->format('d M Y') : '-' }}</strong>
                 |
                 Modified by <strong>{{ $invoice->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $invoice->ModifiedOn ? Carbon::parse($invoice->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $invoice->ModifiedOn ? Carbon::parse($invoice->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
             <div>
                 @php

@@ -26,24 +26,24 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Completion Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $workCompletion->CompletionDate ? \Carbon\Carbon::parse($workCompletion->CompletionDate)->format('d/m/Y') : '—' }}" readonly>
+                           value="{{ $workCompletion->CompletionDate ? \Carbon\Carbon::parse($workCompletion->CompletionDate)->format('d M Y') : '—' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Final Status</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                            value="{{ $workCompletion->finalstatus->Description ?? '—' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Work Done Summary</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                            value="{{ $workCompletion->WorkDoneSummary ?? '—' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Parts Used</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                            value="{{ $workCompletion->PartsUsed ?? '—' }}" readonly>
                 </div>
 
@@ -71,9 +71,9 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                 <div class="text-muted">
                     Created by <strong>{{ $workCompletion->CreatedBy->Name ?? '—' }}</strong>
-                    on <strong>{{ $workCompletion->CreatedOn ? \Carbon\Carbon::parse($workCompletion->CreatedOn)->format('d/m/Y H:i') : '—' }}</strong>
+                    on <strong>{{ $workCompletion->CreatedOn ? \Carbon\Carbon::parse($workCompletion->CreatedOn)->format('d M Y H:i') : '—' }}</strong>
                     | Modified by <strong>{{ $workCompletion->modifiedByUser->Name ?? '—' }}</strong>
-                    on <strong>{{ $workCompletion->ModifiedOn ? \Carbon\Carbon::parse($workCompletion->ModifiedOn)->format('d/m/Y H:i') : '—' }}</strong>
+                    on <strong>{{ $workCompletion->ModifiedOn ? \Carbon\Carbon::parse($workCompletion->ModifiedOn)->format('d M Y H:i') : '—' }}</strong>
                 </div>
                 <div class="text-md-end">
                     <a href="{{ route('workcompletion.index') }}" class="btn btn-sm btn-outline-secondary">⬅ Back to List</a>

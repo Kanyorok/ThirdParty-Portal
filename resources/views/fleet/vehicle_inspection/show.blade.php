@@ -24,7 +24,7 @@
             <h5 class="mb-3">🟢 Pre-Trip Details</h5>
             <div class="mb-4 border rounded p-3">
             <table class="table table-sm table-bordered">
-                <tr><th>Inspection Date</th><td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') }}</td></tr>
+                <tr><th>Inspection Date</th><td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d M Y') }}</td></tr>
                 <tr><th>Mileage</th><td>{{ $inspection->Mileage }} Km/h</td></tr>
                 <tr><th>Fuel (Litres)</th><td>{{ $inspection->fuel->Description }} </td></tr>
                 <tr><th>Engine Oil</th><td>{{ $inspection->engineOil->Description }} </td></tr>
@@ -76,7 +76,7 @@
         @forelse($inspection->postTrips as $postTrip)
             <div class="mb-4 border rounded p-3">
                 <table class="table table-sm table-bordered">
-                    <tr><th>Inspection Date</th><td>{{ \Carbon\Carbon::parse($postTrip->InspectionDate)->format('d/m/Y') }}</td></tr>
+                    <tr><th>Inspection Date</th><td>{{ \Carbon\Carbon::parse($postTrip->InspectionDate)->format('d M Y') }}</td></tr>
                     <tr><th>Mileage</th><td>{{ $postTrip->Mileage }} Km/h</td></tr>
                     <tr><th>Fuel</th><td>{{ $postTrip->Fuel }} Ltr</td></tr>
                     <tr><th>Engine Oil</th><td>{{ $postTrip->EngineOil }} Ltr</td></tr>

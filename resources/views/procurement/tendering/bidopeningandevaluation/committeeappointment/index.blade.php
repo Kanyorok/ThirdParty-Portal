@@ -37,8 +37,7 @@
                     </td>
 
                     <td>{{ $item['members_count'] }}</td>
-                    <td>{{ \Carbon\Carbon::parse($item['appointment_date'])->format('d/m/Y') }}</td>
-                    <td>
+                    <td>{{ \Carbon\Carbon::parse($item['appointment_date'])->format('d M Y') }}</td>                   <td>
                             <a href="{{ route('tendercommittee.manual.show', ['id' => $item['refId'], 'type' => $item['type']]) }}"
                            class="btn btn-sm btn-outline-info">View</a>
                     </td>
@@ -161,7 +160,7 @@
             flatpickr(appt, {
                 dateFormat: 'Y-m-d',
                 altInput: true,
-                altFormat: 'd/m/Y',
+                altFormat: 'd M Y',
                 allowInput: true,
                 minDate: 'today',
                 defaultDate: new Date(),
