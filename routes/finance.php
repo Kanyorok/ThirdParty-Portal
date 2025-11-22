@@ -169,7 +169,12 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
 
     Route::get('agingreportar/customers/search', [AgingReportARController::class, 'customerLookup'])->name('agingreportar.customers.lookup');
     Route::resource('agingreportar', AgingReportARController::class);
-    Route::resource('customerstatement', CustomerStatementController::class);
+    
+    // Customer Statement Select2 API and custom routes
+    Route::get('api/thirdparties/select2', [CustomerStatementController::class, 'select2ThirdParties'])->name('thirdparties.select2');
+    Route::get('customerstatement/{thirdPartyId}', [CustomerStatementController::class, 'statement'])->name('customerstatement.statement');
+    Route::resource('customerstatement', CustomerStatementController::class)->only(['index']);
+    
     Route::resource('paymentvoucher', PaymentVoucherController::class);
     Route::resource('cashmanagement', CashManagementController::class);
     Route::resource('chequemanagement', ChequeManagementController::class);
