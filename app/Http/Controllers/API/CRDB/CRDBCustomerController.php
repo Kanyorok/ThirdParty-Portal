@@ -10,7 +10,7 @@ class CRDBCustomerController extends Controller
 {
     //Sync customer info by executing the p_Customers stored procedure EXEC dbo.r_CustomerData  @IsSynced = 0
 
-    public function syncCustomer(Request $request)
+    public function syncCustomers(Request $request)
     {
         $request->validate([
             'IsSynced' => 'required|boolean',
