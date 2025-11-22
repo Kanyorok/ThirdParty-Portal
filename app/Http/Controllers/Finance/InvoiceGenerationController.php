@@ -264,9 +264,10 @@ class InvoiceGenerationController extends Controller
         // Make sure these exist in t_Modules and t_FinanceTransactionTypes
         $MODULE_ID          = 1100000;
         $TRANSACTION_TYPEID = 16;    // "AR Invoice"
+        $THIRDPARTYTYPEID = 1; // "Tenant"
 
         try {
-            return DB::transaction(function () use ($id, $validated, $svc, $MODULE_ID, $TRANSACTION_TYPEID) {
+            return DB::transaction(function () use ($id, $validated, $svc, $MODULE_ID, $TRANSACTION_TYPEID, $THIRDPARTYTYPEID) {
 
                 // Load the invoice with the same relations, and lock row for update
                 $invoice = FinanceInvoice::with([
@@ -284,8 +285,9 @@ class InvoiceGenerationController extends Controller
 
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
-                    'ModuleID'          => $invoice->ModuleID ?? $MODULE_ID,
+                    'ModuleID'          => $MODULE_ID,
                     'ThirdPartyID'      => $invoice->CustomerID,
+                    'ThirdPartyTypeID'  => $THIRDPARTYTYPEID ?? 1,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,
                     'TransactionType'   => 'Account Receivables Invoice',
                     'ReferenceNumber'   => $invoice->InvoiceNumber,

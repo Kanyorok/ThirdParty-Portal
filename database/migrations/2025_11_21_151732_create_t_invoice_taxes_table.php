@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('AmountPaid', 10, 2)->default(0);
             $table->string('SourceType')->nullable();
             $table->string('Sourcetable')->nullable();
+            $table->boolean('IsPaid')->default(false);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
