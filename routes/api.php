@@ -306,7 +306,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
  */
 use App\Http\Controllers\API\CRDB\CRDBAuthController;
 use App\Http\Controllers\API\CRDB\CRDBGeneralLedgerController;
-
+use App\Http\Controllers\API\CRDB\CRDBCustomerController;   
 // CRDB Authentication Routes (Public)
 Route::prefix('crdb')->group(function () {
     Route::post('login', [CRDBAuthController::class, 'login'])->name('crdb.login');
@@ -319,6 +319,7 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
     // Example:
     Route::get('syncGeneralLedgers', [CRDBGeneralLedgerController::class, 'syncGeneralLedgers'])->name('syncGeneralLedgers');
     Route::get('syncGLBalances', [CRDBGeneralLedgerController::class, 'syncGLBalances'])->name('syncGLBalances');
+    Route::get('syncCustomers', [CRDBCustomerController::class, 'syncCustomers'])->name('syncCustomers');
     // Route::get('data', [CRDBDataController::class, 'fetch']);
     
     // Health check for authenticated requests
