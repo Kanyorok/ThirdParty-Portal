@@ -34,6 +34,7 @@ class SSRSService
 
     protected string $_username;
     protected string $_password;
+    protected string $path;
 
     /**
      * @throws ErroredException
@@ -59,6 +60,7 @@ class SSRSService
         } catch (DecryptException) {
             throw new ErroredException('invalid report service configuration');
         }
+        $this->path = $ssrsConfig->path;
         $path = strtolower($ssrsConfig->path);
         $username = $ssrsConfig->username;
         $this->_username = $username;
@@ -500,7 +502,7 @@ class SSRSService
 
     private function _getRoute(string $path): string
     {//reports/report/BRERP/Admin/Permissions?rs:embed=true
-        return $this->serverURL . "reports/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
+        return $this->serverURL . "{$this->path}/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
     }
 
     /**

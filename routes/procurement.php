@@ -619,6 +619,8 @@ Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->nam
 Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
 Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
 Route::post('/awards/{award}/cancel', [AwardsController::class, 'cancel'])->name('awards.cancel');
+// RFQ direct award approval (no TenderAward model yet)
+Route::post('/awards/rfq/{rfq}/approve', [AwardsController::class, 'approveRfq'])->name('awards.rfq.approve');
 
 // Award creation from consolidated scores
 Route::get('awards/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])->name('awards.create-from-consolidation');

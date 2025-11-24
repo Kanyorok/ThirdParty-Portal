@@ -40,7 +40,7 @@ class AwardsController extends Controller
                     'Cancelled' => 'bg-secondary',
                     default => 'bg-light text-dark'
                 };
-                
+
                 return [
                     'type' => 'tender',
                     // show TenderNo and Title together in the Ref column
@@ -367,6 +367,94 @@ class AwardsController extends Controller
 
         return redirect()->route('procawards.index')
             ->with('success', 'Award approved successfully.');
+    }
+
+    /**
+     * Approve an RFQ by creating an RFQ award for the top ranked supplier.
+     * Uses the same weighting logic applied in RFQEvaluationController for ranking.
+     */
+    public function approveRfq(Request $request, RFQ $rfq)
+    {
+        $request->validate([
+            'approval_remarks' => 'nullable|string|max:500',
+        ]);
+
+        // If already awarded, just redirect (idempotent behaviour)
+        $existing = RFQAward::where('RFQId', $rfq->Id)->first();
+        if ($existing) {
+            return redirect()->route('procawards.index')->with('info', 'RFQ already awarded.');
+        }
+
+        // Load evaluations + criteria weights
+        $evaluations = RFQEvaluation::with([
+            'evaluations.rfqCriteriaUnscoped.criteria',
+            'evaluations.rfqCriteriaUnscoped.section',
+            'evaluations.supplier.thirdParty',
+        ])->where('RFQId', $rfq->Id)->get();
+
+        if ($evaluations->isEmpty()) {
+            return redirect()->route('procawards.index')->with('error', 'No evaluations found for this RFQ.');
+        }
+
+        // Section weights
+        $sectionWeights = \DB::table('t_RFQSection')
+            ->where('RFQID', $rfq->Id)
+            ->pluck('Weight', 'SectionID')
+            ->map(fn($w) => (float)$w)
+            ->toArray();
+
+        // Aggregate per supplier (similar to RFQEvaluationController@index logic)
+        $supplierTotals = []; // [supplierId] => [sumWeightedAcrossEvaluators, evaluatorCount]
+        foreach ($evaluations as $evaluation) {
+            $bySupplier = $evaluation->evaluations->groupBy('SupplierId');
+            foreach ($bySupplier as $supplierId => $entries) {
+                $sectionGroups = $entries->groupBy(fn($e) => $e->rfqCriteriaUnscoped?->SectionID);
+                $evaluatorWeightedTotal = 0.0;
+                foreach ($sectionGroups as $sectionId => $criteriaList) {
+                    $weight = (float)($sectionWeights[$sectionId] ?? 0);
+                    $maxTotal = $criteriaList->count() * 10; // each criteria out of 10
+                    $actualTotal = $criteriaList->sum('Score');
+                    $sectionWeighted = $maxTotal > 0 ? (($actualTotal / $maxTotal) * $weight) : 0.0;
+                    $evaluatorWeightedTotal += $sectionWeighted;
+                }
+                $supplierTotals[$supplierId]['sum'] = ($supplierTotals[$supplierId]['sum'] ?? 0) + $evaluatorWeightedTotal;
+                $supplierTotals[$supplierId]['count'] = ($supplierTotals[$supplierId]['count'] ?? 0) + 1;
+            }
+        }
+
+        // Determine top supplier (highest average weighted total)
+        $topSupplierId = null;
+        $topScore = -1;
+        foreach ($supplierTotals as $sid => $agg) {
+            $avg = $agg['count'] > 0 ? $agg['sum'] / $agg['count'] : 0.0;
+            if ($avg > $topScore) { $topScore = $avg; $topSupplierId = (int)$sid; }
+        }
+
+        if (!$topSupplierId) {
+            return redirect()->route('procawards.index')->with('error', 'Failed to determine top supplier for RFQ.');
+        }
+
+        // Persist award
+        $award = RFQAward::create([
+            'RFQId' => $rfq->Id,
+            'SupplierId' => $topSupplierId,
+            'Comments' => $request->input('approval_remarks'),
+            'CreatedBy' => Auth::id(),
+            'ModifiedBy' => Auth::id(),
+        ]);
+
+        activity()
+            ->performedOn($award)
+            ->causedBy(Auth::user())
+            ->withProperties([
+                'action' => 'approve-rfq',
+                'rfq_id' => $rfq->Id,
+                'supplier_id' => $topSupplierId,
+                'score' => round($topScore,2),
+            ])
+            ->log('RFQ awarded to top ranked supplier.');
+
+        return redirect()->route('procawards.index')->with('success', 'RFQ awarded successfully.');
     }
 
     /**
