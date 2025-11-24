@@ -511,106 +511,169 @@ abstract class ApprovalWorkflowService
     /**
      * Submit a record for approval workflow
      */
-    protected function submittedAction(
-        User $actor, 
-        CodeDetail $status, 
-        $model, 
-        string $source, 
-        string|int $sourceId, 
-        string $remarks
-    ): bool {
-        $class = Relation::getMorphedModel($source);
-        if (!($class && class_exists($class))) {
-            Log::error("Invalid morph alias", ['source' => $source]);
-            throw new ErroredException('Invalid Related Entity');
+    /**
+ * Submit a record for approval workflow
+ */
+protected function submittedAction(
+    User $actor, 
+    CodeDetail $status, 
+    $model, 
+    string $source, 
+    string|int $sourceId, 
+    string $remarks
+): bool {
+    $class = Relation::getMorphedModel($source);
+    if (!($class && class_exists($class))) {
+        Log::error("Invalid morph alias", ['source' => $source]);
+        throw new ErroredException('Invalid Related Entity');
+    }
+
+    $table = $model->getTable();
+    $sourceId = $sourceId ?? $model->getKey();
+
+    Log::info("=== STARTING WORKFLOW SUBMISSION ===", [
+        'source_alias' => $source,
+        'table' => $table,
+        'sourceId' => $sourceId,
+        'actorId' => $actor->Id,
+    ]);
+
+    // STEP 1: Create workflow history entry
+    try {
+        
+
+        // Prevent double submission
+        $existingSubmission = DB::table('t_WorkFlowHistory')
+            ->where('Source', $table)
+            ->where('SourceID', (string)$sourceId)
+            ->where('isApproved', null)
+            ->whereNull('DeletedOn')
+            ->first();
+
+        if ($existingSubmission) {
+            Log::warning("Already submitted", ['table' => $table, 'sourceId' => $sourceId]);
+            throw new ErroredException("This item has already been submitted for approval");
         }
 
-        $table = $model->getTable();
-        $sourceId = $sourceId ?? $model->getKey();
+        // Get first stage
+        $stage = $this->getPermissionFromStage($table);
+        if (!$stage || !$stage->PermissionId) {
+            Log::error("No workflow configuration", ['table' => $table]);
+            throw new ErroredException("No workflow configuration found for {$table}");
+        }
 
-        Log::info("=== STARTING WORKFLOW SUBMISSION ===", [
-            'source_alias' => $source,
+        $amount = $model->Amount ?? null;
+
+        // Create workflow history
+        $history = $this->createHistoryEntry(
+            $table,
+            $sourceId,
+            $status->ID,
+            (int)$stage->Id,
+            $actor->Id,
+            $remarks,
+            $amount
+        );
+
+        Log::info("=== WORKFLOW HISTORY CREATED ===", ['historyId' => $history->Id]);
+
+       
+        Log::info("Transaction committed successfully for WorkflowHistory");
+
+    } catch (ErroredException $e) {
+        DB::rollBack();
+        throw $e;
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        Log::error('Error creating workflow history', ['error' => $e->getMessage()]);
+        throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
+    }
+
+    // STEP 2: Create pending approvers (SEPARATE from history transaction)
+    try {
+        // Use DB::select with positional parameters (?) instead of named parameters (:name)
+        $result = DB::select(
+            'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
+            [
+                $table,
+                (string)$sourceId,
+                (int)$stage->Id
+            ]
+        );
+
+        Log::info("p_ProcessWorkflowPending result", ['result' => $result]);
+
+        // Check for errors returned by SP
+        if (!empty($result) && isset($result[0]->Status)) {
+            if ($result[0]->Status === 'ERROR') {
+                Log::error("p_ProcessWorkflowPending returned ERROR", [
+                    'message' => $result[0]->Message ?? 'Unknown error',
+                ]);
+                
+                // Rollback the history entry since pending creation failed
+                $this->rollbackSubmission($table, $sourceId, $actor->Id);
+                
+                throw new ErroredException($result[0]->Errors ?? 'Failed to create pending approvals');
+            }
+            
+            Log::info("Pending approvals created successfully", [
+                'insertedCount' => $result[0]->InsertedPendingCount ?? 0,
+                'approvalsRequired' => $result[0]->ApprovalsRequired ?? 'N/A',
+                'effectivePermission' => $result[0]->EffectivePermissionId ?? 'N/A',
+                'limitType' => $result[0]->LimitType ?? 'DEFAULT',
+            ]);
+        }
+
+        // Log state after creating pending approvals
+        $this->logWorkflowState($table, $sourceId, 'AFTER_SUBMISSION');
+
+    } catch (ErroredException $e) {
+        throw $e;
+    } catch (\Throwable $e) {
+        Log::error('Error executing p_ProcessWorkflowPending', [
+            'error' => $e->getMessage(),
             'table' => $table,
             'sourceId' => $sourceId,
-            'actorId' => $actor->Id,
         ]);
-
-        try {
-            DB::beginTransaction();
-
-            // Prevent double submission
-            $existingSubmission = DB::table('t_WorkFlowHistory')
-                ->where('Source', $table)
-                ->where('SourceID', (string)$sourceId)
-                ->where('isApproved', null)
-                ->whereNull('DeletedOn')
-                ->first();
-
-            if ($existingSubmission) {
-                Log::warning("Already submitted", ['table' => $table, 'sourceId' => $sourceId]);
-                throw new ErroredException("This item has already been submitted for approval");
-            }
-
-            // Get first stage
-            $stage = $this->getPermissionFromStage($table);
-            if (!$stage || !$stage->PermissionId) {
-                Log::error("No workflow configuration", ['table' => $table]);
-                throw new ErroredException("No workflow configuration found for {$table}");
-            }
-
-            $amount = $model->Amount ?? null;
-
-            // Create workflow history
-            $history = $this->createHistoryEntry(
-                $table,
-                $sourceId,
-                $status->ID,
-                (int)$stage->Id,
-                $actor->Id,
-                $remarks,
-                $amount
-            );
-
-            Log::info("=== WORKFLOW HISTORY CREATED ===", ['historyId' => $history->Id]);
-
-            DB::commit();
-            Log::info("Transaction committed successfully for WorkflowHistory");
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Error creating workflow history', ['error' => $e->getMessage()]);
-            throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
-        }
-
-        // Create pending approvers for first stage
-        try {
-            DB::statement("
-                EXEC p_ProcessWorkflowPending
-                    @Source = :source,
-                    @SourceID = :sourceId,
-                    @StageID = :stageId
-            ", [
-                'source' => $table,
-                'sourceId' => (string)$sourceId,
-                'stageId' => (int)$stage->Id
-            ]);
-
-            Log::info("First stage pending approvals created", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'stageId' => $stage->Id,
-            ]);
-
-            // Log state after creating pending approvals
-            $this->logWorkflowState($table, $sourceId, 'AFTER_SUBMISSION');
-
-        } catch (\Throwable $e) {
-            Log::error('Error executing p_ProcessWorkflowPending', ['error' => $e->getMessage()]);
-            throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
-        }
-
-        return true;
+        
+        // Rollback the history entry since pending creation failed
+        $this->rollbackSubmission($table, $sourceId, $actor->Id);
+        
+        throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
     }
+
+    return true;
+}
+
+/**
+ * Rollback a failed submission by soft-deleting the history entry
+ */
+private function rollbackSubmission(string $table, string|int $sourceId, int $userId): void
+{
+    try {
+        DB::table('t_WorkFlowHistory')
+            ->where('Source', $table)
+            ->where('SourceID', (string)$sourceId)
+            ->whereNull('DeletedOn')
+            ->update([
+                'DeletedOn' => now(),
+                'DeletedBy' => $userId,
+                'ModifiedOn' => now(),
+                'ModifiedBy' => $userId,
+            ]);
+        
+        Log::info("Rolled back failed submission", [
+            'table' => $table,
+            'sourceId' => $sourceId,
+        ]);
+    } catch (\Throwable $e) {
+        Log::error("Failed to rollback submission", [
+            'error' => $e->getMessage(),
+            'table' => $table,
+            'sourceId' => $sourceId,
+        ]);
+    }
+}
 
     /**
      * Get workflow history

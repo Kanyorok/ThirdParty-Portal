@@ -41,7 +41,7 @@ class DepartmentNeedsService
             throw new \Exception('A pending need for this item already exists for your department.');
         }
 
-        // Generate NeedID safely (robust to deletions and concurrent requests)
+        // Generate NeedID safely 
         $prefix = 'NEED-';
         $lastNEED = DepartmentNeed::where('NeedID', 'like', $prefix . '%')
             ->orderBy('Id', 'desc')
@@ -49,7 +49,7 @@ class DepartmentNeedsService
         $lastNumber = $lastNEED ? intval(substr($lastNEED->NeedID, strlen($prefix))) : 0;
         $newNEEDNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
-        DB::beginTransaction();
+       
         try {
             // Create with Pending status - workflow will be initiated immediately
             $departmentNeed = DepartmentNeed::create([
@@ -68,6 +68,8 @@ class DepartmentNeedsService
                 'ModifiedBy' => $actor->Id,
                 'RequestedDate' => $data['RequestedDate'],
             ]);
+            
+            
 
             // Submit to workflow (this creates WorkflowHistory and WorkflowPending)
             $this->workflow->submit(
@@ -84,7 +86,7 @@ class DepartmentNeedsService
                 ->event('create')
                 ->log('Created and submitted Department Need ' . $departmentNeed->NeedID);
 
-            DB::commit();
+            
 
             return $departmentNeed;
         } catch (\Exception $e) {
