@@ -514,6 +514,9 @@ abstract class ApprovalWorkflowService
     /**
  * Submit a record for approval workflow
  */
+/**
+ * Submit a record for approval workflow
+ */
 protected function submittedAction(
     User $actor, 
     CodeDetail $status, 
@@ -538,9 +541,9 @@ protected function submittedAction(
         'actorId' => $actor->Id,
     ]);
 
-    // STEP 1: Create workflow history entry
     try {
-        
+        // Start a SINGLE transaction for everything
+        DB::beginTransaction();
 
         // Prevent double submission
         $existingSubmission = DB::table('t_WorkFlowHistory')
@@ -564,7 +567,7 @@ protected function submittedAction(
 
         $amount = $model->Amount ?? null;
 
-        // Create workflow history
+        // Create workflow history (within the main transaction)
         $history = $this->createHistoryEntry(
             $table,
             $sourceId,
@@ -577,21 +580,7 @@ protected function submittedAction(
 
         Log::info("=== WORKFLOW HISTORY CREATED ===", ['historyId' => $history->Id]);
 
-       
-        Log::info("Transaction committed successfully for WorkflowHistory");
-
-    } catch (ErroredException $e) {
-        DB::rollBack();
-        throw $e;
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        Log::error('Error creating workflow history', ['error' => $e->getMessage()]);
-        throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
-    }
-
-    // STEP 2: Create pending approvers (SEPARATE from history transaction)
-    try {
-        // Use DB::select with positional parameters (?) instead of named parameters (:name)
+        // Call stored procedure (still within the same transaction)
         $result = DB::select(
             'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
             [
@@ -609,11 +598,7 @@ protected function submittedAction(
                 Log::error("p_ProcessWorkflowPending returned ERROR", [
                     'message' => $result[0]->Message ?? 'Unknown error',
                 ]);
-                
-                // Rollback the history entry since pending creation failed
-                $this->rollbackSubmission($table, $sourceId, $actor->Id);
-                
-                throw new ErroredException($result[0]->Errors ?? 'Failed to create pending approvals');
+                throw new ErroredException($result[0]->Message ?? 'Failed to create pending approvals');
             }
             
             Log::info("Pending approvals created successfully", [
@@ -627,51 +612,29 @@ protected function submittedAction(
         // Log state after creating pending approvals
         $this->logWorkflowState($table, $sourceId, 'AFTER_SUBMISSION');
 
+        // Commit everything together
+        DB::commit();
+        Log::info("Workflow submission completed successfully");
+
+        return true;
+
     } catch (ErroredException $e) {
+        DB::rollBack();
+        Log::error("ErroredException in submittedAction", [
+            'message' => $e->getMessage(),
+            'table' => $table,
+            'sourceId' => $sourceId,
+        ]);
         throw $e;
     } catch (\Throwable $e) {
-        Log::error('Error executing p_ProcessWorkflowPending', [
+        DB::rollBack();
+        Log::error('Error in submittedAction', [
             'error' => $e->getMessage(),
             'table' => $table,
             'sourceId' => $sourceId,
+            'trace' => $e->getTraceAsString(),
         ]);
-        
-        // Rollback the history entry since pending creation failed
-        $this->rollbackSubmission($table, $sourceId, $actor->Id);
-        
         throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
-    }
-
-    return true;
-}
-
-/**
- * Rollback a failed submission by soft-deleting the history entry
- */
-private function rollbackSubmission(string $table, string|int $sourceId, int $userId): void
-{
-    try {
-        DB::table('t_WorkFlowHistory')
-            ->where('Source', $table)
-            ->where('SourceID', (string)$sourceId)
-            ->whereNull('DeletedOn')
-            ->update([
-                'DeletedOn' => now(),
-                'DeletedBy' => $userId,
-                'ModifiedOn' => now(),
-                'ModifiedBy' => $userId,
-            ]);
-        
-        Log::info("Rolled back failed submission", [
-            'table' => $table,
-            'sourceId' => $sourceId,
-        ]);
-    } catch (\Throwable $e) {
-        Log::error("Failed to rollback submission", [
-            'error' => $e->getMessage(),
-            'table' => $table,
-            'sourceId' => $sourceId,
-        ]);
     }
 }
 
