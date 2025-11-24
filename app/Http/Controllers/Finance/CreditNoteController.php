@@ -317,17 +317,11 @@ class CreditNoteController extends Controller
         $note = FinanceCDNotes::findOrFail($id);
 
         $validated = $request->validate([
-<<<<<<< HEAD
             'InvoiceRefNo' => 'required|exists:t_FinanceInvoiceEntry,Id',
-            'NoteDate' => 'required|date',
-            'NoteAmount' => 'required|numeric|min:0.00',
-            'Description' => 'required|string',
-=======
 //            'InvoiceRefNo'=> 'required',
             'NoteDate'=> 'required|date',
             'NoteAmount'=> 'required|numeric|min:0.00',
             'Description'=> 'string',
->>>>>>> origin
         ]);
 
         DB::beginTransaction();
