@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
 use App\Enums\WorkflowStatus;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 
 class FleetTripLogService

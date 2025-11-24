@@ -11,7 +11,7 @@ use App\Models\Fleet\FuelType;
 use App\Services\FleetManagement\FleetVehicleInspectionService;
 use Illuminate\Support\Facades\Auth;
 use App\Services\DMS\DocumentService;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class FleetVehicleInspectionController extends Controller
 {

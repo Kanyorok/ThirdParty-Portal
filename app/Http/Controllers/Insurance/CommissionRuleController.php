@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Insurance;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\CommissionRuleRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\Insurance\CommissionRuleService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

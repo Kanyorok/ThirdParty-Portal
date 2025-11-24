@@ -3,7 +3,7 @@
 namespace App\Services\Insurance;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceCommissionRule;
 use App\Models\Insurance\InsuranceProduct;
 

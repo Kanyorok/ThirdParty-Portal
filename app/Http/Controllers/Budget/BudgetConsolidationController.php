@@ -19,7 +19,7 @@ use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
 use App\Models\Budget\BudgetProjectionData;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Shuchkin\SimpleXLSXGen;

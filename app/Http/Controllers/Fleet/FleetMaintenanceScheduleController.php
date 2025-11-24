@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Fleet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetMaintenanceScheduleRequest;
 use App\Models\Fleet\FleetVehicle;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Services\FleetManagement\FleetMaintenanceScheduleService;

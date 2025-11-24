@@ -3,7 +3,7 @@
 namespace App\Models\PropertyManagement;
 
 use App\Enums\Core\PostingEnum;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\HRM\Employee;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;

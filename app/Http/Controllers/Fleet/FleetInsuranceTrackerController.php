@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Auth\User;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Insurance\InsuranceProvider;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class FleetInsuranceTrackerController extends Controller
 {

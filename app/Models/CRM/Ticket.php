@@ -4,10 +4,9 @@ namespace App\Models\CRM;
 
 use App\Enums\TicketPriorityEnum;
 use App\Models\Communication\Comment;
-use App\Models\Core\CodeDetail;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
-use App\Models\DMS\Image;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\StaticListsService;
 use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;

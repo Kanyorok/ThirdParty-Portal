@@ -2,7 +2,7 @@
 
 namespace App\Models\Legal;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Legal\LegalCaseCounsel;
 use App\Models\Legal\LegalCaseOutcome;

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Insurance;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\MedicalFundRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\MedicalFund;
 use App\Models\Insurance\InsuranceProvider;
 use App\Services\Insurance\MedicalFundService;

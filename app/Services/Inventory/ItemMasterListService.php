@@ -4,7 +4,7 @@ namespace App\Services\Inventory;
 
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\DMS\Image;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;

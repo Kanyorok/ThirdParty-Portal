@@ -2,7 +2,7 @@
 
 namespace App\Models\Insurance;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Insurance\BancassurancePolicy;
