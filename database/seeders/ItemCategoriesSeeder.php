@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Inventory\ItemCategories;
 use Illuminate\Support\Facades\DB;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Auth\User;
 use Illuminate\Support\Carbon;

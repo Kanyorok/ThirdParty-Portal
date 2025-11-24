@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Settings\Codes;
 
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

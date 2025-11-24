@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\FleetManagement\FleetVehicleRequestService;
 use Illuminate\Http\Request;
 use App\Traits\Model\UserActorTrait;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Exception;
 
 class FleetVehicleRequestController extends Controller

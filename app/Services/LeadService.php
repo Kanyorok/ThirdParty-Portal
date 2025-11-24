@@ -11,7 +11,7 @@ use App\Helpers\SystemHelper;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\Communication\BulkNotification;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\CRM\Lead;
 use App\Models\CRM\LeadUser;

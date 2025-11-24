@@ -9,7 +9,7 @@ use App\Http\Requests\Insurance\PremiumManagement\BancassurancePremiumPaymentsRe
 use Illuminate\Support\Facades\Log;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Services\Insurance\PremiumManagement\BancassurancePremiumPaymentsService;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Insurance\BancassurancePremiumPayments;
 

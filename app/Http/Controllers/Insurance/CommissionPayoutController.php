@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceCommissionPayout;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Http\Requests\Insurance\BancassuranceCommissionPayoutRequest;

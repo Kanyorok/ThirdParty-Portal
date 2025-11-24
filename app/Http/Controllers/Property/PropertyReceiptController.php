@@ -7,7 +7,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\BillingAndReceipting\PropertyReceiptRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyReceipt;
 use App\Services\Property\BillingAndReceipting\PropertyReceiptService;

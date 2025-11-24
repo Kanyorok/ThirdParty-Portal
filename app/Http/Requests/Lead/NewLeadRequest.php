@@ -7,7 +7,7 @@ use App\Enums\Employee\GenderEnum;
 use App\Enums\LeadTypeEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\CRM\Lead;
