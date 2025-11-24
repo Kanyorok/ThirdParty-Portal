@@ -1,0 +1,44 @@
+CREATE PROCEDURE [dbo].[p_EscalateOverdueWorkflows]
+    @RunBy BIGINT = 0 -- User ID or System ID running the job
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Insert overdue workflow stages into escalation table
+INSERT INTO t_WorkFlowEscalation (
+    WorkflowStageId,
+    UserId,
+    SupervisorId,
+    Notes,
+    CreatedBy,
+    CreatedOn,
+    ModifiedBy,
+    ModifiedOn,
+    DeletedBy,
+    DeletedOn
+)
+SELECT
+    ws.Id AS WorkflowStageID,
+    NULL AS UserID, -- UserId (to be updated if logic is known)
+    d.HeadId as SupervisorId, -- SupervisorId from department
+    'Auto-escalated due to timeout' as Notes,
+    @RunBy AS CreateBy,
+    GETDATE() as CreatedOn,
+    NULL as ModifiedBy,
+    NULL as ModifiedOn,
+    NULL as DeletedBy,
+    NULL as DeletedOn
+FROM t_workflowstages ws
+         INNER JOIN t_Workflows wf ON wf.Id = ws.WorkflowID
+         INNER JOIN t_Departments d ON d.DepartmentID = wf.Source
+WHERE ws.DeletedOn IS NULL
+  AND ws.EscalationLimit IS NOT NULL
+  AND ws.CreatedOn < DATEADD(HOUR, -ws.EscalationLimit, GETDATE())
+  AND NOT EXISTS (
+    SELECT 1
+    FROM t_WorkFlowEscalation e
+    WHERE e.WorkflowStageID = ws.Id
+      AND e.DeletedOn IS NULL
+);
+END;
+GO

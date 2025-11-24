@@ -18,18 +18,19 @@ class BancassuranceClaimService
         //
     }
 
-    Public static function create(
+    public static function create(
         BancassurancePolicy $PolicyId,
-        CodeDetail $ClaimType,
-        string $ClaimReason,
-        float $ClaimAmount,
-        Carbon $ClaimDate,
-        CodeDetail $Status,
-        User $user
-    ):self{
+        CodeDetail          $ClaimType,
+        string              $ClaimReason,
+        float               $ClaimAmount,
+        Carbon              $ClaimDate,
+        CodeDetail          $Status,
+        User                $user
+    ): self
+    {
         $claim = BancassuranceClaim::create([
-            'PolicyId' => $PolicyId -> Id,
-            'ClaimType' =>$ClaimType -> ID,
+            'PolicyId' => $PolicyId->Id,
+            'ClaimType' => $ClaimType->ID,
             'ClaimReason' => $ClaimReason,
             'ClaimAmount' => $ClaimAmount,
             'ClaimDate' => $ClaimDate,

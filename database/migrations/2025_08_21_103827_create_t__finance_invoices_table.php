@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -30,7 +29,7 @@ return new class extends Migration
             $table->string('SourceTable')->nullable();
             $table->boolean('IsGenerated')->default(false);
             $table->string('Status', 20)->default('draft'); //To be used in workflows
-            $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
+            $table->enum('ApprovalStatus', ['draft', 'posted', 'rejected'])->default('draft');
             $table->text('ApprovalReason')->nullable();
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

@@ -22,9 +22,10 @@ class WorkFlowLimitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'DocType' => 'required|string|max:50',
+            'WorkFlowStageId' => 'required|exists:t_WorkFlowStages,Id',
             'Permission' => 'required|integer',
-            'AmountLimit' => 'required|numeric|min:1', 
+            'AmountLimit' => ['required', 'array', 'min:1'],
+        'AmountLimit.*' => ['required', 'numeric', 'min:0', 'distinct'],
         ]; 
     }
 }

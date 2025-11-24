@@ -19,16 +19,17 @@ class BancassuranceClaimClosureService
     }
 
     public static function create(
-        BancassuranceClaim $ClaimId,
+        BancassuranceClaim   $ClaimId,
         InsuranceClosureEnum $FinalStatus,
-        string $FinalRemarks,
-        Carbon $ClosureDate,
-        User $user
-    ):self{
+        string               $FinalRemarks,
+        Carbon               $ClosureDate,
+        User                 $user
+    ): self
+    {
         $closure = BancassuranceClaimClosure::create([
-            'ClaimId' => $ClaimId -> Id,
+            'ClaimId' => $ClaimId->Id,
             'FinalStatus' => $FinalStatus->value,
-            'FinalRemarks'=> $FinalRemarks,
+            'FinalRemarks' => $FinalRemarks,
             'ClosureDate' => $ClosureDate,
             'ClosedBy' => $user->Id,
             'CreatedBy' => $user->Id,

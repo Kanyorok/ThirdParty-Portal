@@ -74,9 +74,9 @@ class PropertyMaintenanceService
     public static function update(
         PropertyMaintenanceRequest $maintenancerequest,
         PropertyRegistry $Property = null,
-        PropertyBlock $Block  = null,
-        PropertyFloor $Floor  = null,
-        PropertyUnit $Unit  = null,
+        PropertyBlock    $Block = null,
+        PropertyFloor    $Floor = null,
+        PropertyUnit     $Unit = null,
         string $ReportedBy,
         CodeDetail $IssueType,
         CodeDetail $Priority,

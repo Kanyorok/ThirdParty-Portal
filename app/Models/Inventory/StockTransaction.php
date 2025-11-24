@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\Inventory;
+
 use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -8,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StockTransaction extends Model
 {
-     use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -81,7 +82,7 @@ class StockTransaction extends Model
     {
         return $this->belongsTo(Branch::class, 'BranchID', 'Id');
     }
-   
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
@@ -102,6 +103,6 @@ class StockTransaction extends Model
         return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
     }
 
-    
+
 }
 

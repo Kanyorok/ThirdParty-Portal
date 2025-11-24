@@ -13,28 +13,28 @@
         </div>
         <div class="card-body p-3">
             @if ($errors->any() || session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Please correct the following errors:</strong>
-                    </div>
-                    @if(session('error'))
-                        <div class="mb-2">{{ session('error') }}</div>
-                    @endif
-                    @if ($errors->any())
-                        <ul class="mb-0 ps-3">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Please correct the following errors:</strong>
                 </div>
+                @if(session('error'))
+                <div class="mb-2">{{ session('error') }}</div>
+                @endif
+                @if ($errors->any())
+                <ul class="mb-0 ps-3">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                @endif
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
             @endif
 
             <form id="paymentVoucherForm"
-                    action="{{ route('paymentvoucher.update', $voucher->Id) }}"
-                    method="POST">
+                action="{{ route('paymentvoucher.update', $voucher->Id) }}"
+                method="POST">
                 @csrf
                 @method('PUT')
 
@@ -44,15 +44,15 @@
                     <div class="col-md-4">
                         <label class="form-label" for="InvoiceNo">Invoice Ref <span class="text-danger">*</span></label>
                         <select name="InvoiceNo" id="InvoiceNo"
-                                class="form-select @error('InvoiceNo') is-invalid @enderror" required>
+                            class="form-select @error('InvoiceNo') is-invalid @enderror" required>
                             <option value="">-- Select Invoice --</option>
                             @foreach($invoices as $invoice)
-                                <option value="{{ $invoice['Id'] }}"
-                                        data-amount="{{ (float) $invoice['Balance'] }}"
-                                        data-currency="{{ $invoice['CurrencyCode'] }}"
-                                    @selected(old('InvoiceNo', $voucher->InvoiceNo) == $invoice['Id'])>
-                                    {{ $invoice['InvoiceNumber'] }} - {{ $invoice['CurrencyCode'] }} {{ number_format($invoice['InvoiceAmount'], 2) }}
-                                </option>
+                            <option value="{{ $invoice['Id'] }}"
+                                data-amount="{{ (float) $invoice['Balance'] }}"
+                                data-currency="{{ $invoice['CurrencyCode'] }}"
+                                @selected(old('InvoiceNo', $voucher->InvoiceNo) == $invoice['Id'])>
+                                {{ $invoice['InvoiceNumber'] }} - {{ $invoice['CurrencyCode'] }} {{ number_format($invoice['InvoiceAmount'], 2) }}
+                            </option>
                             @endforeach
                         </select>
                         @error('InvoiceNo') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -60,13 +60,13 @@
                     <div class="col-md-4">
                         <label class="form-label" for="PaymentMethod">Payment Method <span class="text-danger">*</span></label>
                         <select class="form-select @error('PaymentMethod') is-invalid @enderror"
-                                name="PaymentMethod" id="PaymentMethod" required>
+                            name="PaymentMethod" id="PaymentMethod" required>
                             <option value="" disabled>-- Select Payment Method --</option>
                             @foreach($paymentMethods as $paymentMethod)
-                                <option value="{{ $paymentMethod->Description }}"
-                                    @selected(old('PaymentMethod', $voucher->PaymentMethod) == $paymentMethod->Description)>
-                                    {{ $paymentMethod->Description }}
-                                </option>
+                            <option value="{{ $paymentMethod->Description }}"
+                                @selected(old('PaymentMethod', $voucher->PaymentMethod) == $paymentMethod->Description)>
+                                {{ $paymentMethod->Description }}
+                            </option>
                             @endforeach
                         </select>
                         @error('PaymentMethod') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -74,13 +74,13 @@
                     <div class="col-md-4">
                         <label class="form-label" for="paymentType">Payment Type <span class="text-danger">*</span></label>
                         <select class="form-select @error('PaymentType') is-invalid @enderror"
-                                name="PaymentType" id="paymentType" required>
+                            name="PaymentType" id="paymentType" required>
                             <option value="" disabled>-- Select Payment Type --</option>
                             @foreach($paymentTypes as $paymentType)
-                                <option value="{{ $paymentType->Description }}"
-                                    @selected(old('PaymentType', $voucher->PaymentType) == $paymentType->Description)>
-                                    {{ $paymentType->Description }}
-                                </option>
+                            <option value="{{ $paymentType->Description }}"
+                                @selected(old('PaymentType', $voucher->PaymentType) == $paymentType->Description)>
+                                {{ $paymentType->Description }}
+                            </option>
                             @endforeach
                         </select>
                         @error('PaymentType') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -91,13 +91,13 @@
                     <div class="col-12">
                         <label class="form-label" for="PayAmount">Amount <span class="text-danger">*</span></label>
                         <input type="number"
-                                id="PayAmount"
-                                class="form-control @error('TotAmnt') is-invalid @enderror"
-                                name="TotAmnt"
-                                step="0.01"
-                                min="0"
-                                value="{{ old('TotalAmount', $voucher->TotalAmount) }}"
-                                placeholder="Enter amount">
+                            id="PayAmount"
+                            class="form-control @error('TotAmnt') is-invalid @enderror"
+                            name="TotAmnt"
+                            step="0.01"
+                            min="0"
+                            value="{{ old('TotalAmount', $voucher->TotalAmount) }}"
+                            placeholder="Enter amount">
                         @error('TotAmnt') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
@@ -106,28 +106,28 @@
                     <div class="col-md-4">
                         <label class="form-label" for="SchedAmount">Amount <span class="text-danger">*</span></label>
                         <input type="number"
-                                id="SchedAmount"
-                                class="form-control"
-                                step="0.01"
-                                min="0"
-                                value="{{ old('TotAmnt', $voucher->TotAmnt) }}">
+                            id="SchedAmount"
+                            class="form-control"
+                            step="0.01"
+                            min="0"
+                            value="{{ old('TotAmnt', $voucher->TotAmnt) }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="StartDate">Start Date <span class="text-danger">*</span></label>
                         <input type="date"
-                                class="form-control"
-                                name="StartDate"
-                                value="{{ old('StartDate', $voucher->StartDate) }}">
+                            class="form-control"
+                            name="StartDate"
+                            value="{{ old('StartDate', $voucher->StartDate) }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="Frequency">Frequency <span class="text-danger">*</span></label>
                         <select class="form-select" name="Frequency" id="Frequency">
                             <option value="" disabled>-- Select Frequency --</option>
                             @foreach($paymentFrequencies as $paymentFrequency)
-                                <option value="{{ $paymentFrequency->Description }}"
-                                    @selected(old('Frequency', $voucher->Frequency) == $paymentFrequency->Description)>
-                                    {{ $paymentFrequency->Description }}
-                                </option>
+                            <option value="{{ $paymentFrequency->Description }}"
+                                @selected(old('Frequency', $voucher->Frequency) == $paymentFrequency->Description)>
+                                {{ $paymentFrequency->Description }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
@@ -137,11 +137,12 @@
                     <div class="col-12">
                         <label class="form-label" for="Description">Description</label>
                         <textarea class="form-control @error('Description') is-invalid @enderror"
-                                    name="Description"
-                                    id="Description"
-                                    rows="3"
-                                    placeholder="Enter voucher description">{{ old('Description', $voucher->Description) }}</textarea>
-                        @error('Description') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            name="Description"
+                            id="Description"
+                            rows="3"
+                            placeholder="Enter voucher description">{{ old('Description', $voucher->Description) }}</textarea>
+                        @error('Description')
+                        <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
@@ -150,8 +151,8 @@
                         <i class="fas fa-arrow-left me-1"></i> Back
                     </a>
                     <button type="submit"
-                            id="submitButton"
-                            class="btn btn-outline-info">
+                        id="submitButton"
+                        class="btn btn-outline-info">
                         <i class="fas fa-save me-1"></i> Update Voucher
                     </button>
                 </div>

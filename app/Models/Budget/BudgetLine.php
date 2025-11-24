@@ -2,7 +2,7 @@
 
 namespace App\Models\Budget;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\HRM\Department;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;

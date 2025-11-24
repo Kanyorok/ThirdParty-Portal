@@ -13,9 +13,12 @@
         font-weight: 600;
         text-align: center;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
         vertical-align: middle !important;
     }
+
     table.dataTable tbody tr:hover {
         background-color: #f9fbfd;
     }
@@ -26,6 +29,7 @@
         padding: 4px 12px;
         border: 1px solid #ced4da;
     }
+
     .dataTables_wrapper .dataTables_length select {
         border-radius: 20px;
         padding: 3px 10px;
@@ -104,7 +108,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#productlist').DataTable({
             pageLength: 10,
             ordering: true,

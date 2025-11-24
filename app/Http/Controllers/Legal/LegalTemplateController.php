@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Legal;
+
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
@@ -22,9 +23,9 @@ class LegalTemplateController extends Controller
     {
         $this->authorize(PermissionEnum::ContractView, LegalClause::class);
 
-        $q      = trim((string) $request->input('q'));
-        $status = (string) $request->input('status', '');
-        $type   = (string) $request->input('type', '');
+        $q = trim((string)$request->input('q'));
+        $status = (string)$request->input('status', '');
+        $type = (string)$request->input('type', '');
 
         $query = LegalTemplate::query()
             ->withCount('clauses');
@@ -50,10 +51,10 @@ class LegalTemplateController extends Controller
             ->withQueryString();
 
         // For the filters dropdowns
-        $types   = LegalTemplate::query()->whereNotNull('DocumentType')->distinct()->orderBy('DocumentType')->pluck('DocumentType');
-        $statuses= collect(['DRAFT','ACTIVE','DEPRECATED','ARCHIVED']);
+        $types = LegalTemplate::query()->whereNotNull('DocumentType')->distinct()->orderBy('DocumentType')->pluck('DocumentType');
+        $statuses = collect(['DRAFT', 'ACTIVE', 'DEPRECATED', 'ARCHIVED']);
 
-        return view('legal.templates.index', compact('templates','q','status','type','types','statuses'));
+        return view('legal.templates.index', compact('templates', 'q', 'status', 'type', 'types', 'statuses'));
     }
 
     public function show($id)
@@ -61,7 +62,7 @@ class LegalTemplateController extends Controller
         $this->authorize(PermissionEnum::ContractView, LegalClause::class);
 
         $template = LegalTemplate::with('clauses')->findOrFail($id);
-        $clauses  = $template->clauses; // already ordered
+        $clauses = $template->clauses; // already ordered
         return view('legal.templates.show', compact('template', 'clauses'));
     }
 

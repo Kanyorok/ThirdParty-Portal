@@ -52,10 +52,10 @@ class LegalIntellectualPropertyController extends Controller
             ->where('RegistrationNumber', $validated['RegistrationNumber'])
             ->exists();
 
-        if($duplicates){
+        if ($duplicates) {
             return back()->with('error', 'Error there is alreaady an existing record with these details');
         }
-        try{
+        try {
             DB::beginTransaction();
 
             LegalIntellectualProperty::create([
@@ -76,24 +76,24 @@ class LegalIntellectualPropertyController extends Controller
             activity()
                 ->performedOn(new LegalIntellectualProperty())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'create'])
+                ->withProperties(['action' => 'create'])
                 ->log('Intellectual Property successfully created');
-            
-                DB::commit();
+
+            DB::commit();
 
             return redirect()->route('legal.intellectual.index')->with('success', 'Intellectual Property registered successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
                 ->performedOn(new LegalIntellectualProperty())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'create'])
+                ->withProperties(['action' => 'create'])
                 ->log('Error creating Intellectual Property');
 
             Log::error('Error creating Intellectual Property.' . $th->getMessage());
             return back()->with('error', 'Error creating Intellectual Property: ' . $th->getMessage());
-            
+
         }
     }
 
@@ -134,7 +134,7 @@ class LegalIntellectualPropertyController extends Controller
             'IsDisputed' => 'boolean',
             'DisputeReason' => 'nullable|string',
         ]);
-        try{
+        try {
 
             $validated['ModifiedBy'] = Auth::id();
             $validated['ModifiedOn'] = now();
@@ -144,19 +144,19 @@ class LegalIntellectualPropertyController extends Controller
             activity()
                 ->performedOn(new LegalIntellectualProperty())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Intellectual Property successfully updated');
-            
+
             DB::commit();
 
             return redirect()->route('legal.intellectual.index')->with('success', 'Intellectual Property record updated.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
                 ->performedOn(new LegalIntellectualProperty())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Error updating Intellectual Property');
 
             Log::error('Error updating Intellectual Property.' . $th->getMessage());
@@ -186,30 +186,30 @@ class LegalIntellectualPropertyController extends Controller
     {
         $this->authorize(PermissionEnum::IntellectualPropertyDelete, LegalIntellectualProperty::class);
 
-        try{
+        try {
             DB::beginTransaction();
 
             $record = LegalIntellectualProperty::findOrFail($id);
             $record->DeletedBy = Auth::id();
             $record->save();
             $record->delete();
-            
+
             activity()
                 ->performedOn(new LegalIntellectualProperty())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'delete'])
+                ->withProperties(['action' => 'delete'])
                 ->log('Intellectual Property successfully deleted');
-            
+
             DB::commit();
 
             return back()->with('success', 'Record de;eted successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
                 ->performedOn(new LegalIntellectualProperty())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'delete'])
+                ->withProperties(['action' => 'delete'])
                 ->log('Error deleting Intellectual Property');
 
             Log::error('Error deleting Intellectual Property.' . $th->getMessage());

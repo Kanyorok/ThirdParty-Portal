@@ -11,6 +11,7 @@ use App\Traits\Model\UserActorTrait;
 class BancassuranceCommissionPayout extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_BancassuranceCommissionPayouts';
     const CREATED_AT = 'CreatedOn';
@@ -30,15 +31,17 @@ class BancassuranceCommissionPayout extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-    
+
     public static function getPrimaryKey(): string
     {
         return 'BancassuranceCommissionPayoutId';
     }
+
     public function policies()
     {
         return $this->belongsTo(BancassurancePolicy::class, 'PolicyId', 'Id');
     }
+
     public function paymentmodes()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentMode', 'ID');

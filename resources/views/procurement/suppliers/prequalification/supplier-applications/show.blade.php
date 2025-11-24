@@ -12,12 +12,14 @@
         </div>
         <div class="d-flex align-items-center">
             {{-- Button to trigger the evaluation form --}}
-            <a href="{{ route('prequalification.prequalification-evaluation.show', $application->ApplicationID) }}" class="btn btn-primary me-2">
+            <a href="{{ route('prequalification.prequalification-evaluation.show', $application->ApplicationID) }}"
+                class="btn btn-primary me-2">
                 <i class="fa fa-clipboard-check me-1"></i> Evaluate
             </a>
 
             {{-- Button to view already generated results --}}
-            <a href="{{ route('prequalification.prequalification-evaluation.results', $application->ApplicationID) }}" class="btn btn-info me-2">
+            <a href="{{ route('prequalification.prequalification-evaluation.results', $application->ApplicationID) }}"
+                class="btn btn-info me-2">
                 <i class="fa fa-chart-bar me-1"></i> View Results
             </a>
 
@@ -39,7 +41,8 @@
                         <tr>
                             <td class="fw-semibold text-muted">Status</td>
                             <td>
-                                <span class="badge rounded-pill px-3 py-2 {{ $application->Status->getColor() }} fw-bold">
+                                <span
+                                    class="badge rounded-pill px-3 py-2 {{ $application->Status->getColor() }} fw-bold">
                                     {{ $application->Status->getLabel() }}
                                 </span>
                             </td>
@@ -84,7 +87,7 @@
                             <td class="fw-semibold text-muted">Categories Applied</td>
                             <td>
                                 @if($application->category)
-                                    <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
+                                <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
                                 @else
                                 <span class="text-muted">N/A</span>
                                 @endif

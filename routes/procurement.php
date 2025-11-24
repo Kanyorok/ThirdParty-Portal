@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
@@ -59,10 +60,10 @@ use App\Http\Controllers\Procurement\RFQSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\RFQSettingController;
-use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
 use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
+
 // use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\TenderAcceptController;
 use App\Http\Controllers\Procurement\TenderAssignRoleController;
@@ -87,6 +88,25 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
+    Route::post('department-needs/{NeedID}/submit', [DepartmentNeedsController::class, 'submit'])
+        ->name('department-needs.submit');
+
+
+    // Department Need Approvals (Maker-Checker)
+    Route::middleware('auth')->group(function () {
+        Route::resource('approvals/department-need', DepartmentNeedApprovalController::class)->only([
+            'index',
+            'show',
+            'update',
+            'destroy'
+        ])->names([
+            'index' => 'department-need-approval.index',
+            'show' => 'department-need-approval.show',
+            'update' => 'department-need-approval.update',
+            'destroy' => 'department-need-approval.destroy'
+        ]);
+    });
+
 
     //this route is static affecting orders\create.blade.php & requisitions\show
     Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
@@ -149,6 +169,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
         Route::get('origination/contract-based', [LPOOriginationController::class, 'showContractBasedOptions'])->name('origination.contract-based');
         Route::get('create/contract/{contractId}', [LPOOriginationController::class, 'createFromContract'])->name('create.contract');
 
+        // Award-Based LPO Origination  
         // Award-Based LPO Origination
         Route::get('origination/award-based', [LPOOriginationController::class, 'showAwardBasedOptions'])->name('origination.award-based');
         Route::get('create/award/{awardId}', [LPOOriginationController::class, 'createFromAward'])->name('create.award');
@@ -324,8 +345,8 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
             'show' => 'procurement.criterias.show',
             'store' => 'procurement.criterias.store',
         ]);
-    Route::resource('tenderevaluations',  TenderEvaluationsController::class);
-    Route::post("/store-tender-sections",  [TenderEvaluationsController::class,  'tenderSections'])->name('store-tender-sections');
+    Route::resource('tenderevaluations', TenderEvaluationsController::class);
+    Route::post("/store-tender-sections", [TenderEvaluationsController::class, 'tenderSections'])->name('store-tender-sections');
     Route::get('/tender-criteria/{tenderId}', [TenderEvaluationsController::class, 'getTenderCriteria'])->name('tender-criteria');
     Route::post('/tender-criteria', [TenderEvaluationsController::class, 'storeTenderCriteria'])->name('tender-criteria.store');
     Route::post('/store-criteria-scores', [TenderEvaluationsController::class, 'criteriaScores'])->name('store-criteria-scores');
@@ -405,7 +426,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::resource('planvsactual', PlanvsActualController::class);
     Route::resource('planfromneeds', PlanFromNeedsController::class);
     Route::resource('planmanualinput', PlanManualInputController::class);
-    Route::resource('submitplan', SubmitForApprovalController::class);
+    Route::resource('submitplan', ProcurementSubmitPlanController::class);
     Route::resource('ammendplan', PlanEditController::class);
     Route::resource('approvalinbox', PlanApprovalInboxController::class);
     Route::resource('executiondashboard', PlanExectionDashboardController::class);
@@ -643,17 +664,17 @@ Route::prefix('contracts/lifecycle')->name('contracts.lifecycle.')->group(functi
     Route::get('{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('execution')->where('id', '[0-9]+');
 });
 
-    // Generic Contract CRUD Routes (MOVED TO END - after specific routes)
-    Route::get('contracts/{id}', [ContractsController::class, 'show'])->name('contracts.show')->where('id', '[0-9]+');
-    Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit')->where('id', '[0-9]+');
-    Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update')->where('id', '[0-9]+');
-    Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve')->where('id', '[0-9]+');
+// Generic Contract CRUD Routes (MOVED TO END - after specific routes)
+Route::get('contracts/{id}', [ContractsController::class, 'show'])->name('contracts.show')->where('id', '[0-9]+');
+Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit')->where('id', '[0-9]+');
+Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update')->where('id', '[0-9]+');
+Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve')->where('id', '[0-9]+');
 
 // Contracts - LPO Link
-    Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link')->where('id', '[0-9]+');
+Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link')->where('id', '[0-9]+');
 
-    // Enhanced Goods Receipt Notes (GRN) System
-    require __DIR__ . '/enhanced_grn.php';
+// Enhanced Goods Receipt Notes (GRN) System
+require __DIR__ . '/enhanced_grn.php';
 
 Route::resource('deliverynotes', DeliveryController::class);
 Route::resource('goodsinspection', InspectionController::class);

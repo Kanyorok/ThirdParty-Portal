@@ -22,13 +22,13 @@ class BancassuranceCommissionPayoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'PolicyId' => 'required|exists:t_BancassurancePolicies,Id',
-        'PayoutReference' => 'nullable|string|max:255',
-        'PaidAmount' => 'required|numeric',
-        'PaymentDate' => 'required|date',
-        'PaymentMode' => 'required|exists:t_CodeDetails,ID',
-        'Remarks' => 'nullable|string|max:255',
-        'PaidBy' => 'required|exists:t_Users,Id',
+            'PolicyId' => 'required|exists:t_BancassurancePolicies,Id',
+            'PayoutReference' => 'nullable|string|max:255',
+            'PaidAmount' => 'required|numeric',
+            'PaymentDate' => 'required|date',
+            'PaymentMode' => 'required|exists:t_CodeDetails,ID',
+            'Remarks' => 'nullable|string|max:255',
+            'PaidBy' => 'required|exists:t_Users,Id',
         ];
     }
 }

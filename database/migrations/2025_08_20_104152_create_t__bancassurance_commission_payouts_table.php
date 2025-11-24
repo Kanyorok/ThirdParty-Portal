@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->string('PayoutReference');
             $table->float('PaidAmount');
             $table->date('PaymentDate');
-            $table->foreignId('PaymentMode')->constrained('t_CodeDetails','ID');
+            $table->foreignId('PaymentMode')->constrained('t_CodeDetails', 'ID');
             $table->string('Remarks')->nullable();
             $table->foreignId('PaidBy')->constrained('t_Users', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

@@ -10,6 +10,7 @@ use App\Traits\Model\UserActorTrait;
 class BancassuranceCommissionEarned extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_BancassuranceCommissionRules';
     const CREATED_AT = 'CreatedOn';
@@ -20,7 +21,7 @@ class BancassuranceCommissionEarned extends Model
     protected $fillable = [
         'PolicyId',
         'ReferralId',
-        'CommissionRuleId',    
+        'CommissionRuleId',
         'EarnedByType',
         'EarnedById',
         'EarnedAmount',
@@ -30,7 +31,7 @@ class BancassuranceCommissionEarned extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-    
+
     public static function getPrimaryKey(): string
     {
         return 'BancassuranceCommissionEarnedId';

@@ -56,11 +56,12 @@ class TransactionTransferPolicy
     {
         return $user->can(PermissionEnum::TransactionTransferRestore->value);
     }
-public function approve(User $user): bool
-{
 
-    return $user->can(PermissionEnum::TransactionTransferApproval->value);
-}
+    public function approve(User $user): bool
+    {
+
+        return $user->can(PermissionEnum::TransactionTransferApproval->value);
+    }
 
 
 }

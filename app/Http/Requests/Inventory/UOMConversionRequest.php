@@ -24,7 +24,7 @@ class UOMConversionRequest extends FormRequest
         return [
 
             'Item' => 'required|exists:t_Items,Id',
-            'UOM' => 'required|exists:t_UOM,Id',    
+            'UOM' => 'required|exists:t_UOM,Id',
             'AlternateUOM' => 'required|exists:t_UOM,Id',
             'ConversionFactor' => 'required|numeric|min:0',
             'Remarks' => 'nullable|string|max:500',

@@ -25,12 +25,14 @@
         <div class="d-flex align-items-center">
             {{-- Conditionally show the Evaluate button --}}
             @if($application->round)
-            <a href="{{ route('prequalification.prequalification-evaluation.show', $application->ApplicationID) }}" class="btn btn-primary me-2">
+            <a href="{{ route('prequalification.prequalification-evaluation.show', $application->ApplicationID) }}"
+                class="btn btn-primary me-2">
                 <i class="fa fa-clipboard-check me-1"></i> Evaluate
             </a>
             @endif
 
-            <a href="{{ route('prequalification.prequalification-applications.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('prequalification.prequalification-applications.index') }}"
+                class="btn btn-outline-secondary">
                 <i class="fa fa-arrow-left me-1"></i> Back to Applications
             </a>
         </div>
@@ -48,7 +50,8 @@
                         <tr>
                             <td class="fw-semibold text-muted">Status</td>
                             <td>
-                                <span class="badge rounded-pill px-3 py-2 {{ $application->Status->getColor() }} fw-bold">
+                                <span
+                                    class="badge rounded-pill px-3 py-2 {{ $application->Status->getColor() }} fw-bold">
                                     {{ $application->Status->getLabel() }}
                                 </span>
                             </td>
@@ -93,7 +96,7 @@
                             <td class="fw-semibold text-muted">Categories Applied</td>
                             <td>
                                 @if($application->category)
-                                    <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
+                                <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
                                 @else
                                 <span class="text-muted">N/A</span>
                                 @endif
@@ -106,9 +109,9 @@
     </div>
 
     @php
-        // Best-effort eager load documents if relation exists
-        $application->loadMissing(['documents.dmsDocument.current']);
-        $docs = optional($application->documents)->sortByDesc('CreatedOn');
+    // Best-effort eager load documents if relation exists
+    $application->loadMissing(['documents.dmsDocument.current']);
+    $docs = optional($application->documents)->sortByDesc('CreatedOn');
     @endphp
 
     <div class="card border-0 shadow-sm mb-5">
@@ -117,41 +120,41 @@
         </div>
         <div class="card-body">
             @if($docs && $docs->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-sm table-striped align-middle">
-                        <thead>
-                            <tr>
-                                <th>File</th>
-                                <th>Section</th>
-                                <th>Type</th>
-                                <th>Uploaded</th>
-                                <th style="width:120px">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($docs as $doc)
-                                @php($d = $doc->dmsDocument)
-                                <tr>
-                                    <td>{{ $d?->Name ?? $d?->current?->Name ?? 'Document' }}</td>
-                                    <td>{{ $doc->SectionID ?? '-' }}</td>
-                                    <td>{{ $doc->FileType ?? '-' }}</td>
-                                    <td>{{ optional($doc->CreatedOn)->format('M d, Y H:i') }}</td>
-                                    <td>
-                                        @if($d)
-                                            <a target="_blank" href="{{ url('/dms/document/'.$d->DocumentId.'/preview') }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fa fa-eye me-1"></i> Preview
-                                            </a>
-                                        @else
-                                            <span class="text-muted">N/A</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Section</th>
+                            <th>Type</th>
+                            <th>Uploaded</th>
+                            <th style="width:120px">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($docs as $doc)
+                        @php($d = $doc->dmsDocument)
+                        <tr>
+                            <td>{{ $d?->Name ?? $d?->current?->Name ?? 'Document' }}</td>
+                            <td>{{ $doc->SectionID ?? '-' }}</td>
+                            <td>{{ $doc->FileType ?? '-' }}</td>
+                            <td>{{ optional($doc->CreatedOn)->format('M d, Y H:i') }}</td>
+                            <td>
+                                @if($d)
+                                <a target="_blank" href="{{ url('/dms/document/'.$d->DocumentId.'/preview') }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa fa-eye me-1"></i> Preview
+                                </a>
+                                @else
+                                <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
             @else
-                <div class="text-muted">No supporting documents uploaded.</div>
+            <div class="text-muted">No supporting documents uploaded.</div>
             @endif
         </div>
     </div>

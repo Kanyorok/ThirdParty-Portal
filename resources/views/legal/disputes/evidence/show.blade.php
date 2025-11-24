@@ -12,7 +12,8 @@
                     </h5>
                 </div>
                 <div class="col text-end">
-                    <a href="{{ route('legal.cases.evidence.index', $evidence->case->Id) }}" class="btn btn-outline-secondary">
+                    <a href="{{ route('legal.cases.evidence.index', $evidence->case->Id) }}"
+                        class="btn btn-outline-secondary">
                         <i class="fas fa-long-arrow-alt-left"></i> Back to Evidence List
                     </a>
                 </div>
@@ -20,7 +21,7 @@
         </div>
         <div class="card-body">
             <p class="text-muted">
-                Below are the details for this evidence linked to 
+                Below are the details for this evidence linked to
                 <strong class="text-dark">{{ $evidence->case->CaseTitle }}</strong>.
             </p>
 
@@ -49,16 +50,16 @@
                             </div>
                             <div class="card-body" id="legalDocAttachments">
                                 @php
-                                    $documents = $evidence->documents() 
-                                        ->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                                $documents = $evidence->documents()
+                                ->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
                                 @endphp
                                 @forelse($documents as $document)
-                                    @php
-                                        $document->setRelations([]);
-                                    @endphp
-                                    {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                                @php
+                                $document->setRelations([]);
+                                @endphp
+                                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
                                 @empty
-                                    <span class="text-muted">No attachments.</span>
+                                <span class="text-muted">No attachments.</span>
                                 @endforelse
                             </div>
                         </div>
@@ -68,19 +69,19 @@
                     <div class="p-2 bg-light rounded-3">
                         <strong class="text-info">External File Link:</strong>
                         @if($evidence->ExternalLink)
-                            <p>
-                                <a href="{{ $evidence->ExternalLink }}" target="_blank" class="text-primary">
-                                    View Document <i class="fas fa-external-link-alt"></i>
-                                </a>
-                            </p>
+                        <p>
+                            <a href="{{ $evidence->ExternalLink }}" target="_blank" class="text-primary">
+                                View Document <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </p>
                         @else
-                            <p>N/A</p>
+                        <p>N/A</p>
                         @endif
                     </div>
                 </div>
             </div>
 
-            
+
             <div class="mb-3">
                 <div class="p-2 bg-light rounded-3">
                     <strong class="text-info">Description:</strong>
@@ -93,5 +94,5 @@
 @endsection
 
 @section('scripts')
-    @includeIf('snippets.actions.preview-files')
+@includeIf('snippets.actions.preview-files')
 @endsection

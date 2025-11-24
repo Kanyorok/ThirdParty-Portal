@@ -3,8 +3,12 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\ThirdParies\Supplier; // Use the Supplier model
-use App\Models\ThirdParty\ThirdPartyUser; // Import the ThirdPartyUser model
+use App\Models\ThirdParies\Supplier;
+
+// Use the Supplier model
+use App\Models\ThirdParty\ThirdPartyUser;
+
+// Import the ThirdPartyUser model
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\BusinessTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;

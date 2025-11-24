@@ -19,9 +19,9 @@
                     <select name="status" class="form-select rounded-pill shadow-sm">
                         <option value="">-- All --</option>
                         @foreach ($statuses as $status)
-                            <option value="{{ $status->value }}" {{ request('status') == $status->value ? 'selected' : '' }}>
-                                {{ $status->label() }}
-                            </option>
+                        <option value="{{ $status->value }}" {{ request('status') == $status->value ? 'selected' : '' }}>
+                            {{ $status->label() }}
+                        </option>
                         @endforeach
                     </select>
                 </div>
@@ -38,8 +38,8 @@
 
                 <div class="col-md-3">
                     <label class="form-label fw-medium text-muted">Customer</label>
-                    <input type="text" name="customer" value="{{ request('customer') }}" 
-                           class="form-control rounded-pill shadow-sm" placeholder="e.g. John Doe">
+                    <input type="text" name="customer" value="{{ request('customer') }}"
+                        class="form-control rounded-pill shadow-sm" placeholder="e.g. John Doe">
                 </div>
 
                 <div class="col-12 text-end mt-3">
@@ -72,31 +72,31 @@
                 </thead>
                 <tbody>
                     @forelse($policies as $policy)
-                        <tr>
-                            <td class="text-center text-muted">{{ $loop->iteration }}</td>
-                            <td>{{ $policy->customer->thirdParty->ThirdPartyName ?? '-' }}</td>
-                            <td>{{ $policy->product->Name ?? '-' }}</td>
-                            <td>{{ $policy->insurer->Name ?? '—' }}</td>
-                            <td class="text-end">{{ number_format($policy->SumAssured, 2) }}</td>
-                            <td class="text-end">{{ number_format($policy->PremiumAmount, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
-                            <td>
-                                <span class="badge 
+                    <tr>
+                        <td class="text-center text-muted">{{ $loop->iteration }}</td>
+                        <td>{{ $policy->customer->thirdParty->ThirdPartyName ?? '-' }}</td>
+                        <td>{{ $policy->product->Name ?? '-' }}</td>
+                        <td>{{ $policy->insurer->Name ?? '—' }}</td>
+                        <td class="text-end">{{ number_format($policy->SumAssured, 2) }}</td>
+                        <td class="text-end">{{ number_format($policy->PremiumAmount, 2) }}</td>
+                        <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
+                        <td>
+                            <span class="badge 
                                     @if($policy->Status->value === 'approved') bg-success 
                                     @elseif($policy->Status->value === 'pending') bg-warning text-dark
                                     @elseif($policy->Status->value === 'rejected') bg-danger
                                     @else bg-secondary
                                     @endif
                                     rounded-pill px-3 py-2">
-                                    {{ $policy->Status->Label() }}
-                                </span>
-                            </td>
-                        </tr>
+                                {{ $policy->Status->Label() }}
+                            </span>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-4">No policy proposals found.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">No policy proposals found.</td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>

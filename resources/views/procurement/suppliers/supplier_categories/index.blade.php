@@ -19,7 +19,8 @@
     <div class=" mb-4">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%"
+                    cellspacing="0">
                     <thead class="bg-primary text-white">
                         <tr>
                             <th>Classification ID</th>
@@ -43,10 +44,13 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('proc.supplier-cat.edit', $category) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                <a href="{{ route('proc.supplier-cat.edit', $category) }}"
+                                    class="btn btn-sm btn-outline-warning" title="Edit">
                                     <i class="fa fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-category-id="{{ $category->SupplierCategoryID }}" title="Delete">
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal"
+                                    data-category-id="{{ $category->SupplierCategoryID }}" title="Delete">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </td>

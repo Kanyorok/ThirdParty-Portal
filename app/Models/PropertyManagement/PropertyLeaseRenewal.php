@@ -48,7 +48,8 @@ class PropertyLeaseRenewal extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
-        public function createdByUser()
+
+    public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }

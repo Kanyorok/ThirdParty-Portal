@@ -182,7 +182,7 @@ class PostingController extends Controller
                 try {
                     $trx = FinanceTransaction::create($transaction);
 
-                    $this->updateBalanceForLine($trx->Id,$transaction);
+                    $this->updateBalanceForLine($trx->Id, $transaction);
 
                     activity('Transaction Posting')
                         ->performedOn($trx)
@@ -211,17 +211,17 @@ class PostingController extends Controller
     protected function updateBalanceForLine(int $trxId, array $trx): void
     {
         $glAccountId = (int)$trx['GLAccountID'];
-        $branchId    = $trx['BranchID'] ?? null;
-        $amount      = (float)$trx['Amount'];
-        $drcr        = strtoupper($trx['DRCR'] ?? 'DR');     // DR or CR
-        $rate        = (float)($trx['ExchangeRate'] ?? 1);
-        $currencyId  = $trx['CurrencyID'] ?? null;
+        $branchId = $trx['BranchID'] ?? null;
+        $amount = (float)$trx['Amount'];
+        $drcr = strtoupper($trx['DRCR'] ?? 'DR');     // DR or CR
+        $rate = (float)($trx['ExchangeRate'] ?? 1);
+        $currencyId = $trx['CurrencyID'] ?? null;
 
         // Sign: DR = -, CR = +
-        $signed       = $drcr === 'DR' ? -$amount : $amount;
+        $signed = $drcr === 'DR' ? -$amount : $amount;
 
         // Base/ledger currency deltas (t_FinanceGLBranch stores all three)
-        $localDelta   = $signed * $rate;   // base/ledger currency delta
+        $localDelta = $signed * $rate;   // base/ledger currency delta
         $foreignDelta = $currencyId ? $signed : 0;
 
         // Format to avoid float noise in SQL
@@ -236,7 +236,7 @@ class PostingController extends Controller
             ->where('Id', $glAccountId)
             ->first();
 
-        $glCode        = $trx['GLCode']        ?? ($glMeta->GLCode ?? '');
+        $glCode = $trx['GLCode'] ?? ($glMeta->GLCode ?? '');
         $glAccountType = $trx['GLAccountTypeID'] ?? ($glMeta->GLAccountType ?? ($glMeta->GLAccountTypeID ?? null));
 
         // Does the (GLAccountID, BranchID) row exist?
@@ -256,34 +256,34 @@ class PostingController extends Controller
                 ->update([
                     'LastTransactionId' => $trxId,
                     // increment with DB::raw – use base/ledger delta for Balance/LocalBalance
-                    'Balance'           => DB::raw('Balance + '      . $fmt($localDelta)),
-                    'LocalBalance'      => DB::raw('LocalBalance + ' . $fmt($localDelta)),
-                    'ForeignBalance'    => DB::raw('ForeignBalance + ' . $fmt($foreignDelta)),
-                    'ModifiedOn'        => $now,
-                    'ModifiedBy'        => $uid,
+                    'Balance' => DB::raw('Balance + ' . $fmt($localDelta)),
+                    'LocalBalance' => DB::raw('LocalBalance + ' . $fmt($localDelta)),
+                    'ForeignBalance' => DB::raw('ForeignBalance + ' . $fmt($foreignDelta)),
+                    'ModifiedOn' => $now,
+                    'ModifiedBy' => $uid,
                 ]);
 
         } else {
             // INSERT path → set starting balances (no arithmetic here)
             DB::table('t_FinanceGLBranch')->insert([
-                'GLAccountID'       => $glAccountId,
-                'BranchID'          => $branchId,
-                'GLCode'            => $glCode,
-                'GLAccountType'     => (string)$glAccountType,
+                'GLAccountID' => $glAccountId,
+                'BranchID' => $branchId,
+                'GLCode' => $glCode,
+                'GLAccountType' => (string)$glAccountType,
                 'LastTransactionId' => $trxId,
-                'IsActive'          => 1,
-                'BankID'            => $trx['BankID'] ?? null,
+                'IsActive' => 1,
+                'BankID' => $trx['BankID'] ?? null,
 
                 // starting balances (base/ledger = localDelta)
-                'Balance'           => $fmt($localDelta),
-                'LocalBalance'      => $fmt($localDelta),
-                'ForeignBalance'    => $fmt($foreignDelta),
+                'Balance' => $fmt($localDelta),
+                'LocalBalance' => $fmt($localDelta),
+                'ForeignBalance' => $fmt($foreignDelta),
 
                 // audit — set BOTH created & modified to satisfy NOT NULL constraints
-                'CreatedOn'         => $now,
-                'CreatedBy'         => $trx['CreatedBy'] ?? $uid,
-                'ModifiedOn'        => $now,
-                'ModifiedBy'        => $uid,
+                'CreatedOn' => $now,
+                'CreatedBy' => $trx['CreatedBy'] ?? $uid,
+                'ModifiedOn' => $now,
+                'ModifiedBy' => $uid,
             ]);
         }
     }

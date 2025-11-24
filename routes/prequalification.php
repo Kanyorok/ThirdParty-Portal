@@ -6,7 +6,9 @@ use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicatio
 use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationResultsController; // Add this line
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationResultsController;
+
+// Add this line
 
 Route::prefix('prequalification')
     ->name('prequalification.')

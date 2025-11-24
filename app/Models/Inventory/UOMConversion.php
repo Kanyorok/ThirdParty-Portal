@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\Inventory;
+
 use App\Traits\Model\UserActorTrait;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UOMConversion extends Model
 {
-     use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -61,7 +62,7 @@ class UOMConversion extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'AlternateUOM', 'Id');
     }
-   
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
@@ -77,6 +78,6 @@ class UOMConversion extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
-    
+
 }
 

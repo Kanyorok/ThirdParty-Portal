@@ -17,9 +17,9 @@ class BancassuranceUnderwriting extends Model
     protected $table = 't_BancassuranceUnderwriting';
     protected $primaryKey = 'Id';
 
-    protected $fillable  = [
-        'PolicyId','FeedbackDate','RiskScore','Decision','Comments',
-        'CreatedBy','ModifiedBy', 'DeletedBy'
+    protected $fillable = [
+        'PolicyId', 'FeedbackDate', 'RiskScore', 'Decision', 'Comments',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     public static function getPrimarykey(): string

@@ -103,6 +103,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::resource('creditnote', CreditNoteController::class);
     Route::resource('debitnote', DebitNoteController::class);
     Route::resource('paymentprocessing', PaymentProcessingController::class);
+    Route::get('agingreport/suppliers/search', [AgingReportController::class, 'supplierLookup'])->name('agingreport.suppliers.lookup');
     Route::resource('agingreport', AgingReportController::class);
     // Receipts posting routes moved to separate group below to avoid conflicts
     Route::resource('creditmanagement', CreditManagementController::class);
@@ -166,8 +167,14 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     });
 
 
+    Route::get('agingreportar/customers/search', [AgingReportARController::class, 'customerLookup'])->name('agingreportar.customers.lookup');
     Route::resource('agingreportar', AgingReportARController::class);
-    Route::resource('customerstatement', CustomerStatementController::class);
+    
+    // Customer Statement Select2 API and custom routes
+    Route::get('api/thirdparties/select2', [CustomerStatementController::class, 'select2ThirdParties'])->name('thirdparties.select2');
+    Route::get('customerstatement/{thirdPartyId}', [CustomerStatementController::class, 'statement'])->name('customerstatement.statement');
+    Route::resource('customerstatement', CustomerStatementController::class)->only(['index']);
+    
     Route::resource('paymentvoucher', PaymentVoucherController::class);
     Route::resource('cashmanagement', CashManagementController::class);
     Route::resource('chequemanagement', ChequeManagementController::class);
@@ -272,7 +279,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     //Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
 
     //////// Posting Routes ///////////
-    Route::post('/journalApproval/{id}',[\App\Http\Controllers\Finance\PostingController::class,'journalApproval'])->name('journalApproval');
+    Route::post('/journalApproval/{id}', [\App\Http\Controllers\Finance\PostingController::class, 'journalApproval'])->name('journalApproval');
     Route::post('/finance/ap/invoices/{id}/approve', [InvoiceEntryController::class, 'approve'])->name('ap.invoice.approve');
     Route::post('/finance/ap/invoices/{id}/reject', [InvoiceEntryController::class, 'reject'])->name('ap.invoice.reject');
 
@@ -286,10 +293,10 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
 
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
-        Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-            'index' => 'finance-reports.index',
-            'show' => 'finance-reports.show'
-        ]);
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'finance-reports.index',
+        'show' => 'finance-reports.show'
+    ]);
 });
 
 // Receipts Posting routes

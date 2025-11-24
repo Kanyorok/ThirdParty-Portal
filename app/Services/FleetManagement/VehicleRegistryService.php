@@ -3,7 +3,7 @@
 namespace App\Services\FleetManagement;
 
 
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\VehicleRegistry;
@@ -17,60 +17,60 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class VehicleRegistryService
 {
 
- public function create(array $data): VehicleRegistry
-{
-    return DB::transaction(function () use ($data) {
-        
-        // Check for duplicate Registration Number
-        if (VehicleRegistry::where('RegistrationNo', $data['RegistrationNo'])->exists()) {
-            throw new \Exception('The Registration Number already exists.');
-        }
+    public function create(array $data): VehicleRegistry
+    {
+        return DB::transaction(function () use ($data) {
 
-        // Check for duplicate ChassisNo Number
-        if (VehicleRegistry::where('ChassisNo', $data['ChassisNo'])->exists()) {
-            throw new \Exception('The Chassis No already exists.');
-        }
+            // Check for duplicate Registration Number
+            if (VehicleRegistry::where('RegistrationNo', $data['RegistrationNo'])->exists()) {
+                throw new \Exception('The Registration Number already exists.');
+            }
 
-        $data['RegistrationNo'] = $data['RegistrationNo'] ?? null;
-        $data['Model'] = $data['Model'] ?? null;
-        $data['Make'] = $data['Make'] ?? null;
-        $data['Type'] = $data['Type'] ?? null;
-        $data['Color'] = $data['Color'] ?? null;
-        $data['Year'] = $data['Year'] ?? null;
-        $data['ChassisNo'] = $data['ChassisNo'] ?? null;
-        $data['EngineNo'] = $data['EngineNo'] ?? null;
-        $data['CreatedBy'] = Auth::id();
-        $data['CreatedOn'] = now();
+            // Check for duplicate ChassisNo Number
+            if (VehicleRegistry::where('ChassisNo', $data['ChassisNo'])->exists()) {
+                throw new \Exception('The Chassis No already exists.');
+            }
 
-        $vehicle = VehicleRegistry::create($data);
+            $data['RegistrationNo'] = $data['RegistrationNo'] ?? null;
+            $data['Model'] = $data['Model'] ?? null;
+            $data['Make'] = $data['Make'] ?? null;
+            $data['Type'] = $data['Type'] ?? null;
+            $data['Color'] = $data['Color'] ?? null;
+            $data['Year'] = $data['Year'] ?? null;
+            $data['ChassisNo'] = $data['ChassisNo'] ?? null;
+            $data['EngineNo'] = $data['EngineNo'] ?? null;
+            $data['CreatedBy'] = Auth::id();
+            $data['CreatedOn'] = now();
 
-        activity()
-            ->performedOn($vehicle)
-            ->causedBy(Auth::user())
-            ->log('Vehicle Registry Created');
+            $vehicle = VehicleRegistry::create($data);
 
-        return $vehicle;
-    });
-}
+            activity()
+                ->performedOn($vehicle)
+                ->causedBy(Auth::user())
+                ->log('Vehicle Registry Created');
+
+            return $vehicle;
+        });
+    }
 
 
-  public function update(VehicleRegistry $vehicle, array $data): VehicleRegistry
-{
-    return DB::transaction(function () use ($vehicle, $data) {
-        $vehicle->update($data);
-        $vehicle->ModifiedBy = Auth::id();
-        $vehicle->ModifiedOn = now();
-        $vehicle->save();
+    public function update(VehicleRegistry $vehicle, array $data): VehicleRegistry
+    {
+        return DB::transaction(function () use ($vehicle, $data) {
+            $vehicle->update($data);
+            $vehicle->ModifiedBy = Auth::id();
+            $vehicle->ModifiedOn = now();
+            $vehicle->save();
 
-        activity()
-            ->performedOn($vehicle)
-            ->causedBy(Auth::user())
-            ->withProperties(['attributes' => $data])
-            ->log('Fleet Make Updated');
+            activity()
+                ->performedOn($vehicle)
+                ->causedBy(Auth::user())
+                ->withProperties(['attributes' => $data])
+                ->log('Fleet Make Updated');
 
-        return $vehicle;
-    });
-}
+            return $vehicle;
+        });
+    }
 
     public function delete(VehicleRegistry $vehicle): bool
     {

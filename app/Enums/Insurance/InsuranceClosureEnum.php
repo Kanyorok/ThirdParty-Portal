@@ -4,13 +4,13 @@ namespace App\Enums\Insurance;
 
 use App\Traits\UsefulEnumTrait;
 
-enum InsuranceClosureEnum:string
+enum InsuranceClosureEnum: string
 {
     use UsefulEnumTrait;
 
     case Successful = 'S';
 
-    case Rejected  = 'R';
+    case Rejected = 'R';
 
     case Escalated = 'E';
 

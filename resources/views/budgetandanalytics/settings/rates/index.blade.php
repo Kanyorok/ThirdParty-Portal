@@ -4,9 +4,9 @@
 @section('content')
 
     <div class="card p-3">
-{{--        <div class="card-header bg-dark text-white py-4" style="font-size: 20px; font-weight: bold;">--}}
-{{--            💰 Budget Rate Types--}}
-{{--        </div>--}}
+        {{--        <div class="card-header bg-dark text-white py-4" style="font-size: 20px; font-weight: bold;">--}}
+        {{--            💰 Budget Rate Types--}}
+        {{--        </div>--}}
 
         <div class="d-flex justify-content-between align-items-center mb-2">
             <p class="text-muted mb-1 fs-5">Manage budget rate types used in financial calculations.</p>

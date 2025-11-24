@@ -18,7 +18,8 @@
             <div class="doc-header d-flex justify-content-between align-items-start">
                 <div>
                     <h2 class="mb-1">{{ strtoupper($note->NoteType) }} NOTE</h2>
-                    <p class="mb-0">Document No: {{ strtolower($note->NoteType) === 'credit' ? 'CN-' : 'DN-' }}{{ $note->CDNumber }}</p>
+                    <p class="mb-0">Document
+                        No: {{ strtolower($note->NoteType) === 'credit' ? 'CN-' : 'DN-' }}{{ $note->CDNumber }}</p>
                     <p class="mb-0">Date: {{ \Carbon\Carbon::parse($note->NoteDate)->format('d-m-Y') }}</p>
                     <p class="mb-0">
                         Status:
@@ -35,7 +36,8 @@
                 <div class="text-end">
                     {{-- Optional logo (remove if not needed) --}}
                     {{-- <img src="{{ asset('images/company-logo.png') }}" alt="Company Logo" height="60"> --}}
-                    <h4 class="fw-bold mt-2"><i>{{$note->invoice->currency->Code}} </i> {{ number_format($note->NoteAmount, 2) }}</h4>
+                    <h4 class="fw-bold mt-2">
+                        <i>{{$note->invoice->currency->Code}} </i> {{ number_format($note->NoteAmount, 2) }}</h4>
                 </div>
             </div>
 
@@ -65,7 +67,8 @@
                         @if($note->invoice)
                             <strong>{{ $note->invoice->InvoiceNumber }}</strong><br>
                             Date: {{ \Carbon\Carbon::parse($note->invoice->InvoiceDate)->format('d-m-Y') }}<br>
-                            Amount: {{ number_format($note->invoice->InvoiceAmount, 2) }} {{ $note->invoice->currency->Code ?? '' }}<br>
+                            Amount: {{ number_format($note->invoice->InvoiceAmount, 2) }} {{ $note->invoice->currency->Code ?? '' }}
+                            <br>
                             PO Ref: {{ $note->invoice->order->OrderNo ?? $note->invoice->POReference ?? 'N/A' }}
                         @else
                             N/A
@@ -84,7 +87,7 @@
             {{-- Prepared / Authorized --}}
             <div class="row mt-5">
                 <div class="col-md-6 text-center">
-{{--                    <p>__________________________</p>--}}
+                    {{--                    <p>__________________________</p>--}}
                     <p class="mb-0">Prepared By</p>
                     <small class="text-muted">
                         {{ $note->createdBy->Name ?? 'N/A' }}
@@ -94,7 +97,7 @@
                     </small>
                 </div>
                 <div class="col-md-6 text-center">
-{{--                    <p>__________________________</p>--}}
+                    {{--                    <p>__________________________</p>--}}
                     <p class="mb-0">
                         @if(strtolower($note->ApprovalStatus) === 'posted')
                             Authorized By
@@ -119,20 +122,20 @@
 
         </div>
 
-            {{-- Actions (hidden on print) --}}
-            <div class="d-flex justify-content-end gap-2 no-print mt-3">
-                <button class="btn btn-outline-dark btn-sm" onclick="window.print()">
-                    <i class="fas fa-print me-1"></i> Print
+        {{-- Actions (hidden on print) --}}
+        <div class="d-flex justify-content-end gap-2 no-print mt-3">
+            <button class="btn btn-outline-dark btn-sm" onclick="window.print()">
+                <i class="fas fa-print me-1"></i> Print
+            </button>
+            @if($note->ApprovalStatus==='draft')
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal">
+                    <i class="fas fa-check me-1"></i> Approve
                 </button>
-                @if($note->ApprovalStatus==='draft')
-                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal">
-                        <i class="fas fa-check me-1"></i> Approve
-                    </button>
-                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                        <i class="fas fa-times me-1"></i> Reject
-                    </button>
-                @endif
-            </div>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                    <i class="fas fa-times me-1"></i> Reject
+                </button>
+            @endif
+        </div>
 
 
     </div>
@@ -154,7 +157,10 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button class="btn btn-success" id="postBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">Approve</button>
+                        <button class="btn btn-success" id="postBtn" type="submit"
+                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                            Approve
+                        </button>
                     </div>
                 </div>
             </form>
@@ -178,7 +184,10 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button class="btn btn-danger" id="postBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">Reject</button>
+                        <button class="btn btn-danger" id="postBtn" type="submit"
+                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                            Reject
+                        </button>
                     </div>
                 </div>
             </form>
@@ -186,33 +195,47 @@
     </div>
 
     {{-- Print Styles --}}
-        <style>
-            .official-document {
-                background: #fff;
-                padding: 22px;
-                border: 1px solid #000;
-            }
-            .doc-header h2 { font-size: 1.5rem; font-weight: 700; }
+    <style>
+        .official-document {
+            background: #fff;
+            padding: 22px;
+            border: 1px solid #000;
+        }
 
-            @media print {
-                html, body {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
-                }
-                body * { visibility: hidden; }
-                #note-print-section, #note-print-section * { visibility: visible; }
-                #note-print-section {
-                    position: absolute;
-                    inset: 0;
-                    width: 100%;
-                    border: 1px solid #000;
-                    box-shadow: none !important;
-                    padding: 28px;
-                }
-                .no-print { display: none !important; }
+        .doc-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        @media print {
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
-        </style>
+
+            body * {
+                visibility: hidden;
+            }
+
+            #note-print-section, #note-print-section * {
+                visibility: visible;
+            }
+
+            #note-print-section {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                border: 1px solid #000;
+                box-shadow: none !important;
+                padding: 28px;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
 
 @endsection

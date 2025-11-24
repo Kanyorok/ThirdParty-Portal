@@ -32,23 +32,23 @@
                     </div>
                     <div class="col-md-4 text-md-end">
                         @php
-//                            $reviewClass = match($doc->ReviewStatus) {
-//                                'Approved' => 'success',
-//                                'In Review' => 'warning',
-//                                'Rejected'  => 'danger',
-//                                default     => 'secondary'
-//                            };
-                            $execClass = match($doc->ExecutionStatus) {
-                                'Signed'   => 'success',
-                                'Archived' => 'dark',
-                                'Pending'  => 'warning',
-                                default    => 'secondary'
-                            };
+                            //                            $reviewClass = match($doc->ReviewStatus) {
+                            //                                'Approved' => 'success',
+                            //                                'In Review' => 'warning',
+                            //                                'Rejected'  => 'danger',
+                            //                                default     => 'secondary'
+                            //                            };
+                                                        $execClass = match($doc->ExecutionStatus) {
+                                                            'Signed'   => 'success',
+                                                            'Archived' => 'dark',
+                                                            'Pending'  => 'warning',
+                                                            default    => 'secondary'
+                                                        };
                         @endphp
-{{--                        <div class="mb-1">--}}
-{{--                            <span class="small text-muted me-1">Review:</span>--}}
-{{--                            <span class="badge bg-{{ $reviewClass }}">{{ $doc->ReviewStatus ?: '—' }}</span>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="mb-1">--}}
+                        {{--                            <span class="small text-muted me-1">Review:</span>--}}
+                        {{--                            <span class="badge bg-{{ $reviewClass }}">{{ $doc->ReviewStatus ?: '—' }}</span>--}}
+                        {{--                        </div>--}}
                         <div>
                             <span class="small text-muted me-1">Execution:</span>
                             <span class="badge bg-{{ $execClass }}">{{ $doc->ExecutionStatus ?: '—' }}</span>
