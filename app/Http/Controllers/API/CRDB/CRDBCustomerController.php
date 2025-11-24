@@ -62,5 +62,31 @@ class CRDBCustomerController extends Controller
     }
 
 
+    //Fetch Client Summary Statement
+    public function getClientSummaryStatement(Request $request)
+    {
+        $request->validate([
+            'ThirdPartyID' => 'required',
+            'Type' => 'required|string',
+        ]);
+        try {
+            $data = DB::select("EXEC p_GetClientStatement @ThirdPartyID = ?, @Type = ?", [$request->ThirdPartyID, $request->Type]);
+            return response()->json([
+                'status' => 'ok',
+                'code' => 200,
+                'message' => 'Client Summary Statement Fetched Successfully',
+                'data' => $data
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 500,
+                'message' => 'Failed to fetch client summary statement: ' . $e->getMessage(),
+                'data' => []
+            ], 500);
+        }
+    }
+
+
     
 }
