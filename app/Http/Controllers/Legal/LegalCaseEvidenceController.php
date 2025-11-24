@@ -41,17 +41,17 @@ class LegalCaseEvidenceController extends Controller
         $validated = $request->validate([
             'EvidenceTitle' => 'required|string',
             'Description' => 'required|string',
-            'DMSDocumentID' =>  'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
+            'DMSDocumentID' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
             'ExternalLink' => 'nullable|url'
-        ],[
+        ], [
             'DMSDocumentID.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
-            'DMSDocumentID.max'   => 'File size must not exceed 5 MB.',
+            'DMSDocumentID.max' => 'File size must not exceed 5 MB.',
         ]);
 
         try {
-            $fileName = $request->hasFile('DMSDocumentID') 
-            ? $request->file('DMSDocumentID')->getClientOriginalName()
-            : null;
+            $fileName = $request->hasFile('DMSDocumentID')
+                ? $request->file('DMSDocumentID')->getClientOriginalName()
+                : null;
 
             $duplicate = LegalCaseEvidence::where('LegalCaseID', $caseId)
                 ->where('EvidenceTitle', $validated['EvidenceTitle'])
@@ -62,7 +62,7 @@ class LegalCaseEvidenceController extends Controller
             if ($duplicate) {
                 return back()->with('error', 'Duplicate Evidence entry detected. Please modify your input.');
             }
-                
+
             DB::beginTransaction();
             $evidence = LegalCaseEvidence::create([
                 'LegalCaseID' => $caseId,
@@ -70,7 +70,7 @@ class LegalCaseEvidenceController extends Controller
                 'Description' => $validated['Description'],
                 'DMSDocumentID' => $request->hasFile('DMSDocumentID')
                     ? $request->file('DMSDocumentID')->getClientOriginalName() : null,
-                'ExternalLink' => $validated['ExternalLink']?? null,
+                'ExternalLink' => $validated['ExternalLink'] ?? null,
                 'IsActive' => $validated['IsActive'] ?? 'Active', // Default to inactive
                 'UploadedBy' => Auth::id(),
                 'UploadedOn' => now(),
@@ -100,14 +100,14 @@ class LegalCaseEvidenceController extends Controller
             return redirect()->route('legal.cases.evidence.index', $caseId)
                 ->with('success', 'Evidence linked successfully.');
 
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create Evidence: ' . $th->getMessage());
             return back()->with('error', 'An Error Occurred. Please try again');
         }
     }
 
-    public function show($case_id,$evidence_id)
+    public function show($case_id, $evidence_id)
     {
         $this->authorize(PermissionEnum::DisputeLitigationView, LegalCaseEvidence::class);
 
@@ -117,9 +117,9 @@ class LegalCaseEvidenceController extends Controller
     }
 
     public function edit($case, $id)
-    {  
+    {
         $this->authorize(PermissionEnum::DisputeLitigationUpdate, LegalCaseEvidence::class);
-        
+
         $cases = LegalCase::findOrFail($case);
         $evidence = LegalCaseEvidence::where('LegalCaseID', $case)->findOrFail($id);
 
@@ -129,7 +129,7 @@ class LegalCaseEvidenceController extends Controller
     public function update(Request $request, $caseId, $id)
     {
         $this->authorize(PermissionEnum::DisputeLitigationUpdate, LegalCaseEvidence::class);
-        try{
+        try {
             DB::beginTransaction();
 
             $evidence = LegalCaseEvidence::findOrFail($id);
@@ -171,12 +171,12 @@ class LegalCaseEvidenceController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'Update'])
                 ->log('Updated Evidence' . $evidence->EvidenceTitle);
-            
+
             DB::commit();
 
-        return redirect()->route('legal.cases.evidence.index', $caseId)
-            ->with('success', 'Evidence updated successfully.');
-        }catch(\Throwable $th){
+            return redirect()->route('legal.cases.evidence.index', $caseId)
+                ->with('success', 'Evidence updated successfully.');
+        } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete: ' . $th->getMessage());
             return back()->with('error', 'An Error Occurred. Please try again');
@@ -186,7 +186,7 @@ class LegalCaseEvidenceController extends Controller
     public function destroy($caseId, $id)
     {
         $this->authorize(PermissionEnum::DisputeLitigationDelete, LegalCaseEvidence::class);
-        try{
+        try {
             DB::beginTransaction();
 
             $evidence = LegalCaseEvidence::findOrFail($id);
@@ -201,10 +201,10 @@ class LegalCaseEvidenceController extends Controller
                 ->log('Deleted Evidence');
 
             DB::commit();
-        return redirect()->route('legal.cases.evidence.index', $caseId)
-            ->with('success', 'Evidence deleted successfully.');
+            return redirect()->route('legal.cases.evidence.index', $caseId)
+                ->with('success', 'Evidence deleted successfully.');
 
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete Evidence: ' . $th->getMessage());
             return back()->with('error', 'An Error Occurred. Please try again');

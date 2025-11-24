@@ -4,6 +4,8 @@ namespace App\Models\Core;
 
 use App\Enums\WorkflowStatus;
 use App\Traits\Model\UserActorTrait;
+use App\Models\Core\Approval\WorkflowType;
+use App\Models\Core\Approval\WorkflowStage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -17,27 +19,53 @@ class Workflow extends Model
 
     protected $table = 't_Workflows';
     protected $primaryKey = 'Id';
+    public $timestamps = false;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
-                           'Source',
-                           'SourceID',
-                           'Stage',
-                           'Status',
-                           'Notes',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'Name',
+        'Source',
+        'WorkflowTypeId',
+        'IsFinalStage',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+        'DeletedOn',
+    ];
 
     protected $casts = [
-                        'Status' => WorkflowStatus::class,
-                       ];
+        'CreatedOn' => 'datetime',
+        'IsFinalStage' => 'boolean',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
+    ];
 
-    public static function getPrimaryKey(): string
+    // Soft-delete style check
+    public function isDeleted(): bool
+    {
+        return !is_null($this->DeletedOn);
+    }
+
+    // === Relationships ===
+
+    public function type()
+    {
+        return $this->belongsTo(WorkflowType::class, 'WorkflowTypeId');
+    }
+
+    public function stages()
+    {
+        return $this->hasMany(WorkflowStage::class, 'WorkFlowId');
+    }
+    
+     public static function getPrimaryKey(): string
     {
         return 'WorkflowID';
     }
+
+
+   
 }
+
+    

@@ -17,7 +17,7 @@ class LegalObligationsSeeder extends Seeder
 
         $obligations = [
             [
-                'Title' => 'Submit Annual Compliance Report', 
+                'Title' => 'Submit Annual Compliance Report',
                 'SourceType' => 'Contract',
                 'DueDate' => '2025-09-30',
                 'Status' => 'Pending',

@@ -58,7 +58,7 @@ class ThirdPartyTypesSeeder extends Seeder
         }
 
         // Helper closure to upsert single record
-        $upsert = function (string $code, ?int $categoryId,string $codeDesc) use ($useCodeColumn, $now, $userId, $creditorRoleId, $debtorRoleId) {
+        $upsert = function (string $code, ?int $categoryId, string $codeDesc) use ($useCodeColumn, $now, $userId, $creditorRoleId, $debtorRoleId) {
             $table = DB::table('t_ThirdPartyTypes');
             if ($useCodeColumn) {
                 $exists = $table->where('Code', $code)->first();

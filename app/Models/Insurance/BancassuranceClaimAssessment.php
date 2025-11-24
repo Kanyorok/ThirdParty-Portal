@@ -19,8 +19,8 @@ class BancassuranceClaimAssessment extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'ClaimId','AssessedBy','AssessmentDate','AssessmentAmount','AssessmentComments',
-        'Decision','CreatedBy','ModifiedBy','DeletedBy',
+        'ClaimId', 'AssessedBy', 'AssessmentDate', 'AssessmentAmount', 'AssessmentComments',
+        'Decision', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string

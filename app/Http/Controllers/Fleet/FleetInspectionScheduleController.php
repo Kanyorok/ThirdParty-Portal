@@ -35,10 +35,10 @@ class FleetInspectionScheduleController extends Controller
     public function create()
     {
         $this->authorize('create', FleetInspectionSchedule::class);
-        
+
         $branchId = Auth::user()->employee?->BranchId;
 
-       $vehicles = FleetVehicle::all();
+        $vehicles = FleetVehicle::all();
 
         $inspectionStatus = CodeDetail::where('CodeID', 'InspectionStatus')
             ->orderBy('Value')

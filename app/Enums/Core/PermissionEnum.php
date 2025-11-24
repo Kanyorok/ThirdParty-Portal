@@ -105,10 +105,13 @@ enum PermissionEnum: string
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
     case UsersSessions = 'users-nonExpiringSessions';
+
+
     case MeetingRooms = 'meeting-locations';
 
     case BoardManage = 'board-members-manage';
     case BoardMeeting = 'board-members-meetings';
+
 
     case TaskCreate = 'tasks-create';
     case TaskDelegate = 'tasks-delegate';
@@ -190,12 +193,14 @@ enum PermissionEnum: string
     case PlanConsolidationWrite = 'planconsolidation-write';
     case PlanConsolidationUpdate = 'planconsolidation-update';
     case PlanConsolidationDelete = 'planconsolidation-delete';
+    case PlanConsolidationApproval = 'planconsolidation-approval';
 
         //Procument Plan- Plan Maintain
     case PlanMaintenanceRead = 'planmaintenance-read';
     case PlanMaintenanceWrite = 'planmaintenance-write';
     case PlanMaintenanceUpdate = 'planmaintenance-update';
     case PlanMaintenanceDelete = 'planmaintenance-delete';
+    case PlanMaintenanceApproval = 'planmaintenance-approval';
 
         //Procument Plan- Plan Manual Input
     case PlanManualInputRead = 'planmanualinput-read';
@@ -399,7 +404,7 @@ enum PermissionEnum: string
     case PropertyInvoiceDelete = 'propertyinvoice-delete';
     case PropertyInvoiceView = 'propertyinvoice-view';
 
-    //Property Receipt
+        //Property Receipt
 
     case PropertyReceiptCreate = 'propertyreceipt-create';
     case PropertyReceiptUpdate = 'propertyreceipt-update';
@@ -497,13 +502,13 @@ enum PermissionEnum: string
     case MedicalFundUpdate = 'medicalfund-update';
     case MedicalFundDelete = 'medicalfund-delete';
 
-    // Medical Fund Contribution
+        // Medical Fund Contribution
     case MedicalFundContributionView = 'medicalfundcontribution-view';
     case MedicalFundContributionCreate = 'medicalfundcontribution-create';
-    case MedicalFundContributionUpdate = 'medicalfundcontribution-update'; 
+    case MedicalFundContributionUpdate = 'medicalfundcontribution-update';
     case MedicalFundContributionDelete = 'medicalfundcontribution-delete';
 
-    // Medical Fund Beneficiary
+        // Medical Fund Beneficiary
     case MedicalFundBeneficiaryView = 'medicalfundbeneficiary-view';
     case MedicalFundBeneficiaryCreate = 'medicalfundbeneficiary-create';
     case MedicalFundBeneficiaryUpdate = 'medicalfundbeneficiary-update';
@@ -561,7 +566,7 @@ enum PermissionEnum: string
     case EmployeesDelete = 'employee-delete';
 
 
-/** ========================================  Budget and Analytics  ========================================*/
+    /** ========================================  Budget and Analytics  ========================================*/
     case BudgetSetupView = 'budgetSetup-view';
     case BudgetSetupCreate = 'budgetSetup-create';
     case BudgetSetupUpdate = 'budgetSetup-update';
@@ -597,7 +602,7 @@ enum PermissionEnum: string
     case ApproveReallocation = 'approveReallocation';
 
 
-/** ======================================== Document Management System ========================================*/
+    /** ======================================== Document Management System ========================================*/
 
     case DMSView = 'dms-view';
     case DMSBulkUpload = 'dms-bulkUpload';
@@ -676,27 +681,27 @@ enum PermissionEnum: string
     case FinanceTaxSettingCreate = 'financeTaxSetting-create';
     case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
-    
-    /*
+
+        /*
      *
      * ========================================  Main Settings  ========================================
      */
 
-    //Credit Management
-    case FinanceCreditManagementView='financeCreditManagement-view';
-    case FinanceCreditManagementCreate='financeCreditManagement-create';
-    case FinanceCreditManagementUpdate='financeCreditManagement-update';
-    case FinanceCreditManagementDelete='financeCreditManagement-delete';
+        //Credit Management
+    case FinanceCreditManagementView = 'financeCreditManagement-view';
+    case FinanceCreditManagementCreate = 'financeCreditManagement-create';
+    case FinanceCreditManagementUpdate = 'financeCreditManagement-update';
+    case FinanceCreditManagementDelete = 'financeCreditManagement-delete';
 
-    //Posting
-    case FinanceJournalPosting='financeJournal-financeJournal';
-    case FinanceAPInvoicePosting='financeAPInvoice-financeAPInvoice';
-    case FinanceARInvoicePosting='financeARInvoice-financeARInvoice';// AR Account Receivables
-    case FinanceCreditNotePosting='financeCreditNote-financeCreditNote';
-    case FinanceDebitNotePosting='financeDebitNote-financeDebitNote';
-    case FinanceVoucherPosting='financeVoucher-financeVoucher';
-    case FinancePaymentProcessingPosting='financePaymentProcessing-financePaymentProcessing';
-    case FinanceReceiptPosting='financeReceipt-financeReceipt';
+        //Posting
+    case FinanceJournalPosting = 'financeJournal-financeJournal';
+    case FinanceAPInvoicePosting = 'financeAPInvoice-financeAPInvoice';
+    case FinanceARInvoicePosting = 'financeARInvoice-financeARInvoice'; // AR Account Receivables
+    case FinanceCreditNotePosting = 'financeCreditNote-financeCreditNote';
+    case FinanceDebitNotePosting = 'financeDebitNote-financeDebitNote';
+    case FinanceVoucherPosting = 'financeVoucher-financeVoucher';
+    case FinancePaymentProcessingPosting = 'financePaymentProcessing-financePaymentProcessing';
+    case FinanceReceiptPosting = 'financeReceipt-financeReceipt';
 
 
         /*
@@ -776,45 +781,45 @@ enum PermissionEnum: string
 
 
 
-    /*
+        /*
 *
 * ========================================  Legal  ========================================
 */
-    //Document Registry and Contracts Creation
+        //Document Registry and Contracts Creation
     case ContractView = 'contract-view';
     case ContractCreate = 'contract-create';
     case ContractUpdate = 'contract-update';
     case ContractDelete = 'contract-delete';
 
-    //Disputes and Ltigations
-    case DisputeLitigationView='disputelitigation-view';
-    case DisputeLitigationCreate='disputelitigation-create';
-    case DisputeLitigationUpdate='disputelitigation-update';
-    case DisputeLitigationDelete='disputelitigation-delete';
+        //Disputes and Ltigations
+    case DisputeLitigationView = 'disputelitigation-view';
+    case DisputeLitigationCreate = 'disputelitigation-create';
+    case DisputeLitigationUpdate = 'disputelitigation-update';
+    case DisputeLitigationDelete = 'disputelitigation-delete';
 
-    //LegalObligations
-    case LegalObligationView='legalobligation-view';
-    case LegalObligationCreate='legalobligation-create';
-    case LegalObligationUpdate='legalobligation-update';
-    case LegalObligationDelete='legalobligation-delete';
+        //LegalObligations
+    case LegalObligationView = 'legalobligation-view';
+    case LegalObligationCreate = 'legalobligation-create';
+    case LegalObligationUpdate = 'legalobligation-update';
+    case LegalObligationDelete = 'legalobligation-delete';
 
-    //Legal Search
-    case LegalSearchView='legalsearch-view';
-    case LegalSearchCreate='legalsearch-create';
-    case LegalSearchUpdate='legalsearch-update';
-    case LegalSearchDelete='legalsearch-delete';
+        //Legal Search
+    case LegalSearchView = 'legalsearch-view';
+    case LegalSearchCreate = 'legalsearch-create';
+    case LegalSearchUpdate = 'legalsearch-update';
+    case LegalSearchDelete = 'legalsearch-delete';
 
-    //LoanSecurity
-    case LoanSecurityView='loansecurity-view';
-    case LoanSecurityCreate='loansecurity-create';
-    case LoanSecurityUpdate='loansecurity-update';
-    case LoanSecurityDelete='loansecurity-delete';
+        //LoanSecurity
+    case LoanSecurityView = 'loansecurity-view';
+    case LoanSecurityCreate = 'loansecurity-create';
+    case LoanSecurityUpdate = 'loansecurity-update';
+    case LoanSecurityDelete = 'loansecurity-delete';
 
-    //IntellectualProperty
-    case IntellectualPropertyView='intellectualproperty-view';
-    case IntellectualPropertyCreate='intellectualproperty-create';
-    case IntellectualPropertyUpdate='intellectualproperty-update';
-    case IntellectualPropertyDelete='intellectualproperty-delete';
+        //IntellectualProperty
+    case IntellectualPropertyView = 'intellectualproperty-view';
+    case IntellectualPropertyCreate = 'intellectualproperty-create';
+    case IntellectualPropertyUpdate = 'intellectualproperty-update';
+    case IntellectualPropertyDelete = 'intellectualproperty-delete';
 
 
 
@@ -885,7 +890,7 @@ enum PermissionEnum: string
             [self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete],
             [self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete],
             [self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete],
-            [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete],
+            [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
             [self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy],
@@ -920,9 +925,9 @@ enum PermissionEnum: string
             ///////////////////////  Settings  /////////////////////////////////////
             // [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
 
-              ///////////////////////  Fleet Management  /////////////////////////////////////
-            [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
-            [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
+            ///////////////////////  Fleet Management  /////////////////////////////////////
+            [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
+            [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
 
 
             //Property Management
@@ -946,20 +951,20 @@ enum PermissionEnum: string
 
 
             //Fleet
-            [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
-            [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
-            [self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy],
-            [self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy],
-            [self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy],
-            [self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy],
-            [self::FleetVehicleRequestView,self::FleetVehicleRequestApproval,self::FleetVehicleRequestCreate,self::FleetVehicleRequestUpdate,self::FleetVehicleRequestDestroy],
-            [self::ContractedDriverView,self::ContractedDriverCreate,self::ContractedDriverUpdate,self::ContractedDriverDestroy],
-            [self::FleetMaintenanceScheduleView,self::FleetMaintenanceScheduleCreate,self::FleetMaintenanceScheduleUpdate,self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel],
-            [self::FleetRepairLogView,self::FleetRepairLogCreate,self::FleetRepairLogUpdate,self::FleetRepairLogDestroy],
-            [self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy],
-            [self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy],
-            [self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge],
-            [self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy],
+            [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
+            [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
+            [self::FleetVehicleView, self::FleetVehicleCreate, self::FleetVehicleUpdate, self::FleetVehicleDestroy],
+            [self::FleetInsuranceTrackerView, self::FleetInsuranceTrackerCreate, self::FleetInsuranceTrackerUpdate, self::FleetInsuranceTrackerDestroy],
+            [self::FleetInspectionScheduleView, self::FleetInspectionScheduleCreate, self::FleetInspectionScheduleUpdate, self::FleetInspectionScheduleDestroy],
+            [self::FleetDriverView, self::FleetDriverCreate, self::FleetDriverUpdate, self::FleetDriverDestroy],
+            [self::FleetVehicleRequestView, self::FleetVehicleRequestApproval, self::FleetVehicleRequestCreate, self::FleetVehicleRequestUpdate, self::FleetVehicleRequestDestroy],
+            [self::ContractedDriverView, self::ContractedDriverCreate, self::ContractedDriverUpdate, self::ContractedDriverDestroy],
+            [self::FleetMaintenanceScheduleView, self::FleetMaintenanceScheduleCreate, self::FleetMaintenanceScheduleUpdate, self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel],
+            [self::FleetRepairLogView, self::FleetRepairLogCreate, self::FleetRepairLogUpdate, self::FleetRepairLogDestroy],
+            [self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy],
+            [self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy],
+            [self::FleetServiceAlertView, self::FleetServiceAlertAcknowledge],
+            [self::VehicleInspectionView, self::VehicleInspectionCreate, self::VehicleInspectionUpdate, self::VehicleInspectionDestroy],
 
 
             //Bank Assurance
@@ -986,13 +991,13 @@ enum PermissionEnum: string
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
             [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
 
-                      ///////////////////////  Legal  ///////////////////////////////////////
-            [self::ContractView,self::ContractCreate,self::ContractUpdate,self::ContractDelete],
-            [self::DisputeLitigationView,self::DisputeLitigationCreate,self::DisputeLitigationUpdate,self::DisputeLitigationDelete],
-            [self::LegalObligationView,self::LegalObligationCreate,self::LegalObligationUpdate,self::LegalObligationDelete],
-            [self::LegalSearchView,self::LegalSearchCreate,self::LegalSearchUpdate,self::LegalSearchDelete],
-            [self::LoanSecurityView,self::LoanSecurityCreate,self::LoanSecurityUpdate,self::LoanSecurityDelete],
-            [self::IntellectualPropertyView,self::IntellectualPropertyCreate,self::IntellectualPropertyUpdate,self::IntellectualPropertyDelete],
+            ///////////////////////  Legal  ///////////////////////////////////////
+            [self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete],
+            [self::DisputeLitigationView, self::DisputeLitigationCreate, self::DisputeLitigationUpdate, self::DisputeLitigationDelete],
+            [self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete],
+            [self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete],
+            [self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete],
+            [self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete],
 
 
         ]);
@@ -1051,14 +1056,14 @@ enum PermissionEnum: string
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
-            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
+            self::PlanConsolidationRead,self::PlanConsolidationApproval, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
             self::ProcurementMethodRead, self::ProcurementMethodWrite,
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval,
             self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete,
             self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete,
             self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete,
             self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete,
-            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete,
+            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete,self::PlanMaintenanceApproval,
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete,
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete,
             => ModulesEnum::Procurement,
@@ -1084,20 +1089,20 @@ enum PermissionEnum: string
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval,
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => ModulesEnum::Inventory,
             //Fleet Management
-            self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy,
-            self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy,
-            self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy,
-            self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy,
-            self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy,
-            self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy,
-            self::FleetVehicleRequestView,self::FleetVehicleRequestApproval,self::FleetVehicleRequestCreate,self::FleetVehicleRequestUpdate,self::FleetVehicleRequestDestroy,
-            self::FleetMaintenanceScheduleView,self::FleetMaintenanceScheduleCreate,self::FleetMaintenanceScheduleUpdate,self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel,
-            self::FleetRepairLogView,self::FleetRepairLogCreate,self::FleetRepairLogUpdate,self::FleetRepairLogDestroy,
-            self::ContractedDriverView,self::ContractedDriverCreate,self::ContractedDriverUpdate,self::ContractedDriverDestroy,
-            self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge,
-            self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy,
-            self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy,
-            self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy,
+            self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy,
+            self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy,
+            self::FleetVehicleView, self::FleetVehicleCreate, self::FleetVehicleUpdate, self::FleetVehicleDestroy,
+            self::FleetInsuranceTrackerView, self::FleetInsuranceTrackerCreate, self::FleetInsuranceTrackerUpdate, self::FleetInsuranceTrackerDestroy,
+            self::FleetInspectionScheduleView, self::FleetInspectionScheduleCreate, self::FleetInspectionScheduleUpdate, self::FleetInspectionScheduleDestroy,
+            self::FleetDriverView, self::FleetDriverCreate, self::FleetDriverUpdate, self::FleetDriverDestroy,
+            self::FleetVehicleRequestView, self::FleetVehicleRequestApproval, self::FleetVehicleRequestCreate, self::FleetVehicleRequestUpdate, self::FleetVehicleRequestDestroy,
+            self::FleetMaintenanceScheduleView, self::FleetMaintenanceScheduleCreate, self::FleetMaintenanceScheduleUpdate, self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel,
+            self::FleetRepairLogView, self::FleetRepairLogCreate, self::FleetRepairLogUpdate, self::FleetRepairLogDestroy,
+            self::ContractedDriverView, self::ContractedDriverCreate, self::ContractedDriverUpdate, self::ContractedDriverDestroy,
+            self::FleetServiceAlertView, self::FleetServiceAlertAcknowledge,
+            self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy,
+            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy,
+            self::VehicleInspectionView, self::VehicleInspectionCreate, self::VehicleInspectionUpdate, self::VehicleInspectionDestroy,
             => ModulesEnum::Fleet,
 
 
@@ -1120,7 +1125,7 @@ enum PermissionEnum: string
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView,
             self::PropertyRateAndPricingCreate,self::PropertyRateAndPricingUpdate,self::PropertyRateAndPricingDelete,self::PropertyRateAndPricingView
             => ModulesEnum::Property,
-           // default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+            // default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             //Insurance
             self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete,
@@ -1170,21 +1175,19 @@ enum PermissionEnum: string
             self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete,
             self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete,
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete,
-            self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete,
-            self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting,
+            self::FinanceCreditManagementView, self::FinanceCreditManagementCreate, self::FinanceCreditManagementUpdate, self::FinanceCreditManagementDelete,
+            self::FinanceJournalPosting, self::FinanceAPInvoicePosting, self::FinanceARInvoicePosting, self::FinanceCreditNotePosting, self::FinanceDebitNotePosting, self::FinanceVoucherPosting, self::FinancePaymentProcessingPosting, self::FinanceReceiptPosting,
             => ModulesEnum::Finance,
 
 
             ////////////////////   Legal   ////////////////////////////
             self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete,
-                self::DisputeLitigationView, self::DisputeLitigationCreate, self::DisputeLitigationUpdate, self::DisputeLitigationDelete,
-                self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete,
-                self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete,
-                self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete,
-                self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete,
-                => ModulesEnum::Legal,
-
-
+            self::DisputeLitigationView, self::DisputeLitigationCreate, self::DisputeLitigationUpdate, self::DisputeLitigationDelete,
+            self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete,
+            self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete,
+            self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete,
+            self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete,
+            => ModulesEnum::Legal,
         };
     }
 
@@ -1220,10 +1223,10 @@ enum PermissionEnum: string
             self::ListsView, self::ListsUpdate => 'System Codes',
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
-            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete, => 'Consolodidated Needs',
+            self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete => 'Consolodidated Needs',
             self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
             self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete, => 'Plan Line Items',
-            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, => 'Plan Maintenance',
+            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval => 'Plan Maintenance',
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete, => 'Plan Manual Input',
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete, => 'Plan amendment',
             //Requisition
@@ -1258,20 +1261,20 @@ enum PermissionEnum: string
             self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy => 'UOM Conversion',
 
             //Fleet Management
-            self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy => 'Fleet Model',
-            self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy => 'Fleet Make',
-            self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy => 'Vehicle Management',
-            self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy => 'Fleet Insurance Tracker',
-            self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy => 'Vehicle Inspection',
-            self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy => 'Fleet Driver',
-            self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy => 'Fleet Trip Log',
-            self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy => 'Trip Route Plan',
-            self::FleetVehicleRequestView,self::FleetVehicleRequestApproval,self::FleetVehicleRequestCreate,self::FleetVehicleRequestUpdate,self::FleetVehicleRequestDestroy => 'Fleet Vehicle Request',
-            self::FleetMaintenanceScheduleView,self::FleetMaintenanceScheduleCreate,self::FleetMaintenanceScheduleUpdate,self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel => 'Fleet Maintenance Schedule',
-            self::ContractedDriverView,self::ContractedDriverCreate,self::ContractedDriverUpdate,self::ContractedDriverDestroy => 'Contracted Driver',
-            self::FleetRepairLogView,self::FleetRepairLogCreate,self::FleetRepairLogUpdate,self::FleetRepairLogDestroy => 'Fleet Repair Log',
-            self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy => 'Vehicle Inspection ( Pre & Post Trip)',
-            self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge => 'Fleet Service Alerts',
+            self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy => 'Fleet Model',
+            self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy => 'Fleet Make',
+            self::FleetVehicleView, self::FleetVehicleCreate, self::FleetVehicleUpdate, self::FleetVehicleDestroy => 'Vehicle Management',
+            self::FleetInsuranceTrackerView, self::FleetInsuranceTrackerCreate, self::FleetInsuranceTrackerUpdate, self::FleetInsuranceTrackerDestroy => 'Fleet Insurance Tracker',
+            self::FleetInspectionScheduleView, self::FleetInspectionScheduleCreate, self::FleetInspectionScheduleUpdate, self::FleetInspectionScheduleDestroy => 'Vehicle Inspection',
+            self::FleetDriverView, self::FleetDriverCreate, self::FleetDriverUpdate, self::FleetDriverDestroy => 'Fleet Driver',
+            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy => 'Fleet Trip Log',
+            self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy => 'Trip Route Plan',
+            self::FleetVehicleRequestView, self::FleetVehicleRequestApproval, self::FleetVehicleRequestCreate, self::FleetVehicleRequestUpdate, self::FleetVehicleRequestDestroy => 'Fleet Vehicle Request',
+            self::FleetMaintenanceScheduleView, self::FleetMaintenanceScheduleCreate, self::FleetMaintenanceScheduleUpdate, self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel => 'Fleet Maintenance Schedule',
+            self::ContractedDriverView, self::ContractedDriverCreate, self::ContractedDriverUpdate, self::ContractedDriverDestroy => 'Contracted Driver',
+            self::FleetRepairLogView, self::FleetRepairLogCreate, self::FleetRepairLogUpdate, self::FleetRepairLogDestroy => 'Fleet Repair Log',
+            self::VehicleInspectionView, self::VehicleInspectionCreate, self::VehicleInspectionUpdate, self::VehicleInspectionDestroy => 'Vehicle Inspection ( Pre & Post Trip)',
+            self::FleetServiceAlertView, self::FleetServiceAlertAcknowledge => 'Fleet Service Alerts',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',
@@ -1338,8 +1341,8 @@ enum PermissionEnum: string
             self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete => 'Receipt Posting',
             self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete => 'Debit Note',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
-            self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete=> 'Credit Management',
-            self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting=> 'Transaction Postings',
+            self::FinanceCreditManagementView, self::FinanceCreditManagementCreate, self::FinanceCreditManagementUpdate, self::FinanceCreditManagementDelete => 'Credit Management',
+            self::FinanceJournalPosting, self::FinanceAPInvoicePosting, self::FinanceARInvoicePosting, self::FinanceCreditNotePosting, self::FinanceDebitNotePosting, self::FinanceVoucherPosting, self::FinancePaymentProcessingPosting, self::FinanceReceiptPosting => 'Transaction Postings',
 
             ////////////////////////  Legal   ///////////////////////////
             self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete => 'Legal Contract',
@@ -1347,8 +1350,9 @@ enum PermissionEnum: string
             self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete => 'Legal Obligation',
             self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete => 'Legal Search',
             self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete => 'Loan Security',
-            self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete => 'Intellectual Property',
+            self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete => 'Intellectual Propert',
 
+            default      => 'Unknown Permission'
         };
     }
 }

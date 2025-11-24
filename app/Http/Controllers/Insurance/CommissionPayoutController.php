@@ -21,7 +21,7 @@ class CommissionPayoutController extends Controller
         $policies = BancassurancePolicy::all();
         $payouts = BancassuranceCommissionPayout::all();
 
-        return view('bancassurance.commissions.payouts.index', compact('payouts','policies', 'paymentmodes'));
+        return view('bancassurance.commissions.payouts.index', compact('payouts', 'policies', 'paymentmodes'));
     }
     public function pay()
     {
@@ -29,10 +29,11 @@ class CommissionPayoutController extends Controller
         $policies = BancassurancePolicy::all();
         $payout = BancassuranceCommissionPayout::all();
         $paidBy = User::all();
-        return view('bancassurance.commissions.payouts.pay', compact('payout','policies', 'paymentmodes', 'paidBy'));
+        return view('bancassurance.commissions.payouts.pay', compact('payout', 'policies', 'paymentmodes', 'paidBy'));
 
     }
-   public function store(BancassuranceCommissionPayoutRequest $request)
+
+    public function store(BancassuranceCommissionPayoutRequest $request)
     {
         //$this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
         $validated = $request->validated();
@@ -43,15 +44,15 @@ class CommissionPayoutController extends Controller
         $PaymentDate = new \DateTime($validated['PaymentDate']);
 
         $customer = BancassuranceCommissionPayoutService::create(
-                $PolicyId,
-                $validated['PayoutReference'],
-                $validated['PaidAmount'],
-                $PaymentDate,
-                $PaymentMode, 
-                $validated['Remarks'],
-                $PaidBy,
-                Auth::user(),
-            );
+            $PolicyId,
+            $validated['PayoutReference'],
+            $validated['PaidAmount'],
+            $PaymentDate,
+            $PaymentMode,
+            $validated['Remarks'],
+            $PaidBy,
+            Auth::user(),
+        );
 
         return redirect()->route('bancassurance.commissions.payouts.index')->with('success', 'Commission payout created successfully.');
     }

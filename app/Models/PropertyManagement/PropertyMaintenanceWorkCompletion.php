@@ -42,6 +42,7 @@ class PropertyMaintenanceWorkCompletion extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'FinalStatus', 'ID');
     }
+
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');

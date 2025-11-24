@@ -105,7 +105,8 @@
     {{-- Prequalified Switch --}}
     <div class="col-md-6 d-flex align-items-center">
         <div class="form-check form-switch">
-            <input type="checkbox" name="IsPrequalified" value="1" class="form-check-input" role="switch" id="IsPrequalified"
+            <input type="checkbox" name="IsPrequalified" value="1" class="form-check-input" role="switch"
+                id="IsPrequalified"
                 {{ old('IsPrequalified', optional($supplier)->IsPrequalified ?? false) ? 'checked' : '' }}>
             <label class="form-check-label ms-2" for="IsPrequalified">Prequalified</label>
         </div>

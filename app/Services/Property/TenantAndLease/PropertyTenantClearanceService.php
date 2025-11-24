@@ -19,20 +19,23 @@ class PropertyTenantClearanceService
     /**
      * Create a new class instance.
      */
-    public function __construct(PropertyTenantClearance $propertyTenantClearance) {}
+    public function __construct(PropertyTenantClearance $propertyTenantClearance)
+    {
+    }
 
     public static function create(
         PropertyLeaseTermination $Lease,
-        DateTime                 $ExitDate,
-        bool                     $FinalInspection,
-        bool                     $AllDuesPaid,
-        bool                     $KeysReturned,
+        DateTime $ExitDate,
+        bool     $FinalInspection,
+        bool     $AllDuesPaid,
+        bool     $KeysReturned,
         CodeDetail $DepositRefunded,
         string $AdditionalNotes = null,
         TenantClearanceEnum $Status,
         User $user,
         UploadedFile $document = null
-    ): self {
+    ): self
+    {
         $clearance = PropertyTenantClearance::create([
             'LeaseId' => $Lease->LeaseID,
             'ExitDate' => $ExitDate,

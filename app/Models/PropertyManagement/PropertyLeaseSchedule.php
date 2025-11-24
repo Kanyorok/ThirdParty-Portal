@@ -43,6 +43,7 @@ class PropertyLeaseSchedule extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
+
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');

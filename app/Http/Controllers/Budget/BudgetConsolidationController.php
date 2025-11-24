@@ -55,8 +55,8 @@ class BudgetConsolidationController extends Controller
                     /////////////////////////// Fetching the Activities assoc with the Budget //////////////////////////////////////////
                     $budgetActivities = $budget->activities()->whereHas('budgetLine', function ($query) use ($type) {
                         $query->where('GLAccountTypeID', $type->Value);
-                    })->with('budgetLine:Id,LineName,GLAccountSubTypeID','activity:Id,ActivityName')
-                        ->select('Id', 'Description', 'BudgetLineID', 'BranchID', 'AllocationType', 'FullAllocation','ActivityID')
+                    })->with('budgetLine:Id,LineName,GLAccountSubTypeID', 'activity:Id,ActivityName')
+                        ->select('Id', 'Description', 'BudgetLineID', 'BranchID', 'AllocationType', 'FullAllocation', 'ActivityID')
                         ->get();
 
                     //return $budgetActivities;
@@ -116,7 +116,7 @@ class BudgetConsolidationController extends Controller
                         $budgetLine = BudgetLine::find($entry->BudgetLineID);
                         if ($budgetLine) {
                             //$glAccountSubType = BudgetGLAccountSubType::find($budgetLine->glSubType)->GLAccountSubTypeName ?? 'Entry By Line';
-                            $glAccountSubType= $budgetLine->glSubType->Description;
+                            $glAccountSubType = $budgetLine->glSubType->Description;
                             $budgetLineName = $budgetLine->LineName ?? 'N/A';
                             //fetch allocations
                             $allocationValues = [];

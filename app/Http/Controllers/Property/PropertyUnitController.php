@@ -61,6 +61,7 @@ class PropertyUnitController extends Controller
                 $validated['CurrentStatus'] ? 1 : 0,
                 $validated['Remarks'] ?? '',
                 auth()->user()
+
             );
             return redirect()->route('addunit.index')->with('success', 'property unit Added successfully');
         } catch (\Exception $e) {

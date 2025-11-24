@@ -7,13 +7,13 @@ Route::middleware(['auth'])
     ->prefix('settings')
     ->group(function () {
         Route::get('user-sessions', 'UserSessionController@index')
-            ->middleware('canAction:read,user-sessions')
+            ->middleware(\App\Http\Middleware\CanAction::class . ':read,user-sessions')
             ->name('settings.user-sessions.index');
         Route::post('user-sessions/revoke/{id}', 'UserSessionController@revoke')
-            ->middleware('canAction:update,user-sessions')
+            ->middleware(\App\Http\Middleware\CanAction::class . ':update,user-sessions')
             ->name('settings.user-sessions.revoke');
         Route::post('user-sessions/revoke-others/{userId}', 'UserSessionController@revokeOthers')
-            ->middleware('canAction:approve,user-sessions')
+            ->middleware(\App\Http\Middleware\CanAction::class . ':approve,user-sessions')
             ->name('settings.user-sessions.revoke-others');
     });
 

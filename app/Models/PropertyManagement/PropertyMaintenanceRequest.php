@@ -65,6 +65,7 @@ class PropertyMaintenanceRequest extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Priority', 'ID');
     }
+
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');

@@ -29,7 +29,7 @@ class FinanceTransactionTypes extends Model
 
     public static function getPrimaryKey(): string
     {
-         return 'TransactionTypesId';
+        return 'TransactionTypesId';
     }
 
     // Relationships

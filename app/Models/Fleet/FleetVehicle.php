@@ -26,9 +26,27 @@ class FleetVehicle extends Model
     protected $table = 't_FleetVehicles';
     protected $primaryKey = 'Id';
     protected $fillable = [
-        'RegistrationNo', 'VehicleType', 'Make', 'Model', 'YearOfManufacture', 'ChassisNo', 'EngineNo', 'FuelType', 'Capacity',
-        'OdometerReading', 'Status', 'AssignedBranch', 'MaxPassengers', 'MaxLoad', 'VehicleStatus', 'Color', 'ImageId',
-        'TrackerNo', 'CreatedBy',  'CreatedOn', 'ModifiedBy',
+        'RegistrationNo',
+        'VehicleType',
+        'Make',
+        'Model',
+        'YearOfManufacture',
+        'ChassisNo',
+        'EngineNo',
+        'FuelType',
+        'Capacity',
+        'OdometerReading',
+        'Status',
+        'AssignedBranch',
+        'MaxPassengers',
+        'MaxLoad',
+        'VehicleStatus',
+        'Color',
+        'ImageId',
+        'TrackerNo',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
     ];
 
 
@@ -104,6 +122,4 @@ class FleetVehicle extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'VehicleStatus', 'ID');
     }
-
-    
 }

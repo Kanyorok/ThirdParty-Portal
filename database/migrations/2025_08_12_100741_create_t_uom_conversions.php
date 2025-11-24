@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -19,7 +18,7 @@ return new class extends Migration
             $table->foreignId('UOM')->constrained('t_UOM', 'Id');
             $table->foreignId('AlternateUOM')->constrained('t_UOM', 'Id');
             $table->string('ConversionFactor')->nullable();
-            $table->string('Remarks')->nullable();       
+            $table->string('Remarks')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');

@@ -98,14 +98,14 @@
                                     </a>
                                     @if($item->ApprovalStatus === 'draft')
                                         <a href="{{ route('paymentvoucher.edit', $item->Id) }}"
-                                        class="btn btn-sm btn-outline-primary me-1"
-                                        title="Edit">
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     @else
                                         <a href="{{ route('paymentvoucher.edit', $item->Id) }}"
-                                            class="btn btn-sm btn-outline-primary me-1 disabled"
-                                            title="Edit">
+                                           class="btn btn-sm btn-outline-primary me-1 disabled"
+                                           title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     @endif
@@ -115,20 +115,20 @@
                                                 class="btn btn-sm btn-outline-danger custom-delete-btn"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#customDeleteConfirmModal"
-                                                data-name="{{$item->VoucherNo}}"    {{-- Pass item name --}}
+                                                data-name="{{$item->VoucherNo}}" {{-- Pass item name --}}
                                                 title="Delete Voucher"
                                                 data-route="{{ route('paymentvoucher.destroy', $item->Id) }}">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     @else
                                         <button type="button"
-                                            class="btn btn-sm btn-outline-danger custom-delete-btn disabled"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#customDeleteConfirmModal"
-                                            data-name="{{$item->VoucherNo}}"    {{-- Pass item name --}}
-                                            title="Delete Voucher"
-                                            data-route="{{ route('paymentvoucher.destroy', $item->Id) }}">
-                                            <i  class="fas fa-trash-alt"></i>
+                                                class="btn btn-sm btn-outline-danger custom-delete-btn disabled"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{$item->VoucherNo}}" {{-- Pass item name --}}
+                                                title="Delete Voucher"
+                                                data-route="{{ route('paymentvoucher.destroy', $item->Id) }}">
+                                            <i class="fas fa-trash-alt"></i>
                                         </button>
                                     @endif
                                 </td>
@@ -164,7 +164,7 @@
             </div>
         </div>
     </div>
-@include('components.modals.delete-confirm')
+    @include('components.modals.delete-confirm')
 @endsection
 
 @section('styles')
@@ -197,6 +197,7 @@
             .table-responsive {
                 font-size: 0.875rem;
             }
+
             .btn-sm {
                 padding: 0.2rem 0.4rem;
             }

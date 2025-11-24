@@ -27,7 +27,7 @@ class FleetRoutePlan extends Model
     public static function getPrimaryKey(): string
     {
         return 'RouteId';
-    
+
     }
 
     public function vehicle()

@@ -2,13 +2,14 @@
 @section('title', 'IP Tracking History')
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <h4 class="mb-4">📂 IP Renewal / Dispute Tracking History</h4>
+    <div class="card p-4 shadow rounded-4">
+        <h4 class="mb-4">📂 IP Renewal / Dispute Tracking History</h4>
 
-    <a href="{{ route('legal.intellectual_property.tracking.create', ['ip_id' => $ip->ID]) }}" class="btn btn-primary mb-3">➕ Add Tracking Entry</a>
+        <a href="{{ route('legal.intellectual_property.tracking.create', ['ip_id' => $ip->ID]) }}"
+           class="btn btn-primary mb-3">➕ Add Tracking Entry</a>
 
-    <table class="table table-bordered">
-        <thead>
+        <table class="table table-bordered">
+            <thead>
             <tr>
                 <th>Type</th>
                 <th>Date</th>
@@ -16,8 +17,8 @@
                 <th>Next Action</th>
                 <th>Description</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse($trackings as $track)
                 <tr>
                     <td>{{ $track->TrackingType }}</td>
@@ -27,9 +28,11 @@
                     <td>{{ $track->Description }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5">No tracking entries found.</td></tr>
+                <tr>
+                    <td colspan="5">No tracking entries found.</td>
+                </tr>
             @endforelse
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->string('RefNo')->unique();
             $table->string('IdempotencyKey', 150)->nullable();
             $table->enum('Type', ['normal', 'recurring', 'reversing'])->default('normal');
-            $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
+            $table->enum('ApprovalStatus', ['draft', 'posted', 'rejected'])->default('draft');
             $table->text('ApprovalReason')->nullable();
             $table->text('Description')->nullable();
             $table->string('CurrencyID', 10)->nullable();

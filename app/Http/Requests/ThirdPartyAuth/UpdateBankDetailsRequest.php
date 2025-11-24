@@ -41,6 +41,7 @@ class UpdateBankDetailsRequest extends FormRequest
             'SwiftCode' => 'nullable|string|max:50',
         ];
     }
+
     public function bankDetail(): ?ThirdPartiesBankDetails
     {
         return $this->route('third_parties_bank_detail');

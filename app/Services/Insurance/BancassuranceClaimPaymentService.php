@@ -30,7 +30,7 @@ class BancassuranceClaimPaymentService
         User $user
     ):self{
         $payment = BancassuranceClaimPayment::create([
-            'ClaimId' => $ClaimId -> Id,
+            'ClaimId' => $ClaimId->Id,
             'PaymentDate' => $PaymentDate,
             'PaymentAmount' => $PaymentAmount,
             'PaymentReference' => $PaymentReference,

@@ -22,7 +22,8 @@
                         <div class="row g-2 align-items-end">
                             <div class="col-md-4">
                                 <label class="form-label small text-muted">Customer ID Number</label>
-                                <input type="text" class="form-control" id="idNumber" placeholder="e.g., 12345678" autocomplete="off">
+                                <input type="text" class="form-control" id="idNumber" placeholder="e.g., 12345678"
+                                       autocomplete="off">
                             </div>
                             <div class="col-md-3">
                                 <button type="button" class="btn btn-info" id="btnFind">
@@ -49,16 +50,20 @@
                                             <span class="badge bg-secondary" id="custStatus">—</span>
                                         </div>
                                         <div class="row small mt-2">
-                                            <div class="col-md-4">Email: <span class="text-dark" id="custEmail">—</span></div>
-                                            <div class="col-md-4">Phone: <span class="text-dark" id="custPhone">—</span></div>
-                                            <div class="col-md-4">Avg. Mo. Sales: <strong id="custAvgSales">KSh 0.00</strong></div>
+                                            <div class="col-md-4">Email: <span class="text-dark" id="custEmail">—</span>
+                                            </div>
+                                            <div class="col-md-4">Phone: <span class="text-dark" id="custPhone">—</span>
+                                            </div>
+                                            <div class="col-md-4">Avg. Mo. Sales: <strong id="custAvgSales">KSh
+                                                    0.00</strong></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-4">
                                 <div class="alert alert-info mb-0 small">
-                                    After loading the customer, set **Limit, Terms & Risk** below. Suggested limit uses avg. monthly sales × factor.
+                                    After loading the customer, set **Limit, Terms & Risk** below. Suggested limit uses
+                                    avg. monthly sales × factor.
                                 </div>
                             </div>
                         </div>
@@ -69,11 +74,13 @@
                         <div class="col-lg-8">
                             <div class="card border-0 shadow-sm rounded-4">
                                 <div class="card-body">
-                                    <h6 class="text-muted mb-3"><i class="fas fa-sliders-h text-info me-2"></i> Credit Terms</h6>
+                                    <h6 class="text-muted mb-3"><i class="fas fa-sliders-h text-info me-2"></i> Credit
+                                        Terms</h6>
                                     <div class="row g-3">
                                         <div class="col-md-4">
                                             <label class="form-label">Credit Limit (KES)</label>
-                                            <input type="number" step="0.01" class="form-control" id="creditLimit" name="CreditLimit" placeholder="0.00">
+                                            <input type="number" step="0.01" class="form-control" id="creditLimit"
+                                                   name="CreditLimit" placeholder="0.00">
                                             <div class="form-text">Editable suggested value.</div>
                                         </div>
                                         <div class="col-md-4">
@@ -87,7 +94,8 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Max Overdue (days)</label>
-                                            <input type="number" class="form-control" id="maxOverdue" name="MaxOverdue" value="30">
+                                            <input type="number" class="form-control" id="maxOverdue" name="MaxOverdue"
+                                                   value="30">
                                         </div>
 
                                         <div class="col-md-4">
@@ -100,16 +108,19 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Risk Score (0–100)</label>
-                                            <input type="number" class="form-control" id="riskScore" name="RiskScore" min="0" max="100" value="55">
+                                            <input type="number" class="form-control" id="riskScore" name="RiskScore"
+                                                   min="0" max="100" value="55">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Review Cycle (months)</label>
-                                            <input type="number" class="form-control" id="reviewCycle" name="ReviewCycle" value="6">
+                                            <input type="number" class="form-control" id="reviewCycle"
+                                                   name="ReviewCycle" value="6">
                                         </div>
 
                                         <div class="col-md-6">
                                             <label class="form-label">Effective From</label>
-                                            <input type="date" class="form-control" id="effectiveFrom" name="EffectiveFrom" value="{{ now()->format('Y-m-d') }}">
+                                            <input type="date" class="form-control" id="effectiveFrom"
+                                                   name="EffectiveFrom" value="{{ now()->format('Y-m-d') }}">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Expiry / Next Review</label>
@@ -118,11 +129,13 @@
 
                                         <div class="col-12">
                                             <label class="form-label">Collateral / Security</label>
-                                            <input type="text" class="form-control" id="collateral" name="Collateral" placeholder="e.g., Bank Guarantee, Title Deed, Debenture">
+                                            <input type="text" class="form-control" id="collateral" name="Collateral"
+                                                   placeholder="e.g., Bank Guarantee, Title Deed, Debenture">
                                         </div>
 
                                         <div class="col-12 d-flex align-items-center gap-2">
-                                            <input class="form-check-input" type="checkbox" id="allowOverLimit" name="AllowOverLimit">
+                                            <input class="form-check-input" type="checkbox" id="allowOverLimit"
+                                                   name="AllowOverLimit">
                                             <label for="allowOverLimit" class="form-check-label small">
                                                 Allow over‑limit **with approval**
                                             </label>
@@ -130,7 +143,8 @@
 
                                         <div class="col-12">
                                             <label class="form-label">Remarks</label>
-                                            <textarea class="form-control" id="remarks" name="Remarks" rows="3" placeholder="Add any relevant notes..."></textarea>
+                                            <textarea class="form-control" id="remarks" name="Remarks" rows="3"
+                                                      placeholder="Add any relevant notes..."></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -141,7 +155,8 @@
                         <div class="col-lg-4">
                             <div class="card border-0 shadow-sm rounded-4">
                                 <div class="card-body">
-                                    <h6 class="text-muted mb-3"><i class="fas fa-chart-pie text-info me-2"></i> Summary</h6>
+                                    <h6 class="text-muted mb-3"><i class="fas fa-chart-pie text-info me-2"></i> Summary
+                                    </h6>
                                     <div class="border rounded-3 p-2 small">
                                         <div>Customer: <strong id="sumName">—</strong></div>
                                         <div>Suggested Limit: <strong id="sumSuggested">KSh 0.00</strong></div>
@@ -167,10 +182,22 @@
 
 @section('styles')
     <style>
-        :root { --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif; }
-        body, .card, .table { font-family: var(--font-sans); }
-        .card { border: none; border-radius: .5rem; }
-        .form-text { font-size: .75rem; }
+        :root {
+            --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body, .card, .table {
+            font-family: var(--font-sans);
+        }
+
+        .card {
+            border: none;
+            border-radius: .5rem;
+        }
+
+        .form-text {
+            font-size: .75rem;
+        }
     </style>
 @endsection
 
@@ -207,10 +234,15 @@
         const sumTerms = document.getElementById('sumTerms');
         const sumRisk = document.getElementById('sumRisk');
 
-        function kes(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
-        function toggle(el, on){ el.classList.toggle('d-none', !on); }
+        function kes(n) {
+            return Number(n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
 
-        function demoPayload(id){
+        function toggle(el, on) {
+            el.classList.toggle('d-none', !on);
+        }
+
+        function demoPayload(id) {
             return {
                 customer: {
                     id: 901, id_number: id || '12345678',
@@ -224,37 +256,45 @@
         }
 
         btnFind.addEventListener('click', async () => {
-            if(!idNumber.value.trim()){ hint.textContent='Enter a valid ID number.'; idNumber.focus(); return; }
-            spin.classList.remove('d-none'); hint.textContent='Searching…';
+            if (!idNumber.value.trim()) {
+                hint.textContent = 'Enter a valid ID number.';
+                idNumber.focus();
+                return;
+            }
+            spin.classList.remove('d-none');
+            hint.textContent = 'Searching…';
             let data;
-            try{
-                if(USE_DEMO){
-                    await new Promise(r=>setTimeout(r,500));
+            try {
+                if (USE_DEMO) {
+                    await new Promise(r => setTimeout(r, 500));
                     data = demoPayload(idNumber.value.trim());
-                }else{
-                    const res = await fetch(`${LOOKUP_URL}?id=${encodeURIComponent(idNumber.value.trim())}`,{headers:{'Accept':'application/json'}});
-                    if(!res.ok) throw new Error('lookup failed');
+                } else {
+                    const res = await fetch(`${LOOKUP_URL}?id=${encodeURIComponent(idNumber.value.trim())}`, {headers: {'Accept': 'application/json'}});
+                    if (!res.ok) throw new Error('lookup failed');
                     data = await res.json();
                 }
-            }catch(e){
-                hint.textContent='Customer not found.'; spin.classList.add('d-none'); return;
+            } catch (e) {
+                hint.textContent = 'Customer not found.';
+                spin.classList.add('d-none');
+                return;
             }
-            spin.classList.add('d-none'); hint.textContent='Customer loaded.';
+            spin.classList.add('d-none');
+            hint.textContent = 'Customer loaded.';
 
             // Fill card
             const c = data.customer;
             custName.textContent = c.name || '—';
-            custId.textContent = `ID: ${c.id_number||'—'}`;
-            custEmail.textContent = c.email||'—';
-            custPhone.textContent = c.phone||'—';
-            custStatus.textContent = c.status||'—';
-            custAvgSales.textContent = `KSh ${kes(c.avg_monthly_sales||0)}`;
+            custId.textContent = `ID: ${c.id_number || '—'}`;
+            custEmail.textContent = c.email || '—';
+            custPhone.textContent = c.phone || '—';
+            custStatus.textContent = c.status || '—';
+            custAvgSales.textContent = `KSh ${kes(c.avg_monthly_sales || 0)}`;
             sumName.textContent = c.name || '—';
             toggle(custCard, true);
             toggle(termsBlock, true);
 
             // Suggest limit: avg sales × 4 (demo logic)
-            const suggested = Number(c.avg_monthly_sales||0) * 4;
+            const suggested = Number(c.avg_monthly_sales || 0) * 4;
             creditLimit.value = suggested.toFixed(2);
             sumSuggested.textContent = `KSh ${kes(suggested)}`;
             sumLimit.textContent = `KSh ${kes(creditLimit.value)}`;

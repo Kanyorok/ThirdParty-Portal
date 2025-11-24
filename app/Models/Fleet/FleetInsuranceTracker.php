@@ -20,7 +20,7 @@ use App\Models\Auth\User;
 class FleetInsuranceTracker extends Model
 {
 
-    use SoftDeletes,UserActorTrait, DocumentsTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

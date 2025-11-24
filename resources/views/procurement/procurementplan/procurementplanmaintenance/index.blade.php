@@ -69,7 +69,7 @@
                         <td class="col-created-by"><span class="truncate" title="{{ $plan->createdBy->Name ?? 'N/A' }}">{{ $plan->createdBy->Name ?? 'N/A' }}</span></td>
                         <td class="col-created-on">
               @if($plan->CreatedDate)
-                    {{ (new DateTime($plan->CreatedDate))->format('d/m/Y') }}
+                    {{ (new DateTime($plan->CreatedDate))->format('d M Y') }}
               @else
                 N/A
               @endif

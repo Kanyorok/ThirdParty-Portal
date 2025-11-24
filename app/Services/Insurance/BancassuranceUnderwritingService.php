@@ -20,17 +20,18 @@ class BancassuranceUnderwritingService
 
     public static function create(
         BancassurancePolicy $PolicyId,
-        Carbon $FeedbackDate,
-        Int $RiskScore,
-        CodeDetail $Decision,
-        string $Comments,
-        User $user
-    ):self{
+        Carbon              $FeedbackDate,
+        int                 $RiskScore,
+        CodeDetail          $Decision,
+        string              $Comments,
+        User                $user
+    ): self
+    {
         $underwriting = BancassuranceUnderwriting::create([
-            'PolicyId' => $PolicyId -> Id,
+            'PolicyId' => $PolicyId->Id,
             'FeedbackDate' => $FeedbackDate,
             'RiskScore' => $RiskScore,
-            'Decision' => $Decision -> ID,
+            'Decision' => $Decision->ID,
             'Comments' => $Comments,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,

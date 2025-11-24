@@ -18,8 +18,8 @@ class BancassuranceClaimClosure extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'ClaimId','FinalStatus','FinalRemarks','ClosureDate','ClosedBy',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'ClaimId', 'FinalStatus', 'FinalRemarks', 'ClosureDate', 'ClosedBy',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     public static function getPrimaryKey(): string
@@ -35,6 +35,7 @@ class BancassuranceClaimClosure extends Model
     {
         return $this->belongsTo(BancassuranceClaim::class, 'ClaimId', 'Id');
     }
+
     public function paidamount()
     {
         return $this->hasOne(BancassuranceClaimPayment::class, 'ClaimId', 'ClaimId');

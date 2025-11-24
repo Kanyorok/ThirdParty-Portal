@@ -23,11 +23,11 @@ class PolicyRenewalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'PolicyID'     => 'required', 'exists:t_BancassurancePolicies,Id',
-            'RenewalDate'  => 'required', 'date',
+            'PolicyID' => 'required', 'exists:t_BancassurancePolicies,Id',
+            'RenewalDate' => 'required', 'date',
             'NewStartDate' => 'required', 'date', 'after_or_equal:RenewalDate',
-            'NewEndDate'   => 'required', 'date', 'after:NewStartDate',
-            'Notes'        => 'nullable', 'string', 'max:500',
+            'NewEndDate' => 'required', 'date', 'after:NewStartDate',
+            'Notes' => 'nullable', 'string', 'max:500',
         ];
     }
 
@@ -38,7 +38,7 @@ class PolicyRenewalRequest extends FormRequest
     {
         return [
             'PolicyID.required' => 'A policy must be selected for renewal.',
-            'NewEndDate.after'  => 'The new end date must be after the new start date.',
+            'NewEndDate.after' => 'The new end date must be after the new start date.',
         ];
     }
 }

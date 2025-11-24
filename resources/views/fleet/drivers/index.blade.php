@@ -4,23 +4,25 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0"> Fleet Drivers List</h4>
-        <a href="{{ route('fleet.drivers.create') }}" class="btn btn-primary">
-            + New Driver
-        </a>
-    </div>
+    <div class="card p-4 shadow rounded-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0"> Fleet Drivers List</h4>
+            <a href="{{ route('fleet.drivers.create') }}" class="btn btn-primary">
+                + New Driver
+            </a>
+        </div>
 
-    @if(!$drivers->isEmpty())
-    <div class="mb-3">
-        <p class="mb-0" style="font-style: italic;">
-            <span class="me-2">💡</span>
-            To manage driver licenses and vehicle assignments, click the 'Details' button, then use the tabs to add licenses or assign vehicles.<br>
-            <strong><span class="me-1">ℹ️</span>Note:</strong> Trips are automatically loaded from the trips table when a driver is assigned a trip.
-        </p>
-    </div>
-    @endif
+        @if(!$drivers->isEmpty())
+            <div class="mb-3">
+                <p class="mb-0" style="font-style: italic;">
+                    <span class="me-2">💡</span>
+                    To manage driver licenses and vehicle assignments, click the 'Details' button, then use the tabs to
+                    add licenses or assign vehicles.<br>
+                    <strong><span class="me-1">ℹ️</span>Note:</strong> Trips are automatically loaded from the trips
+                    table when a driver is assigned a trip.
+                </p>
+            </div>
+        @endif
 
         <div class="table-responsive">
             <table id="driversTable" class="table table-bordered table-striped align-middle">

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceInvoiceLine extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     protected $table = 't_FinanceInvoiceLines';
 

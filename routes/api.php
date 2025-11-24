@@ -109,7 +109,6 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
                 ];
             })
         ]);
-
     } catch (\Exception $e) {
         return response()->json([
             'debug' => 'Error in debug endpoint',
@@ -188,8 +187,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::get('{third_party}', [ThirdPartyController::class, 'show']);
         Route::put('{third_party}', [ThirdPartyController::class, 'update']);
         Route::delete('{third_party}', [ThirdPartyController::class, 'destroy']);
-    // Upload supporting documents for a third party
-    Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
+        // Upload supporting documents for a third party
+        Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
         // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
         // Route::patch('{third_party}/approve', [ThirdPartyController::class, 'approve']);
         // Route::patch('{third_party}/reject', [ThirdPartyController::class, 'reject']);
@@ -266,10 +265,10 @@ Route::prefix('procurement')->name('api.procurement.')
 
         // Supplier RFQ endpoints (supplier portal)
         Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-    Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
-    Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
+        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
 
 // Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage
@@ -295,39 +294,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     //         Route::get('supplier/applications/{application}', 'show')->middleware('can:view,application');
     //     });
     // });
-
 });
 
-
-
-
-/***
- *  This Are the API Routes for Central Report Unit C.R.U
- */
-use App\Http\Controllers\API\CRDB\CRDBAuthController;
-use App\Http\Controllers\API\CRDB\CRDBGeneralLedgerController;
-
-// CRDB Authentication Routes (Public)
-Route::prefix('crdb')->group(function () {
-    Route::post('login', [CRDBAuthController::class, 'login'])->name('crdb.login');
-    Route::post('validate-token', [CRDBAuthController::class, 'validateToken'])->name('crdb.validate-token');
-});
-
-// CRDB API Routes (Protected - requires authentication)
-Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class)->group(function () {
-    // Add your CRDB API endpoints here
-    // Example:
-    Route::get('syncGeneralLedgers', [CRDBGeneralLedgerController::class, 'syncGeneralLedgers'])->name('syncGeneralLedgers');
-    Route::get('syncGLBalances', [CRDBGeneralLedgerController::class, 'syncGLBalances'])->name('syncGLBalances');
-    // Route::get('data', [CRDBDataController::class, 'fetch']);
-    
-    // Health check for authenticated requests
-    Route::get('health', function () {
-        return response()->json([
-            'status' => 'ok',
-            'timestamp' => now(),
-            'service' => 'CRDB API',
-            'authenticated' => true,
-        ]);
-    })->name('crdb.health');
-});
+//api routes for workflow stages
+Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');

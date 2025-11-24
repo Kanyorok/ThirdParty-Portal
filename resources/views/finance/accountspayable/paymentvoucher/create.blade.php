@@ -37,47 +37,58 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label" for="InvoiceNo">Invoice Ref <span class="text-danger">*</span></label>
-                            <select name="InvoiceNo" id="InvoiceNo" class="form-select @error('InvoiceNo') is-invalid @enderror" required>
+                            <label class="form-label" for="InvoiceNo">Invoice Ref <span
+                                    class="text-danger">*</span></label>
+                            <select name="InvoiceNo" id="InvoiceNo"
+                                    class="form-select @error('InvoiceNo') is-invalid @enderror" required>
                                 <option value="">-- Select Invoice --</option>
                                 @foreach($invoices as $invoice)
                                     <option value="{{ $invoice['Id'] }}"
                                             data-amount="{{ (float) $invoice['Balance'] }}"
                                             data-currency="{{ $invoice['CurrencyCode'] }}"
                                         @selected(old('InvoiceNo') == $invoice['Id'])>
-                                        {{ $invoice['InvoiceNumber'] }} - {{ $invoice['CurrencyCode'] }} {{ number_format($invoice['InvoiceAmount'], 2) }}
+                                        {{ $invoice['InvoiceNumber'] }}
+                                        - {{ $invoice['CurrencyCode'] }} {{ number_format($invoice['InvoiceAmount'], 2) }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('InvoiceNo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('InvoiceNo')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label" for="PaymentMethod">Payment Method <span class="text-danger">*</span></label>
-                            <select class="form-select @error('PaymentMethod') is-invalid @enderror" name="PaymentMethod" id="PaymentMethod" required>
+                            <label class="form-label" for="PaymentMethod">Payment Method <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select @error('PaymentMethod') is-invalid @enderror"
+                                    name="PaymentMethod" id="PaymentMethod" required>
                                 <option value="" disabled selected>-- Select Payment Method --</option>
                                 @forelse($paymentMethods as $paymentMethod)
-                                    <option value="{{ $paymentMethod->Description }}" @selected(old('PaymentMethod') == $paymentMethod->Description)>
+                                    <option
+                                        value="{{ $paymentMethod->Description }}" @selected(old('PaymentMethod') == $paymentMethod->Description)>
                                         {{ $paymentMethod->Description }}
                                     </option>
                                 @empty
                                     <option disabled>No Payment Method Found</option>
                                 @endforelse
                             </select>
-                            @error('PaymentMethod') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('PaymentMethod')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="paymentType">Payment Type <span class="text-danger">*</span></label>
-                            <select class="form-select @error('PaymentType') is-invalid @enderror" name="PaymentType" id="paymentType" required>
+                            <select class="form-select @error('PaymentType') is-invalid @enderror" name="PaymentType"
+                                    id="paymentType" required>
                                 <option value="" disabled selected>-- Select Payment Type --</option>
                                 @forelse($paymentTypes as $paymentType)
-                                    <option value="{{ $paymentType->Description }}" @selected(old('PaymentType') == $paymentType->Description)>
+                                    <option
+                                        value="{{ $paymentType->Description }}" @selected(old('PaymentType') == $paymentType->Description)>
                                         {{ $paymentType->Description }}
                                     </option>
                                 @empty
                                     <option disabled>No Payment Type Found</option>
                                 @endforelse
                             </select>
-                            @error('PaymentType') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('PaymentType')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
 
@@ -92,13 +103,15 @@
                                    min="0"
                                    value="{{ old('TotAmnt') }}"
                                    placeholder="Enter amount">
-                            @error('TotAmnt') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('TotAmnt')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
 
                     <div id="scheduleRow" class="row g-3 mb-3" style="display:none;">
                         <div class="col-md-4">
-                            <label class="form-label" for="SchedAmount">Amount <span class="text-danger">*</span></label>
+                            <label class="form-label" for="SchedAmount">Amount <span
+                                    class="text-danger">*</span></label>
                             <input type="number"
                                    id="SchedAmount"
                                    class="form-control @error('TotAmnt') is-invalid @enderror"
@@ -106,30 +119,36 @@
                                    min="0"
                                    value="{{ old('TotAmnt') }}"
                                    placeholder="Enter amount">
-                            @error('TotAmnt') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('TotAmnt')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label" for="StartDate">Start Date <span class="text-danger">*</span></label>
+                            <label class="form-label" for="StartDate">Start Date <span
+                                    class="text-danger">*</span></label>
                             <input type="date"
                                    class="form-control @error('StartDate') is-invalid @enderror"
                                    name="StartDate"
                                    value="{{ old('StartDate') }}">
-                            @error('StartDate') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('StartDate')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-{{--                        <div class="col-md-2">--}}
-{{--                            <label class="form-label" for="EndDate">End Date <span class="text-danger">*</span></label>--}}
-{{--                            <input type="date"--}}
-{{--                                   class="form-control @error('EndDate') is-invalid @enderror"--}}
-{{--                                   name="EndDate"--}}
-{{--                                   value="{{ old('EndDate') }}">--}}
-{{--                            @error('EndDate') <div class="invalid-feedback">{{ $message }}</div> @enderror--}}
-{{--                        </div>--}}
+                        {{--                        <div class="col-md-2">--}}
+                        {{--                            <label class="form-label" for="EndDate">End Date <span class="text-danger">*</span></label>--}}
+                        {{--                            <input type="date"--}}
+                        {{--                                   class="form-control @error('EndDate') is-invalid @enderror"--}}
+                        {{--                                   name="EndDate"--}}
+                        {{--                                   value="{{ old('EndDate') }}">--}}
+                        {{--                            @error('EndDate') <div class="invalid-feedback">{{ $message }}</div> @enderror--}}
+                        {{--                        </div>--}}
                         <div class="col-md-4">
-                            <label class="form-label" for="Frequency">Frequency <span class="text-danger">*</span></label>
-                            <select class="form-select @error('Frequency') is-invalid @enderror" name="Frequency" id="Frequency">
+                            <label class="form-label" for="Frequency">Frequency <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select @error('Frequency') is-invalid @enderror" name="Frequency"
+                                    id="Frequency">
                                 <option value="" disabled selected>-- Select Frequency --</option>
                                 @forelse($paymentFrequencies as $paymentFrequency)
-                                    <option value="{{ $paymentFrequency->Description }}" @selected(old('PaymentType') == $paymentFrequency->Description)>
+                                    <option
+                                        value="{{ $paymentFrequency->Description }}" @selected(old('PaymentType') == $paymentFrequency->Description)>
                                         {{ $paymentFrequency->Description }}
                                     </option>
                                 @empty
@@ -140,7 +159,8 @@
                                 <option value="Weekly" @selected(old('Frequency') === 'Weekly')>Weekly</option>
                                 <option value="Custom" @selected(old('Frequency') === 'Custom')>Custom</option>
                             </select>
-                            @error('Frequency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('Frequency')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
 
@@ -152,7 +172,8 @@
                                       id="Description"
                                       rows="3"
                                       placeholder="Enter voucher description">{{ old('Description') }}</textarea>
-                            @error('Description') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('Description')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
 
@@ -203,6 +224,7 @@
                 font-size: 0.75rem;
                 padding: 0.4rem;
             }
+
             .btn-sm {
                 padding: 0.2rem 0.4rem;
             }
@@ -212,7 +234,7 @@
 
 @section('scripts')
     <script>
-        (function() {
+        (function () {
             const paymentTypeEl = document.getElementById('paymentType');
             const invoiceEl = document.getElementById('InvoiceNo');
             const amountRow = document.getElementById('amountRow');

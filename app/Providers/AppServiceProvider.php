@@ -9,9 +9,8 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
+use App\Services\Workflow\ApprovalWorkflow;
 use App\Models\Budget\Budget;
-use App\Models\Settings\WorkFlowStage;
-use App\Models\Settings\WorkFlowLimit;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetDriver;
@@ -40,6 +39,7 @@ use App\Models\Core\CategoryMaster;
 use App\Models\Core\Report;
 use App\Models\Core\SpecialPermission;
 use App\Models\Core\Task;
+use App\Models\Core\Workflow;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
 use App\Models\CRM\Contact;
@@ -175,6 +175,8 @@ use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\Settings\APICredential;
+use App\Models\Settings\WorkFlowLimit;
+use App\Models\Settings\WorkFlowStage;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
@@ -252,6 +254,7 @@ use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
+
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -259,7 +262,6 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
-use App\Models\Settings\WorkFlow;
 
 //use App\Policies\FleetManagement\DriverPolicy;
 
@@ -271,9 +273,13 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
+    public function register():void 
+
     {
-        //
+         $this->app->bind(ApprovalWorkflow::class, function ($app) {
+        return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
+    });
+    
     }
 
     /**
@@ -315,7 +321,7 @@ class AppServiceProvider extends ServiceProvider
             APICredential::getPrimaryKey() => APICredential::class,
             Comment::getPrimaryKey() => Comment::class,
             Report::getPrimaryKey() => Report::class,
-            WorkFlow::getPrimaryKey() => WorkFlow::class,
+            Workflow::getPrimaryKey() => Workflow::class,
             WorkFlowStage::getPrimaryKey() => WorkFlowStage::class,
             WorkFlowLimit::getPrimaryKey() => WorkFlowLimit::class,
 
@@ -352,6 +358,7 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
+          
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,

@@ -26,7 +26,7 @@ class LegalSearchRequestController extends Controller
         $this->authorize(PermissionEnum::LegalSearchCreate, LegalSearchRequest::class);
 
         $details = CodeDetail::select('Value')
-            ->where('CodeID', 'LegalSearchRequestTypes')  
+            ->where('CodeID', 'LegalSearchRequestTypes')
             ->get();
         return view('legal.search_requests.create', compact('details'));
     }
@@ -36,38 +36,38 @@ class LegalSearchRequestController extends Controller
         $this->authorize(PermissionEnum::LegalSearchCreate, LegalSearchRequest::class);
 
         $validated = $request->validate([
-                'RequestType' => 'required|exists:t_CodeDetails,Value', // e.g., "Company", "Individual", "Group"
-                'EntityName' => 'required|string',
-                // 'EntityType' => 'nullable|string',
-                // 'RegistrationNumber' => 'nullable|string',
-                // 'Country' => 'nullable|string',
-                // 'RequestDate' => 'required|date',
-                'Remarks' => 'required|string',
-            ]);
+            'RequestType' => 'required|exists:t_CodeDetails,Value', // e.g., "Company", "Individual", "Group"
+            'EntityName' => 'required|string',
+            // 'EntityType' => 'nullable|string',
+            // 'RegistrationNumber' => 'nullable|string',
+            // 'Country' => 'nullable|string',
+            // 'RequestDate' => 'required|date',
+            'Remarks' => 'required|string',
+        ]);
 
         $duplicate = LegalSearchRequest::where('RequestType', $validated['RequestType'])
             ->where('EntityName', $validated['EntityName'])
             ->exists();
-        
-            if($duplicate){
-                return back()->with('error', 'There is already an existinf search request with this details');
-            }
-            
-        try{
+
+        if ($duplicate) {
+            return back()->with('error', 'There is already an existinf search request with this details');
+        }
+
+        try {
             DB::beginTransaction();
 
             $requestdate = now();
             $request = LegalSearchRequest::create([
-                'RequestType'=> $validated['RequestType'],
-                'EntityName'=> $validated['EntityName'],
+                'RequestType' => $validated['RequestType'],
+                'EntityName' => $validated['EntityName'],
                 // 'EntityType'=> $validated['EntityType'],
                 // 'RegistrationNumber'=> $validated['RegistrationNumber'],
                 // 'Country'=> $validated['Country'],
                 // 'RequestDate'=> $validated['RequestDate'],
-                'Remarks'=> $validated['Remarks'],
-                'Status'=> $validated['Status'] ?? 'Pending',
+                'Remarks' => $validated['Remarks'],
+                'Status' => $validated['Status'] ?? 'Pending',
                 // 'IsActive'=> $validated['IsActive'] ?? false,
-                'RequestDate' =>$requestdate,
+                'RequestDate' => $requestdate,
                 'RequestedBy' => Auth::id(),
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::Id(),
@@ -76,19 +76,19 @@ class LegalSearchRequestController extends Controller
             activity()
                 ->performedOn(new LegalSearchRequest())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'create'])
+                ->withProperties(['action' => 'create'])
                 ->log('Search Request created successfully');
 
             DB::commit();
 
             return redirect()->route('legal.search_requests.index')->with('success', 'Search Request submitted.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
                 ->performedOn(new LegalSearchRequest())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'create'])
+                ->withProperties(['action' => 'create'])
                 ->log('Error creating Search Request');
 
             Log::error('Error creating Search Request' . $th->getMessage());
@@ -110,7 +110,7 @@ class LegalSearchRequestController extends Controller
 
         $request = LegalSearchRequest::findOrFail($id);
         $details = CodeDetail::select('Value')
-            ->where('CodeID', 'LegalSearchRequestTypes')  
+            ->where('CodeID', 'LegalSearchRequestTypes')
             ->get();
         return view('legal.search_requests.edit', compact('request', 'details'));
     }
@@ -126,7 +126,7 @@ class LegalSearchRequestController extends Controller
             'Status' => 'nullable|string',
         ]);
 
-        try{
+        try {
             DB::beginTransaction();
 
             $requestdate = now();
@@ -137,23 +137,23 @@ class LegalSearchRequestController extends Controller
 
             LegalSearchRequest::where('Id', $id)->update($data);
 
-            
+
             activity()
                 ->performedOn(new LegalSearchRequest())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Search Request updated successfully');
 
             DB::commit();
 
             return redirect()->route('legal.search_requests.index')->with('success', 'Search request updated.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
                 ->performedOn(new LegalSearchRequest())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'update'])
+                ->withProperties(['action' => 'update'])
                 ->log('Error updating Search Request');
 
             Log::error('Error updating Search Request' . $th->getMessage());
@@ -165,31 +165,31 @@ class LegalSearchRequestController extends Controller
     {
         $this->authorize(PermissionEnum::LegalSearchDelete, LegalSearchRequest::class);
 
-        try{
+        try {
             DB::beginTransaction();
 
             $searches = LegalSearchRequest::findOrFail($id);
             $searches->DeletedBy = Auth::id();
             $searches->save();
             $searches->delete();
-                    
+
             activity()
                 ->performedOn(new LegalSearchRequest())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'delete'])
+                ->withProperties(['action' => 'delete'])
                 ->log('Search Request deleted successfully');
 
             DB::commit();
 
             return back()->with('success', 'Search request deleted.');
 
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
                 ->performedOn(new LegalSearchRequest())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'delete'])
+                ->withProperties(['action' => 'delete'])
                 ->log('Error deleting Search Request');
 
             Log::error('Error deleting Search Request' . $th->getMessage());

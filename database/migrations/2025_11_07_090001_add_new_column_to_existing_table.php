@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_FinanceGLAccounts', function (Blueprint $table) {
-            $table->boolean('IsSynced')->default(false);
+        Schema::table('t_WorkflowHistory', function (Blueprint $table) {
+            //
+             $table->string('DocumentId')->nullable();
         });
     }
 
@@ -21,8 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('t_FinanceGLAccounts', function (Blueprint $table) {
-            $table->dropColumn('IsSynced');
+        Schema::table('t_WorkflowHistory', function (Blueprint $table) {
+            //
+             $table->dropColumn('DocumentId');
         });
     }
 };

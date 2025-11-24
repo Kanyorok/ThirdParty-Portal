@@ -40,51 +40,50 @@ class LegalCaseController extends Controller
         $this->authorize(PermissionEnum::DisputeLitigationCreate, LegalCase::class);
 
         $validated = $request->validate([
-            'CaseTitle'=> 'required|string',
-            'CaseNumber'=> 'required|string',
-            'CourtName'=> 'required|string',
-            'FilingDate'=> 'required|date',
-            'OpposingParty'=> 'required|string',
-            'CaseType'=> 'required|string',
-            'Summary'=> 'required|string',
-            'AssignedCounselID'=> 'nullable',
-            'CaseDMSDocID'=> 'nullable',
+            'CaseTitle' => 'required|string',
+            'CaseNumber' => 'required|string',
+            'CourtName' => 'required|string',
+            'FilingDate' => 'required|date',
+            'OpposingParty' => 'required|string',
+            'CaseType' => 'required|string',
+            'Summary' => 'required|string',
+            'AssignedCounselID' => 'nullable',
+            'CaseDMSDocID' => 'nullable',
 
         ]);
 
         $duplicate = LegalCase::where('CaseNumber', $validated['CaseNumber'])
             ->exists();
-        if($duplicate){
+        if ($duplicate) {
             return back()->with('error', 'A legal case with this case number already exists.');
         }
 
-        try{
+        try {
             DB::beginTransaction();
 
-        LegalCase::create([
-            'CaseTitle' => $validated['CaseTitle'],
-            'CaseNumber' => $validated['CaseNumber'],
-            'CourtName' => $validated['CourtName'],
-            'FilingDate' => $validated['FilingDate'],
-            'OpposingParty' => $validated['OpposingParty'],
-            'CaseType' => $validated['CaseType'],
-            'Summary' => $validated['Summary'],
-            'AssignedCounselID' => $validated['AssignedCounselID']??null,
-            'CaseDMSDocID' => $validated['CaseDMSDocID'] ?? null,
-            'CreatedBy' => Auth::Id(),
-            'ModifiedBy' => Auth::Id(),
-        ]);
+            LegalCase::create([
+                'CaseTitle' => $validated['CaseTitle'],
+                'CaseNumber' => $validated['CaseNumber'],
+                'CourtName' => $validated['CourtName'],
+                'FilingDate' => $validated['FilingDate'],
+                'OpposingParty' => $validated['OpposingParty'],
+                'CaseType' => $validated['CaseType'],
+                'Summary' => $validated['Summary'],
+                'AssignedCounselID' => $validated['AssignedCounselID'] ?? null,
+                'CaseDMSDocID' => $validated['CaseDMSDocID'] ?? null,
+                'CreatedBy' => Auth::Id(),
+                'ModifiedBy' => Auth::Id(),
+            ]);
 
-        activity()
-            ->performedOn(new LegalCase())
-            ->causedBy(Auth::user())
-            ->log('Legal case created');
+            activity()
+                ->performedOn(new LegalCase())
+                ->causedBy(Auth::user())
+                ->log('Legal case created');
 
-        DB::commit();
+            DB::commit();
 
-        return redirect()->route('legal.cases.index')->with('success', 'Legal case created successfully.');
-        }
-        catch(\Throwable $th){
+            return redirect()->route('legal.cases.index')->with('success', 'Legal case created successfully.');
+        } catch (\Throwable $th) {
             DB::rollBack();
             activity()
                 ->performedOn(new LegalCase())
@@ -106,58 +105,58 @@ class LegalCaseController extends Controller
             ->where('CodeID', 'CaseTypes')
             ->get();
 
-        $caseStatus=CodeDetail::select('CodeID', 'Value', 'Description')->where('CodeID','LegalCaseStatus')->get();
+        $caseStatus = CodeDetail::select('CodeID', 'Value', 'Description')->where('CodeID', 'LegalCaseStatus')->get();
 
-        return view('legal.disputes.edit', compact('case', 'caseTypes','caseStatus'));
+        return view('legal.disputes.edit', compact('case', 'caseTypes', 'caseStatus'));
     }
 
     public function update(Request $request, $id)
     {
         $this->authorize(PermissionEnum::DisputeLitigationUpdate, LegalCase::class);
 
-        try{
-        $validated = $request->validate([
-            'CaseTitle'=> 'required|string',
-            'CaseNumber'=> 'required|string',
-            'CourtName'=> 'required|string',
-            'FilingDate'=> 'required|date',
-            'OpposingParty'=> 'required|string',
-            'CaseType'=> 'required|string',
-            'Status'=> 'required|string',
-            'Summary'=> 'required|string',
-            'AssignedCounselID'=> 'nullable',
-            'CaseDMSDocID'=> 'nullable',
-        ]);
+        try {
+            $validated = $request->validate([
+                'CaseTitle' => 'required|string',
+                'CaseNumber' => 'required|string',
+                'CourtName' => 'required|string',
+                'FilingDate' => 'required|date',
+                'OpposingParty' => 'required|string',
+                'CaseType' => 'required|string',
+                'Status' => 'required|string',
+                'Summary' => 'required|string',
+                'AssignedCounselID' => 'nullable',
+                'CaseDMSDocID' => 'nullable',
+            ]);
 
-        DB::beginTransaction();
+            DB::beginTransaction();
 
-        $case = LegalCase::findOrFail($id);
-        $case->update([
-            'CaseTitle' => $request->CaseTitle,
-            'CaseNumber' => $request->CaseNumber,
-            'CourtName' => $request->CourtName,
-            'FilingDate' => $request->FilingDate,
-            'OpposingParty' => $request->OpposingParty,
-            'CaseType' => $request->CaseType,
-            'Status' => $request->Status,
-            'Summary' => $request->Summary,
-            'AssignedCounselID' => $request->AssignedCounselID,
-            'CaseDMSDocID' => $request->CaseDMSDocID,
-            'ModifiedBy' => Auth::Id(),
-            'ModifiedOn' => now(),
-        ]);
+            $case = LegalCase::findOrFail($id);
+            $case->update([
+                'CaseTitle' => $request->CaseTitle,
+                'CaseNumber' => $request->CaseNumber,
+                'CourtName' => $request->CourtName,
+                'FilingDate' => $request->FilingDate,
+                'OpposingParty' => $request->OpposingParty,
+                'CaseType' => $request->CaseType,
+                'Status' => $request->Status,
+                'Summary' => $request->Summary,
+                'AssignedCounselID' => $request->AssignedCounselID,
+                'CaseDMSDocID' => $request->CaseDMSDocID,
+                'ModifiedBy' => Auth::Id(),
+                'ModifiedOn' => now(),
+            ]);
 
-        activity()
-            ->performedOn(new LegalCase())
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'update'])
-            ->log('Legal case updated');
+            activity()
+                ->performedOn(new LegalCase())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Legal case updated');
 
-        DB::commit();
+            DB::commit();
 
-        return redirect()->route('legal.cases.index')->with('success', 'Legal case updated successfully.');
-    }catch(\Throwable $th){
-        DB::rollBack();
+            return redirect()->route('legal.cases.index')->with('success', 'Legal case updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
             activity()
                 ->performedOn(new LegalCase())
                 ->causedBy(Auth::user())
@@ -182,34 +181,33 @@ class LegalCaseController extends Controller
     {
         $this->authorize(PermissionEnum::DisputeLitigationDelete, LegalCase::class);
 
-        try{
-        DB::beginTransaction();
-        $case = LegalCase::findOrFail($id);
-        $caseId = $case->Id;
-        $evidence = LegalCaseEvidence::where('LegalCaseID', $caseId)
-            ->update(['DeletedBy' => Auth::id()]);
-        $evidence = LegalCaseEvidence::where('LegalCaseID', $caseId)->delete();
+        try {
+            DB::beginTransaction();
+            $case = LegalCase::findOrFail($id);
+            $caseId = $case->Id;
+            $evidence = LegalCaseEvidence::where('LegalCaseID', $caseId)
+                ->update(['DeletedBy' => Auth::id()]);
+            $evidence = LegalCaseEvidence::where('LegalCaseID', $caseId)->delete();
 
-        $counsel = LegalCaseCounsel::where('LegalCaseID', $caseId)
-            ->update(['DeletedBy' => Auth::id()]);
-        $counsel = LegalCaseCounsel::where('LegalCaseID', $caseId)->delete();
+            $counsel = LegalCaseCounsel::where('LegalCaseID', $caseId)
+                ->update(['DeletedBy' => Auth::id()]);
+            $counsel = LegalCaseCounsel::where('LegalCaseID', $caseId)->delete();
 
-        $outcome = LegalCaseOutcome::where('LegalCaseID', $caseId)
-            ->update(['DeletedBy' => Auth::id()]);
-        $outcome = LegalCaseOutcome::where('LegalCaseID', $caseId)->delete();
+            $outcome = LegalCaseOutcome::where('LegalCaseID', $caseId)
+                ->update(['DeletedBy' => Auth::id()]);
+            $outcome = LegalCaseOutcome::where('LegalCaseID', $caseId)->delete();
 
-        $case = LegalCase::where('Id', $caseId)
-            ->update(['DeletedBy' => Auth::id()]);
-        $case = LegalCase::where('Id', $caseId)->delete();
+            $case = LegalCase::where('Id', $caseId)
+                ->update(['DeletedBy' => Auth::id()]);
+            $case = LegalCase::where('Id', $caseId)->delete();
 
-        activity()
-            ->performedOn(new LegalCase())
-            ->causedBy(Auth::user())
-            ->log('Legal case deleted');
-        DB::commit();
-        return back()->with('success', 'Legal case deleted successfully.');
-        }
-        catch(\Throwable $th){
+            activity()
+                ->performedOn(new LegalCase())
+                ->causedBy(Auth::user())
+                ->log('Legal case deleted');
+            DB::commit();
+            return back()->with('success', 'Legal case deleted successfully.');
+        } catch (\Throwable $th) {
             DB::rollBack();
             activity()
                 ->performedOn(new LegalCase())

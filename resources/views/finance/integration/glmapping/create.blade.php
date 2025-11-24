@@ -61,7 +61,8 @@
                     <a href="{{ route('glpostingmap.index') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Back
                     </a>
-                    <button type="submit" class="btn btn-info" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">
+                    <button type="submit" class="btn btn-info"
+                            onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">
                         <i class="fas fa-save"></i> Save Mapping
                     </button>
                 </div>
@@ -75,7 +76,7 @@
         const transactionSelect = document.getElementById('TransactionType');
         const moduleSelect = document.getElementById('ModuleID');
 
-        moduleSelect.addEventListener('change', function() {
+        moduleSelect.addEventListener('change', function () {
             const selectedModule = this.value;
             transactionSelect.disabled = !selectedModule;
 
@@ -100,7 +101,7 @@
 
         async function loadAccounts() {
             try {
-                const resp = await fetch("{{ route('glpostingmap.list') }}", { headers: { 'Accept': 'application/json' } });
+                const resp = await fetch("{{ route('glpostingmap.list') }}", {headers: {'Accept': 'application/json'}});
                 if (!resp.ok) throw new Error('HTTP error ' + resp.status);
                 glData = await resp.json();
                 populateAccounts();
