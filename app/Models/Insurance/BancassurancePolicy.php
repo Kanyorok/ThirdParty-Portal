@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassurancePolicy extends Model
 {
-    use SoftDeletes, UserActorTrait,DocumentsTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

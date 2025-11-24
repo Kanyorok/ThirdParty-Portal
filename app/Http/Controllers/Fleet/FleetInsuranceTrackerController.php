@@ -44,16 +44,16 @@ class FleetInsuranceTrackerController extends Controller
     }
 
     public function store(FleetInsuranceTrackerRequest $request)
-{
+    {
 
-    $this->authorize('create', FleetInsuranceTracker::class);
-    $validated = $request->validated();
-    $document = $request->file('Document'); 
-    $record = $this->records->create($validated,$document);
+        $this->authorize('create', FleetInsuranceTracker::class);
+        $validated = $request->validated();
+        $document = $request->file('Document');
+        $record = $this->records->create($validated, $document);
 
-    return redirect()->route('fleet.insurance_tracker.index')
-        ->with('success', 'Insurance record created successfully.');
-}
+        return redirect()->route('fleet.insurance_tracker.index')
+            ->with('success', 'Insurance record created successfully.');
+    }
 
 
     public function show($id)
@@ -91,7 +91,7 @@ class FleetInsuranceTrackerController extends Controller
 
     public function destroy($id)
     {
-         $this->authorize('destroy', FleetInsuranceTracker::class);
+        $this->authorize('destroy', FleetInsuranceTracker::class);
         $record = FleetInsuranceTracker::findOrFail($id);
         $this->records->delete($record);
 

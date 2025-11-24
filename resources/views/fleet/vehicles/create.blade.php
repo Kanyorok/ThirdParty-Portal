@@ -3,13 +3,13 @@
 
 @section('content')
 @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
+<div class="alert alert-danger">
+    <ul>
+        @foreach($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
 @endif
 
 
@@ -20,13 +20,13 @@
     <form action="{{ route('fleet.vehicles.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        
+
         @php
-            $activeStatus = $vehicleStatuses->firstWhere('Description', 'Active');
+        $activeStatus = $vehicleStatuses->firstWhere('Description', 'Active');
         @endphp
 
         @if($activeStatus)
-            <input type="hidden" name="Status" value="{{ $activeStatus->ID }}">
+        <input type="hidden" name="Status" value="{{ $activeStatus->ID }}">
         @endif
 
         <div class="row g-3">
@@ -34,7 +34,7 @@
             <div class="col-md-4">
                 <label class="form-label">Registration Number <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="RegistrationNo" required
-                       value="{{ old('RegistrationNo') }}" required maxlength="7">
+                    value="{{ old('RegistrationNo') }}" required maxlength="7">
             </div>
 
             {{-- Vehicle Type --}}
@@ -43,9 +43,9 @@
                 <select class="form-select" name="VehicleType" required>
                     <option value="">Select Type</option>
                     @foreach ($vehicleTypes as $type)
-                        <option value="{{ $type->ID }}" {{ old('VehicleType') == $type->ID ? 'selected' : '' }}>
-                            {{ $type->Description }}
-                        </option>
+                    <option value="{{ $type->ID }}" {{ old('VehicleType') == $type->ID ? 'selected' : '' }}>
+                        {{ $type->Description }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -56,9 +56,9 @@
                 <select class="form-select" name="FuelType">
                     <option value="">Select Fuel</option>
                     @foreach ($fuelTypes as $fuel)
-                        <option value="{{ $fuel->Id }}" {{ old('FuelType') == $fuel->Id ? 'selected' : '' }}>
-                            {{ $fuel->FuelName }}
-                        </option>
+                    <option value="{{ $fuel->Id }}" {{ old('FuelType') == $fuel->Id ? 'selected' : '' }}>
+                        {{ $fuel->FuelName }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -69,9 +69,9 @@
                 <select class="form-control" id="make" name="Make" required>
                     <option value="">-- Select Make --</option>
                     @foreach($brands as $brand)
-                        <option value="{{ $brand->Id }}" {{ old('Make') == $brand->Id ? 'selected' : '' }}>
-                            {{ $brand->BrandName }}
-                        </option>
+                    <option value="{{ $brand->Id }}" {{ old('Make') == $brand->Id ? 'selected' : '' }}>
+                        {{ $brand->BrandName }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -90,9 +90,9 @@
                 <select class="form-select" name="YearOfManufacture" required>
                     <option value="">Select Year</option>
                     @for ($year = now()->year; $year >= 1980; $year--)
-                        <option value="{{ $year }}" {{ old('YearOfManufacture') == $year ? 'selected' : '' }}>
-                            {{ $year }}
-                        </option>
+                    <option value="{{ $year }}" {{ old('YearOfManufacture') == $year ? 'selected' : '' }}>
+                        {{ $year }}
+                    </option>
                     @endfor
                 </select>
             </div>
@@ -107,36 +107,36 @@
             <div class="col-md-4">
                 <label class="form-label">Chassis Number<span class="text-danger">*</span></label>
                 <input type="text"
-                       class="form-control"
-                       name="ChassisNo"
-                       value="{{ old('ChassisNo') }}"
-                       minlength="17"
-                       maxlength="17"
-                       pattern=".{17}"
-                       title="Chassis Number must be exactly 17 characters">
+                    class="form-control"
+                    name="ChassisNo"
+                    value="{{ old('ChassisNo') }}"
+                    minlength="17"
+                    maxlength="17"
+                    pattern=".{17}"
+                    title="Chassis Number must be exactly 17 characters">
             </div>
 
             {{-- Engine No --}}
             <div class="col-md-4">
                 <label class="form-label">Engine Number<span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="EngineNo" value="{{ old('EngineNo') }}"
-                       minlength="11" maxlength="17"
-                       title="Engine Number must be 11 to 17 characters">
+                    minlength="11" maxlength="17"
+                    title="Engine Number must be 11 to 17 characters">
             </div>
 
             {{-- Capacity --}}
             <div class="col-md-4">
                 <label class="form-label">Vehicle Engine (CC)<span class="text-danger">*</span></label>
                 <input type="number" class="form-control" name="Capacity" value="{{ old('Capacity') }}"
-                       placeholder="e.g., 1500" min="0" max="9999" maxlength="4">
+                    placeholder="e.g., 1500" min="0" max="9999" maxlength="4">
             </div>
 
             {{-- Odometer --}}
             <div class="col-md-4">
                 <label class="form-label">Odometer Reading<span class="text-danger">*</span></label>
                 <input type="number" class="form-control" name="OdometerReading"
-                       value="{{ old('OdometerReading') }}"
-                       min="0" max="999999" maxlength="6" placeholder="e.g., 012345">
+                    value="{{ old('OdometerReading') }}"
+                    min="0" max="999999" maxlength="6" placeholder="e.g., 012345">
             </div>
 
 
@@ -144,14 +144,14 @@
             <div class="col-md-4">
                 <label class="form-label">Maximum Load (Kg)<span class="text-danger">*</span></label>
                 <input type="number" step="0.01" class="form-control" name="MaxLoad"
-                       value="{{ old('MaxLoad') }}" min="0">
+                    value="{{ old('MaxLoad') }}" min="0">
             </div>
 
             {{-- Max Passengers --}}
             <div class="col-md-4">
                 <label class="form-label">Maximum Passengers<span class="text-danger">*</span></label>
                 <input type="number" class="form-control" name="MaxPassengers"
-                       value="{{ old('MaxPassengers') }}" min="0">
+                    value="{{ old('MaxPassengers') }}" min="0">
             </div>
 
             {{-- Branch --}}
@@ -160,9 +160,9 @@
                 <select class="form-select" name="AssignedBranch">
                     <option value="">-- None --</option>
                     @foreach ($branches as $branch)
-                        <option value="{{ $branch->Id }}" {{ old('AssignedBranch') == $branch->Id ? 'selected' : '' }}>
-                            {{ $branch->Name }}
-                        </option>
+                    <option value="{{ $branch->Id }}" {{ old('AssignedBranch') == $branch->Id ? 'selected' : '' }}>
+                        {{ $branch->Name }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -184,7 +184,7 @@
 
 {{-- Dynamic Make → Model --}}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const makeSelect = document.getElementById('make');
         const modelSelect = document.getElementById('model');
         const selectedModel = "{{ old('Model') }}";
@@ -206,7 +206,7 @@
             }
         }
 
-        makeSelect.addEventListener('change', function () {
+        makeSelect.addEventListener('change', function() {
             loadModels(this.value, null);
         });
 

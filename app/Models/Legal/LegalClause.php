@@ -40,8 +40,8 @@ class LegalClause extends Model
     // Casts for convenience
     protected $casts = [
         'EffectiveFrom' => 'date',
-        'EffectiveTo'   => 'date',
-        'Tags'          => 'array',
+        'EffectiveTo' => 'date',
+        'Tags' => 'array',
     ];
 
     // (Fix the incorrect returned name)

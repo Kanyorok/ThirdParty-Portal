@@ -3,7 +3,7 @@
 namespace App\Services\FleetManagement;
 
 
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\FleetManagement\FleetModel;
 use App\Models\FleetManagement\FleetMake;
@@ -17,38 +17,39 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class FleetModelService
 {
 
-  public function create(array $data): FleetModel
-{
-    return DB::transaction(function () use ($data) {
-        $data['ModelID'] = $this->generateModelID();
-        $data['ModelName'] = $data['ModelName'] ?? null;
-        $data['BrandID'] = $data['BrandID'] ?? null;
-        $data['Remarks'] = $data['Remarks'] ?? null;
-        $data['CreatedBy'] = Auth::id();
-        $data['CreatedOn'] = now();
-        
-        // Check if the fleet model already exists on soft deletes
-        $existing = FleetModel::withTrashed()
-            ->where('ModelName', $data['ModelName'])
-            ->where('BrandID', $data['BrandID'])
-            ->first();
+    public function create(array $data): FleetModel
+    {
+        return DB::transaction(function () use ($data) {
+            $data['ModelID'] = $this->generateModelID();
+            $data['ModelName'] = $data['ModelName'] ?? null;
+            $data['BrandID'] = $data['BrandID'] ?? null;
+            $data['Remarks'] = $data['Remarks'] ?? null;
+            $data['CreatedBy'] = Auth::id();
+            $data['CreatedOn'] = now();
 
-        if ($existing) {
-            if ($existing->trashed()) {
-                $existing->restore();
-                return $existing;
+            // Check if the fleet model already exists on soft deletes
+            $existing = FleetModel::withTrashed()
+                ->where('ModelName', $data['ModelName'])
+                ->where('BrandID', $data['BrandID'])
+                ->first();
+
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                    return $existing;
+                }
+                throw new \Exception("This model already exists for the selected brand.");
             }
-            throw new \Exception("This model already exists for the selected brand.");
-        }
 
-        return FleetModel::create($data);
-    
-    });
-    activity()
-        ->performedOn($model)
-        ->causedBy(Auth::user())
-        ->log('Fleet Model Created');
-}
+            return FleetModel::create($data);
+
+        });
+        activity()
+            ->performedOn($model)
+            ->causedBy(Auth::user())
+            ->log('Fleet Model Created');
+    }
+
     private function generateModelID(): string
     {
         $latestModel = FleetModel::withTrashed()->latest('CreatedOn')->first();
@@ -57,7 +58,7 @@ class FleetModelService
             return 'MOD-0001';
         }
 
-        $lastId = (int) str_replace('MOD-', '', $latestModel->ModelID);
+        $lastId = (int)str_replace('MOD-', '', $latestModel->ModelID);
         $newId = $lastId + 1;
 
         return 'MOD-' . str_pad($newId, 4, '0', STR_PAD_LEFT);

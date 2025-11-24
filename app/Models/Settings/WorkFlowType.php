@@ -2,10 +2,9 @@
 
 namespace App\Models\Settings;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Settings\ApprovalStage;
 
 class WorkFlowType extends Model
 {
@@ -27,8 +26,4 @@ class WorkFlowType extends Model
         return 'WorkFlowTypeId';
     }
 
-    public function approvalStages()
-    {
-        return $this->hasMany(ApprovalStage::class, 'TypeID', 'Id');
-    }
 }

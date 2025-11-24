@@ -38,7 +38,7 @@ class PropertyNewTenant extends Model
         return $this->belongsTo(CodeDetail::class, 'TenantType', 'ID');
     }
 
-        public function createdByUser()
+    public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }

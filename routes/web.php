@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Finance\BankBranchController;
-use App\Http\Controllers\Admin\LicenseController;
+use App\Http\Controllers\Settings\WorflowLimitsController;
+use App\Http\Controllers\Settings\WorflowLimitController;
+use App\Http\Controllers\Settings\WorkflowController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])->group(function () {
@@ -12,12 +14,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
 require __DIR__ . '/auth.php';
 
-Route::middleware(['auth','license'])->namespace('App\Http\Controllers')->group(function () {
-    // Customizable dashboard APIs
-    Route::prefix('dashboard')->group(function() {
-        Route::get('widgets', 'Dashboard\\UserDashboardController@widgets')->name('user-dashboard.widgets');
-        Route::post('widgets', 'Dashboard\\UserDashboardController@saveLayout')->name('user-dashboard.widgets.save');
-    });
+Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(function () {
     require __DIR__ . '/crm.php';
 
     // Procurement routes with prefix
@@ -45,12 +42,27 @@ Route::middleware(['auth','license'])->namespace('App\Http\Controllers')->group(
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
         Route::get('workflows', 'WorkFlowController@index')->name('settings.workflows.index');
         Route::post('workflows/create', 'WorkFlowController@store')->name('settings.workflows.store');
-        Route::get('workflows/delete/{id}', 'WorkFlowController@destroy')->name('settings.workflows.delete');
+        Route::put('workflows/{id}', 'WorkFlowController@update')->name('settings.workflows.update');
+        // Delete workflow: use proper HTTP verb. Remove old GET delete route.
+        Route::delete('workflows/{id}', 'WorkFlowController@destroy')->name('settings.workflows.destroy');
+        // Optional fallback if DELETE is blocked by infra
+        Route::post('workflows/delete/{id}', 'WorkFlowController@destroy')->name('settings.workflows.delete.post');
         Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
         Route::post('workflow-stages', 'WorkflowStagesController@store')->name('settings.workflow_stages.store');
         Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
-        Route::get('workflow-limits', 'WorflowLimitsController@index')->name('settings.workflow_limits');
-        Route::post('workflow-limits', 'WorflowLimitsController@store')->name('settings.approval_workflow_limit.store');
+
+        Route::get('/settings/workflows/{id}/state', [WorkFlowController::class, 'getState'])->name('settings.workflows.state');
+
+        //         // Add POST alternative for delete to handle form submission
+        // Route::post('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy.post');
+        // Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
+
+        // Workflow Limits Routes
+        Route::get('workflow-limits', [WorflowLimitsController::class, 'index'])->name('settings.workflow_limits');
+        Route::post('workflow-limits', [WorflowLimitsController::class, 'store'])->name('settings.workflow_limits.store');
+        Route::delete('workflow-limits/{id}', [WorflowLimitsController::class, 'destroy'])->name('settings.workflow_limits.destroy');
+
+
 
         Route::get('integrations', 'SettingsController@integrations')->name('settings.integrations');
         Route::post('integrations', 'IntegrationController');

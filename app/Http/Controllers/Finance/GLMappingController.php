@@ -19,9 +19,14 @@ class GLMappingController extends Controller
 {
     public function index()
     {
+<<<<<<< HEAD
+        $mappings = FinanceGLMapping::with('modules:ModuleID,Name', 'transactions:Id,Name', 'debitAccount:Id,GLName', 'creditAccount:Id,GLName')
+            ->orderBy('Id', 'desc')->get();
+=======
         $this->authorize(PermissionEnum::FinanceGLMappingView, FinanceGLMapping::class);
         $mappings = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName,GLCode', 'creditAccount:Id,GLName,GLCode')
             ->orderBy('Id','desc')->get();
+>>>>>>> origin
 
         $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
         $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
@@ -35,10 +40,16 @@ class GLMappingController extends Controller
 
     public function create()
     {
+<<<<<<< HEAD
+        $glaccounts = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $moduleIds = FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
+        $modules = Module::select('ModuleID', 'Name')->whereIn('ModuleID', $moduleIds)
+=======
         $this->authorize(PermissionEnum::FinanceGLMappingCreate, FinanceGLMapping::class);
         $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
         $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
         $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+>>>>>>> origin
             ->where('ParentID', null)
             ->orderBy('Name', 'asc')->get();
         $transactionTypes = FinanceModuleTransactions::all();
@@ -49,11 +60,23 @@ class GLMappingController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGLMappingCreate, FinanceGLMapping::class);
 
+<<<<<<< HEAD
+        $glmaps = FinanceGLMapping::create([
+            'ModuleID' => $validated['ModuleID'],
+            'TransactionTypeID' => $validated['TransactionType'],
+            'DebitGLAccountID' => $validated['DebitGLAccountID'],
+            'CreditGLAccountID' => $validated['CreditGLAccountID'],
+            'IsActive' => $request->has('IsActive') ? 1 : 0,
+            'CreatedBy' => Auth::Id(),
+            'ModifiedBy' => Auth::Id(),
+        ]);
+=======
         // Check if the required tables exist and have data
         try {
             $moduleCount = DB::table('t_Modules')->count();
             $transactionTypeCount = DB::table('t_FinanceTransactionTypes')->count();
             $glAccountCount = DB::table('t_FinanceGLAccounts')->count();
+>>>>>>> origin
 
         } catch (\Exception $e) {
             Log::error('Database table check failed:', ['error' => $e->getMessage()]);
@@ -135,6 +158,8 @@ class GLMappingController extends Controller
 
         return response()->json($types);
     }
+<<<<<<< HEAD
+=======
     public function edit($id)
     {
         $this->authorize(PermissionEnum::FinanceGLMappingUpdate, FinanceGLMapping::class);
@@ -224,14 +249,15 @@ class GLMappingController extends Controller
 
         return redirect()->route('glpostingmap.index')->with('success', 'GL Mapping deleted successfully.');
     }
+>>>>>>> origin
 
     public function list()
     {
         $this->authorize(PermissionEnum::FinanceGLMappingView, FinanceGLMapping::class);
         $accounts = DB::table('t_FinanceGLAccounts')  // Table name
-            ->select('Id', 'GLName')            // Columns we need
-            ->orderBy('GLName')                 // Sort for better UX
-            ->get();
+        ->select('Id', 'GLName')            // Columns we need
+        ->orderBy('GLName')                 // Sort for better UX
+        ->get();
 
         return response()->json($accounts);   // Send data as JSON
     }

@@ -10,29 +10,29 @@
     <div class="card-body">
         <p class="text-muted">Browse, manage, and update standard legal clauses and templates for quick inclusion in contracts and legal documents.</p>
         <div class="table-reponsive">
-        <table class="table table-hover table-sm align-middle text-center"
-            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Type</th>
-                    <th>Version</th>
-                    <th>Standard</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if($clauses->count())
-                @foreach ($clauses as $clause)
+            <table class="table table-hover table-sm align-middle text-center"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Version</th>
+                        <th>Standard</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if($clauses->count())
+                    @foreach ($clauses as $clause)
                     <tr>
                         <td>{{ $clause->Title }}</td>
                         <td>{{ $clause->ClauseType }}</td>
                         <td>v {{ $clause->Version }}</td>
                         <td>
                             @if($clause->IsStandard === 'Yes')
-                                <span class="badge bg-success">Yes</span>
+                            <span class="badge bg-success">Yes</span>
                             @else
-                                <span class="badge bg-secondary">No</span>
+                            <span class="badge bg-secondary">No</span>
                             @endif
                         </td>
                         <td>
@@ -50,8 +50,8 @@
                             </button>
                         </td>
                     </tr>
-                @endforeach
-                @else
+                    @endforeach
+                    @else
                     <tr>
                         <td colspan="5" class="p-0">
                             <div class="text-centre p-4 border rounded-3 bg-light">
@@ -62,9 +62,9 @@
                             </div>
                         </td>
                     </tr>
-                @endif
-            </tbody>
-        </table>
+                    @endif
+                </tbody>
+            </table>
         </div>
         <div class="d-flex justify-content-end align-items-center mt-3">
             {{ $clauses->links() }}

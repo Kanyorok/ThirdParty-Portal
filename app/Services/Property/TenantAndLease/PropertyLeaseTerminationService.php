@@ -20,7 +20,9 @@ class PropertyLeaseTerminationService
     /**
      * Create a new class instance.
      */
-    public function __construct(PropertyLeaseTermination $propertyLeaseTermination) {}
+    public function __construct(PropertyLeaseTermination $propertyLeaseTermination)
+    {
+    }
 
     public static function create(
         PropertyNewLease $LeaseID,

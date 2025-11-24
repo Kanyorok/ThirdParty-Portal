@@ -13,9 +13,12 @@
         font-weight: 600;
         text-align: center;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
         vertical-align: middle !important;
     }
+
     table.dataTable tbody tr:hover {
         background-color: #f9fbfd;
     }
@@ -26,6 +29,7 @@
         padding: 4px 12px;
         border: 1px solid #ced4da;
     }
+
     .dataTables_wrapper .dataTables_length select {
         border-radius: 20px;
         padding: 3px 10px;
@@ -37,6 +41,7 @@
         font-size: 0.85rem;
         padding: 0.25rem 0.6rem;
     }
+
     .pending-btn {
         font-size: 0.8rem;
         padding: 0.25rem 0.6rem;
@@ -85,21 +90,21 @@
                             <td>{{ \Carbon\Carbon::parse($e->ClaimDate)->format('d/m/Y') }}</td>
                             <td class="text-center">
                                 @if(strtolower($e->status->Description ?? '') === 'paid')
-                                    <span class="badge bg-success status-badge">Paid</span>
+                                <span class="badge bg-success status-badge">Paid</span>
                                 @else
-                                    <span class="badge bg-warning text-dark status-badge">Pending</span>
+                                <span class="badge bg-warning text-dark status-badge">Pending</span>
                                 @endif
                             </td>
                             <td class="text-center">
                                 @if(strtolower($e->status->Description ?? '') === 'paid')
-                                    <a href="{{ route('bancassurance.commissions.payouts.pay', $e->Id) }}" 
-                                       class="btn btn-sm btn-success payout-btn">
-                                        <i class="bi bi-cash-stack me-1"></i> Payout
-                                    </a>
+                                <a href="{{ route('bancassurance.commissions.payouts.pay', $e->Id) }}"
+                                    class="btn btn-sm btn-success payout-btn">
+                                    <i class="bi bi-cash-stack me-1"></i> Payout
+                                </a>
                                 @else
-                                    <button class="btn btn-sm btn-secondary pending-btn" disabled>
-                                        ⌛ Pending Payment
-                                    </button>
+                                <button class="btn btn-sm btn-secondary pending-btn" disabled>
+                                    ⌛ Pending Payment
+                                </button>
                                 @endif
                             </td>
                         </tr>
@@ -120,7 +125,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#commissionsTable').DataTable({
             pageLength: 10,
             ordering: true,
@@ -130,8 +135,10 @@
                 search: "_INPUT_",
                 searchPlaceholder: "Search commissions..."
             },
-            columnDefs: [
-                { orderable: false, targets: [6] } // Actions column
+            columnDefs: [{
+                    orderable: false,
+                    targets: [6]
+                } // Actions column
             ]
         });
     });

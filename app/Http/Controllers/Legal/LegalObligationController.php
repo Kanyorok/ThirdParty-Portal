@@ -22,7 +22,7 @@ class LegalObligationController extends Controller
 
         $obligations = LegalObligation::orderByDesc('CreatedOn')->paginate(15);
         $details = CodeDetail::select('Value')
-            ->where('CodeID','LegalSourceTypes')
+            ->where('CodeID', 'LegalSourceTypes')
             ->get();
 
         return view('legal.obligations.index', compact('obligations', 'details'));
@@ -33,7 +33,7 @@ class LegalObligationController extends Controller
         $this->authorize(PermissionEnum::LegalObligationCreate, LegalObligation::class);
 
         $details = CodeDetail::select('Value')
-            ->where('CodeID','LegalSourceTypes')
+            ->where('CodeID', 'LegalSourceTypes')
             ->get();
         return view('legal.obligations.create', compact('details'));
     }
@@ -53,19 +53,19 @@ class LegalObligationController extends Controller
             ->where('SourceType', $validated['SourceType'])
             ->exists();
 
-        if($duplicate){
+        if ($duplicate) {
             return back()->with('error', 'There is an existing record same as this');
         }
 
-        try{
+        try {
             DB::beginTransaction();
 
             $obligations = LegalObligation::create([
-                'Title'=> $validated['Title'],
-                'SourceType'=> $validated['SourceType'],
-                'DueDate'=> $validated['DueDate'],
-                'Status'=> $validated['Status'] ?? 'Pending',
-                'Description'=> $validated['Description'],
+                'Title' => $validated['Title'],
+                'SourceType' => $validated['SourceType'],
+                'DueDate' => $validated['DueDate'],
+                'Status' => $validated['Status'] ?? 'Pending',
+                'Description' => $validated['Description'],
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
@@ -79,7 +79,7 @@ class LegalObligationController extends Controller
             DB::commit();
 
             return redirect()->route('legal.obligations.index')->with('success', 'Obligation created successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
@@ -115,7 +115,7 @@ class LegalObligationController extends Controller
             'Description' => 'required|string',
         ]);
 
-        try{
+        try {
             DB::beginTransaction();
 
             $data['ModifiedBy'] = Auth::id();
@@ -133,7 +133,7 @@ class LegalObligationController extends Controller
             DB::commit();
 
             return redirect()->route('legal.obligations.index')->with('success', 'Obligation updated successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
@@ -161,7 +161,7 @@ class LegalObligationController extends Controller
     {
         $this->authorize(PermissionEnum::LegalObligationDelete, LegalObligation::class);
 
-        try{
+        try {
             DB::beginTransaction();
 
             $obligation = LegalObligation::findOrFail($id);
@@ -177,9 +177,9 @@ class LegalObligationController extends Controller
 
             DB::commit();
 
-            return back()->with('success','Obligation successfully deleted');
+            return back()->with('success', 'Obligation successfully deleted');
 
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
@@ -209,8 +209,7 @@ class LegalObligationController extends Controller
         // Check if the user is already assigned
         if ($obligation->AssignedTo == $validated['UserId']) {
             return back()->withErrors('Error', 'User Already Assigned');
-        }
-        else{
+        } else {
 
             //Store in scheduled table
             $schedule = Schedule::create([
@@ -260,7 +259,6 @@ class LegalObligationController extends Controller
 
     //     return redirect()->back()->with('success', 'Obligation marked as completed.');
     // }
-
 
 
     // public function calendar()

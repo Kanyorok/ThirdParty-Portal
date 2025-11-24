@@ -3,9 +3,9 @@
 @section('content')
 
     <div class="card mt-4 shadow-sm rounded-3">
-{{--        <div class="card-header bg-light text-white fw-semibold">--}}
-{{--            Budget Entry Overview (By Lines)--}}
-{{--        </div>--}}
+        {{--        <div class="card-header bg-light text-white fw-semibold">--}}
+        {{--            Budget Entry Overview (By Lines)--}}
+        {{--        </div>--}}
         <div class="card-body">
             @if($entries->isEmpty())
                 <div class="alert alert-warning">No budget entries found for this BudgetID.</div>

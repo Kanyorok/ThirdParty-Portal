@@ -20,11 +20,12 @@ class BancassuranceClaimAssessmentService
 
     public static function create(
         BancassuranceClaim $claim,
-        string $AssessmentComments,
-        float $AssessmentAmount,
-        CodeDetail $Decision,
-        User $user,
-    ): self {
+        string             $AssessmentComments,
+        float              $AssessmentAmount,
+        CodeDetail         $Decision,
+        User               $user,
+    ): self
+    {
         $assessment = BancassuranceClaimAssessment::create([
             'ClaimId' => $claim->Id,
             'AssessmentComments' => $AssessmentComments,

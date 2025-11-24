@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class InsurancePricingRule extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_InsurancePricingRules';
     const CREATED_AT = 'CreatedOn';
@@ -22,27 +23,29 @@ class InsurancePricingRule extends Model
         'RuleName',
         'CoverageAmountMax',
         'CoverageAmountMin',
-        'PremiumRate',     
-        'AgeMin',     
-        'AgeMax',     
-        'TenureMin',  
-        'TenureMax',  
-        'IsActive',       
+        'PremiumRate',
+        'AgeMin',
+        'AgeMax',
+        'TenureMin',
+        'TenureMax',
+        'IsActive',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
     ];
-    
+
     public static function getPrimaryKey(): string
     {
         return 'InsurancePricingRulesId';
     }
+
     public function provider()
     {
-        return $this->belongsTo(InsuranceProvider::class,'InsuranceProviderId','Id');
+        return $this->belongsTo(InsuranceProvider::class, 'InsuranceProviderId', 'Id');
     }
-         public function product()
+
+    public function product()
     {
-        return $this->belongsTo(InsuranceProduct::class,'Product','Id');
+        return $this->belongsTo(InsuranceProduct::class, 'Product', 'Id');
     }
 }

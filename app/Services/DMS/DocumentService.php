@@ -223,7 +223,7 @@ class DocumentService extends PermissionsService
                 }
                 return $service->_newVersion($disk, $path, $name, $sizeInBytes, $actor, $properties, $checksum);
             });
-        } catch (Exception | Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error creating document: ');
             Log::error($e);
             throw new ErroredException('Saving file failed.');
@@ -583,7 +583,7 @@ class DocumentService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($this->document)->event('update')->log('Updated file ' . $this->document->Name . ' visibility : ' . $visibility->description());
                 return $this;
             });
-        } catch (Exception | Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error update document visibility: ');
             Log::error($e);
             throw new ErroredException();

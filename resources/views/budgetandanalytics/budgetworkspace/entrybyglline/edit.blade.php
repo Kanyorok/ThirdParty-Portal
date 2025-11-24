@@ -3,7 +3,7 @@
 @section('content')
 
     <div class="card mt-4">
-{{--        <div class="card-header bg-dark text-white">✏️ Edit Budget Line Entry</div>--}}
+        {{--        <div class="card-header bg-dark text-white">✏️ Edit Budget Line Entry</div>--}}
         <div class="card-body">
             <form action="{{ route('entrybyglline.update', $entry->Id) }}" method="POST">
                 @csrf

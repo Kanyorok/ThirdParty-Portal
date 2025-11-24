@@ -33,7 +33,7 @@ BEGIN
     INSERT
     INTO #CampaignReport
     SELECT c.CampaignID,
-           c.Label                                                                                            AS CampaignLabel,
+           c.Label                                                  AS CampaignLabel,
            case
                when c.Status = 'd' then 'Draft'
                when c.status = 'a' then 'Approval'
@@ -41,27 +41,27 @@ BEGIN
                when c.status = 'f' then 'Failed'
                when c.status = 'r' then 'Processing'
                when c.status = 'p'
-                   then 'Sending' END                                                                         AS CampaignStatus,
+                   then 'Sending' END                               AS CampaignStatus,
            case
                when c.Type = 's' then 'SMS Campaign'
                when c.Type = 'e' then 'Email Campaign'
-               ELSE c.Type END                                                                                AS CampaignType,
-           isnull(s.Content, c.Details)                                                                       AS CampaignDetails,
-           c.Notes                                                                                            AS CampaignNotes,
-           (SELECT f.Name FROM t_users f WHERE f.id = c.CreatedBy)                                            AS CreatedBy,
+               ELSE c.Type END                                      AS CampaignType,
+           isnull(s.Content, c.Details)                             AS CampaignDetails,
+           c.Notes                                                  AS CampaignNotes,
+           (SELECT f.Name FROM t_users f WHERE f.id = c.CreatedBy)  AS CreatedBy,
            c.CreatedOn,
-           (SELECT f.Name FROM t_users f WHERE f.id = c.ModifiedBy)                                           AS ModifiedBy,
+           (SELECT f.Name FROM t_users f WHERE f.id = c.ModifiedBy) AS ModifiedBy,
            c.ModifiedOn,
 
-           (SELECT f.Name FROM t_users f WHERE f.id = c.DeletedBy)                                            AS DeletedBy,
+           (SELECT f.Name FROM t_users f WHERE f.id = c.DeletedBy)  AS DeletedBy,
            c.DeletedOn,
-           s.Phone                                                                                            AS SMSPhone,
+           s.Phone                                                  AS SMSPhone,
            CASE
                WHEN s.Status = 'p' THEN 'Pending'
                WHEN s.Status = 'f' THEN 'Failed'
                WHEN s.Status = 's' THEN 'Sent'
                ELSE s.Status
-               END                                                                                            AS SMSStatus,
+               END                                                  AS SMSStatus,
            isnull(k.name, s.PartyID),
            s.CreatedOn
     FROM t_Campaigns c

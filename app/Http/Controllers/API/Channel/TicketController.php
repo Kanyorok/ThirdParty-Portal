@@ -52,22 +52,22 @@ class TicketController extends Controller
 
         try {
             $data = $request->validate([
-                                        'ticket_id'          => [
-                                                                 'required',
-                                                                 'string',
-                                                                 'max:100',
-                                                                ],
-                                        'ticket_title'       => [
-                                                                 'required',
-                                                                 'string',
-                                                                 'max:255',
-                                                                ],
-                                        'ticket_description' => [
-                                                                 'required',
-                                                                 'string',
-                                                                ],
-                                        'ticket_category'    => ['required'],
-                                       ]);
+                'ticket_id' => [
+                    'required',
+                    'string',
+                    'max:100',
+                ],
+                'ticket_title' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'ticket_description' => [
+                    'required',
+                    'string',
+                ],
+                'ticket_category' => ['required'],
+            ]);
         } catch (ValidationException $e) {
             return $this->br_response(422, $e->getMessage(), $e->errors());
         }

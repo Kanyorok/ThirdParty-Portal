@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceTransaction extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
+
     protected $table = 't_FinancialTransactions';
     protected $primaryKey = 'Id';
 
@@ -22,6 +23,7 @@ class FinanceTransaction extends Model
     {
         return 'FinanceTransactionId';
     }
+
     protected $fillable = [
         'TransactionDate',
         'ThirdPartyID',

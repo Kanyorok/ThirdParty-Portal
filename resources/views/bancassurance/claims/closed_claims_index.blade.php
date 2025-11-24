@@ -12,9 +12,12 @@
         font-weight: 600;
         text-align: center;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
         vertical-align: middle !important;
     }
+
     table.dataTable tbody tr:hover {
         background-color: #f9fbfd;
     }
@@ -25,6 +28,7 @@
         padding: 4px 12px;
         border: 1px solid #ced4da;
     }
+
     .dataTables_wrapper .dataTables_length select {
         border-radius: 20px;
         padding: 3px 10px;
@@ -43,8 +47,8 @@
 
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('bancassurance.claims.initiateClosureForm') }}" 
-           class="btn btn-sm btn-primary rounded-pill shadow-sm">
+        <a href="{{ route('bancassurance.claims.initiateClosureForm') }}"
+            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> Initiate Closure
         </a>
     </div>
@@ -56,10 +60,10 @@
 
     {{-- ✅ Success Message --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-pill py-2 px-3 mb-3 shadow-sm" role="alert">
-            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="alert alert-success alert-dismissible fade show rounded-pill py-2 px-3 mb-3 shadow-sm" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     @endif
 
     {{-- ✅ Closed Claims Table --}}
@@ -113,7 +117,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#claimclosed').DataTable({
             pageLength: 10,
             ordering: true,

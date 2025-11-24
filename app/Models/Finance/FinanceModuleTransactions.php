@@ -27,7 +27,7 @@ class FinanceModuleTransactions extends Model
 
     public static function getPrimaryKey(): string
     {
-         return 'ModuleTransactionsId';
+        return 'ModuleTransactionsId';
     }
 
     // Relationships (example stubs - update as needed)
@@ -35,6 +35,7 @@ class FinanceModuleTransactions extends Model
     {
         return $this->belongsTo(Module::class, 'ModuleID', 'ModuleID');
     }
+
     public function transactions()
     {
         return $this->belongsTo(FinanceTransactionTypes::class, 'TransactionTypeID', 'Id');

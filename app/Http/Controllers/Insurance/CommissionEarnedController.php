@@ -8,11 +8,11 @@ use Illuminate\Http\Request;
 
 class CommissionEarnedController extends Controller
 {
-public function index(Request $request)
-{
-    $claims = BancassuranceClaim::all();
+    public function index(Request $request)
+    {
+        $claims = BancassuranceClaim::all();
 
-    return view('bancassurance.commissions.earned.index', compact('claims'));
-}
+        return view('bancassurance.commissions.earned.index', compact('claims'));
+    }
 
 }

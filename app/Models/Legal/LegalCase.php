@@ -51,6 +51,7 @@ class LegalCase extends Model
     {
         return $this->hasMany(LegalCaseCounsel::class, 'LegalCaseID', 'Id');
     }
+
     /**
      * One case has one outcome (judgment or resolution)
      */

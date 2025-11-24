@@ -78,17 +78,17 @@ class InterBranchRequisition extends Model
         return $this->hasOne(TransactionTransfer::class, 'RequisitionId', 'Id');
 }
 
-public function scopeActive($query)
-{
-    $activeStatusId = cache()->rememberForever('status_active_id', function () {
-        return \DB::table('t_CodeDetails')
-            ->where('Code', 'Status')
-            ->where('Name', 'Active')
-            ->value('Id');
-    });
+    public function scopeActive($query)
+    {
+        $activeStatusId = cache()->rememberForever('status_active_id', function () {
+            return \DB::table('t_CodeDetails')
+                ->where('Code', 'Status')
+                ->where('Name', 'Active')
+                ->value('Id');
+        });
 
-    return $query->where('Status', $activeStatusId);
-}
+        return $query->where('Status', $activeStatusId);
+    }
 
 
 }

@@ -17,6 +17,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('home');
+    Route::get('/user-dashboard/widgets', [DashboardController::class, 'getWidgets'])->name('user-dashboard.widgets');
+    Route::post('/user-dashboard/widgets/save', [DashboardController::class, 'saveLayout'])->name('user-dashboard.widgets.save');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::post('timeout', [AuthenticatedSessionController::class, 'timeout'])->name('timeout');
@@ -31,7 +33,7 @@ Route::middleware('auth')->group(function () {
     // Route::any('ssrs-report', [\App\Http\Controllers\Auth\ReportController::class, 'show'])->name('ssrs.view_report');
     //Route::any('rpt',[ReportController::class,'view']);//->name('ssrs.view_report');
 
-//    Route::get('/ssrs-proxy', [SSRSProxyController::class, 'fetchReport']);
+    //    Route::get('/ssrs-proxy', [SSRSProxyController::class, 'fetchReport']);
     /* Route::get('core/auth/report/{report}/ssrs-report-proxy', SSRSProxyController::class)->name('auth.ssrs.proxy');
      Route::any('report/{any}', [SSRSProxyController::class, 'report'])->where('any', '.*')->name('ssrs.proxy.report')
          ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
@@ -42,5 +44,4 @@ Route::middleware('auth')->group(function () {
          ->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
      Route::any('reports/{any}', [SSRSProxyController::class, 'assets'])->where('any', '.*');
      Route::get('core/auth/report/assets/{asset?}', [SSRSProxyController::class, 'assets'])->name('auth.ssrs.proxy.assets');*/
-
 });

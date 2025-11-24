@@ -43,16 +43,19 @@ class PrequalificationEvaluation extends Model
     {
         return $this->belongsTo(PrequalificationApplication::class, 'ApplicationID', 'ApplicationID');
     }
+
     // Evaluator is of type User
     public function evaluator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'EvaluatorID', 'UserID');
     }
-    // Section to be evaluated 
+
+    // Section to be evaluated
     public function evaluationSection(): BelongsTo
     {
         return $this->belongsTo(Section::class, 'SectionID', 'Id');
     }
+
     // criteria within the section to be evaluated
     public function criteria(): BelongsTo
     {

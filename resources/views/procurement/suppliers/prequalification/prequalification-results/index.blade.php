@@ -26,8 +26,8 @@
                         @forelse ($evaluations as $evaluation)
                         <tr>
                             @php
-                                $app = $evaluation->application;
-                                $hasRound = (bool) optional($app)->round;
+                            $app = $evaluation->application;
+                            $hasRound = (bool) optional($app)->round;
                             @endphp
                             <td>{{ optional($app)->applicationNo ?? 'N/A' }}</td>
                             <td>{{ optional($app->supplier)->ThirdPartyName ?? 'N/A' }}</td>
@@ -51,22 +51,22 @@
                             </td>
                             <td>
                                 @if (!$hasRound)
-                                    {{-- Prevent actions that require a configured round to avoid 404 from controller --}}
-                                    @if (optional($app)->result)
-                                        {{-- Result exists but round not configured: no view button shown --}}
-                                    @else
-                                        <button class="btn btn-sm btn-secondary" disabled title="Prequalification round not configured for this application">
-                                            <i class="fas fa-edit me-1"></i> Evaluate
-                                        </button>
-                                    @endif
+                                {{-- Prevent actions that require a configured round to avoid 404 from controller --}}
+                                @if (optional($app)->result)
+                                {{-- Result exists but round not configured: no view button shown --}}
                                 @else
-                                    @if (optional($app)->result)
-                                        {{-- View button removed by request --}}
-                                    @else
-                                        <a href="{{ route('prequalification.prequalification-evaluation.show', $evaluation->ApplicationID) }}" class="btn btn-sm btn-warning text-dark">
-                                            <i class="fas fa-edit me-1"></i> Evaluate
-                                        </a>
-                                    @endif
+                                <button class="btn btn-sm btn-secondary" disabled title="Prequalification round not configured for this application">
+                                    <i class="fas fa-edit me-1"></i> Evaluate
+                                </button>
+                                @endif
+                                @else
+                                @if (optional($app)->result)
+                                {{-- View button removed by request --}}
+                                @else
+                                <a href="{{ route('prequalification.prequalification-evaluation.show', $evaluation->ApplicationID) }}" class="btn btn-sm btn-warning text-dark">
+                                    <i class="fas fa-edit me-1"></i> Evaluate
+                                </a>
+                                @endif
                                 @endif
                             </td>
                         </tr>

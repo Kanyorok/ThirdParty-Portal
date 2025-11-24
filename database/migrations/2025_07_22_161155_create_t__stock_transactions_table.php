@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -20,11 +19,11 @@ return new class extends Migration
             $table->foreignId('ItemID')->constrained('t_Items', 'Id');
             $table->foreignId('StoreID')->nullable()->constrained('t_Stores', 'Id');
             $table->foreignId('BranchID')->constrained('t_Branches', 'Id');
-            $table->decimal('UnitCost', 10, 2)->nullable();  
+            $table->decimal('UnitCost', 10, 2)->nullable();
             $table->foreignId('UOMID')->constrained('t_UOM', 'Id');
             $table->decimal('QuantityIn', 18, 2)->nullable()->default(0);
             $table->decimal('QuantityOut', 18, 2)->nullable()->default(0);
-            $table->decimal('BalanceQty', 18, 2)->nullable() ->default(0);
+            $table->decimal('BalanceQty', 18, 2)->nullable()->default(0);
             $table->dateTime('TransactionDate');
             $table->text('Remarks')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

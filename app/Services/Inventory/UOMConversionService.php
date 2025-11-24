@@ -11,24 +11,24 @@ use Carbon\Carbon;
 class UOMConversionService
 {
     public function create(array $data): UOMConversion
-{
-    return DB::transaction(function () use ($data) {
-        $data['UOMNo'] = $this->generateUOMNo();
-        $data['Item'] = $data['Item'] ?? null;
-        $data['UOM'] = $data['UOM'] ?? null;
-        $data['AlternateUOM'] = $data['AlternateUOM'] ?? null;
-        $data['ConversionFactor'] = $data['ConversionFactor'] ?? null;
-        $data['Remarks'] = $data['Remarks'] ?? null;
-        $data['CreatedBy'] = Auth::id();
-        $data['CreatedOn'] = now();
+    {
+        return DB::transaction(function () use ($data) {
+            $data['UOMNo'] = $this->generateUOMNo();
+            $data['Item'] = $data['Item'] ?? null;
+            $data['UOM'] = $data['UOM'] ?? null;
+            $data['AlternateUOM'] = $data['AlternateUOM'] ?? null;
+            $data['ConversionFactor'] = $data['ConversionFactor'] ?? null;
+            $data['Remarks'] = $data['Remarks'] ?? null;
+            $data['CreatedBy'] = Auth::id();
+            $data['CreatedOn'] = now();
 
-        return UOMConversion::create($data);
-    });
-    activity()
-        ->performedOn($unit)
-        ->causedBy(Auth::user())
-        ->log('Unit of Measure Conversion Created');
-}
+            return UOMConversion::create($data);
+        });
+        activity()
+            ->performedOn($unit)
+            ->causedBy(Auth::user())
+            ->log('Unit of Measure Conversion Created');
+    }
 
 
     private function generateUOMNo(): string
@@ -39,7 +39,7 @@ class UOMConversionService
             return 'UOM-0001';
         }
 
-        $lastId = (int) str_replace('UOM-', '', $latestUOM->UOMNo);
+        $lastId = (int)str_replace('UOM-', '', $latestUOM->UOMNo);
         $newId = $lastId + 1;
 
         return 'UOM-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
@@ -47,22 +47,22 @@ class UOMConversionService
 
 
     public function update(UOMConversion $unit, array $data): UOMConversion
-{
-    return DB::transaction(function () use ($unit, $data) {
-        $unit->update($data);
-        $unit->ModifiedBy = Auth::id();
-        $unit->ModifiedOn = now();
-        $unit->save();
+    {
+        return DB::transaction(function () use ($unit, $data) {
+            $unit->update($data);
+            $unit->ModifiedBy = Auth::id();
+            $unit->ModifiedOn = now();
+            $unit->save();
 
-        activity()
-            ->performedOn($unit)
-            ->causedBy(Auth::user())
-            ->withProperties(['attributes' => $data])
-            ->log('Unit of Measure Conversion Updated');
+            activity()
+                ->performedOn($unit)
+                ->causedBy(Auth::user())
+                ->withProperties(['attributes' => $data])
+                ->log('Unit of Measure Conversion Updated');
 
-        return $unit;
-    });
-}
+            return $unit;
+        });
+    }
 
     public function delete(UOMConversion $unit): bool
     {

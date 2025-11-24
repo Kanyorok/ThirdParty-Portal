@@ -82,7 +82,7 @@ class PrequalificationRoundResource extends JsonResource
             // Application state for current supplier (present only when joined in apiIndex)
             'applicationId' => $this->when(isset($this->applicationId), fn() => $this->applicationId),
             // hasApplied now means the current authenticated user has an application (user-scoped)
-            'hasApplied' => $this->when(isset($this->applicationId), fn() => (bool) $this->applicationId),
+            'hasApplied' => $this->when(isset($this->applicationId), fn() => (bool)$this->applicationId),
             'createdByOwner' => $this->when(isset($this->createdByOwner), fn() => (bool)$this->createdByOwner),
             // canApply combines: not yet applied AND not owner of related categories (currently only hasApplied available)
             'canApply' => $this->when(true, fn() => !(isset($this->applicationId) && $this->applicationId)),

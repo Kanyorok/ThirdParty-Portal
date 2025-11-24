@@ -75,7 +75,7 @@ class TransactionReceiptsController extends Controller
         $items = $validatedData['items'] ?? [];
         unset($validatedData['items']);
 
-       $transfer = TransactionTransfer::findOrFail($validatedData['TransferID']);
+        $transfer = TransactionTransfer::findOrFail($validatedData['TransferID']);
 
 
         try {
@@ -126,46 +126,46 @@ class TransactionReceiptsController extends Controller
         return redirect()->route('transactionsreceipts.index')->with('success', 'Receipt deleted.');
     }
 
-   public function getTransferItems($id)
-{
-    $transfer = TransactionTransfer::with([
-        'items.item.price',
-        'items.item.uom',
-        'ToBranch'
-    ])->findOrFail($id);
+    public function getTransferItems($id)
+    {
+        $transfer = TransactionTransfer::with([
+            'items.item.price',
+            'items.item.uom',
+            'ToBranch'
+        ])->findOrFail($id);
 
-    $branchId = $transfer->ToBranch;
+        $branchId = $transfer->ToBranch;
 
-    $branchStores = Store::where('BranchID', $branchId)
-        ->select('Id', 'StoreName')
-        ->get();
+        $branchStores = Store::where('BranchID', $branchId)
+            ->select('Id', 'StoreName')
+            ->get();
 
-    $itemsWithStores = $transfer->items->map(function ($transferItem) use ($branchStores) {
-        $item = $transferItem->item;
+        $itemsWithStores = $transfer->items->map(function ($transferItem) use ($branchStores) {
+            $item = $transferItem->item;
 
-        return [
-            'Item' => $item->Id,
-            'DispatchedQty' => $transferItem->DispatchedQty,
-            'item' => [
-                'ItemName' => $item->ItemName,
-                'Id' => $item->Id,
-                'uom' => [
-                    'Code' => $item->uom?->Code ?? 'N/A'
+            return [
+                'Item' => $item->Id,
+                'DispatchedQty' => $transferItem->DispatchedQty,
+                'item' => [
+                    'ItemName' => $item->ItemName,
+                    'Id' => $item->Id,
+                    'uom' => [
+                        'Code' => $item->uom?->Code ?? 'N/A'
+                    ],
                 ],
-            ],
-            'stores' => $branchStores,
-            'UnitCost' => $item->price?->ActualPrice ?? 0,
-            'UOM' => $item->UOM,
-            'UOMCode' => $item->uom?->Code ?? 'N/A',
-            'PriceID' => $item->price?->Id ?? null,
-        ];
-    });
+                'stores' => $branchStores,
+                'UnitCost' => $item->price?->ActualPrice ?? 0,
+                'UOM' => $item->UOM,
+                'UOMCode' => $item->uom?->Code ?? 'N/A',
+                'PriceID' => $item->price?->Id ?? null,
+            ];
+        });
 
-    return response()->json([
-        'items' => $itemsWithStores,
-        'from_branch' => $branchId,
-    ]);
-}
+        return response()->json([
+            'items' => $itemsWithStores,
+            'from_branch' => $branchId,
+        ]);
+    }
 
 
 }

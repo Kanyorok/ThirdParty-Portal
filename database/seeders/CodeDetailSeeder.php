@@ -357,16 +357,16 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentTerm', 'Description' => '90% on completion, 10% after retention period', 'Value' => 'R'],
 
             //Insurance Decision
-            ['CodeID' => 'Decision','Description' => 'Approved', 'Value' => 'A'],
-            ['CodeID' => 'Decision','Description' => 'Decline', 'Value' => 'D'],
-            ['CodeID' => 'Decision','Description' => 'More Information Needed', 'Value' => 'M'],
+            ['CodeID' => 'Decision', 'Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'Decision', 'Description' => 'Decline', 'Value' => 'D'],
+            ['CodeID' => 'Decision', 'Description' => 'More Information Needed', 'Value' => 'M'],
 
             //Insurance Claim type
-            ['CodeID' => 'ClaimType','Description' => 'Death', 'Value' => 'D'],
-            ['CodeID' => 'ClaimType','Description' => 'Accident', 'Value' => 'A'],
-            ['CodeID' => 'ClaimType','Description' => 'Loss', 'Value' => 'L'],
-            ['CodeID' => 'ClaimType','Description' => 'Medical', 'Value' => 'M'],
-            ['CodeID' => 'ClaimType','Description' => 'Other', 'Value' => 'O'],
+            ['CodeID' => 'ClaimType', 'Description' => 'Death', 'Value' => 'D'],
+            ['CodeID' => 'ClaimType', 'Description' => 'Accident', 'Value' => 'A'],
+            ['CodeID' => 'ClaimType', 'Description' => 'Loss', 'Value' => 'L'],
+            ['CodeID' => 'ClaimType', 'Description' => 'Medical', 'Value' => 'M'],
+            ['CodeID' => 'ClaimType', 'Description' => 'Other', 'Value' => 'O'],
 
             //Insurance Cover Type
             ['CodeID' => 'CoverType','Description' => 'Comprehensive', 'Value' => 'C'],
@@ -378,11 +378,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ContributorType','Description' => 'Employer', 'Value' => 'C'],
 
             //Insurance Claim Status
-            ['CodeID' => 'ClaimStatus','Description' => 'Initiated', 'Value' => 'I'],
-            ['CodeID' => 'ClaimStatus','Description' => 'Under Assessment', 'Value' => 'U'],
-            ['CodeID' => 'ClaimStatus','Description' => 'Approved', 'Value' => 'A'],
-            ['CodeID' => 'ClaimStatus','Description' => 'Rejected', 'Value' => 'R'],
-            ['CodeID' => 'ClaimStatus','Description' => 'Paid', 'Value' => 'P'],
+            ['CodeID' => 'ClaimStatus', 'Description' => 'Initiated', 'Value' => 'I'],
+            ['CodeID' => 'ClaimStatus', 'Description' => 'Under Assessment', 'Value' => 'U'],
+            ['CodeID' => 'ClaimStatus', 'Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'ClaimStatus', 'Description' => 'Rejected', 'Value' => 'R'],
+            ['CodeID' => 'ClaimStatus', 'Description' => 'Paid', 'Value' => 'P'],
 
             //MedicalContributorStatus
             ['CodeID' => 'MedicalContributorStatus','Description' => 'Active', 'Value' => 'A'],
@@ -466,9 +466,9 @@ class CodeDetailSeeder extends Seeder
 
             //Legal Loan securities Loacations
             ['CodeID' => 'LoanSecurityLocations', 'Description' => 'Physical location where the secured asset is kept or registered.', 'Value' => 'On-Site Storage'],
-            [ 'CodeID' => 'LoanSecurityLocations','Description' => 'Third-party secured warehouse or bonded storage facility.','Value' => 'Bonded Warehouse'],
-            ['CodeID' => 'LoanSecurityLocations','Description' => 'Registered with the relevant government agency or land registry.','Value' => 'Government Registry'],
-            [ 'CodeID' => 'LoanSecurityLocations', 'Description' => 'Held in the possession of the lender until the loan is repaid.', 'Value' => 'Lender Custody'],
+            ['CodeID' => 'LoanSecurityLocations', 'Description' => 'Third-party secured warehouse or bonded storage facility.', 'Value' => 'Bonded Warehouse'],
+            ['CodeID' => 'LoanSecurityLocations', 'Description' => 'Registered with the relevant government agency or land registry.', 'Value' => 'Government Registry'],
+            ['CodeID' => 'LoanSecurityLocations', 'Description' => 'Held in the possession of the lender until the loan is repaid.', 'Value' => 'Lender Custody'],
             ['CodeID' => 'LoanSecurityLocations', 'Description' => 'Stored in a bank vault or secured bank deposit box.', 'Value' => 'Bank Vault'],
 
             //Legal Search Requests Types
@@ -635,11 +635,11 @@ class CodeDetailSeeder extends Seeder
 
 
             // Recurrent Journal Payment Frequency
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Daily', 'Value' => 'd','DisplayOrder'=>0],
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Weekly', 'Value' => 'w','DisplayOrder'=>0],
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Monthly', 'Value' => 'm','DisplayOrder'=>0],
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Quarterly', 'Value' => 'q','DisplayOrder'=>0],
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Yearly', 'Value' => 'y','DisplayOrder'=>0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Daily', 'Value' => 'd', 'DisplayOrder' => 0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Weekly', 'Value' => 'w', 'DisplayOrder' => 0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Monthly', 'Value' => 'm', 'DisplayOrder' => 0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Quarterly', 'Value' => 'q', 'DisplayOrder' => 0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Yearly', 'Value' => 'y', 'DisplayOrder' => 0],
 
             // Legal Execution Status
             ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Pending', 'Value' => 'P'],

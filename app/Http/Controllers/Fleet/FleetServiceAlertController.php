@@ -51,9 +51,9 @@ class FleetServiceAlertController extends Controller
 
 
     public function acknowledge(int $scheduleId)
-{
-    $this->authorize('acknowledge', FleetServiceAlert::class);
-    $this->service->acknowledgeFromSchedule($scheduleId);
+    {
+        $this->authorize('acknowledge', FleetServiceAlert::class);
+        $this->service->acknowledgeFromSchedule($scheduleId);
 
         return redirect()->route('fleet.alerts.index')
             ->with('success', 'Service alert acknowledged successfully.');
