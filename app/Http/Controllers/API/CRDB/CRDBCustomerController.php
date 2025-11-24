@@ -15,8 +15,11 @@ class CRDBCustomerController extends Controller
         $request->validate([
             'IsSynced' => 'required|boolean',
         ]);
+
         try {
+            // 1. Fetch data from SQL
             $data = DB::select("EXEC dbo.r_CustomerData @IsSynced = 0");
+
             if (empty($data)) {
                 return response()->json([
                     'status' => 'empty',
@@ -25,13 +28,29 @@ class CRDBCustomerController extends Controller
                     'data' => []
                 ], 404);
             }
+
+            // 2. TRANSFORM THE DATA (Crucial Step)
+            // We iterate through the results and convert the 'typesJson' string
+            // into a real PHP array so Laravel outputs it as a nested JSON object.
+            $formattedData = collect($data)->map(function ($item) {
+                // Check if the field exists and isn't null
+                if (!empty($item->TypesJson)) { 
+                    $item->TypesJson = json_decode($item->TypesJson);
+                } else {
+                    $item->TypesJson = []; // Ensure it's an array if null
+                }
+                return $item;
+            });
+
+            // 3. Return the transformed collection
             return response()->json([
                 'status' => 'ok',
                 'code' => 200,
-                'count' => count($data),
+                'count' => $formattedData->count(),
                 'message' => 'Customer Data Fetched Successfully',
-                'data' => collect($data)
+                'data' => $formattedData
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -40,5 +59,8 @@ class CRDBCustomerController extends Controller
                 'data' => []
             ], 500);
         }
-    }   
+    }
+
+
+    
 }
