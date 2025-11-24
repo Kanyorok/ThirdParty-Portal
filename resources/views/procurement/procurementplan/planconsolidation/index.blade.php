@@ -97,7 +97,7 @@
                             </td>
                             <td>{{ $plan->created_assets_count ?? 0 }}</td> {{-- Expected via withCount or accessor --}}
                             <td>{{ $plan->createdBy->name ?? 'System' }}</td> {{-- Assumes createdBy relationship exists --}}
-                            <td>{{ $plan->CreatedOn ? $plan->CreatedOn->format('Y-m-d') : 'N/A' }}</td> {{-- Using CreatedOn as per model const --}}
+                            <td>{{ $plan->CreatedOn ? $plan->CreatedOn->format('d M Y') : 'N/A' }}</td> {{-- Using CreatedOn as per model const --}}
                             <td>
                                 <div class="d-flex gap-1"> {{-- Using gap-1 for slightly less space --}}
                                     {{-- Ensure these route names correctly point to your ProcurementPeriodController methods --}}

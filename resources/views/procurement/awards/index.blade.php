@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Tender & RFQ Awards Overview')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 
     <div class="container mt-4">
@@ -26,7 +29,7 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered align-middle">
+                    <table id="awardsTable" class="table table-bordered align-middle">
                         <thead class="table-light text-center">
 
                         <tr>
@@ -97,13 +100,13 @@
                                         @else
                                             <span class="btn btn-sm btn-outline-secondary disabled" title="Missing reference id">View</span>
                                         @endif
-                                        
+
                                         @if($row['status'] === 'Pending')
-                                            <button type="button" class="btn btn-sm btn-success" 
+                                            <button type="button" class="btn btn-sm btn-success"
                                                     onclick="approveAward({{ $row['award_id'] ?? $row['id'] }})" title="Approve Award">
                                                 <i class="fas fa-check"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-danger" 
+                                            <button type="button" class="btn btn-sm btn-danger"
                                                     onclick="rejectAward({{ $row['award_id'] ?? $row['id'] }})" title="Reject Award">
                                                 <i class="fas fa-times"></i>
                                             </button>
@@ -138,7 +141,7 @@
             </div>
         </div>
 
-        <!-- Pagination removed because items is a collection -->
+        <!-- Client-side pagination handled by DataTables -->
     </div>
 
     <!-- Approval Modal -->
@@ -208,3 +211,21 @@
     </script>
 
 @endsection
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tableEl = document.getElementById('awardsTable');
+            if (tableEl) {
+                $('#awardsTable').DataTable({
+                    pageLength: 10,
+                    lengthChange: true,
+                    ordering: true,
+                    searching: false, // use the existing server-side filter form
+                    language: { emptyTable: "No awards found" }
+                });
+            }
+        });
+    </script>
+@endpush
