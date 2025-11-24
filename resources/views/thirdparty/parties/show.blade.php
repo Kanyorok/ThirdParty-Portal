@@ -117,19 +117,27 @@
                                 'Primary Contact' => $primaryUser?->FullName,
                                 'Primary Email' => $primaryUser?->Email,
                                 'Approval Status' => $party->ApprovalStatus?->label(),
-                                'Operational Status' => $party->Status?->value,
+                                'Operational Status' => $party->Status?->label(),
                                 // New multi-type display: join Codes; fallback to legacy enum label
                                 'Third Party Types' => ($party->types && $party->types->count()) ? $party->types->pluck('Code')->filter()->unique()->join(', ') : $party->ThirdPartyType?->label(),
                                 'Is Prequalified' => $party->IsPrequalified,
-                                'Created On' => $party->CreatedOn?->format('d/m/Y H:i:s'),
-                                'Modified On' => $party->ModifiedOn?->format('d/m/Y H:i:s'),
+                                'Created On' => $party->CreatedOn,
+                                'Modified On' => $party->ModifiedOn,
                             ];
                         @endphp
 
                         @foreach ($details as $label => $value)
                             <div class="col-md-6 col-lg-4">
                                 <p class="text-muted mb-1 fw-semibold">{{ $label }}</p>
-                                <p class="fw-bold">{{ $value ?? 'N/A' }}</p>
+                                <p class="fw-bold">
+                                    @if (is_bool($value))
+                                        {{ $value ? 'Yes' : 'No' }}
+                                    @elseif ($value instanceof \Carbon\CarbonInterface)
+                                        {{ appDate($value) }}
+                                    @else
+                                        {{ $value ?? 'N/A' }}
+                                    @endif
+                                </p>
                             </div>
                         @endforeach
                     </div>
@@ -164,20 +172,20 @@
                         <div class="col-md-12">
                             <p class="text-muted mb-1 fw-semibold">Third Party Types</p>
                             <p class="fw-bold">
-                                {{ ($party->types && $party->types->count()) 
-                                    ? $party->types->pluck('Code')->filter()->unique()->join(', ') 
+                                {{ ($party->types && $party->types->count())
+                                    ? $party->types->pluck('Code')->filter()->unique()->join(', ')
                                     : ($party->ThirdPartyType?->label() ?? 'N/A') }}
                             </p>
                         </div>
 
                         <div class="col-md-6 col-lg-4">
                             <p class="text-muted mb-1 fw-semibold">Created On</p>
-                            <p class="fw-bold">{{ $party->CreatedOn?->format('d/m/Y') ?? 'N/A' }}</p>
+                            <p class="fw-bold">{{ $party->CreatedOn ? appDate($party->CreatedOn) : 'N/A' }}</p>
                         </div>
 
                         <div class="col-md-6 col-lg-4">
                             <p class="text-muted mb-1 fw-semibold">Modified On</p>
-                            <p class="fw-bold">{{ $party->ModifiedOn?->format('d/m/Y') ?? 'N/A' }}</p>
+                            <p class="fw-bold">{{ $party->ModifiedOn ? appDate($party->ModifiedOn) : 'N/A' }}</p>
                         </div>
                     </div>
                 </div>
@@ -210,7 +218,7 @@
             </div>
             <div class="modal-body text-center py-4">
                 <p class="mb-3">
-                    Are you sure you want to delete 
+                    Are you sure you want to delete
                     <strong class="text-dark">{{ $party->ThirdPartyName ?? 'this third party' }}</strong>?
                 </p>
                 <p class="text-muted small mb-0">

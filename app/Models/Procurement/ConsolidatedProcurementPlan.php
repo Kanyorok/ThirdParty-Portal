@@ -8,6 +8,7 @@ use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\TenderItems;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -161,4 +162,23 @@ class ConsolidatedProcurementPlan extends Model
             $q->where('UserId', $userId);
         })->where('Status', ProcurementPlanStatusEnum::Pending);
     }
+
+    /**
+     * Determine if any line item from this consolidated procurement plan
+     * has already been attached to a tender (i.e. converted/used).
+     * Used by tender initiation view to hide already consumed plans.
+     */
+    public function isUsed(): bool
+    {
+        // Cache the result per instance to avoid N+1 queries in loops
+        if (array_key_exists('is_used_cached', $this->attributes)) {
+            return (bool)$this->attributes['is_used_cached'];
+        }
+
+        $lineItemIds = PlanLineItem::where('PlanID', $this->PlanID)->pluck('LineItemID');
+        $used = $lineItemIds->isNotEmpty() && TenderItems::whereIn('PlanItemID', $lineItemIds)->exists();
+        $this->attributes['is_used_cached'] = $used ? 1 : 0;
+        return $used;
+    }
+
 }

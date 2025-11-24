@@ -170,6 +170,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
         Route::get('create/contract/{contractId}', [LPOOriginationController::class, 'createFromContract'])->name('create.contract');
 
         // Award-Based LPO Origination  
+        // Award-Based LPO Origination
         Route::get('origination/award-based', [LPOOriginationController::class, 'showAwardBasedOptions'])->name('origination.award-based');
         Route::get('create/award/{awardId}', [LPOOriginationController::class, 'createFromAward'])->name('create.award');
 
@@ -229,24 +230,24 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
 
 
-    // RFQ routes (enforced via canAction)
+    // RFQ routes (enforced via CanAction middleware)
     Route::get('/rfqs/create', [RFQController::class, 'create'])
-        ->middleware('canAction:write,rfqs')
+        ->middleware(\App\Http\Middleware\CanAction::class . ':write,rfqs')
         ->name('rfqs.create');
     Route::post('/rfqs', [RFQController::class, 'store'])
-        ->middleware('canAction:write,rfqs')
+        ->middleware(\App\Http\Middleware\CanAction::class . ':write,rfqs')
         ->name('rfqs.store');
     Route::get('/rfqs/{id}', [RFQController::class, 'show'])
-        ->middleware('canAction:read,rfqs')
+        ->middleware(\App\Http\Middleware\CanAction::class . ':read,rfqs')
         ->name('rfqs.show');
     Route::get('/rfqs', [RFQController::class, 'index'])
-        ->middleware('canAction:read,rfqs')
+        ->middleware(\App\Http\Middleware\CanAction::class . ':read,rfqs')
         ->name('rfqs.index');
     Route::post('/rfqs/{rfq}/approve', [RFQController::class, 'approve'])
-        ->middleware('canAction:approve,rfqs')
+        ->middleware(\App\Http\Middleware\CanAction::class . ':approve,rfqs')
         ->name('rfqs.approve');
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])
-        ->middleware('canAction:approve,rfqs')
+        ->middleware(\App\Http\Middleware\CanAction::class . ':approve,rfqs')
         ->name('rfqs.reject');
 
     // RFQ Response routes
