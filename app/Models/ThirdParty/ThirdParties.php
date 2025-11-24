@@ -42,7 +42,7 @@ class ThirdParties extends Model
         'Phone',
         'Website',
         'Status',
-        'ThirdPartyType', //legacy column deprecated (kept temporarily for backward compatibility)
+        'ThirdPartyType',
         'IsPrequalified',
         'ApprovalStatus',
         'IDNumber',

@@ -179,6 +179,7 @@ class CodeDetailSeeder extends Seeder
             //ThirdPartyType
             ['CodeID' => 'PartyType', 'Description' => 'Individual', 'Value' => 'IN'],
             ['CodeID' => 'PartyType', 'Description' => 'Cooperate', 'Value' => 'CO'],
+            
 
             // Requisition Status
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved', 'Value' => 'Ap'],

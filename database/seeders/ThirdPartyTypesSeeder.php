@@ -33,9 +33,11 @@ class ThirdPartyTypesSeeder extends Seeder
 
         $tenantCode = 'TE-0001';
         $supplierCode = 'SU-0001';
+        $customerCode = 'CU-0001';
 
         $tenantDescription = 'Tenant';
         $supplierDescription = 'Supplier';
+        $customerDescription = 'Customer';
 
         // Resolve CategoryMaster IDs for Tenant (Name=Tenant, Type=TenantCategory) and Supplier (Name=Supplier, Type=SupplierCategory)
         $tenantCategoryId = DB::table('t_CategoryMaster')
@@ -46,9 +48,13 @@ class ThirdPartyTypesSeeder extends Seeder
             ->where('Name', 'Supplier')
             ->where('Type', 'SupplierCategory')
             ->value('Id');
+        $customerCategoryId = DB::table('t_CategoryMaster')
+            ->where('Name', 'Customer')
+            ->where('Type', 'CustomerCategory')
+            ->value('Id');
 
-        if (!$tenantCategoryId || !$supplierCategoryId) {
-            $this->command?->warn('Required CategoryMaster records (Tenant/Supplier) missing; run CategoryMasterSeeder first.');
+        if (!$tenantCategoryId || !$supplierCategoryId || !$customerCategoryId) {
+            $this->command?->warn('Required CategoryMaster records (Tenant/Supplier/Customer) missing; run CategoryMasterSeeder first.');
         }
 
         // Helper closure to upsert single record
@@ -83,9 +89,11 @@ class ThirdPartyTypesSeeder extends Seeder
 
         $upsert($tenantCode, $tenantCategoryId,$tenantDescription);
         $upsert($supplierCode, $supplierCategoryId,$supplierDescription);
+        $upsert($customerCode, $customerCategoryId,$customerDescription);
 
         //Add manually the Descriptions
         DB::table('t_ThirdPartyTypes')->where('Code', $tenantCode)->update(['Description' => 'Tenant']);
         DB::table('t_ThirdPartyTypes')->where('Code', $supplierCode)->update(['Description' => 'Supplier']);
+        DB::table('t_ThirdPartyTypes')->where('Code', $customerCode)->update(['Description' => 'Customer']);
     }
 }

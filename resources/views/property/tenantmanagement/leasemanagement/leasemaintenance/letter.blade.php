@@ -89,7 +89,7 @@
 </head>
 
 <body>
-
+@dd($lease)
     {{-- HEADER --}}
     <div class="header">
         <h2>Lease Offer Letter</h2>
