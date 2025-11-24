@@ -217,7 +217,7 @@ class PropertyNewLeaseController extends Controller
         $lease = PropertyNewLease::with(['tenant.thirdParty', 'property', 'block', 'floor', 'unit', 'code'])->findOrFail($Id);
 
         // Optionally generate PDF
-        $pdf = Pdf::loadView('property.tenantmanagement.leasemanagement.leasemaintenance.letter', compact('lease'));
+        $pdf = Pdf::loadView('property.tenantmanagement.leasemanagement.leasemaintenance.Offerletter', compact('lease'));
 
         return $pdf->download("Lease_Offer_{$lease->LeaseNumber}.pdf");
 
