@@ -35,6 +35,7 @@ class SSRSService
     protected string $_username;
     protected string $_password;
     protected string $path;
+    protected string $virtual_directory = 'ReportServer';
 
     /**
      * @throws ErroredException
@@ -51,7 +52,7 @@ class SSRSService
             throw new ErroredException('invalid report service configuration');
         }
 
-        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host') || !property_exists($ssrsConfig, 'path')) {
+        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'virtual_directory') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host') || !property_exists($ssrsConfig, 'path')) {
             throw new ErroredException('invalid report service configuration');
         }
 
@@ -61,6 +62,7 @@ class SSRSService
             throw new ErroredException('invalid report service configuration');
         }
         $this->path = $ssrsConfig->path;
+        $this->virtual_directory = $ssrsConfig->virtual_directory;
         $path = strtolower($ssrsConfig->path);
         $username = $ssrsConfig->username;
         $this->_username = $username;
@@ -163,7 +165,7 @@ class SSRSService
     public function exportReport(string $path, array $parameters = [], string $format = 'XML', bool $content = false): StreamedResponse|string
     {
         $response = $this->_query
-            ->get(Str::rtrim($this->serverURL, '/') . "/ReportServer?" . $path . "&rs:Format=$format" . self::queryParams($parameters));
+            ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters));
 
         if (!$response->successful()) {
             throw new ConnectionException(
