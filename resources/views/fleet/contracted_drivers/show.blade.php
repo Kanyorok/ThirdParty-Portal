@@ -30,7 +30,7 @@
                     </div>
                     <div class="col-md-12">
                         <strong>Company Name:</strong>
-                        <p class="text-muted">{{ $driver->company->ThirdPartyName }}</p>
+                        <p class="text-muted">{{ $driver->company->ThirdPartyName ?? 'N/A'}}</p>
                     </div>
 
                     <div class="col-md-12">
@@ -104,11 +104,11 @@
                                     @foreach($licenses as $license)
                                         <tr data-id="{{ $license->Id }}">
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $license->LicenseNumber }}</td>
-                                            <td>{{ $license->LicenseCategory }}</td>
-                                            <td>{{ $license->IssueDate }}</td>
-                                            <td>{{ $license->ExpiryDate }}</td>
-                                            <td>{{ $license->Notes }}</td>
+                                            <td>{{ $license->LicenseNumber ?? 'N/A' }}</td>
+                                            <td>{{ $license->LicenseCategory ?? 'N/A' }}</td>
+                                            <td>{{ $license->IssueDate ?? 'N/A'}}</td>
+                                            <td>{{ $license->ExpiryDate ?? 'N/A'}}</td>
+                                            <td>{{ $license->Notes ?? 'N/A' }}</td>
                                             <td>
                                                 <button class="btn btn-sm btn-warning btn-edit" data-type="license"
                                                         data-id="{{ $license->Id }}">✏️
@@ -264,6 +264,7 @@
                     <div class="modal-body">
                         <label class="form-label">Vehicle</label>
                         <select name="VehicleID" class="form-control" required>
+                            <option value="">-- Select Vehicle --</option>
                             @foreach($vehicles as $vehicle)
                                 <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
                             @endforeach
@@ -346,8 +347,9 @@
                     <div class="modal-body">
                         <label class="form-label">Vehicle</label>
                         <select name="VehicleID" id="editAssignmentVehicle" class="form-control" required>
+                            <option value="">-- Select Vehicle --</option>
                             @foreach($vehicles as $vehicle)
-                                <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
+                                <option value="{{ old('VehicleID', $vehicle->Id) }}">{{ $vehicle->RegistrationNo }}</option>
                             @endforeach
                         </select>
                         <label class="form-label mt-2">Assignment Date</label>

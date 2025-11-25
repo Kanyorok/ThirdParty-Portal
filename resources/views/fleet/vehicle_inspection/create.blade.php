@@ -80,12 +80,16 @@
 
             {{-- Driver (Always shown) --}}
             <div class="row g-3 mt-2">
-                {{-- Driver --}}
+                {{-- Driver Fields --}}
+                <input type="hidden" name="DriverID" id="DriverID">
+                <input type="hidden" name="ContractedDriverID" id="ContractedDriverID">
+                
                 <div class="col-md-6">
                     <label class="form-label">Driver<span class="text-danger">*</span></label>
-                    <input type="hidden" name="DriverID" id="DriverID">
                     <input type="text" id="DriverName" class="form-control" readonly>
+                    <small class="text-muted" id="DriverTypeText"></small>
                 </div>
+                
                 <div class="col-md-4">
                     <label class="form-label">Inspection Date<span class="text-danger">*</span></label>
                     <input type="date" name="InspectionDate" class="form-control" value="{{ old('InspectionDate') }}"
@@ -135,43 +139,44 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
 
-                {{-- Safety Equipment --}}
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <label class="form-label fw-bold">Safety Equipment<span class="text-danger">*</span></label>
-                        <div class="d-flex flex-wrap gap-4 border rounded p-3">
-                            @foreach([
-                                'Reflector' => 'Reflector',
-                                'FireExtinguisher' => 'Fire Extinguisher',
-                                'FirstAidKit' => 'First Aid Kit',
-                                'SpareTyre' => 'Spare Tyre',
-                                'Spanner' => 'Spanner',
-                                'Jack' => 'Jack',
-                                '4XFloorMats' => '4X Floor Mats',
-                            ] as $field => $label)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="{{ $field }}"
-                                           value="1" {{ old($field) ? 'checked' : '' }}>
-                                    <label class="form-check-label">{{ $label }}</label>
-                                </div>
-                            @endforeach
-                        </div>
+            {{-- Safety Equipment --}}
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Safety Equipment<span class="text-danger">*</span></label>
+                    <div class="d-flex flex-wrap gap-4 border rounded p-3">
+                        @foreach([
+                            'Reflector' => 'Reflector',
+                            'FireExtinguisher' => 'Fire Extinguisher',
+                            'FirstAidKit' => 'First Aid Kit',
+                            'SpareTyre' => 'Spare Tyre',
+                            'Spanner' => 'Spanner',
+                            'Jack' => 'Jack',
+                            '4XFloorMats' => '4X Floor Mats',
+                        ] as $field => $label)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="{{ $field }}"
+                                       value="1" {{ old($field) ? 'checked' : '' }}>
+                                <label class="form-check-label">{{ $label }}</label>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
+            </div>
 
-                {{-- Document Upload --}}
-                <div class="mb-3 mt-3">
-                    <label class="form-label">Upload Supporting Document<span class="text-danger">*</span></label>
-                    <input type="file" name="Document" class="form-control">
-                    <small class="text-muted">Attach inspection sheet, photos, or related files</small>
-                </div>
+            {{-- Document Upload --}}
+            <div class="mb-3 mt-3">
+                <label class="form-label">Upload Supporting Document</label>
+                <input type="file" name="Document" class="form-control">
+                <small class="text-muted">Attach inspection sheet, photos, or related files (Max: 2MB)</small>
+            </div>
 
-                {{-- Submit --}}
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Save Inspection</button>
-                    <a href="{{ route('fleet.vehicle_inspection.index') }}" class="btn btn-secondary">Cancel</a>
-                </div>
+            {{-- Submit --}}
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Save Inspection</button>
+                <a href="{{ route('fleet.vehicle_inspection.index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
         </form>
     </div>
 @endsection
@@ -181,8 +186,10 @@
 document.addEventListener('DOMContentLoaded', function () {
     const vehicleSelect = document.querySelector('[name="VehicleID"]');
     const driverIdInput = document.getElementById('DriverID');
+    const contractedDriverIdInput = document.getElementById('ContractedDriverID');
     const driverNameInput = document.getElementById('DriverName');
-    const fuelTypeInput = document.querySelector('[name="FuelType"]'); 
+    const driverTypeText = document.getElementById('DriverTypeText');
+    const fuelTypeInput = document.getElementById('FuelTypeID');
     const fuelNameInput = document.getElementById('FuelTypeName');
     const mileageInput = document.querySelector('[name="Mileage"]');
 
@@ -190,9 +197,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchVehicleDetails(Id) {
         if (!Id) {
+            // Clear all fields if no vehicle selected
             driverIdInput.value = '';
+            contractedDriverIdInput.value = '';
             driverNameInput.value = '';
-            fuelTypeInput.value = ''; // ← CHANGED: Use the correct input
+            driverTypeText.textContent = '';
+            fuelTypeInput.value = '';
             fuelNameInput.value = '';
             mileageInput.value = '';
             return;
@@ -204,19 +214,34 @@ document.addEventListener('DOMContentLoaded', function () {
                 return res.json();
             })
             .then(data => {
-                driverIdInput.value = data.driverId ?? '';
+                // Clear both driver fields first
+                driverIdInput.value = '';
+                contractedDriverIdInput.value = '';
+                driverTypeText.textContent = '';
+                
+                // Set the appropriate driver field based on driverType
+                if (data.driverType === 'FleetDriver') {
+                    driverIdInput.value = data.driverId ?? '';
+                    driverTypeText.textContent = 'Fleet Driver';
+                } else if (data.driverType === 'ContractedDriver') {
+                    contractedDriverIdInput.value = data.driverId ?? '';
+                    driverTypeText.textContent = 'Contracted Driver';
+                } else {
+                    driverTypeText.textContent = 'No driver assigned';
+                }
+                
                 driverNameInput.value = data.driverName ?? 'No driver assigned';
 
                 if (data.fuelTypeId) {
-                    fuelTypeInput.value = data.fuelTypeId; // ← CHANGED: Set the correct input
+                    fuelTypeInput.value = data.fuelTypeId;
                     fuelNameInput.value = data.fuelTypeName ?? '';
                 } else {
-                    fuelTypeInput.value = ''; // ← CHANGED: Use the correct input
+                    fuelTypeInput.value = '';
                     fuelNameInput.value = '';
                 }
 
-                // ✅ Fetch last mileage
-                fetch(`/fleet/vehicle_inspection/get-last-mileage/${Id}`) // ← FIXED: variable name
+                // Fetch last mileage
+                fetch(`/fleet/vehicle_inspection/get-last-mileage/${Id}`)
                     .then(res => res.json())
                     .then(mileageData => {
                         lastMileage = mileageData.lastMileage ?? 0;
@@ -224,7 +249,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
             })
             .catch(err => {
-                console.error(err);
+                console.error('Error fetching vehicle details:', err);
+                driverNameInput.value = 'Error loading driver information';
+                driverTypeText.textContent = '';
             });
     }
 
@@ -241,6 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetchVehicleDetails(this.value);
     });
 
+    // Initialize if vehicle is already selected (e.g., form validation failed)
     if (vehicleSelect?.value) {
         fetchVehicleDetails(vehicleSelect.value);
     }
