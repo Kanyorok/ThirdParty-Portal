@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\ApprovalEnum;
+use App\Enums\Core\ExtensionsEnum;
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
@@ -30,7 +32,7 @@ class PropertyNewLeaseController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
-        $newleases = PropertyNewLease::with('tenant', 'property')->get();
+        $newleases = PropertyNewLease::with(['tenant', 'property'])->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
     }
 
@@ -119,7 +121,7 @@ class PropertyNewLeaseController extends Controller
         $floor = PropertyFloor::findOrFail($data['FloorID']);
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $paymentFrequency = CodeDetail::findOrFail($data['PaymentFrequency']);
-    
+
         foreach ($request->file('Document', []) as $uploadedFile) {
         $this->service->create(
             $tenant,
@@ -235,9 +237,17 @@ class PropertyNewLeaseController extends Controller
             ->log("Generated Lease Offer Letter for {$lease->LeaseNumber}.");
 
         // Generate PDF
-        $pdf = Pdf::loadView('property.tenantmanagement.leasemanagement.leasemaintenance.Offerletter', compact('lease'));
+        $pdf = Pdf::loadView('property.tenantmanagement.leasemanagement.leasemaintenance.Offerletter', compact('lease'))->output();
 
-        return $pdf->download("Lease_Offer_{$lease->LeaseNumber}.pdf");
+        $lease->newDocumentFromContent(module: ModulesEnum::Property, extension: ExtensionsEnum::Pdf,
+            fileName: "Lease_Offer_{$lease->LeaseNumber}.pdf", content: $pdf,
+            actor: auth()->user(), permissions: [PermissionEnum::PropertyNewLeaseView->value]
+        );
+
+        //todo start approval
+
+        return redirect()->route('addlease.index')->with('success', 'Lease Offer Letter generated successfully.');
+        //   return $pdf->download("Lease_Offer_{$lease->LeaseNumber}.pdf");
 
         // OR display in browser as HTML
         // return view('property.tenantmanagement.leasemanagement.leasemaintenance.letter', compact('lease'));
