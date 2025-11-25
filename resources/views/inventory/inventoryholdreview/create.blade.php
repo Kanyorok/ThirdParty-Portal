@@ -1,4 +1,4 @@
-@php use App\Models\Core\CodeDetail; @endphp
+@php use App\Models\Core\Approval\CodeDetail; @endphp
 @extends('layouts.app')
 
 @section('title', 'Inventory Review')

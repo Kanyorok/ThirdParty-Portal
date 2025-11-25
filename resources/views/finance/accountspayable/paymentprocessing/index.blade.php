@@ -53,7 +53,7 @@
                             <th class="text-end">Amount</th>
                             <th>Status</th>
                             <th>Payment Type</th>
-{{--                            <th>Description</th>--}}
+                            {{--                            <th>Description</th>--}}
                             <th class="text-center">Actions</th>
                         </tr>
                         </thead>
@@ -77,9 +77,9 @@
                                     @endif
                                 </td>
                                 <td>{{ $item->PaymentType ?? '-' }}</td>
-{{--                                <td title="{{ $item->Description ?? '-' }}" style="white-space: nowrap;">--}}
-{{--                                    {{ $item->Description ?? '-' }}--}}
-{{--                                </td>--}}
+                                {{--                                <td title="{{ $item->Description ?? '-' }}" style="white-space: nowrap;">--}}
+                                {{--                                    {{ $item->Description ?? '-' }}--}}
+                                {{--                                </td>--}}
                                 <td class="text-center">
                                     <a href="{{ route('paymentprocessing.show', $item->Id) }}"
                                        class="btn btn-sm btn-outline-info me-1"
@@ -162,6 +162,7 @@
             .table-responsive {
                 font-size: 0.875rem;
             }
+
             .btn-sm {
                 padding: 0.2rem 0.4rem;
             }

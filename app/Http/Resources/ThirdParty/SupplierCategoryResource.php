@@ -9,7 +9,7 @@ class SupplierCategoryResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     public function toArray($request)
@@ -19,7 +19,7 @@ class SupplierCategoryResource extends JsonResource
             'supplierCategoryId' => $this->SupplierCategoryID,
             'supplierCategoryName' => $this->SupplierCategoryName,
             'description' => $this->Description,
-            'isActive' => (bool) $this->IsActive,
+            'isActive' => (bool)$this->IsActive,
             'createdOn' => $this->CreatedOn,
             'modifiedOn' => $this->ModifiedOn,
         ];

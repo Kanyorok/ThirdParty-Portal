@@ -3,7 +3,7 @@
 namespace App\Models\Insurance;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,8 +19,8 @@ class BancassuranceClaimAssessment extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'ClaimId','AssessedBy','AssessmentDate','AssessmentAmount','AssessmentComments',
-        'Decision','CreatedBy','ModifiedBy','DeletedBy',
+        'ClaimId', 'AssessedBy', 'AssessmentDate', 'AssessmentAmount', 'AssessmentComments',
+        'Decision', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string

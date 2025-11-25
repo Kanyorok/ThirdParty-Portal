@@ -44,8 +44,8 @@ class Department extends Model
     }
 
     public function getFullNameAttribute()
-{
-    return $this->Name;
-}
+    {
+        return $this->Name;
+    }
 
 }

@@ -6,7 +6,7 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use DateTime;
@@ -19,20 +19,23 @@ class PropertyTenantClearanceService
     /**
      * Create a new class instance.
      */
-    public function __construct(PropertyTenantClearance $propertyTenantClearance) {}
+    public function __construct(PropertyTenantClearance $propertyTenantClearance)
+    {
+    }
 
     public static function create(
         PropertyLeaseTermination $Lease,
-        DateTime                 $ExitDate,
-        bool                     $FinalInspection,
-        bool                     $AllDuesPaid,
-        bool                     $KeysReturned,
+        DateTime $ExitDate,
+        bool     $FinalInspection,
+        bool     $AllDuesPaid,
+        bool     $KeysReturned,
         CodeDetail $DepositRefunded,
         string $AdditionalNotes = null,
         TenantClearanceEnum $Status,
         User $user,
         UploadedFile $document = null
-    ): self {
+    ): self
+    {
         $clearance = PropertyTenantClearance::create([
             'LeaseId' => $Lease->LeaseID,
             'ExitDate' => $ExitDate,

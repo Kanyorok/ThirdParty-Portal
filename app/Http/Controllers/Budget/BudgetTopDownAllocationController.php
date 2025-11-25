@@ -54,7 +54,7 @@ class BudgetTopDownAllocationController extends Controller
         $branchId = $validated['BranchID'];
 
         //Logic for All branches
-        if($validated['BranchID']=='all'){
+        if ($validated['BranchID'] == 'all') {
             return $this->displayAllBranches($validated['BudgetID']);
         }
 
@@ -192,7 +192,7 @@ class BudgetTopDownAllocationController extends Controller
         $isExisting = true;
 
         //Call from SP
-        return$glsMaster = collect(DB::select("EXEC GetBudgetWorkspaceAllBranches :budgetId", [
+        return $glsMaster = collect(DB::select("EXEC GetBudgetWorkspaceAllBranches :budgetId", [
             'budgetId' => $budgetId
         ]));
 

@@ -7,7 +7,7 @@ use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassuranceClaimAssessmentRequest;
 use App\Http\Requests\Insurance\BancassuranceClaimRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimAssessment;
 use App\Models\Insurance\BancassurancePolicy;
@@ -21,72 +21,72 @@ use Illuminate\Support\Facades\Auth;
 class ClaimController extends Controller
 {
     //
-public function create()
-{
-    $this->authorize(PermissionEnum::BancassuranceClaimView, BancassuranceClaim::class);
-    $policies = BancassurancePolicy::where('Status', InsurancePolicyStatus::Issued)->get();
-    $claimtypes = CodeDetail::where('CodeID', 'ClaimType')->get();
-    $claimstatus = CodeDetail::where('CodeID', 'ClaimStatus')->get();
-    return view('bancassurance.claims.create', compact('policies','claimtypes','claimstatus'));
-}
+    public function create()
+    {
+        $this->authorize(PermissionEnum::BancassuranceClaimView, BancassuranceClaim::class);
+        $policies = BancassurancePolicy::where('Status', InsurancePolicyStatus::Issued)->get();
+        $claimtypes = CodeDetail::where('CodeID', 'ClaimType')->get();
+        $claimstatus = CodeDetail::where('CodeID', 'ClaimStatus')->get();
+        return view('bancassurance.claims.create', compact('policies', 'claimtypes', 'claimstatus'));
+    }
 
-public function store(BancassuranceClaimRequest $request)
-{
-    $this->authorize(PermissionEnum::BancassuranceClaimCreate, BancassuranceClaim::class);
-    $validated = $request->validated();
-    $PolicyId = BancassurancePolicy::findOrFail($validated['PolicyId']);
-    $Status = CodeDetail::where('CodeID', 'ClaimStatus')->where('Value', 'I')->firstOrFail();
-    $ClaimType = CodeDetail::findOrFail($validated['ClaimType']);
+    public function store(BancassuranceClaimRequest $request)
+    {
+        $this->authorize(PermissionEnum::BancassuranceClaimCreate, BancassuranceClaim::class);
+        $validated = $request->validated();
+        $PolicyId = BancassurancePolicy::findOrFail($validated['PolicyId']);
+        $Status = CodeDetail::where('CodeID', 'ClaimStatus')->where('Value', 'I')->firstOrFail();
+        $ClaimType = CodeDetail::findOrFail($validated['ClaimType']);
 
-    $claim = BancassuranceClaimService::create(
-        $PolicyId,
-        $ClaimType,
-        $validated['ClaimReason'],
-        $validated['ClaimAmount'],
-        Carbon::parse($validated['ClaimDate']),
-        $Status,
-        $request->user(),
-    );
+        $claim = BancassuranceClaimService::create(
+            $PolicyId,
+            $ClaimType,
+            $validated['ClaimReason'],
+            $validated['ClaimAmount'],
+            Carbon::parse($validated['ClaimDate']),
+            $Status,
+            $request->user(),
+        );
 
-    return redirect()->route('bancassurance.claims.index')->with('success', 'Claim initiated successfully.');
-}
+        return redirect()->route('bancassurance.claims.index')->with('success', 'Claim initiated successfully.');
+    }
 
-public function index(Request $request)
-{
-    $mode = $request->query('mode', 'default');
+    public function index(Request $request)
+    {
+        $mode = $request->query('mode', 'default');
 
-    $claims = BancassuranceClaim::with('claimtype')->get();
+        $claims = BancassuranceClaim::with('claimtype')->get();
 
-    return view('bancassurance.claims.index', compact('claims', 'mode'));
-}
+        return view('bancassurance.claims.index', compact('claims', 'mode'));
+    }
 
-public function assessForm($id)
-{
-    $claim = BancassuranceClaim::find($id);
-    $decisions = CodeDetail::where('CodeID', 'Decision')->get();
+    public function assessForm($id)
+    {
+        $claim = BancassuranceClaim::find($id);
+        $decisions = CodeDetail::where('CodeID', 'Decision')->get();
 
         if (!$claim) {
             return redirect()->route('bancassurance.claims.index')->with('error', 'Claim not found.');
         }
 
-    return view('bancassurance.claims.assess', compact('claim','decisions'));
-}
+        return view('bancassurance.claims.assess', compact('claim', 'decisions'));
+    }
 
 
-public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $id)
-{
-    $validated = $request->validated();
+    public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $id)
+    {
+        $validated = $request->validated();
 
-    $claim = BancassuranceClaim::findOrFail($id);
-    $Decision = CodeDetail::findOrFail($validated['Decision']);
+        $claim = BancassuranceClaim::findOrFail($id);
+        $Decision = CodeDetail::findOrFail($validated['Decision']);
 
-    $assessment = BancassuranceClaimAssessmentService::create(
-        $claim,
-        $validated['AssessmentComments'],
-        $validated['AssessmentAmount'],
-        $Decision,
-        $request->user(),
-    );
+        $assessment = BancassuranceClaimAssessmentService::create(
+            $claim,
+            $validated['AssessmentComments'],
+            $validated['AssessmentAmount'],
+            $Decision,
+            $request->user(),
+        );
 
         return redirect()->route('bancassurance.claims.index')->with('success', 'Assessment submitted.');
     }

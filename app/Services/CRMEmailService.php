@@ -121,7 +121,7 @@ class CRMEmailService
         return self::create($actor, $subject, $body, ($priorityEnum) ?? EmailPriorityEnum::Normal, $to, $Party, $PartyID, $cc, $bcc, $replyTo);
     }
 
-     public static function createDriver(FleetDriver $driver, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $replyTo = null): CRMEmailService
+    public static function createDriver(FleetDriver $driver, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $replyTo = null): CRMEmailService
     {
         return self::create($actor, $subject, $body, $priorityEnum, [[$driver->FullName => $driver->Email]], FleetDriver::getPrimaryKey(), $driver->Id, $cc, replyTo: $replyTo);
     }
@@ -169,13 +169,13 @@ class CRMEmailService
             $mailer->alwaysFrom($username, config('org.name'));
             $mailer->alwaysTo($username, config('org.name'));
             $mailer->setSymfonyTransport(Mail::createSymfonyTransport([
-                'transport'  => 'smtp',
-                'timeout'    => 5,
-                'host'       => $host,
-                'port'       => $port,
+                'transport' => 'smtp',
+                'timeout' => 5,
+                'host' => $host,
+                'port' => $port,
                 'encryption' => $encryption->value, // Ensure it's a string (e.g., 'tls', 'ssl')
-                'username'   => $username,
-                'password'   => $password,
+                'username' => $username,
+                'password' => $password,
             ]));
 
             return $mailer->sendNow(new TestMail()) instanceof SentMessage;

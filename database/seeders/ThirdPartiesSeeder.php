@@ -3,8 +3,12 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\ThirdParty\ThirdParties; // Import the ThirdParties model
-use App\Models\ThirdParty\ThirdPartyUser; // Import the ThirdPartyUser model to get a creator ID
+use App\Models\ThirdParty\ThirdParties;
+
+// Import the ThirdParties model
+use App\Models\ThirdParty\ThirdPartyUser;
+
+// Import the ThirdPartyUser model to get a creator ID
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\BusinessTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;

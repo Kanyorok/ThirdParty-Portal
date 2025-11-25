@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Legal;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Module;
 use App\Models\Finance\FinanceModuleTransactions;
 use App\Models\Legal\LegalDocument;
@@ -93,13 +93,13 @@ class LegalDocumentController extends Controller
     public function create()
     {
         $execStatuses = CodeDetail::where('CodeID', 'LegalExecutionStatusType')->get();
-        $docTypes=CodeDetail::where('CodeID', 'LegalDocumentType')->get();
-        $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
-        $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+        $docTypes = CodeDetail::where('CodeID', 'LegalDocumentType')->get();
+        $moduleIds = FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
+        $modules = Module::select('ModuleID', 'Name')->whereIn('ModuleID', $moduleIds)
             ->where('ParentID', null)
             ->orderBy('Name', 'asc')->get();
 
-        return view('legal.documents.create',compact('execStatuses','modules','docTypes'));
+        return view('legal.documents.create', compact('execStatuses', 'modules', 'docTypes'));
     }
 
     public function store(Request $request)
@@ -125,7 +125,7 @@ class LegalDocumentController extends Controller
         try {
             DB::beginTransaction();
 
-            $moduleName=Module::where('ModuleID',$validated['SourceModule'])->pluck('Name')->first();
+            $moduleName = Module::where('ModuleID', $validated['SourceModule'])->pluck('Name')->first();
             $doc = LegalDocument::create([
                 'DocumentTitle' => $validated['DocumentTitle'],
                 'DocumentType' => $validated['DocumentType'],
@@ -202,12 +202,12 @@ class LegalDocumentController extends Controller
             ->findOrFail($id);
 
         // Option sets for your selects (same as in create/edit blades)
-        $docTypes=CodeDetail::where('CodeID', 'LegalDocumentType')->get();
+        $docTypes = CodeDetail::where('CodeID', 'LegalDocumentType')->get();
         $sources = ['Legal', 'Procurement', 'Property', 'HR', 'Insurance'];
         //$reviewStatuses = ['Draft', 'In Review', 'Approved', 'Rejected'];
         $execStatuses = CodeDetail::where('CodeID', 'LegalExecutionStatusType')->get();
-        $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
-        $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+        $moduleIds = FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
+        $modules = Module::select('ModuleID', 'Name')->whereIn('ModuleID', $moduleIds)
             ->where('ParentID', null)
             ->orderBy('Name', 'asc')->get();
 
@@ -221,7 +221,7 @@ class LegalDocumentController extends Controller
             'sources' => $sources,
             //'reviewStatuses' => $reviewStatuses,
             'execStatuses' => $execStatuses,
-            'modules'      => $modules,
+            'modules' => $modules,
         ]);
     }
 
@@ -234,36 +234,36 @@ class LegalDocumentController extends Controller
             'DocumentTitle' => [
                 'required', 'string', 'max:255'
             ],
-            'DocumentType'    => ['required', 'string', 'max:100'],
-            'SourceModule'    => ['required', 'string', 'max:100'],
-            'SourceID'        => ['nullable', 'integer'],
-            'LinkedDMSDocID'  => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
-            'Remarks'         => ['nullable', 'string'],
-            'ReviewStatus'    => ['nullable', 'string', 'max:50'],
+            'DocumentType' => ['required', 'string', 'max:100'],
+            'SourceModule' => ['required', 'string', 'max:100'],
+            'SourceID' => ['nullable', 'integer'],
+            'LinkedDMSDocID' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
+            'Remarks' => ['nullable', 'string'],
+            'ReviewStatus' => ['nullable', 'string', 'max:50'],
             'ExecutionStatus' => ['nullable', 'string', 'max:50'],
-            'DispatchDate'    => ['nullable', 'date'],
-            'SignOffDate'     => ['nullable', 'date'],
+            'DispatchDate' => ['nullable', 'date'],
+            'SignOffDate' => ['nullable', 'date'],
             // Optional toggle if you ever want to drop older pivots:
-            'DetachOldPivots' => ['sometimes','boolean'],
+            'DetachOldPivots' => ['sometimes', 'boolean'],
         ]);
 
         try {
             DB::beginTransaction();
 
-            $moduleName=Module::where('ModuleID',$validated['SourceModule'])->pluck('Name')->first();
+            $moduleName = Module::where('ModuleID', $validated['SourceModule'])->pluck('Name')->first();
             // Update normal fields
             $doc->fill([
-                'DocumentTitle'   => $validated['DocumentTitle'],
-                'DocumentType'    => $validated['DocumentType'],
-                'SourceModule'    =>$moduleName,
-                'SourceID'        => $validated['SourceModule'],
-                'Remarks'         => $validated['Remarks'] ?? $doc->Remarks,
-                'ReviewStatus'    => $validated['ReviewStatus'] ?? $doc->ReviewStatus,
+                'DocumentTitle' => $validated['DocumentTitle'],
+                'DocumentType' => $validated['DocumentType'],
+                'SourceModule' => $moduleName,
+                'SourceID' => $validated['SourceModule'],
+                'Remarks' => $validated['Remarks'] ?? $doc->Remarks,
+                'ReviewStatus' => $validated['ReviewStatus'] ?? $doc->ReviewStatus,
                 'ExecutionStatus' => $validated['ExecutionStatus'] ?? $doc->ExecutionStatus,
-                'DispatchDate'    => $validated['DispatchDate'] ?? $doc->DispatchDate,
-                'SignOffDate'     => $validated['SignOffDate'] ?? $doc->SignOffDate,
-                'ModifiedBy'      => Auth::id(),
-                'ModifiedOn'      => now(),
+                'DispatchDate' => $validated['DispatchDate'] ?? $doc->DispatchDate,
+                'SignOffDate' => $validated['SignOffDate'] ?? $doc->SignOffDate,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ])->save();
 
             // 2) If a new file was uploaded, create a NEW DMS document and point to it
@@ -297,20 +297,20 @@ class LegalDocumentController extends Controller
             DB::rollBack();
             Log::error('Failed to update legal document', [
                 'doc_id' => $doc->Id,
-                'error'  => $e->getMessage(),
-                'trace'  => $e->getTraceAsString(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return back()
                 ->withInput()
-                ->with('error', 'Could not update document. DB said: '.$e->getMessage());
+                ->with('error', 'Could not update document. DB said: ' . $e->getMessage());
         }
     }
 
     public function destroy($id)
     {
 
-        LegalDocument::where('ID', $id)->update(['IsActive' => 0,'DeletedBy' => Auth::id()]);
+        LegalDocument::where('ID', $id)->update(['IsActive' => 0, 'DeletedBy' => Auth::id()]);
         LegalDocument::find($id)->delete();
         return redirect()->route('legal.documents.index')->with('success', 'Document Deleted.');
     }

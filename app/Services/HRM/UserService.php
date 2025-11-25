@@ -36,9 +36,7 @@ class UserService
 {
     public const MODULE = 'USERS';
 
-    public function __construct(public User $user)
-    {
-    }
+    public function __construct(public User $user) {}
 
     public static function ceos(bool $query = false): Builder|Collection
     {
@@ -148,8 +146,11 @@ class UserService
         return $this;
     }
 
-    public function isMarketingManager(Branch $branch): bool
+    public function isMarketingManager(?Branch $branch): bool
     {
+        if (is_null($branch)) {
+            return false;
+        }
         if (!(new BranchService($branch))->isHQ()) {
             return false;
         }
@@ -331,12 +332,10 @@ class UserService
                 activity()->causedBy($actor)->performedOn($this->user)->event('delete')->log('Deleted user account ' . $this->user->UserID);
 
                 $this->sendEmail('account deleted', '<p>Hello ' . $this->user->Name . '<br>Your account has just been deleted <br> If you have any questions or concerns, feel free to reach out to our support team </p>');
-
             });
-        } catch (Throwable|ErroredException $e) {
+        } catch (Throwable | ErroredException $e) {
             Log::error('Error delete user ' . $e->getMessage());
             throw new ErroredException();
         }
-
     }
 }

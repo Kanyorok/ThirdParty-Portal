@@ -10,7 +10,7 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\PriceManagement;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\Inventory\ItemMasterListService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;

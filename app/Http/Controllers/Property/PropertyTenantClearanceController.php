@@ -6,7 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyTenantClearanceRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Services\Property\TenantAndLease\PropertyTenantClearanceService;

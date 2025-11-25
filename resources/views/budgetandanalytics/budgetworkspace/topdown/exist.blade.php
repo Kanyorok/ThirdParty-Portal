@@ -38,9 +38,10 @@
                         <option selected disabled>-- Select Budget --</option>
                         @foreach ($budgets as $item)
                             <option
-                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }} :
-                                 {{ Carbon::parse($item->From)->format('Y-m-d') }}
-                                to  {{ Carbon::parse($item->To)->format('Y-m-d') }} </option>
+                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }}
+                                :
+                                {{ Carbon::parse($item->From)->format('Y-m-d') }}
+                                to {{ Carbon::parse($item->To)->format('Y-m-d') }} </option>
                         @endforeach
                     </select>
                 </div>
@@ -54,12 +55,12 @@
                         @endforeach
                     </select>
                 </div>
-{{--                <div class="col-md-4">--}}
-{{--                    <label class="form-label fw-medium">Select Format</label>--}}
-{{--                    <select class="form-select form-select-sm" id="format" name="format" disabled>--}}
-{{--                        <option value="m" selected>Monthly</option>--}}
-{{--                    </select>--}}
-{{--                </div>--}}
+                {{--                <div class="col-md-4">--}}
+                {{--                    <label class="form-label fw-medium">Select Format</label>--}}
+                {{--                    <select class="form-select form-select-sm" id="format" name="format" disabled>--}}
+                {{--                        <option value="m" selected>Monthly</option>--}}
+                {{--                    </select>--}}
+                {{--                </div>--}}
             </div>
 
             <div id="monthly_form" class="table-responsive mb-3">
@@ -168,10 +169,10 @@
                         <div class="border rounded p-2 bg-info text-white">
                             <span class="fw-bold">Variance:</span> <span id="variance" class="fw-bold">0</span>
                         </div>
-{{--                        <div class="border rounded p-2 bg-warning">--}}
-{{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
-{{--                                                                           class="fw-bold">0.00%</span>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="border rounded p-2 bg-warning">--}}
+                        {{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
+                        {{--                                                                           class="fw-bold">0.00%</span>--}}
+                        {{--                        </div>--}}
                     </div>
                 </div>
             </div>

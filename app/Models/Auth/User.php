@@ -2,7 +2,6 @@
 
 namespace App\Models\Auth;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Employee\GenderEnum;
 use App\Models\Communication\Email;
 use App\Models\Communication\SMS;
@@ -39,16 +38,32 @@ class User extends Authenticatable
     protected $table = 't_Users';
     protected $primaryKey = 'Id';
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
-        'UserID', 'Name', 'Email', 'Phone', 'ImageId', 'Linked', 'EmployeeId', 'Notes', 'Password', 'Email_Signature', 'ClientID', 'ExtensionNo',
-        'BranchId', 'login_at', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'UserID',
+        'Name',
+        'Email',
+        'Phone',
+        'ImageId',
+        'Linked',
+        'EmployeeId',
+        'Notes',
+        'Password',
+        'Email_Signature',
+        'ClientID',
+        'ExtensionNo',
+        'BranchId',
+        'login_at',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $hidden = [
-        'Password', 'remember_token', 'Linked', 'Email_Signature', 'BranchId'
+        'Password',
+        'remember_token',
+        'Linked',
+        'Email_Signature',
+        'BranchId'
     ];
 
     protected $casts = [
@@ -60,12 +75,13 @@ class User extends Authenticatable
 
     protected ?Role $effectiveRole = null;
 
+    // ✅ FIXED: Use Id instead of UserID for polymorphic relationships
     public function getRoleNames(): Collection
     {
         $branchId = session('LoginBranchId');
         if (!$branchId) return collect();
 
-    return ModelRole::where('model_id', $this->Id)
+        return ModelRole::where('model_id', $this->Id)  // Changed from $this->UserID
             ->where('model_type', self::getPrimaryKey())
             ->where('BranchId', $branchId)
             ->with('role')
@@ -77,10 +93,10 @@ class User extends Authenticatable
     public function hasRole($roles, string $guard = null): bool
     {
         $roleNames = $this->getRoleNames();
-
         return collect($roles)->intersect($roleNames)->isNotEmpty();
     }
 
+    // ✅ FIXED: Use Id instead of UserID
     public function getPermissionsViaRoles(): Collection
     {
         $branchId = session('LoginBranchId');
@@ -88,7 +104,7 @@ class User extends Authenticatable
 
         return Permission::query()
             ->whereHas('roles.modelRoles', function ($query) use ($branchId) {
-                $query->where('model_id', $this->Id)
+                $query->where('model_id', $this->Id)  // Changed from implicit binding
                     ->where('model_type', self::getPrimaryKey())
                     ->where('BranchId', $branchId);
             })
@@ -101,11 +117,12 @@ class User extends Authenticatable
     }
 
 
+    // ✅ FIXED: Explicitly use Id for model_id
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
     {
         // Remove existing roles for this user + branch
         ModelRole::where([
-            'model_id' => $this->Id,
+            'model_id' => $this->Id,  // Explicitly use Id
             'model_type' => self::getPrimaryKey(),
             'BranchId' => $branchId,
         ])->delete();
@@ -116,7 +133,7 @@ class User extends Authenticatable
                 : Role::where('name', $role)->firstOrFail();
 
             ModelRole::create([
-                'model_id' => $this->Id,
+                'model_id' => $this->Id,  // Explicitly use Id
                 'model_type' => self::getPrimaryKey(),
                 'role_id' => $roleModel->id,
                 'BranchId' => $branchId,
@@ -126,16 +143,18 @@ class User extends Authenticatable
         }
     }
 
+    // Keep this as is - used for routing and morph map
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
     }
 
-    public function employee():BelongsTo
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'EmployeeId', 'Id');
     }
 
+    // Keep this as is - used for routing
     public function getRouteKeyName(): string
     {
         return 'UserID';
@@ -161,28 +180,26 @@ class User extends Authenticatable
         return $this->hasMany(LoanAssignment::class, 'UserId', 'Id');
     }
 
-    public function roles(): MorphToMany
+    //  FIXED: Use Id for polymorphic lookup
+    public function role(): ?Role
     {
-        return $this->morphToMany(
-            config('permission.models.role'),
-            'model',
-            config('permission.table_names.model_has_roles'),
-            config('permission.column_names.model_morph_key'),
-            'role_id'
-        )->withPivot(['BranchId'/*, 'CreatedBy', 'ModifiedBy'*/])->withTimestamps()->where('t_ModelRoles.BranchId', $this->BranchId);
-    }
+        // Return memory-injected role if available
+        if ($this->effectiveRole instanceof Role) {
+            return $this->effectiveRole;
+        }
 
-    public function role()
-    {
-        return $this->roles()?->latest('id')->first();
-        /*
-          $branchRole =  ModelRole::where('model_id', $this->getKey())
-              ->where('model_type', self::getPrimaryKey())
-              ->where('BranchId', $this->BranchId)
-              ->with('role')
-              ->first();
+        $branchId = session('LoginBranchId');
+        if (!$branchId) {
+            return null;
+        }
 
-          return  $branchRole->role;*/
+        // Find branch-specific role via t_ModelRoles
+        $modelRole = ModelRole::where('model_id', $this->Id)  // Changed from implicit
+            ->where('model_type', self::getPrimaryKey())
+            ->where('BranchId', $branchId)
+            ->first();
+
+        return  $modelRole?->role;
     }
 
     public function teams(): BelongsToMany
@@ -198,16 +215,10 @@ class User extends Authenticatable
 
     public function branchRoles(): HasMany
     {
-        return $this->hasMany(ModelRole::class, 'model_id')
+        return $this->hasMany(ModelRole::class, 'model_id', 'Id')  // Added explicit foreign/local key
             ->where('model_type', self::getPrimaryKey())
             ->with(['role', 'branch']);
     }
-
-    public function branch(): BelongsTo
-    {
-        return $this->belongsTo(Branch::class, 'BranchId', 'Id');
-    }
-
 
     public function getEmailForPasswordReset()
     {

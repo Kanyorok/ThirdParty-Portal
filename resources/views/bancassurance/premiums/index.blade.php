@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Premium Payments')
 @section('styles')
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 
 @section('content')
@@ -31,36 +31,36 @@
                 </thead>
                 <tbody>
                     @forelse($payments as $payment)
-                        <tr>
-                            <td class="text-center">{{ $loop->iteration }}</td>
-                            <td>{{ $payment->policies->PolicyNumber ?? '-' }}</td>
-                            <td>{{ $payment->CustomerID ?? 'N/A' }}</td>
-                            <td>{{ $payment->PaymentFrequency ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d/m/Y') }}</td>
-                            <td class="text-end">{{ number_format($payment->Amount, 2) }}</td>
-                            <td class="text-center">
-                                <div class="d-inline-flex gap-1">
-                                    <a href="{{ route('bancassurance.premiums.show', $payment->Id) }}" class="btn btn-sm btn-info" title="View">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('bancassurance.premiums.printReceipt', $payment->Id) }}" target="_blank" class="btn btn-sm btn-secondary" title="Print">
-                                        <i class="bi bi-printer"></i>
-                                    </a>
-                                    <form action="{{ route('bancassurance.premiums.destroy', $payment->Id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Return Payment"
-                                            onclick="return confirm('Are you sure you want to return this payment?');">
-                                            <i class="bi bi-arrow-clockwise"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td class="text-center">{{ $loop->iteration }}</td>
+                        <td>{{ $payment->policies->PolicyNumber ?? '-' }}</td>
+                        <td>{{ $payment->CustomerID ?? 'N/A' }}</td>
+                        <td>{{ $payment->PaymentFrequency ?? '-' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d/m/Y') }}</td>
+                        <td class="text-end">{{ number_format($payment->Amount, 2) }}</td>
+                        <td class="text-center">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{{ route('bancassurance.premiums.show', $payment->Id) }}" class="btn btn-sm btn-info" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('bancassurance.premiums.printReceipt', $payment->Id) }}" target="_blank" class="btn btn-sm btn-secondary" title="Print">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                                <form action="{{ route('bancassurance.premiums.destroy', $payment->Id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Return Payment"
+                                        onclick="return confirm('Are you sure you want to return this payment?');">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted">No premium payments found.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No premium payments found.</td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -73,7 +73,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#PremiumPaymentsTable').DataTable({
             pageLength: 10,
             ordering: true,

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionRequest;
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionService;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
 

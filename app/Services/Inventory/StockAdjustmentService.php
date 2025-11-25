@@ -3,7 +3,7 @@
 namespace App\Services\Inventory;
 
 use App\Enums\Inventory\Transfers;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\InventoryHold;

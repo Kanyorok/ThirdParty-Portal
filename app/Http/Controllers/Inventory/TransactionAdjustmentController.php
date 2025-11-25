@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockAdjustmentRequest;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockItem;
 use App\Services\Inventory\StockAdjustmentService;

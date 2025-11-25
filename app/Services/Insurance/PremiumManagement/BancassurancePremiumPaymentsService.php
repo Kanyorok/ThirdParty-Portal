@@ -3,7 +3,7 @@
 namespace App\Services\Insurance\PremiumManagement;
 
 use App\Models\Insurance\BancassurancePolicy;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Auth\User;
 use App\Models\Insurance\BancassurancePremiumPayments;
 use DateTime;

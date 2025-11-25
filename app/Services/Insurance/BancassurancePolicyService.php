@@ -6,7 +6,7 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
@@ -27,19 +27,19 @@ class BancassurancePolicyService
     }
 
     public static function create(
-        BancassuranceCustomer $CustomerID,
-        InsuranceProduct $ProductID,
-        ?InsuranceProvider $InsurerID,
-        float $SumAssured,
-        float $PremiumAmount,
-        Carbon $PolicyStartDate,
-        Carbon $PolicyEndDate,
-        CodeDetail $PaymentFrequency,
+        BancassuranceCustomer  $CustomerID,
+        InsuranceProduct       $ProductID,
+        ?InsuranceProvider     $InsurerID,
+        float                  $SumAssured,
+        float                  $PremiumAmount,
+        Carbon                 $PolicyStartDate,
+        Carbon                 $PolicyEndDate,
+        CodeDetail             $PaymentFrequency,
         ?BancAssuranceReferral $ReferralID = null,
         ?InsuranceProductRider $RiderAddOn = null,
-        ?Carbon $IssuedDate = null,
-        ?Carbon $ExpiryDate = null,
-        bool    $IsActive = true,
+        ?Carbon                $IssuedDate = null,
+        ?Carbon                $ExpiryDate = null,
+        bool                   $IsActive = true,
         InsurancePolicyStatus  $Status,
         User                   $user
     ): self
@@ -53,9 +53,9 @@ class BancassurancePolicyService
 
 
         $policy = BancassurancePolicy::create([
-            'CustomerID' => $CustomerID -> Id,
-            'ProductID' => $ProductID -> Id,
-            'InsurerID' => $InsurerID -> Id ?? null,
+            'CustomerID' => $CustomerID->Id,
+            'ProductID' => $ProductID->Id,
+            'InsurerID' => $InsurerID->Id ?? null,
             'PolicyNumber' => $PolicyNumber,
             'SumAssured' => $SumAssured,
             'PremiumAmount' => $PremiumAmount,
@@ -80,15 +80,16 @@ class BancassurancePolicyService
 
     public static function uploadpolicy(
         BancassurancePolicy $policy,
-        User $user,
-        UploadedFile $document = null
-    ): self {
+        User                $user,
+        UploadedFile        $document = null
+    ): self
+    {
         if ($document) {
-        $policy->newDocument(
-            ModulesEnum::Insurance,
-            $document,
-            [PermissionEnum::BancassurancePolicyView->value],
-            $user
+            $policy->newDocument(
+                ModulesEnum::Insurance,
+                $document,
+                [PermissionEnum::BancassurancePolicyView->value],
+                $user
             );
         }
 

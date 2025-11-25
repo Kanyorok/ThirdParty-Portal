@@ -349,7 +349,7 @@
   window.addPlanItemToGrid = addPlanItemToGrid;
 
   // ---- Helpers
-  async function refreshItemCate  // ---- Manual Entry: add rows with Item Master select
+  // ---- Manual Entry: add rows with Item Master select
   let manualRowSeq = 0;
   function addManualItemRow() {
     const tbody = document.getElementById('manualItemsBody');
@@ -481,11 +481,13 @@
     document.querySelectorAll('.manual-item-select').forEach(select => {
       const prevValue = select.value;
       select.innerHTML = selectedItemCategory ? getFilteredItemOptions(selectedItemCategory) : getAllItemOptions();
-..select.options].some(opt => opt.value === prevValue)) {
+      if ([...select.options].some(opt => opt.value === prevValue)) {
         select.value = prevValue;
       }
     });
   }
+
+  // Backend already filters to priced items, no need for client-side price checks.
 
   async function populateSuppliers(categoryId = null) {
     suppliersList.innerHTML = '';

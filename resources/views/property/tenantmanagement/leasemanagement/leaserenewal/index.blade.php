@@ -7,7 +7,7 @@
 <div class="container mt-4">
 <a href="{{ route('renewlease.create') }}" class="btn btn-primary mb-3">Renew Lease</a>
 
-<p><small>This is a list of renewals</small></p>
+    <p><small>This is a list of renewals</small></p>
 
     @if($leaserenewals->count())
         <table class="table table-bordered table-striped align-middle" id="LeaseRenewal">

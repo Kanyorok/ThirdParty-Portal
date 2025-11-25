@@ -11,7 +11,7 @@ use App\Models\Procurement\PlanLineItem;
 use App\Services\Procurement\ProcurementPlan\SchedulePlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Throwable;
 
 class ProcurementSchedulePlanController extends Controller

@@ -101,7 +101,8 @@
 
             <div class="card-body p-3">
                 <p class="text-muted">
-                    The Chart of Accounts organizes all GL accounts for assets, liabilities, income, expenses, and equity to support accurate reporting.
+                    The Chart of Accounts organizes all GL accounts for assets, liabilities, income, expenses, and
+                    equity to support accurate reporting.
                 </p>
 
                 @if($charts->count())
@@ -212,7 +213,8 @@
             @if($charts->hasPages())
                 <div class="card-footer bg-white d-flex justify-content-between align-items-center py-2 px-3">
                     <small class="text-muted mb-0">
-                        Showing {{ $charts->firstItem() ?? 0 }} to {{ $charts->lastItem() ?? 0 }} of {{ $charts->total() }} accounts
+                        Showing {{ $charts->firstItem() ?? 0 }} to {{ $charts->lastItem() ?? 0 }}
+                        of {{ $charts->total() }} accounts
                     </small>
                     <div class="mb-0">
                         {{ $charts->onEachSide(1)->links('pagination::bootstrap-5') }}

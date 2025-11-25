@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReverseJournalEntry extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
+
     protected $table = 't_FinanceReverseJournalEntries';
     protected $primaryKey = 'Id';
 
@@ -17,6 +18,7 @@ class ReverseJournalEntry extends Model
     {
         return 'ReverseJournalEntryId';
     }
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';

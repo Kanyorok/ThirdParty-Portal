@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetVehicle;
 
 class FleetMake extends Model
 {
     use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -50,10 +51,8 @@ class FleetMake extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
-     public function vehicles()
+    public function vehicles()
     {
         return $this->hasMany(FleetVehicle::class, 'Make', 'Id');
     }
-
-    
 }

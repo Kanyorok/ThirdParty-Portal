@@ -3,8 +3,8 @@
 @section('title', 'Add Supplier')
 
 @section('content')
-<div class="container py-4">
-    <h3 class="fw-bold mb-4">Add New Supplier</h3>
+    <div class="container py-4">
+        <h3 class="fw-bold mb-4">Add New Supplier</h3>
 
     <form action="{{ route('suppliers.store') }}" method="POST">
         @csrf

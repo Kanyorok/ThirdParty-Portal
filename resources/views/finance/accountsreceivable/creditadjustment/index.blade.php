@@ -108,12 +108,12 @@
                                     <div class="text-center p-4 border rounded-3 bg-light">
                                         <p class="mb-3 text-muted fs-5">
                                             <i class="fas fa-info-circle me-2 text-info"></i>
-                                            <i>No credit adjustments have been made yet.</i>
+                                            <i>No credit adjustments have been made yet. Visit the Index Page and Make an Adjustment to an existing Credit Account</i>
                                         </p>
-                                        <a href="{{ route('creditadjustment.create') }}"
+                                        <!-- <a href="{{ route('creditadjustment.create') }}"
                                            class="btn btn-primary px-4 py-2">
                                             <i class="fas fa-plus-circle me-2"></i> Create Adjustment
-                                        </a>
+                                        </a> -->
                                     </div>
                                 </td>
                             </tr>

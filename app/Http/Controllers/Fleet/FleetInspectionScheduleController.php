@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Fleet\FleetInspectionSchedule;
 use App\Services\FleetManagement\FleetInspectionScheduleService;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\HRM\Employee;
 use Illuminate\Support\Facades\Auth;
@@ -35,10 +35,10 @@ class FleetInspectionScheduleController extends Controller
     public function create()
     {
         $this->authorize('create', FleetInspectionSchedule::class);
-        
+
         $branchId = Auth::user()->employee?->BranchId;
 
-       $vehicles = FleetVehicle::all();
+        $vehicles = FleetVehicle::all();
 
         $inspectionStatus = CodeDetail::where('CodeID', 'InspectionStatus')
             ->orderBy('Value')

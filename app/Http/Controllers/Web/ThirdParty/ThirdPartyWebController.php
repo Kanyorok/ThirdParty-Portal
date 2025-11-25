@@ -9,7 +9,7 @@ use App\Enums\ThirdPartyTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyWithUserRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;

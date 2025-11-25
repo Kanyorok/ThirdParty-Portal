@@ -7,7 +7,7 @@ use App\Models\Inventory\ItemType;
 use App\Http\Requests\Inventory\ItemTypeRequest;
 use App\Services\Inventory\ItemTypeService;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class ItemTypeController extends Controller
 {

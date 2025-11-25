@@ -27,35 +27,35 @@ class DashboardController extends Controller
      */
     public function __invoke(Request $request): View
     {
-    $actor = $request->user();
-    $actorId = $actor?->Id ?? 1;
+        $actor = $request->user();
+        $actorId = $actor?->Id ?? 1;
         $data = [
-                 'leads'     => [
-                                 'line'  => [
-                                             'labels'    => [],
-                                             'converted' => [],
-                                            ],
-                                 'donut' => ['labels' => []],
-                                 'total' => 0,
-                                ],
-                 'campaigns' => [
-                                 'active' => 0,
-                                 'sent'   => 0,
-                                ],
-                 'schedule'  => [
-                                 'calls'        => 0,
-                                 'appointments' => 0,
-                                 'total'        => 0,
-                                ],
-                 'tickets'   => ['active' => 0],
-                ];
+            'leads'     => [
+                'line'  => [
+                    'labels'    => [],
+                    'converted' => [],
+                ],
+                'donut' => ['labels' => []],
+                'total' => 0,
+            ],
+            'campaigns' => [
+                'active' => 0,
+                'sent'   => 0,
+            ],
+            'schedule'  => [
+                'calls'        => 0,
+                'appointments' => 0,
+                'total'        => 0,
+            ],
+            'tickets'   => ['active' => 0],
+        ];
 
         //Fetch Number of open budgets, Total GLS
         $openBudgets = Budget::where('Status', 'draft')->count();
         $totalGLS = BudgetGLMaster::count();
 
-    // Widgets: ensure base widgets exist
-    $this->ensureDefaultWidgets($actorId);
+        // Widgets: ensure base widgets exist
+        $this->ensureDefaultWidgets($actorId);
 
         // Build simple stats for widgets
         $needsTotal = DepartmentNeed::count();
@@ -72,16 +72,16 @@ class DashboardController extends Controller
         ];
 
         // Load available widgets (normalize keys for Blade) and current user layout
-    $availableWidgets = DashboardWidget::where('IsActive', true)->orderBy('Name')->get()
-        ->map(function($w){
+        $availableWidgets = DashboardWidget::where('IsActive', true)->orderBy('Name')->get()
+            ->map(function ($w) {
                 return (object) [
                     'key' => $w->Key,
                     'name' => $w->Name,
                     'view' => $w->View,
-            'module' => $w->Module ?? null,
-            'type' => $w->Type ?? null,
-            'endpoint' => $w->DataEndpoint ?? null,
-            'default_filters' => $w->DefaultFilters ? json_decode($w->DefaultFilters, true) : null,
+                    'module' => $w->Module ?? null,
+                    'type' => $w->Type ?? null,
+                    'endpoint' => $w->DataEndpoint ?? null,
+                    'default_filters' => $w->DefaultFilters ? json_decode($w->DefaultFilters, true) : null,
                     'default_w' => (int) $w->DefaultW,
                     'default_h' => (int) $w->DefaultH,
                 ];
@@ -192,5 +192,67 @@ class DashboardController extends Controller
                 ]
             );
         }
+    }
+
+    /**
+     * Get available widgets for the user dashboard
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getWidgets(Request $request)
+    {
+        $availableWidgets = DashboardWidget::where('IsActive', true)->orderBy('Name')->get()
+            ->map(function ($w) {
+                return [
+                    'key' => $w->Key,
+                    'name' => $w->Name,
+                    'view' => $w->View,
+                    'module' => $w->Module ?? null,
+                    'type' => $w->Type ?? null,
+                    'endpoint' => $w->DataEndpoint ?? null,
+                    'default_filters' => $w->DefaultFilters ? json_decode($w->DefaultFilters, true) : null,
+                    'default_w' => (int) $w->DefaultW,
+                    'default_h' => (int) $w->DefaultH,
+                ];
+            });
+
+        return response()->json([
+            'available' => $availableWidgets,
+        ]);
+    }
+
+    /**
+     * Save the user's dashboard layout
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function saveLayout(Request $request)
+    {
+        $user = $request->user();
+        $widgets = $request->input('widgets', []);
+
+        // Delete existing layout for the user
+        UserDashboardWidget::where('user_id', $user->Id)->delete();
+
+        // Save new layout
+        foreach ($widgets as $widget) {
+            UserDashboardWidget::create([
+                'user_id' => $user->Id,
+                'widget_key' => $widget['widget_key'],
+                'x' => $widget['x'] ?? 0,
+                'y' => $widget['y'] ?? 0,
+                'w' => $widget['w'] ?? 6,
+                'h' => $widget['h'] ?? 1,
+                'sort_order' => $widget['sort_order'] ?? 0,
+                'config' => $widget['config'] ?? [],
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'message' => 'Layout saved successfully',
+        ]);
     }
 }

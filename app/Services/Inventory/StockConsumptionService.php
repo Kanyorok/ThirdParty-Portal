@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Inventory\StockItem;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Inventory\StockTransaction;
 use App\Models\Inventory\ItemMasterList;
 

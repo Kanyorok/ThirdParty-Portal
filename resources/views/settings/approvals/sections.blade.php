@@ -39,10 +39,10 @@
                                     data-id="{{ $group->Id }}"
                                     data-name="{{ $group->Name }}"
                                     data-description="{{ $group->Description }}"
-                                    data-doc="{{ $group->DocType }}">
+                                    data-doc="{{ $tableToAlias[$group->Source] ?? '' }}">
                                     ✏️ Edit
                                 </button>
-                                <form method="POST" action="{{ route('settings.workflows.delete', $group->Id) }}" class="d-inline">
+                                <form method="POST" action="{{ route('settings.workflows.destroy', $group->Id) }}" class="d-inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger"
@@ -94,7 +94,7 @@
                         <select name="DocType" id="DocType" class="form-control select2" required>
                             <option value="">-- Select --</option>
                             @foreach($sourceOptions as $alias => $class)
-                            <option value="{{ $class }}">{{ class_basename($class) }}</option>
+                            <option value="{{ $alias }}">{{ class_basename($class) }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -114,7 +114,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    const updateRouteTemplate = "{{ route('approval-setup.update', ['id' => '__ID__']) }}";
+    const updateRouteTemplate = "{{ route('settings.workflows.update', ['id' => '__ID__']) }}";
 
     $(function() {
         const $modal = $('#ApprovalModal');

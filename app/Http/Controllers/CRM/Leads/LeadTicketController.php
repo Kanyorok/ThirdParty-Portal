@@ -101,7 +101,7 @@ class LeadTicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error creating ticket ' . $e->getMessage());
             Log::error($e);
             return $this->errored('unexpected error creating ticket, try again later');

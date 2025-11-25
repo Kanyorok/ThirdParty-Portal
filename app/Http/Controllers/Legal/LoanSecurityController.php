@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Legal;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Legal\LoanSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,12 +27,12 @@ class LoanSecurityController extends Controller
         $this->authorize(PermissionEnum::LoanSecurityCreate, LoanSecurity::class);
 
         $details = CodeDetail::select('Value')
-            ->where('CodeID','LoanSecurityTypes')
+            ->where('CodeID', 'LoanSecurityTypes')
             ->get();
         $locations = CodeDetail::select('Value')
-            ->where('CodeID','LoanSecurityLocations')
+            ->where('CodeID', 'LoanSecurityLocations')
             ->get();
-        return view('legal.securities.create', compact('details','locations'));
+        return view('legal.securities.create', compact('details', 'locations'));
     }
 
     public function store(Request $request)
@@ -57,23 +57,23 @@ class LoanSecurityController extends Controller
             ->where('RegistrationDetails', $validated['RegistrationDetails'])
             ->exists();
 
-        if($duplicate){
+        if ($duplicate) {
             return back()->with('error', 'Error there is an existing record with the same details');
         }
-        try{
+        try {
             DB::beginTransaction();
 
             $securities = LoanSecurity::create([
-                'SecurityType'=> $validated['SecurityType'],
-                'OwnerName'=> $validated['OwnerName'],
-                'OwnerIDNumber'=> $validated['OwnerIDNumber'],
-                'LoanAccountNumber'=> $validated['LoanAccountNumber'],
-                'Value'=> $validated['Value'],
-                'Institution'=> $validated['Institution'],
-                'RegistrationDetails'=> $validated['RegistrationDetails'],
-                'Locations'=> $validated['Locations'],
-                'SecurityStatus'      => $validated['SecurityStatus'] ?? 'Held',
-                'Remarks'=> $validated['Remarks'],
+                'SecurityType' => $validated['SecurityType'],
+                'OwnerName' => $validated['OwnerName'],
+                'OwnerIDNumber' => $validated['OwnerIDNumber'],
+                'LoanAccountNumber' => $validated['LoanAccountNumber'],
+                'Value' => $validated['Value'],
+                'Institution' => $validated['Institution'],
+                'RegistrationDetails' => $validated['RegistrationDetails'],
+                'Locations' => $validated['Locations'],
+                'SecurityStatus' => $validated['SecurityStatus'] ?? 'Held',
+                'Remarks' => $validated['Remarks'],
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
@@ -87,7 +87,7 @@ class LoanSecurityController extends Controller
             DB::commit();
 
             return redirect()->route('legal.securities.index')->with('success', 'Security registered successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
@@ -106,10 +106,10 @@ class LoanSecurityController extends Controller
         $this->authorize(PermissionEnum::LoanSecurityUpdate, LoanSecurity::class);
 
         $details = CodeDetail::select('Value')
-            ->where('CodeID','LoanSecurityTypes')
+            ->where('CodeID', 'LoanSecurityTypes')
             ->get();
         $locations = CodeDetail::select('Value')
-            ->where('CodeID','LoanSecurityLocations')
+            ->where('CodeID', 'LoanSecurityLocations')
             ->get();
         $security = LoanSecurity::findOrFail($id);
         return view('legal.securities.edit', compact('security', 'details', 'locations'));
@@ -141,18 +141,18 @@ class LoanSecurityController extends Controller
             $security = LoanSecurity::findOrFail($id);
 
             $security->update([
-                'SecurityType'        => $validated['SecurityType'],
-                'OwnerName'           => $validated['OwnerName'],
-                'OwnerIDNumber'       => $validated['OwnerIDNumber'],
-                'LoanAccountNumber'   => $validated['LoanAccountNumber'],
-                'Value'               => $validated['Value'],
-                'Institution'         => $validated['Institution'],
+                'SecurityType' => $validated['SecurityType'],
+                'OwnerName' => $validated['OwnerName'],
+                'OwnerIDNumber' => $validated['OwnerIDNumber'],
+                'LoanAccountNumber' => $validated['LoanAccountNumber'],
+                'Value' => $validated['Value'],
+                'Institution' => $validated['Institution'],
                 'RegistrationDetails' => $validated['RegistrationDetails'],
-                'Locations'           => $validated['Locations'],
-                'SecurityStatus'      => $validated['SecurityStatus'],
-                'Remarks'             => $validated['Remarks'],
-                'ModifiedBy'          => $userId,
-                'ModifiedOn'          => $now,
+                'Locations' => $validated['Locations'],
+                'SecurityStatus' => $validated['SecurityStatus'],
+                'Remarks' => $validated['Remarks'],
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => $now,
             ]);
 
             activity()
@@ -164,7 +164,7 @@ class LoanSecurityController extends Controller
             DB::commit();
 
             // dd($security);
-         return redirect()->route('legal.securities.index')->with('success', 'Security updated successfully.');
+            return redirect()->route('legal.securities.index')->with('success', 'Security updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             activity()
@@ -190,7 +190,7 @@ class LoanSecurityController extends Controller
     {
         $this->authorize(PermissionEnum::LoanSecurityDelete, LoanSecurity::class);
 
-        try{
+        try {
             DB::beginTransaction();
 
             $security = LoanSecurity::findOrFail($id);
@@ -198,7 +198,7 @@ class LoanSecurityController extends Controller
             $security->DeletedBy = Auth::id();
             $security->save();
             $security->delete();
-        
+
             activity()
                 ->performedOn(new LoanSecurity())
                 ->causedBy(Auth::user())
@@ -207,16 +207,16 @@ class LoanSecurityController extends Controller
 
             DB::commit();
 
-             return back()->with('success','Loan Security successfully deleted');
-        }catch(\Throwable $th){
+            return back()->with('success', 'Loan Security successfully deleted');
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
                 ->performedOn(new LoanSecurity())
                 ->causedBy(Auth::user())
-                ->withProperties(['action'=>'delete'])
+                ->withProperties(['action' => 'delete'])
                 ->log('Error deleting loan security');
-            
+
             Log::error('Error deleting loan security.' . $th->getMessage());
             return back()->with('error', 'Error deleting loan security.' . $th->getMessage());
         }

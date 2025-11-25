@@ -13,7 +13,7 @@ use App\Services\FleetManagement\FleetDriverAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class FleetDriverAssignmentController extends Controller
 {

@@ -24,41 +24,41 @@ class InvoiceIntakeService
     {
         $v = Validator::make($data, [
             // header
-            'IdempotencyKey' => ['nullable','string','max:100'],
-            'SourceTable'    => ['required','string','max:255'],
-            'ModuleID'       => ['nullable','integer'],
-            'CurrencyID'     => ['nullable','integer'],
-            'CustomerID'     => ['nullable','integer'],
-            'InvoiceID'      => ['nullable'],
-            'InvoiceNumber'  => ['nullable','string','max:100'],
-            'InvoiceTitle'   => ['required','string','max:100'],
-            'InvoiceDate'    => ['required','date'],
-            'DueDate'        => ['nullable','date','after_or_equal:InvoiceDate'],
-            'InvoiceRemarks' => ['nullable','string','max:100'],
-            'TotalAmount'    => ['required','integer'],
-            'AmountPaid'     => ['nullable','integer'],
-            'IsPaid'         => ['nullable','boolean'],
-            'IsGenerated'    => ['nullable','boolean'],
-            'Status'         => ['nullable','in:draft,queued,approved,posted,rejected'],
-            'ApprovalStatus' => ['nullable','in:draft,posted,rejected'],
-            'ApprovalReason' => ['nullable','string'],
+            'IdempotencyKey' => ['nullable', 'string', 'max:100'],
+            'SourceTable' => ['required', 'string', 'max:255'],
+            'ModuleID' => ['nullable', 'integer'],
+            'CurrencyID' => ['nullable', 'integer'],
+            'CustomerID' => ['nullable', 'integer'],
+            'InvoiceID' => ['nullable'],
+            'InvoiceNumber' => ['nullable', 'string', 'max:100'],
+            'InvoiceTitle' => ['required', 'string', 'max:100'],
+            'InvoiceDate' => ['required', 'date'],
+            'DueDate' => ['nullable', 'date', 'after_or_equal:InvoiceDate'],
+            'InvoiceRemarks' => ['nullable', 'string', 'max:100'],
+            'TotalAmount' => ['required', 'integer'],
+            'AmountPaid' => ['nullable', 'integer'],
+            'IsPaid' => ['nullable', 'boolean'],
+            'IsGenerated' => ['nullable', 'boolean'],
+            'Status' => ['nullable', 'in:draft,queued,approved,posted,rejected'],
+            'ApprovalStatus' => ['nullable', 'in:draft,posted,rejected'],
+            'ApprovalReason' => ['nullable', 'string'],
 
             // audit
-            'CreatedBy'      => ['required','integer'],
-            'ModifiedBy'     => ['required','integer'],
+            'CreatedBy' => ['required', 'integer'],
+            'ModifiedBy' => ['required', 'integer'],
 
             // lines
-            'lines'                   => ['required','array','min:1'],
-            'lines.*.InvoiceLineName' => ['required','string','max:150'],
-            'lines.*.Description'     => ['nullable','string','max:250'],
-            'lines.*.UnitCost'        => ['required','integer'],
-            'lines.*.Quantity'        => ['required','integer','min:1'],
-            'lines.*.Tax'             => ['nullable','string','max:10'],
-            'lines.*.TaxID'           => ['nullable','string','max:10'],
-            'lines.*.TaxAmount'       => ['nullable','string','max:10'],
-            'lines.*.CurrencyID'      => ['nullable','integer'],
-            'lines.*.Discount'        => ['nullable','integer'],
-            'lines.*.Total'           => ['required','integer'],
+            'lines' => ['required', 'array', 'min:1'],
+            'lines.*.InvoiceLineName' => ['required', 'string', 'max:150'],
+            'lines.*.Description' => ['nullable', 'string', 'max:250'],
+            'lines.*.UnitCost' => ['required', 'integer'],
+            'lines.*.Quantity' => ['required', 'integer', 'min:1'],
+            'lines.*.Tax' => ['nullable', 'string', 'max:10'],
+            'lines.*.TaxID' => ['nullable', 'string', 'max:10'],
+            'lines.*.TaxAmount' => ['nullable', 'string', 'max:10'],
+            'lines.*.CurrencyID' => ['nullable', 'integer'],
+            'lines.*.Discount' => ['nullable', 'integer'],
+            'lines.*.Total' => ['required', 'integer'],
         ]);
 
         if ($v->fails()) {
@@ -74,7 +74,7 @@ class InvoiceIntakeService
             $sum = array_sum(array_map(fn($l) => (int)$l['Total'], $payload['lines']));
             if ((int)$payload['TotalAmount'] !== $sum) {
                 return [
-                    'message'    => "Header TotalAmount does not match sum of lines.",
+                    'message' => "Header TotalAmount does not match sum of lines.",
                     'request_id' => null,
                 ];
             }
@@ -85,27 +85,27 @@ class InvoiceIntakeService
 
             $header = [
                 'IdempotencyKey' => $idk,
-                'SourceTable'    => $payload['SourceTable'],
+                'SourceTable' => $payload['SourceTable'],
 
-                'ModuleID'       => $payload['ModuleID']       ?? null,
-                'CurrencyID'     => $payload['CurrencyID']     ?? null,
-                'CustomerID'     => $payload['CustomerID']     ?? null,
-                'InvoiceID'      => $payload['InvoiceID']      ?? null,
-                'InvoiceNumber'  => $payload['InvoiceNumber']  ?? null,
-                'InvoiceTitle'   => $payload['InvoiceTitle'],
-                'InvoiceDate'    => $payload['InvoiceDate'],
-                'DueDate'        => $payload['DueDate']        ?? null,
+                'ModuleID' => $payload['ModuleID'] ?? null,
+                'CurrencyID' => $payload['CurrencyID'] ?? null,
+                'CustomerID' => $payload['CustomerID'] ?? null,
+                'InvoiceID' => $payload['InvoiceID'] ?? null,
+                'InvoiceNumber' => $payload['InvoiceNumber'] ?? null,
+                'InvoiceTitle' => $payload['InvoiceTitle'],
+                'InvoiceDate' => $payload['InvoiceDate'],
+                'DueDate' => $payload['DueDate'] ?? null,
                 'InvoiceRemarks' => $payload['InvoiceRemarks'] ?? null,
-                'TotalAmount'    => (int) $payload['TotalAmount'],
-                'AmountPaid'     => (int) ($payload['AmountPaid'] ?? 0),
-                'IsPaid'         => (bool)($payload['IsPaid'] ?? false),
-                'IsGenerated'    => (bool)($payload['IsGenerated'] ?? true),
-                'Status'         => $payload['Status']         ?? 'draft',
+                'TotalAmount' => (int)$payload['TotalAmount'],
+                'AmountPaid' => (int)($payload['AmountPaid'] ?? 0),
+                'IsPaid' => (bool)($payload['IsPaid'] ?? false),
+                'IsGenerated' => (bool)($payload['IsGenerated'] ?? true),
+                'Status' => $payload['Status'] ?? 'draft',
                 'ApprovalStatus' => $payload['ApprovalStatus'] ?? 'draft',
                 'ApprovalReason' => $payload['ApprovalReason'] ?? null,
 
-                'ModifiedBy'     => $payload['ModifiedBy'],
-                'ModifiedOn'     => $now,
+                'ModifiedBy' => $payload['ModifiedBy'],
+                'ModifiedOn' => $now,
             ];
 
             // check if invoice exists (handles double submits)
@@ -122,21 +122,21 @@ class InvoiceIntakeService
                 // insert lines
                 foreach ($payload['lines'] as $line) {
                     $l = new FinanceInvoiceLine();
-                    $l->InvoiceID       = $invoice->Id;
+                    $l->InvoiceID = $invoice->Id;
                     $l->InvoiceLineName = $line['InvoiceLineName'];
-                    $l->Description     = $line['Description']   ?? null;
-                    $l->UnitCost        = (int)$line['UnitCost'];
-                    $l->Quantity        = (int)$line['Quantity'];
-                    $l->Tax             = $line['Tax']           ?? null;
-                    $l->TaxID           = $line['TaxID']         ?? null;
-                    $l->TaxAmount       = $line['TaxAmount']     ?? '0';
-                    $l->CurrencyID      = $line['CurrencyID']    ?? ($payload['CurrencyID'] ?? null);
-                    $l->Discount        = (int)($line['Discount'] ?? 0);
-                    $l->Total           = (int)$line['Total'];
-                    $l->CreatedBy       = $payload['CreatedBy'];
-                    $l->CreatedOn       = $now;
-                    $l->ModifiedBy      = $payload['ModifiedBy'];
-                    $l->ModifiedOn      = $now;
+                    $l->Description = $line['Description'] ?? null;
+                    $l->UnitCost = (int)$line['UnitCost'];
+                    $l->Quantity = (int)$line['Quantity'];
+                    $l->Tax = $line['Tax'] ?? null;
+                    $l->TaxID = $line['TaxID'] ?? null;
+                    $l->TaxAmount = $line['TaxAmount'] ?? '0';
+                    $l->CurrencyID = $line['CurrencyID'] ?? ($payload['CurrencyID'] ?? null);
+                    $l->Discount = (int)($line['Discount'] ?? 0);
+                    $l->Total = (int)$line['Total'];
+                    $l->CreatedBy = $payload['CreatedBy'];
+                    $l->CreatedOn = $now;
+                    $l->ModifiedBy = $payload['ModifiedBy'];
+                    $l->ModifiedOn = $now;
                     $l->save();
                 }
             }
@@ -151,7 +151,7 @@ class InvoiceIntakeService
 
 
         return [
-            'message'    => 'Invoice successfully stored in Finance.',
+            'message' => 'Invoice successfully stored in Finance.',
             'request_id' => $invoice->RequestID,
         ];
     }
@@ -159,11 +159,11 @@ class InvoiceIntakeService
     protected function computeIdempotencyKey(array $payload): string
     {
         $parts = [
-            'SourceTable'  => $payload['SourceTable'] ?? null,
-            'InvoiceID'    => $payload['InvoiceID']   ?? null,
-            'CustomerID'   => $payload['CustomerID']  ?? null,
-            'InvoiceDate'  => $payload['InvoiceDate'] ?? null,
-            'InvoiceTitle' => $payload['InvoiceTitle']?? null,
+            'SourceTable' => $payload['SourceTable'] ?? null,
+            'InvoiceID' => $payload['InvoiceID'] ?? null,
+            'CustomerID' => $payload['CustomerID'] ?? null,
+            'InvoiceDate' => $payload['InvoiceDate'] ?? null,
+            'InvoiceTitle' => $payload['InvoiceTitle'] ?? null,
         ];
 
         $norm = array_map(fn($v) => is_string($v) ? trim(mb_strtoupper($v)) : $v, $parts);

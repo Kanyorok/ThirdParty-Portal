@@ -28,11 +28,11 @@ class FleetRoutePlannerController extends Controller
     {
         $this->authorize('create', FleetRoutePlan::class);
         $validated = $request->validate([
-            'VehicleID'  => 'required|exists:t_FleetVehicles,Id',
-            'TripName'   => 'required|string|max:255',
+            'VehicleID' => 'required|exists:t_FleetVehicles,Id',
+            'TripName' => 'required|string|max:255',
             #'VehicleID'  => 'required|exists:t_FleetVehicles,Id',
-            'Waypoints'  => 'required|array|min:2',
-            'Waypoints.*'=> 'required|string|max:255',
+            'Waypoints' => 'required|array|min:2',
+            'Waypoints.*' => 'required|string|max:255',
         ]);
 
         FleetRoutePlan::create([

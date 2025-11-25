@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->date('StartDate');
             $table->date('CuttOffDate')->nullable();
             $table->date('NextRunDate')->nullable();
-            $table->enum('Frequency',['d','w','m','q','y']);
+            $table->enum('Frequency', ['d', 'w', 'm', 'q', 'y']);
             $table->string('ReferenceName');
             $table->text('Description')->nullable();
             $table->boolean('isVoucher')->default(false);

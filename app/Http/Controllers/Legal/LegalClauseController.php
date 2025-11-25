@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Legal;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Legal\LegalClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

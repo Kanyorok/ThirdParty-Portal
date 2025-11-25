@@ -38,5 +38,5 @@ class LegalSearchRequest extends Model
     {
         return 'LegalSearchRequestsId';
     }
-    
+
 }

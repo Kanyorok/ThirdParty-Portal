@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Fleet\FleetTripLog;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\DocumentsTrait;
 use App\Models\ThirdParty\ThirdParties;
@@ -61,7 +61,4 @@ class ContractedDriver extends Model
     {
         return $this->hasMany(FleetTripLog::class, 'DriverNo', 'Id');
     }
-
-    
-
 }

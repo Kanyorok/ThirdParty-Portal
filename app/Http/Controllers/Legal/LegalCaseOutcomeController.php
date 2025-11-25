@@ -19,7 +19,7 @@ class LegalCaseOutcomeController extends Controller
 
         $case = LegalCase::findOrFail($caseId);
         $outcomes = LegalCaseOutcome::with('case')->orderByDesc('JudgmentDate')->get();
-        return view('legal.disputes.outcomes.index', compact('outcomes','case'));
+        return view('legal.disputes.outcomes.index', compact('outcomes', 'case'));
     }
 
     public function create($caseId)
@@ -50,10 +50,10 @@ class LegalCaseOutcomeController extends Controller
             ->where('JudgmentDate', $request->JudgmentDate)
             ->where('JudgeName', $request->JudgeName)
             ->exists();
-        if($duplicate){
+        if ($duplicate) {
             return back()->with('error', 'Existing record for this Outcome');
         }
-        try{
+        try {
             DB::beginTransaction();
 
             $outcomes = LegalCaseOutcome::create([
@@ -71,21 +71,21 @@ class LegalCaseOutcomeController extends Controller
             ]);
 
             activity()
-            ->performedOn(new LegalCaseOutcome())
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('Legal case outcome created');
+                ->performedOn(new LegalCaseOutcome())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'create'])
+                ->log('Legal case outcome created');
 
             DB::commit();
 
             return redirect()->route('legal.cases.show', $caseId)->with('success', 'Case outcome recorded successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
-            ->performedOn(new LegalCaseOutcome())
-            ->causedBy(Auth::user())
-            ->log('Error creating case outcome');
+                ->performedOn(new LegalCaseOutcome())
+                ->causedBy(Auth::user())
+                ->log('Error creating case outcome');
 
             Log::error('Error creating case outcome: ' . $th->getMessage());
             return back()->with('error', 'Error creating case outcome: ' . $th->getMessage());
@@ -117,7 +117,7 @@ class LegalCaseOutcomeController extends Controller
             'Remarks' => 'required|string',
         ]);
 
-        try{
+        try {
             DB::beginTransaction();
 
             $outcome->update([
@@ -131,21 +131,21 @@ class LegalCaseOutcomeController extends Controller
             ]);
 
             activity()
-            ->performedOn(new LegalCaseOutcome())
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('Legal case outcome created');
+                ->performedOn(new LegalCaseOutcome())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'create'])
+                ->log('Legal case outcome created');
 
             DB::commit();
 
             return redirect()->route('legal.cases.show', $caseId)->with('success', 'Case outcome updated successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
-            ->performedOn(new LegalCaseOutcome())
-            ->causedBy(Auth::user())
-            ->log('Error updating case outcome');
+                ->performedOn(new LegalCaseOutcome())
+                ->causedBy(Auth::user())
+                ->log('Error updating case outcome');
 
             Log::error('Error updating case outcome: ' . $th->getMessage());
             return back()->with('error', 'Error updating case outcome: ' . $th->getMessage());
@@ -165,7 +165,7 @@ class LegalCaseOutcomeController extends Controller
     {
         $this->authorize(PermissionEnum::DisputeLitigationDelete, LegalCaseOutcome::class);
 
-        try{
+        try {
             DB::beginTransaction();
 
             $outcome = LegalCaseOutcome::findOrFail($id);
@@ -183,16 +183,16 @@ class LegalCaseOutcomeController extends Controller
 
             return redirect()->route('legal.cases.show', $caseId)->with('success', 'Case outcome deleted successfully.');
 
-        }catch(\Throwable $th){
-                DB::rollBack();
+        } catch (\Throwable $th) {
+            DB::rollBack();
 
-                activity()
+            activity()
                 ->performedOn(new LegalCaseOutcome())
                 ->causedBy(Auth::user())
                 ->log('Error deleted case outcome');
 
-                Log::error('Error deleted case outcome: ' . $th->getMessage());
-                return back()->with('error', 'Error deleted case outcome: ' . $th->getMessage());
+            Log::error('Error deleted case outcome: ' . $th->getMessage());
+            return back()->with('error', 'Error deleted case outcome: ' . $th->getMessage());
         }
     }
 }
