@@ -277,4 +277,9 @@ class User extends Authenticatable
     {
         return $this->Name;
     }
+	
+	public function branch(): BelongsTo
+	{
+		return $this->belongsTo(Branch::class, 'BranchId', 'Id');
+	}
 }

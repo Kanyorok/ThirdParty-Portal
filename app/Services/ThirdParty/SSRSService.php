@@ -61,12 +61,13 @@ class SSRSService
             throw new ErroredException('invalid report service configuration');
         }
         $this->path = $ssrsConfig->path;
-        $path = strtolower($ssrsConfig->path);
+        //$path = strtolower($ssrsConfig->path);
         $username = $ssrsConfig->username;
         $this->_username = $username;
         $this->_password = (string)$password;
         $this->serverURL = $ssrsConfig->host;
-        $this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/{$path}/api/v2.0/";
+        //$this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/{$path}/api/v2.0/";
+		$this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/{$this->path}/api/v2.0/";
 
         $this->_query = Http::withCookies(request()->cookie(), parse_url($this->serverURL, PHP_URL_HOST))
             ->withHeaders(request()->header())->retry(3, 100)->timeout(60 * 10)
@@ -83,7 +84,6 @@ class SSRSService
      * @throws GuzzleException
      */
     public function initiateRequest(string $path): ResponseInterface
-
     {
         $cookieJar = new FileCookieJar($this->_getPath(), true);
         $client = new Client([
@@ -477,11 +477,13 @@ class SSRSService
      */
     public function getReportByPath(string $path): array
     {
-        try {
-            $response = $this->_query->get($this->_serverAPIUrl . "/Reports(Path='{$path}')");
-        } catch (ConnectionException) {
+        //try {
+            $response = $this->_query->get($this->_serverAPIUrl . "Reports(Path='{$path}')");
+       /* } catch (ConnectionException $e) {
+			dd($e);
             throw new ErroredException("Could not reach to SSRS Server. Please check your connection.");
-        }
+        }*/
+		dd($response);
 
         if (!$response->successful()) {
             if ($response->notFound()) {
