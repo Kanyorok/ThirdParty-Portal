@@ -38,7 +38,9 @@ class PropertyNewLease extends Model
         'DueDay',
         'SpecialTerms',
         'Status',
+        'ApprovalStatus',
         'IsActive',
+        'IsOfferGenerated',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
@@ -118,8 +119,9 @@ class PropertyNewLeaseController extends Controller
         $floor = PropertyFloor::findOrFail($data['FloorID']);
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $paymentFrequency = CodeDetail::findOrFail($data['PaymentFrequency']);
+    
         foreach ($request->file('Document', []) as $uploadedFile) {
-        $this->service::create(
+        $this->service->create(
             $tenant,
             $property,
             $block,
@@ -133,6 +135,8 @@ class PropertyNewLeaseController extends Controller
             $data['ServiceCharge'],
             $data['ParkingFee'],
             $data['OtherCharges'],
+            ApprovalEnum::Pending->value,
+            false,
             $data['DueDay'],
             $data['SpecialTerms'] ?? '',
             $request->user(),
@@ -168,7 +172,7 @@ class PropertyNewLeaseController extends Controller
         $frequency = CodeDetail::findOrFail($data['PaymentFrequency']);
         $user = auth()->user();
 
-        $this->service::update(
+        $this->service->update(
             lease: $lease,
             PropertyID: $property,
             BlockID: $block,
@@ -187,8 +191,8 @@ class PropertyNewLeaseController extends Controller
             user: $user
         );
 
-        foreach ($request->file('Document', []) as $uploadedFile) {
-        $this->service::update(
+    foreach ($request->file('Document', []) as $uploadedFile) {
+        $this->service->update(
             lease: $lease,
             PropertyID: $property,
             BlockID: $block,
@@ -216,7 +220,21 @@ class PropertyNewLeaseController extends Controller
     {
         $lease = PropertyNewLease::with(['tenant.thirdParty', 'property', 'block', 'floor', 'unit', 'code'])->findOrFail($Id);
 
-        // Optionally generate PDF
+        // Update IsOfferGenerated to true
+        $lease->update([
+            'IsOfferGenerated' => true,
+            'ModifiedBy' => auth()->user()->Id,
+            'ModifiedOn' => now(),
+        ]);
+
+        // Log the activity
+        activity()
+            ->causedBy(auth()->user()->Id)
+            ->performedOn($lease)
+            ->event('offer_generated')
+            ->log("Generated Lease Offer Letter for {$lease->LeaseNumber}.");
+
+        // Generate PDF
         $pdf = Pdf::loadView('property.tenantmanagement.leasemanagement.leasemaintenance.Offerletter', compact('lease'));
 
         return $pdf->download("Lease_Offer_{$lease->LeaseNumber}.pdf");
