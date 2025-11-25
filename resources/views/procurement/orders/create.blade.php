@@ -154,9 +154,9 @@
                     <select class="form-control" id="contractRef">
                         <option selected disabled>Select Active Contract</option>
                         @foreach(($contracts ?? []) as $c)
-                            <option value="{{ $c->ContractRef }}" 
-                                    data-contract-id="{{ $c->Id }}" 
-                                    data-supplier-id="{{ $c->SupplierId }}" 
+                            <option value="{{ $c->ContractRef }}"
+                                    data-contract-id="{{ $c->Id }}"
+                                    data-supplier-id="{{ $c->SupplierId }}"
                                     data-supplier-name="{{ $c->SupplierName ?? '' }}"
                                     data-address="{{ $c->Address }}">
                                 {{ $c->ContractRef }} - {{ $c->SupplierName }} [{{ $c->ContractStatus }}]
@@ -333,20 +333,20 @@
         // Prepare RFQ responses for JS (for supplier filtering)
         const rfqResponses = @json($rfqResponses);
         const convertedRFQIds = @json($convertedRFQIds);
-        
+
         // Load all items for dropdowns
         const allItems = @json($allItems);
-        
+
         // Build item options HTML
         let itemOptions = '<option value="" disabled selected>Select Item</option>';
         let currentAvailableItems = allItems; // Keep reference to current available items
-        
+
         function buildItemOptions(items) {
             let options = '<option value="" disabled selected>Select Item</option>';
             items.forEach(item => {
-                options += `<option value="${item.itemCode}" 
-                                   data-name="${item.itemName}" 
-                                   data-description="${item.description || item.itemName}" 
+                options += `<option value="${item.itemCode}"
+                                   data-name="${item.itemName}"
+                                   data-description="${item.description || item.itemName}"
                                    data-price="${item.unitPrice || 0}"
                                    data-type="${item.itemType || ''}"
                                    data-category="${item.categoryName || ''}">
@@ -355,21 +355,21 @@
             });
             return options;
         }
-        
+
         // Initialize with all items
         itemOptions = buildItemOptions(allItems);
-        
+
         // Function to update item options for contract-specific tender items
     function updateItemOptionsForContract(contractItems) {
             currentAvailableItems = contractItems;
             itemOptions = buildItemOptions(contractItems);
-            
+
             // Update existing dropdowns with new options
             $('.itemCode').each(function() {
                 if (this.tagName !== 'SELECT') return; // only update selects
                 const currentVal = $(this).val();
                 $(this).html(itemOptions);
-                
+
                 // Try to restore the previously selected value if it still exists
                 if (currentVal && contractItems.find(item => item.itemCode == currentVal)) {
                     $(this).val(currentVal);
@@ -387,30 +387,30 @@
             const addRow = (idx, it) => {
                 const $tr = $('<tr/>');
                 $tr.append(`<td class="line-no">${idx + 1}.</td>`);
-                
+
                 // Create item dropdown with currently available items (contract-specific or all items)
                 const $itemTd = $('<td class="text-start"/>' );
                 const $inputItem = $('<input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required/>' );
                 if (it.itemCode) { $inputItem.val(it.itemCode); }
                 $itemTd.append($inputItem);
                 $tr.append($itemTd);
-                
+
                 // Item description
                 const itemDescription = it.description || it.itemName || '';
                 $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
-                
+
                 // Other fields
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${it.quantity ?? ''}"></td>`);
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
                 $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" step="any"></td>');
                 $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>');
-                
+
                 const lineTotal = (+it.quantity || 0) * (+it.unitPrice || 0);
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly value="${lineTotal.toFixed(2)}"></td>`);
                 $tr.append('<td class="text-center align-middle"><button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button></td>');
                 $tbody.append($tr);
             };
-            
+
             (items || []).forEach((it, idx) => addRow(idx, it));
             if ((items || []).length === 0) {
                 // keep one blank row with current available items
@@ -639,7 +639,7 @@
             const supplierId = parseInt(opt.data('supplier-id'));
             const supplierName = opt.data('supplier-name') || '';
             const address = opt.data('address') || '';
-            
+
             if (!isNaN(contractId)) {
                 $('#SourceId').val(contractId);
             } else {
@@ -660,13 +660,13 @@
             if (!isNaN(contractId)) {
                 fetch(`/procurement/purchase-order/contract-items/${contractId}`)
                     .then(r => r.json())
-                    .then(({items, availableItems}) => { 
+                    .then(({items, availableItems}) => {
                         // Update global item options with contract-specific tender items
                         updateItemOptionsForContract(availableItems || []);
-                        
+
                         // Populate the form with the tender items
-                        populateItems(items || []); 
-                        updateTotals(); 
+                        populateItems(items || []);
+                        updateTotals();
                     })
                     .catch(err => {
                         console.error('Failed to load contract tender items:', err);
@@ -680,13 +680,13 @@
         $(function () {
             $('form#purchaseOrdersForm').submit(function (e) {
                 e.preventDefault();
-                
+
                 // Ensure supplier value is set (Direct uses preqSupplier, others set hidden earlier)
                 const preqVal = $('#preqSupplier').val();
                 if (preqVal && $("input[name='supplier']").length === 0 && $('input[name="SourceType"]:checked').val() === 'DIRECT') {
                     $('<input>').attr({type:'hidden', name:'supplier', value:String(preqVal)}).appendTo('#purchaseOrdersForm');
                 }
-                
+
                 // Validate required fields before submission
                 let isValid = true;
                 let errorMessages = [];
@@ -699,7 +699,7 @@
                         isValid = false;
                     }
                 }
-                
+
                 // Check supplier
                 if (mode === 'DIRECT') {
                     if (!$('#preqSupplier').val()) {
@@ -713,27 +713,27 @@
                         isValid = false;
                     }
                 }
-                
+
                 // Check payment terms
                 if (!$('#terms').val()) {
                     errorMessages.push('Please select payment terms');
                     isValid = false;
                 }
-                
+
                 // Check if we have at least one item
                 const itemCount = $('.itemCode').length;
                 if (itemCount === 0) {
                     errorMessages.push('Please add at least one item');
                     isValid = false;
                 }
-                
+
                 // Check each item has required fields
                 $('.itemCode').each(function(index) {
                     const $row = $(this).closest('tr');
                     const itemCode = $(this).val();
                     const quantity = $row.find('.quantity').val();
                     const unitPrice = $row.find('.unit-price').val();
-                    
+
                     if (!itemCode) {
                         errorMessages.push(`Row ${index + 1}: Please enter an item`);
                         isValid = false;
@@ -747,15 +747,15 @@
                         isValid = false;
                     }
                 });
-                
+
                 if (!isValid) {
                     alert('Please fix the following errors:\n\n' + errorMessages.join('\n'));
                     return false;
                 }
-                
+
                 // Show loading state
                 $('#saveOrder').prop('disabled', true).text('Saving...');
-                
+
                 // Submit the form normally
                 this.submit();
             });
@@ -774,8 +774,8 @@
                 const $sel = $('#itemCategory');
                 $sel.empty().append(`<option value="">-- None --</option>`);
                 Promise.all([
-                    fetch(`{{ url('procurement/purchaseOrder/root-categories') }}`).then(r=>r.json()).catch(()=>({data:[]})),
-                    fetch(`{{ url('procurement/purchaseOrder/direct-plan-categories') }}`).then(r=>r.json()).catch(()=>({data:[]})),
+                    fetch(`{{ url('procurement/purchase-order/root-categories') }}`).then(r=>r.json()).catch(()=>({data:[]})),
+                    fetch(`{{ url('procurement/purchase-order/direct-plan-categories') }}`).then(r=>r.json()).catch(()=>({data:[]})),
                 ]).then(([root, direct])=>{
                     const seen = new Set();
                     [...(root.data||[]), ...(direct.data||[])].forEach(row=>{
@@ -812,7 +812,7 @@
             const $hiddenSup = $("input[name='supplier']");
             if ($hiddenSup.length) { $hiddenSup.val(''); }
             $('input[name="address"]').val('');
-            fetch(`{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${catId}`)
+            fetch(`{{ url('procurement/purchase-order/prequalified-suppliers') }}/${catId}`)
                 .then(r=>r.json()).then(({data})=>{
                     (data||[]).forEach(row=>{
                         const supplierId = row.SupplierId || row.SupplierID || '';
@@ -825,7 +825,7 @@
                 }).catch(()=>{});
 
             // 2) Load plan items filtered by category and populate the grid
-            fetch(`{{ url('procurement/purchaseOrder/plan') }}/${planId}/category/${catId}/items`)
+            fetch(`{{ url('procurement/purchase-order/plan') }}/${planId}/category/${catId}/items`)
                 .then(r=>r.json())
                 .then((resp)=>{
                     const items = (resp && (resp.data || resp.items)) ? (resp.data || resp.items) : [];
@@ -860,7 +860,7 @@
         $(document).on('click', '#add-row', function() {
             const $tbody = $('#item-rows');
             const rowCount = $tbody.find('tr').length + 1;
-            
+
             const $newRow = $(`
                 <tr>
                     <td class="line-no">${rowCount}.</td>
@@ -892,7 +892,7 @@
                     </td>
                 </tr>
             `);
-            
+
             $tbody.append($newRow);
             updateRowNumbers();
         });
@@ -965,7 +965,7 @@
                         // Load categories tied to this plan
                         const $cat = $('#itemCategory');
                         $cat.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
-                        fetch(`{{ url('procurement/purchaseOrder/plan') }}/${val}/categories`)
+                        fetch(`{{ url('procurement/purchase-order/plan') }}/${val}/categories`)
                             .then(r=>r.json())
                             .then(({success, data})=>{
                                 (data||[]).forEach(row=>{

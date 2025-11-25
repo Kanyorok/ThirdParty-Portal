@@ -16,18 +16,20 @@
 
                 <div class="mb-3">
                     <label class="form-label">Evidence Title</label>
-                    <input type="text" name="EvidenceTitle" value="{{ old('EvidenceTitle', $evidence->EvidenceTitle) }}" class="form-control" required>
+                    <input type="text" name="EvidenceTitle"
+                        value="{{ old('EvidenceTitle', $evidence->EvidenceTitle) }}" class="form-control"
+                        required>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Upload Document (optional)</label>
                         <input type="file" name="DMSDocumentID" class="form-control"
-                               accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpeg,.jpg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/jpg,image/png">
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpeg,.jpg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/jpg,image/png">
                         <small class="form-text text-muted">Accepted formats: PDF, Word, Excel, CSV, JPG, PNG</small>
                         @if ($evidence->DMSDocumentID)
                         <div class="mt-2">
-                          <span class="text-success">Current Document: {{ basename($evidence->DMSDocumentID) }}</span>
+                            <span class="text-success">Current Document: {{ basename($evidence->DMSDocumentID) }}</span>
                         </div>
                         @endif
                     </div>
@@ -40,7 +42,7 @@
                 <div class="mb-3">
                     <label class="form-label">Description</label>
                     <textarea name="Description" class="form-control" rows="3"
-                              required>{{ old('Description', $evidence->Description) }}</textarea>
+                        required>{{ old('Description', $evidence->Description) }}</textarea>
                 </div>
 
                 <div class="form-check mb-3">
@@ -50,7 +52,8 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mb-3">
-                    <a href="{{ route('legal.cases.evidence.index', $cases->Id) }}" class="btn btn-outline-secondary">
+                    <a href="{{ route('legal.cases.evidence.index', $cases->Id) }}"
+                        class="btn btn-outline-secondary">
                         <i class="fas fa-long-arrow-alt-left"></i> Back
                     </a>
                     <button type="submit" class="btn btn-info"

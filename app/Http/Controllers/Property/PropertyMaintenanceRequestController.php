@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Http\Requests\Property\MaintenanceAndIssues\MaintenanceRequest;
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceService;

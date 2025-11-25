@@ -2,24 +2,24 @@
 @section('title', 'Tax Jurisdictions')
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <!-- Header -->
-    <div class="card-header bg-light px-3 py-2 d-flex justify-content-between mb-1">
-        <h4 class="text-info mb-0"><i class="fas fa-globe"></i> Tax Jurisdictions</h4>
-        <div>
-            <a href="{{ route('taxjurisdiction.create') }}" class="btn btn-info">
-                <i class="fas fa-plus me-1"></i> Add Jurisdiction
-            </a>
+    <div class="card p-4 shadow rounded-4">
+        <!-- Header -->
+        <div class="card-header bg-light px-3 py-2 d-flex justify-content-between mb-1">
+            <h4 class="text-info mb-0"><i class="fas fa-globe"></i> Tax Jurisdictions</h4>
+            <div>
+                <a href="{{ route('taxjurisdiction.create') }}" class="btn btn-info">
+                    <i class="fas fa-plus me-1"></i> Add Jurisdiction
+                </a>
+            </div>
         </div>
-    </div>
 
-    <!-- Body -->
-    <div class="card-body">
-        <p class="text-muted">Manage tax jurisdictions for your organization.</p>
+        <!-- Body -->
+        <div class="card-body">
+            <p class="text-muted">Manage tax jurisdictions for your organization.</p>
 
-        <table class="table table-hover table-sm align-middle text-center"
-            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-            <thead>
+            <table class="table table-hover table-sm align-middle text-center"
+                   style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                <thead>
                 <tr>
                     <th>#</th>
                     <th>Jurisdiction</th>
@@ -28,8 +28,8 @@
                     <th>Status</th>
                     <th style="white-space: nowrap;">Actions</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @if ($taxJurisdictions->count())
                     @foreach($taxJurisdictions as $item)
                         <tr>
@@ -49,11 +49,11 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <button type="button"
-                                    class="btn btn-sm btn-danger custom-delete-btn"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#customDeleteConfirmModal"
-                                    data-name="{{ $item->JurisdictionName }}"
-                                    data-route="{{ route('taxjurisdiction.destroy', $item->Id) }}">
+                                        class="btn btn-sm btn-danger custom-delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#customDeleteConfirmModal"
+                                        data-name="{{ $item->JurisdictionName }}"
+                                        data-route="{{ route('taxjurisdiction.destroy', $item->Id) }}">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </td>
@@ -74,10 +74,10 @@
                         </td>
                     </tr>
                 @endif
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
 @include('components.modals.delete-confirm')
 @endsection

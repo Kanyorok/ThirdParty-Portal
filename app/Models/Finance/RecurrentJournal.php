@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RecurrentJournal extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
+
     protected $table = 't_FinanceRecurrentJournals';
     protected $primaryKey = 'Id';
 

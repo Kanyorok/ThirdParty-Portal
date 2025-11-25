@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Helpers\SystemHelper;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
-class WorkflowTypesSeeder extends Seeder
+class WorkFlowTypesSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -14,46 +15,44 @@ class WorkflowTypesSeeder extends Seeder
     public function run(): void
     {
         $now = Carbon::now();
-
+        $actor = SystemHelper::user()->Id;
         $workflowTypes = [
             [
                 'TypeID' => 'AMT',
                 'Name' => 'Amount-Based Approval',
-                'CreatedBy' => 2,
-                'ModifiedBy' => 2,
+                'CreatedBy' => $actor,
+                'ModifiedBy' => $actor,
                 'CreatedOn' => $now,
                 'ModifiedOn' => $now,
             ],
             [
                 'TypeID' => 'MAJ',
                 'Name' => 'Majority Approval',
-                'CreatedBy' => 2,
-                'ModifiedBy' => 2,
+                'CreatedBy' => $actor,
+                'ModifiedBy' => $actor,
                 'CreatedOn' => $now,
                 'ModifiedOn' => $now,
             ],
             [
                 'TypeID' => 'ALL',
                 'Name' => 'All Must Approve',
-                'CreatedBy' => 2,
-                'ModifiedBy' => 2,
+                'CreatedBy' => $actor,
+                'ModifiedBy' => $actor,
                 'CreatedOn' => $now,
                 'ModifiedOn' => $now,
             ],
             [
                 'TypeID' => 'CNT',
                 'Name' => 'Count-Based Approval',
-                'CreatedBy' => 2,
-                'ModifiedBy' => 2,
+                'CreatedBy' => $actor,
+                'ModifiedBy' => $actor,
                 'CreatedOn' => $now,
                 'ModifiedOn' => $now,
             ],
         ];
 
         foreach ($workflowTypes as $type) {
-            $existing = DB::table('t_WorkFlowTypes')->where('TypeID', $type['TypeID'])->first();
-
-            if ($existing) {
+            if (DB::table('t_WorkFlowTypes')->where('TypeID', $type['TypeID'])->exists()) {
                 DB::table('t_WorkFlowTypes')
                     ->where('TypeID', $type['TypeID'])
                     ->update([

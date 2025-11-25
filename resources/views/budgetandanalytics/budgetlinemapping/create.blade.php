@@ -12,7 +12,7 @@
         </div>
     @endif
     <div class="card mb-4">
-{{--        <div class="card-header bg-secondary text-white">➕ Add Budget Line & GL Mapping</div>--}}
+        {{--        <div class="card-header bg-secondary text-white">➕ Add Budget Line & GL Mapping</div>--}}
         <div class="card-body">
             <p class="text-muted">
                 Use this form to create a new Budget Line. A Budget Line defines a specific category under your budget,

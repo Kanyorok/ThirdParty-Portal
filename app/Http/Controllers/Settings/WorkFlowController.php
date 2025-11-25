@@ -6,18 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\Settings\WorkFlowRequest;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Settings\WorkFlow;
-use App\Models\Settings\WorkFlowStage;
+use App\Models\Core\Approval\WorkflowStage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-
 class WorkFlowController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $morphMap = Relation::morphMap();
@@ -26,103 +23,273 @@ class WorkFlowController extends Controller
 
         $sourceOptions = array_flip($morphMap);
 
-        return view('settings.approvals.sections', compact('workFlowGroups', 'sourceOptions'));
+        $tableToAlias = collect($morphMap)
+            ->mapWithKeys(function ($class, $alias) {
+                try {
+                    $instance = app($class);
+                    if ($instance instanceof Model) {
+                        return [$instance->getTable() => $alias];
+                    }
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+                return [];
+            })
+            ->toArray();
+
+        return view('settings.approvals.sections', compact('workFlowGroups', 'sourceOptions', 'tableToAlias'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        // Not used
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(WorkFlowRequest $request)
     {
         $validated = $request->validated();
-        //dd($request->all());
-        /** @var \App\Models\Auth\User $user */
         $user = Auth::user();
 
         try {
+            $selection = (string) ($validated['DocType'] ?? '');
+            $tableName = $this->resolveSelectedToTable($selection);
+
+            if (!$tableName) {
+                throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
+            }
+
+            $moduleId = DB::table(table: 't_ModuleSources')
+                ->where('DocumentType', $tableName)
+                ->value('ModuleID');
+
+            if (!$moduleId) {
+                Log::warning("No module found for document type: {$tableName}");
+            }
+
             $workFlow = WorkFlow::create([
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
-                'Source' => $validated['DocType'],
+                'Source' => $tableName,
+                'FinalStage' => '', // Initialize as empty string (column doesn't allow nulls)
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
                 'CreatedOn' => now(),
             ]);
 
+            Log::info('Workflow created successfully.', [
+                'workflow_id' => $workFlow->Id,
+                'source' => $tableName,
+                'module_id' => $moduleId,
+                'created_by' => Auth::id(),
+            ]);
+
             activity()->causedBy($user)
                 ->performedOn($workFlow)
                 ->event('create')
-                ->log('Created approval workflow stage: ' . $validated['Name']);
-
-                        // Log success
-        Log::info('Workflow created successfully.', [
-            'workflow_id' => $workFlow->id,
-            'created_by' => Auth::id(),
-        ]);
+                ->log('Created approval workflow: ' . $validated['Name']);
         } catch (\Exception $e) {
+            Log::error('Failed to create workflow.', [
+                'error_message' => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
 
-                    // Log the error
-        Log::error('Failed to create workflow.', [
-            'error_message' => $e->getMessage(),
-            'user_id' => Auth::id(),
-        ]);
-            return redirect()->back()->withErrors(['error' => 'Failed to create approval stage: ' . $e->getMessage()]);
+            return redirect()->back()->withErrors([
+                'error' => 'Failed to create approval workflow: ' . $e->getMessage()
+            ]);
         }
 
-        return redirect()->back()->with('success', 'Approval workflow created.');
+        return redirect()->back()->with('success', 'Approval workflow created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
+    public function update(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'Name' => ['required', 'string', 'max:255'],
+            'Description' => ['required', 'string', 'max:1000'],
+            'DocType' => ['required', 'string'],
+        ]);
+
+        try {
+            $workFlow = WorkFlow::findOrFail($id);
+            $selection = (string) ($validated['DocType'] ?? '');
+            $tableName = $this->resolveSelectedToTable($selection);
+
+            if (!$tableName) {
+                throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
+            }
+
+            //auto-detect module
+
+            $moduleId = DB::table('t_ModuleSources')
+                ->where('DocumentType', $tableName)
+                ->value('ModuleID');
+
+            $workFlow->update([
+                'Name' => $validated['Name'],
+                'Description' => $validated['Description'],
+                'Source' => $tableName,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            Log::info('Workflow updated successfully.', [
+                'workflow_id' => $workFlow->Id,
+                'module_id' => $moduleId,
+                'updated_by' => Auth::id(),
+            ]);
+
+            return redirect()->back()->with('success', 'Approval workflow updated.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->withErrors([
+                'error' => 'Failed to update workflow: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     public function show($id)
     {
+        // Force fresh data from database
         $approval = WorkFlow::findOrFail($id);
+        $approval->refresh(); // Ensure we have the latest data
+
         $sourceOptions = array_flip(Relation::morphMap());
         $approvalTypes = DB::table('t_WorkFlowTypes')->get();
         $permissions = DB::table('t_Permissions')->get();
-        $workflowLimits = DB::table('t_WorkflowLimits')
-            ->select('Id', 'Source')
+        $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'WorkFlowStageId')->get();
+
+        // Get stages with fresh data
+        $stages = WorkflowStage::where('WorkFlowId', $id)
+            ->with(['type_name', 'workflow'])
+            ->orderBy('Order')
             ->get();
 
-        $stages = WorkFlowStage::where('WorkFlowId', $id)
-            ->with(['workflow'])
-            ->get();
-
-        return view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'));
+        // Force disable caching
+        return response()
+            ->view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        $workFlow = WorkFlow::findOrFail($id);
-        $workFlow->delete();
+        DB::beginTransaction();
+
+        try {
+            $workFlow = WorkFlow::findOrFail($id);
+            $workflowName = $workFlow->Name;
+
+            // Count stages before deletion
+            $stagesCount = WorkflowStage::where('WorkFlowId', $id)->count();
+
+            // Delete all associated stages first (explicit deletion)
+            WorkflowStage::where('WorkFlowId', $id)->delete();
+
+            Log::info('Deleted workflow stages', [
+                'workflow_id' => $id,
+                'workflow_name' => $workflowName,
+                'stages_deleted' => $stagesCount,
+            ]);
+
+            // Now delete the workflow
+            $workFlow->delete();
+
+            // Log activity
+            activity()->performedOn($workFlow)
+                ->event('delete')
+                ->log("Deleted workflow '{$workflowName}' and {$stagesCount} stage(s)");
+
+            DB::commit();
+
+            return redirect()->route('settings.workflows.index')
+                ->with('success', "Workflow '{$workflowName}' and {$stagesCount} associated stage(s) deleted successfully.");
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Failed to delete workflow', [
+                'workflow_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->with('error', 'Delete failed: ' . $e->getMessage());
+        }
+    }
+
+    private function resolveSelectedToTable(?string $selection): ?string
+    {
+        if (!$selection) return null;
+
+        $morphMap = Relation::morphMap();
+        $class = $morphMap[$selection] ?? $selection;
+
+        if (!class_exists($class)) return null;
+
+        $instance = app($class);
+        if (!$instance instanceof Model) return null;
+
+        return $instance->getTable();
+    }
+
+
+    public function getState($id)
+    {
+        try {
+            $workflow = WorkFlow::findOrFail($id);
+            $workflow->refresh();
+
+            // Get all stages with proper relationships
+            $stagesCollection = WorkflowStage::where('WorkFlowId', $id)
+                ->with(['type_name', 'workflow'])
+                ->orderBy('Order')
+                ->get();
+
+            // Map stages with proper final stage detection
+            $stages = $stagesCollection->map(function ($stage) use ($workflow) {
+                // Check if this stage is marked as final stage
+                $isFinalStage = ($stage->StageName === $workflow->FinalStage);
+
+
+                return [
+                    'Id' => $stage->Id,
+                    'StageName' => $stage->StageName,
+                    'Order' => $stage->Order,
+                    'type' => $stage->type_name ? [
+                        'TypeID' => $stage->type_name->TypeID,
+                        'Name' => $stage->type_name->Name,
+                    ] : null,
+                    'role_name' => $stage->role_name ?? '-',
+                    'MaxAmount' => $stage->MaxAmount ?? '-',
+                    'Count' => $stage->Count ?? null,
+                    'IsFinalStage' => $isFinalStage,
+                    'FinalStageName' => $workflow->FinalStage,
+                    'EscalationLimit' => $stage->EscalationLimit,
+                ];
+            })->values();
+
+            return response()->json([
+                'status' => 'success',
+                'workflow' => [
+                    'Id' => $workflow->Id,
+                    'Name' => $workflow->Name,
+                    'IsFinalStage' => $workflow->FinalStage ? true : false,
+                    'Description' => $workflow->Description,
+                    'Source' => $workflow->Source,
+                ],
+                'stages' => $stages,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch workflow state', [
+                'workflow_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch workflow state: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

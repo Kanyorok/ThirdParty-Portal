@@ -34,7 +34,7 @@ class LegalTemplateClause extends Pivot
     ];
 
     protected $casts = [
-        'Position'    => 'integer',
+        'Position' => 'integer',
         'IsMandatory' => 'boolean',
     ];
 }

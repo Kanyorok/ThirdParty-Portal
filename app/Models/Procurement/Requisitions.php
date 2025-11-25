@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Models\Procurement;
+use App\Enums\WorkflowStatus;
+use App\Services\Procurement\Requisition\RequisitionWorkFlowService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +12,7 @@ use App\Models\Inventory\TransactionTransfer;
 class Requisitions extends Model
 {
     //
-    use SoftDeletes;
+ 
     use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
@@ -49,8 +51,48 @@ class Requisitions extends Model
 
     public function transfer()
     {
-        return $this->hasOne(\App\Models\Inventory\TransactionTransfer::class, 'RequisitionId', 'Id');
+        return $this->hasOne(TransactionTransfer::class, 'RequisitionId', 'Id');
     }
 
+    // Workflow status helpers
+    public function isPendingApproval(): bool
+    {
+        return in_array($this->Status, [
+            WorkflowStatus::Submitted,
+            WorkflowStatus::Pending,
+            WorkflowStatus::UnderReview,
+        ]);
+    }
+
+    public function isApproved(): bool
+    {
+        return in_array($this->Status, [
+            WorkflowStatus::APPROVED,
+            WorkflowStatus::Accepted,
+            WorkflowStatus::Completed,
+        ]);
+    }
+
+    public function isRejected(): bool
+    {
+        return in_array($this->Status, [
+            WorkflowStatus::REJECTED,
+            WorkflowStatus::RejectedCancel,
+        ]);
+    }
+
+    // Auto-submit for approval when created
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function (Requisitions $requisition) {
+            if ($requisition->isPendingApproval()) {
+                // Use the workflow service to submit for approval
+                $workflowService = app(RequisitionWorkFlowService::class);
+                $workflowService->submit($requisition, $requisition->creator, 'Initial submission');
+            }
+        });
+    }
 
 }

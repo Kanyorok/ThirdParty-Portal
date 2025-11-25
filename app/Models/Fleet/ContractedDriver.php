@@ -13,7 +13,7 @@ use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetVehicleAssignment;
 use App\Models\Fleet\FleetContractedDriverLicense;
 use App\Models\Fleet\FleetContractedDriverAssignment;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\DocumentsTrait;
 use App\Models\ThirdParty\ThirdParties;

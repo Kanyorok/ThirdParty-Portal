@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,10 +12,10 @@ return new class extends Migration
     {
         Schema::create('t_BancassuranceClaims ', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('PolicyId')->constrained('t_BancassurancePolicies','Id');
-            $table->foreignId('ClaimType')->constrained('t_CodeDetails','ID');
+            $table->foreignId('PolicyId')->constrained('t_BancassurancePolicies', 'Id');
+            $table->foreignId('ClaimType')->constrained('t_CodeDetails', 'ID');
             $table->string('ClaimReason');
-            $table->decimal('ClaimAmount',10, 2);
+            $table->decimal('ClaimAmount', 10, 2);
             $table->date('ClaimDate');
             $table->string('Status');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

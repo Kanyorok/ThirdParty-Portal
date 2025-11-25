@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\ThirdPartyAuth;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreThirdPartyWithUserRequest extends FormRequest

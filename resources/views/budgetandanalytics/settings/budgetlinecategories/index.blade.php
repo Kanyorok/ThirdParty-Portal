@@ -9,9 +9,9 @@
     </div>
     <div class="card p-2">
 
-{{--        <div class="card-header bg-dark text-white mb-0">--}}
-{{--            📂 Budget Line Categories--}}
-{{--        </div>--}}
+        {{--        <div class="card-header bg-dark text-white mb-0">--}}
+        {{--            📂 Budget Line Categories--}}
+        {{--        </div>--}}
 
         <div class="card-body">
             <p class="text-muted mb-3">
@@ -33,7 +33,7 @@
                 </div>
             @endif
 
-            @if(count($budgetLineCategories))
+        @if(count($budgetLineCategories))
                 <table class="table table-bordered table-striped">
                     <thead>
                     <tr>

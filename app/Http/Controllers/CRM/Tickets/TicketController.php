@@ -12,8 +12,8 @@ use App\Http\Requests\Ticket\NewTicketRequest;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\CRM\Ticket;
-use App\Services\CRM\TicketService;
 use App\Services\StaticListsService;
+use App\Services\TicketService;
 use App\Traits\Controller\TicketsTrait;
 use Carbon\Carbon;
 use Exception;
@@ -57,15 +57,14 @@ class TicketController extends Controller
                         // dd($actor->teams()->select('t_TeamUser.TeamId')->get('TeamId'));
                     })->orWhere('t_Tickets.CreatedBy', $actor->Id)->orWhere(function (Builder $query) use ($actor) {
                         $query->where('t_Tickets.Party', User::getPrimaryKey())->where('t_Tickets.PartyID', $actor->Id);
-                    })->orWhere(function (Builder $query) use ($actor) {
-                        $query->user($actor);
-                    });/*->orWhereHas('watchers', function (Builder $query) use ($actor) {// 'Party', 'PartyID'
+                    })->orWhereHas('watchers', function (Builder $query) use ($actor) {
+// 'Party', 'PartyID'
                         $query->where(function (Builder $query) use ($actor) {
                             $query->where('t_TicketUsers.PartyID', $actor->Id)->where('t_TicketUsers.Party', User::getPrimaryKey());
                         })->orWhere(function (Builder $query) use ($actor) {
                             $query->where('t_TicketUsers.Party', Team::getPrimaryKey())->whereIn('t_TicketUsers.PartyID', $actor->teams()->select('t_Teams.TeamID'));
                         });
-                    });*/
+                    });
                 });
             } elseif ($request->get('_user') === 'none') {
                 $query->where(function (Builder $query) {
@@ -76,16 +75,17 @@ class TicketController extends Controller
             }
 
 
-            if ($request->get('_status') === 'all') {
-                $query->whereIn('t_Tickets.Status', TicketStatusEnum::values());
-            } else {
-                try {
-                    $status = TicketStatusEnum::fromValue($request->get('_status'));
-                    $query->where('t_Tickets.Status', $status->value);
-                } catch (Exception) {
-                    throw new ErroredException('Invalid Status filter given');
-                }
-            }
+            /*todo fix with code details
+             *   if ($request->get('_status') === 'all') {
+                  $query->whereIn('t_Tickets.Status', TicketStatusEnum::values());
+              } else {
+                  try {
+                      $status = TicketStatusEnum::fromValue($request->get('_status'));
+                      $query->where('t_Tickets.Status', $status->value);
+                  } catch (Exception) {
+                      throw new ErroredException('Invalid Status filter given');
+                  }
+              }*/
 
             if ($request->get('_priority') === 'all') {
                 $query->whereIn('t_Tickets.Priority', TicketPriorityEnum::values());
@@ -122,7 +122,7 @@ class TicketController extends Controller
         if ($assignee->Id === $owner->Id) {
             throw ValidationException::withMessages(['ticket_user' => 'you cannot assign yourself, your ticket.']);
         }
-        $exists = $owner->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.Status', TicketStatusEnum::Active->value)->first();
+        $exists = $owner->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.StatusId', TicketStatusEnum::Active->codeDetail()->ID)->first();
         if ($exists instanceof Ticket) {
             return $this->errored('Ticket <a href="' . route('tickets.show', [$exists->TicketID]) . '" class="fw-bold text-white">' . $exists->TicketID . '</a> of the same category already exists.');
         }
@@ -146,7 +146,7 @@ class TicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception $e) {
             Log::error('Error creating User ticket ' . $e->getMessage());
             return $this->errored('unexpected error creating ticket, try again later');
         }
@@ -173,9 +173,10 @@ class TicketController extends Controller
     public function show(Request $request, Ticket $ticket): View
     {
         $this->authorize('view', $ticket);
+
         return view('crm.tickets.show', compact('ticket'))
             ->with('TicketCategories', StaticListsService::getList(StaticListsService::TicketCategories))
-            ->with('canApprove', (($ticket->Status->value === TicketStatusEnum::Approval->value) && ((new TicketService($ticket))->canApprove($request->user()))))
+            ->with('canApprove', true) //todo fix code details workflow (($ticket->Status->value === TicketStatusEnum::Approval->value) && ((new TicketService($ticket))->canApprove($request->user())))
             ->with('party', $ticket->party);
     }
 
@@ -197,7 +198,7 @@ class TicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception $e) {
             Log::error('Error update ticket ticket ' . $e->getMessage());
             return $this->errored('unexpected error creating ticket, try again later');
         }
@@ -218,7 +219,7 @@ class TicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception $e) {
             Log::error('Error update ticket ticket ' . $e->getMessage());
             return $this->errored('unexpected error creating ticket, try again later');
         }
@@ -234,16 +235,17 @@ class TicketController extends Controller
     {
         $this->authorize('restore', $ticket);
         $request->validate([
-            'open_reason' => ['required', 'string', 'min:15', 'max:250',],
+            'open_reason' => [
+                'required', 'string', 'min:15', 'max:250',
+            ],
         ]);
-
-        if (!in_array($ticket->Status->value, [TicketStatusEnum::Resolved->value, TicketStatusEnum::Cancelled->value], true)) {
+        if (!in_array($ticket->status->ID, [TicketStatusEnum::Resolved->codeDetail()->ID, TicketStatusEnum::Cancelled->codeDetail()->ID], true)) {
             return $this->errored('ticket is not closed');
         }
 
         try {
             DB::transaction(function () use ($request, $ticket) {
-                $this->service($ticket)->reopen($request->user(), $request->open_reason);
+                $this->service($ticket)->reopen($request->user(), $request->string('open_reason')->trim()->toString());
             });
         } catch (ErroredException $e) {
             return $e->toJson();

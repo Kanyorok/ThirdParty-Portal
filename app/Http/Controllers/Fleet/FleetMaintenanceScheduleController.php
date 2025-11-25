@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Fleet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetMaintenanceScheduleRequest;
 use App\Models\Fleet\FleetVehicle;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Services\FleetManagement\FleetMaintenanceScheduleService;
@@ -23,8 +23,8 @@ class FleetMaintenanceScheduleController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetMaintenanceSchedule::class);
-        $schedules = FleetMaintenanceSchedule::with('vehicle','maintenanceStatus')
-            ->orderByDesc('ScheduleID','desc')
+        $schedules = FleetMaintenanceSchedule::with('vehicle', 'maintenanceStatus')
+            ->orderByDesc('ScheduleID', 'desc')
             ->get();
 
         return view('fleet.maintenance.schedule.index', compact('schedules'));
@@ -69,9 +69,9 @@ class FleetMaintenanceScheduleController extends Controller
 
     // Update a schedule (acknowledge)
     public function update(FleetMaintenanceScheduleRequest $request, $id)
-{
-    $this->authorize('update', FleetMaintenanceSchedule::class);
-    $data = $request->validated();
+    {
+        $this->authorize('update', FleetMaintenanceSchedule::class);
+        $data = $request->validated();
 
         // Only handle mileage update & completion
         if (!empty($data['ScheduledMileage'])) {
@@ -106,10 +106,10 @@ class FleetMaintenanceScheduleController extends Controller
     }
 
     // Cancel a schedule
-   public function cancel($id)
-{
-    $this->authorize('cancel', FleetMaintenanceSchedule::class);
-    $schedule = FleetMaintenanceSchedule::findOrFail($id);
+    public function cancel($id)
+    {
+        $this->authorize('cancel', FleetMaintenanceSchedule::class);
+        $schedule = FleetMaintenanceSchedule::findOrFail($id);
 
         // Just deactivate, no change to MaintenanceStatus
         $schedule->Status = false;

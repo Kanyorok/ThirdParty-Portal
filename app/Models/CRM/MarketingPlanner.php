@@ -6,7 +6,7 @@ use App\Enums\Marketing\PlannerStatus;
 use App\Enums\Marketing\PlannerTypeEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use App\Services\StaticListsService;

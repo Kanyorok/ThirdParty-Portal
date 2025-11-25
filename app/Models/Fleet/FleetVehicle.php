@@ -4,7 +4,7 @@ namespace App\Models\Fleet;
 
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\GPSCoordinate;
 use App\Models\DMS\Image;
 use App\Models\FleetManagement\FleetMake;
@@ -26,9 +26,27 @@ class FleetVehicle extends Model
     protected $table = 't_FleetVehicles';
     protected $primaryKey = 'Id';
     protected $fillable = [
-        'RegistrationNo', 'VehicleType', 'Make', 'Model', 'YearOfManufacture', 'ChassisNo', 'EngineNo', 'FuelType', 'Capacity',
-        'OdometerReading', 'Status', 'AssignedBranch', 'MaxPassengers', 'MaxLoad', 'VehicleStatus', 'Color', 'ImageId',
-        'TrackerNo', 'CreatedBy',  'CreatedOn', 'ModifiedBy',
+        'RegistrationNo',
+        'VehicleType',
+        'Make',
+        'Model',
+        'YearOfManufacture',
+        'ChassisNo',
+        'EngineNo',
+        'FuelType',
+        'Capacity',
+        'OdometerReading',
+        'Status',
+        'AssignedBranch',
+        'MaxPassengers',
+        'MaxLoad',
+        'VehicleStatus',
+        'Color',
+        'ImageId',
+        'TrackerNo',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
     ];
 
 
@@ -104,6 +122,4 @@ class FleetVehicle extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'VehicleStatus', 'ID');
     }
-
-    
 }

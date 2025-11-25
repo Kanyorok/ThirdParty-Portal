@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Fleet;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetVehicleAssignment;
 use App\Models\Fleet\Branch;
 use App\Models\Fleet\FuelType;

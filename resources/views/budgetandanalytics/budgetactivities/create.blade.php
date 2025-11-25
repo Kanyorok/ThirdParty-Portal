@@ -12,9 +12,9 @@
     @endif
     <div class="container mt-2">
         <div class="card p-1">
-{{--            <div class="card-header bg-light text-black">--}}
-{{--                ➕ New Budget Activity--}}
-{{--            </div>--}}
+            {{--            <div class="card-header bg-light text-black">--}}
+            {{--                ➕ New Budget Activity--}}
+            {{--            </div>--}}
             <div class="card-body">
                 <p class="muted">
                     Use this form to add a new activity under your selected budget line. An activity represents a

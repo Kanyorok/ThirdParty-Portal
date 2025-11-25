@@ -2,7 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
@@ -38,7 +38,7 @@ class PropertyNewTenant extends Model
         return $this->belongsTo(CodeDetail::class, 'TenantType', 'ID');
     }
 
-        public function createdByUser()
+    public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }

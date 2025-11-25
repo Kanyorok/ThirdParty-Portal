@@ -316,10 +316,12 @@
                 {{-- Action Buttons --}}
                 @if($journalEntry->ApprovalStatus=='draft')
                     <div class="mt-4 d-flex justify-content-end gap-3">
-                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
+                        <button class="btn btn-outline-danger" data-bs-toggle="modal"
+                                data-bs-target="#actionRejectModal" data-action="reject">
                             <i class="fas fa-times-circle me-1"></i> Reject
                         </button>
-                        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#actionApproveModal" data-action="approve">
+                        <button class="btn btn-outline-success" data-bs-toggle="modal"
+                                data-bs-target="#actionApproveModal" data-action="approve">
                             <i class="fas fa-check-circle me-1"></i> Approve
                         </button>
                     </div>
@@ -338,7 +340,8 @@
 
     @if($journalEntry->ApprovalStatus=='draft')
         {{-- Approve Modal --}}
-        <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+        <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel"
+             aria-hidden="true">
             <div class="modal-dialog">
                 <form method="POST" action="{{ route('journalApproval', $journalEntry->Id) }}">
                     @csrf
@@ -353,12 +356,16 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="reason" class="form-label">Reason</label>
-                                <textarea class="form-control" name="Reason" id="reason" rows="3" required placeholder="Enter reason here..."></textarea>
+                                <textarea class="form-control" name="Reason" id="reason" rows="3" required
+                                          placeholder="Enter reason here..."></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-success" id="postBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">Approve</button>
+                            <button class="btn btn-success" id="postBtn" type="submit"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                                Approve
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -366,7 +373,8 @@
         </div>
 
         {{-- Reject Modal --}}
-        <div class="modal fade" id="actionRejectModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+        <div class="modal fade" id="actionRejectModal" tabindex="-1" aria-labelledby="actionModalLabel"
+             aria-hidden="true">
             <div class="modal-dialog">
                 <form method="POST" action="{{ route('journalApproval', $journalEntry->Id) }}">
                     @csrf
@@ -381,12 +389,16 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="reason" class="form-label">Reason</label>
-                                <textarea class="form-control" name="Reason" id="reason" rows="3" required placeholder="Enter reason here..."></textarea>
+                                <textarea class="form-control" name="Reason" id="reason" rows="3" required
+                                          placeholder="Enter reason here..."></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-danger" id="postBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">Reject</button>
+                            <button class="btn btn-danger" id="postBtn" type="submit"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                                Reject
+                            </button>
                         </div>
                     </div>
                 </form>

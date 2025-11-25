@@ -17,7 +17,9 @@
 
                 <div class="mb-3">
                     <label for="CategoryName" class="form-label">Category Name</label>
-                    <input type="text" name="CategoryName" id="CategoryName" class="form-control @error('CategoryName') is-invalid @enderror" value="{{ old('CategoryName', $category->CategoryName) }}" required>
+                    <input type="text" name="CategoryName" id="CategoryName"
+                        class="form-control @error('CategoryName') is-invalid @enderror"
+                        value="{{ old('CategoryName', $category->CategoryName) }}" required>
                     @error('CategoryName')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -25,14 +27,16 @@
 
                 <div class="mb-3">
                     <label for="Description" class="form-label">Description</label>
-                    <textarea name="Description" id="Description" rows="4" class="form-control @error('Description') is-invalid @enderror">{{ old('Description', $category->Description) }}</textarea>
+                    <textarea name="Description" id="Description" rows="4"
+                        class="form-control @error('Description') is-invalid @enderror">{{ old('Description', $category->Description) }}</textarea>
                     @error('Description')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="mb-3 form-check">
-                    <input type="checkbox" name="IsActive" id="IsActive" value="1" class="form-check-input" {{ old('IsActive', $category->IsActive) ? 'checked' : '' }}>
+                    <input type="checkbox" name="IsActive" id="IsActive" value="1"
+                        class="form-check-input" {{ old('IsActive', $category->IsActive) ? 'checked' : '' }}>
                     <label for="IsActive" class="form-check-label">Is Active</label>
                 </div>
 
@@ -41,8 +45,8 @@
                     <select id="item_category_ids" name="item_category_ids[]" class="form-control" multiple size="6">
                         @php $selected = collect(old('item_category_ids', $category->itemCategories->pluck('Id')->all())); @endphp
                         @foreach(($itemCategories ?? []) as $cat)
-                            <option
-                                value="{{ $cat->Id }}" @selected($selected->contains($cat->Id))>{{ $cat->Name }}</option>
+                        <option
+                            value="{{ $cat->Id }}" @selected($selected->contains($cat->Id))>{{ $cat->Name }}</option>
                         @endforeach
                     </select>
                     <small class="text-muted">Hold Ctrl / Cmd to select multiple. Only parent categories (no ParentId)

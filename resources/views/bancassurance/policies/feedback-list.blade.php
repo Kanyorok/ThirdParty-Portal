@@ -30,25 +30,25 @@
                 </thead>
                 <tbody>
                     @forelse($proposals as $item)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $item->PolicyNumber ?? '-' }}</td>
-                            <td>{{ $item->customer->thirdParty->ThirdPartyName ?? '-' }}</td>
-                            <td>{{ $item->product->Name ?? '-' }}</td>
-                            <td>{{ $item->insurer->Name ?? '-' }}</td>
-                            <td>
-                                <span class="badge bg-{{ $item->Status->badgeColor() ?? 'secondary' }}">
-                                    {{ $item->Status->label() ?? '-' }}
-                                </span>
-                            </td>
-                            <td>{{ \Carbon\Carbon::parse($item->CreatedAt)->format('d/m/Y') ?? '-' }}</td>
-                            <td class="text-center">
-                                <a href="{{ route('bancassurance.policies.feedbackForm', $item->Id) }}" 
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil-square me-1"></i> Feedback
-                                </a>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $item->PolicyNumber ?? '-' }}</td>
+                        <td>{{ $item->customer->thirdParty->ThirdPartyName ?? '-' }}</td>
+                        <td>{{ $item->product->Name ?? '-' }}</td>
+                        <td>{{ $item->insurer->Name ?? '-' }}</td>
+                        <td>
+                            <span class="badge bg-{{ $item->Status->badgeColor() ?? 'secondary' }}">
+                                {{ $item->Status->label() ?? '-' }}
+                            </span>
+                        </td>
+                        <td>{{ \Carbon\Carbon::parse($item->CreatedAt)->format('d/m/Y') ?? '-' }}</td>
+                        <td class="text-center">
+                            <a href="{{ route('bancassurance.policies.feedbackForm', $item->Id) }}"
+                                class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square me-1"></i> Feedback
+                            </a>
+                        </td>
+                    </tr>
                     @empty
                     @endforelse
                 </tbody>
@@ -62,7 +62,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#feedback').DataTable({
             pageLength: 10,
             ordering: true,

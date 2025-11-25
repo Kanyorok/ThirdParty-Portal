@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('initialize_module_order_proc', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
+            $table->string('Description')->nullable();
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('initialize_module_order_proc');
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
+            $table->dropColumn('Description');
+        });
     }
 };

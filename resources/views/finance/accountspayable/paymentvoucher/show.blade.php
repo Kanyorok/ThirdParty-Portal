@@ -107,7 +107,7 @@
             @if(!empty($voucher->Description))
                 <div class="mt-4">
                     <h6 class="text-muted mb-2">Remarks:</h6>
-                       <i> {{ $voucher->Description }}</i>
+                    <i> {{ $voucher->Description }}</i>
                 </div>
             @endif
 
@@ -137,10 +137,12 @@
                     </div>
                     <div class="modal-body">
                         <label for="approveReason" class="form-label">Reason for approval</label>
-                        <textarea class="form-control" name="Reasons" rows="3" placeholder="Optional reason..."></textarea>
+                        <textarea class="form-control" name="Reasons" rows="3"
+                                  placeholder="Optional reason..."></textarea>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-success" id="approveProceedBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                        <button class="btn btn-success" id="approveProceedBtn" type="submit"
+                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
                             <span class="default-label"><i class="fas fa-check-circle"></i> Proceed to Approve</span>
                         </button>
                     </div>
@@ -161,10 +163,12 @@
                     </div>
                     <div class="modal-body">
                         <label for="rejectReason" class="form-label">Reason for rejection</label>
-                        <textarea class="form-control" name="Reasons" rows="3" required placeholder="Required reason..."></textarea>
+                        <textarea class="form-control" name="Reasons" rows="3" required
+                                  placeholder="Required reason..."></textarea>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-danger" id="rejectProceedBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                        <button class="btn btn-danger" id="rejectProceedBtn" type="submit"
+                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
                             <span class="default-label"><i class="fas fa-check-circle"></i> Proceed to Reject</span>
                         </button>
                     </div>

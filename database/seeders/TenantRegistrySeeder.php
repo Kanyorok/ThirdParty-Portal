@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\PropertyManagement\PropertyNewTenant;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Carbon\Carbon;
 
 class TenantRegistrySeeder extends Seeder

@@ -5,7 +5,7 @@ namespace App\Models\Inventory;
 use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ItemCategories extends Model
@@ -43,7 +43,7 @@ class ItemCategories extends Model
         'Name'  => 'string',
         'Description'   => 'string',
         'ParentId'      => 'integer',
-        'Status'        => 'integer',
+        'Status' => 'integer',
         'CreatedBy'     => 'integer',
         'ModifiedBy'    => 'integer',
         'DeletedBy'     => 'integer',
@@ -76,7 +76,7 @@ class ItemCategories extends Model
     {
         return $this->belongsTo(ItemCategories::class, 'ParentId');
     }
-    
+
     public function status()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
@@ -109,7 +109,7 @@ class ItemCategories extends Model
                     ->first();
 
                 $lastCode = $lastCategory ? $lastCategory->CategoryCode : 'CAT-000';
-                $lastNumber = (int) substr($lastCode, 4);
+                $lastNumber = (int)substr($lastCode, 4);
                 $category->CategoryCode = 'CAT-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
             }
 
@@ -123,7 +123,7 @@ class ItemCategories extends Model
                     ->first();
 
                 $lastSubCode = $lastSubCategory ? $lastSubCategory->CategoryCode : 'SUB-000';
-                $lastSubNumber = (int) substr($lastSubCode, 4);
+                $lastSubNumber = (int)substr($lastSubCode, 4);
                 $category->CategoryCode = 'SUB-' . str_pad($lastSubNumber + 1, 3, '0', STR_PAD_LEFT);
             }
         });

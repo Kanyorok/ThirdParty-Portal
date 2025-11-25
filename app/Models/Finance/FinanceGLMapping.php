@@ -30,18 +30,19 @@ class FinanceGLMapping extends Model
 
     public static function getPrimaryKey(): string
     {
-         return 'FinanceGlMappingId';
+        return 'FinanceGlMappingId';
     }
 
     public function transactions()
     {
-        return $this->belongsTo(FinanceTransactionTypes::class, 'TransactionTypeID','Id');
+        return $this->belongsTo(FinanceTransactionTypes::class, 'TransactionTypeID', 'Id');
     }
 
     public function modules()
     {
-        return $this->belongsTo(Module::class,'ModuleID','ModuleID');
+        return $this->belongsTo(Module::class, 'ModuleID', 'ModuleID');
     }
+
     public function debitAccount()
     {
         return $this->belongsTo(FinanceGLAccounts::class, 'DebitGLAccountID', 'Id');

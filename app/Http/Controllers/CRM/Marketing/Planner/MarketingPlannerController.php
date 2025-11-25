@@ -101,10 +101,10 @@ class MarketingPlannerController extends Controller
                 })->editColumn('Status', function (MarketingPlanner $planner) {
                     return $planner->Status->description();
                 })->setRowData([
-                                'dbl_click_url' => function (MarketingPlanner $planner) {
-                                    return route('marketing-planner.show', $planner->PlannerID);
-                                },
-                               ])->rawColumns(['action'])->make();
+                    'dbl_click_url' => function (MarketingPlanner $planner) {
+                        return route('marketing-planner.show', $planner->PlannerID);
+                    },
+                ])->rawColumns(['action'])->make();
         }
 
         if ((new UserService($request->user()))->isMarketingManager($branch)) {
@@ -114,11 +114,11 @@ class MarketingPlannerController extends Controller
                     ->whereNull('t_MarketingPlanner.MasterPlannerId')->select(['t_MarketingPlanner.PlannerID', 't_MarketingPlanner.Name', 'BranchId'])->get());
         }
 
-        $branches = (is_null($branch->ManagerId) && is_null($branch->UserId)) ? collect([]) : collect([$branch]);
+        $branches = (is_null($branch) || (is_null($branch->ManagerId) && is_null($branch->UserId))) ? collect([]) : collect([$branch]);
 
         return view('crm.marketing.planner.index')->with('isMarketingManager', false)
-            ->with('Branches', $branches)///*Branch::query()->get(['t_Branches.Name', 't_Branches.BranchID'])*/)
-                ->with('MarketingModes', StaticListsService::getList(StaticListsService::MarketingModes));
+            ->with('Branches', $branches) ///*Branch::query()->get(['t_Branches.Name', 't_Branches.BranchID'])*/)
+            ->with('MarketingModes', StaticListsService::getList(StaticListsService::MarketingModes));
     }
 
     /**
@@ -144,7 +144,7 @@ class MarketingPlannerController extends Controller
                 activity()->causedBy($request->user())->performedOn($planner)->event('create')->log('created  marketing plan ' . $planner->PlannerID);
                 return $planner;
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating planner failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -205,7 +205,7 @@ class MarketingPlannerController extends Controller
                 (new PlannerService($planner))->update($mode, $request->validated('Name'), ($request->validated('Notes')) ?? "", $actor);
                 activity()->causedBy($actor)->performedOn($planner)->event('update')->log('updated  marketing plan ' . $planner->PlannerID);
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error updating planner failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

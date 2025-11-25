@@ -2,7 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -43,6 +43,7 @@ class PropertyLeaseSchedule extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
+
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');

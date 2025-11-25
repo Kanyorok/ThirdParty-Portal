@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use App\Enums\BusinessTypeEnum;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;

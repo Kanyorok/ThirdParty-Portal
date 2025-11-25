@@ -81,6 +81,9 @@ class TenderController extends Controller
         // Items from t_Items where DeletedOn is NULL (active only)
         $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')
             ->whereNull('DeletedOn')
+            ->whereHas('price', function ($q) {
+                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            })
             ->orderBy('ItemName')
             ->get()->map(function ($item) use ($categoryToTopLevel) {
             return [

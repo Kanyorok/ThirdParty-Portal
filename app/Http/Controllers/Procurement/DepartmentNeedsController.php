@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\DepartmentNeed;
 use App\Services\Procurement\ProcurementPlan\DepartmentNeedsService;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +84,29 @@ class DepartmentNeedsController extends Controller
         $departmentneedviews = DepartmentNeed::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.index', compact('departmentneedviews'));
     }
+
+   public function submit(Request $request, $NeedID)
+{
+    $departmentNeed = DepartmentNeed::findOrFail($NeedID);
+    $actor = $request->user();
+
+    try {
+        DB::transaction(function () use ($departmentNeed, $actor) {
+            /** @var ApprovalWorkflow $workflow */
+            $workflow = app(ApprovalWorkflow::class, ['codeId' => 'DepartmentNeeds']);
+            $workflow->submit($departmentNeed, $actor, DepartmentNeedsEnum::Pending, 'Submitted for approval');
+        });
+
+        return redirect()
+            ->route('procurementdepartmentalplan.index')
+            ->with('success', 'Department Need submitted for approval successfully.');
+    } catch (\Throwable $e) {
+        Log::error('Department Need submission failed: ' . $e->getMessage());
+        return redirect()
+            ->back()
+            ->with('error', 'Failed to submit for approval. Please try again.');
+    }
+}
 
     public function fetchLinesByDPlan($NeedID)
     {

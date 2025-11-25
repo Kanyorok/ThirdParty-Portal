@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->foreignId('PolicyId')->constrained('t_BancassurancePolicies', 'Id');
             $table->foreignId('ReferralId')->constrained('t_BancassuranceReferrals', 'Id');
             $table->foreignId('CommissionRuleId')->constrained('t_BancassuranceCommissionRules', 'Id');
-            $table->foreignId('EarnedByType')->constrained('t_CodeDetails','ID');
+            $table->foreignId('EarnedByType')->constrained('t_CodeDetails', 'ID');
             $table->string('EarnedById');
             $table->float('EarnedAmount');
             $table->string('Status');

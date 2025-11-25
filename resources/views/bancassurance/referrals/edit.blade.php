@@ -47,9 +47,9 @@
                             <select name="PreferredInsurerId" class="form-select form-select-sm rounded-pill" required>
                                 <option value="">-- Select Insurer --</option>
                                 @foreach ($insurers as $insurer)
-                                    <option value="{{ $insurer->Id }}" {{ old('PreferredInsurerId', $referral->PreferredInsurerId) == $insurer->Id ? 'selected' : '' }}>
-                                        {{ $insurer->Name }}
-                                    </option>
+                                <option value="{{ $insurer->Id }}" {{ old('PreferredInsurerId', $referral->PreferredInsurerId) == $insurer->Id ? 'selected' : '' }}>
+                                    {{ $insurer->Name }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -58,9 +58,9 @@
                             <select name="InsuranceProductId" class="form-select form-select-sm rounded-pill" required>
                                 <option value="">-- Select Product --</option>
                                 @foreach ($insuranceproducts as $product)
-                                    <option value="{{ $product->Id }}" {{ old('InsuranceProductId', $referral->InsuranceProductId) == $product->Id ? 'selected' : '' }}>
-                                        {{ $product->Name }}
-                                    </option>
+                                <option value="{{ $product->Id }}" {{ old('InsuranceProductId', $referral->InsuranceProductId) == $product->Id ? 'selected' : '' }}>
+                                    {{ $product->Name }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -79,9 +79,9 @@
                             <select name="ReferredBy" class="form-select form-select-sm rounded-pill">
                                 <option value="">-- Select User --</option>
                                 @foreach ($users as $user)
-                                    <option value="{{ $user->Id }}" {{ old('ReferredBy', $referral->ReferredBy) == $user->Id ? 'selected' : '' }}>
-                                        {{ $user->Name }}{{ $user->employee ? ' - ' . $user->employee->FullName : '' }}
-                                    </option>
+                                <option value="{{ $user->Id }}" {{ old('ReferredBy', $referral->ReferredBy) == $user->Id ? 'selected' : '' }}>
+                                    {{ $user->Name }}{{ $user->employee ? ' - ' . $user->employee->FullName : '' }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -90,9 +90,9 @@
                             <select name="AssignedTo" class="form-select form-select-sm rounded-pill">
                                 <option value="">-- Optional Assignment --</option>
                                 @foreach ($users as $user)
-                                    <option value="{{ $user->Id }}" {{ old('AssignedTo', $referral->AssignedTo) == $user->Id ? 'selected' : '' }}>
-                                        {{ $user->employee->FirstName ?? $user->Name }}
-                                    </option>
+                                <option value="{{ $user->Id }}" {{ old('AssignedTo', $referral->AssignedTo) == $user->Id ? 'selected' : '' }}>
+                                    {{ $user->employee->FirstName ?? $user->Name }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -121,33 +121,33 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const insurerSelect = document.querySelector('select[name="PreferredInsurerId"]');
-    const productSelect = document.querySelector('select[name="InsuranceProductId"]');
-    const currentProductId = "{{ old('InsuranceProductId', $referral->InsuranceProductId) }}";
-    const productsRoute = @json(route('bancassurance.referrals.referrals.products', ['insurerId' => 'INSURER_ID']));
+    document.addEventListener('DOMContentLoaded', function() {
+        const insurerSelect = document.querySelector('select[name="PreferredInsurerId"]');
+        const productSelect = document.querySelector('select[name="InsuranceProductId"]');
+        const currentProductId = "{{ old('InsuranceProductId', $referral->InsuranceProductId) }}";
+        const productsRoute = @json(route('bancassurance.referrals.referrals.products', ['insurerId' => 'INSURER_ID']));
 
-    insurerSelect.addEventListener('change', function () {
-        const insurerId = this.value;
-        if (!insurerId) {
-            productSelect.innerHTML = '<option value="">-- Select Product --</option>';
-            return;
-        }
+        insurerSelect.addEventListener('change', function() {
+            const insurerId = this.value;
+            if (!insurerId) {
+                productSelect.innerHTML = '<option value="">-- Select Product --</option>';
+                return;
+            }
 
-        fetch(productsRoute.replace('INSURER_ID', insurerId))
-            .then(response => response.json())
-            .then(products => {
-                let options = '<option value="">-- Select Product --</option>';
-                products.forEach(product => {
-                    const selected = product.Id == currentProductId ? 'selected' : '';
-                    options += `<option value="${product.Id}" ${selected}>${product.Name}</option>`;
+            fetch(productsRoute.replace('INSURER_ID', insurerId))
+                .then(response => response.json())
+                .then(products => {
+                    let options = '<option value="">-- Select Product --</option>';
+                    products.forEach(product => {
+                        const selected = product.Id == currentProductId ? 'selected' : '';
+                        options += `<option value="${product.Id}" ${selected}>${product.Name}</option>`;
+                    });
+                    productSelect.innerHTML = options;
                 });
-                productSelect.innerHTML = options;
-            });
-    });
+        });
 
-    if (insurerSelect.value) insurerSelect.dispatchEvent(new Event('change'));
-});
+        if (insurerSelect.value) insurerSelect.dispatchEvent(new Event('change'));
+    });
 </script>
 @endpush
 @endsection

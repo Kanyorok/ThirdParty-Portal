@@ -49,11 +49,11 @@ class ThirdPartyResource extends JsonResource
             'thirdPartyType' => $this->ThirdPartyType?->value,
             // New array of assigned types via pivot
             'types' => $types,
-            'isPrequalified' => (bool) $this->IsPrequalified,
+            'isPrequalified' => (bool)$this->IsPrequalified,
             'createdOn' => optional($this->CreatedOn)->format('Y-m-d H:i:s'),
             'modifiedOn' => optional($this->ModifiedOn)->format('Y-m-d H:i:s'),
             'createdBy' => $this->CreatedBy,
-            'isActive' => (bool) $this->IsActive,
+            'isActive' => (bool)$this->IsActive,
             'categories' => SupplierCategoryResource::collection($this->whenLoaded('categories')),
         ];
     }

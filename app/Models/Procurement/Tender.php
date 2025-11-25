@@ -89,6 +89,7 @@ class Tender extends Model
             ->using(TenderVendor::class)
             ->withPivot('InvitationStatus', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
     }
+
     public function itemCategoryRelation()
     {
         return $this->belongsTo(ItemCategories::class, 'ItemCategoryId', 'Id');

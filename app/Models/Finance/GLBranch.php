@@ -8,13 +8,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GLBranch extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
     protected $table = "t_FinanceGLBranch";
     protected $primaryKey = 'Id';
+
     public static function getPrimaryKey(): string
     {
         return 'GLBranchId';

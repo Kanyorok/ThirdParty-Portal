@@ -2,7 +2,7 @@
 
 namespace App\Models\Insurance;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -19,8 +19,8 @@ class BancassuranceClaim extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'PolicyId','ClaimType','ClaimReason','ClaimAmount','ClaimDate','Status',
-        'CreatedBy','ModifiedBy','DeletedBy',
+        'PolicyId', 'ClaimType', 'ClaimReason', 'ClaimAmount', 'ClaimDate', 'Status',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -38,7 +38,7 @@ class BancassuranceClaim extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'ClaimType', 'ID');
     }
-    
+
     public function status()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');

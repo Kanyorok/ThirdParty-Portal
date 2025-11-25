@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class LegalTemplate extends Model
 {
-    use SoftDeletes, UserActorTrait,DocumentsTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -51,11 +51,11 @@ class LegalTemplate extends Model
     }
 
     protected $casts = [
-        'IsActive'      => 'boolean',
-        'Tokens'        => 'array',
+        'IsActive' => 'boolean',
+        'Tokens' => 'array',
         'EffectiveFrom' => 'date',
-        'EffectiveTo'   => 'date',
-        'ApprovedOn'    => 'datetime',
+        'EffectiveTo' => 'date',
+        'ApprovedOn' => 'datetime',
     ];
 
 
@@ -94,29 +94,29 @@ class LegalTemplate extends Model
     /**
      * Attach a single clause to this template with full control.
      *
-     * @param  int|\App\Models\Legal\LegalClause $clause
-     * @param  array{position?:int,is_mandatory?:bool,clause_version?:string,
+     * @param int|\App\Models\Legal\LegalClause $clause
+     * @param array{position?:int,is_mandatory?:bool,clause_version?:string,
      *               title_override?:string,content_override?:string,created_by?:int} $options
      */
     public function attachClause($clause, array $options = []): void
     {
-        $clauseId = $clause instanceof LegalClause ? $clause->getKey() : (int) $clause;
+        $clauseId = $clause instanceof LegalClause ? $clause->getKey() : (int)$clause;
 
         $position = $options['position'] ?? ($this->clauses()->max('t_legal_clause_template.Position') + 1) ?? 1;
-        $userId   = $options['created_by'] ?? Auth::id();
-        $now      = Carbon::now();
+        $userId = $options['created_by'] ?? Auth::id();
+        $now = Carbon::now();
 
         $this->clauses()->syncWithoutDetaching([
             $clauseId => [
-                'Position'       => (int) $position,
-                'IsMandatory'    => (bool) ($options['is_mandatory'] ?? false),
-                'ClauseVersion'  => $options['clause_version'] ?? null,
-                'TitleOverride'  => $options['title_override'] ?? null,
-                'ContentOverride'=> $options['content_override'] ?? null,
-                'CreatedBy'      => $userId,
-                'CreatedOn'      => $now,
-                'ModifiedBy'     => $userId,
-                'ModifiedOn'     => $now,
+                'Position' => (int)$position,
+                'IsMandatory' => (bool)($options['is_mandatory'] ?? false),
+                'ClauseVersion' => $options['clause_version'] ?? null,
+                'TitleOverride' => $options['title_override'] ?? null,
+                'ContentOverride' => $options['content_override'] ?? null,
+                'CreatedBy' => $userId,
+                'CreatedOn' => $now,
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => $now,
             ],
         ]);
     }
@@ -126,8 +126,8 @@ class LegalTemplate extends Model
      * Existing pivot rows will be updated to the new order;
      * rows not present will be removed.
      *
-     * @param  array<int,int> $orderedClauseIds
-     * @param  bool $clearOverrides If true, wipes overrides on reordering.
+     * @param array<int,int> $orderedClauseIds
+     * @param bool $clearOverrides If true, wipes overrides on reordering.
      */
     public function syncClausesOrdered(array $orderedClauseIds, bool $clearOverrides = false): void
     {
@@ -138,13 +138,13 @@ class LegalTemplate extends Model
         $pos = 1;
         foreach ($orderedClauseIds as $clauseId) {
             $map[(int)$clauseId] = [
-                'Position'      => $pos++,
-                'ModifiedBy'    => $userId,
-                'ModifiedOn'    => $now,
+                'Position' => $pos++,
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => $now,
             ];
 
             if ($clearOverrides) {
-                $map[(int)$clauseId]['TitleOverride']   = null;
+                $map[(int)$clauseId]['TitleOverride'] = null;
                 $map[(int)$clauseId]['ContentOverride'] = null;
             }
         }
@@ -162,7 +162,7 @@ class LegalTemplate extends Model
             ->sortBy('pivot.Position')
             ->map(function (LegalClause $c) {
                 $title = $c->pivot->TitleOverride ?: $c->Title;
-                $body  = $c->pivot->ContentOverride ?: $c->Content;
+                $body = $c->pivot->ContentOverride ?: $c->Content;
                 return trim("{$title}\n\n{$body}");
             })
             ->implode("\n\n");

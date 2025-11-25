@@ -2,16 +2,12 @@
 
 namespace App\Listeners\Ticket;
 
-use App\Enums\Core\PermissionEnum;
-use App\Enums\TicketStatusEnum;
 use App\Events\Ticket\ReopenTicketEvent;
-use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use App\Models\CRM\Ticket;
 use App\Services\HRM\UserService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\DB;
 
 class ReopenWorkflowListener implements ShouldQueue
 {
@@ -30,7 +26,8 @@ class ReopenWorkflowListener implements ShouldQueue
      */
     public function handle(ReopenTicketEvent $event): void
     {
-        $users = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::TicketApproval->value)->get(["Id", "UserID", "Name", "Email"]);
+        /*Approval Workflow
+         * $users = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::TicketApproval->value)->get(["Id", "UserID", "Name", "Email"]);
         DB::transaction(function () use ($users, $event) {
             foreach ($users as $user) {
                 if (!$user instanceof User) {
@@ -49,7 +46,7 @@ class ReopenWorkflowListener implements ShouldQueue
 
                 $this->_sendMail($user, $event->ticket, $event->reason);
             }
-        });
+        });*/
     }
 
     protected function _sendMail(User $user, Ticket $ticket, string $reason): void

@@ -3,7 +3,7 @@
 namespace App\Services\Insurance;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimPayment;
 use Illuminate\Support\Carbon;
@@ -30,7 +30,7 @@ class BancassuranceClaimPaymentService
         User $user
     ):self{
         $payment = BancassuranceClaimPayment::create([
-            'ClaimId' => $ClaimId -> Id,
+            'ClaimId' => $ClaimId->Id,
             'PaymentDate' => $PaymentDate,
             'PaymentAmount' => $PaymentAmount,
             'PaymentReference' => $PaymentReference,

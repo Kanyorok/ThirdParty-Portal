@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Procurement\Supplier;
 use App\Models\ThirdParty\ThirdParties;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
 use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;

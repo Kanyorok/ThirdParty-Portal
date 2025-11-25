@@ -9,6 +9,9 @@ use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTransaction;
 use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceCreditMovement;
+use App\Models\Finance\FinanceInvoiceLine;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
+use App\Models\Finance\InvoiceTax;
 use App\Services\Finance\TransactionService;
 use App\Services\Finance\CreditCalculationService;
 use Illuminate\Http\Request;
@@ -259,11 +262,12 @@ class InvoiceGenerationController extends Controller
 
         // Configure your module + transaction type mapping IDs
         // Make sure these exist in t_Modules and t_FinanceTransactionTypes
-        $MODULE_ID          = 1100000;
+        $MODULE_ID = 1100000;
         $TRANSACTION_TYPEID = 16;    // "AR Invoice"
+        $THIRDPARTYTYPEID = 1; // "Tenant"
 
         try {
-            return DB::transaction(function () use ($id, $validated, $svc, $MODULE_ID, $TRANSACTION_TYPEID) {
+            return DB::transaction(function () use ($id, $validated, $svc, $MODULE_ID, $TRANSACTION_TYPEID, $THIRDPARTYTYPEID) {
 
                 // Load the invoice with the same relations, and lock row for update
                 $invoice = FinanceInvoice::with([
@@ -283,20 +287,21 @@ class InvoiceGenerationController extends Controller
                 $payload = [
                     'ModuleID'          => $MODULE_ID,
                     'ThirdPartyID'      => $invoice->CustomerID,
+                    'ThirdPartyTypeID'  => $THIRDPARTYTYPEID ?? 1,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,
-                    'TransactionType'   => 'Account Receivables Invoice',
-                    'ReferenceNumber'   => $invoice->InvoiceNumber,
-                    'TransactionDate'   => $invoice->InvoiceDate ?? now()->toDateString(),
-                    'Amount'            => (float)($invoice->TotalAmount ?? 0),   // net (excl. tax) if that's your model
-                    'TaxAmount'         => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
-                    'BranchID'          => session('LoginBranchId', 1),
-                    'DepartmentID'      => $invoice->DepartmentID ?? null,
-                    'CurrencyID'        => $invoice->CurrencyID ?? 56,
-                    'CurrencyCode'      => optional($invoice->currency)->Code ?? 'KES',
-                    'ExchangeRate'      => (float)($invoice->ExchangeRate ?? 1),
-                    'Narration'         => trim(($invoice->Description ?? '').' '.$validated['Reason']),
-                    'SourceTable'       => $invoice->SourceTable,
-                    'SystemDescription' => 'AR Invoice '.$invoice->InvoiceNumber,
+                    'TransactionType' => 'Account Receivables Invoice',
+                    'ReferenceNumber' => $invoice->InvoiceNumber,
+                    'TransactionDate' => $invoice->InvoiceDate ?? now()->toDateString(),
+                    'Amount' => (float)($invoice->TotalAmount ?? 0),   // net (excl. tax) if that's your model
+                    'TaxAmount' => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
+                    'BranchID' => session('LoginBranchId', 1),
+                    'DepartmentID' => $invoice->DepartmentID ?? null,
+                    'CurrencyID' => $invoice->CurrencyID ?? 56,
+                    'CurrencyCode' => optional($invoice->currency)->Code ?? 'KES',
+                    'ExchangeRate' => (float)($invoice->ExchangeRate ?? 1),
+                    'Narration' => trim(($invoice->Description ?? '') . ' ' . $validated['Reason']),
+                    'SourceTable' => $invoice->SourceTable,
+                    'SystemDescription' => 'AR Invoice ' . $invoice->InvoiceNumber,
                     // Optional one‑off overrides if needed:
                     // 'DebitGLAccountID'  => 5_001,
                     // 'CreditGLAccountID' => 3_001,
@@ -314,19 +319,33 @@ class InvoiceGenerationController extends Controller
                     $invoice->update([
                         'ApprovalStatus' => 'posted',
                         'ApprovalReason' => $validated['Reason'],
-                        'ModifiedBy'     => Auth::id(),
-                        'ModifiedOn'     => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
                     ]);
 
-                    // If credit was applied to this invoice, update the credit movement
-                    if ($invoice->UseCredit) {
-                        FinanceCreditMovement::where('ReferenceType', 'invoice')
-                            ->where('ReferenceID', $invoice->Id)
-                            ->update([
-                                'Notes' => "Credit applied to invoice #{$invoice->InvoiceNumber} - Invoice posted to GL",
-                                'ModifiedBy' => Auth::id(),
-                                'ModifiedOn' => now(),
-                            ]);
+                    //Pull all the taxes for that invoice distinctly from the t_FinanceInvoiceLines table
+                    $invoiceTaxes = FinanceInvoiceLine::where('InvoiceID', $invoice->Id)
+                        ->select('TaxID')
+                        ->distinct()
+                        ->get();
+                    foreach ($invoiceTaxes as $tax) {
+                        //Get more Tax info using the TaxID from the t_FinanceTaxRuleConfiguration table
+                        $taxRule = FinanceTaxRuleConfiguration::find($tax->TaxID);
+                        //Calculate the TaxAmount based on the TaxRate and the TotalAmount of the invoice
+                        $taxAmount = $invoice->TotalAmount * ($taxRule->Rate / 100);
+                        InvoiceTax::create([
+                            'ARInvoiceID' => $invoice->Id,
+                            'TaxID' => $tax->TaxID,
+                            'TaxAmount' => $taxAmount,
+                            'TaxPercentage' => $taxRule->Rate,
+                            'AmountPaid' => 0,
+                            'SourceType' => 'AR',
+                            'Sourcetable' => 't_FinanceInvoices',
+                            'CreatedBy' => Auth::id(),
+                            'CreatedOn' => now(),
+                            'ModifiedBy' => Auth::id(),
+                            'ModifiedOn' => now(),
+                        ]);
                     }
                 }
 
@@ -348,7 +367,7 @@ class InvoiceGenerationController extends Controller
         } catch (\Throwable $e) {
             // Log if you want: Log::error('AP approve error', ['id'=>$id, 'err'=>$e->getMessage()])
             return $e->getMessage();
-            return back()->with('error', "Approval/Post failed: ".$e->getMessage());
+            return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
 
@@ -373,7 +392,7 @@ class InvoiceGenerationController extends Controller
 
                 // If already processed, prevent duplicate rejection
                 if (in_array($invoice->ApprovalStatus, ['posted', 'rejected'], true)) {
-                    $apStatus=ucfirst($invoice->ApprovalStatus);
+                    $apStatus = ucfirst($invoice->ApprovalStatus);
                     return back()->with('error', "Invoice {$invoice->InvoiceNumber} is already {$apStatus}.");
                 }
 
@@ -381,8 +400,8 @@ class InvoiceGenerationController extends Controller
                 $invoice->update([
                     'ApprovalStatus' => 'rejected',
                     'ApprovalReason' => $validated['Reason'],
-                    'ModifiedBy'     => Auth::id(),
-                    'ModifiedOn'     => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
                 ]);
 
                 activity('Transaction Posting')
@@ -393,9 +412,9 @@ class InvoiceGenerationController extends Controller
 
                 return back()->with('success', "Invoice {$invoice->InvoiceNumber} rejected successfully.");
             });
-        }catch (\Throwable $e) {
-            Log::error('AP reject error', ['id'=>$id, 'err'=>$e->getMessage()]);
-            return back()->with('error', "Approval/Post failed: ".$e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('AP reject error', ['id' => $id, 'err' => $e->getMessage()]);
+            return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
 
@@ -404,7 +423,7 @@ class InvoiceGenerationController extends Controller
      */
     private function checkCreditAvailability(int $customerId, float $invoiceAmount): array
     {
-        
+
         return $this->creditService->canApplyCredit($customerId, $invoiceAmount);
     }
 

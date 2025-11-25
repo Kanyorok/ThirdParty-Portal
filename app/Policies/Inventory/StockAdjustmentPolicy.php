@@ -56,6 +56,7 @@ class StockAdjustmentPolicy
     {
         return $user->can(PermissionEnum::StockAdjustmentRestore->value);
     }
+
     /**
      * Determine whether the user can approve the stock adjustment.
      */
@@ -64,7 +65,6 @@ class StockAdjustmentPolicy
         return $user->can(PermissionEnum::StockAdjustmentApproval->value);
     }
 
-   
 
 }
 

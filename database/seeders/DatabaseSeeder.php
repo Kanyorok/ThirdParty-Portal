@@ -27,8 +27,6 @@ class DatabaseSeeder extends Seeder
         $this->call(DepartmentSeeder::class);
         $this->call(EmployeeSeeder::class);
         $this->call(ItemCategoriesSeeder::class);
-        $this->call(ItemTypeSeeder::class);
-        $this->call(InventoryTypeSeeder::class);
         $this->call(UnitOfMeasureSeeder::class);
         $this->call(ItemMasterListSeeder::class);
         // $this->call(DepartmentNeedsSeeder::class);
@@ -66,7 +64,7 @@ class DatabaseSeeder extends Seeder
         $this->call(FinanceGLTypeGroupSeeder::class);
         $this->call(FinanceGLSubAccountTypeSeeder::class);
         $this->call(FinanceGLAccountsSeeder::class);
-        // $this->call(FinanceSegmentOrderSeeder::class);
+        $this->call(FinanceSegmentOrderSeeder::class);
 //        $this->call(OrderLinesSeeder::class);
 //         $this->call(OrderSeeder::class);
 //         $this->call(GoodsReceiptsSeeder::class);

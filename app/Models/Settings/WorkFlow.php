@@ -6,8 +6,9 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
-use App\Models\Settings\WorkFlowType;
-use App\Models\Settings\WorkflowStage;
+use App\Models\Core\Module;
+use App\Models\Core\Approval\WorkFlowType;
+use App\Models\Core\Approval\WorkflowStage;
 
 class WorkFlow extends Model
 {
@@ -24,13 +25,14 @@ class WorkFlow extends Model
         'Name',
         'Source',
         'Description',
+        'FinalStage',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
     ];
 
     protected $casts = [
-        'IsFinalStage' => 'boolean',
+        'FinalStage' => 'string',
     ];
 
     public static function getPrimaryKey(): string
@@ -47,4 +49,16 @@ class WorkFlow extends Model
     {
         return $this->hasMany(WorkflowStage::class, 'WorkFlowId', 'Id');
     }
+
+    public function module()
+   {
+    return $this->belongsTo(Module::class, 'ModuleId');
+   }
+
+    public function getIsFinalStageAttribute()
+    {
+        return !empty($this->FinalStage);
+    }
+
+
 }

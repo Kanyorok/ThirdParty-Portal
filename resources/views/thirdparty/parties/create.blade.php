@@ -32,20 +32,20 @@
                             <div class="col-md-6 col-lg-4">
                                 <label for="PartyType" class="form-label">Party Type <span class="text-danger">*</span></label>
                                 <select class="form-select @error('PartyType') is-invalid @enderror"
-                                        id="PartyType"
-                                        name="PartyType"
-                                        required>
+                                    id="PartyType"
+                                    name="PartyType"
+                                    required>
                                     <option value="">Select Party Type</option>
                                     @foreach ($partyTypes as $type)
-                                        <option value="{{ $type->Value }}"
-                                                data-code="{{ $type->CodeID }}"
-                                                {{ old('PartyType') == $type->Value ? 'selected' : '' }}>
-                                            {{ $type->Description }}
-                                        </option>
+                                    <option value="{{ $type->Value }}"
+                                        data-code="{{ $type->CodeID }}"
+                                        {{ old('PartyType') == $type->Value ? 'selected' : '' }}>
+                                        {{ $type->Description }}
+                                    </option>
                                     @endforeach
                                 </select>
                                 @error('PartyType')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
 
@@ -60,29 +60,29 @@
                             <div class="col-md-6">
                                 <label for="FirstName" class="form-label">First Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('FirstName') is-invalid @enderror"
-                                       id="FirstName" name="FirstName" value="{{ old('FirstName') }}" required>
+                                    id="FirstName" name="FirstName" value="{{ old('FirstName') }}" required>
                                 @error('FirstName') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="col-md-6">
                                 <label for="LastName" class="form-label">Last Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('LastName') is-invalid @enderror"
-                                       id="LastName" name="LastName" value="{{ old('LastName') }}" required>
+                                    id="LastName" name="LastName" value="{{ old('LastName') }}" required>
                                 @error('LastName') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="col-md-6">
                                 <label for="UserEmail" class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control @error('UserEmail') is-invalid @enderror"
-                                       id="UserEmail" name="UserEmail" value="{{ old('UserEmail') }}" required>
+                                    id="UserEmail" name="UserEmail" value="{{ old('UserEmail') }}" required>
                                 @error('UserEmail') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="col-md-6">
                                 <label for="UserPhone" class="form-label">Phone <span class="text-danger">*</span></label>
                                 <input type="tel" class="form-control @error('UserPhone') is-invalid @enderror"
-                                       id="UserPhone" name="UserPhone" value="{{ old('UserPhone') }}"
-                                       pattern="^\+[1-9]\d{7,14}$" inputmode="tel" placeholder="e.g., +254712345678">
+                                    id="UserPhone" name="UserPhone" value="{{ old('UserPhone') }}"
+                                    pattern="^\+[1-9]\d{7,14}$" inputmode="tel" placeholder="e.g., +254712345678">
                                 @error('UserPhone') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
 
@@ -91,7 +91,7 @@
                                 <select class="form-select @error('Gender') is-invalid @enderror" id="Gender" name="Gender">
                                     <option value="">Select Gender</option>
                                     @foreach (\App\Enums\Employee\GenderEnum::cases() as $gender)
-                                        <option value="{{ $gender->value }}" {{ old('Gender') == $gender->value ? 'selected' : '' }}>{{ $gender->value }}</option>
+                                    <option value="{{ $gender->value }}" {{ old('Gender') == $gender->value ? 'selected' : '' }}>{{ $gender->value }}</option>
                                     @endforeach
                                 </select>
                                 @error('Gender') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -106,7 +106,7 @@
                             <div class="col-md-6 col-lg-4">
                                 <label for="ThirdPartyName" class="form-label">Company Legal Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('ThirdPartyName') is-invalid @enderror"
-                                       id="ThirdPartyName" name="ThirdPartyName" value="{{ old('ThirdPartyName') }}">
+                                    id="ThirdPartyName" name="ThirdPartyName" value="{{ old('ThirdPartyName') }}">
                                 @error('ThirdPartyName') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
 
@@ -120,9 +120,9 @@
                                 <select class="form-select" id="BusinessType" name="BusinessType">
                                     <option value="">Select Business Type</option>
                                     @foreach (\App\Enums\BusinessTypeEnum::cases() as $type)
-                                        <option value="{{ $type->value }}" {{ old('BusinessType') == $type->value ? 'selected' : '' }}>
-                                            {{ $type->label() }}
-                                        </option>
+                                    <option value="{{ $type->value }}" {{ old('BusinessType') == $type->value ? 'selected' : '' }}>
+                                        {{ $type->label() }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -172,13 +172,13 @@
                             <select class="form-select @error('Country') is-invalid @enderror" id="Country" name="Country">
                                 <option value="">Select Country</option>
                                 @foreach ($country as $c)
-                                    <option value="{{ $c->Id }}" {{ old('Name') == $c->Name ? 'selected' : '' }}>
-                                        {{ $c->Name }}
-                                    </option>
+                                <option value="{{ $c->Id }}" {{ old('Name') == $c->Name ? 'selected' : '' }}>
+                                    {{ $c->Name }}
+                                </option>
                                 @endforeach
                             </select>
                             @error('Name')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
 
                             <div class="col-md-6">
@@ -194,7 +194,7 @@
                             <div class="col-md-6">
                                 <label for="Phone" class="form-label">Phone</label>
                                 <input type="tel" class="form-control" id="Phone" name="Phone" value="{{ old('Phone') }}"
-                                       pattern="^\+[1-9]\d{7,14}$" inputmode="tel" placeholder="e.g., +254712345678">
+                                    pattern="^\+[1-9]\d{7,14}$" inputmode="tel" placeholder="e.g., +254712345678">
                             </div>
 
                             <div class="col-12">
@@ -208,12 +208,12 @@
                     <div class="bg-light p-5 border rounded-3">
                         <h2 class="h5 fw-bold mb-3">Status & Classification</h2>
                         <div class="row g-4">
-                        <div class="col-md-6 col-lg-4">
-                            <label for="ThirdPartyType" class="form-label">
-                                Third Party Type <span class="text-danger">*</span>
-                            </label>
+                            <div class="col-md-6 col-lg-4">
+                                <label for="ThirdPartyType" class="form-label">
+                                    Third Party Type <span class="text-danger">*</span>
+                                </label>
 
-                            @foreach($thirdPartyTypes as $type)
+                                @foreach($thirdPartyTypes as $type)
                                 <div class="form-check mb-2">
                                     <input
                                         type="checkbox"
@@ -221,22 +221,21 @@
                                         id="type_{{ $type->TypeId }}"
                                         name="ThirdPartyType[]"
                                         value="{{ $type->TypeId }}"
-                                        {{ collect(old('ThirdPartyType', []))->contains($type->TypeId) ? 'checked' : '' }}
-                                    >
+                                        {{ collect(old('ThirdPartyType', []))->contains($type->TypeId) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-medium" for="type_{{ $type->TypeId }}">
                                         {{ $type->Description ?? $type->Code ?? 'Unknown Type' }}
                                     </label>
                                 </div>
-                            @endforeach
+                                @endforeach
 
-                            @error('ThirdPartyType')
+                                @error('ThirdPartyType')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
+                                @enderror
 
-                            <small class="text-muted">
-                                Select one or more third-party types as applicable.
-                            </small>
-                        </div>
+                                <small class="text-muted">
+                                    Select one or more third-party types as applicable.
+                                </small>
+                            </div>
 
 
 
@@ -245,7 +244,7 @@
                                 <select class="form-select" id="ApprovalStatus" name="ApprovalStatus" required>
                                     <option value="">Select Approval Status</option>
                                     @foreach (\App\Enums\ThirdPartyApprovalStatusEnum::cases() as $status)
-                                        <option value="{{ $status->value }}" {{ old('ApprovalStatus') == $status->value ? 'selected' : '' }}>{{ $status->label() }}</option>
+                                    <option value="{{ $status->value }}" {{ old('ApprovalStatus') == $status->value ? 'selected' : '' }}>{{ $status->label() }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -255,7 +254,7 @@
                                 <select class="form-select" id="Status" name="Status" required>
                                     <option value="">Select Status</option>
                                     @foreach (\App\Enums\ThirdPartyStatusEnum::cases() as $status)
-                                        <option value="{{ $status->value }}" {{ old('Status') == $status->value ? 'selected' : '' }}>{{ $status->label() }}</option>
+                                    <option value="{{ $status->value }}" {{ old('Status') == $status->value ? 'selected' : '' }}>{{ $status->label() }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -275,56 +274,56 @@
 
                 {{-- TOGGLE SCRIPT --}}
 
-    @push('scripts')
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const sel = document.getElementById('PartyType');
-        const primary = document.getElementById('primary-user-section');
-        const corp = document.getElementById('corporate-fields');
-        const ind = document.getElementById('individual-fields');
+                @push('scripts')
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const sel = document.getElementById('PartyType');
+                        const primary = document.getElementById('primary-user-section');
+                        const corp = document.getElementById('corporate-fields');
+                        const ind = document.getElementById('individual-fields');
 
-        // 🔹 New helper function to enable/disable hidden inputs
-        function toggleFields(showIndividual) {
-            document.querySelectorAll('#individual-fields input, #individual-fields select, #individual-fields textarea')
-                .forEach(el => el.disabled = !showIndividual);
+                        // 🔹 New helper function to enable/disable hidden inputs
+                        function toggleFields(showIndividual) {
+                            document.querySelectorAll('#individual-fields input, #individual-fields select, #individual-fields textarea')
+                                .forEach(el => el.disabled = !showIndividual);
 
-            document.querySelectorAll('#corporate-fields input, #corporate-fields select, #corporate-fields textarea')
-                .forEach(el => el.disabled = showIndividual);
-        }
+                            document.querySelectorAll('#corporate-fields input, #corporate-fields select, #corporate-fields textarea')
+                                .forEach(el => el.disabled = showIndividual);
+                        }
 
-        function update() {
-            if (!sel) return;
-            const val = sel.value;
+                        function update() {
+                            if (!sel) return;
+                            const val = sel.value;
 
-            // Hide everything if nothing selected
-            if (!val) {
-                primary.style.display = 'none';
-                corp.style.display = 'none';
-                ind.style.display = 'none';
-                toggleFields(false);
-                return;
-            }
+                            // Hide everything if nothing selected
+                            if (!val) {
+                                primary.style.display = 'none';
+                                corp.style.display = 'none';
+                                ind.style.display = 'none';
+                                toggleFields(false);
+                                return;
+                            }
 
-            // Always show primary user section once type is selected
-            primary.style.display = '';
+                            // Always show primary user section once type is selected
+                            primary.style.display = '';
 
-            // Individual vs Corporate toggle
-            if (val.toLowerCase() === 'in' || sel.options[sel.selectedIndex].text.toLowerCase().includes('individual')) {
-                ind.style.display = '';
-                corp.style.display = 'none';
-                toggleFields(true); // enable individual fields
-            } else {
-                ind.style.display = 'none';
-                corp.style.display = '';
-                toggleFields(false); // enable corporate fields
-            }
-        }
+                            // Individual vs Corporate toggle
+                            if (val.toLowerCase() === 'in' || sel.options[sel.selectedIndex].text.toLowerCase().includes('individual')) {
+                                ind.style.display = '';
+                                corp.style.display = 'none';
+                                toggleFields(true); // enable individual fields
+                            } else {
+                                ind.style.display = 'none';
+                                corp.style.display = '';
+                                toggleFields(false); // enable corporate fields
+                            }
+                        }
 
-        sel?.addEventListener('change', update);
-        update(); // handle initial state (e.g. after validation error)
-    });
-    </script>
-    @endpush
+                        sel?.addEventListener('change', update);
+                        update(); // handle initial state (e.g. after validation error)
+                    });
+                </script>
+                @endpush
             </div>
         </div>
     </div>

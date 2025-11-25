@@ -24,7 +24,7 @@ class DocumentController extends Controller
     /**
      * Appendable Html Content for Content
      * @throws AuthorizationException
-     *@deprecated
+     * @deprecated
      */
     public function show(Image $image): View
     {
@@ -36,7 +36,7 @@ class DocumentController extends Controller
     /**
      * Download Content
      * @throws AuthorizationException
-     *@deprecated
+     * @deprecated
      */
     public function edit(Request $request, Image $image)
     {
@@ -52,7 +52,7 @@ class DocumentController extends Controller
     /**
      * Remove the specified resource from storage.
      * @throws AuthorizationException
-     *@deprecated
+     * @deprecated
      */
     public function destroy(Request $request, Image $image): JsonResponse
     {

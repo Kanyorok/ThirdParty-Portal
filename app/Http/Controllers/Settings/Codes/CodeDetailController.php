@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Settings\Codes;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\CodeDetailsRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\StaticListsService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;

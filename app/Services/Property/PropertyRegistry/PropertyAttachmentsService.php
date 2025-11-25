@@ -5,7 +5,7 @@ namespace App\Services\Property\PropertyRegistry;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyAttachments;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Http\UploadedFile;
@@ -25,7 +25,7 @@ class PropertyAttachmentsService
         CodeDetail      $DocumentType,
         string        $Description = null,
          User          $user,
-         UploadedFile $document = null
+        UploadedFile $document = null
     ): self
     {
         $propertyattachments = PropertyAttachments::create([
@@ -58,14 +58,15 @@ class PropertyAttachmentsService
         ?string             $Description,
         User                $user,
         UploadedFile        $document = null
-    ): self {
+    ): self
+    {
         $attachment->update([
-            'PropertyID'    => $PropertyID->Id,
+            'PropertyID' => $PropertyID->Id,
             'DocumentTitle' => $DocumentTitle,
-            'DocumentType'  => $DocumentType->Id,
-            'Description'   => $Description,
-            'ModifiedBy'    => $user->Id,
-            'ModifiedOn'    => now(),
+            'DocumentType' => $DocumentType->Id,
+            'Description' => $Description,
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => now(),
         ]);
 
         if ($document) {
