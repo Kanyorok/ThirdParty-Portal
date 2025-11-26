@@ -35,6 +35,7 @@ class SSRSService
     protected string $_username;
     protected string $_password;
     protected string $path;
+    protected string $virtual_directory = 'ReportServer';
 
     /**
      * @throws ErroredException
@@ -51,7 +52,7 @@ class SSRSService
             throw new ErroredException('invalid report service configuration');
         }
 
-        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host') || !property_exists($ssrsConfig, 'path')) {
+        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'virtual_directory') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host') || !property_exists($ssrsConfig, 'path')) {
             throw new ErroredException('invalid report service configuration');
         }
 
@@ -61,6 +62,7 @@ class SSRSService
             throw new ErroredException('invalid report service configuration');
         }
         $this->path = $ssrsConfig->path;
+        $this->virtual_directory = $ssrsConfig->virtual_directory;
         $path = strtolower($ssrsConfig->path);
         $username = $ssrsConfig->username;
         $this->_username = $username;
@@ -68,10 +70,8 @@ class SSRSService
         $this->serverURL = $ssrsConfig->host;
         $this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/{$path}/api/v2.0/";
 
-        $this->_query = Http::withCookies(request()->cookie(), parse_url($this->serverURL, PHP_URL_HOST))
-            ->withHeaders(request()->header())->retry(3, 100)->timeout(60 * 10)
+        $this->_query = Http::retry(3, 100)->timeout(60 * 10)
             ->withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
-
     }
 
     public function getPassword(): string
@@ -133,7 +133,7 @@ class SSRSService
             $query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']])
                 ->get(Str::of($Host)->trim()->rtrim('/') . "/{$Path}/api/v2.0/ME");
             //->get(Str::of($Host)->trim()->rtrim('/') . "/reports/api/v2.0/ME");
-        } catch (ConnectionException|Exception) {
+        } catch (ConnectionException | Exception) {
             return null;
         }
         if ($query->successful() && array_key_exists('DisplayName', $query->json())) {
@@ -163,7 +163,7 @@ class SSRSService
     public function exportReport(string $path, array $parameters = [], string $format = 'XML', bool $content = false): StreamedResponse|string
     {
         $response = $this->_query
-            ->get(Str::rtrim($this->serverURL, '/') . "/ReportServer?" . $path . "&rs:Format=$format" . self::queryParams($parameters));
+            ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters));
 
         if (!$response->successful()) {
             throw new ConnectionException(
@@ -501,7 +501,7 @@ class SSRSService
     }
 
     private function _getRoute(string $path): string
-    {//reports/report/BRERP/Admin/Permissions?rs:embed=true
+    { //reports/report/BRERP/Admin/Permissions?rs:embed=true
         return $this->serverURL . "{$this->path}/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
     }
 
