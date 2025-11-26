@@ -29,7 +29,6 @@
                 <textarea name="Description" id="Description" class="form-control">{{ old('Description') }}</textarea>
             </div>
 
-            {{-- Hidden field to automatically set IsActive to 1 --}}
             <input type="hidden" name="IsActive" value="1">
 
             <button type="submit" class="btn btn-success">Save</button>
