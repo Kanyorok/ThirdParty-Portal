@@ -39,87 +39,112 @@ class ConsolidatedPlanWorkflowService
      * @throws ErroredException
      */
      public function submitForApproval(User $actor, string $remarks = 'Submitted for approval'): bool
-    {
-        Log::info("Submitting Consolidated Procurement Plan for approval", [
-            'planId' => $this->plan->PlanID,
-            'actorId' => $actor->Id,
-            'currentStatus' => $this->plan->Status->value ?? null,
-        ]);
+{
+    Log::info("Submitting Consolidated Procurement Plan for approval", [
+        'planId' => $this->plan->PlanID,
+        'actorId' => $actor->Id,
+        'currentStatus' => $this->plan->Status->value ?? null,
+    ]);
 
-        // Validate that plan exists and has an ID
-        if (is_null($this->plan->PlanID)) {
-            throw new ErroredException('Invalid plan: PlanID is missing');
-        }
-
-        // Validate that plan is in draft status
-        if ($this->plan->Status !== ProcurementPlanStatusEnum::Draft) {
-            throw new ErroredException('Only draft plans can be submitted for approval. Current status: ' . ($this->plan->Status->value ?? 'unknown'));
-        }
-
-        // Validate that plan has line items
-        if ($this->plan->lineItems()->count() === 0) {
-            throw new ErroredException('Cannot submit a plan without line items');
-        }
-
-        
-        try {
-            // Calculate total amount from line items (for workflow routing if needed)
-            $totalAmount = $this->plan->lineItems->sum(function ($item) {
-    $quantity = (float) ($item->MergedQty ?? $item->OriginalQTY ?? 0);
-    $unitCost = ($item->AdjustedCost > 0)
-        ? $item->AdjustedCost
-        : ($item->EstimatedUnitCost ?? 0);
-
-    return $quantity * $unitCost;
-            });
-
-            Log::info("Calculated total amount for workflow", [
-                'planId' => $this->plan->PlanID,
-                'totalAmount' => $totalAmount,
-            ]);
-
-            $this->logLineItemDetails();
-
-            // Update plan status to Pending using the mapped value from config
-            $pendingStatusValue = $this->workflow->getMappedStatus('Pending');
-            $this->plan->Status = ProcurementPlanStatusEnum::from($pendingStatusValue);
-            $this->plan->SubmittedBy = $actor->Id;
-            $this->plan->SubmittedDate = now();
-            $this->plan->ModifiedBy = $actor->Id;
-            $this->plan->save();
-
-            Log::info("Plan status updated using config mapping", [
-                'planId' => $this->plan->PlanID,
-                'status' => $this->plan->Status->value,
-                'mappedValue' => $pendingStatusValue,
-            ]);
-
-            // Submit to workflow - the workflow service will use config mappings
-            $result = $this->workflow->submit(
-                $this->plan,
-                $actor,
-                ProcurementPlanStatusEnum::Pending, // This is just for logging, actual value comes from config
-                $remarks
-            );
-
-            if (!$result) {
-                throw new ErroredException('Failed to submit plan to workflow');
-            }
-             $this->logPendingApprovers();
-
-            Log::info("Plan submitted successfully", ['planId' => $this->plan->PlanID]);
-            return true;
-
-        } catch (\Throwable $e) {
-            Log::error("Failed to submit plan for approval", [
-                'planId' => $this->plan->PlanID,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw new ErroredException($e->getMessage());
-        }
+    // Validate that plan exists and has an ID
+    if (is_null($this->plan->PlanID)) {
+        throw new ErroredException('Invalid plan: PlanID is missing');
     }
 
+    // Allow submission from Draft or Rejected status (for resubmission)
+    $allowedStatuses = [
+        ProcurementPlanStatusEnum::Draft,
+        ProcurementPlanStatusEnum::Rejected
+    ];
+    
+    if (!in_array($this->plan->Status, $allowedStatuses)) {
+        throw new ErroredException(
+            'Only draft or rejected plans can be submitted for approval. Current status: ' . 
+            ($this->plan->Status->value ?? 'unknown')
+        );
+    }
+
+    // REMOVED THE DUPLICATE CHECK THAT WAS HERE
+
+    // Validate that plan has line items
+    if ($this->plan->lineItems()->count() === 0) {
+        throw new ErroredException('Cannot submit a plan without line items');
+    }
+
+    try {
+        DB::beginTransaction();
+
+        // If resubmitting (status was Rejected), clean up old workflow records
+        if ($this->plan->Status === ProcurementPlanStatusEnum::Rejected) {
+            DB::table('t_WorkflowPending')
+                ->where('Source', $this->plan->getTable())
+                ->where('SourceID', (string)$this->plan->PlanID)
+                ->whereNull('DeletedOn')
+                ->update([
+                    'DeletedOn' => now(),
+                    'DeletedBy' => $actor->Id,
+                ]);
+        }
+
+        // Calculate total amount from line items (for workflow routing if needed)
+        $totalAmount = $this->plan->lineItems->sum(function ($item) {
+            $quantity = (float) ($item->MergedQty ?? $item->OriginalQTY ?? 0);
+            $unitCost = ($item->AdjustedCost > 0)
+               ? $item->AdjustedCost
+               : ($item->EstimatedUnitCost ?? 0);
+            return $quantity * $unitCost;
+        });
+
+        Log::info("Calculated total amount for workflow", [
+            'planId' => $this->plan->PlanID,
+            'totalAmount' => $totalAmount,
+        ]);
+
+        $this->logLineItemDetails();
+
+        // Update plan status to Pending using the mapped value from config
+        $pendingStatusValue = $this->workflow->getMappedStatus('Pending');
+        $this->plan->Status = ProcurementPlanStatusEnum::from($pendingStatusValue);
+        $this->plan->SubmittedBy = $actor->Id;
+        $this->plan->SubmittedDate = now();
+        $this->plan->ModifiedBy = $actor->Id;
+        $this->plan->save();
+
+        Log::info("Plan status updated using config mapping", [
+            'planId' => $this->plan->PlanID,
+            'status' => $this->plan->Status->value,
+            'mappedValue' => $pendingStatusValue,
+        ]);
+
+        // Submit to workflow - the workflow service will use config mappings
+        $result = $this->workflow->submit(
+            $this->plan,
+            $actor,
+            ProcurementPlanStatusEnum::Pending,
+            $remarks
+        );
+
+        if (!$result) {
+            throw new ErroredException('Failed to submit plan to workflow');
+        }
+
+        $this->logPendingApprovers();
+
+        DB::commit();
+
+        Log::info("Plan submitted successfully", ['planId' => $this->plan->PlanID]);
+        return true;
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        Log::error("Failed to submit plan for approval", [
+            'planId' => $this->plan->PlanID,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        throw new ErroredException($e->getMessage());
+    }
+}
      /**
      * Log detailed line item information for debugging
      */

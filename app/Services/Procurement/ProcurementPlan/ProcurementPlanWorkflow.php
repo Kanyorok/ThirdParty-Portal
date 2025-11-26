@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 class ProcurementPlanWorkflow extends ApprovalWorkflow
 {
     private string $configKey = 'PlanID';
-    private string $codeId = 'PROCUREMENT_PLAN_STATUS';
+    private string $codeId = 'ProcurementPlanStatus';
 
     public function __construct()
     {
