@@ -75,7 +75,7 @@ class VehicleController extends Controller
         $imageFile = $request->file('ImageFile');
 
         // Automatically set the vehicle status to "Active"
-        $activeStatus = \App\Models\Core\CodeDetail::where('CodeID', 'VehicleStatus')
+        $activeStatus = CodeDetail::where('CodeID', 'VehicleStatus')
             ->where('Description', 'Active')
             ->value('ID');
 

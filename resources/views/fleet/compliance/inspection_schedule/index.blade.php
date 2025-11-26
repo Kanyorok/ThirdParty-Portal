@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'License & Inspection Schedule')
+@section('title', 'Fleet Inspection Schedule')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
