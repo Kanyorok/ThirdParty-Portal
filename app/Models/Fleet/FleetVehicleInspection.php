@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\FuelType;
 use App\Models\HRM\Employee;
 
 class FleetVehicleInspection extends Model
@@ -55,7 +56,12 @@ class FleetVehicleInspection extends Model
         return $this->belongsTo(FleetVehicleInspection::class, 'ParentInspectionID');
     }
 
-    public function fuel()
+    public function fuelType()
+    {
+        return $this->belongsTo(FuelType::class, 'FuelType', 'Id');
+    }
+
+    public function fuel()      
     {
         return $this->belongsTo(CodeDetail::class, 'Fuel', 'ID');
     }

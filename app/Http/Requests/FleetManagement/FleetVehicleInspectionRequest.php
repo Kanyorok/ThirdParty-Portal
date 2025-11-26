@@ -25,15 +25,15 @@ class FleetVehicleInspectionRequest extends FormRequest
     return [
         'ParentInspectionID' => 'nullable|exists:t_FleetVehicleInspections,Id',
         'VehicleID'      => 'required|integer|exists:t_FleetVehicles,Id',
-        'InspectionTypeID' => 'required|integer|exists:t_CodeDetails,Id',
-        'FuelType'       => 'required|integer|exists:t_CodeDetails,Id',
+        'InspectionTypeID' => 'required|integer|exists:t_CodeDetails,ID',
+        'FuelType'       => 'required|integer|exists:t_FuelTypes,Id',
         'DriverID' => 'nullable|integer|exists:t_FleetDrivers,Id|required_without:ContractedDriverID',
         'ContractedDriverID' => 'nullable|integer|exists:t_ContractedDrivers,Id|required_without:DriverID',
         'InspectionDate' => 'required|date',
         'Mileage'        => 'required|integer|min:0',
-        'Fuel'           => 'required|numeric|min:0',
-        'EngineOil'      => 'required|numeric|min:0',
-        'Coolant'        => 'required|numeric|min:0',
+        'Fuel'           => 'required|integer|exists:t_CodeDetails,ID',
+        'EngineOil'      => 'required|integer|exists:t_CodeDetails,ID',
+        'Coolant'        => 'required|integer|exists:t_CodeDetails,ID',
         'Reflector'       => 'nullable|boolean',
         'FireExtinguisher'=> 'nullable|boolean',
         'FirstAidKit'     => 'nullable|boolean',
@@ -51,7 +51,7 @@ class FleetVehicleInspectionRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             if ($this->VehicleID && $this->Mileage) {
-                $lastInspection = \App\Models\Fleet\FleetVehicleInspection::where('VehicleID', $this->VehicleID)
+                $lastInspection = FleetVehicleInspection::where('VehicleID', $this->VehicleID)
                     ->orderByDesc('InspectionDate')
                     ->first();
 

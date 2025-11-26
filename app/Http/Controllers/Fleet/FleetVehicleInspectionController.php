@@ -29,7 +29,7 @@ class FleetVehicleInspectionController extends Controller
         $inspections = FleetVehicleInspection::with([
             'vehicle', 
             'driver', 
-            'contractedDriver', // <-- include contracted driver
+            'contractedDriver', 
             'engineOil', 
             'postTrips', 
             'fuel', 
