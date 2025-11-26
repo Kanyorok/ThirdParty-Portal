@@ -11,8 +11,8 @@
             <p><strong>Vehicle:</strong> {{ $inspection->vehicle->RegistrationNo ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
-            <p><strong>Driver:</strong> {{ $inspection->driver->FullName ?? 'N/A' }}</p>
-            <p><strong>Fuel Type:</strong> {{ $inspection->fuel->FuelName ?? 'N/A' }}</p>
+            <p><strong>Driver:</strong> {{ $inspection->driver?->FullName ?? $inspection->contractedDriver?->FullName }}</p>
+            <p><strong>Fuel Type:</strong> {{ $inspection->fuelType?->FuelName ?? 'N/A' }}</p>
         </div>
     </div>
 </div>
@@ -33,7 +33,7 @@
                         <td>{{ $inspection->Mileage }} Km/h</td>
                     </tr>
                     <tr>
-                        <th>Fuel (Litres)</th>
+                        <th>Fuel (bars)</th>
                         <td>{{ $inspection->fuel->Description }} </td>
                     </tr>
                     <tr>

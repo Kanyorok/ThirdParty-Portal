@@ -40,10 +40,6 @@ class FleetTripLogController extends Controller
         if ($request->has('parentTripId')) {
             $parentTrip = FleetTripLog::findOrFail($request->parentTripId);
         }
-        $parentTrip = null;
-        if ($request->has('parentTripId')) {
-            $parentTrip = FleetTripLog::findOrFail($request->parentTripId);
-        }
 
         // Remove $tripsStatus since we're auto-setting to "Scheduled"
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();

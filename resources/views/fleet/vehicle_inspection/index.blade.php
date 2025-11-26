@@ -37,7 +37,7 @@
                     <td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') }}</td>
                     <td>{{ $inspection->inspectionType->Description ?? 'N/A' }}</td>
                     <td>{{ $inspection->vehicle?->RegistrationNo }}</td>
-                    <td>{{ $inspection->driver?->FullName }}</td>
+                    <td>{{ $inspection->driver?->FullName ?? $inspection->contractedDriver?->FullName }}</td>
                     <td>{{ $inspection->Mileage }} Km/h</td>
                     <td>{{ $inspection->fuel->Description ?? 'N/A' }}</td>
                     <td>{{ $inspection->engineOil->Description ?? 'N/A' }} </td>

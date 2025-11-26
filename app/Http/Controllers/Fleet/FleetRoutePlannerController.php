@@ -7,6 +7,7 @@ use App\Models\Fleet\FleetRoutePlan;
 use App\Models\Fleet\FleetVehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Core\Approval\CodeDetail;
 
 class FleetRoutePlannerController extends Controller
 {
@@ -19,8 +20,9 @@ class FleetRoutePlannerController extends Controller
 
     public function create()
     {
+        $vehicleStatuses = CodeDetail::where('CodeID', 'VehicleStatus')->get();
         $this->authorize('create', FleetRoutePlan::class);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::where('Status', $vehicleStatuses->where('Description', 'Active')->first()->ID)->get();
         return view('fleet.route_planner.create', compact('vehicles'));
     }
 
