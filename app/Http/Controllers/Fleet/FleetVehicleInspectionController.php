@@ -68,7 +68,9 @@ class FleetVehicleInspectionController extends Controller
     {
         $this->authorize('create', FleetVehicleInspection::class);
 
-        $parentInspection = FleetVehicleInspection::with('inspectionType')->findOrFail($id);
+        // In your controller
+        $parentInspection = FleetVehicleInspection::with(['driver', 'contractedDriver', 'vehicle', 'fuel', 'inspectionType'])
+            ->find($id);
 
         $vehicles = FleetVehicle::all();
         $fuels = FuelType::where('IsActive', true)->get();

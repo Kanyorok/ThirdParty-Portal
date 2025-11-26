@@ -29,13 +29,8 @@
                 <textarea name="Description" id="Description" class="form-control">{{ old('Description') }}</textarea>
             </div>
 
-            <div class="form-check mb-3">
-                <input type="hidden" name="IsActive" value="0">
-                <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" value="1"
-                    {{ old('IsActive', $model->IsActive ?? 0) ? 'checked' : '' }}>
-                <label for="IsActive" class="form-check-label">Active</label>
-            </div>
-
+            {{-- Hidden field to automatically set IsActive to 1 --}}
+            <input type="hidden" name="IsActive" value="1">
 
             <button type="submit" class="btn btn-success">Save</button>
             <a href="{{ route('fueltypes.index') }}" class="btn btn-secondary">Cancel</a>

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\FleetManagement;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Fleet\FleetVehicleInspection;
 
 class FleetVehicleInspectionRequest extends FormRequest
 {

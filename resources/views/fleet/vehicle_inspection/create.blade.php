@@ -78,21 +78,46 @@
                 </div>
             @endunless
 
-            {{-- Driver (Always shown) --}}
+            {{-- Driver Section (Always shown) --}}
             <div class="row g-3 mt-2">
-                {{-- Driver Fields --}}
-                <input type="hidden" name="DriverID" id="DriverID">
-                <input type="hidden" name="ContractedDriverID" id="ContractedDriverID">
-                
                 <div class="col-md-6">
                     <label class="form-label">Driver<span class="text-danger">*</span></label>
-                    <input type="text" id="DriverName" class="form-control" readonly>
-                    <small class="text-muted" id="DriverTypeText"></small>
+                    
+                    @if(isset($parentInspection))
+                        {{-- Post-Trip: Show driver from parent inspection --}}
+                        @php
+                            // Get driver name from parent inspection
+                            $driverName = 'No driver assigned';
+                            $driverType = 'No driver assigned';
+                            
+                            if ($parentInspection->DriverID) {
+                                $driverName = $parentInspection->driver->DriverName ?? 'Driver not found';
+                                $driverType = 'Fleet Driver';
+                            } elseif ($parentInspection->ContractedDriverID) {
+                                $driverName = $parentInspection->contractedDriver->FullName ?? 'Contracted driver not found';
+                                $driverType = 'Contracted Driver';
+                            }
+                        @endphp
+                        
+                        <input type="text" class="form-control" value="{{ $driverName }}" readonly>
+                        <small class="text-muted">{{ $driverType }} (from Pre-Trip Inspection)</small>
+                        
+                        {{-- Hidden fields to preserve driver assignment --}}
+                        <input type="hidden" name="DriverID" value="{{ $parentInspection->DriverID }}">
+                        <input type="hidden" name="ContractedDriverID" value="{{ $parentInspection->ContractedDriverID }}">
+                        
+                    @else
+                        {{-- Pre-Trip: Dynamic driver selection --}}
+                        <input type="hidden" name="DriverID" id="DriverID">
+                        <input type="hidden" name="ContractedDriverID" id="ContractedDriverID">
+                        <input type="text" id="DriverName" class="form-control" readonly>
+                        <small class="text-muted" id="DriverTypeText"></small>
+                    @endif
                 </div>
                 
                 <div class="col-md-4">
                     <label class="form-label">Inspection Date<span class="text-danger">*</span></label>
-                    <input type="date" name="InspectionDate" class="form-control" value="{{ old('InspectionDate') }}"
+                    <input type="date" name="InspectionDate" class="form-control" value="{{ old('InspectionDate', date('Y-m-d')) }}"
                            required>
                 </div>
                 <div class="col-md-4">
@@ -198,13 +223,13 @@ document.addEventListener('DOMContentLoaded', function () {
     function fetchVehicleDetails(Id) {
         if (!Id) {
             // Clear all fields if no vehicle selected
-            driverIdInput.value = '';
-            contractedDriverIdInput.value = '';
-            driverNameInput.value = '';
-            driverTypeText.textContent = '';
-            fuelTypeInput.value = '';
-            fuelNameInput.value = '';
-            mileageInput.value = '';
+            if (driverIdInput) driverIdInput.value = '';
+            if (contractedDriverIdInput) contractedDriverIdInput.value = '';
+            if (driverNameInput) driverNameInput.value = '';
+            if (driverTypeText) driverTypeText.textContent = '';
+            if (fuelTypeInput) fuelTypeInput.value = '';
+            if (fuelNameInput) fuelNameInput.value = '';
+            if (mileageInput) mileageInput.value = '';
             return;
         }
 
@@ -215,29 +240,29 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(data => {
                 // Clear both driver fields first
-                driverIdInput.value = '';
-                contractedDriverIdInput.value = '';
-                driverTypeText.textContent = '';
+                if (driverIdInput) driverIdInput.value = '';
+                if (contractedDriverIdInput) contractedDriverIdInput.value = '';
+                if (driverTypeText) driverTypeText.textContent = '';
                 
                 // Set the appropriate driver field based on driverType
                 if (data.driverType === 'FleetDriver') {
-                    driverIdInput.value = data.driverId ?? '';
-                    driverTypeText.textContent = 'Fleet Driver';
+                    if (driverIdInput) driverIdInput.value = data.driverId ?? '';
+                    if (driverTypeText) driverTypeText.textContent = 'Fleet Driver';
                 } else if (data.driverType === 'ContractedDriver') {
-                    contractedDriverIdInput.value = data.driverId ?? '';
-                    driverTypeText.textContent = 'Contracted Driver';
+                    if (contractedDriverIdInput) contractedDriverIdInput.value = data.driverId ?? '';
+                    if (driverTypeText) driverTypeText.textContent = 'Contracted Driver';
                 } else {
-                    driverTypeText.textContent = 'No driver assigned';
+                    if (driverTypeText) driverTypeText.textContent = 'No driver assigned';
                 }
                 
-                driverNameInput.value = data.driverName ?? 'No driver assigned';
+                if (driverNameInput) driverNameInput.value = data.driverName ?? 'No driver assigned';
 
-                if (data.fuelTypeId) {
+                if (data.fuelTypeId && fuelTypeInput) {
                     fuelTypeInput.value = data.fuelTypeId;
-                    fuelNameInput.value = data.fuelTypeName ?? '';
+                    if (fuelNameInput) fuelNameInput.value = data.fuelTypeName ?? '';
                 } else {
-                    fuelTypeInput.value = '';
-                    fuelNameInput.value = '';
+                    if (fuelTypeInput) fuelTypeInput.value = '';
+                    if (fuelNameInput) fuelNameInput.value = '';
                 }
 
                 // Fetch last mileage
@@ -245,32 +270,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(res => res.json())
                     .then(mileageData => {
                         lastMileage = mileageData.lastMileage ?? 0;
-                        mileageInput.placeholder = `Last recorded: ${lastMileage} km`;
+                        if (mileageInput) mileageInput.placeholder = `Last recorded: ${lastMileage} km`;
                     });
             })
             .catch(err => {
                 console.error('Error fetching vehicle details:', err);
-                driverNameInput.value = 'Error loading driver information';
-                driverTypeText.textContent = '';
+                if (driverNameInput) driverNameInput.value = 'Error loading driver information';
+                if (driverTypeText) driverTypeText.textContent = '';
             });
     }
 
     // Prevent entering mileage lower than last
-    mileageInput?.addEventListener('input', function () {
-        const entered = parseInt(this.value || 0);
-        if (entered < lastMileage) {
-            alert(`Mileage cannot be less than the last recorded value (${lastMileage} km).`);
-            this.value = lastMileage;
+    if (mileageInput) {
+        mileageInput.addEventListener('input', function () {
+            const entered = parseInt(this.value || 0);
+            if (entered < lastMileage) {
+                alert(`Mileage cannot be less than the last recorded value (${lastMileage} km).`);
+                this.value = lastMileage;
+            }
+        });
+    }
+
+    if (vehicleSelect) {
+        vehicleSelect.addEventListener('change', function () {
+            fetchVehicleDetails(this.value);
+        });
+
+        // Initialize if vehicle is already selected (e.g., form validation failed)
+        if (vehicleSelect.value) {
+            fetchVehicleDetails(vehicleSelect.value);
         }
-    });
-
-    vehicleSelect?.addEventListener('change', function () {
-        fetchVehicleDetails(this.value);
-    });
-
-    // Initialize if vehicle is already selected (e.g., form validation failed)
-    if (vehicleSelect?.value) {
-        fetchVehicleDetails(vehicleSelect.value);
     }
 });
 </script>
