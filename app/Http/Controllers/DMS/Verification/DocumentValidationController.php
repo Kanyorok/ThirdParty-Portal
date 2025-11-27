@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\DMS;
+namespace App\Http\Controllers\DMS\Verification;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;

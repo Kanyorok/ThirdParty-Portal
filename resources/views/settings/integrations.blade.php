@@ -137,7 +137,7 @@
                                             @endif
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
                                                    class="d-none" style="display: none;">
-                                            <div class="mb-3 col-sm-6 col-12">
+                                            <div class="mb-3 col-12">
                                                 <label class="form-label" for="SSRS_Host">Host <span
                                                         class="text-danger">*</span></label>
                                                 <input type="text" class="form-control config-srs-form"
@@ -157,6 +157,18 @@
                                                        value="{{ $srsConfig?->path ?? "Reports" }}"
                                                        name="SSRS_Path">
                                                 <span id="SSRS_Path_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="SSRS_Virtual_Directory">Virtual Directory<span
+                                                        class="text-danger">*</span> </label>
+                                                <input type="text" class="form-control config-srs-form"
+                                                       id="SSRS_Virtual_Directory" disabled
+                                                       placeholder="Reports" required autocomplete="off"
+                                                       value="{{ $srsConfig?->virtual_directory ?? "ReportServer" }}"
+                                                       name="SSRS_Virtual_Directory">
+                                                <span id="SSRS_Virtual_Directory_error"
+                                                      class="invalid-feedback d-none error"
                                                       role="alert"></span>
                                             </div>
                                             <div class="mb-3 col-sm-6 col-12">
@@ -1204,7 +1216,7 @@
                     $('#CRDB_API_Key').val(maskedKey);
                     $('#CRDB_API_Key').attr('type', 'password'); // Keep it as password type
                     $('#crdbToggleKey i').removeClass('fa-eye-slash').addClass('fa-eye');
-                    
+
                     // Show warning that key should be saved immediately
                     nWarning('IMPORTANT: Save this API key immediately. It will not be shown again and cannot be retrieved from the system.');
                 }
@@ -1224,7 +1236,7 @@
             const $input = $('#CRDB_API_Key');
             const $icon = $('#crdbToggleKey i');
             const actualKey = $input.attr('data-actual-key');
-            
+
             if (!actualKey) {
                 // Try to get from stored prefix/suffix if available
                 const prefix = $('#CRDB_API_Key').data('key-prefix');
@@ -1236,7 +1248,7 @@
                 }
                 return;
             }
-            
+
             if ($input.attr('type') === 'password') {
                 // Show actual key
                 $input.attr('type', 'text');
@@ -1256,7 +1268,7 @@
                 nWarning('No API key available in this session. Generate a new key to view and copy it.');
                 return;
             }
-            
+
             // Copy the actual key to clipboard
             window.navigator.clipboard.writeText(actualKey).then(function() {
                 nSuccess('API key copied to clipboard successfully. Save it securely - it cannot be retrieved later.');

@@ -41,8 +41,7 @@
                 <tr>
                     <td>{{ $adjustments->firstItem() + $index }}</td>
                     <td>{{ $adjustment->AdjustmentId}}</td>
-                    <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d/m/Y') }}</td>
-                    <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
+                    <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d M Y') }}</td>                   <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
                     <td>{{$adjustment->adjustedBy->Name ?? 'N/A'}}</td>
                     <td>
                         @if($statusEnum)

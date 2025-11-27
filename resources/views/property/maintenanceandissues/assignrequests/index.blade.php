@@ -51,8 +51,8 @@
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $assignment->request->RequestNumber ?? '-' }}</td>
                 <td>{{ $assignment->assignmentType->Description ?? '-' }}</td>
-                <td>{{ $assignment->ExpectedStartDate ? Carbon::parse($assignment->ExpectedStartDate)->format('d/m/Y') : '-' }}</td>
-                <td>{{ $assignment->ExpectedCompletion ? Carbon::parse($assignment->ExpectedCompletion)->format('d/m/Y') : '-' }}</td>
+                <td>{{ $assignment->ExpectedStartDate ? Carbon::parse($assignment->ExpectedStartDate)->format('d M Y') : '-' }}</td>
+                <td>{{ $assignment->ExpectedCompletion ? Carbon::parse($assignment->ExpectedCompletion)->format('d M Y') : '-' }}</td>
                 <td>
                   @if ($assignment->priorityLevel)
                     @php $priority = $assignment->priorityLevel->Value; @endphp

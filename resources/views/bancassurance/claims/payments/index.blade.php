@@ -72,8 +72,7 @@
                             <td>{{ $pay->claim->policy->customer->ThirdParty->ThirdPartyName ?? '-'}}</td>
                             <td>{{ $pay->claim->claimtype->Description ?? '-'}}</td>
                             <td class="text-end">{{ number_format($pay->PaymentAmount, 2) ?? '-'}}</td>
-                            <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d/m/Y') }}</td>
-                            <td>{{ $pay->PaymentReference ?? '-'}}</td>
+                            <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d M Y') }}</td>                           <td>{{ $pay->PaymentReference ?? '-'}}</td>
                         </tr>
                         @empty
                         <tr>

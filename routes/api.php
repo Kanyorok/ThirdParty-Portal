@@ -296,5 +296,43 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // });
 });
 
+
+
+
+
+/***
+ *  This Are the API Routes for Central Report Unit C.R.U
+ */
+use App\Http\Controllers\API\CRDB\CRDBAuthController;
+use App\Http\Controllers\API\CRDB\CRDBGeneralLedgerController;
+use App\Http\Controllers\API\CRDB\CRDBCustomerController;   
+// CRDB Authentication Routes (Public)
+Route::prefix('crdb')->group(function () {
+    Route::post('login', [CRDBAuthController::class, 'login'])->name('crdb.login');
+    Route::post('validate-token', [CRDBAuthController::class, 'validateToken'])->name('crdb.validate-token');
+});
+
+// CRDB API Routes (Protected - requires authentication)
+Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class)->group(function () {
+    // Add your CRDB API endpoints here
+    // Example:
+    Route::get('syncGeneralLedgers', [CRDBGeneralLedgerController::class, 'syncGeneralLedgers'])->name('syncGeneralLedgers');
+    Route::get('syncGLBalances', [CRDBGeneralLedgerController::class, 'syncGLBalances'])->name('syncGLBalances');
+    Route::get('syncCustomers', [CRDBCustomerController::class, 'syncCustomers'])->name('syncCustomers');
+    Route::get('getClientSummaryStatement', [CRDBCustomerController::class, 'getClientSummaryStatement'])->name('getClientSummaryStatement');
+    // Route::get('data', [CRDBDataController::class, 'fetch']);
+    
+    // Health check for authenticated requests
+    Route::get('health', function () {
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now(),
+            'service' => 'CRDB API',
+            'authenticated' => true,
+        ]);
+    })->name('crdb.health');
+});
+
 //api routes for workflow stages
 Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');
+

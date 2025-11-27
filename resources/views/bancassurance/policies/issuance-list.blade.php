@@ -51,7 +51,7 @@
                                     {{ $policy->Status->label() ?? '-' }}
                                 </span>
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($policy->CreatedAt)->format('d/m/Y') ?? '-' }}</td>
+                            <td>{{ \Carbon\Carbon::parse($policy->CreatedAt)->format('d M Y') ?? '-' }}</td>
                             <td class="text-center">
                                 <form action="{{ route('bancassurance.policies.storeIssuance', $policy->Id) }}" method="POST" enctype="multipart/form-data">
                                     @csrf

@@ -65,7 +65,7 @@
                 ?? $existingAward->winningSupplier->thirdParty->TradingName
                 ?? $existingAward->winningSupplier->SupplierName
                 ?? ('Supplier #'.$existingAward->WinningSupplierID) }}</strong> 
-            on {{ optional($existingAward->AwardDate)->format('d/m/Y') ?? optional($existingAward->CreatedOn)->format('d/m/Y') }}.
+            on {{ optional($existingAward->AwardDate)->format('d M Y') ?? optional($existingAward->CreatedOn)->format('d M Y') }}.
             @if(method_exists($existingAward,'status_badge') || isset($existingAward->status_badge))
             Status: <span class="badge {{ $existingAward->status_badge['class'] ?? 'bg-warning text-dark' }}">{{ $existingAward->status_badge['text'] ?? $existingAward->AwardStatus }}</span>
             @endif

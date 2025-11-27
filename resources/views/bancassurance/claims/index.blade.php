@@ -99,8 +99,7 @@
                             <td>{{ $claim->claimtype->Description ?? '-'}}</td>
                             <td>{{ $claim->ClaimReason ?? '-'}}</td>
                             <td>{{ number_format($claim->ClaimAmount, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d/m/Y') }}</td>
-                            <td class="text-center">
+                            <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d M Y') }}</td>                           <td class="text-center">
                                 <span class="badge bg-primary">
                                     {{ $claim->status->Description ?? '-' }}
                                 </span>

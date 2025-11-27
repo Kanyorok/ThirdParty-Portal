@@ -88,7 +88,7 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
     $(document).ready(function() {
-        @if(!$fleetModels - > isEmpty())
+        @if(!$fleetModels->isEmpty())
         $('#fleetModelsTable').DataTable({
             pageLength: 10,
             ordering: true,

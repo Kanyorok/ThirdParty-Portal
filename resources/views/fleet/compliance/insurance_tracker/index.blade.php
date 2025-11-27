@@ -39,9 +39,7 @@
                         <td>{{ $record->PolicyNumber }}</td>
                         <td>{{ $record->insurance->Name ?? 'N/A' }}</td>
                         <td>KES {{ number_format($record->PremiumAmount, 2) }}</td>
-                        <td>{{ \Carbon\Carbon::parse($record->CoverageStartDate)->format('d/m/Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($record->CoverageEndDate)->format('d/m/Y') }}</td>
-                        @php
+                        <td>{{ \Carbon\Carbon::parse($record->CoverageStartDate)->format('d M Y') }}</td>                       <td>{{ \Carbon\Carbon::parse($record->CoverageEndDate)->format('d M Y') }}</td>                       @php
                             $statusColor = match(strtolower($record->insuranceStatus->Description ?? '')) {
                                 'active' => 'success',
                                 'expired' => 'danger',

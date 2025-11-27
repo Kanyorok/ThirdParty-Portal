@@ -42,9 +42,8 @@
                                     {{ $p->Status->label() }}
                                 </span>
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($p->IssuedDate)->format('d/m/Y') }}</td>
-                            <td class="text-center">
-                                <a href="{{ route('bancassurance.policies.review', $p->Id) }}" 
+                            <td>{{ \Carbon\Carbon::parse($p->IssuedDate)->format('d M Y') }}</td>                           <td class="text-center">
+                                <a href="{{ route('bancassurance.policies.review', $p->Id) }}"
                                    class="btn btn-sm btn-outline-info">
                                     <i class="bi bi-eye me-1"></i> Review
                                 </a>

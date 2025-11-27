@@ -59,8 +59,8 @@
                             <td>{{ $newlease->LeaseNumber ?? '-' }}</td>
                             <td>{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                             <td>{{ $newlease->property->PropertyName ?? '-' }}</td>
-                            <td>{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d/m/Y') : '-' }}</td>
-                            <td>{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d/m/Y') : '-' }}</td>
+                            <td>{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d M Y') : '-' }}</td>
+                            <td>{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d M Y') : '-' }}</td>
                             <td>{{ $newlease->code->Description ?? '-' }}</td>
                             <td>{{ $newlease->DueDay ?? '-' }}</td>
                             <td>

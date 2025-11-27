@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Core\Approval\CodeDetail;
+use App\Policies\Fleet\FleetVehiclePolicy;
 use App\Models\Fleet\FleetVehicleAssignment;
 use App\Models\Fleet\Branch;
 use App\Models\Fleet\FuelType;
@@ -74,7 +75,7 @@ class VehicleController extends Controller
         $imageFile = $request->file('ImageFile');
 
         // Automatically set the vehicle status to "Active"
-        $activeStatus = \App\Models\Core\CodeDetail::where('CodeID', 'VehicleStatus')
+        $activeStatus = CodeDetail::where('CodeID', 'VehicleStatus')
             ->where('Description', 'Active')
             ->value('ID');
 
@@ -277,7 +278,8 @@ class VehicleController extends Controller
             });
 
         // Merge all and attach driver names
-        $allDrivers = $assignedDrivers->merge($contractedDrivers)->filter();
+        $allDrivers = $assignedDrivers->concat($contractedDrivers)->filter();
+
         $driverIds = $allDrivers->pluck('Id')->unique()->filter();
 
         $permanentDrivers = FleetDriver::whereIn('Id', $driverIds)->get()->keyBy('Id');
@@ -293,5 +295,5 @@ class VehicleController extends Controller
                 'Period' => $item['Period'],
             ];
         });
-    }
+            }
 }

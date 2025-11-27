@@ -181,7 +181,7 @@
         </div>
         <div class="col-md-6">
           <div class="section-title">Transaction Info</div>
-          <p><strong>Payment Date:</strong> {{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d/m/Y') }}</p>
+          <p><strong>Payment Date:</strong> {{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d M Y') }}</p>
           <p><strong>Payment Mode:</strong> {{ $payment->paymentmodes->Description }}</p>
         </div>
       </div>

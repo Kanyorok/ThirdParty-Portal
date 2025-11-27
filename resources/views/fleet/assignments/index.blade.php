@@ -37,9 +37,8 @@
                         <td>{{ $item->fleetVehicleType->Description ?? 'N/A' }}</td>
                         <td>{{ $item->vehicle->RegistrationNo ?? 'N/A' }}</td>
                         <td>{{ $item->driver->FullName ?? 'N/A' }}</td>
-                        <td>{{ $item->LastInspectionDate ? \Carbon\Carbon::parse($item->LastInspectionDate)->format('d/m/Y') : 'N/A' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($item->AssignmentDate)->format('d/m/Y') }}</td>
-                        <td>{{ $item->Purpose }}</td>
+                        <td>{{ $item->LastInspectionDate ? \Carbon\Carbon::parse($item->LastInspectionDate)->format('d M Y') : 'N/A' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($item->AssignmentDate)->format('d M Y') }}</td>                       <td>{{ $item->Purpose }}</td>
                         <td>{{ $item->Notes }}</td>
                         <td>
                             {{ $item->assigner ? $item->assigner->LastName . ' ' . $item->assigner->FirstName : 'N/A' }}

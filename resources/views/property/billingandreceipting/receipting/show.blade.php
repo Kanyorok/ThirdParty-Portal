@@ -35,13 +35,13 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Invoice Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                        value="{{ $receipt->InvoiceDate ? Carbon::parse($receipt->InvoiceDate)->format('d/m/Y') : '-' }}" readonly>
+                        value="{{ $receipt->InvoiceDate ? Carbon::parse($receipt->InvoiceDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Payment Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                        value="{{ $receipt->PaymentDate ? Carbon::parse($receipt->PaymentDate)->format('d/m/Y') : '-' }}" readonly>
+                        value="{{ $receipt->PaymentDate ? Carbon::parse($receipt->PaymentDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
                 {{-- Financials --}}
@@ -120,9 +120,9 @@
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
             <div>
                 Created by <strong>{{ $receipt->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $receipt->CreatedOn ? Carbon::parse($receipt->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                    on <strong>{{ $receipt->CreatedOn ? Carbon::parse($receipt->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by <strong>{{ $receipt->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $receipt->ModifiedOn ? Carbon::parse($receipt->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                    on <strong>{{ $receipt->ModifiedOn ? Carbon::parse($receipt->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
             <div>
                 <a href="{{ route('rentreceipt.index') }}" class="btn btn-sm btn-secondary">Back</a>

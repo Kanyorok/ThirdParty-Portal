@@ -39,14 +39,14 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Start Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}"
+                           value="{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') : '-' }}"
+                           value="{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
             </div><br>
@@ -85,9 +85,9 @@
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
             <div>
                 Created by <strong>{{ $leaseschedule->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $leaseschedule->CreatedOn ? Carbon::parse($leaseschedule->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $leaseschedule->CreatedOn ? Carbon::parse($leaseschedule->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by <strong>{{ $leaseschedule->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $leaseschedule->ModifiedOn ? Carbon::parse($leaseschedule->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $leaseschedule->ModifiedOn ? Carbon::parse($leaseschedule->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
             <div>
                 <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-dark">Edit</a>

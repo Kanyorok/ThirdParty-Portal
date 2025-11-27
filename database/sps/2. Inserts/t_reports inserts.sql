@@ -228,15 +228,15 @@ VALUES ('Product Rates', NULL, '/BRERP/Budget/Product%20Rates', 1200000, 1, 'Jul
         'Jul  3 2025 11:35:41:000AM', NULL, NULL, 'r_BudgetProductsRate')
 INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
                          [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
-VALUES ('DMSTags', NULL, '/DMS/DMSTags', 700000, 1, 'Jul  4 2025 11:35:41:000AM', 1, 'Jul  4 2025 11:35:41:000AM', NULL,
-        NULL, 'r_tags')
+VALUES ('DMSTags', NULL, '/BRERP/DMS/DMSTags', 700000, 1, 'Jul  4 2025 11:35:41:000AM', 1, 'Jul  4 2025 11:35:41:000AM',
+        NULL, NULL, 'r_tags')
 INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
                          [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
 VALUES ('Tenant Maintenance', NULL, '/BRERP/Property%20Management/Tenant%20Maintenance', 500000, 1,
         'Jul  4 2025 11:35:41:000AM', 1, 'Jul  4 2025 11:35:41:000AM', NULL, NULL, 'R_TenantMaintenance')
 INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
                          [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
-VALUES ('Repositories', NULL, '/DMS/Repositories', 700000, 1, 'Jul  9 2025 11:35:41:000AM', 1,
+VALUES ('Repositories', NULL, '/BRERP/DMS/Repositories', 700000, 1, 'Jul  9 2025 11:35:41:000AM', 1,
         'Jul  9 2025 11:35:41:000AM', NULL, NULL, 'r_Repositories')
 INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
                          [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
@@ -277,7 +277,7 @@ VALUES ('Legal Obligations', NULL, '/BRERP/Legal/Legal%20Obligations', 800000, 1
         'Aug 22 2025 12:55:41:153PM', NULL, NULL, 'r_legalobligations')
 INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
                          [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
-VALUES ('Document Versions', NULL, '/DMS/Document%20Versions', 700000, 1, 'Aug 22 2025  1:25:42:203PM', 1,
+VALUES ('Document Versions', NULL, '/BRERP/DMS/Document%20Versions', 700000, 1, 'Aug 22 2025  1:25:42:203PM', 1,
         'Aug 22 2025  1:25:42:203PM', NULL, NULL, 'r_documentVersions')
 INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
                          [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
@@ -305,10 +305,6 @@ VALUES ('Drivers', NULL, '/BRERP/Fleet/Drivers', 600000, 1, 'Aug 25 2025  6:36:0
         'Aug 25 2025  6:36:08:610AM', NULL, NULL, 'r_FleetDriversList')
 INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
                          [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
-VALUES ('Vehicle Request', NULL, '/BRERP/Fleet/Vehicle Request', 600000, 1, 'Aug 25 2025  7:15:00:697AM', 1,
-        'Aug 25 2025  7:15:00:697AM', NULL, NULL, 'r_VehicleRequests')
-INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
-                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
 VALUES ('Fleet Insurance List', NULL, '/BRERP/Fleet/Fleet Insurance List', 600000, 1, 'Aug 22 2025  1:02:46:873PM', 1,
         'Aug 22 2025  1:02:46:873PM', NULL, NULL, 'r_FleetInsuranceList')
 INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
@@ -319,3 +315,163 @@ INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy],
                          [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
 VALUES ('Insurance Products', NULL, '/BRERP/Bank%20Assurance/Insurance%20Products', 900000, 1,
         'Aug 27 2025  1:02:46:873PM', 1, 'Aug 27 2025  1:02:46:873PM', NULL, NULL, 'r_InsuranceProducts')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Document Legal Hold', NULL, '/BRERP/DMS/Document%20Legal%20Hold', 700000, 1, 'Aug 27 2025  1:02:46:873PM', 1,
+        'Aug 27 2025  1:02:46:873PM', NULL, NULL, 'r_DocumentLegalHold')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Legal Document Registry', NULL, '/BRERP/Legal/Legal%20Document%20Registry', 800000, 1,
+        'Aug 27 2025  1:02:46:873PM', 1, 'Aug 27 2025  1:02:46:873PM', NULL, NULL, ' r_legaldocumentregistry')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Legal Clause Library', NULL, '/BRERP/Legal/Legal%20Clause%20Library', 800000, 1, 'Sep  4 2025 12:21:38:183PM',
+        1, 'Sep  4 2025 12:21:38:183PM', NULL, NULL, 'r_LegalClauses')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Legal Templates', NULL, '/BRERP/Legal/Legal%20Templates', 800000, 1, 'Sep  4 2025 12:21:38:187PM', 1,
+        'Sep  4 2025 12:21:38:187PM', NULL, NULL, 'r_LegalTemplates')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Legal Loan Security Registry', NULL, '/BRERP/Legal/Legal%20Loan%20Security%20Registry', 800000, 1,
+        'Sep  4 2025 12:21:38:190PM', 1, 'Sep  4 2025 12:21:38:190PM', NULL, NULL, ' r_LegalLoanSecurities')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('/Legal Disputes', NULL, '/BRERP/Legal/Legal%20Disputes', 800000, 1, 'Sep  4 2025 12:21:38:197PM', 1,
+        'Sep  4 2025 12:21:38:197PM', NULL, NULL, ' r_LegalCases')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Legal Intellectual Property', NULL, '/BRERP/Legal/Legal%20Intellectual%20Property', 800000, 1,
+        'Sep  4 2025 12:21:38:210PM', 1, 'Sep  4 2025 12:21:38:210PM', NULL, NULL, 'r_LegalIntellectualProperties')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Model', NULL, '/BRERP/Fleet/Fleet Model', 600000, 1, 'Sep  8 2025  1:34:53:817PM', 1,
+        'Sep  8 2025  1:34:53:817PM', NULL, NULL, 'r_FleetModel')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Brand', NULL, '/BRERP/Fleet/Fleet Brand', 600000, 1, 'Sep  8 2025  1:52:09:247PM', 1,
+        'Sep  8 2025  1:52:09:247PM', NULL, NULL, 'r_FleetMake')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Insurance Claims', NULL, '/BRERP/Bank%20Assurance/Insurance%20Claims', 900000, 1, 'Sep 15 2025  2:04:31:380PM',
+        1, 'Sep 15 2025  2:04:31:380PM', NULL, NULL, 'R_BankAssuranceClaims')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Insurance Commission Payout', NULL, '/BRERP/Bank%20Assurance/Insurance%20Commission%20Payout', 900000, 1,
+        'Sep 15 2025  2:04:31:380PM', 1, 'Sep 15 2025  2:04:31:380PM', NULL, NULL, 'R_BankAssuranceCommission')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Insurance Commission Rule', NULL, '/BRERP/Bank%20Assurance/Insurance%20Commission%20Rule', 900000, 1,
+        'Sep 15 2025  2:04:31:380PM', 1, 'Sep 15 2025  2:04:31:380PM', NULL, NULL, 'R_BankAssuranceCommissionRule')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Insurance Customer', NULL, '/BRERP/Bank%20Assurance/Insurance%20Customer', 900000, 1,
+        'Sep 15 2025  2:04:31:380PM', 1, 'Sep 15 2025  2:04:31:380PM', NULL, NULL, 'R_BankAssuranceCustomers')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Insurance Policy', NULL, '/BRERP/Bank%20Assurance/Insurance%20Policy', 900000, 1, 'Sep 15 2025  2:04:31:380PM',
+        1, 'Sep 15 2025  2:04:31:380PM', NULL, NULL, 'R_BankAssurancePolicies')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Insurance Referrals', NULL, '/BRERP/Bank%20Assurance/Insurance%20Referrals', 900000, 1,
+        'Sep 15 2025  2:04:31:380PM', 1, 'Sep 15 2025  2:04:31:380PM', NULL, NULL, 'R_BankAssuranceReferrals')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Insurance Riders', NULL, '/BRERP/Bank%20Assurance/Insurance%20Riders', 900000, 1, 'Sep 15 2025  2:04:31:380PM',
+        1, 'Sep 15 2025  2:04:31:380PM', NULL, NULL, 'R_InsuranceProductRiders')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Insurance Beneficiaries', NULL, '/BRERP/Bank%20Assurance/Insurance%20Beneficiaries', 900000, 1,
+        'Sep 15 2025  2:04:31:380PM', 1, 'Sep 15 2025  2:04:31:380PM', NULL, NULL, 'R_BancassuranceBeneficiaries')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Guarantor Report', NULL, '/CRMIMARISHA/GuarantorReport', 200000, 1, 'Jul 17 2025  2:04:31:380PM', 1,
+        'Jul 17 2025  2:04:31:380PM', NULL, NULL, 'r_GuarantorNotifications')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Contracted Driver Assignments', NULL, '/BRERP/Fleet/Fleet Contracted Driver Assignments', 600000, 1,
+        'Sep 16 2025  1:20:03:927PM', 1, 'Sep 16 2025  1:20:03:927PM', NULL, NULL, 'r_FleetContractedDriverAssignments')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Driver Assignments', NULL, '/BRERP/Fleet/Fleet Driver Assignments', 600000, 1,
+        'Sep 16 2025  1:20:07:600PM', 1, 'Sep 16 2025  1:20:07:600PM', NULL, NULL, 'r_FleetDriverAssignments')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Driver License Tracking', NULL, '/BRERP/Fleet/Fleet Driver License Tracking', 600000, 1,
+        'Sep 16 2025  1:20:11:700PM', 1, 'Sep 16 2025  1:20:11:700PM', NULL, NULL, 'r_FleetDriverLicenseTracking')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Drivers', NULL, '/BRERP/Fleet/Fleet Drivers', 600000, 1, 'Sep 16 2025  1:20:14:817PM', 1,
+        'Sep 16 2025  1:20:14:817PM', NULL, NULL, 'r_FleetDriversList')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Maintenance Schedules', NULL, '/BRERP/Fleet/Fleet Maintenance Schedules', 600000, 1,
+        'Sep 16 2025  1:20:17:537PM', 1, 'Sep 16 2025  1:20:17:537PM', NULL, NULL, 'r_FleetMaintenanceSchedules')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Repair Logs', NULL, '/BRERP/Fleet/Fleet Repair Logs', 600000, 1, 'Sep 16 2025  1:20:20:810PM', 1,
+        'Sep 16 2025  1:20:20:810PM', NULL, NULL, 'r_FleetRepairLogs')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Service Alerts', NULL, '/BRERP/Fleet/Fleet Service Alerts', 600000, 1, 'Sep 16 2025  1:20:24:520PM', 1,
+        'Sep 16 2025  1:20:24:520PM', NULL, NULL, 'r_FleetServiceAlerts')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Trip Logs', NULL, '/BRERP/Fleet/Fleet Trip Logs', 600000, 1, 'Sep 16 2025  1:20:27:080PM', 1,
+        'Sep 16 2025  1:20:27:080PM', NULL, NULL, 'r_TripLogs')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Vehicle Inspection', NULL, '/BRERP/Fleet/Fleet Vehicle Inspection', 600000, 1,
+        'Sep 16 2025  1:20:27:727PM', 1, 'Sep 16 2025  1:20:27:727PM', NULL, NULL, 'r_FleetVehicleInspections')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fuel Types', NULL, '/BRERP/Fleet/Fuel Types', 600000, 1, 'Sep 16 2025  1:20:28:640PM', 1,
+        'Sep 16 2025  1:20:28:640PM', NULL, NULL, 'r_FuelTypes')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Legal Document Registries', NULL, '/BRERP/Legal/Legal Document Registry', 800000, 1,
+        'Oct  3 2025 12:33:43:203PM', 1, 'Oct  3 2025 12:33:43:203PM', NULL, NULL, ' r_legaldocumentregistry')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Stock Defect Review', NULL, '/BRERP/Inventory/Stock%20Defect%20Review', 400000, 1,
+        'Oct 22 2025 12:33:43:203PM', 1, 'Oct 22 2025 12:33:43:203PM', NULL, NULL, ' p_stockdefectreview')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Balance Sheet Statement', NULL, '/BRERP/Finance/Balance%20Sheet%20Statement', 1100000, 1,
+        'Oct 23 2025  5:06:59:000PM', 1, 'Oct 23 2025  5:06:59:000PM', NULL, NULL, NULL)
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('General Ledger Statement', NULL, '/BRERP/Finance/General%20Ledger%20Statement', 1100000, 1,
+        'Oct 23 2025  5:06:59:000PM', 1, 'Oct 23 2025  5:06:59:000PM', NULL, NULL, NULL)
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Trial Balance', NULL, '/BRERP/Finance/Trial%20Balance', 1100000, 1, 'Oct 23 2025  5:06:59:000PM', 1,
+        'Oct 23 2025  5:06:59:000PM', NULL, NULL, NULL)
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Income Statement', NULL, '/BRERP/Finance/Income%20Statement', 1100000, 1, 'Oct 23 2025  5:06:59:000PM', 1,
+        'Oct 23 2025  5:06:59:000PM', NULL, NULL, NULL)
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('SupervisorReport', NULL, '/CRM/SupervisorReportN', 200000, 1, 'Oct 27 2025  1:02:46:873PM', 1,
+        'Oct 27 2025  1:02:46:873PM', NULL, NULL, 'r_supervisorReport')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Fleet Vehicle Assignment', NULL, '/BRERP/Fleet/Fleet Vehicle Assignment', 600000, 1,
+        'Nov 18 2025  7:58:45:463AM', 1, 'Nov 18 2025  7:58:45:463AM', NULL, NULL, 'r_FleetVehicleAssignments')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Legal Case Registry', NULL, '/BRERP/Legal/Legal Case Registry', 800000, 1, 'Nov 18 2025  9:27:24:587AM', 1,
+        'Nov 18 2025  9:27:24:587AM', NULL, NULL, '[r_LegalCaseRegistry]')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Credit Invoice', NULL, '/BRERP/Finance/Credit%20Invoices', 1100000, 1, 'Nov 18 2025 12:37:44:033PM', 1,
+        'Nov 18 2025 12:37:44:033PM', NULL, NULL, 'r_CreditorInvoices')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Store Item Listing', NULL, '/BRERP/Inventory/Store%20Item%20Listing', 400000, 1, 'Nov 19 2025  6:54:41:010AM',
+        1, 'Nov 19 2025  6:54:41:010AM', NULL, NULL, 'r_StoreItemListing')
+INSERT INTO [t_reports] ([Name], [Description], [Path], [ModuleId], [CreatedBy], [CreatedOn], [ModifiedBy],
+                         [ModifiedOn], [DeletedBy], [DeletedOn], [ProcedureName])
+VALUES ('Debtors Invoice', NULL, '/BRERP/Finance/Debtors%20Invoices', 1100000, 1, 'Nov 22 2025  9:18:01:110AM', 1,
+        'Nov 22 2025  9:18:01:110AM', NULL, NULL, 'r_DebtorInvoices')

@@ -47,10 +47,8 @@
                                     {{ $policy->Status->Label() }}
                                 </span>
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
-                            <td class="text-center">
-                                <a href="{{ route('bancassurance.policies.show', $policy->Id) }}" 
+                            <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d M Y') }}</td>                           <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</td>                           <td class="text-center">
+                                <a href="{{ route('bancassurance.policies.show', $policy->Id) }}"
                                    class="btn btn-sm btn-outline-info px-3">
                                     <i class="bi bi-eye me-1"></i> View
                                 </a>
