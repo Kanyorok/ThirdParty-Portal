@@ -12,10 +12,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProcurementSubmitPlanController extends Controller
 {
-    //
     public function index()
     {
         $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
@@ -47,18 +47,31 @@ class ProcurementSubmitPlanController extends Controller
         $actor = $request->user();
 
         try {
-            DB::transaction(function () use ($plan, $actor) {
-                (new SubmitPlanService($plan))->submit($actor);
-            });
+            //let the service handle transactions
+            (new SubmitPlanService($plan))->submit($actor);
+            
+            $lock->release();
+            
+            return redirect()
+                ->route('Procurement-Plan-Submission.index')
+                ->with('success', 'Plan submitted successfully.');
+                
         } catch (ErroredException $e) {
+            $lock->release();
+            Log::error('Plan submission failed (business logic)', [
+                'planId' => $plan->PlanID,
+                'error' => $e->getMessage(),
+            ]);
             return redirect()->back()->with('error', $e->getMessage());
+            
         } catch (Exception $e) {
-            \Log::error('Error Plan submission failed: ' . $e->getMessage());
+            $lock->release();
+            Log::error('Plan submission failed (unexpected)', [
+                'planId' => $plan->PlanID,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         }
-
-        return redirect()->route('Procurement-Plan-Submission.index')->with('success', 'Plan submitted successfully.');
     }
-
-
 }

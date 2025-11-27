@@ -6,7 +6,7 @@ use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Fleet\FleetServiceAlert;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Enums\WorkflowStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

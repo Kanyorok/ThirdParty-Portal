@@ -62,10 +62,11 @@ class DebitNoteController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(){
-        $this->authorize(PermissionEnum::DebitNoteCreate, FinanceCDNotes::class);
+    public function create()
+    {
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceCDNotes::class);
 
-         $invoices = FinanceInvoice::select('Id','InvoiceNumber','InvoiceTitle','TotalAmount')->where('ApprovalStatus','posted')
+        $invoices = FinanceInvoice::select('Id', 'InvoiceNumber', 'InvoiceTitle', 'TotalAmount')->where('ApprovalStatus', 'posted')
             ->get();
 
         return view('finance.accountsreceivable.debitnote.create', compact('invoices'));
@@ -79,44 +80,44 @@ class DebitNoteController extends Controller
         $this->authorize(PermissionEnum::DebitNoteCreate, FinanceCDNotes::class);
 
         $validated = $request->validate([
-            'InvoiceRefNo'=> 'required|exists:t_FinanceInvoices,Id',
-            'NoteDate'=> 'required|date',
-            'NoteAmount'=> 'required|numeric|min:0.00',
-            'Description'=> 'required|string',
+            'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
+            'NoteDate' => 'required|date',
+            'NoteAmount' => 'required|numeric|min:0.00',
+            'Description' => 'required|string',
         ]);
 
         DB::beginTransaction();
         try {
             // $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
 
-            if ($request->NoteType =='Credit') {
+            if ($request->NoteType == 'Credit') {
                 $notes = FinanceCDNotes::create([
-                    'NoteType'=> 'credit',
+                    'NoteType' => 'credit',
                     // 'CDNumber'=>$cdNumber,
-                    'InvoiceRefNo'=> $validated['InvoiceRefNo'],
-                    'NoteDate'=> $validated['NoteDate'],
-                    'NoteAmount'=> $validated['NoteAmount'],
-                    'Description'=> $validated['Description'],
-                    'CreatedBy'          =>Auth::Id(),
-                    'ModifiedBy'         => Auth::Id(),
+                    'InvoiceRefNo' => $validated['InvoiceRefNo'],
+                    'NoteDate' => $validated['NoteDate'],
+                    'NoteAmount' => $validated['NoteAmount'],
+                    'Description' => $validated['Description'],
+                    'CreatedBy' => Auth::Id(),
+                    'ModifiedBy' => Auth::Id(),
                 ]);
             } else {
                 $notes = FinanceCDNotes::create([
-                    'NoteType'=> 'debit',
+                    'NoteType' => 'debit',
                     // 'CDNumber'=>$cdNumber,
-                    'InvoiceRefNo'=> $validated['InvoiceRefNo'],
-                    'NoteDate'=> $validated['NoteDate'],
-                    'NoteAmount'=> $validated['NoteAmount'],
-                    'Description'=> $validated['Description'],
-                    'CreatedBy'          =>Auth::Id(),
-                    'ModifiedBy'         => Auth::Id(),
+                    'InvoiceRefNo' => $validated['InvoiceRefNo'],
+                    'NoteDate' => $validated['NoteDate'],
+                    'NoteAmount' => $validated['NoteAmount'],
+                    'Description' => $validated['Description'],
+                    'CreatedBy' => Auth::Id(),
+                    'ModifiedBy' => Auth::Id(),
                 ]);
             }
             activity()
                 ->performedOn($notes)
                 ->causedBy(Auth::user())
-                ->withProperties(['action' =>'create'])
-                ->log('Created Note Sucessfully:'. $notes->id);
+                ->withProperties(['action' => 'create'])
+                ->log('Created Note Sucessfully:' . $notes->id);
             DB::commit();
             return redirect()->route('debitnote.index')->with('success', 'Debit Note created successfully.');
         } catch (\Throwable $th) {
@@ -167,7 +168,7 @@ class DebitNoteController extends Controller
         $this->authorize(PermissionEnum::DebitNoteUpdate, FinanceCDNotes::class);
 
         $validated = $request->validate([
-//            'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
+            'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
             'NoteDate'     => 'required|date',
             'NoteAmount'   => 'required|numeric|min:0.00',
             'Description'  => 'nullable|string',
@@ -176,12 +177,12 @@ class DebitNoteController extends Controller
 
         DB::beginTransaction();
         try {
-            $note=FinanceCDNotes::where('Id',$id)->update([
-//                'InvoiceRefNo'=> $validated['InvoiceRefNo'],
-                'NoteDate'    => $validated['NoteDate'],
-                'NoteAmount'  => $validated['NoteAmount'],
+            $note = FinanceCDNotes::where('Id', $id)->update([
+                'InvoiceRefNo' => $validated['InvoiceRefNo'],
+                'NoteDate' => $validated['NoteDate'],
+                'NoteAmount' => $validated['NoteAmount'],
                 'Description' => $validated['Description'],
-                'ModifiedBy'  => Auth::id(),
+                'ModifiedBy' => Auth::id(),
             ]);
 
             activity()

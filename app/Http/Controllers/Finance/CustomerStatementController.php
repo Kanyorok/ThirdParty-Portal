@@ -66,7 +66,7 @@ class CustomerStatementController extends Controller
     /**
      * Fetch and display customer statement
      */
-    public function statement($thirdPartyId, $Type)
+    public function statement($thirdPartyId)
     {
         //For ERP it will be a detailed statement
         $Type = 'Detailed';

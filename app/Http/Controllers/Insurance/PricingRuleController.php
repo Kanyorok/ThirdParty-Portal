@@ -23,59 +23,60 @@ class PricingRuleController extends Controller
 
     public function create()
     {
-      $this->authorize(PermissionEnum::InsurancePricingRuleView, InsurancePricingRule::class);
-       $providers = InsuranceProvider::all();
-       $products = InsuranceProduct::all();
-       
+        $this->authorize(PermissionEnum::InsurancePricingRuleView, InsurancePricingRule::class);
+        $providers = InsuranceProvider::all();
+        $products = InsuranceProduct::all();
 
-        return view('bancassurance.pricing.create', compact('providers','products'));
+
+        return view('bancassurance.pricing.create', compact('providers', 'products'));
     }
 
     public function store(InsurancePricingRuleRequest $request)
-{
-    $this->authorize(PermissionEnum::InsurancePricingRuleCreate, InsurancePricingRule::class);
-    $validated = $request->validated();
-
-         $InsuranceProviderId = InsuranceProvider::findOrFail($validated['InsuranceProviderId']);
-         $Product = InsuranceProduct::findOrFail($validated['Product']);
-
-         $providers = InsurancePricingRuleService::create(
-            $InsuranceProviderId,
-                $Product,
-                $validated['RuleName'],
-                $validated['CoverageAmountMax'],
-                $validated['CoverageAmountMin'],
-                $validated['PremiumRate'],
-                $validated['AgeMin'],
-                $validated['AgeMax'],
-                $validated['TenureMin'],
-                $validated['TenureMax'],
-                $validated['IsActive'],
-                Auth::user(),
-            );
-
-    return redirect()->route('bancassurance.pricing.index')->with('success', 'Pricing rule saved successfully.');
-}
-public function getProductByProvider($providerId)
-{
-    $products = InsuranceProduct::where('InsuranceProviderID', $providerId)->get();
-    return response()->json($products);
-}
-
- public function edit($Id)
     {
-       $this->authorize(PermissionEnum::InsurancePricingRuleView, InsurancePricingRule::class);
+        $this->authorize(PermissionEnum::InsurancePricingRuleCreate, InsurancePricingRule::class);
+        $validated = $request->validated();
 
-       $rule = InsurancePricingRule::findOrFail($Id);
-       $providers = InsuranceProvider::all();
-     
-        return view('bancassurance.pricing.edit', compact('rule','providers'));
+        $InsuranceProviderId = InsuranceProvider::findOrFail($validated['InsuranceProviderId']);
+        $Product = InsuranceProduct::findOrFail($validated['Product']);
+
+        $providers = InsurancePricingRuleService::create(
+            $InsuranceProviderId,
+            $Product,
+            $validated['RuleName'],
+            $validated['CoverageAmountMax'],
+            $validated['CoverageAmountMin'],
+            $validated['PremiumRate'],
+            $validated['AgeMin'],
+            $validated['AgeMax'],
+            $validated['TenureMin'],
+            $validated['TenureMax'],
+            $validated['IsActive'],
+            Auth::user(),
+        );
+
+        return redirect()->route('bancassurance.pricing.index')->with('success', 'Pricing rule saved successfully.');
+    }
+
+    public function getProductByProvider($providerId)
+    {
+        $products = InsuranceProduct::where('InsuranceProviderID', $providerId)->get();
+        return response()->json($products);
+    }
+
+    public function edit($Id)
+    {
+        $this->authorize(PermissionEnum::InsurancePricingRuleView, InsurancePricingRule::class);
+
+        $rule = InsurancePricingRule::findOrFail($Id);
+        $providers = InsuranceProvider::all();
+
+        return view('bancassurance.pricing.edit', compact('rule', 'providers'));
     }
 
     // Update product
-    public function update (InsurancePricingRuleRequest $request, $id)
+    public function update(InsurancePricingRuleRequest $request, $id)
     {
-       $this->authorize(PermissionEnum::InsurancePricingRuleUpdate, InsurancePricingRule::class);
+        $this->authorize(PermissionEnum::InsurancePricingRuleUpdate, InsurancePricingRule::class);
         $validated = $request->validated();
 
         DB::beginTransaction();
@@ -84,17 +85,17 @@ public function getProductByProvider($providerId)
             $rule = InsurancePricingRule::findOrFail($id);
 
             $rule->update([
-                'InsuranceProviderId' => $validated['InsuranceProviderId'],             
+                'InsuranceProviderId' => $validated['InsuranceProviderId'],
                 'Product' => $validated['Product'],
                 'RuleName' => $validated['RuleName'],
-                'CoverageAmountMax' => $validated['CoverageAmountMax'], 
-                'CoverageAmountMin' => $validated['CoverageAmountMin'], 
-                'PremiumRate' => $validated['PremiumRate'], 
-                'AgeMin' => $validated['AgeMin'], 
-                'AgeMax' => $validated['AgeMax'], 
-                'TenureMin' => $validated['TenureMin'], 
-                'TenureMax' => $validated['TenureMax'], 
-                'IsActive' => $validated['IsActive'], 
+                'CoverageAmountMax' => $validated['CoverageAmountMax'],
+                'CoverageAmountMin' => $validated['CoverageAmountMin'],
+                'PremiumRate' => $validated['PremiumRate'],
+                'AgeMin' => $validated['AgeMin'],
+                'AgeMax' => $validated['AgeMax'],
+                'TenureMin' => $validated['TenureMin'],
+                'TenureMax' => $validated['TenureMax'],
+                'IsActive' => $validated['IsActive'],
                 'ModifiedBy' => Auth::Id(),
             ]);
 
@@ -116,7 +117,7 @@ public function getProductByProvider($providerId)
 
     public function destroy($Id)
     {
-       $this->authorize(PermissionEnum::InsurancePricingRuleDelete, InsurancePricingRule::class);
+        $this->authorize(PermissionEnum::InsurancePricingRuleDelete, InsurancePricingRule::class);
         try {
             $rule = InsurancePricingRule::findOrFail($Id);
             $rule->delete();

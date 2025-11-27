@@ -98,6 +98,9 @@ trait ReportsTrait
         } catch (ErroredException $e) {
             return redirect()->back()->with('fail', $e->getMessage() ?? 'cannot retrieve report data.');
         } catch (Throwable|Exception $e) {
+            if ($e->getCode() === 404) {
+                return redirect()->back()->with('fail', 'report not found.');
+            }
             return redirect()->back()->with('fail', 'cannot retrieve report data.');
         }
 

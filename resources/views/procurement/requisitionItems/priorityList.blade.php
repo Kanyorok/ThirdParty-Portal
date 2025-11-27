@@ -14,8 +14,8 @@
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-body">
-              <table id="campaignTable"
-                  class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                    <table id="campaignTable"
+                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                         <thead>
 
                         <tr>
@@ -79,7 +79,8 @@
                                 <td>{{ $item->MediumCount }}</td>
                                 <td>{{ $item->LowCount }}</td>
                                 <td>{{ $item->Score }}</td>
-                                <td><a href="{{ route('requisition.show', $item->Id) }}" class="btn btn-sm btn-primary">View</a></td>
+                                <td><a href="{{ route('requisition.show', $item->Id) }}" class="btn btn-sm btn-primary">View</a>
+                                </td>
                             </tr>
                         @empty
                             <tr>

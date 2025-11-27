@@ -279,7 +279,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     //Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
 
     //////// Posting Routes ///////////
-    Route::post('/journalApproval/{id}',[\App\Http\Controllers\Finance\PostingController::class,'journalApproval'])->name('journalApproval');
+    Route::post('/journalApproval/{id}', [\App\Http\Controllers\Finance\PostingController::class, 'journalApproval'])->name('journalApproval');
     Route::post('/finance/ap/invoices/{id}/approve', [InvoiceEntryController::class, 'approve'])->name('ap.invoice.approve');
     Route::post('/finance/ap/invoices/{id}/reject', [InvoiceEntryController::class, 'reject'])->name('ap.invoice.reject');
 
@@ -293,10 +293,10 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
 
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
-        Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-            'index' => 'finance-reports.index',
-            'show' => 'finance-reports.show'
-        ]);
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'finance-reports.index',
+        'show' => 'finance-reports.show'
+    ]);
 });
 
 // Receipts Posting routes

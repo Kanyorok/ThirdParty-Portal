@@ -21,17 +21,17 @@ class BancassuranceClaimClosurePolicy
         return $user->can(PermissionEnum::InsuranceClaimClosureCreate->value);
     }
 
-    public function view(User $user,  BancassuranceClaimClosure $bancassuranceclaimclosure): bool
+    public function view(User $user, BancassuranceClaimClosure $bancassuranceclaimclosure): bool
     {
         return $user->can(PermissionEnum::InsuranceClaimClosureView->value);
     }
 
-    public function update(User $user,  BancassuranceClaimClosure $bancassuranceclaimclosure): bool
+    public function update(User $user, BancassuranceClaimClosure $bancassuranceclaimclosure): bool
     {
         return $user->can(PermissionEnum::InsuranceClaimClosureUpdate->value);
     }
 
-    public function destroy(User $user,  BancassuranceClaimClosure $bancassuranceclaimclosure): bool
+    public function destroy(User $user, BancassuranceClaimClosure $bancassuranceclaimclosure): bool
     {
         return $user->can(PermissionEnum::InsuranceClaimClosureDelete->value);
     }

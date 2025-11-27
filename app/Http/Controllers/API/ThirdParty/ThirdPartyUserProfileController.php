@@ -36,7 +36,7 @@ class ThirdPartyUserProfileController extends Controller
     /**
      * Update the authenticated user's profile and associated ThirdParty record.
      *
-     * @param  ThirdPartyAuthUpdateThirdPartyUserProfileRequest $request
+     * @param ThirdPartyAuthUpdateThirdPartyUserProfileRequest $request
      * @return JsonResponse
      */
     public function update(ThirdPartyAuthUpdateThirdPartyUserProfileRequest $request): JsonResponse
@@ -99,7 +99,7 @@ class ThirdPartyUserProfileController extends Controller
     /**
      * Perform a partial update on the authenticated user's profile and associated ThirdParty record.
      *
-     * @param  Request $request
+     * @param Request $request
      * @return JsonResponse
      */
     public function partialUpdate(Request $request): JsonResponse
@@ -205,7 +205,7 @@ class ThirdPartyUserProfileController extends Controller
     /**
      * Change the authenticated user's password.
      *
-     * @param  Request $request
+     * @param Request $request
      * @return JsonResponse
      */
     public function changePassword(Request $request): JsonResponse
@@ -246,7 +246,7 @@ class ThirdPartyUserProfileController extends Controller
     /**
      * Delete the authenticated user's profile.
      *
-     * @param  Request $request
+     * @param Request $request
      * @return JsonResponse
      */
     public function destroy(Request $request): JsonResponse

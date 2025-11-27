@@ -30,7 +30,7 @@ class FinanceCDNotes extends Model
         'ModifiedBy',
     ];
 
-    public static function getPrimaryKey() : string
+    public static function getPrimaryKey(): string
     {
         return 'FinanceCDNotesId';
     }
@@ -38,7 +38,7 @@ class FinanceCDNotes extends Model
     public function invoice()
     {
         return $this->belongsTo(FinanceInvoiceEntry::class, 'InvoiceRefNo', 'Id')
-                        ->where('ApprovalStatus', 'posted');
+            ->where('ApprovalStatus', 'posted');
     }
 
     public function invoiceDebit()
@@ -56,6 +56,7 @@ class FinanceCDNotes extends Model
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
+
     protected static function booted()
     {
         static::creating(function ($note) {
@@ -71,5 +72,4 @@ class FinanceCDNotes extends Model
             $note->CDNumber = sprintf('%s-%06d-%s', $year, $count, $uniquePart);
         });
     }
-
 }

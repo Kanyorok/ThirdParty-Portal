@@ -24,9 +24,15 @@ class ItemMasterListSeeder extends Seeder
             throw new \Exception("Active status not found in t_CodeDetails. Please seed it first.");
         }
 
-        // Foreign keys
-        $itemTypeId = DB::table('t_ItemTypes')->where('TypeName', 'Stock')->value('Id');
-        $inventoryTypeId = DB::table('t_InventoryTypes')->where('Type', 'Consumable')->value('Id');
+    $itemTypeId = DB::table('t_CodeDetails')
+    ->where('CodeID', 'ItemTypeStatus')
+    ->where('Description', 'Stock')
+    ->value('ID');
+
+    $inventoryTypeId = DB::table('t_CodeDetails')
+        ->where('CodeID', 'InventoryTypeStatus')
+        ->where('Description', 'Durable')
+        ->value('ID');
 
         // Preload categories and UOMs
         $categories = ItemCategories::with('parent')->whereNotNull('ParentId')->get();

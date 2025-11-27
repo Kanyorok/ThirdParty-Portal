@@ -13,34 +13,35 @@ use Illuminate\Support\Carbon;
 
 class ClaimClosureController extends Controller
 {
-public function closedClaimsIndex()
-{
-    $closedClaims = BancassuranceClaimClosure::all();
-    return view('bancassurance.claims.closed_claims_index', compact('closedClaims'));
-}
-public function initiateClosureForm()
-{
-    $claims = BancassuranceClaimPayment::all();
-    $status = InsuranceClosureEnum::cases();
+    public function closedClaimsIndex()
+    {
+        $closedClaims = BancassuranceClaimClosure::all();
+        return view('bancassurance.claims.closed_claims_index', compact('closedClaims'));
+    }
 
-    return view('bancassurance.claims.initiate_closure_form', compact('claims','status'));
-}
+    public function initiateClosureForm()
+    {
+        $claims = BancassuranceClaimPayment::all();
+        $status = InsuranceClosureEnum::cases();
 
-public function storeClosureFromList(BancassuranceClaimClosureRequest $request)
-{
-    $validated = $request->validated();
-    $ClaimId = BancassuranceClaim::findOrFail($validated['ClaimId']);
-    $FinalStatus = InsuranceClosureEnum::from($validated['FinalStatus']);
+        return view('bancassurance.claims.initiate_closure_form', compact('claims', 'status'));
+    }
 
-    $closedClaims = BancassuranceClaimClosureService::create(
-        $ClaimId,
-        $FinalStatus,
-        $validated['FinalRemarks'],
-        Carbon::parse($validated['ClosureDate']),
-        $request->user(),
-    );
+    public function storeClosureFromList(BancassuranceClaimClosureRequest $request)
+    {
+        $validated = $request->validated();
+        $ClaimId = BancassuranceClaim::findOrFail($validated['ClaimId']);
+        $FinalStatus = InsuranceClosureEnum::from($validated['FinalStatus']);
 
-    return redirect()->route('bancassurance.claims.closed')->with('success', 'Claim successfully closed.');
-}
+        $closedClaims = BancassuranceClaimClosureService::create(
+            $ClaimId,
+            $FinalStatus,
+            $validated['FinalRemarks'],
+            Carbon::parse($validated['ClosureDate']),
+            $request->user(),
+        );
+
+        return redirect()->route('bancassurance.claims.closed')->with('success', 'Claim successfully closed.');
+    }
 
 }

@@ -2,7 +2,7 @@
 @section('title', 'Rent Collection Dashboard')
 @section('content')
 <div class="container mt-4">
-<p><small>The information below is an overview of lease financial transactions (Invoice and Payments)</small></p>
+    <p><small>The information below is an overview of lease financial transactions (Invoice and Payments)</small></p>
 
     <!-- Summary Cards -->
     <div class="row mb-4">

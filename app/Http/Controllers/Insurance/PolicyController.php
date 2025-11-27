@@ -10,7 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassurancePolicyRequest;
 use App\Http\Requests\Insurance\BancassuranceUnderwritingRequest;
 use App\Http\Requests\Insurance\PolicyRenewalRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancassurancePremiumPayments;

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Auth\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\HRM\Employee;
 
 
@@ -69,7 +69,7 @@ class FleetTripLog extends Model
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
     }
 
-   
+
     public function parentTripType()
     {
         return $this->belongsTo(CodeDetail::class, 'TripType', 'ID');
@@ -100,9 +100,8 @@ class FleetTripLog extends Model
         return $this->belongsTo(User::class, 'CreatedBy');
     }
 
-   public function employee()
-        {
-            return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
-        }
-
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
+    }
 }

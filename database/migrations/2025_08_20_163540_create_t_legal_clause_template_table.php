@@ -28,14 +28,14 @@ return new class extends Migration {
             $table->longText('ContentOverride')->nullable();
 
             // Audit
-            $table->foreignId('CreatedBy')->nullable()->constrained('t_Users','Id');
+            $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn')->useCurrent();
-            $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users','Id');
+            $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn')->nullable();
 
             // Constraints & indexes
-            $table->unique(['TemplateID','ClauseID'], 'uq_Template_Clause');
-            $table->index(['TemplateID','Position'], 'idx_Template_Position');
+            $table->unique(['TemplateID', 'ClauseID'], 'uq_Template_Clause');
+            $table->index(['TemplateID', 'Position'], 'idx_Template_Position');
         });
     }
 

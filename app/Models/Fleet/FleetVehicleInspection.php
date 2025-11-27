@@ -4,20 +4,22 @@ namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FuelType;
 use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\ContractedDriver;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
+use App\Traits\Model\DocumentsTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\CodeDetail;
-use App\Traits\Model\DocumentsTrait;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\FuelType;
 use App\Models\HRM\Employee;
 
 class FleetVehicleInspection extends Model
 {
-    use UserActorTrait, SoftDeletes,DocumentsTrait;
+    use UserActorTrait, SoftDeletes, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -28,13 +30,10 @@ class FleetVehicleInspection extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'InspectionID', 'ParentInspectionID', 'InspectionTypeID', 'VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil', 'Fuel', 'Coolant', 'Reflector', 'FireExtinguisher', 'FirstAidKit', 'SpareTyre', 'Spanner', 'Jack', '4XFloorMats',
-        'CreatedBy',
-        'CreatedOn',
-        'ModifiedBy',
-        'ModifiedOn',
-        'DeletedBy',
-        'DeletedOn',
+        'InspectionID', 'ParentInspectionID', 'InspectionTypeID', 'VehicleID', 'FuelType', 'DriverID', 'ContractedDriverID',
+        'InspectionDate', 'Mileage', 'EngineOil', 'Fuel', 'Coolant', 'Reflector', 'FireExtinguisher', 'FirstAidKit',
+        'SpareTyre', 'Spanner', 'Jack', '4XFloorMats',
+        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn',
     ];
 
     public static function getPrimaryKey(): string
@@ -57,7 +56,12 @@ class FleetVehicleInspection extends Model
         return $this->belongsTo(FleetVehicleInspection::class, 'ParentInspectionID');
     }
 
-    public function fuel()
+    public function fuelType()
+    {
+        return $this->belongsTo(FuelType::class, 'FuelType', 'Id');
+    }
+
+    public function fuel()      
     {
         return $this->belongsTo(CodeDetail::class, 'Fuel', 'ID');
     }
@@ -72,9 +76,20 @@ class FleetVehicleInspection extends Model
         return $this->belongsTo(CodeDetail::class, 'Coolant', 'ID');
     }
 
+    /**
+     * Regular fleet driver
+     */
     public function driver()
     {
         return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
+    }
+
+    /**
+     * Contracted driver
+     */
+    public function contractedDriver()
+    {
+        return $this->belongsTo(ContractedDriver::class, 'ContractedDriverID', 'Id');
     }
 
     public function inspectionType()
@@ -82,5 +97,11 @@ class FleetVehicleInspection extends Model
         return $this->belongsTo(CodeDetail::class, 'InspectionTypeID', 'ID');
     }
 
-
+    /**
+     * Helper to get the assigned driver (regular or contracted)
+     */
+    public function assignedDriver()
+    {
+        return $this->driver ?? $this->contractedDriver;
+    }
 }

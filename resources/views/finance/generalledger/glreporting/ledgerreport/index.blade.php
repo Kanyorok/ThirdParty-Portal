@@ -7,31 +7,100 @@
     }
 
     /* ---------- Cards & Layout ---------- */
-    .gl-card { border-radius: .85rem; box-shadow: 0 8px 22px rgba(0,0,0,.06); border: 1px solid rgba(0,0,0,.06); }
-    .gl-chip { display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .65rem; border-radius:.75rem; background:#f6f9ff; border:1px solid #e6edff; font-weight:600; }
-    .gl-label { font-size:.78rem; color:#6c757d; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
-    .toolbar .btn { border-radius:.65rem; }
-    .balance-chip { padding:.25rem .55rem; border-radius:.5rem; background:#eef5ff; font-variant-numeric: tabular-nums; }
-    .ref-jv { font-weight:700; text-decoration:none; }
-    .ref-jv:hover { text-decoration:underline; }
+    .gl-card {
+        border-radius: .85rem;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .06);
+        border: 1px solid rgba(0, 0, 0, .06);
+    }
+
+    .gl-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .35rem .65rem;
+        border-radius: .75rem;
+        background: #f6f9ff;
+        border: 1px solid #e6edff;
+        font-weight: 600;
+    }
+
+    .gl-label {
+        font-size: .78rem;
+        color: #6c757d;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+    }
+
+    .toolbar .btn {
+        border-radius: .65rem;
+    }
+
+    .balance-chip {
+        padding: .25rem .55rem;
+        border-radius: .5rem;
+        background: #eef5ff;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ref-jv {
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .ref-jv:hover {
+        text-decoration: underline;
+    }
 
     /* ---------- Table ---------- */
-    .table-ledger thead th { position: sticky; top: 0; z-index: 2; background:#f8fafc; border-bottom:2px solid #e9ecef; }
-    .table-ledger tbody tr:hover { background:#f7f9ff; }
+    .table-ledger thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #f8fafc;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .table-ledger tbody tr:hover {
+        background: #f7f9ff;
+    }
 
     /* ---------- Print Rules ---------- */
     @media print {
-        @page { size: A4 portrait; margin: 8mm; }
-        html, body { width: 210mm; height: 297mm; }
-        .container, .container * { max-width: 100% !important; }
-        .no-print, .no-print * { display: none !important; }
-        .card, .gl-card { box-shadow: none !important; border: none !important; }
+        @page {
+            size: A4 portrait;
+            margin: 8mm;
+        }
+
+        html, body {
+            width: 210mm;
+            height: 297mm;
+        }
+
+        .container, .container * {
+            max-width: 100% !important;
+        }
+
+        .no-print, .no-print * {
+            display: none !important;
+        }
+
+        .card, .gl-card {
+            box-shadow: none !important;
+            border: none !important;
+        }
+
         /* Hide columns not needed in print */
         th.col-date, td.col-date,
         th.col-desc, td.col-desc,
         th.col-branch, td.col-branch,
-        th.col-dept, td.col-dept { display: none !important; }
-        th, td { font-size: 11pt; }
+        th.col-dept, td.col-dept {
+            display: none !important;
+        }
+
+        th, td {
+            font-size: 11pt;
+        }
     }
 </style>
 
@@ -61,11 +130,13 @@
                         <div class="row g-3 align-items-end">
                             <div class="col-md-3">
                                 <label class="form-label gl-label">From Date</label>
-                                <input type="date" name="FromDate" value="{{ old('FromDate', request('FromDate')) }}" class="form-control rounded-3" required>
+                                <input type="date" name="FromDate" value="{{ old('FromDate', request('FromDate')) }}"
+                                       class="form-control rounded-3" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label gl-label">To Date</label>
-                                <input type="date" name="ToDate" value="{{ old('ToDate', request('ToDate')) }}" class="form-control rounded-3" required>
+                                <input type="date" name="ToDate" value="{{ old('ToDate', request('ToDate')) }}"
+                                       class="form-control rounded-3" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label gl-label">GL Account</label>
@@ -163,45 +234,47 @@
                         <tbody>
                         {{-- Dummy Row 1 --}}
                         @if($reports->count())
-                        @foreach ($reports as $report)
-                            <tr>
-                                <td class="col-date">{{ $report->TransactionDate  ?? '-'}}</td>
-                                <td>
-                                    <a href="#" class="ref-jv">{{ $report->ReferenceNumber ?? '-'}}</a>
-                                </td>
-                                <td class="col-desc text-truncate" style="max-width:480px;" title="Cash received from customer">
-                                    {{$report->SystemDescription ?? '-'}}
-                                </td>
-                                <td class="col-branch">{{$report->BranchID ?? '-'}}</td>
-                                <td class="col-dept">{{$report->DepartmentID ?? '-'}}</td>
-                                @if($report['DRCR'] === 'DR')
-                                    <td class="text-end">{{ number_format($report->Amount, 2) }}</td>
+                            @foreach ($reports as $report)
+                                <tr>
+                                    <td class="col-date">{{ $report->TransactionDate  ?? '-'}}</td>
+                                    <td>
+                                        <a href="#" class="ref-jv">{{ $report->ReferenceNumber ?? '-'}}</a>
+                                    </td>
+                                    <td class="col-desc text-truncate" style="max-width:480px;"
+                                        title="Cash received from customer">
+                                        {{$report->SystemDescription ?? '-'}}
+                                    </td>
+                                    <td class="col-branch">{{$report->BranchID ?? '-'}}</td>
+                                    <td class="col-dept">{{$report->DepartmentID ?? '-'}}</td>
+                                    @if($report['DRCR'] === 'DR')
+                                        <td class="text-end">{{ number_format($report->Amount, 2) }}</td>
                                     @else
-                                    <td class="text-end">{{ number_format(0, 2) }}</td>
-                                @endif
+                                        <td class="text-end">{{ number_format(0, 2) }}</td>
+                                    @endif
 
-                                @if($report['DRCR'] === 'CR')
-                                    <td class="text-end">{{ number_format($report->Amount, 2) }}</td>
+                                    @if($report['DRCR'] === 'CR')
+                                        <td class="text-end">{{ number_format($report->Amount, 2) }}</td>
                                     @else
-                                    <td class="text-end">{{ number_format(0, 2) }}</td>
-                                @endif
-                                
-                                <td class="text-end"><span class="balance-chip">{{ number_format(0, 2) }}</span></td>
-                            </tr>
-                        @endforeach
+                                        <td class="text-end">{{ number_format(0, 2) }}</td>
+                                    @endif
+
+                                    <td class="text-end"><span class="balance-chip">{{ number_format(0, 2) }}</span>
+                                    </td>
+                                </tr>
+                            @endforeach
                         @else
-                        <tr>
-                            <td colspan="8" class="text-muted">
-                                <div class="text-center p-4 border rounded-3 bg-light">
-                                    <p class="mb-3 text-muted fs-5">
-                                        <i class="fas fa-info-circle me-2 text-info"></i>
-                                        <i>No transactions found for the selected criteria.</i>
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                        @endif
-                        </tfoot>
+                            <tr>
+                                <td colspan="8" class="text-muted">
+                                    <div class="text-center p-4 border rounded-3 bg-light">
+                                        <p class="mb-3 text-muted fs-5">
+                                            <i class="fas fa-info-circle me-2 text-info"></i>
+                                            <i>No transactions found for the selected criteria.</i>
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endif
+                            </tfoot>
                     </table>
                 </div>
 
@@ -213,4 +286,3 @@
         </div>
     </div>
 @endsection
- 

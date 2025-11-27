@@ -10,7 +10,7 @@ class BancassuranceClaimPolicy
     /**
      * Create a new policy instance.
      */
-        public function viewAny(User $user): bool
+    public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::BancassuranceClaimView->value);
     }
@@ -20,7 +20,7 @@ class BancassuranceClaimPolicy
         return $user->can(PermissionEnum::BancassuranceClaimCreate->value);
     }
 
-    public function view(User $user, BancassuranceClaimPolicy $bancassuranceclaimpolicy ): bool
+    public function view(User $user, BancassuranceClaimPolicy $bancassuranceclaimpolicy): bool
     {
         return $user->can(PermissionEnum::BancassuranceClaimView->value);
     }

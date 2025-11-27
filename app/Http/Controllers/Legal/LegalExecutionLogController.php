@@ -45,7 +45,7 @@ class LegalExecutionLogController extends Controller
         ]);
 
         return redirect()->route('legal.documents.execution_logs.index', $documentId)
-                         ->with('success', 'Execution Log added successfully.');
+            ->with('success', 'Execution Log added successfully.');
     }
 
     public function show($documentId, $id)
@@ -84,7 +84,7 @@ class LegalExecutionLogController extends Controller
         ]);
 
         return redirect()->route('legal.documents.execution_logs.index', $documentId)
-                         ->with('success', 'Execution Log updated successfully.');
+            ->with('success', 'Execution Log updated successfully.');
     }
 
     public function destroy($documentId, $id)
@@ -97,6 +97,6 @@ class LegalExecutionLogController extends Controller
         ]);
 
         return redirect()->route('legal.documents.execution_logs.index', $documentId)
-                         ->with('success', 'Execution Log archived.');
+            ->with('success', 'Execution Log archived.');
     }
 }

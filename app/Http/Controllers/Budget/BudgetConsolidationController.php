@@ -19,7 +19,7 @@ use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
 use App\Models\Budget\BudgetProjectionData;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Shuchkin\SimpleXLSXGen;
@@ -55,8 +55,8 @@ class BudgetConsolidationController extends Controller
                     /////////////////////////// Fetching the Activities assoc with the Budget //////////////////////////////////////////
                     $budgetActivities = $budget->activities()->whereHas('budgetLine', function ($query) use ($type) {
                         $query->where('GLAccountTypeID', $type->Value);
-                    })->with('budgetLine:Id,LineName,GLAccountSubTypeID','activity:Id,ActivityName')
-                        ->select('Id', 'Description', 'BudgetLineID', 'BranchID', 'AllocationType', 'FullAllocation','ActivityID')
+                    })->with('budgetLine:Id,LineName,GLAccountSubTypeID', 'activity:Id,ActivityName')
+                        ->select('Id', 'Description', 'BudgetLineID', 'BranchID', 'AllocationType', 'FullAllocation', 'ActivityID')
                         ->get();
 
                     //return $budgetActivities;
@@ -116,7 +116,7 @@ class BudgetConsolidationController extends Controller
                         $budgetLine = BudgetLine::find($entry->BudgetLineID);
                         if ($budgetLine) {
                             //$glAccountSubType = BudgetGLAccountSubType::find($budgetLine->glSubType)->GLAccountSubTypeName ?? 'Entry By Line';
-                            $glAccountSubType= $budgetLine->glSubType->Description;
+                            $glAccountSubType = $budgetLine->glSubType->Description;
                             $budgetLineName = $budgetLine->LineName ?? 'N/A';
                             //fetch allocations
                             $allocationValues = [];

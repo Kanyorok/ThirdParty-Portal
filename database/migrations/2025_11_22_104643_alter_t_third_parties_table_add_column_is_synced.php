@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_FinanceGLAccounts', function (Blueprint $table) {
+        Schema::table('t_ThirdParties', function (Blueprint $table) {
             $table->boolean('IsSynced')->default(false);
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('t_FinanceGLAccounts', function (Blueprint $table) {
+        Schema::table('t_ThirdParties', function (Blueprint $table) {
             $table->dropColumn('IsSynced');
         });
     }

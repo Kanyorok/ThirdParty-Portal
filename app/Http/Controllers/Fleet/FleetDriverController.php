@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Fleet\FleetDriverAssignment;
 use App\Models\Fleet\FleetDriverLicenseTracking;
 use App\Services\FleetManagement\FleetDriverService;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Http\Requests\FleetManagement\FleetDriverRequest;
 use App\Models\HRM\Employee;
 use App\Services\DMS\DocumentService;
@@ -128,39 +128,55 @@ class FleetDriverController extends Controller
     }
 
 
-   public function show($Id)
-    {
-        $this->authorize('view', FleetDriver::class);
+  public function show($Id)
+{
+    $this->authorize('view', FleetDriver::class);
 
-        $driver = FleetDriver::with([
-            'assignments.vehicle',
-            'trips' 
-        ])->findOrFail($Id);
+    $driver = FleetDriver::with([
+        'assignments.vehicle',
+        'trips'
+    ])->findOrFail($Id);
 
-        $licenses = \App\Models\Fleet\FleetDriverLicenseTracking::where('DriverID', $Id)->get();
+    $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
 
-        $assignments = $driver->assignments()
-            ->with('vehicle')
-            ->orderByDesc('AssignmentDate')
-            ->get();
+    $assignments = $driver->assignments()
+        ->with('vehicle')
+        ->orderByDesc('AssignmentDate')
+        ->get();
 
-        $activeStatusId = \App\Models\Core\CodeDetail::where('CodeID', 'VehicleStatus')
-            ->where('Description', 'Active')
-            ->value('Id');
+    $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+        ->where('Description', 'Active')
+        ->value('Id');
 
-        $vehicles = \App\Models\Fleet\FleetVehicle::where('Status', $activeStatusId)->get();
+    // Vehicles already assigned to contracted drivers
+    $assignedToContracted = \App\Models\Fleet\FleetContractedDriverAssignment::whereNull('DeletedOn')
+        ->pluck('VehicleID')
+        ->toArray();
 
-        $assigners = \App\Models\HRM\Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-            ->pluck('name', 'Id');
+    // Vehicles already assigned to fleet drivers
+    $assignedToFleet = FleetDriverAssignment::whereNull('DeletedOn')
+        ->pluck('VehicleID')
+        ->toArray();
 
-        return view('fleet.drivers.show', compact(
-            'driver',
-            'licenses',
-            'assignments',
-            'vehicles',
-            'assigners'
-        ));
-    }
+    $assignedIds = array_unique(array_merge($assignedToContracted, $assignedToFleet));
+
+    // Only active + unassigned vehicles
+    $vehicles = FleetVehicle::where('Status', $activeStatusId)
+        ->whereNotIn('Id', $assignedIds)
+        ->get();
+
+    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+        ->pluck('name', 'Id');
+
+    return view('fleet.drivers.show', compact(
+        'driver',
+        'licenses',
+        'assignments',
+        'vehicles',
+        'assigners'
+    ));
+}
+
 
 
 

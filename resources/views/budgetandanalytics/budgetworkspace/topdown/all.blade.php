@@ -36,9 +36,10 @@
                         <option selected disabled>-- Select Budget --</option>
                         @foreach ($budgets as $item)
                             <option
-                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }} :
+                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }}
+                                :
                                 {{ Carbon::parse($item->From)->format('Y-m-d') }}
-                                to  {{ Carbon::parse($item->To)->format('Y-m-d') }} </option>
+                                to {{ Carbon::parse($item->To)->format('Y-m-d') }} </option>
                         @endforeach
                     </select>
                 </div>

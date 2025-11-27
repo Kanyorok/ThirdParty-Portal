@@ -3,7 +3,7 @@
 namespace App\Models\PropertyManagement;
 
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -65,6 +65,7 @@ class PropertyMaintenanceRequest extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Priority', 'ID');
     }
+
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');

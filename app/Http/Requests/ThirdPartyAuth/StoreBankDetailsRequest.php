@@ -17,7 +17,7 @@ class StoreBankDetailsRequest extends FormRequest
 
         $thirdPartyId = $this->input('ThirdPartyId');
 
-        return $user->thirdParty && $user->thirdParty->Id === (int) $thirdPartyId;
+        return $user->thirdParty && $user->thirdParty->Id === (int)$thirdPartyId;
     }
 
     public function rules(): array

@@ -12,7 +12,7 @@ enum InsurancePolicyStatus: string
 
     case SubmittedForUnderwriting = 'S';
 
-    case AwaitingIssuance  = 'A';
+    case AwaitingIssuance = 'A';
     case Issued = 'I';
 
     case  Rejected = 'R';

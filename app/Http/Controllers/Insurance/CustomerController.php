@@ -10,7 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\BancassuranceCustomer;
 
@@ -73,7 +73,7 @@ class CustomerController extends Controller
     public function check()
     {
         //check
-       $customers = BancassuranceCustomer::all();
+        $customers = BancassuranceCustomer::all();
 
         return view('bancassurance.customers.check', compact('customers'));
     }

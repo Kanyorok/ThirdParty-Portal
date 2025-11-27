@@ -20,7 +20,8 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('legal.documents.update', $doc->Id) }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('legal.documents.update', $doc->Id) }}"
+                      enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 

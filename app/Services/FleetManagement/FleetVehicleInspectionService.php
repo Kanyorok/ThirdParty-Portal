@@ -8,11 +8,11 @@ use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\ModulesEnum;
 use Illuminate\Http\UploadedFile;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
-use App\Models\Fleet\FleetVehicleAssignment; // <-- added
+use App\Models\Fleet\FleetVehicleAssignment; 
 
 class FleetVehicleInspectionService
 {
@@ -53,7 +53,8 @@ class FleetVehicleInspectionService
                 'InspectionTypeID'   => $data['InspectionTypeID'],
                 'VehicleID'          => $data['VehicleID'],
                 'FuelType'           => $data['FuelType'],
-                'DriverID'           => $data['DriverID'],
+                'DriverID'           => $data['DriverID'] ?? null, // Make sure to include both
+                'ContractedDriverID' => $data['ContractedDriverID'] ?? null, // ← THIS WAS MISSING
                 'InspectionDate'     => $data['InspectionDate'] ?? null,
                 'Mileage'            => $data['Mileage'] ?? null,
                 'Fuel'               => $data['Fuel'] ?? null,
@@ -290,4 +291,3 @@ class FleetVehicleInspectionService
         });
     }
 }
-

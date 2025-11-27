@@ -6,7 +6,7 @@ use App\Models\Auth\User;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 
 class BancassuranceCustomersBeneficiariesService

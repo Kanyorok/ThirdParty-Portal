@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('t_BancassuranceClaimClosures', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('ClaimId')->constrained('t_BancassuranceClaims','Id');
+            $table->foreignId('ClaimId')->constrained('t_BancassuranceClaims', 'Id');
             $table->string('FinalStatus');
             $table->string('FinalRemarks');
             $table->date('ClosureDate');

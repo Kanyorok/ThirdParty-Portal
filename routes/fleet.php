@@ -223,6 +223,7 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
 
 
 
+
     // ==================== Vehicle Inspections====================
     Route::get('/vehicle_inspection', [FleetVehicleInspectionController::class, 'index'])->name('fleet.vehicle_inspection.index');
     Route::get('/vehicle_inspection/create', [FleetVehicleInspectionController::class, 'create'])->name('fleet.vehicle_inspection.create');

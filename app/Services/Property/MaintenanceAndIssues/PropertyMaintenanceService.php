@@ -5,7 +5,7 @@ namespace App\Services\Property\MaintenanceAndIssues;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
@@ -74,9 +74,9 @@ class PropertyMaintenanceService
     public static function update(
         PropertyMaintenanceRequest $maintenancerequest,
         PropertyRegistry $Property = null,
-        PropertyBlock $Block  = null,
-        PropertyFloor $Floor  = null,
-        PropertyUnit $Unit  = null,
+        PropertyBlock    $Block = null,
+        PropertyFloor    $Floor = null,
+        PropertyUnit     $Unit = null,
         string $ReportedBy,
         CodeDetail $IssueType,
         CodeDetail $Priority,

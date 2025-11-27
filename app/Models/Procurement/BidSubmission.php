@@ -3,7 +3,7 @@
 namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\DMS\Document;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;

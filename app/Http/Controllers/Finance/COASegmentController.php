@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
@@ -246,7 +246,7 @@ class COASegmentController extends Controller
     public function insertGLCodes(): void
     {
         // Pull segment order once (order by something deterministic)
-        $segments = SegmentOrder::select('Id','SegmentType','Description')
+        $segments = SegmentOrder::select('Id', 'SegmentType', 'Description')
             ->orderBy('Id')
             ->get();
 
@@ -264,13 +264,13 @@ class COASegmentController extends Controller
                     } else {
                         // Use the segment name as a column on FinanceGLAccounts
                         $column = $segment->SegmentType;             // e.g. 'BranchCode', 'Major', etc.
-                        $value  = data_get($glAccount, $column, ''); // safe accessor
-                        $parts[] = (string) $value;
+                        $value = data_get($glAccount, $column, ''); // safe accessor
+                        $parts[] = (string)$value;
                     }
                 }
 
                 // Join with dashes; drop empty parts
-                $parts = array_values(array_filter($parts, fn ($v) => $v !== null && $v !== ''));
+                $parts = array_values(array_filter($parts, fn($v) => $v !== null && $v !== ''));
                 $glCode = implode('-', $parts);
 
                 // Save the final GL code

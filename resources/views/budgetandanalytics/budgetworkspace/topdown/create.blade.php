@@ -154,10 +154,10 @@
                         <div class="border rounded p-2 bg-info text-white">
                             <span class="fw-bold">Variance:</span> <span id="variance" class="fw-bold">0</span>
                         </div>
-{{--                        <div class="border rounded p-2 bg-warning">--}}
-{{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
-{{--                                                                           class="fw-bold">0.00%</span>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="border rounded p-2 bg-warning">--}}
+                        {{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
+                        {{--                                                                           class="fw-bold">0.00%</span>--}}
+                        {{--                        </div>--}}
                     </div>
                 </div>
             </div>

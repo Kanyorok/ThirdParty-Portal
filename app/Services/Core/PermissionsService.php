@@ -223,4 +223,29 @@ abstract class PermissionsService
         );
         return $destination;
     }
+
+    //dynammically add workflowStage permission
+public static function createWorkflowStagePermission(int $stageId, string $stageName, string $workflowSource, int $createdBy = 1)
+{
+    // Optional: fetch module ID if your permissions are linked to modules
+    $moduleId = DB::table('t_ModuleSources')
+        ->where('DocumentType', $workflowSource)
+        ->value('ModuleID');
+
+    // Permission name can be standardized
+    $permissionName = 'workflow_stage_' . $stageId;
+
+    // Insert or update permission
+    DB::table('t_Permissions')->updateOrInsert(
+        ['PermissionName' => $permissionName],
+        [
+            'DisplayName' => $stageName,
+            'ModuleID' => $moduleId,
+            'CreatedBy' => $createdBy,
+            'CreatedOn' => now(),
+        ]
+    );
+
+    return $permissionName;
+}
 }

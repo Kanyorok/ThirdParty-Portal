@@ -2,7 +2,7 @@
 
 namespace App\Models\ThirdParies;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\CRM\CompetitorProduct;

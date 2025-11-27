@@ -12,7 +12,7 @@ use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\PriceManagement;
 use App\Traits\Model\DocumentsTrait;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class ItemMasterList extends Model
 {

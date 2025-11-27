@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\FleetManagement;
 
 use App\Http\Controllers\Controller;
-use App\Models\FleetManagement\FleetMake; 
+use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
 use App\Policies\FleetManagement\FleetModelPolicy;
 use App\Http\Requests\FleetManagement\FleetModelRequest;
@@ -34,7 +34,7 @@ class FleetModelController extends Controller
     public function create()
     {
         $this->authorize('create', FleetModel::class);
-        
+
         $brands = FleetMake::all();
 
         return view('fleetmanagement.fleetmodel.create', compact('brands'));
@@ -63,43 +63,43 @@ class FleetModelController extends Controller
 
 
     public function show($id)
-        {
-            $this->authorize('view', FleetModel::class);
-            $fleetModel = FleetModel::findOrFail($id);
-            $brands = FleetMake::all();
-            return view('fleetmanagement.fleetmodel.show', compact('fleetModel', 'brands'));
-        }
+    {
+        $this->authorize('view', FleetModel::class);
+        $fleetModel = FleetModel::findOrFail($id);
+        $brands = FleetMake::all();
+        return view('fleetmanagement.fleetmodel.show', compact('fleetModel', 'brands'));
+    }
 
     public function update(FleetModelRequest $request, $id)
-        {
-            $this->authorize('update', FleetModel::class);
-            $fleetModel = FleetModel::findOrFail($id);
-            $brands = FleetMake::all();
-            $fleetModel->update($request->validated());
+    {
+        $this->authorize('update', FleetModel::class);
+        $fleetModel = FleetModel::findOrFail($id);
+        $brands = FleetMake::all();
+        $fleetModel->update($request->validated());
 
 
-            return redirect()
-                ->route('fleetmodel.index')
-                ->with('success', 'Fleet Model updated successfully.');
-        }
-
-        public function edit($id)
-        {
-            $this->authorize('edit', FleetModel::class);
-            $brands = FleetMake::all();
-            $fleetModel = FleetModel::findOrFail($id);
-            return view('fleetmanagement.fleetmodel.edit', compact('fleetModel', 'brands'));
-        }
-
-      public function destroy(string $Id)
-        {
-            $this->authorize('destroy', FleetModel::class);
-            $model = FleetModel::findOrFail($Id);
-
-            $this->service->delete($model);
-
-            return redirect()->route('fleetmodel.index')->with('success', 'Model deleted successfully.');
-        }
-
-
+        return redirect()
+            ->route('fleetmodel.index')
+            ->with('success', 'Fleet Model updated successfully.');
     }
+
+    public function edit($id)
+    {
+        $this->authorize('edit', FleetModel::class);
+        $brands = FleetMake::all();
+        $fleetModel = FleetModel::findOrFail($id);
+        return view('fleetmanagement.fleetmodel.edit', compact('fleetModel', 'brands'));
+    }
+
+    public function destroy(string $Id)
+    {
+        $this->authorize('destroy', FleetModel::class);
+        $model = FleetModel::findOrFail($Id);
+
+        $this->service->delete($model);
+
+        return redirect()->route('fleetmodel.index')->with('success', 'Model deleted successfully.');
+    }
+
+
+}

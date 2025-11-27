@@ -15,7 +15,7 @@ class PendingWorkflow extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_PendingWorkflows';
+    protected $table = 't_WorkFlowPending';
     protected $primaryKey = 'Id';
 
     /**
@@ -36,7 +36,7 @@ class PendingWorkflow extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'PendingWorkflowID';
+        return 'Id';
     }
 
     public function source(): MorphTo

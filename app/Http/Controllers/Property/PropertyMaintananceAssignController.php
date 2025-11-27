@@ -12,7 +12,7 @@ use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Models\HRM\Employee;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class PropertyMaintananceAssignController extends Controller
 {

@@ -26,8 +26,8 @@ class Section extends Model
         'CreatedBy',
         'ModifiedBy',
         // Ignore these; Meant for a pivot table; bad casing
-     //   'sectionable_id',
-       // 'sectionable_type',
+        //   'sectionable_id',
+        // 'sectionable_type',
     ];
 
     protected $casts = [

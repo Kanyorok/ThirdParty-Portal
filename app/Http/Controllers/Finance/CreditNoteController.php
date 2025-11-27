@@ -67,7 +67,7 @@ class CreditNoteController extends Controller
     public function create(){
         $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
-        $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->where('ApprovalStatus','posted')
+        $invoices = FinanceInvoiceEntry::select('Id', 'InvoiceNumber')->where('ApprovalStatus', 'posted')
             ->get();
 
         return view('finance.accountspayable.creditnote.create', compact('invoices'));
@@ -78,50 +78,50 @@ class CreditNoteController extends Controller
         $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
         $validated = $request->validate([
-            'InvoiceRefNo'=> 'required|exists:t_FinanceInvoiceEntry,Id',
-            'NoteDate'=> 'required|date',
-            'NoteAmount'=> 'required|numeric|min:0.00',
-            'Description'=> 'required|string',
-            ]);
+            'InvoiceRefNo' => 'required|exists:t_FinanceInvoiceEntry,Id',
+            'NoteDate' => 'required|date',
+            'NoteAmount' => 'required|numeric|min:0.00',
+            'Description' => 'required|string',
+        ]);
 
-            DB::beginTransaction();
-            try {
-                // $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
+        DB::beginTransaction();
+        try {
+            // $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
 
-                if ($request->NoteType =='Credit') {
-                    $notes = FinanceCDNotes::create([
-                        'NoteType'=> 'credit',
-                        // 'CDNumber'=>$cdNumber,
-                        'InvoiceRefNo'=> $validated['InvoiceRefNo'],
-                        'NoteDate'=> $validated['NoteDate'],
-                        'NoteAmount'=> $validated['NoteAmount'],
-                        'Description'=> $validated['Description'],
-                        'CreatedBy'          =>Auth::Id(),
-                        'ModifiedBy'         => Auth::Id(),
-                    ]);
-                } else {
-                    $notes = FinanceCDNotes::create([
-                        'NoteType'=> 'debit',
-                        // 'CDNumber'=>$cdNumber,
-                        'InvoiceRefNo'=> $validated['InvoiceRefNo'],
-                        'NoteDate'=> $validated['NoteDate'],
-                        'NoteAmount'=> $validated['NoteAmount'],
-                        'Description'=> $validated['Description'],
-                        'CreatedBy'          =>Auth::Id(),
-                        'ModifiedBy'         => Auth::Id(),
-                    ]);
-                }
-                activity()
-                    ->performedOn($notes)
-                    ->causedBy(Auth::user())
-                    ->withProperties(['action' =>'create'])
-                    ->log('Created Note Sucessfully:'. $notes->id);
-                DB::commit();
-                return redirect()->route('creditnote.index')->with('success', 'Credit Note created successfully.');
-            } catch (\Throwable $th) {
-                DB::rollBack();
-                return back()->with('error', $th->getMessage());
+            if ($request->NoteType == 'Credit') {
+                $notes = FinanceCDNotes::create([
+                    'NoteType' => 'credit',
+                    // 'CDNumber'=>$cdNumber,
+                    'InvoiceRefNo' => $validated['InvoiceRefNo'],
+                    'NoteDate' => $validated['NoteDate'],
+                    'NoteAmount' => $validated['NoteAmount'],
+                    'Description' => $validated['Description'],
+                    'CreatedBy' => Auth::Id(),
+                    'ModifiedBy' => Auth::Id(),
+                ]);
+            } else {
+                $notes = FinanceCDNotes::create([
+                    'NoteType' => 'debit',
+                    // 'CDNumber'=>$cdNumber,
+                    'InvoiceRefNo' => $validated['InvoiceRefNo'],
+                    'NoteDate' => $validated['NoteDate'],
+                    'NoteAmount' => $validated['NoteAmount'],
+                    'Description' => $validated['Description'],
+                    'CreatedBy' => Auth::Id(),
+                    'ModifiedBy' => Auth::Id(),
+                ]);
             }
+            activity()
+                ->performedOn($notes)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'create'])
+                ->log('Created Note Sucessfully:' . $notes->id);
+            DB::commit();
+            return redirect()->route('creditnote.index')->with('success', 'Credit Note created successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', $th->getMessage());
+        }
     }
 
     public function show(int $id)
@@ -144,20 +144,20 @@ class CreditNoteController extends Controller
     {
         // $this->authorize('approve-ap-invoice', FinanceInvoiceEntry::class);
 
-         $validated = $request->validate([
+        $validated = $request->validate([
             'Reason' => 'required|string|max:255',
         ]);
 
         //Get the NoteTYPE
         $noteType = FinanceCDNotes::find($id)->NoteType;
-        if($noteType==='credit'){
-            $trxType=18;
-        }elseif($noteType==='debit'){
-            $trxType=19;
+        if ($noteType === 'credit') {
+            $trxType = 18;
+        } elseif ($noteType === 'debit') {
+            $trxType = 19;
         }
         // Configure your module + transaction type mapping IDs
         // Make sure these exist in t_Modules and t_FinanceTransactionTypes
-        $MODULE_ID          = 1100000; // Finance module
+        $MODULE_ID = 1100000; // Finance module
         $TRANSACTION_TYPEID = $trxType;    // "AP Invoice"
 
         try {
@@ -177,33 +177,33 @@ class CreditNoteController extends Controller
 
                 // Guard: already posted?
                 if (in_array($invoice->ApprovalStatus, ['posted', 'rejected'], true)) {
-                    $apStatus=ucfirst($invoice->ApprovalStatus);
+                    $apStatus = ucfirst($invoice->ApprovalStatus);
                     return back()->with('error', "Note {$invoice->CDNumber} is already {$apStatus}.");
                 }
                 $noteType = FinanceCDNotes::find($id)->NoteType;
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
-                    'ModuleID'          => $MODULE_ID,
-                    'ThirdPartyID'      => optional($invoice->invoice)->SupplierID,
+                    'ModuleID' => $MODULE_ID,
+                    'ThirdPartyID' => optional($invoice->invoice)->SupplierID,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,
-                    'TransactionType'   => ucfirst((string)($noteType ?? '')).' Note',
-                    'ReferenceNumber'   => (string)($invoice->CDNumber ?? ''),
-                    'TransactionDate'   => $invoice->NoteDate ?? now()->toDateString(),
+                    'TransactionType' => ucfirst((string)($noteType ?? '')) . ' Note',
+                    'ReferenceNumber' => (string)($invoice->CDNumber ?? ''),
+                    'TransactionDate' => $invoice->NoteDate ?? now()->toDateString(),
                     // Amounts
-                    'Amount'            => (float)($invoice->NoteAmount ?? 0),                 // note amount
-                    'TaxAmount'         => (float)(optional($invoice->invoice)->TaxAmount ?? 0), // consider swapping to note tax if you store it
+                    'Amount' => (float)($invoice->NoteAmount ?? 0),                 // note amount
+                    'TaxAmount' => (float)(optional($invoice->invoice)->TaxAmount ?? 0), // consider swapping to note tax if you store it
                     // Org context
-                    'BranchID'          => (int)session('LoginBranchId', 1),
-                    'DepartmentID'      => optional($invoice->invoice)->DepartmentID ?? null,
+                    'BranchID' => (int)session('LoginBranchId', 1),
+                    'DepartmentID' => optional($invoice->invoice)->DepartmentID ?? null,
                     // Currency
-                    'CurrencyID'        => optional($invoice->invoice)->CurrencyID ?? 1,
-                    'CurrencyCode'      => optional(optional($invoice->invoice)->currency)->Code ?? 'KES',
-                    'ExchangeRate'      => (float)(optional($invoice->invoice)->ExchangeRate ?? 1),
+                    'CurrencyID' => optional($invoice->invoice)->CurrencyID ?? 1,
+                    'CurrencyCode' => optional(optional($invoice->invoice)->currency)->Code ?? 'KES',
+                    'ExchangeRate' => (float)(optional($invoice->invoice)->ExchangeRate ?? 1),
                     // Descriptions
-                    'Narration'         => trim(
+                    'Narration' => trim(
                         (string)($invoice->Description ?? '') . ' ' . (string)($validated['Reason'] ?? '')
                     ),
-                    'SourceTable'       => 't_FinanceCDNotes',
+                    'SourceTable' => 't_FinanceCDNotes',
                     'SystemDescription' => sprintf('%s Note %s', ucfirst((string)($noteType ?? '')), (string)($invoice->CDNumber ?? '')),
                     // Optional overrides if needed:
                     // 'DebitGLAccountID'  => 5001,
@@ -222,8 +222,8 @@ class CreditNoteController extends Controller
                     $invoice->update([
                         'ApprovalStatus' => 'posted',
                         'ApprovalReason' => $validated['Reason'],
-                        'ModifiedBy'     => Auth::id(),
-                        'ModifiedOn'     => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
                     ]);
                 }
 
@@ -245,14 +245,14 @@ class CreditNoteController extends Controller
         } catch (\Throwable $e) {
             // Log if you want: Log::error('AP approve error', ['id'=>$id, 'err'=>$e->getMessage()])
             return $e->getMessage();
-            return back()->with('error', "Approval/Post failed: ".$e->getMessage());
+            return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
 
 
     public function reject(Request $request, $id)
     {
-         $validated = $request->validate([
+        $validated = $request->validate([
             'Reason' => 'required|string|max:1000',
         ]);
         try {
@@ -262,15 +262,15 @@ class CreditNoteController extends Controller
 
                 // If already processed, prevent duplicate rejection
                 if (in_array($invoice->ApprovalStatus, ['posted', 'rejected'], true)) {
-                    $apStatus=ucfirst($invoice->ApprovalStatus);
+                    $apStatus = ucfirst($invoice->ApprovalStatus);
                     return back()->with('error', "Note {$invoice->CDNumber} is already {$apStatus}.");
                 }
                 // Update status & reason
                 $invoice->update([
                     'ApprovalStatus' => 'rejected',
                     'ApprovalReason' => $validated['Reason'],
-                    'ModifiedBy'     => Auth::id(),
-                    'ModifiedOn'     => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
                 ]);
 
                 activity('Transaction Posting')
@@ -281,9 +281,9 @@ class CreditNoteController extends Controller
 
                 return back()->with('success', "Note {$invoice->CDNumber} rejected successfully.");
             });
-        }catch (\Throwable $e) {
-            Log::error('AP reject error', ['id'=>$id, 'err'=>$e->getMessage()]);
-            return back()->with('error', "Approval/Post failed: ".$e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('AP reject error', ['id' => $id, 'err' => $e->getMessage()]);
+            return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
 
@@ -305,7 +305,7 @@ class CreditNoteController extends Controller
             ->performedOn($note)
             ->causedBy(Auth::id())
             ->withProperties(['action' => 'delete'])
-            ->log('Deleted Note: '.$note->CDNumber);
+            ->log('Deleted Note: ' . $note->CDNumber);
 
         return back()->with('success', 'Credit/Debit Note deleted successfully.');
     }
@@ -317,6 +317,7 @@ class CreditNoteController extends Controller
         $note = FinanceCDNotes::findOrFail($id);
 
         $validated = $request->validate([
+            'InvoiceRefNo' => 'required|exists:t_FinanceInvoiceEntry,Id',
 //            'InvoiceRefNo'=> 'required',
             'NoteDate'=> 'required|date',
             'NoteAmount'=> 'required|numeric|min:0.00',
@@ -337,7 +338,7 @@ class CreditNoteController extends Controller
                 ->performedOn($note)
                 ->causedBy(Auth::id())
                 ->withProperties(['action' => 'update'])
-                ->log('Updated Note: '.$note->CDNumber);
+                ->log('Updated Note: ' . $note->CDNumber);
 
             DB::commit();
             return back()->with('success', 'Note updated successfully.');
