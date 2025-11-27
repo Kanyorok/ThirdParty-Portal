@@ -19,8 +19,8 @@ class InsuranceProductService
         InsuranceProvider $InsuranceProviderID,
         string            $Name,
         string            $Type,
-        ?string            $Description = null,
-        ?bool              $IsActive = null,
+        ?string           $Description = null,
+        ?bool             $IsActive = null,
         User              $user
     ): self
     {

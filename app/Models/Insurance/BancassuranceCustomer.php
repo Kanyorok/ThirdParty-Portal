@@ -6,7 +6,7 @@ use App\Models\Auth\User;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 
 class BancassuranceCustomer extends Model

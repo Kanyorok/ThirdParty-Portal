@@ -19,6 +19,7 @@ class GLMappingController extends Controller
 {
     public function index()
     {
+
         $this->authorize(PermissionEnum::FinanceGLMappingView, FinanceGLMapping::class);
         $mappings = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName,GLCode', 'creditAccount:Id,GLName,GLCode')
             ->orderBy('Id','desc')->get();
@@ -35,10 +36,12 @@ class GLMappingController extends Controller
 
     public function create()
     {
+
         $this->authorize(PermissionEnum::FinanceGLMappingCreate, FinanceGLMapping::class);
         $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
         $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
         $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+
             ->where('ParentID', null)
             ->orderBy('Name', 'asc')->get();
         $transactionTypes = FinanceModuleTransactions::all();
@@ -48,6 +51,7 @@ class GLMappingController extends Controller
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceGLMappingCreate, FinanceGLMapping::class);
+
 
         // Check if the required tables exist and have data
         try {
@@ -135,6 +139,7 @@ class GLMappingController extends Controller
 
         return response()->json($types);
     }
+
     public function edit($id)
     {
         $this->authorize(PermissionEnum::FinanceGLMappingUpdate, FinanceGLMapping::class);
@@ -225,13 +230,14 @@ class GLMappingController extends Controller
         return redirect()->route('glpostingmap.index')->with('success', 'GL Mapping deleted successfully.');
     }
 
+
     public function list()
     {
         $this->authorize(PermissionEnum::FinanceGLMappingView, FinanceGLMapping::class);
         $accounts = DB::table('t_FinanceGLAccounts')  // Table name
-            ->select('Id', 'GLName')            // Columns we need
-            ->orderBy('GLName')                 // Sort for better UX
-            ->get();
+        ->select('Id', 'GLName')            // Columns we need
+        ->orderBy('GLName')                 // Sort for better UX
+        ->get();
 
         return response()->json($accounts);   // Send data as JSON
     }

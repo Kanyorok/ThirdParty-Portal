@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,14 +13,14 @@ return new class extends Migration
         Schema::create('t_FinanceVoucher', function (Blueprint $table) {
             $table->id('Id');
             $table->string('VoucherNo')->unique();
-            $table->foreignId('InvoiceNo')->constrained('t_FinanceInvoiceEntry','Id');
+            $table->foreignId('InvoiceNo')->constrained('t_FinanceInvoiceEntry', 'Id');
             $table->decimal('TotalAmount', 10, 2);
             $table->string('PaymentMethod');
             $table->string('PaymentType')->default('Full');
             $table->date('StartDate')->nullable();
             $table->date('EndDate')->nullable();
             $table->string('Frequency')->nullable();
-            $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
+            $table->enum('ApprovalStatus', ['draft', 'posted', 'rejected'])->default('draft');
             $table->text('ApprovalReason')->nullable();
             $table->string('Status')->default('draft'); //
             $table->boolean('IsProcessed')->default(false);

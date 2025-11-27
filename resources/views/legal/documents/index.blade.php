@@ -15,59 +15,59 @@
             <div class="card-body">
 
                 {{-- Filters --}}
-{{--                <form method="GET" class="row g-2 mb-3">--}}
-{{--                    <div class="col-md-3">--}}
-{{--                        <input type="text" name="q" class="form-control" placeholder="Search title/type/source..."--}}
-{{--                               value="{{ $filters['q'] ?? '' }}">--}}
-{{--                    </div>--}}
-{{--                    <div class="col-md-2">--}}
-{{--                        <select name="type" class="form-select">--}}
-{{--                            <option value="">All Types</option>--}}
-{{--                            @foreach (['Contract','Lease','NDA','MOU'] as $t)--}}
-{{--                                <option value="{{ $t }}" @selected(($filters['type'] ?? '') === $t)>{{ $t }}</option>--}}
-{{--                            @endforeach--}}
-{{--                        </select>--}}
-{{--                    </div>--}}
-{{--                    <div class="col-md-2">--}}
-{{--                        <select name="source" class="form-select">--}}
-{{--                            <option value="">All Sources</option>--}}
-{{--                            @foreach (['Legal','Procurement','Property','HR','Insurance'] as $s)--}}
-{{--                                <option value="{{ $s }}" @selected(($filters['source'] ?? '') === $s)>{{ $s }}</option>--}}
-{{--                            @endforeach--}}
-{{--                        </select>--}}
-{{--                    </div>--}}
-{{--                    <div class="col-md-2">--}}
-{{--                        <select name="review" class="form-select">--}}
-{{--                            <option value="">All Review</option>--}}
-{{--                            @foreach (['Draft','In Review','Approved','Rejected'] as $r)--}}
-{{--                                <option value="{{ $r }}" @selected(($filters['review'] ?? '') === $r)>{{ $r }}</option>--}}
-{{--                            @endforeach--}}
-{{--                        </select>--}}
-{{--                    </div>--}}
-{{--                    <div class="col-md-2">--}}
-{{--                        <select name="exec" class="form-select">--}}
-{{--                            <option value="">All Execution</option>--}}
-{{--                            @foreach (['Pending','Signed','Archived'] as $e)--}}
-{{--                                <option value="{{ $e }}" @selected(($filters['exec'] ?? '') === $e)>{{ $e }}</option>--}}
-{{--                            @endforeach--}}
-{{--                        </select>--}}
-{{--                    </div>--}}
+                {{--                <form method="GET" class="row g-2 mb-3">--}}
+                {{--                    <div class="col-md-3">--}}
+                {{--                        <input type="text" name="q" class="form-control" placeholder="Search title/type/source..."--}}
+                {{--                               value="{{ $filters['q'] ?? '' }}">--}}
+                {{--                    </div>--}}
+                {{--                    <div class="col-md-2">--}}
+                {{--                        <select name="type" class="form-select">--}}
+                {{--                            <option value="">All Types</option>--}}
+                {{--                            @foreach (['Contract','Lease','NDA','MOU'] as $t)--}}
+                {{--                                <option value="{{ $t }}" @selected(($filters['type'] ?? '') === $t)>{{ $t }}</option>--}}
+                {{--                            @endforeach--}}
+                {{--                        </select>--}}
+                {{--                    </div>--}}
+                {{--                    <div class="col-md-2">--}}
+                {{--                        <select name="source" class="form-select">--}}
+                {{--                            <option value="">All Sources</option>--}}
+                {{--                            @foreach (['Legal','Procurement','Property','HR','Insurance'] as $s)--}}
+                {{--                                <option value="{{ $s }}" @selected(($filters['source'] ?? '') === $s)>{{ $s }}</option>--}}
+                {{--                            @endforeach--}}
+                {{--                        </select>--}}
+                {{--                    </div>--}}
+                {{--                    <div class="col-md-2">--}}
+                {{--                        <select name="review" class="form-select">--}}
+                {{--                            <option value="">All Review</option>--}}
+                {{--                            @foreach (['Draft','In Review','Approved','Rejected'] as $r)--}}
+                {{--                                <option value="{{ $r }}" @selected(($filters['review'] ?? '') === $r)>{{ $r }}</option>--}}
+                {{--                            @endforeach--}}
+                {{--                        </select>--}}
+                {{--                    </div>--}}
+                {{--                    <div class="col-md-2">--}}
+                {{--                        <select name="exec" class="form-select">--}}
+                {{--                            <option value="">All Execution</option>--}}
+                {{--                            @foreach (['Pending','Signed','Archived'] as $e)--}}
+                {{--                                <option value="{{ $e }}" @selected(($filters['exec'] ?? '') === $e)>{{ $e }}</option>--}}
+                {{--                            @endforeach--}}
+                {{--                        </select>--}}
+                {{--                    </div>--}}
 
-{{--                    <div class="w-100 d-none d-md-block"></div>--}}
+                {{--                    <div class="w-100 d-none d-md-block"></div>--}}
 
-{{--                    <div class="col-md-2">--}}
-{{--                        <input type="date" name="from" class="form-control" value="{{ $filters['from'] ?? '' }}">--}}
-{{--                        <small class="text-muted">From</small>--}}
-{{--                    </div>--}}
-{{--                    <div class="col-md-2">--}}
-{{--                        <input type="date" name="to" class="form-control" value="{{ $filters['to'] ?? '' }}">--}}
-{{--                        <small class="text-muted">To</small>--}}
-{{--                    </div>--}}
-{{--                    <div class="col-md-3 d-flex gap-2">--}}
-{{--                        <button type="submit" class="btn btn-primary flex-grow-1">Search</button>--}}
-{{--                        <a href="{{ route('legal.documents.index') }}" class="btn btn-outline-secondary">Reset</a>--}}
-{{--                    </div>--}}
-{{--                </form>--}}
+                {{--                    <div class="col-md-2">--}}
+                {{--                        <input type="date" name="from" class="form-control" value="{{ $filters['from'] ?? '' }}">--}}
+                {{--                        <small class="text-muted">From</small>--}}
+                {{--                    </div>--}}
+                {{--                    <div class="col-md-2">--}}
+                {{--                        <input type="date" name="to" class="form-control" value="{{ $filters['to'] ?? '' }}">--}}
+                {{--                        <small class="text-muted">To</small>--}}
+                {{--                    </div>--}}
+                {{--                    <div class="col-md-3 d-flex gap-2">--}}
+                {{--                        <button type="submit" class="btn btn-primary flex-grow-1">Search</button>--}}
+                {{--                        <a href="{{ route('legal.documents.index') }}" class="btn btn-outline-secondary">Reset</a>--}}
+                {{--                    </div>--}}
+                {{--                </form>--}}
 
                 <div class="table-responsive">
                     <table class="table table-hover table-sm align-middle">
@@ -76,7 +76,7 @@
                             <th>Title</th>
                             <th>Type</th>
                             <th>Source</th>
-{{--                            <th>Review</th>--}}
+                            {{--                            <th>Review</th>--}}
                             <th>Execution</th>
                             <th>Created</th>
                             <th>Actions</th>
@@ -88,18 +88,18 @@
                                 <td class="fw-semibold">{{ $doc->DocumentTitle }}</td>
                                 <td>{{ $doc->DocumentType }}</td>
                                 <td>{{ $doc->SourceModule }}</td>
-{{--                                <td>--}}
-{{--                                    @php--}}
-{{--                                        $review = $doc->ReviewStatus;--}}
-{{--                                        $reviewClass = match($review) {--}}
-{{--                                            'Approved' => 'success',--}}
-{{--                                            'In Review' => 'warning',--}}
-{{--                                            'Rejected' => 'danger',--}}
-{{--                                            default => 'secondary'--}}
-{{--                                        };--}}
-{{--                                    @endphp--}}
-{{--                                    <span class="badge bg-{{ $reviewClass }}">{{ $review ?: '—' }}</span>--}}
-{{--                                </td>--}}
+                                {{--                                <td>--}}
+                                {{--                                    @php--}}
+                                {{--                                        $review = $doc->ReviewStatus;--}}
+                                {{--                                        $reviewClass = match($review) {--}}
+                                {{--                                            'Approved' => 'success',--}}
+                                {{--                                            'In Review' => 'warning',--}}
+                                {{--                                            'Rejected' => 'danger',--}}
+                                {{--                                            default => 'secondary'--}}
+                                {{--                                        };--}}
+                                {{--                                    @endphp--}}
+                                {{--                                    <span class="badge bg-{{ $reviewClass }}">{{ $review ?: '—' }}</span>--}}
+                                {{--                                </td>--}}
                                 <td>
                                     @php
                                         $exec = $doc->ExecutionStatus;

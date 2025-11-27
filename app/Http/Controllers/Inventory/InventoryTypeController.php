@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\InventoryType;
 use App\Http\Requests\Inventory\InventoryTypeRequest;
 use App\Services\Inventory\InventoryTypeService;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class InventoryTypeController extends Controller
 {

@@ -10,7 +10,7 @@ use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Providers\Inventory\InterBranchRequisitionPolicy;
 use App\Services\Inventory\InterBranchRequisitionService;
 use Exception;

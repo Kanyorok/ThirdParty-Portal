@@ -3,7 +3,7 @@
 namespace App\Services\Insurance;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimAssessment;
 use Illuminate\Support\Carbon;
@@ -20,11 +20,12 @@ class BancassuranceClaimAssessmentService
 
     public static function create(
         BancassuranceClaim $claim,
-        string $AssessmentComments,
-        float $AssessmentAmount,
-        CodeDetail $Decision,
-        User $user,
-    ): self {
+        string             $AssessmentComments,
+        float              $AssessmentAmount,
+        CodeDetail         $Decision,
+        User               $user,
+    ): self
+    {
         $assessment = BancassuranceClaimAssessment::create([
             'ClaimId' => $claim->Id,
             'AssessmentComments' => $AssessmentComments,

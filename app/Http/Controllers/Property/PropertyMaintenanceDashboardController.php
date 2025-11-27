@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PostingEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyRegistry;

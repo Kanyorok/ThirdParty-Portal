@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Fleet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetTripLogRequest;
 use App\Models\Fleet\FleetTripLog;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\FleetManagement\FleetTripLogService;
 use Illuminate\Http\Request;
 use App\Models\CRM\MarketingPlanner;
@@ -36,10 +36,6 @@ class FleetTripLogController extends Controller
     {
         $this->authorize('create', FleetTripLog::class);
 
-        $parentTrip = null;
-        if ($request->has('parentTripId')) {
-            $parentTrip = FleetTripLog::findOrFail($request->parentTripId);
-        }
         $parentTrip = null;
         if ($request->has('parentTripId')) {
             $parentTrip = FleetTripLog::findOrFail($request->parentTripId);

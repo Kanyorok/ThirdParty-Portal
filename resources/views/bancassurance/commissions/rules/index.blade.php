@@ -13,9 +13,12 @@
         font-weight: 600;
         text-align: center;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
         vertical-align: middle !important;
     }
+
     table.dataTable tbody tr:hover {
         background-color: #f9fbfd;
     }
@@ -26,6 +29,7 @@
         padding: 4px 12px;
         border: 1px solid #ced4da;
     }
+
     .dataTables_wrapper .dataTables_length select {
         border-radius: 20px;
         padding: 3px 10px;
@@ -36,23 +40,30 @@
     .badge {
         font-size: 0.85rem;
     }
+
     .btn-group .btn {
         margin-right: 4px;
     }
+
     .btn-group .btn:last-child {
         margin-right: 0;
     }
 
     /* 🔹 Icon Sizes */
     i.bi {
-        font-size: 0.9rem; /* general icons */
+        font-size: 0.9rem;
+        /* general icons */
     }
+
     td i.bi {
-        font-size: 0.75rem; /* table action icons */
+        font-size: 0.75rem;
+        /* table action icons */
         vertical-align: middle;
     }
+
     .btn-sm i.bi {
-        margin-top: -1px; /* align icon in compact buttons */
+        margin-top: -1px;
+        /* align icon in compact buttons */
     }
 </style>
 @endsection
@@ -62,8 +73,8 @@
 
     {{-- ✅ Header / Add Button --}}
     <div class="d-flex justify-content-end mb-3">
-        <a href="{{ route('commissions.rules.create') }}" 
-           class="btn btn-sm btn-primary rounded-pill shadow-sm">
+        <a href="{{ route('commissions.rules.create') }}"
+            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1 fs-6"></i> Add Commission Rule
         </a>
     </div>
@@ -103,22 +114,22 @@
                             <td>{{ $rule->appliesto->Description ?? '-' }}</td>
                             <td class="text-center">
                                 @if($rule->IsActive)
-                                    <span class="badge bg-success">Active</span>
+                                <span class="badge bg-success">Active</span>
                                 @else
-                                    <span class="badge bg-secondary">Inactive</span>
+                                <span class="badge bg-secondary">Inactive</span>
                                 @endif
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('commissions.rules.edit', $rule->Id) }}" 
-                                       class="btn btn-outline-warning btn-sm rounded-pill px-2 py-1" title="Edit">
+                                    <a href="{{ route('commissions.rules.edit', $rule->Id) }}"
+                                        class="btn btn-outline-warning btn-sm rounded-pill px-2 py-1" title="Edit">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <form action="{{ route('commissions.rules.destroy', $rule->Id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1"
-                                                onclick="return confirm('Are you sure you want to delete this rule?');" title="Delete">
+                                            onclick="return confirm('Are you sure you want to delete this rule?');" title="Delete">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -146,7 +157,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#commissionrules').DataTable({
             pageLength: 10,
             ordering: true,
@@ -156,8 +167,10 @@
                 search: "_INPUT_",
                 searchPlaceholder: "Search commission rules..."
             },
-            columnDefs: [
-                { orderable: false, targets: [8] } // Disable sorting on Actions column
+            columnDefs: [{
+                    orderable: false,
+                    targets: [8]
+                } // Disable sorting on Actions column
             ]
         });
     });

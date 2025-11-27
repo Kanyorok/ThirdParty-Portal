@@ -92,6 +92,4 @@ class StockItem extends Model
     }
 
 
-
-
 }

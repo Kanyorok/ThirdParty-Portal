@@ -2,7 +2,7 @@
 
 namespace App\Services\Finance;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Finance\FinanceGLMapping; // mapping table model
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
@@ -63,6 +63,7 @@ class TransactionService
         $base = [
             'TransactionDate'   => $payload['TransactionDate'] ?? Carbon::now()->toDateString(),
             'ThirdPartyID'      =>$payload['ThirdPartyID'] ?? null,
+            'ThirdPartyTypeID'  => $payload['ThirdPartyTypeID'] ?? null,
             'ReferenceNumber'   => $payload['ReferenceNumber'] ?? uniqid('REF-'),
             'TransactionType'   => (string)($payload['TransactionType'] ?? 'External'),
             'ModuleID'          => $payload['ModuleID'],
@@ -167,6 +168,7 @@ class TransactionService
             $revLines[] = [
                 'TransactionDate'     => $date,
                 'ThirdPartyID'=> $o->ThirdPartyID ?? null,
+                'ThirdPartyTypeID'  => $o->ThirdPartyTypeID ?? null,
                 'ReferenceNumber'     => $refPre . ($o->ReferenceNumber ?? 'N/A'),
                 'TransactionType'     => trim(($o->TransactionType ?? 'External') . $typeSuf),
                 'TransactionTypeID'     => $o->TransactionTypeID,
@@ -214,6 +216,7 @@ class TransactionService
         $rules = [
             'ModuleID'          => 'required',//|integer|exists:t_Modules,ModuleID', // adjust column if needed
             'ThirdPartyID'=> 'nullable|integer',
+            'ThirdPartyTypeID' => 'nullable|integer|exists:t_ThirdPartyTypes,TypeId',
             'TransactionTypeID' => 'nullable|integer|exists:t_FinanceTransactionTypes,Id', // adjust
             'ReferenceNumber'   => 'required|string|max:100',
             'TransactionDate'   => 'nullable|date',
@@ -251,6 +254,7 @@ class TransactionService
             '*.ReferenceNumber'   => 'required|string|max:100',
             '*.TransactionType'   => 'required|string|max:100',
             '*.TransactionTypeID'   => 'nullable|string|max:100',
+            '*.ThirdPartyTypeID'    => 'nullable|integer|exists:t_ThirdPartyTypes,TypeId',
             '*.ModuleID'          => 'nullable',//|integer', // FK not enforced here; already validated in payload
             '*.SourceTable'       => 'nullable|string|max:100',
             '*.GLAccountID'       => 'required|integer|exists:t_FinanceGLAccounts,Id',

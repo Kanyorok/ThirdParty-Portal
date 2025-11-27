@@ -7,11 +7,11 @@ use App\Http\Requests\FleetManagement\FleetVehicleInspectionRequest;
 use App\Models\Fleet\FleetVehicleInspection;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\ContractedDriver;
 use App\Models\Fleet\FuelType;
 use App\Services\FleetManagement\FleetVehicleInspectionService;
 use Illuminate\Support\Facades\Auth;
-use App\Services\DMS\DocumentService;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class FleetVehicleInspectionController extends Controller
 {
@@ -26,10 +26,19 @@ class FleetVehicleInspectionController extends Controller
     {
         $this->authorize('viewAny', FleetVehicleInspection::class);
 
-        $inspections = FleetVehicleInspection::with(['vehicle', 'driver', 'engineOil', 'postTrips', 'fuel', 'coolant', 'inspectionType'])
-            ->where('CreatedBy', Auth::id())
-            ->whereNull('ParentInspectionID')
-            ->get();
+        $inspections = FleetVehicleInspection::with([
+            'vehicle', 
+            'driver', 
+            'contractedDriver', 
+            'engineOil', 
+            'postTrips', 
+            'fuel', 
+            'coolant', 
+            'inspectionType'
+        ])
+        ->where('CreatedBy', Auth::id())
+        ->whereNull('ParentInspectionID')
+        ->get();
 
         return view('fleet.vehicle_inspection.index', compact('inspections'));
     }
@@ -39,39 +48,45 @@ class FleetVehicleInspectionController extends Controller
         $this->authorize('create', FleetVehicleInspection::class);
 
         $vehicles = FleetVehicle::all();
-        $fuels    = FuelType::where('IsActive', true)->get();
+        $fuels = FuelType::where('IsActive', true)->get();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
         $engineOilUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
         $fuelUOMs = CodeDetail::where('CodeID', 'FuelUOM')->get();
         $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
-        return view('fleet.vehicle_inspection.create', compact('vehicles', 'fuels', 'inspectionTypes', 'engineOilUOMs', 'fuelUOMs', 'coolantUOMs'));
+        $drivers = FleetDriver::all();
+        $contractedDrivers = ContractedDriver::all();
+
+        return view('fleet.vehicle_inspection.create', compact(
+            'vehicles', 'fuels', 'inspectionTypes', 
+            'engineOilUOMs', 'fuelUOMs', 'coolantUOMs', 
+            'drivers', 'contractedDrivers'
+        ));
     }
 
     public function createPostTrip($id)
     {
         $this->authorize('create', FleetVehicleInspection::class);
 
-        // Eager-load inspectionType so ID is available in the Blade
-        $parentInspection = FleetVehicleInspection::with('inspectionType')->findOrFail($id);
+        // In your controller
+        $parentInspection = FleetVehicleInspection::with(['driver', 'contractedDriver', 'vehicle', 'fuel', 'inspectionType'])
+            ->find($id);
 
         $vehicles = FleetVehicle::all();
-        $fuels    = FuelType::where('IsActive', true)->get();
+        $fuels = FuelType::where('IsActive', true)->get();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
         $engineOilUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
         $fuelUOMs = CodeDetail::where('CodeID', 'FuelUOM')->get();
         $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
-        return view('fleet.vehicle_inspection.create', [
-            'fuels'             => $fuels,
-            'vehicles'          => $vehicles,
-            'engineOilUOMs'     => $engineOilUOMs,
-            'fuelUOMs'          => $fuelUOMs,
-            'coolantUOMs'      => $coolantUOMs, 
-            'fuels'             => $fuels,
-            'inspectionTypes'   => $inspectionTypes,
-            'parentInspection'  => $parentInspection,
-        ]);
+        $drivers = FleetDriver::all();
+        $contractedDrivers = ContractedDriver::all();
+
+        return view('fleet.vehicle_inspection.create', compact(
+            'vehicles', 'fuels', 'inspectionTypes', 
+            'engineOilUOMs', 'fuelUOMs', 'coolantUOMs',
+            'drivers', 'contractedDrivers', 'parentInspection'
+        ));
     }
 
     public function store(FleetVehicleInspectionRequest $request)
@@ -90,8 +105,14 @@ class FleetVehicleInspectionController extends Controller
     {
         $this->authorize('view', FleetVehicleInspection::class);
 
-        $inspection = FleetVehicleInspection::with(['vehicle', 'driver', 'fuel', 'postTrips', 'inspectionType'])
-            ->findOrFail($id);
+        $inspection = FleetVehicleInspection::with([
+            'vehicle', 
+            'driver', 
+            'contractedDriver', // include contracted driver
+            'fuel', 
+            'postTrips', 
+            'inspectionType'
+        ])->findOrFail($id);
 
         return view('fleet.vehicle_inspection.show', compact('inspection'));
     }
@@ -99,17 +120,21 @@ class FleetVehicleInspectionController extends Controller
     public function edit($id)
     {
         $this->authorize('edit', FleetVehicleInspection::class);
-        $fuels    = FuelType::where('IsActive', true)->get();
+
         $inspection = FleetVehicleInspection::findOrFail($id);
-        $vehicles   = FleetVehicle::all();
-        $drivers    = FleetDriver::all();
+        $vehicles = FleetVehicle::all();
+        $drivers = FleetDriver::all();
+        $contractedDrivers = ContractedDriver::all();
+        $fuels = FuelType::where('IsActive', true)->get();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
         $engineOilUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
         $fuelUOMs = CodeDetail::where('CodeID', 'FuelUOM')->get();
         $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
-
-        return view('fleet.vehicle_inspection.edit', compact('inspection', 'vehicles', 'drivers', 'engineOilUOMs', 'fuelUOMs', 'coolantUOMs', 'inspectionTypes','fuels'));
+        return view('fleet.vehicle_inspection.edit', compact(
+            'inspection', 'vehicles', 'drivers', 'contractedDrivers',
+            'engineOilUOMs', 'fuelUOMs', 'coolantUOMs', 'inspectionTypes','fuels'
+        ));
     }
 
     public function update(FleetVehicleInspectionRequest $request, $id)
@@ -138,29 +163,33 @@ class FleetVehicleInspectionController extends Controller
     {
         $vehicle = FleetVehicle::with('fuelType')->find($Id);
 
+        // Try regular driver first
         $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
             ->whereNull('DeletedOn')
             ->latest('AssignmentDate')
             ->first();
 
+        $driverType = 'FleetDriver';
         if (!$driverAssignment) {
             $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
                 ->whereNull('DeletedOn')
                 ->latest('AssignmentDate')
                 ->first();
+            $driverType = 'ContractedDriver';
         }
 
         return response()->json([
             'driverId'      => $driverAssignment?->DriverID,
-            'driverName'    => $driverAssignment?->driver?->FullName ?? 'No driver assigned',
+            'driverName'    => $driverAssignment?->driver?->FullName ?? $driverAssignment?->contractedDriver?->FullName ?? 'No driver assigned',
+            'driverType'    => $driverType,
             'fuelTypeId'    => $vehicle?->fuelType?->Id,
             'fuelTypeName'  => $vehicle?->fuelType?->FuelName,
         ]);
     }
 
-     public function getLastMileage($vehicleId)
+    public function getLastMileage($vehicleId)
     {
-        $lastInspection = \App\Models\Fleet\FleetVehicleInspection::where('VehicleID', $vehicleId)
+        $lastInspection = FleetVehicleInspection::where('VehicleID', $vehicleId)
             ->orderByDesc('InspectionDate')
             ->first();
 
@@ -168,5 +197,4 @@ class FleetVehicleInspectionController extends Controller
             'lastMileage' => $lastInspection?->Mileage ?? 0,
         ]);
     }
-
 }

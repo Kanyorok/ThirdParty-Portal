@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalCaseEvidence extends Model
 {
-    use SoftDeletes, UserActorTrait,DocumentsTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -42,6 +42,6 @@ class LegalCaseEvidence extends Model
 
     public function case()
     {
-        return $this->belongsTo(LegalCase::class, 'LegalCaseID','Id');
+        return $this->belongsTo(LegalCase::class, 'LegalCaseID', 'Id');
     }
 }

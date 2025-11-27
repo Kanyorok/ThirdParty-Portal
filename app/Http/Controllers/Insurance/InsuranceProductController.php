@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProductRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\Insurance\ProviderAndProducts\InsuranceProductService;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProvider;

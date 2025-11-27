@@ -13,14 +13,14 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Auth\User;
 
 
 class FleetInsuranceTracker extends Model
 {
 
-    use SoftDeletes,UserActorTrait, DocumentsTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

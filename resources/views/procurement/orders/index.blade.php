@@ -48,11 +48,11 @@
                 <th>Order Date</th>
                   <th>LPO No</th>
                 <th>Priority</th>
-                <th>Branch</th>
                 <th>Order Amount</th>
                 <th>Order Lines</th>
                 <th>Created By</th>
                 <th>Created On</th>
+                <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -63,14 +63,63 @@
                   <td>{{ $item->OrderNo }}</td>
                     <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d M Y') }}</td>                 <td>{{ $item->ExtOrdNum }}</td>
                   <td>{{ $item->Priority }}</td>
-                  <td>{{ $item->BranchID }}</td>
-                  <td>{{ number_format($item->UnitPrice, 2) }}</td>
+                  @php
+                    $totalIncl = null;
+                    try {
+                      $totalIncl = $item->OrdTotIncl ?? null;
+                      if ($totalIncl === null) {
+                        $excl = $item->OrdTotExcl ?? null;
+                        $tax  = $item->OrdTotTax  ?? null;
+                        if ($excl !== null && $tax !== null) {
+                          $totalIncl = (float)$excl + (float)$tax;
+                        }
+                      }
+                    } catch (\Throwable $e) { $totalIncl = null; }
+                  @endphp
+                  <td>{{ number_format(($totalIncl ?? 0), 2) }}</td>
                   <td>{{ $item->ordercount }}</td>
                   <td>{{ $item->CreatedBy }}</td>
                     <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d M Y H:i') }}</td>
-                    <td><a href="#" class="btn btn-info btn-sm view-order" data-id="{{ $item->Id }}">View</a>
-                    <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
-                  </td>
+                    <td>
+                      @php
+                        // Authoritative status resolution using approvals workflow
+                        $docType = 'purchase_order';
+                        $orderId = (int)($item->Id ?? 0);
+                        $orderTotal = (float)($item->OrdTotIncl ?? 0);
+
+                        // 1) Explicit rejection check
+                        $rejected = \Illuminate\Support\Facades\DB::table('t_Approvals')
+                            ->where('DocType', $docType)
+                            ->where('DocumentId', $orderId)
+                            ->where('Status', 'rejected')
+                            ->exists();
+
+                        // 2) Full approval check via ApprovalService
+                        $approved = false;
+                        if (!$rejected && $orderId > 0) {
+                            try {
+                                $approved = app(\App\Services\Core\ApprovalService::class)
+                                    ->isFullyApproved($docType, $orderId, $orderTotal);
+                            } catch (\Throwable $e) {
+                                $approved = false; // default to pending on errors
+                            }
+                        }
+
+                        $statusText = $approved ? 'Approved' : ($rejected ? 'Rejected' : 'Pending');
+                        $badgeClass = $approved ? 'badge bg-success' : ($rejected ? 'badge bg-danger' : 'badge bg-warning text-dark');
+                      @endphp
+                      <span class="{{ $badgeClass }}">{{ $statusText }}</span>
+                    </td>
+                    <td>
+                      <a href="#" class="btn btn-info btn-sm view-order" data-id="{{ $item->Id }}">View</a>
+                      @if($approved)
+                        <span class="btn btn-success btn-sm disabled" aria-disabled="true" title="This PO is fully approved">Approve</span>
+                      @elseif($rejected)
+                        <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true" title="This PO was rejected">Approve</span>
+                      @else
+                        <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
+                      @endif
+                    </td>
                 </tr>
               @empty
                 <tr>

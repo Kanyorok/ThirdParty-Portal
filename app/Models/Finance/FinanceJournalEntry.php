@@ -72,7 +72,7 @@ class FinanceJournalEntry extends Model
 
                 $nextNumber = 1;
                 if ($latestRef) {
-                    $lastDigits = (int) substr($latestRef, -3);
+                    $lastDigits = (int)substr($latestRef, -3);
                     $nextNumber = $lastDigits + 1;
                 }
 
@@ -87,12 +87,14 @@ class FinanceJournalEntry extends Model
         return $this->hasMany(FinanceJournalLines::class, 'JournalEntryId', 'Id');
     }
 
-    public function recurringJournals(){
-        return $this->hasMany(RecurrentJournal::class,'JournalEntryId','Id');
+    public function recurringJournals()
+    {
+        return $this->hasMany(RecurrentJournal::class, 'JournalEntryId', 'Id');
     }
 
-    public function reverseJournals(){
-        return $this->hasMany(ReverseJournalEntry::class,'JournalEntryId','Id');
+    public function reverseJournals()
+    {
+        return $this->hasMany(ReverseJournalEntry::class, 'JournalEntryId', 'Id');
     }
 
     // Relationship to find reversals where this journal is the original

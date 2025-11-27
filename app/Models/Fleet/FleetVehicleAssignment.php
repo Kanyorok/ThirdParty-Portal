@@ -12,7 +12,7 @@ use App\Models\Fleet\FleetTripLog;
 use App\Models\Fleet\FleetDriver;
 use App\Models\Auth\User;
 use App\Models\HRM\Employee;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 
 class FleetVehicleAssignment extends Model

@@ -3,7 +3,7 @@
 @section('title', 'Add Fleet Model')
 
 @section('styles')
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 
 @section('content')
@@ -14,7 +14,7 @@
         <h4>Fleet Model List</h4>
         <a href="{{ route('fleetmodel.create') }}" class="btn btn-primary">Add New</a>
     </div>
- <p>
+    <p>
         <i class="fas fa-info-circle"></i>
         <span class="text-info" data-bs-toggle="tooltip" title="This indicates how many vehicles are associated with each fleet brand."></span>
         <i>Help Notes: The Usage Column shows the number of vehicles under the car model</i>
@@ -45,11 +45,11 @@
                             {{-- ✅ Show usage count --}}
                             <td>
                                 @if($model->vehicles_count > 0)
-                                    <span class="badge bg-info text-dark">
-                                        In Use ({{ $model->vehicles_count }})
-                                    </span>
+                                <span class="badge bg-info text-dark">
+                                    In Use ({{ $model->vehicles_count }})
+                                </span>
                                 @else
-                                    <span class="badge bg-secondary">Not In Use</span>
+                                <span class="badge bg-secondary">Not In Use</span>
                                 @endif
                             </td>
 
@@ -59,19 +59,19 @@
                                 <a href="{{ route('fleetmodel.edit', $model->Id) }}" class="btn btn-sm btn-warning">Edit</a>
 
                                 @if($model->vehicles_count > 0)
-                                    {{-- 🔒 Locked delete button --}}
-                                    <button class="btn btn-sm btn-danger" disabled
-                                        title="Cannot delete — this model is in use by {{ $model->vehicles_count }} vehicle(s)">
-                                        Delete
-                                    </button>
+                                {{-- 🔒 Locked delete button --}}
+                                <button class="btn btn-sm btn-danger" disabled
+                                    title="Cannot delete — this model is in use by {{ $model->vehicles_count }} vehicle(s)">
+                                    Delete
+                                </button>
                                 @else
-                                    {{-- 🗑️ Allow delete if not in use --}}
-                                    <form action="{{ route('fleetmodel.destroy', $model->Id) }}" method="POST" class="d-inline"
-                                          onsubmit="return confirm('Are you sure you want to delete this fleet model?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
+                                {{-- 🗑️ Allow delete if not in use --}}
+                                <form action="{{ route('fleetmodel.destroy', $model->Id) }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('Are you sure you want to delete this fleet model?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
                                 @endif
                             </td>
                         </tr>
@@ -84,22 +84,22 @@
 </div>
 
 @section('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            @if(!$fleetModels->isEmpty())
-            $('#fleetModelsTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true,
-                language: {
-                    emptyTable: ""
-                }
-            });
-            @endif
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+        @if(!$fleetModels->isEmpty())
+        $('#fleetModelsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true,
+            language: {
+                emptyTable: ""
+            }
         });
-    </script>
+        @endif
+    });
+</script>
 @endsection
 @endsection

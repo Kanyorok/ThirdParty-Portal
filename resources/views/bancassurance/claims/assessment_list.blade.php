@@ -12,9 +12,12 @@
         font-weight: 600;
         text-align: center;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
         vertical-align: middle !important;
     }
+
     table.dataTable tbody tr:hover {
         background-color: #f9fbfd;
     }
@@ -25,6 +28,7 @@
         padding: 4px 12px;
         border: 1px solid #ced4da;
     }
+
     .dataTables_wrapper .dataTables_length select {
         border-radius: 20px;
         padding: 3px 10px;
@@ -35,12 +39,15 @@
     .btn-group .btn {
         margin-right: 4px;
     }
+
     .btn-group .btn:last-child {
         margin-right: 0;
     }
+
     .badge {
         font-size: 0.85rem;
     }
+
     .btn i {
         vertical-align: middle;
     }
@@ -53,7 +60,7 @@
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
         <a href="{{ route('bancassurance.claims.index') }}"
-           class="btn btn-sm btn-primary rounded-pill shadow-sm">
+            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> New Assessment
         </a>
     </div>
@@ -96,17 +103,17 @@
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}"
-                                       class="btn btn-outline-info rounded-pill px-2" title="View">
+                                        class="btn btn-outline-info rounded-pill px-2" title="View">
                                         <i class="bi bi-eye"></i> View
                                     </a>
 
                                     @if($assessment->claimpaiyments()->exists())
-                                        <button class="btn btn-secondary rounded-pill px-2" disabled>Paid</button>
+                                    <button class="btn btn-secondary rounded-pill px-2" disabled>Paid</button>
                                     @else
-                                        <a href="{{ route('bancassurance.claims.assessment_edit', $assessment->Id) }}"
-                                           class="btn btn-outline-primary rounded-pill px-2" title="Edit">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
+                                    <a href="{{ route('bancassurance.claims.assessment_edit', $assessment->Id) }}"
+                                        class="btn btn-outline-primary rounded-pill px-2" title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
                                     @endif
                                 </div>
                             </td>
@@ -131,7 +138,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#assessments').DataTable({
             pageLength: 10,
             ordering: true,
@@ -141,8 +148,10 @@
                 search: "_INPUT_",
                 searchPlaceholder: "Search assessments..."
             },
-            columnDefs: [
-                { orderable: false, targets: [7] } // Disable sorting on Actions
+            columnDefs: [{
+                    orderable: false,
+                    targets: [7]
+                } // Disable sorting on Actions
             ]
         });
     });

@@ -17,18 +17,19 @@ class PropertyLeaseRenewalService
      * @throws Exception if the lease renewal already exists or creation fails.
      */
     public static function create(
-        int $leaseId,
-        int $paymentFrequencyId,
+        int    $leaseId,
+        int    $paymentFrequencyId,
         string $EndDateCurrentLease,
         string $NewStartDate,
         string $NewEndDate,
-        int $NewMonthlyRent,
-        float $ServiceCharge,
-        float $ParkingFee,
-        float $OtherCharges,
+        int    $NewMonthlyRent,
+        float  $ServiceCharge,
+        float  $ParkingFee,
+        float  $OtherCharges,
         string $Remarks = null,
-        User $user
-    ): PropertyLeaseRenewal {
+        User   $user
+    ): PropertyLeaseRenewal
+    {
         DB::beginTransaction();
 
         try {
@@ -101,17 +102,17 @@ class PropertyLeaseRenewalService
      */
     public static function update(
         PropertyLeaseRenewal $leaseRenewal,
-        int                  $leaseId,
-        int                  $paymentFrequencyId,
-        string               $EndDateCurrentLease,
-        string               $NewStartDate,
-        string               $NewEndDate,
-        int                  $NewMonthlyRent,
-        float                $ServiceCharge,
-        float                $ParkingFee,
-        float                $OtherCharges,
-        string               $Remarks,
-        User                 $user
+        int    $leaseId,
+        int    $paymentFrequencyId,
+        string $EndDateCurrentLease,
+        string $NewStartDate,
+        string $NewEndDate,
+        int    $NewMonthlyRent,
+        float  $ServiceCharge,
+        float  $ParkingFee,
+        float  $OtherCharges,
+        string $Remarks,
+        User   $user
     ): void {
         DB::beginTransaction();
 
@@ -163,7 +164,7 @@ class PropertyLeaseRenewalService
 
     public static function delete(
         PropertyLeaseRenewal $leaseRenewal,
-        User                 $user
+        User $user
     ): void {
         DB::beginTransaction();
 

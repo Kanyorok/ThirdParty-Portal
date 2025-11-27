@@ -5,7 +5,7 @@ namespace App\Services\Insurance\Customers;
 use App\Models\Auth\User;
 use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Models\Insurance\BancassuranceCustomer;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\HRM\Employee;
 use DateTime;
 

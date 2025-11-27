@@ -46,10 +46,13 @@ class PlanManualInputController extends Controller
         $selectedPlanId = $request->input('plan_id');
         $selectedPlanTitle = $request->input('title');
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
+        // Include items that have either a direct ItemPrice > 0 OR a related price ActualPrice > 0
         $items = ItemMasterList::with(['category', 'uom', 'price'])
-            ->whereNotNull('ItemPrice')
-            ->whereHas('price', function ($q) {
-                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            ->where(function ($q) {
+                $q->whereNotNull('ItemPrice')->where('ItemPrice', '>', 0)
+                  ->orWhereHas('price', function ($p) {
+                      $p->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+                  });
             })
             ->orderBy('ItemName')
             ->get();
@@ -123,9 +126,11 @@ class PlanManualInputController extends Controller
         $this->authorize('edit', $lineItem);
         $plans = ConsolidatedProcurementPlan::all();
         $items = ItemMasterList::with(['category', 'uom', 'price'])
-            ->whereNotNull('ItemPrice')
-            ->whereHas('price', function ($q) {
-                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            ->where(function ($q) {
+                $q->whereNotNull('ItemPrice')->where('ItemPrice', '>', 0)
+                  ->orWhereHas('price', function ($p) {
+                      $p->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+                  });
             })
             ->orderBy('ItemName')
             ->get();

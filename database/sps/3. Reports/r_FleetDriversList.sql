@@ -26,13 +26,13 @@ BEGIN
      Notes,
      EmploymentType,
      Phone)
-    SELECT d.FullName          AS Name,
-           d.StaffNumber       AS StaffNumber,
-           d.NationalID        AS NationalID,
+    SELECT d.FullName            AS Name,
+           d.StaffNumber         AS StaffNumber,
+           d.NationalID          AS NationalID,
            'd.LicenseNumber'     AS LicenseNumber,
            'd.LicenseExpirydate' AS ExpiryDate,
-           d.Notes             AS Notes,
-           c.Description       AS EmploymentType,
+           d.Notes               AS Notes,
+           c.Description         AS EmploymentType,
            d.Phone               AS [Phone]
     FROM t_FleetDrivers AS d
              left join t_CodeDetails AS c on d.EmploymentType = c.ID

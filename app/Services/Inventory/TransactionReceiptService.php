@@ -3,7 +3,7 @@
 namespace App\Services\Inventory;
 
 use App\Enums\Inventory\Transfers;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\InventoryHold;
@@ -18,7 +18,7 @@ use Log;
 
 class TransactionReceiptService
 {
-   public function createReceipt($validatedData, $items)
+    public function createReceipt($validatedData, $items)
     {
         return DB::transaction(function () use ($validatedData, $items) {
             $transfer = \App\Models\Inventory\TransactionTransfer::findOrFail($validatedData['TransferID']);
@@ -125,27 +125,26 @@ class TransactionReceiptService
                 Log::info("Auto-creating new stock record for ItemID: {$itemId}, Branch: {$toBranchId}, Store: {$storeId}");
 
                 $stock = StockItem::firstOrCreate(
-                [
-                    'ItemID' => $itemId,
-                    'Branch' => $toBranchId,
-                    'Store'  => $storeId,
-                ],
-                [
-                    'UOM' => $itemData['uom'] ?? null,
-                    'UnitCost' => $itemData['unit_cost'] ?? 0,
-                    'CurrentQty' => 0,
-                    'Min' => 0,
-                    'Reorder' => 0,
-                    'Max' => 0,
-                    'LastReceived' => now(),
-                    'Status' => true,
-                    'CreatedBy' => auth()->id(),
-                    'CreatedOn' => now(),
-                    'ModifiedBy' => auth()->id(),
-                    'ModifiedOn' => now(),
-                ]
-            );
-
+                    [
+                        'ItemID' => $itemId,
+                        'Branch' => $toBranchId,
+                        'Store'  => $storeId,
+                    ],
+                    [
+                        'UOM' => $itemData['uom'] ?? null,
+                        'UnitCost' => $itemData['unit_cost'] ?? 0,
+                        'CurrentQty' => 0,
+                        'Min' => 0,
+                        'Reorder' => 0,
+                        'Max' => 0,
+                        'LastReceived' => now(),
+                        'Status' => true,
+                        'CreatedBy' => auth()->id(),
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => auth()->id(),
+                        'ModifiedOn' => now(),
+                    ]
+                );
             }
 
             $receiptItem = $receipt->items()->create([

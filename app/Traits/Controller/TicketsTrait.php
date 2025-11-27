@@ -7,7 +7,7 @@ use App\Enums\TicketSourceEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
 use App\Models\BR\Client;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Ticket;
 use App\Services\CRM\TicketService;

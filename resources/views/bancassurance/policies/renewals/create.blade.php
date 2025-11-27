@@ -24,8 +24,8 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Current End Date</label>
-                        <input type="text" class="form-control" 
-                               value="{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}" readonly>
+                        <input type="text" class="form-control"
+                            value="{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}" readonly>
                     </div>
                 </div>
 
@@ -34,30 +34,30 @@
                     <div class="col-md-4">
                         <label class="form-label">Renewal Date <span class="text-danger">*</span></label>
                         <input type="date" name="RenewalDate"
-                               class="form-control @error('RenewalDate') is-invalid @enderror"
-                               value="{{ old('RenewalDate') }}" required>
+                            class="form-control @error('RenewalDate') is-invalid @enderror"
+                            value="{{ old('RenewalDate') }}" required>
                         @error('RenewalDate')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label">New Start Date <span class="text-danger">*</span></label>
                         <input type="date" name="NewStartDate"
-                               class="form-control @error('NewStartDate') is-invalid @enderror"
-                               value="{{ old('NewStartDate') }}" required>
+                            class="form-control @error('NewStartDate') is-invalid @enderror"
+                            value="{{ old('NewStartDate') }}" required>
                         @error('NewStartDate')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label">New End Date <span class="text-danger">*</span></label>
                         <input type="date" name="NewEndDate"
-                               class="form-control @error('NewEndDate') is-invalid @enderror"
-                               value="{{ old('NewEndDate') }}" required>
+                            class="form-control @error('NewEndDate') is-invalid @enderror"
+                            value="{{ old('NewEndDate') }}" required>
                         @error('NewEndDate')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -66,10 +66,10 @@
                 <div class="mb-3">
                     <label class="form-label">Notes / Comments</label>
                     <textarea name="Notes" rows="2"
-                              class="form-control @error('Notes') is-invalid @enderror"
-                              placeholder="Optional comments...">{{ old('Notes') }}</textarea>
+                        class="form-control @error('Notes') is-invalid @enderror"
+                        placeholder="Optional comments...">{{ old('Notes') }}</textarea>
                     @error('Notes')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 

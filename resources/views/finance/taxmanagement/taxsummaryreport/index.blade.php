@@ -68,16 +68,21 @@
         <!-- Quick tax filter pills -->
         <ul class="nav nav-pills mb-3" id="taxPills" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pill-all" type="button" role="tab">All</button>
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pill-all" type="button"
+                        role="tab">All
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pill-vat" type="button" role="tab">VAT</button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pill-vat" type="button" role="tab">VAT
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pill-wht" type="button" role="tab">WHT</button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pill-wht" type="button" role="tab">WHT
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pill-gst" type="button" role="tab">GST</button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pill-gst" type="button" role="tab">GST
+                </button>
             </li>
         </ul>
 
@@ -271,20 +276,60 @@
 
 @section('styles')
     <style>
-        :root { --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif; }
-        body, .card, .table { font-family: var(--font-sans); }
-        .card { border: none; }
-        .table-hover tbody tr:hover { background-color: #f8f9fa; transition: background-color .2s; }
-        .badge.bg-primary-subtle { background-color: #eef2ff; }
-        .badge.bg-teal { background-color: #d1fae5; }
-        .rounded-3 { border-radius: .75rem!important; }
+        :root {
+            --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body, .card, .table {
+            font-family: var(--font-sans);
+        }
+
+        .card {
+            border: none;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color .2s;
+        }
+
+        .badge.bg-primary-subtle {
+            background-color: #eef2ff;
+        }
+
+        .badge.bg-teal {
+            background-color: #d1fae5;
+        }
+
+        .rounded-3 {
+            border-radius: .75rem !important;
+        }
+
         /* Print */
         @media print {
-            body * { visibility: hidden; }
-            #printRoot, #printRoot * { visibility: visible; }
-            #printRoot { position: absolute; left: 0; top: 0; width: 100%; }
-            @page { size: A4 portrait; margin: 14mm; }
-            .navbar, .btn, .modal, .nav, form { display: none !important; }
+            body * {
+                visibility: hidden;
+            }
+
+            #printRoot, #printRoot * {
+                visibility: visible;
+            }
+
+            #printRoot {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 14mm;
+            }
+
+            .navbar, .btn, .modal, .nav, form {
+                display: none !important;
+            }
         }
     </style>
 @endsection
@@ -292,33 +337,38 @@
 @section('scripts')
     <script>
         // minimal helpers
-        const fmt = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-        function sum(sel){ let s=0; document.querySelectorAll(sel).forEach(td=>s+=Number(td.dataset.amt||0)); return s; }
+        const fmt = n => Number(n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        function sum(sel) {
+            let s = 0;
+            document.querySelectorAll(sel).forEach(td => s += Number(td.dataset.amt || 0));
+            return s;
+        }
 
         // fill totals & tiles from "All" tab
-        (function(){
+        (function () {
             const tTaxable = sum('#pill-all .taxable');
-            const tTax     = sum('#pill-all .tax');
+            const tTax = sum('#pill-all .tax');
             document.getElementById('tAllTaxable').textContent = fmt(tTaxable);
-            document.getElementById('tAllTax').textContent     = fmt(tTax);
+            document.getElementById('tAllTax').textContent = fmt(tTax);
 
             // per pill totals
             document.getElementById('tVATTaxable').textContent = fmt(sum('#pill-vat .taxable'));
-            document.getElementById('tVATTax').textContent     = fmt(sum('#pill-vat .tax'));
+            document.getElementById('tVATTax').textContent = fmt(sum('#pill-vat .tax'));
 
             document.getElementById('tWHTTaxable').textContent = fmt(sum('#pill-wht .taxable'));
-            document.getElementById('tWHTTax').textContent     = fmt(sum('#pill-wht .tax'));
+            document.getElementById('tWHTTax').textContent = fmt(sum('#pill-wht .tax'));
 
             document.getElementById('tGSTTaxable').textContent = fmt(sum('#pill-gst .taxable'));
-            document.getElementById('tGSTTax').textContent     = fmt(sum('#pill-gst .tax'));
+            document.getElementById('tGSTTax').textContent = fmt(sum('#pill-gst .tax'));
 
             // tiles
             document.getElementById('sumTaxable').textContent = 'KSh ' + fmt(tTaxable);
-            document.getElementById('sumTax').textContent     = 'KSh ' + fmt(tTax);
+            document.getElementById('sumTax').textContent = 'KSh ' + fmt(tTax);
             // simple status logic
             const overdue = document.querySelectorAll('#pill-all .badge.bg-danger').length;
             const pending = document.querySelectorAll('#pill-all .badge.bg-warning').length;
-            const filed   = document.querySelectorAll('#pill-all .badge.bg-success').length;
+            const filed = document.querySelectorAll('#pill-all .badge.bg-success').length;
             document.getElementById('sumStatus').textContent = `${filed} Filed • ${pending} Pending • ${overdue} Overdue`;
 
             // actions
@@ -328,16 +378,18 @@
                 let csv = [];
                 for (const row of table.rows) {
                     const cells = Array.from(row.cells).map(td => {
-                        let t = (td.innerText||'').trim().replace(/\s+/g,' ');
-                        if (/[",\n]/.test(t)) t = `"${t.replace(/"/g,'""')}"`;
+                        let t = (td.innerText || '').trim().replace(/\s+/g, ' ');
+                        if (/[",\n]/.test(t)) t = `"${t.replace(/"/g, '""')}"`;
                         return t;
                     });
                     csv.push(cells.join(','));
                 }
-                const blob = new Blob([csv.join('\n')], {type:'text/csv;charset=utf-8;'});
+                const blob = new Blob([csv.join('\n')], {type: 'text/csv;charset=utf-8;'});
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url; a.download = 'tax_summary.csv'; a.click();
+                a.href = url;
+                a.download = 'tax_summary.csv';
+                a.click();
                 URL.revokeObjectURL(url);
             };
         })();

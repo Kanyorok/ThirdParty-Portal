@@ -383,8 +383,9 @@
                     <div class="modal-body">
                         <label class="form-label">Vehicle</label>
                         <select name="VehicleID" id="editAssignmentVehicle" class="form-control" required>
+                            <option value="">-- Select Vehicle --</option>
                             @foreach($vehicles as $vehicle)
-                                <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
+                                <option value="{{ old('VehicleID', $vehicle->Id) }}">{{ $vehicle->RegistrationNo }}</option>
                             @endforeach
                         </select>
                         <label class="form-label mt-2">Assignment Date</label>

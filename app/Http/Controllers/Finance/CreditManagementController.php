@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceCreditMovement;

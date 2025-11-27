@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Marketing;
 
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\StaticListsService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

@@ -2,7 +2,7 @@
 
 namespace App\Models\Legal;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Legal\LegalCaseCounsel;
 use App\Models\Legal\LegalCaseOutcome;
@@ -51,6 +51,7 @@ class LegalCase extends Model
     {
         return $this->hasMany(LegalCaseCounsel::class, 'LegalCaseID', 'Id');
     }
+
     /**
      * One case has one outcome (judgment or resolution)
      */

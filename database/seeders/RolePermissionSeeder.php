@@ -19,18 +19,18 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-    $actor = SystemHelper::user();
+        $actor = SystemHelper::user();
         $now   = now();
         $guard = Guard::getDefaultName(User::class);
 
         // Ensure baseline roles
         if (!Role::query()->where('name', 'Default')->exists()) {
             Role::create([
-                'name'       => 'Default',
+                'name' => 'Default',
                 'guard_name' => $guard,
                 'created_at' => $now,
                 'updated_at' => $now,
-                'CreatedBy'  => $actor->Id ?? 1,
+                'CreatedBy' => $actor->Id ?? 1,
                 'ModifiedBy' => $actor->Id ?? 1,
             ]);
         }
@@ -55,8 +55,8 @@ class RolePermissionSeeder extends Seeder
             $name = $perm->value;
             if (!isset($existing[$name])) {
                 $rows[] = [
-                    'name'       => $name,
-                    'ModuleId'   => $perm->module()->value,
+                    'name' => $name,
+                    'ModuleId' => $perm->module()->value,
                     'guard_name' => $guard,
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -92,11 +92,11 @@ class RolePermissionSeeder extends Seeder
         // Pivot likely: role_has_permissions (role_id, permission_id, + your audit cols)
         // Each row binds ~2-6 params; stay well under 2100
         $pivotValues = [
-            'CreatedBy'  => $actor->Id ?? 1,
+            'CreatedBy' => $actor->Id ?? 1,
             'ModifiedBy' => $actor->Id ?? 1,
         ];
 
-    foreach (array_chunk($permissionIds, 500) as $permChunk) {
+        foreach (array_chunk($permissionIds, 500) as $permChunk) {
             // syncWithoutDetaching keeps existing links and adds missing ones
             $attachPayload = [];
             foreach ($permChunk as $pid) {
@@ -109,7 +109,7 @@ class RolePermissionSeeder extends Seeder
         User::query()
             ->whereDoesntHave('roles')
             ->orderBy('Id')
-        ->chunkById(500, function ($users) use ($adminRole) {
+            ->chunkById(500, function ($users) use ($adminRole) {
                 $now = now();
                 $payload = [];
                 foreach ($users as $u) {
@@ -117,12 +117,12 @@ class RolePermissionSeeder extends Seeder
                     $payload[$adminRole->id] = [
                         'BranchId'  => $u->BranchId ?? 1,
                         'CreatedOn' => $now,
-                        'ModifiedOn'=> $now,
+                        'ModifiedOn' => $now,
                     ];
                     // Attach per-user (keeps memory low and avoids giant param batches)
-            // Ensure morph type uses our alias key 'UserID'
-            $u->setRelation('roles', null); // prevent cached relations side-effects
-            $u->roles()->syncWithoutDetaching($payload);
+                    // Ensure morph type uses our alias key 'UserID'
+                    $u->setRelation('roles', null); // prevent cached relations side-effects
+                    $u->roles()->syncWithoutDetaching($payload);
                 }
             });
     }

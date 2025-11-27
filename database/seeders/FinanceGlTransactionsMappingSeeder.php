@@ -11,8 +11,8 @@ class FinanceGlTransactionsMappingSeeder extends Seeder
     public function run(): void
     {
         $moduleId = 1100000; // Finance module ID
-        $userId   = 1;       // System/admin user ID for seeding
-        $now      = Carbon::now();
+        $userId = 1;       // System/admin user ID for seeding
+        $now = Carbon::now();
 
         // Mapping: TransactionTypeID, DebitGLCode, CreditGLCode
         $mappings = [
@@ -43,15 +43,15 @@ class FinanceGlTransactionsMappingSeeder extends Seeder
 
             if (!$exists) {
                 DB::table('t_FinanceGlTransactionsMapping')->insert([
-                    'ModuleID'          => $moduleId,
+                    'ModuleID' => $moduleId,
                     'TransactionTypeID' => $transactionTypeId,
-                    'DebitGLAccountID'  => $debitCode,
+                    'DebitGLAccountID' => $debitCode,
                     'CreditGLAccountID' => $creditCode,
-                    'IsActive'          => 1,
-                    'CreatedBy'         => $userId,
-                    'CreatedOn'         => $now,
-                    'ModifiedBy'        => $userId,
-                    'ModifiedOn'        => $now,
+                    'IsActive' => 1,
+                    'CreatedBy' => $userId,
+                    'CreatedOn' => $now,
+                    'ModifiedBy' => $userId,
+                    'ModifiedOn' => $now,
                 ]);
             }
         }

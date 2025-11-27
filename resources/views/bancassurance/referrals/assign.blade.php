@@ -9,11 +9,13 @@
         padding: 4px 12px;
         border: 1px solid #ced4da;
     }
+
     .dataTables_wrapper .dataTables_length select {
         border-radius: 20px;
         padding: 3px 10px;
         border: 1px solid #ced4da;
     }
+
     table.dataTable tbody tr:hover {
         background-color: #f8f9fa;
     }
@@ -62,7 +64,7 @@
                                     <select name="AssignedTo" class="form-select form-select-sm rounded-pill" required>
                                         <option value="">-- Select Officer --</option>
                                         @foreach($employees as $emp)
-                                            <option value="{{ $emp->Id }}">{{ $emp->FirstName }} {{ $emp->LastName }}</option>
+                                        <option value="{{ $emp->Id }}">{{ $emp->FirstName }} {{ $emp->LastName }}</option>
                                         @endforeach
                                     </select>
                                 </td>
@@ -92,7 +94,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#assignTable').DataTable({
             pageLength: 10,
             ordering: true,

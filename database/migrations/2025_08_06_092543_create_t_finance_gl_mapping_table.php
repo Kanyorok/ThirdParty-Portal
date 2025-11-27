@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,10 +12,10 @@ return new class extends Migration
     {
         Schema::create('t_FinanceGlTransactionsMapping', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('ModuleID')->constrained('t_Modules','ModuleID');
-            $table->foreignId('TransactionTypeID', 100)->constrained('t_FinanceTransactionTypes','Id');
-            $table->unsignedInteger('DebitGLAccountID')->constrained('t_FinanceGLAccounts','Id');
-            $table->unsignedInteger('CreditGLAccountID')->constrained('t_FinanceGLAccounts','Id');
+            $table->foreignId('ModuleID')->constrained('t_Modules', 'ModuleID');
+            $table->foreignId('TransactionTypeID', 100)->constrained('t_FinanceTransactionTypes', 'Id');
+            $table->unsignedInteger('DebitGLAccountID')->constrained('t_FinanceGLAccounts', 'Id');
+            $table->unsignedInteger('CreditGLAccountID')->constrained('t_FinanceGLAccounts', 'Id');
             $table->boolean('IsActive')->default(1);
 
             // User tracking

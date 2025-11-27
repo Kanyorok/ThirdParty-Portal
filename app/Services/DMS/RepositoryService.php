@@ -27,7 +27,9 @@ class RepositoryService extends PermissionsService
     protected const string Internal = 'internal';
     protected const string Validation = 'validation';
 
-    public function __construct(public Repository $repo) {}
+    public function __construct(public Repository $repo)
+    {
+    }
 
     public static function getUser(User $actor, array $parents = []): Collection
     {
@@ -81,7 +83,7 @@ class RepositoryService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder ' . $this->repo->Name . ' visibility : ' . $visibility->value);
                 return $this;
             });
-        } catch (Exception | Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error update repository visibility: ');
             Log::error($e);
             throw new ErroredException();
@@ -132,7 +134,7 @@ class RepositoryService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder name : ' . $this->repo->Name);
                 return $this;
             });
-        } catch (Exception | Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error update repository: ');
             Log::error($e);
             throw new ErroredException();
@@ -170,7 +172,7 @@ class RepositoryService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($repo)->event('create')->log('Created folder : ' . $repo->Name);
                 return $repo;
             });
-        } catch (Exception | Throwable $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error creating repository: ');
             Log::error($e);
             throw new ErroredException();

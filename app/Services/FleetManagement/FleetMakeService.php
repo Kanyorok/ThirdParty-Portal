@@ -3,7 +3,7 @@
 namespace App\Services\FleetManagement;
 
 
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\Auth\User;
@@ -15,37 +15,37 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class FleetMakeService
 {
 
-  public function create(array $data): FleetMake
-{
-    return DB::transaction(function () use ($data) {
-        $data['BrandID'] = $this->generateBrandID();
-        $data['BrandName'] = $data['BrandName'] ?? null;
-        $data['Remarks'] = $data['Remarks'] ?? null;
-        $data['CreatedBy'] = Auth::id();
-        $data['CreatedOn'] = now();
+    public function create(array $data): FleetMake
+    {
+        return DB::transaction(function () use ($data) {
+            $data['BrandID'] = $this->generateBrandID();
+            $data['BrandName'] = $data['BrandName'] ?? null;
+            $data['Remarks'] = $data['Remarks'] ?? null;
+            $data['CreatedBy'] = Auth::id();
+            $data['CreatedOn'] = now();
 
-        // Check if the fleet make already exists on soft deletes
-          $existing = FleetMake::withTrashed()
-            ->where('BrandName', $data['BrandName'])
-            ->first();
+            // Check if the fleet make already exists on soft deletes
+            $existing = FleetMake::withTrashed()
+                ->where('BrandName', $data['BrandName'])
+                ->first();
 
-        if ($existing) {
-            if ($existing->trashed()) {
-                $existing->restore();
-                return $existing;
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                    return $existing;
+                }
+
+                throw new \Exception("The fleet brand already exists.");
             }
 
-            throw new \Exception("The fleet brand already exists.");
-        }
 
-
-        return FleetMake::create($data);
-    });
-    activity()
-        ->performedOn($make)
-        ->causedBy(Auth::user())
-        ->log('Fleet Make Created');
-}
+            return FleetMake::create($data);
+        });
+        activity()
+            ->performedOn($make)
+            ->causedBy(Auth::user())
+            ->log('Fleet Make Created');
+    }
 
     private function generateBrandID(): string
     {
@@ -55,7 +55,7 @@ class FleetMakeService
             return 'BRAND-0001';
         }
 
-        $lastId = (int) str_replace('BRAND-', '', $latestMake->BrandID);
+        $lastId = (int)str_replace('BRAND-', '', $latestMake->BrandID);
         $newId = $lastId + 1;
 
         return 'BRAND-' . str_pad($newId, 4, '0', STR_PAD_LEFT);

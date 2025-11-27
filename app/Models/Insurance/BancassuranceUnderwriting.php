@@ -2,7 +2,7 @@
 
 namespace App\Models\Insurance;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,9 +17,9 @@ class BancassuranceUnderwriting extends Model
     protected $table = 't_BancassuranceUnderwriting';
     protected $primaryKey = 'Id';
 
-    protected $fillable  = [
-        'PolicyId','FeedbackDate','RiskScore','Decision','Comments',
-        'CreatedBy','ModifiedBy', 'DeletedBy'
+    protected $fillable = [
+        'PolicyId', 'FeedbackDate', 'RiskScore', 'Decision', 'Comments',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     public static function getPrimarykey(): string

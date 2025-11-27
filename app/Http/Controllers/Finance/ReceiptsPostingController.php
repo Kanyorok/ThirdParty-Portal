@@ -9,7 +9,7 @@ use App\Models\Finance\FinanceReceiptAllocation;
 use App\Models\Finance\CustomerWallet;
 use App\Services\Finance\TransactionService;
 use App\Models\ThirdParty\ThirdParties;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\Finance\ReceiptPostingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

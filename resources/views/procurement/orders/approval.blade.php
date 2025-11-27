@@ -18,6 +18,26 @@
     <div class="card shadow-sm mb-3">
         <div class="card-body">
             @if(isset($orderInfo))
+                @php
+                    $docType = 'purchase_order';
+                    $poId = (int)($orderInfo->Id ?? 0);
+                    $orderTotal = (float)($orderInfo->OrdTotIncl ?? 0);
+                    $isRejected = false;
+                    $isFullyApproved = false;
+                    try {
+                        $isRejected = \Illuminate\Support\Facades\DB::table('t_Approvals')
+                            ->where('DocType', $docType)
+                            ->where('DocumentId', $poId)
+                            ->where('Status', 'rejected')
+                            ->exists();
+                        if (!$isRejected && $poId > 0) {
+                            $isFullyApproved = app(\App\Services\Core\ApprovalService::class)
+                                ->isFullyApproved($docType, $poId, $orderTotal);
+                        }
+                    } catch (\Throwable $e) {
+                        $isRejected = false; $isFullyApproved = false;
+                    }
+                @endphp
                 <div class="row mb-3">
                     <div class="col-md-4"><strong>LPO No:</strong> {{ $orderInfo->ExtOrdNum ?? '--' }}</div>
                     <div class="col-md-4"><strong>Order No:</strong> {{ $orderInfo->OrderNo ?? '--' }}</div>
@@ -101,25 +121,66 @@
         </div>
     </div>
 
-    @if(!($isFullyApproved ?? false))
-        <form action="{{ route('purchaseOrder.approve', $orderInfo->Id ?? 0) }}" method="POST">
-            @csrf
-            <input type="hidden" name="document_type" value="purchase_order">
-            <input type="hidden" name="order_total" value="{{ $orderInfo->OrdTotIncl ?? 0 }}">
-            <input type="hidden" name="order_id" value="{{ $orderInfo->Id ?? 0 }}">
-            <input type="hidden" name="action" value="approve">
-            <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Approve</button>
-            </div>
-        </form>
+    @if($isFullyApproved)
+        <div class="d-flex justify-content-end gap-2">
+            <span class="btn btn-success disabled" aria-disabled="true" title="This PO is fully approved">
+                <i class="fas fa-check"></i> Approved
+            </span>
+            <span class="btn btn-outline-secondary disabled" aria-disabled="true" title="This PO is fully approved">Reject</span>
+        </div>
+    @elseif($isRejected)
+        <div class="d-flex justify-content-end gap-2">
+            <span class="btn btn-outline-secondary disabled" aria-disabled="true" title="This PO was rejected">Approve</span>
+            <span class="btn btn-danger disabled" aria-disabled="true"><i class="fas fa-times"></i> Rejected</span>
+        </div>
     @else
-        <div class="alert alert-success d-flex justify-content-between align-items-center">
-            <div>
-                <i class="fas fa-check-circle me-1"></i>
-                This purchase order is fully approved.
-                @if(!empty($approvedBy))
-                    <br><small>Approved by: {{ implode(', ', $approvedBy) }}</small>
-                @endif
+        <div class="d-flex justify-content-end gap-2">
+            <form action="{{ route('purchaseOrder.approve', $orderInfo->Id ?? 0) }}" method="POST">
+                @csrf
+                <input type="hidden" name="document_type" value="purchase_order">
+                <input type="hidden" name="order_total" value="{{ $orderInfo->OrdTotIncl ?? 0 }}">
+                <input type="hidden" name="order_id" value="{{ $orderInfo->Id ?? 0 }}">
+                <input type="hidden" name="action" value="approve">
+                <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Approve</button>
+            </form>
+
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                <i class="fas fa-times"></i> Reject
+            </button>
+        </div>
+
+        <!-- Reject Modal -->
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="rejectModalLabel">Reject Purchase Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('purchaseOrder.approve', $orderInfo->Id ?? 0) }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <input type="hidden" name="document_type" value="purchase_order">
+                            <input type="hidden" name="order_total" value="{{ $orderInfo->OrdTotIncl ?? 0 }}">
+                            <input type="hidden" name="order_id" value="{{ $orderInfo->Id ?? 0 }}">
+                            <input type="hidden" name="action" value="reject">
+                            <input type="hidden" name="rollback_to_previous" value="1">
+                            <div class="mb-3">
+                                <label for="rejection_reason" class="form-label">Reason for rejection</label>
+                                <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" placeholder="Provide a brief reason" required></textarea>
+                            </div>
+                            <div class="alert alert-warning">
+                                This will send the P.O back to the previous workflow step.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Confirm Reject
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     @endif

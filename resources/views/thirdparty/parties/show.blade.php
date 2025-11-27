@@ -117,7 +117,7 @@
                                 'Primary Contact' => $primaryUser?->FullName,
                                 'Primary Email' => $primaryUser?->Email,
                                 'Approval Status' => $party->ApprovalStatus?->label(),
-                                'Operational Status' => $party->Status?->value,
+                                'Operational Status' => $party->Status?->label(),
                                 // New multi-type display: join Codes; fallback to legacy enum label
                                 'Third Party Types' => ($party->types && $party->types->count()) ? $party->types->pluck('Code')->filter()->unique()->join(', ') : $party->ThirdPartyType?->label(),
                                 'Is Prequalified' => $party->IsPrequalified,
@@ -129,7 +129,15 @@
                         @foreach ($details as $label => $value)
                             <div class="col-md-6 col-lg-4">
                                 <p class="text-muted mb-1 fw-semibold">{{ $label }}</p>
-                                <p class="fw-bold">{{ $value ?? 'N/A' }}</p>
+                                <p class="fw-bold">
+                                    @if (is_bool($value))
+                                        {{ $value ? 'Yes' : 'No' }}
+                                    @elseif ($value instanceof \Carbon\CarbonInterface)
+                                        {{ $value->format('d/m/Y H:i:s') }}
+                                    @else
+                                        {{ $value ?? 'N/A' }}
+                                    @endif
+                                </p>
                             </div>
                         @endforeach
                     </div>

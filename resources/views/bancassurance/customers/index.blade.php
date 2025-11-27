@@ -12,9 +12,12 @@
         font-weight: 600;
         text-align: center;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
         vertical-align: middle !important;
     }
+
     table.dataTable tbody tr:hover {
         background-color: #f9fbfd;
     }
@@ -25,6 +28,7 @@
         padding: 4px 12px;
         border: 1px solid #ced4da;
     }
+
     .dataTables_wrapper .dataTables_length select {
         border-radius: 20px;
         padding: 3px 10px;
@@ -35,6 +39,7 @@
     .btn-group .btn {
         margin-right: 4px;
     }
+
     .btn-group .btn:last-child {
         margin-right: 0;
     }
@@ -43,6 +48,7 @@
     .badge {
         font-size: 0.8rem;
     }
+
     .btn i {
         vertical-align: middle;
     }
@@ -54,16 +60,16 @@
 
     {{-- ✅ Success Message --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-pill py-2 px-3 mb-3 shadow-sm" role="alert">
-            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="alert alert-success alert-dismissible fade show rounded-pill py-2 px-3 mb-3 shadow-sm" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     @endif
 
     {{-- ✅ Header --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('bancassurance.customers.create') }}" 
-           class="btn btn-sm btn-primary rounded-pill shadow-sm">
+        <a href="{{ route('bancassurance.customers.create') }}"
+            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-person-plus me-1"></i> New Customer
         </a>
     </div>
@@ -91,40 +97,40 @@
                     </thead>
                     <tbody>
                         @forelse ($customers as $customer)
-                            <tr>
-                                <td class="text-center">{{ $loop->iteration }}</td>
-                                <td>{{ $customer->thirdParty->ThirdPartyName ?? '-' }}</td>
-                                <td>{{ $customer->NationalID ?? '-' }}</td>
-                                <td>{{ $customer->thirdParty->Phone ?? '-' }}</td>
-                                <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
-                                <td>
-                                    {{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d M Y') : '-' }}
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        {{-- Portfolio --}}
-                                        <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" 
-                                           class="btn btn-outline-info rounded-pill px-2" 
-                                           title="View Portfolio">
-                                            <i class="bi bi-folder2-open"></i>
-                                        </a>
+                        <tr>
+                            <td class="text-center">{{ $loop->iteration }}</td>
+                            <td>{{ $customer->thirdParty->ThirdPartyName ?? '-' }}</td>
+                            <td>{{ $customer->NationalID ?? '-' }}</td>
+                            <td>{{ $customer->thirdParty->Phone ?? '-' }}</td>
+                            <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
+                            <td>
+                                {{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d M Y') : '-' }}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    {{-- Portfolio --}}
+                                    <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}"
+                                        class="btn btn-outline-info rounded-pill px-2"
+                                        title="View Portfolio">
+                                        <i class="bi bi-folder2-open"></i>
+                                    </a>
 
-                                        {{-- Communication --}}
-                                        <a href="{{ route('bancassurance.customers.communication.index') }}" 
-                                           class="btn btn-outline-secondary rounded-pill px-2" 
-                                           title="Customer Communication">
-                                            <i class="bi bi-chat-left-text"></i>
-                                        </a>
+                                    {{-- Communication --}}
+                                    <a href="{{ route('bancassurance.customers.communication.index') }}"
+                                        class="btn btn-outline-secondary rounded-pill px-2"
+                                        title="Customer Communication">
+                                        <i class="bi bi-chat-left-text"></i>
+                                    </a>
 
-                                        {{-- Beneficiary --}}
-                                        <a href="{{ route('bancassurance.customers.beneficiaries.create') }}" 
-                                           class="btn btn-outline-primary rounded-pill px-2" 
-                                           title="Add Beneficiary">
-                                            <i class="bi bi-person-plus"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
+                                    {{-- Beneficiary --}}
+                                    <a href="{{ route('bancassurance.customers.beneficiaries.create') }}"
+                                        class="btn btn-outline-primary rounded-pill px-2"
+                                        title="Add Beneficiary">
+                                        <i class="bi bi-person-plus"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                         @empty
                         @endforelse
                     </tbody>
@@ -140,7 +146,7 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#Customerregistry').DataTable({
             pageLength: 10,
             ordering: true,
@@ -150,8 +156,10 @@
                 search: "_INPUT_",
                 searchPlaceholder: "Search customers..."
             },
-            columnDefs: [
-                { orderable: false, targets: [6] } // Disable sorting on Actions
+            columnDefs: [{
+                    orderable: false,
+                    targets: [6]
+                } // Disable sorting on Actions
             ]
         });
     });

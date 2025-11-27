@@ -41,7 +41,7 @@ class LegalCounselController extends Controller
             'CounselName' => 'required|string|max:255',
             'FirmName' => 'required|string|max:255',
             'Email' => 'required|email|max:255',
-            'Phone' => [ 'required', 'regex:/^\\+[1-9]\\d{7,14}$/' ],
+            'Phone' => ['required', 'regex:/^\\+[1-9]\\d{7,14}$/'],
             'Role' => 'required|string|max:100',
             // 'Remarks' => 'nullable|string',
         ]);
@@ -50,13 +50,13 @@ class LegalCounselController extends Controller
             ->where('Phone', $validated['Phone'])
             ->exists();
 
-        if($duplicates){
+        if ($duplicates) {
             return back()->with('error', 'A counsel with this details already exists');
         }
-        try{
+        try {
             DB::beginTransaction();
 
-            $counsel =  LegalCaseCounsel::create([
+            $counsel = LegalCaseCounsel::create([
                 'LegalCaseID' => $caseId,
                 'CounselName' => $validated['CounselName'],
                 'FirmName' => $validated['FirmName'] ?? null,
@@ -71,21 +71,21 @@ class LegalCounselController extends Controller
             ]);
             // return $counsel;
             activity()
-            ->performedOn(new LegalCaseCounsel())
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('Legal Counsel created');
+                ->performedOn(new LegalCaseCounsel())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'create'])
+                ->log('Legal Counsel created');
 
             DB::commit();
 
             return redirect()->route('legal.cases.show', $caseId)->with('success', 'Counsel assigned successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
                 ->performedOn(new LegalCaseCounsel())
                 ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
+                ->withProperties(['action' => 'create'])
                 ->log('Error creating legal councel: ' . $th->getMessage());
 
             Log::error('Error creating legal councel: ' . $th->getMessage());
@@ -99,7 +99,7 @@ class LegalCounselController extends Controller
 
         $case = LegalCase::findOrFail($disputeId);
         $counsel = LegalCaseCounsel::where('LegalCaseID', $disputeId)
-                                ->findOrFail($counselId);
+            ->findOrFail($counselId);
 
         return view('legal.disputes.counsels.edit', compact('case', 'counsel'));
     }
@@ -110,17 +110,17 @@ class LegalCounselController extends Controller
 
         $case = LegalCase::findOrFail($disputeId);
         $counsel = LegalCaseCounsel::where('LegalCaseID', $disputeId)
-                                ->findOrFail($counselId);
+            ->findOrFail($counselId);
 
         $data = $request->validate([
             'CounselName' => 'required|string|max:255',
             'FirmName'    => 'required|string|max:255',
             'Email'       => 'required|email|max:255',
-            'Phone'       => [ 'required', 'regex:/^\\+[1-9]\\d{7,14}$/' ],
+            'Phone'       => ['required', 'regex:/^\\+[1-9]\\d{7,14}$/'],
             'Role'        => 'required|string|max:100',
             'Remarks'     => 'required|string',
         ]);
-        try{
+        try {
 
             DB::beginTransaction();
 
@@ -145,17 +145,17 @@ class LegalCounselController extends Controller
             return redirect()
                 ->route('legal.disputes.counsels.show', [$case->Id, $counsel->Id])
                 ->with('success', 'Counsel updated successfully.');
-            }catch(\Throwable $th){
-                DB::rollBack();
+        } catch (\Throwable $th) {
+            DB::rollBack();
 
-                activity()
-                    ->performedOn(new LegalCaseCounsel())
-                    ->causedBy(Auth::user())
-                    ->withProperties(['action' => 'update'])
-                    ->log('Error editing legal councel: ' . $th->getMessage());
+            activity()
+                ->performedOn(new LegalCaseCounsel())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Error editing legal councel: ' . $th->getMessage());
 
-                Log::error('Error editing legal councel: ' . $th->getMessage());
-                return back()->with('error', 'Error creating legal councel: ' . $th->getMessage());
+            Log::error('Error editing legal councel: ' . $th->getMessage());
+            return back()->with('error', 'Error creating legal councel: ' . $th->getMessage());
         }
     }
 
@@ -166,7 +166,7 @@ class LegalCounselController extends Controller
 
         $case = LegalCase::findOrFail($disputeId);
         $counsel = LegalCaseCounsel::where('LegalCaseID', $disputeId)
-                                ->findOrFail($counselId);
+            ->findOrFail($counselId);
 
         return view('legal.disputes.counsels.show', compact('case', 'counsel'));
     }
@@ -175,7 +175,7 @@ class LegalCounselController extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::DisputeLitigationDelete, LegalCaseCounsel::class);
-        try{
+        try {
             DB::beginTransaction();
 
             $counsel = LegalCaseCounsel::findOrFail($id);
@@ -192,17 +192,16 @@ class LegalCounselController extends Controller
                 ->log('Counsel Succefully Deleted');
 
             return redirect()->route('legal.cases.show', $caseId)->with('success', 'Counsel removed successfully.');
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
 
             activity()
-                    ->performedOn(new LegalCaseCounsel())
-                    ->causedBy(Auth::user())
-                    ->withProperties(['action' => 'delete'])
-                    ->log('Error deleting legal councel: ' . $th->getMessage());
+                ->performedOn(new LegalCaseCounsel())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'delete'])
+                ->log('Error deleting legal councel: ' . $th->getMessage());
 
             return back()->with('error', 'Error deleting Assigned counsel');
         }
-
     }
 }

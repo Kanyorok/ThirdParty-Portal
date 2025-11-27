@@ -12,9 +12,12 @@
         font-weight: 600;
         text-align: center;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
         vertical-align: middle !important;
     }
+
     table.dataTable tbody tr:hover {
         background-color: #f9fbfd;
     }
@@ -25,6 +28,7 @@
         padding: 4px 12px;
         border: 1px solid #ced4da;
     }
+
     .dataTables_wrapper .dataTables_length select {
         border-radius: 20px;
         padding: 3px 10px;
@@ -35,12 +39,15 @@
     .btn-group .btn {
         margin-right: 4px;
     }
+
     .btn-group .btn:last-child {
         margin-right: 0;
     }
+
     .badge {
         font-size: 0.85rem;
     }
+
     .btn i {
         vertical-align: middle;
     }
@@ -53,11 +60,11 @@
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <a href="{{ route('bancassurance.claims.create') }}"
-           class="btn btn-sm btn-primary rounded-pill shadow-sm">
+            class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> Initiate New Claim
         </a>
         <a href="{{ route('bancassurance.claims.closed') }}"
-           class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+            class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
             View Closed Claims
         </a>
     </div>
@@ -100,7 +107,7 @@
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a href="{{ route('bancassurance.claims.assessForm', $claim->Id) }}"
-                                       class="btn btn-outline-info rounded-pill px-2" title="Assess Claim">
+                                        class="btn btn-outline-info rounded-pill px-2" title="Assess Claim">
                                         <i class="bi bi-check-circle"></i> Assess
                                     </a>
                                 </div>
@@ -126,7 +133,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#claim').DataTable({
             pageLength: 10,
             ordering: true,
@@ -136,8 +143,10 @@
                 search: "_INPUT_",
                 searchPlaceholder: "Search claims..."
             },
-            columnDefs: [
-                { orderable: false, targets: [7] } // Disable sorting on Actions
+            columnDefs: [{
+                    orderable: false,
+                    targets: [7]
+                } // Disable sorting on Actions
             ]
         });
     });

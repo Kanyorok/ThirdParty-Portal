@@ -64,8 +64,9 @@
                                 <label class="form-label" for="BranchID">Branch ID <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="BranchID" name="BranchID" required
-                                       maxlength="10"
-                                       placeholder="Branch ID">
+                                       maxlength="10" readonly
+                                       placeholder="Auto-generated e.g. WAR001">
+                                <p class="form-text">Auto-generated from name: first 3 letters + sequence (e.g., WAR001).</p>
                                 <p id="BranchID_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
@@ -374,5 +375,92 @@
                 branchesTable.ajax.reload();
             }
         }
+
+        // --- Auto-generate BranchID based on Branch Name ---
+        const nameInput = document.getElementById('Name');
+        const branchIdInput = document.getElementById('BranchID');
+
+        // Debounce utility
+        function debounce(fn, delay) {
+            let t;return function(){const ctx=this,args=arguments;clearTimeout(t);t=setTimeout(()=>fn.apply(ctx,args),delay)};
+        }
+
+        // Build 3-letter prefix from name (letters only), pad with X if fewer than 3
+        function buildPrefix(name) {
+            const letters = (name || '').toUpperCase().replace(/[^A-Z]/g, '');
+            const prefix = (letters.slice(0, 3) + 'XXX').slice(0, 3);
+            return prefix;
+        }
+
+        // Query server for existing branches matching prefix and compute next suffix
+        async function fetchNextSuffix(prefix) {
+            try {
+                // Mimic DataTables server-side request to reuse existing endpoint
+                const params = new URLSearchParams({
+                    draw: '1',
+                    start: '0',
+                    length: '100',
+                    'search[value]': prefix,
+                    'search[regex]': 'false'
+                });
+                const res = await fetch(`{{ route('branches.index') }}?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!res.ok) throw new Error('Network response was not ok');
+                const data = await res.json();
+                const rows = Array.isArray(data.data) ? data.data : [];
+                let max = 0;
+                rows.forEach(r => {
+                    const id = r.BranchID || r.branchid || '';
+                    if (typeof id === 'string' && id.toUpperCase().startsWith(prefix)) {
+                        const m = id.slice(prefix.length).match(/^(\d{1,})$/);
+                        if (m) {
+                            const n = parseInt(m[1], 10);
+                            if (!isNaN(n)) max = Math.max(max, n);
+                        }
+                    }
+                });
+                return max + 1;
+            } catch (e) {
+                // Fallback: try using any currently loaded rows in DataTable
+                try {
+                    if (branchesTable) {
+                        let max = 0;
+                        branchesTable.rows().every(function(){
+                            const d = this.data();
+                            const id = d && (d.BranchID || d.branchid || '');
+                            if (typeof id === 'string' && id.toUpperCase().startsWith(prefix)) {
+                                const m = id.slice(prefix.length).match(/^(\d{1,})$/);
+                                if (m) {
+                                    const n = parseInt(m[1], 10);
+                                    if (!isNaN(n)) max = Math.max(max, n);
+                                }
+                            }
+                        });
+                        return max + 1;
+                    }
+                } catch(_) {}
+                return 1;
+            }
+        }
+
+        const updateBranchId = debounce(async function() {
+            if (!nameInput || !branchIdInput) return;
+            const name = nameInput.value;
+            const prefix = buildPrefix(name);
+            if (!prefix || prefix === 'XXX') { branchIdInput.value = ''; return; }
+            const next = await fetchNextSuffix(prefix);
+            const suffix = String(next).padStart(3, '0');
+            branchIdInput.value = `${prefix}${suffix}`;
+        }, 300);
+
+        // Bind events when create modal opens and on input
+        $(document).on('click', '.modal-create-branch', function () {
+            // Clear previous values
+            if (branchIdInput) branchIdInput.value = '';
+            if (nameInput) {
+                // Trigger generation if name already typed somehow
+                updateBranchId();
+            }
+        });
+        if (nameInput) nameInput.addEventListener('input', updateBranchId);
     </script>
 @endsection

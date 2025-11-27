@@ -3,7 +3,7 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\ItemCategories;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use Exception;

@@ -5,7 +5,7 @@ namespace App\Models\Insurance;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassurancePolicy;
 
 class BancassuranceBeneficiaries extends Model

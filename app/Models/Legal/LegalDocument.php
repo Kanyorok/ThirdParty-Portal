@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalDocument extends Model
 {
-    use SoftDeletes, UserActorTrait,DocumentsTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -42,7 +42,7 @@ class LegalDocument extends Model
         'IsActive',
     ];
 
-    public static function getPrimaryKey() : string
+    public static function getPrimaryKey(): string
     {
         return 'LegalDocumentId';
     }
@@ -55,7 +55,7 @@ class LegalDocument extends Model
 
     public function modules()
     {
-        return $this->belongsTo(Module::class,'ModuleID','SourceID');
+        return $this->belongsTo(Module::class, 'ModuleID', 'SourceID');
     }
 
     public function modifiedBy()

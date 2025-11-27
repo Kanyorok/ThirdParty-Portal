@@ -78,17 +78,46 @@
                 </div>
             @endunless
 
-            {{-- Driver (Always shown) --}}
+            {{-- Driver Section (Always shown) --}}
             <div class="row g-3 mt-2">
-                {{-- Driver --}}
                 <div class="col-md-6">
                     <label class="form-label">Driver<span class="text-danger">*</span></label>
-                    <input type="hidden" name="DriverID" id="DriverID">
-                    <input type="text" id="DriverName" class="form-control" readonly>
+                    
+                    @if(isset($parentInspection))
+                        {{-- Post-Trip: Show driver from parent inspection --}}
+                        @php
+                            // Get driver name from parent inspection
+                            $driverName = 'No driver assigned';
+                            $driverType = 'No driver assigned';
+                            
+                            if ($parentInspection->DriverID) {
+                                $driverName = $parentInspection->driver->DriverName ?? 'Driver not found';
+                                $driverType = 'Fleet Driver';
+                            } elseif ($parentInspection->ContractedDriverID) {
+                                $driverName = $parentInspection->contractedDriver->FullName ?? 'Contracted driver not found';
+                                $driverType = 'Contracted Driver';
+                            }
+                        @endphp
+                        
+                        <input type="text" class="form-control" value="{{ $driverName }}" readonly>
+                        <small class="text-muted">{{ $driverType }} (from Pre-Trip Inspection)</small>
+                        
+                        {{-- Hidden fields to preserve driver assignment --}}
+                        <input type="hidden" name="DriverID" value="{{ $parentInspection->DriverID }}">
+                        <input type="hidden" name="ContractedDriverID" value="{{ $parentInspection->ContractedDriverID }}">
+                        
+                    @else
+                        {{-- Pre-Trip: Dynamic driver selection --}}
+                        <input type="hidden" name="DriverID" id="DriverID">
+                        <input type="hidden" name="ContractedDriverID" id="ContractedDriverID">
+                        <input type="text" id="DriverName" class="form-control" readonly>
+                        <small class="text-muted" id="DriverTypeText"></small>
+                    @endif
                 </div>
+                
                 <div class="col-md-4">
                     <label class="form-label">Inspection Date<span class="text-danger">*</span></label>
-                    <input type="date" name="InspectionDate" class="form-control" value="{{ old('InspectionDate') }}"
+                    <input type="date" name="InspectionDate" class="form-control" value="{{ old('InspectionDate', date('Y-m-d')) }}"
                            required>
                 </div>
                 <div class="col-md-4">
@@ -135,43 +164,44 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
 
-                {{-- Safety Equipment --}}
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <label class="form-label fw-bold">Safety Equipment<span class="text-danger">*</span></label>
-                        <div class="d-flex flex-wrap gap-4 border rounded p-3">
-                            @foreach([
-                                'Reflector' => 'Reflector',
-                                'FireExtinguisher' => 'Fire Extinguisher',
-                                'FirstAidKit' => 'First Aid Kit',
-                                'SpareTyre' => 'Spare Tyre',
-                                'Spanner' => 'Spanner',
-                                'Jack' => 'Jack',
-                                '4XFloorMats' => '4X Floor Mats',
-                            ] as $field => $label)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="{{ $field }}"
-                                           value="1" {{ old($field) ? 'checked' : '' }}>
-                                    <label class="form-check-label">{{ $label }}</label>
-                                </div>
-                            @endforeach
-                        </div>
+            {{-- Safety Equipment --}}
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Safety Equipment<span class="text-danger">*</span></label>
+                    <div class="d-flex flex-wrap gap-4 border rounded p-3">
+                        @foreach([
+                            'Reflector' => 'Reflector',
+                            'FireExtinguisher' => 'Fire Extinguisher',
+                            'FirstAidKit' => 'First Aid Kit',
+                            'SpareTyre' => 'Spare Tyre',
+                            'Spanner' => 'Spanner',
+                            'Jack' => 'Jack',
+                            '4XFloorMats' => '4X Floor Mats',
+                        ] as $field => $label)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="{{ $field }}"
+                                       value="1" {{ old($field) ? 'checked' : '' }}>
+                                <label class="form-check-label">{{ $label }}</label>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
+            </div>
 
-                {{-- Document Upload --}}
-                <div class="mb-3 mt-3">
-                    <label class="form-label">Upload Supporting Document<span class="text-danger">*</span></label>
-                    <input type="file" name="Document" class="form-control">
-                    <small class="text-muted">Attach inspection sheet, photos, or related files</small>
-                </div>
+            {{-- Document Upload --}}
+            <div class="mb-3 mt-3">
+                <label class="form-label">Upload Supporting Document</label>
+                <input type="file" name="Document" class="form-control">
+                <small class="text-muted">Attach inspection sheet, photos, or related files (Max: 2MB)</small>
+            </div>
 
-                {{-- Submit --}}
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Save Inspection</button>
-                    <a href="{{ route('fleet.vehicle_inspection.index') }}" class="btn btn-secondary">Cancel</a>
-                </div>
+            {{-- Submit --}}
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Save Inspection</button>
+                <a href="{{ route('fleet.vehicle_inspection.index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
         </form>
     </div>
 @endsection
@@ -181,8 +211,10 @@
 document.addEventListener('DOMContentLoaded', function () {
     const vehicleSelect = document.querySelector('[name="VehicleID"]');
     const driverIdInput = document.getElementById('DriverID');
+    const contractedDriverIdInput = document.getElementById('ContractedDriverID');
     const driverNameInput = document.getElementById('DriverName');
-    const fuelTypeInput = document.querySelector('[name="FuelType"]'); 
+    const driverTypeText = document.getElementById('DriverTypeText');
+    const fuelTypeInput = document.getElementById('FuelTypeID');
     const fuelNameInput = document.getElementById('FuelTypeName');
     const mileageInput = document.querySelector('[name="Mileage"]');
 
@@ -190,11 +222,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchVehicleDetails(Id) {
         if (!Id) {
-            driverIdInput.value = '';
-            driverNameInput.value = '';
-            fuelTypeInput.value = ''; // ← CHANGED: Use the correct input
-            fuelNameInput.value = '';
-            mileageInput.value = '';
+            // Clear all fields if no vehicle selected
+            if (driverIdInput) driverIdInput.value = '';
+            if (contractedDriverIdInput) contractedDriverIdInput.value = '';
+            if (driverNameInput) driverNameInput.value = '';
+            if (driverTypeText) driverTypeText.textContent = '';
+            if (fuelTypeInput) fuelTypeInput.value = '';
+            if (fuelNameInput) fuelNameInput.value = '';
+            if (mileageInput) mileageInput.value = '';
             return;
         }
 
@@ -204,45 +239,67 @@ document.addEventListener('DOMContentLoaded', function () {
                 return res.json();
             })
             .then(data => {
-                driverIdInput.value = data.driverId ?? '';
-                driverNameInput.value = data.driverName ?? 'No driver assigned';
-
-                if (data.fuelTypeId) {
-                    fuelTypeInput.value = data.fuelTypeId; // ← CHANGED: Set the correct input
-                    fuelNameInput.value = data.fuelTypeName ?? '';
+                // Clear both driver fields first
+                if (driverIdInput) driverIdInput.value = '';
+                if (contractedDriverIdInput) contractedDriverIdInput.value = '';
+                if (driverTypeText) driverTypeText.textContent = '';
+                
+                // Set the appropriate driver field based on driverType
+                if (data.driverType === 'FleetDriver') {
+                    if (driverIdInput) driverIdInput.value = data.driverId ?? '';
+                    if (driverTypeText) driverTypeText.textContent = 'Fleet Driver';
+                } else if (data.driverType === 'ContractedDriver') {
+                    if (contractedDriverIdInput) contractedDriverIdInput.value = data.driverId ?? '';
+                    if (driverTypeText) driverTypeText.textContent = 'Contracted Driver';
                 } else {
-                    fuelTypeInput.value = ''; // ← CHANGED: Use the correct input
-                    fuelNameInput.value = '';
+                    if (driverTypeText) driverTypeText.textContent = 'No driver assigned';
+                }
+                
+                if (driverNameInput) driverNameInput.value = data.driverName ?? 'No driver assigned';
+
+                if (data.fuelTypeId && fuelTypeInput) {
+                    fuelTypeInput.value = data.fuelTypeId;
+                    if (fuelNameInput) fuelNameInput.value = data.fuelTypeName ?? '';
+                } else {
+                    if (fuelTypeInput) fuelTypeInput.value = '';
+                    if (fuelNameInput) fuelNameInput.value = '';
                 }
 
-                // ✅ Fetch last mileage
-                fetch(`/fleet/vehicle_inspection/get-last-mileage/${Id}`) // ← FIXED: variable name
+                // Fetch last mileage
+                fetch(`/fleet/vehicle_inspection/get-last-mileage/${Id}`)
                     .then(res => res.json())
                     .then(mileageData => {
                         lastMileage = mileageData.lastMileage ?? 0;
-                        mileageInput.placeholder = `Last recorded: ${lastMileage} km`;
+                        if (mileageInput) mileageInput.placeholder = `Last recorded: ${lastMileage} km`;
                     });
             })
             .catch(err => {
-                console.error(err);
+                console.error('Error fetching vehicle details:', err);
+                if (driverNameInput) driverNameInput.value = 'Error loading driver information';
+                if (driverTypeText) driverTypeText.textContent = '';
             });
     }
 
     // Prevent entering mileage lower than last
-    mileageInput?.addEventListener('input', function () {
-        const entered = parseInt(this.value || 0);
-        if (entered < lastMileage) {
-            alert(`Mileage cannot be less than the last recorded value (${lastMileage} km).`);
-            this.value = lastMileage;
+    if (mileageInput) {
+        mileageInput.addEventListener('input', function () {
+            const entered = parseInt(this.value || 0);
+            if (entered < lastMileage) {
+                alert(`Mileage cannot be less than the last recorded value (${lastMileage} km).`);
+                this.value = lastMileage;
+            }
+        });
+    }
+
+    if (vehicleSelect) {
+        vehicleSelect.addEventListener('change', function () {
+            fetchVehicleDetails(this.value);
+        });
+
+        // Initialize if vehicle is already selected (e.g., form validation failed)
+        if (vehicleSelect.value) {
+            fetchVehicleDetails(vehicleSelect.value);
         }
-    });
-
-    vehicleSelect?.addEventListener('change', function () {
-        fetchVehicleDetails(this.value);
-    });
-
-    if (vehicleSelect?.value) {
-        fetchVehicleDetails(vehicleSelect.value);
     }
 });
 </script>
