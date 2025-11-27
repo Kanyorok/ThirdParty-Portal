@@ -605,4 +605,19 @@ class DocumentService extends PermissionsService
                         data-url="' . route('file.embed-preview', [$this->document->DocumentId]) . '" id="document-' . $this->document->DocumentId . '">
                     ' . $this->document->ext()?->getIcon() . "&nbsp;" . Str::limit(explode(".", $this->document->Name)[0], 10) . '.' . $this->document->ext()?->value . '</span>';
     }
+
+    public function restore(User $actor): static
+    {
+        if (!$this->document->trashed()) {
+            return $this;
+        }
+
+        $this->document->forceFill([
+            'DeletedOn' => null,
+            'DeletedBy' => null,
+        ])->save();
+        activity()->causedBy($actor)->performedOn($this->document)->event('restore')->log("document {$this->document->Name} restored");
+
+        return $this;
+    }
 }

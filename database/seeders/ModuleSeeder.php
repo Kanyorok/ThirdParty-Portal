@@ -426,6 +426,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 797100, 'Name' => 'Signatures', 'Icon' => null, 'Description' => '', 'ParentID' => 797000, 'Route' => 'document-signature.index'],
             ['ModuleID' => 797200, 'Name' => 'Validation Types', 'Icon' => null, 'Description' => '', 'ParentID' => 797000, 'Route' => 'document-validation-type.index'],
 
+            ['ModuleID' => 798000, 'Name' => 'Trash', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'document-trashed.index'],
+
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);
     }
