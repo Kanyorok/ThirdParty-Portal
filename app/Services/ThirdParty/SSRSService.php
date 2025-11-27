@@ -83,7 +83,6 @@ class SSRSService
      * @throws GuzzleException
      */
     public function initiateRequest(string $path): ResponseInterface
-
     {
         $cookieJar = new FileCookieJar($this->_getPath(), true);
         $client = new Client([
