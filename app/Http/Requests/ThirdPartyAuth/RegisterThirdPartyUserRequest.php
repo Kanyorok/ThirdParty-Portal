@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use App\Enums\BusinessTypeEnum;
 
 class RegisterThirdPartyUserRequest extends FormRequest
 {
@@ -20,10 +22,34 @@ class RegisterThirdPartyUserRequest extends FormRequest
         return [
             'FirstName' => ['required', 'string', 'max:255'],
             'LastName' => ['required', 'string', 'max:255'],
-            'Email' => ['required', 'string', 'email', 'max:255', 'unique:t_ThirdPartyUsers,Email'],
-            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
+            'Email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:t_ThirdPartyUsers,Email',
+                'unique:t_ThirdParties,Email'
+            ],
+            'Phone' => [
+                'required',
+                'string',
+                'max:20',
+                'regex:/^\+[1-9]\d{7,14}$/',
+                'unique:t_ThirdPartyUsers,Phone',
+                'unique:t_ThirdParties,Phone'
+            ],
             'Password' => ['required', 'string', 'min:8', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'Password_confirmation' => ['required', 'string'],
+            'ThirdPartyType' => ['required', 'exists:t_ThirdPartyTypes,TypeId'],
+            'ThirdPartyName' => ['nullable', 'string', 'max:255'],
+            'TradingName' => ['nullable', 'string', 'max:255'],
+            'BusinessType' => ['nullable', 'string', 'max:255', Rule::enum(BusinessTypeEnum::class)],
+            'RegistrationNumber' => ['nullable', 'string', 'max:255'],
+            'TaxPIN' => ['nullable', 'string', 'max:255'],
+            'VATNumber' => ['nullable', 'string', 'max:255'],
+            'CountryId' => ['nullable', 'integer', 'exists:t_Country,Id'],
+            'PhysicalAddress' => ['nullable', 'string', 'max:500'],
+            'Website' => ['nullable', 'url', 'max:255'],
         ];
     }
 
@@ -31,14 +57,12 @@ class RegisterThirdPartyUserRequest extends FormRequest
     {
         return [
             'Email.unique' => __('auth.user_exists'),
-            'Phone.regex' => 'Phone format is invalid. Use international format, e.g., +254712345678',
+            'Phone.regex' => __('auth.invalid_phone_format'),
             'Password.confirmed' => __('auth.password_mismatch'),
+            'ThirdPartyType.required' => 'A Third Party Type (T, S, or C) must be selected for registration.',
         ];
     }
 
-    /**
-     * Normalize phone to +E.164 before validation (allow inputs like 2547..., +2547..., spaces, dashes).
-     */
     protected function prepareForValidation(): void
     {
         $raw = (string) ($this->input('Phone') ?? '');
@@ -46,10 +70,8 @@ class RegisterThirdPartyUserRequest extends FormRequest
             return;
         }
 
-        // Strip everything except digits
         $digits = preg_replace('/\D+/', '', $raw) ?? '';
 
-        // If we have a plausible E.164 length, prefix with + (8-15 digits total)
         if (strlen($digits) >= 8 && strlen($digits) <= 15) {
             $normalized = '+' . ltrim($digits, '+');
             $this->merge(['Phone' => $normalized]);
@@ -58,7 +80,6 @@ class RegisterThirdPartyUserRequest extends FormRequest
 
     protected function failedValidation(Validator $validator)
     {
-        // Log validation errors with request context to single channel
         Log::channel('single')->warning('Third-party registration validation failed', [
             'errors' => $validator->errors()->toArray(),
             'ip' => $this->ip(),
@@ -70,7 +91,7 @@ class RegisterThirdPartyUserRequest extends FormRequest
         ]);
 
         throw new HttpResponseException(response()->json([
-            'message' => __('validation.failed'),
+            'message' => __('auth.validation_failed'),
             'errors' => $validator->errors(),
         ], 422));
     }
