@@ -94,7 +94,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('propertyrateandpricing/edit/{Id}', [PropertyRateAndPricingControllert::class, 'edit'])->name('propertyrateandpricing.edit');
     Route::put('propertyrateandpricing/edit/{Id}', [PropertyRateAndPricingControllert::class, 'update'])->name('propertyrateandpricing.update');
     Route::delete('propertyrateandpricing/delete/{Id}', [PropertyRateAndPricingControllert::class, 'destroy'])->name('propertyrateandpricing.destroy');
-
     Route::get('/propertyrateandpricing/blocks/{PropertyId}', [PropertyRateAndPricingControllert::class, 'getBlockByProperty'])->name('getblockbyproperty.rate');
     Route::get('/propertyrateandpricing/floors/{BlockId}', [PropertyRateAndPricingControllert::class, 'getFloorByBlock'])->name('getfloorbyblock.rate');
     Route::get('/propertyrateandpricing/Units/{FloorId}', [PropertyRateAndPricingControllert::class, 'getUnitsByFloor'])->name('getunitsbyfloor.rate');
