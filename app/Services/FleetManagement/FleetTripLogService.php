@@ -36,12 +36,12 @@ class FleetTripLogService
     public function createParentTrip(array $data): FleetTripLog
     {
         return DB::transaction(function () use ($data) {
-            $scheduledStatus = \App\Models\Core\CodeDetail::where('CodeID', 'TripStatus')
+            $scheduledStatus = CodeDetail::where('CodeID', 'TripStatus')
                 ->where('Description', 'Scheduled')
                 ->value('ID');
 
             if (!$scheduledStatus) {
-                $scheduledStatus = \App\Models\Core\CodeDetail::where('CodeID', 'TripStatus')
+                $scheduledStatus = CodeDetail::where('CodeID', 'TripStatus')
                     ->orderBy('Description')
                     ->value('ID');
                 
@@ -89,12 +89,12 @@ class FleetTripLogService
     public function createChildTrips(FleetTripLog $parent, array $childData): void
     {
         DB::transaction(function () use ($parent, $childData) {
-            $scheduledStatus = \App\Models\Core\CodeDetail::where('CodeID', 'TripStatus')
+            $scheduledStatus = CodeDetail::where('CodeID', 'TripStatus')
                 ->where('Description', 'Scheduled')
                 ->value('ID');
 
             if (!$scheduledStatus) {
-                $scheduledStatus = \App\Models\Core\CodeDetail::where('CodeID', 'TripStatus')
+                $scheduledStatus = CodeDetail::where('CodeID', 'TripStatus')
                     ->orderBy('Description')
                     ->value('ID');
             }

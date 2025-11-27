@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -277,9 +276,9 @@ class User extends Authenticatable
     {
         return $this->Name;
     }
-	
-	public function branch(): BelongsTo
-	{
-		return $this->belongsTo(Branch::class, 'BranchId', 'Id');
-	}
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'BranchId', 'Id');
+    }
 }

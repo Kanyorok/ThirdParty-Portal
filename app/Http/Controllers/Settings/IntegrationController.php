@@ -22,9 +22,9 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use SensitiveParameter;
@@ -91,7 +91,7 @@ class IntegrationController extends Controller
         }
 
         if ($Integration->value === IntegrationsEnum::ReportService->value) {
-            return $this->_reportServiceConfiguration($request->getSSRS_Host(), $request->validated('SSRS_Path'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
+            return $this->_reportServiceConfiguration($request->getSSRS_Host(), $request->validated('SSRS_Path'), $request->validated('SSRS_Virtual_Directory'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
         }
 
         if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value, IntegrationsEnum::CRDB->value], true)) {
@@ -315,7 +315,7 @@ class IntegrationController extends Controller
                 APICredential::query()->where('Integration', $Integration->value)->delete();
 
                 $configuration = ['Key' => md5($key)];
-                
+
                 // For CRDB, store only first 3 and last 3 characters for masking display (security)
                 if ($Integration->value === IntegrationsEnum::CRDB->value) {
                     $keyLength = strlen($key);
@@ -345,7 +345,7 @@ class IntegrationController extends Controller
         return $this->succeeded('key generated.', data: ['token' => $key]);
     }
 
-    private function _reportServiceConfiguration(string $Host, string $Path, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
+    private function _reportServiceConfiguration(string $Host, string $Path, string $VirtualDirectory, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
     {
         $DisplayName = SSRSService::testConfig($Host, $Path, $Username, $password);
         if (is_null($DisplayName)) {
@@ -359,6 +359,7 @@ class IntegrationController extends Controller
             'path' => $Path,
             'name' => $DisplayName,
             'password' => Crypt::encryptString($password),
+            'virtual_directory' => $VirtualDirectory,
         ], $actor);
     }
 

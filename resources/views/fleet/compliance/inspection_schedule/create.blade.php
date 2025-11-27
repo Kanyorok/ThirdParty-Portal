@@ -72,8 +72,8 @@
 
 
                 <div class="col-md-6">
-                    <label for="Remarks" class="form-label">Remarks</label>
-                    <input type="text" name="Remarks" id="Remarks" class="form-control" placeholder="Optional notes">
+                    <label for="Remarks" class="form-label">Remarks<span class="text-danger">*</span></label>
+                    <input type="text" name="Remarks" id="Remarks" class="form-control" placeholder="Optional notes" required>
                 </div>
             </div>
 

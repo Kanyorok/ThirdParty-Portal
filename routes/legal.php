@@ -23,7 +23,7 @@ use App\Http\Controllers\Legal\RegulatoryTaskController;
 use App\Http\Controllers\Legal\RegulatoryObligationController;
 use App\Http\Controllers\Legal\ComplianceCalendarController;
 use App\Http\Controllers\Legal\ComplianceIncidentController;
-
+use App\Http\Controllers\Legal\ComplianceTrainingController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -149,4 +149,27 @@ Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () 
 
     Route::resource('filings', \App\Http\Controllers\Legal\ComplianceFilingController::class);
     Route::post('filings/{id}/upload-ack', [\App\Http\Controllers\Legal\ComplianceFilingController::class, 'uploadAck'])->name('filings.uploadAck');
+});
+
+
+Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () {
+    Route::resource('policies', \App\Http\Controllers\Legal\CompliancePolicyController::class);
+    Route::post('policies/{id}/acknowledge', [\App\Http\Controllers\Legal\CompliancePolicyController::class,'acknowledge'])->name('policies.acknowledge');
+
+    Route::resource('trainings', \App\Http\Controllers\Legal\ComplianceTrainingController::class);
+    Route::resource('certifications', \App\Http\Controllers\Legal\ComplianceCertificationController::class);
+});
+
+Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () {
+    Route::resource('trainings', \App\Http\Controllers\Legal\ComplianceTrainingController::class);
+    Route::post('trainings/{id}/add-participant', [\App\Http\Controllers\Legal\ComplianceTrainingController::class,'addParticipant'])->name('trainings.addParticipant');
+    Route::post('trainings/{trainingId}/mark-attendance/{participantId}', [\App\Http\Controllers\Legal\ComplianceTrainingController::class,'markAttendance'])->name('trainings.markAttendance');
+    Route::post('trainings/{id}/add-certification',[\App\Http\Controllers\Legal\ComplianceTrainingController::class,'addCertification'])->name('trainings.addCertification');
+    Route::post('trainings/{trainingId}/quick-issue/{participantId}', [ComplianceTrainingController::class,'quickIssueCertification'])->name('trainings.quickIssueCert');
+    Route::post('trainings/{trainingId}/bulk-issue',[ComplianceTrainingController::class,'bulkIssueCertifications'])->name('trainings.bulkIssueCerts');
+});
+
+Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () {
+    Route::get('analytics', [ComplianceAnalyticsController::class,'index'])
+        ->name('analytics.index');
 });

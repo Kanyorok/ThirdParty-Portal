@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetVehicleAssignment;
+use App\Models\Fleet\FleetContractedDriverLicense;
+use App\Models\Fleet\FleetContractedDriverAssignment;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\DocumentsTrait;
@@ -57,8 +61,40 @@ class ContractedDriver extends Model
         return $this->belongsTo(ThirdParties::class, 'CompanyID', 'Id');
     }
 
+
     public function tripLogs()
     {
-        return $this->hasMany(FleetTripLog::class, 'DriverNo', 'Id');
+        return $this->hasManyThrough(
+            FleetTripLog::class,
+            FleetVehicleAssignment::class,
+            'DriverID',
+            'Id',
+            'Id',
+            'TripNo'
+        )->whereNull('t_FleetVehicleAssignments.DeletedOn')
+        ->whereNull('t_TripLogs.DeletedOn');
     }
+
+    public function licenses()  
+    {
+        return $this->hasMany(FleetContractedDriverLicense::class, 'ContractedDriverID', 'Id');
+    }
+
+    public function assignments()
+    {
+        return $this->hasMany(FleetContractedDriverAssignment::class, 'DriverID', 'Id');
+    }
+
+    public function vehicles()
+    {
+        return $this->hasManyThrough(
+            FleetVehicle::class,
+            FleetContractedDriverAssignment::class,
+            'DriverID',
+            'Id',
+            'Id',
+            'VehicleID'
+        );
+    }
+
 }
