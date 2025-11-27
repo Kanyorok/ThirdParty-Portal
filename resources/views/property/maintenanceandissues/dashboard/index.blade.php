@@ -118,7 +118,7 @@
                     <td>
                         {{ $assign->internalTechnician->FullName ?? $assign->prequalifiedVendor->TradingName ?? '-' }}
                     </td>
-                    <td>{{ $assign->AssignmentDate ? \Carbon\Carbon::parse($assign->AssignmentDate)->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $assign->AssignmentDate ? \Carbon\Carbon::parse($assign->AssignmentDate)->format('d M Y') : '-' }}</td>
                 </tr>
             @empty
                 <tr>

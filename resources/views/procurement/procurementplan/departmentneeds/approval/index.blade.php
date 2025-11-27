@@ -70,9 +70,7 @@
           ? number_format($NeedsApprovalview->RequestedQty * $NeedsApprovalview->EstimatedUnitCost, 2, '.', ',')
       : 'N/A'}}</td>
                     <td>{{ $NeedsApprovalview->creator->Name }}</td>
-                    <td>{{ Carbon::parse($NeedsApprovalview->CreatedOn)->format('d/m/Y') }}</td>
-                    <td>{{ Carbon::parse($NeedsApprovalview->RequestedDate)->format('d/m/Y') }}</td>
-                    <td>
+                    <td>{{ Carbon::parse($NeedsApprovalview->CreatedOn)->format('d M Y') }}</td>                   <td>{{ Carbon::parse($NeedsApprovalview->RequestedDate)->format('d M Y') }}</td>                   <td>
                         <a class="btn btn-sm btn-primary" href="{{ route('department-need-approval.show', $NeedsApprovalview->Id) }}">View to Approve</a>
                     </td>
                 </tr>

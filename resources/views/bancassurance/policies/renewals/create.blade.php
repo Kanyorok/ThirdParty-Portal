@@ -25,7 +25,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Current End Date</label>
                         <input type="text" class="form-control"
-                            value="{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}" readonly>
+                            value="{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}" readonly>
                     </div>
                 </div>
 

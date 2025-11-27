@@ -272,7 +272,7 @@
                             // Keep submitted value as ISO (server-friendly), show dd/mm/yyyy to users
                             dateFormat: 'Y-m-d',
                             altInput: true,
-                            altFormat: 'd/m/Y',
+                            altFormat: 'd M Y',
                             allowInput: true
                         };
 

@@ -30,8 +30,8 @@
                     {{-- Exit Date --}}
                     <div class="mb-3">
                         <label class="form-label">Exit Date</label>
-                        <input type="text" id="exit-date" name="ExitDate" class="form-control"
-                               value="{{ old('ExitDate', Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}"
+                           <input type="text" id="exit-date" name="ExitDate" class="form-control"
+                               value="{{ old('ExitDate', Carbon::parse($clearancetenant->ExitDate)->format('d M Y')) }}"
                                required>
                     </div>
 
@@ -129,7 +129,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         flatpickr("#exit-date", {
-            dateFormat: "d/m/Y",
+            dateFormat: "d M Y",
             allowInput: true
         });
     </script>

@@ -157,9 +157,7 @@
                                 <td>{{ $reverse->OriginalReferenceNumber ?? '-' }}</td>
 
                                 {{-- Reversal Date --}}
-                                <td>{{ \Carbon\Carbon::parse($reverse->ReversalDate ?? $reversal->Date)->format('d/m/Y') }}</td>
-
-                                {{-- Reason --}}
+                                <td>{{ \Carbon\Carbon::parse($reverse->ReversalDate ?? $reversal->Date)->format('d M Y') }}</td>                                {{-- Reason --}}
                                 <td>{{ $reverse->Reason ?? '-' }}</td>
 
                                 {{-- Status --}}

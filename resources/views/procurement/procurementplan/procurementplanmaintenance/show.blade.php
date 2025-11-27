@@ -11,7 +11,7 @@
             <strong>Fiscal Year:</strong> {{ $plan->FiscalYear }}<br>
             <strong>Status:</strong> {{ $plan->Status->label() }}<br>
             <strong>Created By:</strong> {{ $plan->createdBy->Name ?? 'N/A' }}<br>
-            <strong>Created On:</strong> {{ \Carbon\Carbon::parse($plan->CreatedDate)->format('d/m/Y') ?? 'N/A' }}<br>
+            <strong>Created On:</strong> {{ \Carbon\Carbon::parse($plan->CreatedDate)->format('d M Y') ?? 'N/A' }}<br>
         </div>
 
         <h5>Line Items</h5>

@@ -63,7 +63,7 @@
                                                 <strong class="text-success">{{ $contract->ContractRef }}</strong>
                                                 @if($contract->ContractApprovedOn)
                                                     <div class="text-muted small">
-                                                        Approved: {{ $contract->ContractApprovedOn->format('d/m/Y') }}
+                                                        Approved: {{ $contract->ContractApprovedOn->format('d M Y') }}
                                                     </div>
                                                 @endif
                                                 @if($contract->PaymentTerms)
@@ -83,7 +83,7 @@
                                                     </div>
                                                     <div class="text-muted small">
                                                         <i class="fas fa-calendar me-1"></i>
-                                                        {{ $contract->tender->OpeningDate?->format('d/m/Y') }}
+                                                        {{ $contract->tender->OpeningDate?->format('d M Y') }}
                                                     </div>
                                                 </div>
                                             @else
@@ -128,11 +128,11 @@
                                                 <div class="small">
                                                     <div class="text-success">
                                                         <i class="fas fa-play me-1"></i>
-                                                        {{ $contract->ContractStartDate->format('d/m/Y') }}
+                                                        {{ $contract->ContractStartDate->format('d M Y') }}
                                                     </div>
                                                     <div class="text-danger">
                                                         <i class="fas fa-stop me-1"></i>
-                                                        {{ $contract->ContractEndDate->format('d/m/Y') }}
+                                                        {{ $contract->ContractEndDate->format('d M Y') }}
                                                     </div>
                                                     @php
                                                         $now = now();

@@ -21,8 +21,8 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Termination Date</label>
-                    <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}"
+                          <input type="text" class="form-control bg-light text-dark"
+                              value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
@@ -54,9 +54,9 @@
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
             <div>
                 Created by <strong>{{ $leasetermination->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $leasetermination->CreatedOn ? Carbon::parse($leasetermination->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $leasetermination->CreatedOn ? Carbon::parse($leasetermination->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by <strong>{{ $leasetermination->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $leasetermination->ModifiedOn ? Carbon::parse($leasetermination->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $leasetermination->ModifiedOn ? Carbon::parse($leasetermination->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
             <div>
                 <a href="{{ route('terminatelease.index') }}" class="btn btn-sm btn-dark">Back</a>

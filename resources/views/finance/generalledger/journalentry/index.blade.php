@@ -146,8 +146,7 @@
                                         <span class="badge bg-danger ms-2">Reversed</span>
                                     @endif
                                 </td>
-                                <td>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') }}</td>
-                                <td>{{ $journalEntry->Description ?? '-' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('d M Y') }}</td>                               <td>{{ $journalEntry->Description ?? '-' }}</td>
                                 <td>{{ $journalEntry->source_module_name }}</td>
                                 <td>
                                     {{ number_format($journalEntry->journalLines->sum(function($line) {

@@ -57,8 +57,7 @@
                 @endphp
                 {{ $supplierName }}
             </td>
-            <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('d/m/Y') }}</td>
-            <td>
+            <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('d M Y') }}</td>           <td>
                 @php $status = strtolower($invitation->ResponseStatus ?? ''); @endphp
                 @if($status === 'accepted')
                     <span class="badge bg-success">{{ $invitation->ResponseStatus }}</span>
@@ -68,8 +67,7 @@
                     <span class="badge bg-secondary">{{ $invitation->ResponseStatus }}</span>
                 @endif
             </td>
-            <td>{{ \Carbon\Carbon::parse($invitation->ResponseDate)->format('d/m/Y') }}</td>
-            <td>{{ $invitation->DeclineReason ?? 'Ready to submit bid' }}</td>
+            <td>{{ \Carbon\Carbon::parse($invitation->ResponseDate)->format('d M Y') }}</td>           <td>{{ $invitation->DeclineReason ?? 'Ready to submit bid' }}</td>
         </tr>
     @empty
         <tr>

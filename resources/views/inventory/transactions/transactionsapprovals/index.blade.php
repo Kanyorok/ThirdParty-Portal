@@ -102,8 +102,7 @@
                                 {{ $record->branch->Name ?? 'N/A' }}
                             @endif
                         </td>
-                        <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y') }}</td>
-                        <td>
+                        <td>{{ Carbon::parse($record->CreatedOn)->format('d M Y') }}</td>                       <td>
                             @if($transactionType == 'Stock Transfer')
                                 {{ $record->transferredBy->Name ?? 'N/A'}}
                             @elseif($transactionType == 'Stock Adjustment')
@@ -117,7 +116,7 @@
                                 if ($transactionType == 'Stock Transfer' && $statusEnum) {
                                     $statusDisplay = $statusEnum->label();
                                     $badgeColor = $statusEnum->badgeColor();
-                                } 
+                                }
                                 elseif ($transactionType == 'Stock Adjustment') {
                                     $adjustmentStatusEnum = Transfers::tryFrom($record->Status) ?? null;
                                     if ($adjustmentStatusEnum) {
@@ -133,7 +132,7 @@
                                     $badgeColor = 'secondary';
                                 }
                             @endphp
-                            
+
                             @if(isset($statusDisplay) && isset($badgeColor))
                                 <span class="badge bg-{{ $badgeColor }}">{{ $statusDisplay }}</span>
                             @else

@@ -66,8 +66,8 @@
                                 <h5>Contract Duration</h5>
                                 @if($contract->ContractStartDate && $contract->ContractEndDate)
                                     <div class="text-muted">
-                                        {{ $contract->ContractStartDate->format('d/m/Y') }} -
-                                        {{ $contract->ContractEndDate->format('d/m/Y') }}
+                                        {{ $contract->ContractStartDate->format('d M Y') }} -
+                                        {{ $contract->ContractEndDate->format('d M Y') }}
                                     </div>
                                     <small class="text-success">
                                         ({{ $contract->ContractStartDate->diffInDays($contract->ContractEndDate) }}
@@ -117,7 +117,7 @@
                                     </tr>
                                     <tr>
                                         <td><strong>Award Date:</strong></td>
-                                        <td>{{ $contract->AwardDate ? $contract->AwardDate->format('d/m/Y') : 'N/A' }}</td>
+                                        <td>{{ $contract->AwardDate ? $contract->AwardDate->format('d M Y') : 'N/A' }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Award Status:</strong></td>
@@ -213,7 +213,7 @@
                                         <tr>
                                             <td>{{ $doc['type'] ?? 'Contract Document' }}</td>
                                             <td>{{ $doc['original_name'] }}</td>
-                                            <td>{{ isset($doc['upload_date']) ? \Carbon\Carbon::parse($doc['upload_date'])->format('d/m/Y H:i') : 'N/A' }}</td>
+                                            <td>{{ isset($doc['upload_date']) ? \Carbon\Carbon::parse($doc['upload_date'])->format('d M Y H:i') : 'N/A' }}</td>
                                             <td>
                                                 <a href="{{ Storage::url($doc['file_path']) }}" target="_blank"
                                                    class="btn btn-sm btn-outline-primary">

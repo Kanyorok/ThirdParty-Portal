@@ -23,7 +23,7 @@
                     <tr>
                         <td>{{ $item->user->employee->FirstName ?? $item->user->Name ?? 'N/A' }} {{ $item->user->employee->LastName ?? '' }}</td>
                         <td>{{$item->Role}} </td>
-                        <td>{{$item->modifiedBy->CreatedOn->format('d/m/Y')}}</td>
+                        <td>{{$item->modifiedBy->CreatedOn->format('d M Y')}}</td>
                         @if($item->Response == '0')
                             <td><span class="badge bg-warning">Pending</span></td>
                         @elseif($item->Response == '1')

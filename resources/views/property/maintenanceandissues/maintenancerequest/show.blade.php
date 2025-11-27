@@ -84,10 +84,10 @@
                 <div>
                     Created by <strong>{{ $maintenancerequest->createdByUser->Name ?? '-' }}</strong>
                     on
-                    <strong>{{ $maintenancerequest->CreatedOn ? Carbon::parse($maintenancerequest->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                    <strong>{{ $maintenancerequest->CreatedOn ? Carbon::parse($maintenancerequest->CreatedOn)->format('d M Y') : '-' }}</strong>
                     | Modified by <strong>{{ $maintenancerequest->modifiedByUser->Name ?? '-' }}</strong>
                     on
-                    <strong>{{ $maintenancerequest->ModifiedOn ? Carbon::parse($maintenancerequest->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                    <strong>{{ $maintenancerequest->ModifiedOn ? Carbon::parse($maintenancerequest->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
                 <div>
                     <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}"

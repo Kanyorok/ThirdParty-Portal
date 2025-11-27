@@ -22,8 +22,8 @@
 
                     <dt class="col-sm-5">Coverage Period:</dt>
                     <dd class="col-sm-6">
-                        {{ \Carbon\Carbon::parse($record->CoverageStartDate)->format('d/m/Y') }} —
-                        {{ \Carbon\Carbon::parse($record->CoverageEndDate)->format('d/m/Y') }}
+                        {{ \Carbon\Carbon::parse($record->CoverageStartDate)->format('d M Y') }} —
+                        {{ \Carbon\Carbon::parse($record->CoverageEndDate)->format('d M Y') }}
                     </dd>
                 </dl>
             </div>
@@ -31,7 +31,7 @@
             <div class="col-md-6">
                 <dl class="row">
                     <dt class="col-sm-5">Renewal Reminder:</dt>
-                    <dd class="col-sm-6">{{ \Carbon\Carbon::parse($record->RenewalReminderDate)->format('d/m/Y') }}</dd>
+                    <dd class="col-sm-6">{{ \Carbon\Carbon::parse($record->RenewalReminderDate)->format('d M Y') }}</dd>
 
                     <dt class="col-sm-5">Status:</dt>
                     @php

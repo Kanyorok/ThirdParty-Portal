@@ -12,7 +12,7 @@
                         ?? $existingAward->winningSupplier->thirdParty->TradingName
                         ?? $existingAward->winningSupplier->SupplierName
                         ?? ('Supplier #'.$existingAward->WinningSupplierID) }}</strong>
-                    on {{ optional($existingAward->AwardDate)->format('d/m/Y') ?? optional($existingAward->CreatedOn)->format('d/m/Y') }}.
+                    on {{ optional($existingAward->AwardDate)->format('d M Y') ?? optional($existingAward->CreatedOn)->format('d M Y') }}.
                     Status: <span class="badge {{ $existingAward->status_badge['class'] }}">{{ $existingAward->status_badge['text'] }}</span>
                 </div>
                 @if($existingAward->AwardStatus === \App\Models\Procurement\TenderAward::STATUS_PENDING)

@@ -55,7 +55,7 @@
                                 @endif
                             </td>
 
-                            <td>{{ $schedule->ScheduledDate ? \Carbon\Carbon::parse($schedule->ScheduledDate)->format('d/m/Y') : '-' }}</td>
+                            <td>{{ $schedule->ScheduledDate ? \Carbon\Carbon::parse($schedule->ScheduledDate)->format('d M Y') : '-' }}</td>
                             <td>{{ $schedule->ScheduledMileage ?? '-' }}</td>
 
                             <!-- Maintenance Status -->

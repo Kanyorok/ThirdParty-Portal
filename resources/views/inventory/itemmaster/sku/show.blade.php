@@ -62,7 +62,7 @@
                 </div>
                 <div class="col-md-3">
                     <p><strong>Last Received:</strong>
-                        {{ $item->LastReceived ? \Carbon\Carbon::parse($item->LastReceived)->format('d/m/Y') : 'N/A' }}
+                        {{ $item->LastReceived ? \Carbon\Carbon::parse($item->LastReceived)->format('d M Y') : 'N/A' }}
                     </p>
                 </div>
                 <div class="col-md-3">

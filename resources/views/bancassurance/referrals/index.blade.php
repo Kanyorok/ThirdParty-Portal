@@ -83,7 +83,7 @@
                                     </span>
                                 </td>
                                 <td>{{ $referral->assignedToUser->Name ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') ?? '-' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d M Y') ?? '-' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm" role="group">
                                         {{-- View --}}

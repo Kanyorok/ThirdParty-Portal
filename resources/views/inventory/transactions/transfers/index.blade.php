@@ -59,8 +59,7 @@
                     <tr>
                         <td>{{ $i + 1 }}</td>
                         <td>{{ $transfer->TransferID ?? '-' }}</td>
-                        <td>{{ Carbon::parse($transfer->TransferDate)->format('d/m/Y') }}</td>
-                        {{-- <td>{{ optional($transfer->fromBranch)->Name ?? '-' }}</td> --}}
+                        <td>{{ Carbon::parse($transfer->TransferDate)->format('d M Y') }}</td>                       {{-- <td>{{ optional($transfer->fromBranch)->Name ?? '-' }}</td> --}}
                         <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                         <td>{{$transfer->transferredBy->Name ?? 'N/A'}}</td>
                         <td>
@@ -128,7 +127,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <script>
         $(document).ready(function () {
             @if(!$transfers->isEmpty())

@@ -40,21 +40,21 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date of Current Lease</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('d/m/Y') : '-' }}"
+                           value="{{ $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">New Start Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('d/m/Y') : '-' }}"
+                           value="{{ $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">New End Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('d/m/Y') : '-' }}"
+                           value="{{ $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
@@ -96,9 +96,9 @@
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
             <div>
                 Created by <strong>{{ $leaserenewal->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $leaserenewal->CreatedOn ? Carbon::parse($leaserenewal->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $leaserenewal->CreatedOn ? Carbon::parse($leaserenewal->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by <strong>{{ $leaserenewal->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $leaserenewal->ModifiedOn ? Carbon::parse($leaserenewal->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $leaserenewal->ModifiedOn ? Carbon::parse($leaserenewal->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
             <div>
                 <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-dark">Edit</a>

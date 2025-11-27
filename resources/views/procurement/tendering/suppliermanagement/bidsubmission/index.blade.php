@@ -43,9 +43,9 @@
                         <td>{{ $submission->submissionMode->Description ?? 'N/A' }}</td>
                         <td>
                             @if ($submission->ReceivedAt instanceof \Illuminate\Support\Carbon || $submission->ReceivedAt instanceof \Carbon\Carbon)
-                                {{ $submission->ReceivedAt->format('d/m/Y') }}
+                                {{ $submission->ReceivedAt->format('d M Y') }}
                             @else
-                                {{ \Carbon\Carbon::parse($submission->ReceivedAt)->format('d/m/Y') }}
+                                {{ \Carbon\Carbon::parse($submission->ReceivedAt)->format('d M Y') }}
                             @endif
                         </td>
                         <td>{{ $submission->createdByUser->Name ?? 'N/A' }}</td>
@@ -100,9 +100,9 @@
                                 <label class="fw-bold">Received At:</label>
                                 <div class="text-muted">
                                     @if ($submission->ReceivedAt instanceof \Illuminate\Support\Carbon || $submission->ReceivedAt instanceof \Carbon\Carbon)
-                                        {{ $submission->ReceivedAt->format('d/m/Y') }}
+                                        {{ $submission->ReceivedAt->format('d M Y') }}
                                     @else
-                                        {{ \Carbon\Carbon::parse($submission->ReceivedAt)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($submission->ReceivedAt)->format('d M Y') }}
                                     @endif
                                 </div>
                             </div>
