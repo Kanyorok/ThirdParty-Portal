@@ -2,6 +2,7 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
@@ -100,12 +101,12 @@ class PropertyNewLeaseService
         }
 
             // Submit to workflow (this creates WorkflowHistory and WorkflowPending)
-        /*    $this->workflow->submit(
+            $this->workflow->submit(
                 $newlease,
                 $user,
                 ApprovalEnum::Pending,  // Required: Pending status enum
                 'Submitted for approval'
-            );*/
+            );
 
         PropertyLeaseScheduleService::create(
             leaseId: $newlease->Id,

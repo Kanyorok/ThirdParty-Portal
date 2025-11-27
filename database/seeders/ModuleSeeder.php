@@ -311,6 +311,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 502320, 'Name' => 'Lease Schedule', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'schedulelease.index'],
             ['ModuleID' => 502330, 'Name' => 'Lease Renewal', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'renewlease.index'],
             ['ModuleID' => 502340, 'Name' => 'Lease Termination', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'terminatelease.index'],
+            ['ModuleID' => 502390, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => null],
+            ['ModuleID' => 502391, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index'],
+            //['ModuleID' => 502392, 'Name' => 'Renewal Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'renewalapproval.index'],
+            //['ModuleID' => 502393, 'Name' => 'Termination Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'terminationapproval.index'],
             //['ModuleID' => 502350, 'Name' => 'Payment Frequency', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'paymentfrequency.index'],
 
             // First level - Billing & Receipting

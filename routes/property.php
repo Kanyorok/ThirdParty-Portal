@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Property\PropertyApprovalController;
 use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
@@ -188,6 +189,19 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'edit'])->name('renewlease.edit');
     Route::put('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'update'])->name('renewlease.update');
     Route::delete('renewlease/delete/{Id}', [PropertyLeaseRenewalController::class, 'destroy'])->name('renewlease.destroy');
+
+    //Property Approval
+    //Route::resource('approval', PropertyApprovalController::class);
+    Route::resource('approvals', PropertyApprovalController::class)->only([
+        'index',
+    ])->names([
+        'index' => 'propertyapproval.index'
+    ]);
+    // Approval actions: view, approve, reject
+    Route::get('approvals/{Id}', [PropertyApprovalController::class, 'show'])->name('propertyapproval.show');
+    Route::post('approvals/approve/{Id}', [PropertyApprovalController::class, 'approve'])->name('propertyapproval.approve');
+    Route::post('approvals/reject/{Id}', [PropertyApprovalController::class, 'reject'])->name('propertyapproval.reject');
+    
 
     //Route::resource('rentinvoice', PropertyInvoiceController::class);
     Route::get('rentinvoice', [PropertyInvoiceController::class, 'index'])->name('rentinvoice.index');
