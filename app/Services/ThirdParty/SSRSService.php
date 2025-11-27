@@ -475,13 +475,12 @@ class SSRSService
      */
     public function getReportByPath(string $path): array
     {
-        //try {
+        try {
             $response = $this->_query->get($this->_serverAPIUrl . "Reports(Path='{$path}')");
-       /* } catch (ConnectionException $e) {
+        } catch (ConnectionException $e) {
 			dd($e);
             throw new ErroredException("Could not reach to SSRS Server. Please check your connection.");
-        }*/
-		dd($response);
+        }
 
         if (!$response->successful()) {
             if ($response->notFound()) {
