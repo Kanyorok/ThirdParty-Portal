@@ -299,6 +299,10 @@
                         <input type="hidden" id="SupplierID" name="SupplierID" value="">
                         <input type="hidden" id="POReference" name="POReference" value="">
                         <input type="hidden" id="GRNReference" name="GRNReference" value="">
+                        <input type="hidden" id="TaxID" name="TaxID" value="1">
+                        <input type="hidden" id="TaxAmount" name="TaxAmount" value="">
+                        <input type="hidden" id="TaxPercentage" name="TaxPercentage" value="">
+                        <input type="hidden" id="InvoiceAmount" name="InvoiceAmount" value="">
 
                         <div class="row g-3">
                             <div class="col-md-6">
