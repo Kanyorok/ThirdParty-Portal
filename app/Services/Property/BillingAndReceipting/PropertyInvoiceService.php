@@ -104,6 +104,15 @@ class PropertyInvoiceService
             //dd($lines);
             if (!empty($lines)) {
                 $total = array_sum(array_column($lines, 'Total'));
+                $taxAmount = 0.0;
+                $invoiceAmount = (float) $total;
+                $taxPercentage = null;
+
+                if ($Tax) {
+                    $taxPercentage = (float) $Tax->Rate;
+                    $taxAmount = round($total * ($taxPercentage / 100), 2);
+                    $invoiceAmount = round($total + $taxAmount, 2);
+                }
 
                 // Prepare Finance payload (no IdempotencyKey here)
                 $payload = [
@@ -122,6 +131,10 @@ class PropertyInvoiceService
                     'InvoiceRemarks' => $InvoiceNotes ?? 'Auto-generated from Property',
 
                     'TotalAmount' => (int)$total,
+                    'InvoiceAmount' => $invoiceAmount,
+                    'TaxAmount' => $taxAmount,
+                    'TaxPercentage' => $taxPercentage,
+                    'TaxID' => $Tax?->Id,
                     'CreatedBy' => $user->Id,
                     'ModifiedBy' => $user->Id,
                     'lines' => $lines, //This should be an array of the items that will be disp in your module

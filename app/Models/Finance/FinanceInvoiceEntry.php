@@ -39,12 +39,24 @@ class FinanceInvoiceEntry extends Model
         'ApprovalReason',
         'InvoiceDate',
         'InvoiceAmount',
+        'TaxID',
+        'TaxAmount',
+        'TaxPercentage',
+        'TotalAmount',
         'DueDate',
         'Amount', // Added for v2 compatibility
         'DueDate', // Added for v2 functionality
         'Description',
         'CreatedBy',
         'ModifiedBy',
+    ];
+
+    protected $casts = [
+        'InvoiceAmount' => 'float',
+        'TaxAmount' => 'float',
+        'TaxPercentage' => 'float',
+        'TotalAmount' => 'float',
+        'ExchangeRate' => 'float',
     ];
 
     public static function getPrimaryKey() : string
