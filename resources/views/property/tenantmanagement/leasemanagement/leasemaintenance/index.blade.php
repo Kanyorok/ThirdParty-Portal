@@ -66,7 +66,7 @@
                             <td>
                                 <div class="action-buttons">
                                     @if ($newlease->IsActive === false || $newlease->IsActive === 'Inactive')
-                                        <button class="btn btn-sm btn-secondary" title="Inactive Lease" disabled>
+                                        <button class="btn btn-sm btn-secondary" title="Inactive Lease">
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     @else
@@ -76,10 +76,16 @@
                                         </a>
                                     @endif
 
-                                    <a href="{{ route('addlease.edit', $newlease->Id) }}"
-                                       class="btn btn-sm btn-warning" title="Edit Lease">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
+                                    @if($newlease->IsOfferGenerated)
+                                        <button class="btn btn-sm btn-secondary" title="Offer Generated - Lease Locked" >
+                                            <i class="bi bi-lock"></i>
+                                        </button>
+                                    @else
+                                        <a href="{{ route('addlease.edit', $newlease->Id) }}"
+                                           class="btn btn-sm btn-warning" title="Edit Lease">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                    @endif
 
                                     @if($newlease->invoices()->exists())
                                         <button class="btn btn-sm btn-secondary" title="In Use">
