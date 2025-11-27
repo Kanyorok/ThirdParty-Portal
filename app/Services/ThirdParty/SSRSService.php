@@ -69,10 +69,8 @@ class SSRSService
         //$this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/{$path}/api/v2.0/";
 		$this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/{$this->path}/api/v2.0/";
 
-        $this->_query = Http::withCookies(request()->cookie(), parse_url($this->serverURL, PHP_URL_HOST))
-            ->withHeaders(request()->header())->retry(3, 100)->timeout(60 * 10)
+        $this->_query = Http::retry(3, 100)->timeout(60 * 10)
             ->withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']]);
-
     }
 
     public function getPassword(): string
@@ -133,7 +131,7 @@ class SSRSService
             $query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']])
                 ->get(Str::of($Host)->trim()->rtrim('/') . "/{$Path}/api/v2.0/ME");
             //->get(Str::of($Host)->trim()->rtrim('/') . "/reports/api/v2.0/ME");
-        } catch (ConnectionException|Exception) {
+        } catch (ConnectionException | Exception) {
             return null;
         }
         if ($query->successful() && array_key_exists('DisplayName', $query->json())) {
@@ -503,7 +501,7 @@ class SSRSService
     }
 
     private function _getRoute(string $path): string
-    {//reports/report/BRERP/Admin/Permissions?rs:embed=true
+    { //reports/report/BRERP/Admin/Permissions?rs:embed=true
         return $this->serverURL . "{$this->path}/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
     }
 

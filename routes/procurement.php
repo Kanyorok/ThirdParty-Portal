@@ -133,11 +133,9 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
     Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     Route::get('purchaseOrder/approval/{id}', [PurchaseOrderController::class, 'approval'])->name('purchaseOrder.approval');
-    Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
-    // Explicit show and approval routes (restrict {id} to numeric to avoid catching 'create')
-    Route::get('purchaseOrder/{id}', [PurchaseOrderController::class, 'show'])->whereNumber('id')->name('purchaseOrder.show');
+    // Resource route handles create, show, edit, update, destroy
     Route::resource('purchaseOrder', PurchaseOrderController::class);
     Route::get('/purchase-order/rfq-items/{rfqId}', [PurchaseOrderController::class, 'getRFQItems'])->name('purchase-order.rfq-items');
     Route::get('/purchase-order/awarded-rfqs', [PurchaseOrderController::class, 'getAwardedRFQs'])->name('purchase-order.awarded-rfqs');
@@ -323,7 +321,6 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
 
     // Purchase Order JSON helpers
     Route::get('purchaseOrder/root-categories', [PurchaseOrderController::class, 'getRootItemCategories'])->withoutMiddleware(['ajax'])->name('purchaseOrder.rootCategories');
-    Route::get('purchaseOrder/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->withoutMiddleware(['ajax'])->name('purchaseOrder.prequalifiedSuppliers');
     Route::get('purchaseOrder/items-by-category/{categoryId}', [PurchaseOrderController::class, 'getItemsByCategoryWithDescendants'])->withoutMiddleware(['ajax'])->name('purchaseOrder.itemsByCategory');
     Route::get('purchaseOrder/direct-plan-categories', [PurchaseOrderController::class, 'getDirectPlanCategories'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanCategories');
     Route::get('purchaseOrder/direct-plan-items/{categoryId?}', [PurchaseOrderController::class, 'getDirectPlanItemsByCategory'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanItems');
@@ -664,11 +661,6 @@ Route::prefix('contracts/lifecycle')->name('contracts.lifecycle.')->group(functi
     Route::get('{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('execution')->where('id', '[0-9]+');
 });
 
-// Generic Contract CRUD Routes (MOVED TO END - after specific routes)
-Route::get('contracts/{id}', [ContractsController::class, 'show'])->name('contracts.show')->where('id', '[0-9]+');
-Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit')->where('id', '[0-9]+');
-Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update')->where('id', '[0-9]+');
-Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve')->where('id', '[0-9]+');
 
 // Contracts - LPO Link
 Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link')->where('id', '[0-9]+');
@@ -747,5 +739,5 @@ Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController
 //
 // Additional procurement routes (JSON endpoints used by frontend)
 Route::get('committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
-Route::get('tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+Route::get('tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show.typed');
 Route::get('rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);

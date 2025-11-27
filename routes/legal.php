@@ -90,8 +90,6 @@ Route::middleware(['module:800000'])->prefix('legal')->group(function () {
         // IP Tracking
         Route::resource('ip-tracking', LegalIPTrackingController::class);
     });
-
-
 });
 
 Route::prefix('legal/compliance/obligations/{obligationId}/tasks')->name('legal.compliance.tasks.')->group(function () {
@@ -102,30 +100,13 @@ Route::prefix('legal/compliance/obligations/{obligationId}/tasks')->name('legal.
     Route::put('/{id}', [RegulatoryTaskController::class, 'update'])->name('update');
 });
 
-Route::prefix('legal/compliance/obligations/{obligationId}/tasks')->name('legal.compliance.tasks.')->group(function () {
-    Route::get('/', [RegulatoryTaskController::class, 'index'])->name('index');
-    Route::get('/create', [RegulatoryTaskController::class, 'create'])->name('create');
-    Route::post('/', [RegulatoryTaskController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [RegulatoryTaskController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [RegulatoryTaskController::class, 'update'])->name('update');
-});
 
-Route::prefix('legal/compliance/obligations')->name('legal.compliance.obligations.')->group(function () {
-    Route::get('/', [RegulatoryObligationController::class, 'index'])->name('index');
-    Route::get('/create', [RegulatoryObligationController::class, 'create'])->name('create');
-    Route::post('/', [RegulatoryObligationController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [RegulatoryObligationController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [RegulatoryObligationController::class, 'update'])->name('update');
-});
 
-Route::prefix('legal/compliance/calendar')->name('legal.compliance.calendar.')->group(function () {
-    Route::get('/', [ComplianceCalendarController::class, 'index'])->name('index');
-    Route::get('/create', [ComplianceCalendarController::class, 'create'])->name('create');
-    Route::post('/', [ComplianceCalendarController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [ComplianceCalendarController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [ComplianceCalendarController::class, 'update'])->name('update');
-    Route::delete('/{id}', [ComplianceCalendarController::class, 'destroy'])->name('destroy');
-});
+
+
+
+
+
 
 Route::prefix('legal/setup')->name('legal.setup.')->group(function () {
     Route::resource('regulatory_bodies', \App\Http\Controllers\Legal\Setup\RegulatoryBodyController::class);
