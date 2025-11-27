@@ -30,16 +30,16 @@
                     </div>
                     <div class="col-md-12">
                         <strong>Company Name:</strong>
-                        <p class="text-muted">{{ $driver->company->ThirdPartyName }}</p>
+                        <p class="text-muted">{{ $driver->company->ThirdPartyName ?? 'N/A'}}</p>
                     </div>
 
                     <div class="col-md-12">
                         <strong>Contract Start Date:</strong>
-                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d/m/Y') }}</p>
+                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }}</p>
                     </div>
                     <div class="col-md-12">
                         <strong>Contract End Date:</strong>
-                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d/m/Y') }}</p>
+                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}</p>
                     </div>
                     <div class="col-md-12">
                         <strong>Active:</strong>
@@ -106,22 +106,22 @@
                                 </thead>
                                 <tbody id="licensesTable">
                                     @foreach($licenses as $license)
-                                    <tr data-id="{{ $license->Id }}">
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $license->LicenseNumber }}</td>
-                                        <td>{{ $license->LicenseCategory }}</td>
-                                        <td>{{ $license->IssueDate }}</td>
-                                        <td>{{ $license->ExpiryDate }}</td>
-                                        <td>{{ $license->Notes }}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-warning btn-edit" data-type="license"
-                                                data-id="{{ $license->Id }}">✏️
-                                            </button>
-                                            <button class="btn btn-sm btn-danger btn-delete" data-type="license"
-                                                data-id="{{ $license->Id }}">🗑️
-                                            </button>
-                                        </td>
-                                    </tr>
+                                        <tr data-id="{{ $license->Id }}">
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $license->LicenseNumber ?? 'N/A' }}</td>
+                                            <td>{{ $license->LicenseCategory ?? 'N/A' }}</td>
+                                            <td>{{ $license->IssueDate ?? 'N/A'}}</td>
+                                            <td>{{ $license->ExpiryDate ?? 'N/A'}}</td>
+                                            <td>{{ $license->Notes ?? 'N/A' }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning btn-edit" data-type="license"
+                                                        data-id="{{ $license->Id }}">✏️
+                                                </button>
+                                                <button class="btn btn-sm btn-danger btn-delete" data-type="license"
+                                                        data-id="{{ $license->Id }}">🗑️
+                                                </button>
+                                            </td>
+                                        </tr>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -155,7 +155,7 @@
                                     <tr data-id="{{ $assignment->Id }}">
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $assignment->vehicle?->RegistrationNo?? '' }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d M Y') }}</td>
                                         <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—' }}</td>
                                         <td>{{ $assignment->Purpose ?: '—' }}</td>
                                         <td>{{ $assignment->assignedBy?->LastName ?? '—' }}</td>
@@ -254,51 +254,52 @@
     </div>
 </div>
 
-{{-- Add Assignment Modal --}}
-<div class="modal fade" id="addAssignmentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form id="addAssignmentForm">
-            @csrf
-            <input type="hidden" name="DriverID" value="{{ $driver->Id }}">
-            <div class="modal-content rounded-4">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Assignment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    {{-- Add Assignment Modal --}}
+    <div class="modal fade" id="addAssignmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="addAssignmentForm">
+                @csrf
+                <input type="hidden" name="DriverID" value="{{ $driver->Id }}">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Assignment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Vehicle</label>
+                        <select name="VehicleID" class="form-control" required>
+                            <option value="">-- Select Vehicle --</option>
+                            @foreach($vehicles as $vehicle)
+                                <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
+                            @endforeach
+                        </select>
+                        <label class="form-label mt-2">Assignment Date</label>
+                        <input type="date" name="AssignmentDate" class="form-control" required>
+                        <label class="form-label mt-2">Unassignment Date</label>
+                        <input type="date" name="UnassignmentDate" class="form-control">
+                        <label class="form-label mt-2">Purpose</label>
+                        <input type="text" name="Purpose" class="form-control">
+                        <label for="AssignedBy" class="form-label">Assigned By</label>
+                        <select name="AssignedBy" id="AssignedBy" class="form-select" required>
+                            <option value="">-- Select Assigned By --</option>
+                            @foreach ($assigners as $id => $name)
+                                <option
+                                    value="{{ $id }}" {{ old('AssignedBy', auth()->id()) == $id ? 'selected' : '' }}>
+                                    {{ $name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <label class="form-label mt-2">Notes</label>
+                        <textarea name="Notes" class="form-control"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Save</button>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <label class="form-label">Vehicle</label>
-                    <select name="VehicleID" class="form-control" required>
-                        @foreach($vehicles as $vehicle)
-                        <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
-                        @endforeach
-                    </select>
-                    <label class="form-label mt-2">Assignment Date</label>
-                    <input type="date" name="AssignmentDate" class="form-control" required>
-                    <label class="form-label mt-2">Unassignment Date</label>
-                    <input type="date" name="UnassignmentDate" class="form-control">
-                    <label class="form-label mt-2">Purpose</label>
-                    <input type="text" name="Purpose" class="form-control">
-                    <label for="AssignedBy" class="form-label">Assigned By</label>
-                    <select name="AssignedBy" id="AssignedBy" class="form-select" required>
-                        <option value="">-- Select Assigned By --</option>
-                        @foreach ($assigners as $id => $name)
-                        <option
-                            value="{{ $id }}" {{ old('AssignedBy', auth()->id()) == $id ? 'selected' : '' }}>
-                            {{ $name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <label class="form-label mt-2">Notes</label>
-                    <textarea name="Notes" class="form-control"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary" type="submit">Save</button>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
 {{-- Edit License Modal --}}
 <div class="modal fade" id="editLicenseModal" tabindex="-1">
@@ -334,53 +335,54 @@
     </div>
 </div>
 
-{{-- Edit Assignment Modal --}}
-<div class="modal fade" id="editAssignmentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form id="editAssignmentForm">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="DriverID" value="{{ $driver->Id }}">
-            <input type="hidden" name="Id" id="editAssignmentId">
-            <div class="modal-content rounded-4">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Assignment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    {{-- Edit Assignment Modal --}}
+    <div class="modal fade" id="editAssignmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="editAssignmentForm">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="DriverID" value="{{ $driver->Id }}">
+                <input type="hidden" name="Id" id="editAssignmentId">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Assignment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Vehicle</label>
+                        <select name="VehicleID" id="editAssignmentVehicle" class="form-control" required>
+                            <option value="">-- Select Vehicle --</option>
+                            @foreach($vehicles as $vehicle)
+                                <option value="{{ old('VehicleID', $vehicle->Id) }}">{{ $vehicle->RegistrationNo }}</option>
+                            @endforeach
+                        </select>
+                        <label class="form-label mt-2">Assignment Date</label>
+                        <input type="date" name="AssignmentDate" id="editAssignmentDate" class="form-control" required>
+                        <label class="form-label mt-2">Unassignment Date</label>
+                        <input type="date" name="UnassignmentDate" id="editUnassignmentDate" class="form-control">
+                        <label class="form-label mt-2">Purpose</label>
+                        <input type="text" name="Purpose" id="editAssignmentPurpose" class="form-control">
+                        <label for="AssignedBy" class="form-label">Assigned By</label>
+                        <select name="AssignedBy" id="AssignedBy" class="form-select" required>
+                            <option value="">-- Select Assigned By --</option>
+                            @foreach ($assigners as $id => $name)
+                                <option
+                                    value="{{ $id }}" {{ old('AssignedBy', auth()->id()) == $id ? 'selected' : '' }}>
+                                    {{ $name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <label class="form-label mt-2">Notes</label>
+                        <textarea name="Notes" id="editAssignmentNotes" class="form-control"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Update</button>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <label class="form-label">Vehicle</label>
-                    <select name="VehicleID" id="editAssignmentVehicle" class="form-control" required>
-                        @foreach($vehicles as $vehicle)
-                        <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
-                        @endforeach
-                    </select>
-                    <label class="form-label mt-2">Assignment Date</label>
-                    <input type="date" name="AssignmentDate" id="editAssignmentDate" class="form-control" required>
-                    <label class="form-label mt-2">Unassignment Date</label>
-                    <input type="date" name="UnassignmentDate" id="editUnassignmentDate" class="form-control">
-                    <label class="form-label mt-2">Purpose</label>
-                    <input type="text" name="Purpose" id="editAssignmentPurpose" class="form-control">
-                    <label for="AssignedBy" class="form-label">Assigned By</label>
-                    <select name="AssignedBy" id="AssignedBy" class="form-select" required>
-                        <option value="">-- Select Assigned By --</option>
-                        @foreach ($assigners as $id => $name)
-                        <option
-                            value="{{ $id }}" {{ old('AssignedBy', auth()->id()) == $id ? 'selected' : '' }}>
-                            {{ $name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <label class="form-label mt-2">Notes</label>
-                    <textarea name="Notes" id="editAssignmentNotes" class="form-control"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary" type="submit">Update</button>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
 {{-- Delete Driver Modal --}}
 <div class="modal fade" id="deleteDriverModal" tabindex="-1" aria-labelledby="deleteDriverModalLabel"

@@ -3,7 +3,7 @@
 namespace App\Services\Property\BillingAndReceipting;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyReceipt;
 use Exception;

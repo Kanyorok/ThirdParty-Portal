@@ -6,7 +6,7 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;

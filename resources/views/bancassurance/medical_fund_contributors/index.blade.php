@@ -64,12 +64,12 @@
                                 <td><span class="badge bg-{{ $c->status->Description==='Active'?'success':($c->status->Description==='Suspended'?'warning text-dark':'secondary') }}">{{ $c->status->Description }}</span></td>
                                 <td>
                                     @if(!empty($c->EffectiveFrom))
-                                        {{ \Illuminate\Support\Carbon::parse($c->EffectiveFrom)->format('d/m/Y') }}
+                                        {{ \Illuminate\Support\Carbon::parse($c->EffectiveFrom)->format('d M Y') }}
                                     @else
                                         —
                                     @endif
                                     @if(!empty($c->EffectiveTo))
-                                        — {{ \Illuminate\Support\Carbon::parse($c->EffectiveTo)->format('d/m/Y') }}
+                                        — {{ \Illuminate\Support\Carbon::parse($c->EffectiveTo)->format('d M Y') }}
                                     @endif
                                 </td>
                                 <td class="text-end">

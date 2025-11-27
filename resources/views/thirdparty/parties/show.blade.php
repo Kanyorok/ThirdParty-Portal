@@ -121,8 +121,8 @@
                                 // New multi-type display: join Codes; fallback to legacy enum label
                                 'Third Party Types' => ($party->types && $party->types->count()) ? $party->types->pluck('Code')->filter()->unique()->join(', ') : $party->ThirdPartyType?->label(),
                                 'Is Prequalified' => $party->IsPrequalified,
-                                'Created On' => $party->CreatedOn,
-                                'Modified On' => $party->ModifiedOn,
+                                'Created On' => $party->CreatedOn?->format('d M Y H:i:s'),
+                                'Modified On' => $party->ModifiedOn?->format('d M Y H:i:s'),
                             ];
                         @endphp
 
@@ -133,7 +133,7 @@
                                     @if (is_bool($value))
                                         {{ $value ? 'Yes' : 'No' }}
                                     @elseif ($value instanceof \Carbon\CarbonInterface)
-                                        {{ appDate($value) }}
+                                        {{ $value->format('d/m/Y H:i:s') }}
                                     @else
                                         {{ $value ?? 'N/A' }}
                                     @endif
@@ -180,12 +180,12 @@
 
                         <div class="col-md-6 col-lg-4">
                             <p class="text-muted mb-1 fw-semibold">Created On</p>
-                            <p class="fw-bold">{{ $party->CreatedOn ? appDate($party->CreatedOn) : 'N/A' }}</p>
+                            <p class="fw-bold">{{ $party->CreatedOn?->format('d M Y') ?? 'N/A' }}</p>
                         </div>
 
                         <div class="col-md-6 col-lg-4">
                             <p class="text-muted mb-1 fw-semibold">Modified On</p>
-                            <p class="fw-bold">{{ $party->ModifiedOn ? appDate($party->ModifiedOn) : 'N/A' }}</p>
+                            <p class="fw-bold">{{ $party->ModifiedOn?->format('d M Y') ?? 'N/A' }}</p>
                         </div>
                     </div>
                 </div>

@@ -10,7 +10,7 @@ use App\Models\Communication\Call;
 use App\Models\Communication\Email;
 use App\Models\Communication\SMS;
 use App\Models\Core\Activity;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\Core\Task;

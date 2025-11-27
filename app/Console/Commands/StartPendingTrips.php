@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Fleet\FleetTripLog;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Carbon\Carbon;
 
 class StartPendingTrips extends Command

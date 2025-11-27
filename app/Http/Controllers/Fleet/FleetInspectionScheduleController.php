@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Fleet\FleetInspectionSchedule;
 use App\Services\FleetManagement\FleetInspectionScheduleService;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\HRM\Employee;
 use Illuminate\Support\Facades\Auth;

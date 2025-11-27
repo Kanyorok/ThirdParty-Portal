@@ -19,7 +19,7 @@
                     <div class="mb-3">
                         <label class="form-label">Exit Date</label>
                         <input type="text" class="form-control"
-                               value="{{ $clearancetenant->ExitDate ? Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') : '-' }}"
+                               value="{{ $clearancetenant->ExitDate ? Carbon::parse($clearancetenant->ExitDate)->format('d M Y') : '-' }}"
                                readonly>
                     </div>
 

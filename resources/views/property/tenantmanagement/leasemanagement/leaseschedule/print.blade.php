@@ -93,7 +93,7 @@
     <div class="header">
         <h2 class="h2 mb-0 text-decoration-none">{{ config('app.name') }}</h2>
         <h2>Lease Schedule Summary</h2>
-        <p>Generated on {{ now()->format('d/m/Y') }}</p>
+        <p>Generated on {{ now()->format('d M Y') }}</p>
         <button class="btn-print no-print" onclick="window.print()">Print Again</button>
     </div>
 
@@ -115,11 +115,11 @@
     </div>
     <div class="form-row">
         <div class="form-label">Start Date</div>
-        <div class="form-value">{{ \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') }}</div>
+        <div class="form-value">{{ \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d M Y') }}</div>
     </div>
     <div class="form-row">
         <div class="form-label">End Date</div>
-        <div class="form-value">{{ \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') }}</div>
+        <div class="form-value">{{ \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d M Y') }}</div>
     </div>
     <div class="form-row">
         <div class="form-label">Base Rent</div>

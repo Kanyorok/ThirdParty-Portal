@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Property;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewTenantRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;
 use App\Services\Property\TenantAndLease\PropertyNewTenantService;

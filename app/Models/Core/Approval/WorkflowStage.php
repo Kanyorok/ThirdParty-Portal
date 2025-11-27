@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Settings\WorkFlowLimit;
 use App\Models\Settings\WorkFlowType;
 use Spatie\Permission\Models\Permission;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Settings\Workflow;
 
 class WorkflowStage extends Model

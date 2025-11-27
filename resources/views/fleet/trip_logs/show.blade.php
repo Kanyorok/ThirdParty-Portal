@@ -6,7 +6,7 @@
     {{-- Parent Trip --}}
     <div class="card shadow rounded-4 p-4" style="min-width: 300px; max-width: 350px;">
         <h5 class="mb-3">📋 Parent Trip Details</h5>
-        
+
         {{-- Status Badge --}}
         <div class="mb-3">
             @php
@@ -31,8 +31,8 @@
             <li class="list-group-item"><strong>Trip Code:</strong> {{ $parentTrip->TripCode ?? 'N/A' }}</li>
             <li class="list-group-item"><strong>Vehicle Type:</strong> {{ $parentTrip->parentVehicleType->Description ?? 'N/A' }}</li>
             <li class="list-group-item"><strong>Load Type:</strong> {{ $parentTrip->parentLoadType->Description ?? 'N/A' }}</li>
-            <li class="list-group-item"><strong>Start Date:</strong> {{ \Carbon\Carbon::parse($parentTrip->TripStartDate)->format('d/m/Y') }}</li>
-            <li class="list-group-item"><strong>End Date:</strong> {{ \Carbon\Carbon::parse($parentTrip->TripEndDate)->format('d/m/Y') }}</li>
+            <li class="list-group-item"><strong>Start Date:</strong> {{ \Carbon\Carbon::parse($parentTrip->TripStartDate)->format('d M Y') }}</li>
+            <li class="list-group-item"><strong>End Date:</strong> {{ \Carbon\Carbon::parse($parentTrip->TripEndDate)->format('d M Y') }}</li>
             <li class="list-group-item"><strong>Start Time:</strong> {{ \Carbon\Carbon::parse($parentTrip->StartTime)->format('H:i A') }}</li>
             <li class="list-group-item"><strong>End Time:</strong> {{ \Carbon\Carbon::parse($parentTrip->EndTime)->format('H:i A') }}</li>
             <li class="list-group-item"><strong>Start Location:</strong> {{ $parentTrip->StartLocation }}</li>
@@ -45,7 +45,7 @@
         {{-- Parent Trip Actions --}}
         <div class="mt-3 d-flex justify-content-between">
             <a href="{{ route('fleet.trip_logs.edit', $parentTrip->Id) }}" class="btn btn-sm btn-warning">✏ Edit</a>
-            
+
             <form action="{{ route('fleet.trip_logs.destroy', $parentTrip->Id) }}" method="POST"
                   onsubmit="return confirm('Deleting this parent will also delete ALL its child trips. Continue?');">
                 @csrf
@@ -82,9 +82,7 @@
                         @foreach ($childTrips as $child)
                             <tr>
                                 <td>{{ $child->TripNo }}</td>
-                                <td>{{ \Carbon\Carbon::parse($child->TripStartDate)->format('d/m/Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($child->TripEndDate)->format('d/m/Y') }}</td>
-                                <td>{{ $child->StartLocation }}</td>
+                                <td>{{ \Carbon\Carbon::parse($child->TripStartDate)->format('d M Y') }}</td>                               <td>{{ \Carbon\Carbon::parse($child->TripEndDate)->format('d M Y') }}</td>                               <td>{{ $child->StartLocation }}</td>
                                 <td>{{ $child->EndLocation }}</td>
                                 <td>{{ $child->Purpose ?? 'N/A' }}</td>
                                 <td>
@@ -131,7 +129,7 @@
     </div>
     <div class="col-md-4 text-end">
         <div class="d-flex gap-2 justify-content-end">
-            <form action="{{ route('fleet.trip_logs.approve', $parentTrip->Id) }}" method="POST" 
+            <form action="{{ route('fleet.trip_logs.approve', $parentTrip->Id) }}" method="POST"
                   onsubmit="return confirm('Approve this trip and all child trips?');">
                 @csrf
                 @method('PATCH')

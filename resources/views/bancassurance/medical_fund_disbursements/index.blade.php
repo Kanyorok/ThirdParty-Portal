@@ -43,8 +43,7 @@
                         @foreach($disbursements as $i => $d)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ optional($d->DisbursementDate)->format('d/m/Y') }}</td>
-                                <td>{{ optional($d->beneficiary)->FullName ?? '—' }}</td>
+                                <td>{{ optional($d->DisbursementDate)->format('d M Y') }}</td>                               <td>{{ optional($d->beneficiary)->FullName ?? '—' }}</td>
                                 <td>{{ $d->Purpose ?? '—' }}</td>
                                 <td class="text-end">{{ number_format((float)$d->Amount,2) }}</td>
                                 <td>{{ $d->ApprovedBy ?? '—' }}</td>

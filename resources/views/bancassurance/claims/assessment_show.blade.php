@@ -36,7 +36,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Assessment Date</label>
                         <input type="text" class="form-control"
-                            value="{{ $assessment->AssessmentDate ? \Carbon\Carbon::parse($assessment->AssessmentDate)->format('d/m/Y') : '-' }}"
+                            value="{{ $assessment->AssessmentDate ? \Carbon\Carbon::parse($assessment->AssessmentDate)->format('d M Y') : '-' }}"
                             readonly>
                     </div>
                 </div>

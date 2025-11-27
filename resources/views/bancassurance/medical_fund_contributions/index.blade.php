@@ -111,7 +111,7 @@
               @foreach($contributions as $i => $c)
                 <tr>
                   <td>{{ $loop->iteration}}</td>
-                  <td>{{ $c->ContributionDate ? \Carbon\Carbon::parse($c->ContributionDate)->format('d/m/Y') : '-' }}</td>
+                  <td>{{ $c->ContributionDate ? \Carbon\Carbon::parse($c->ContributionDate)->format('d M Y') : '-' }}</td>
                   <td>{{ $c->contributor->thirdParty->ThirdPartyName ?? '—' }}</td>
                   {{-- <td>
                     {{-- Prefer a human-friendly description from the contribution's type relation, fallback to raw value --}}

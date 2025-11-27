@@ -103,13 +103,15 @@
 
                                         @if($row['status'] === 'Pending')
                                             <button type="button" class="btn btn-sm btn-success"
-                                                    onclick="approveAward({{ $row['award_id'] ?? $row['id'] }})" title="Approve Award">
+                                                    onclick="approveAward('{{ $row['type'] }}', {{ $row['type']==='rfq' ? ($row['rfq_id'] ?? $row['id']) : ($row['award_id'] ?? $row['id']) }})" title="Approve Award">
                                                 <i class="fas fa-check"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-danger"
-                                                    onclick="rejectAward({{ $row['award_id'] ?? $row['id'] }})" title="Reject Award">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                            @if($row['type'] === 'tender')
+                                                <button type="button" class="btn btn-sm btn-danger"
+                                                        onclick="rejectAward({{ $row['award_id'] ?? $row['id'] }})" title="Reject Award">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            @endif
                                         @elseif($row['status'] === 'Approved')
                                             @php
                                                 $award = \App\Models\Procurement\TenderAward::find($row['award_id'] ?? $row['id']);
@@ -197,12 +199,15 @@
     </div>
 
     <script>
-        function approveAward(awardId) {
+        function approveAward(type, id) {
             const form = document.getElementById('approveForm');
-            form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', awardId);
+            if (type === 'rfq') {
+                form.action = `{{ route('awards.rfq.approve', ':id') }}`.replace(':id', id);
+            } else {
+                form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', id);
+            }
             new bootstrap.Modal(document.getElementById('approveModal')).show();
         }
-
         function rejectAward(awardId) {
             const form = document.getElementById('rejectForm');
             form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', awardId);

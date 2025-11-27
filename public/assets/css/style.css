@@ -31857,7 +31857,7 @@ select[data-multiselectsplitter-secondselect-selector].dataTable-input {
 .auth-main .auth-wrapper.v2 {
   display: flex;
   align-items: center;
-  background: #fff;
+    /*background: #fff;*/
 }
 
 .auth-main .auth-wrapper.v2 .img-auth-side {

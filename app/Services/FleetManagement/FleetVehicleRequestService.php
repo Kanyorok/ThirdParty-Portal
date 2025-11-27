@@ -5,7 +5,7 @@ namespace App\Services\FleetManagement;
 use App\Models\Fleet\FleetVehicleRequest;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

@@ -43,7 +43,7 @@
                     <div class="col-md-4">
                         @if($selectedTender && $selectedTender->OpeningDate)
                             <div class="text-muted small">
-                                <strong>Opening Date:</strong> {{ $selectedTender->OpeningDate->format('d/m/Y H:i') }}
+                                <strong>Opening Date:</strong> {{ $selectedTender->OpeningDate->format('d M Y H:i') }}
                             </div>
                         @endif
                     </div>
@@ -129,7 +129,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <strong>Received:</strong> {{ $submission->ReceivedAt->format('d/m/Y H:i') }}<br>
+                                    <strong>Received:</strong> {{ $submission->ReceivedAt->format('d M Y H:i') }}<br>
                                     <strong>Documents:</strong> {{ count(json_decode($submission->EncryptedDocuments, true) ?? []) }}
                                     files<br>
                                     <strong>Security:</strong>
@@ -157,7 +157,7 @@
                                     @else
                                         <span class="badge bg-success">✅ Opened</span><br>
                                         <small class="text-muted">
-                                            {{ $submission->OpenedAt->format('d/m/Y H:i') }}<br>
+                                            {{ $submission->OpenedAt->format('d M Y H:i') }}<br>
                                             by {{ $submission->openedByUser->name ?? 'Unknown' }}
                                         </small>
                                     @endif

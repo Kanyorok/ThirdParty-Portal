@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 

@@ -5,7 +5,7 @@ namespace App\Services\FleetManagement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetDriver;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
 use App\Enums\Core\ModulesEnum;

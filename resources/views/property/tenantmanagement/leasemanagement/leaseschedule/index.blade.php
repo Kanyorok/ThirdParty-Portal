@@ -56,15 +56,15 @@
                                 <td>{{ $leaseschedule->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                                 <td>{{ $leaseschedule->lease->property->PropertyName ?? '-' }}</td>
                                 <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
-                                <td>{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}</td>
-                                <td>{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') : '-' }}</td>
+                                <td>{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d M Y') : '-' }}</td>
+                                <td>{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d M Y') : '-' }}</td>
                                 <td>
                                     <div class="action-buttons">
                                         <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}"
                                            class="btn btn-sm btn-info text-white" title="View Schedule">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route('schedulelease.print', $leaseschedule->Id) }}" 
+                                        <a href="{{ route('schedulelease.print', $leaseschedule->Id) }}"
                                            target="_blank" class="btn btn-sm btn-secondary" title="Print Schedule">
                                             <i class="bi bi-printer"></i>
                                         </a>

@@ -2,7 +2,7 @@
 
 namespace App\Models\Insurance;
 
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use App\Enums\Insurance\InsurancePolicyStatus;

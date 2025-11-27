@@ -39,13 +39,12 @@
                                 {{ $req->requester->FirstName ?? '' }} {{ $req->requester->LastName ?? '' }}
                             </td>
                             <td>{{ $req->department->Name ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($req->RequestDate)->format('d/m/Y') }}</td>
-                            <td>{{ $req->trip?->TripNo ?? '-' }}</td>
+                            <td>{{ \Carbon\Carbon::parse($req->RequestDate)->format('d M Y') }}</td>                           <td>{{ $req->trip?->TripNo ?? '-' }}</td>
                             <td>
                                 @if ($req->trip?->TripStartDate && $req->trip?->TripEndDate)
-                                    {{ \Carbon\Carbon::parse($req->trip->TripStartDate)->format('d/m/Y') }}
+                                    {{ \Carbon\Carbon::parse($req->trip->TripStartDate)->format('d M Y') }}
                                     <span class="text-muted">→</span>
-                                    {{ \Carbon\Carbon::parse($req->trip->TripEndDate)->format('d/m/Y') }}
+                                    {{ \Carbon\Carbon::parse($req->trip->TripEndDate)->format('d M Y') }}
                                 @else
                                     -
                                 @endif

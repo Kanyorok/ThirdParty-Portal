@@ -34,10 +34,11 @@ class IntegrationRequest extends FormRequest
             // SSRS Integration Validation Rules
             'SSRS_Host' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'url:http,https', 'max:200'],
             'SSRS_Path' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
+            'SSRS_Virtual_Directory' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
             'SSRS_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
             'SSRS_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
 
-            // iTrack 
+            // iTrack
             'iTrack_URl' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'url:http,https', 'max:200'],
             'iTrack_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'max:200'],
             'iTrack_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::iTrack->value, 'required', 'string', 'max:200'],

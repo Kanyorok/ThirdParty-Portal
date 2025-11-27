@@ -11,7 +11,7 @@
                 <div class="row">
                     <div class="col-md-4 mb-2">
                         <strong>Received
-                            Date:</strong><br> {{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d/m/Y') }}
+                            Date:</strong><br> {{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d M Y') }}
                     </div>
                     <div class="col-md-4 mb-2">
                         <strong>Received By:</strong> {{ $receipt->receivedBy->Name ?? 'N/A' }}

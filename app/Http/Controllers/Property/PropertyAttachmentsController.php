@@ -11,7 +11,7 @@ use App\Http\Requests\Property\PropertyRegistry\PropertyAttachmentsRequest;
 use App\Services\Property\PropertyRegistry\PropertyAttachmentsService;
 use App\Models\PropertyManagement\PropertyAttachments;
 use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 
 class PropertyAttachmentsController extends Controller
 {

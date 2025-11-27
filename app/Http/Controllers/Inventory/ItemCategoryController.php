@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreItemCategoryRequest;
 use App\Http\Requests\Inventory\UpdateItemCategoryRequest;
 use App\Models\Inventory\ItemCategories;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;

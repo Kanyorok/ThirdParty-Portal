@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
 use App\Models\Communication\Comment;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\CRM\ProductDevelopment;
 use App\Models\CRM\ProductDevelopmentFeature;
 use App\Models\DMS\Image;

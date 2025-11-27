@@ -13,7 +13,7 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\HRM\Employee;
 use App\Models\HRM\Department;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\Inventory\StockConsumptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

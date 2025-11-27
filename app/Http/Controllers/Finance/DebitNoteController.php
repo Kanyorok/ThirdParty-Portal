@@ -62,14 +62,9 @@ class DebitNoteController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-<<<<<<< HEAD
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceCDNotes::class);
-=======
-    public function create(){
-        $this->authorize(PermissionEnum::DebitNoteCreate, FinanceCDNotes::class);
->>>>>>> origin
 
         $invoices = FinanceInvoice::select('Id', 'InvoiceNumber', 'InvoiceTitle', 'TotalAmount')->where('ApprovalStatus', 'posted')
             ->get();
@@ -173,34 +168,19 @@ class DebitNoteController extends Controller
         $this->authorize(PermissionEnum::DebitNoteUpdate, FinanceCDNotes::class);
 
         $validated = $request->validate([
-<<<<<<< HEAD
             'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
-            'NoteDate' => 'required|date',
-            'NoteAmount' => 'required|numeric|min:0.00',
-            'Description' => 'nullable|string',
-            'NoteType' => 'required|in:credit,debit',
-=======
-//            'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
             'NoteDate'     => 'required|date',
             'NoteAmount'   => 'required|numeric|min:0.00',
             'Description'  => 'nullable|string',
             'NoteType'     => 'required|in:credit,debit',
->>>>>>> origin
         ]);
 
         DB::beginTransaction();
         try {
-<<<<<<< HEAD
             $note = FinanceCDNotes::where('Id', $id)->update([
                 'InvoiceRefNo' => $validated['InvoiceRefNo'],
                 'NoteDate' => $validated['NoteDate'],
                 'NoteAmount' => $validated['NoteAmount'],
-=======
-            $note=FinanceCDNotes::where('Id',$id)->update([
-//                'InvoiceRefNo'=> $validated['InvoiceRefNo'],
-                'NoteDate'    => $validated['NoteDate'],
-                'NoteAmount'  => $validated['NoteAmount'],
->>>>>>> origin
                 'Description' => $validated['Description'],
                 'ModifiedBy' => Auth::id(),
             ]);

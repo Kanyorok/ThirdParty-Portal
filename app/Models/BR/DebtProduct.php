@@ -18,7 +18,7 @@ class DebtProduct extends Model
     //protected $connection = 'brcbs';
     protected $connection = 'sqlsrv';
     protected $keyType = 'string';
-    protected $table = 'syn_t_AdvancesReport';//synnym
+    protected $table = 't_AdvancesReport';//synnym
     protected $primaryKey = 'AccountID';//null;
 
     protected $casts = [

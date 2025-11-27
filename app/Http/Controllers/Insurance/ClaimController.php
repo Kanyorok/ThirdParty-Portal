@@ -7,7 +7,7 @@ use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassuranceClaimAssessmentRequest;
 use App\Http\Requests\Insurance\BancassuranceClaimRequest;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimAssessment;
 use App\Models\Insurance\BancassurancePolicy;

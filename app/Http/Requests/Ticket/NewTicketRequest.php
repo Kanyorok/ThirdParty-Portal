@@ -7,7 +7,7 @@ use App\Enums\TicketSourceEnum;
 use App\Http\Requests\Core\ShareRequest;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\StaticListsService;
 use Carbon\Carbon;
 use Exception;

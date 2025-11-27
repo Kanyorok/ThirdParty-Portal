@@ -1,4 +1,5 @@
 <?php
+#in the key.php file
 if (!function_exists("sodium_crypto_sign_keypair")) {
     fwrite(STDERR, "Sodium missing\n");
     exit(1);

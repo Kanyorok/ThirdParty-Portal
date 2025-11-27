@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\DMS\Image;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Workflow;
 use App\Models\Core\PendingWorkflow;
 use Illuminate\Http\UploadedFile;

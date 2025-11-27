@@ -180,7 +180,7 @@
                                 {{-- Start Date --}}
                                 <td>
                                     @if($recurring->recurringJournals && $recurring->recurringJournals->isNotEmpty())
-                                        {{ optional($recurring->recurringJournals->first())->StartDate ? \Carbon\Carbon::parse($recurring->recurringJournals->first()->StartDate)->format('d/m/Y') : '-' }}
+                                        {{ optional($recurring->recurringJournals->first())->StartDate ? \Carbon\Carbon::parse($recurring->recurringJournals->first()->StartDate)->format('d M Y') : '-' }}
                                     @else
                                         -
                                     @endif
@@ -189,7 +189,7 @@
                                 {{-- Cutoff Date --}}
                                 <td>
                                     @if($recurring->recurringJournals && $recurring->recurringJournals->isNotEmpty())
-                                        {{ optional($recurring->recurringJournals->first())->CuttOffDate ? \Carbon\Carbon::parse($recurring->recurringJournals->first()->CuttOffDate)->format('d/m/Y') : '-' }}
+                                        {{ optional($recurring->recurringJournals->first())->CuttOffDate ? \Carbon\Carbon::parse($recurring->recurringJournals->first()->CuttOffDate)->format('d M Y') : '-' }}
                                     @else
                                         -
                                     @endif
@@ -213,7 +213,7 @@
                                 {{-- Next Run --}}
                                 @if($recurring->recurringJournals && $recurring->recurringJournals->isNotEmpty())
                                     <td>
-                                        {{ optional($recurring->recurringJournals->first())->NextRunDate ? \Carbon\Carbon::parse($recurring->recurringJournals->first()->NextRunDate)->format('d/m/Y') : 'Not Set' }}
+                                        {{ optional($recurring->recurringJournals->first())->NextRunDate ? \Carbon\Carbon::parse($recurring->recurringJournals->first()->NextRunDate)->format('d M Y') : 'Not Set' }}
                                     </td>
                                 @else
                                     <td class="text-center">

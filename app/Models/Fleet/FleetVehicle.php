@@ -4,7 +4,7 @@ namespace App\Models\Fleet;
 
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\GPSCoordinate;
 use App\Models\DMS\Image;
 use App\Models\FleetManagement\FleetMake;

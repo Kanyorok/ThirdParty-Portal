@@ -48,7 +48,7 @@
                             <tr>
                                 <td>{{ $loop->iteration ?? '-' }}</td>
                                 <td>{{ $leasetermination->lease->LeaseNumber ?? '-' }}</td>
-                                <td>{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}</td>
+                                <td>{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d M Y') : '-' }}</td>
                                 <td>{{ $leasetermination->code->Description ?? '-' }}</td>
                                 <td>{{ $leasetermination->Remarks ?? '-' }}</td>
                                 <td>
