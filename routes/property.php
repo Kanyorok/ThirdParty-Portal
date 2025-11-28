@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Property\PropertyApprovalController;
 use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
@@ -93,7 +94,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('propertyrateandpricing/edit/{Id}', [PropertyRateAndPricingControllert::class, 'edit'])->name('propertyrateandpricing.edit');
     Route::put('propertyrateandpricing/edit/{Id}', [PropertyRateAndPricingControllert::class, 'update'])->name('propertyrateandpricing.update');
     Route::delete('propertyrateandpricing/delete/{Id}', [PropertyRateAndPricingControllert::class, 'destroy'])->name('propertyrateandpricing.destroy');
-
     Route::get('/propertyrateandpricing/blocks/{PropertyId}', [PropertyRateAndPricingControllert::class, 'getBlockByProperty'])->name('getblockbyproperty.rate');
     Route::get('/propertyrateandpricing/floors/{BlockId}', [PropertyRateAndPricingControllert::class, 'getFloorByBlock'])->name('getfloorbyblock.rate');
     Route::get('/propertyrateandpricing/Units/{FloorId}', [PropertyRateAndPricingControllert::class, 'getUnitsByFloor'])->name('getunitsbyfloor.rate');
@@ -188,6 +188,19 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'edit'])->name('renewlease.edit');
     Route::put('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'update'])->name('renewlease.update');
     Route::delete('renewlease/delete/{Id}', [PropertyLeaseRenewalController::class, 'destroy'])->name('renewlease.destroy');
+
+    //Property Approval
+    //Route::resource('approval', PropertyApprovalController::class);
+    Route::resource('approvals', PropertyApprovalController::class)->only([
+        'index',
+    ])->names([
+        'index' => 'propertyapproval.index'
+    ]);
+    // Approval actions: view, approve, reject
+    Route::get('approvals/{Id}', [PropertyApprovalController::class, 'show'])->name('propertyapproval.show');
+    Route::post('approvals/approve/{Id}', [PropertyApprovalController::class, 'approve'])->name('propertyapproval.approve');
+    Route::post('approvals/reject/{Id}', [PropertyApprovalController::class, 'reject'])->name('propertyapproval.reject');
+    
 
     //Route::resource('rentinvoice', PropertyInvoiceController::class);
     Route::get('rentinvoice', [PropertyInvoiceController::class, 'index'])->name('rentinvoice.index');

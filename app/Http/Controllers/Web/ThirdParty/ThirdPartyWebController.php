@@ -26,87 +26,91 @@ use Illuminate\Support\Str;
 
 class ThirdPartyWebController extends Controller
 {
-public function index(Request $request): View|JsonResponse
-{
-    if ($request->ajax()) {
-        $query = ThirdParties::query()
-            ->with(['types', 'country'])
-            ->select([
-                't_ThirdParties.Id',
-                't_ThirdParties.ThirdPartyName',
-                't_ThirdParties.TradingName',
-                't_ThirdParties.CountryId',
-                't_ThirdParties.ThirdPartyType',
-                't_ThirdParties.ApprovalStatus',
-                't_ThirdParties.BusinessType',
-                't_ThirdParties.IsPrequalified',
-            ])
-            ->addSelect([
-                'UserEmail' => ThirdPartyUser::select('Email')
-                    ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
-                    ->orderByDesc('CreatedOn')
-                    ->limit(1),
-                'UserFirstName' => ThirdPartyUser::select('FirstName')
-                    ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
-                    ->orderByDesc('CreatedOn')
-                    ->limit(1),
-                'UserLastName' => ThirdPartyUser::select('LastName')
-                    ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
-                    ->orderByDesc('CreatedOn')
-                    ->limit(1),
-            ]);
+    public function index(Request $request): View|JsonResponse
+    {
+        if ($request->ajax()) {
+            $query = ThirdParties::query()
+                ->with(['types', 'country'])
+                ->select([
+                    't_ThirdParties.Id',
+                    't_ThirdParties.ThirdPartyName',
+                    't_ThirdParties.TradingName',
+                    't_ThirdParties.CountryId',
+                    't_ThirdParties.ThirdPartyType',
+                    't_ThirdParties.ApprovalStatus',
+                    't_ThirdParties.BusinessType',
+                    't_ThirdParties.IsPrequalified',
+                ])
+                ->addSelect([
+                    'UserEmail' => ThirdPartyUser::select('Email')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                    'UserFirstName' => ThirdPartyUser::select('FirstName')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                    'UserLastName' => ThirdPartyUser::select('LastName')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                ]);
 
-        // 🔍 Search
-        if ($request->filled('search.value')) {
-            $searchTerm = $request->input('search.value');
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('ThirdPartyName', 'like', "%{$searchTerm}%")
-                    ->orWhere('TradingName', 'like', "%{$searchTerm}%")
-                    ->orWhere('RegistrationNumber', 'like', "%{$searchTerm}%")
-                    ->orWhere('TaxPIN', 'like', "%{$searchTerm}%");
-            });
-        }
+            // 🔍 Search
+            if ($request->filled('search.value')) {
+                $searchTerm = $request->input('search.value');
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('ThirdPartyName', 'like', "%{$searchTerm}%")
+                        ->orWhere('TradingName', 'like', "%{$searchTerm}%")
+                        ->orWhere('RegistrationNumber', 'like', "%{$searchTerm}%")
+                        ->orWhere('TaxPIN', 'like', "%{$searchTerm}%");
+                });
+            }
 
-        // 🏷 Filter by type
-        if ($request->filled('type')) {
-            $typeFilter = $request->input('type');
-            $query->whereHas('types', function ($q) use ($typeFilter) {
-                $q->where('TypeId', $typeFilter)
-                  ->orWhere('Code', 'like', "%{$typeFilter}%");
-            });
-        }
+            // 🏷 Filter by type
+            if ($request->filled('type')) {
+                $typeFilter = $request->input('type');
+                $query->whereHas('types', function ($q) use ($typeFilter) {
+                    $q->where('TypeId', $typeFilter)
+                        ->orWhere('Code', 'like', "%{$typeFilter}%");
+                });
+            }
 
-        // ⚙️ Filter by approval status
-        if ($request->filled('status')) {
-            $query->where('ApprovalStatus', $request->input('status'));
-        }
+            // ⚙️ Filter by approval status
+            if ($request->filled('status')) {
+                $query->where('ApprovalStatus', $request->input('status'));
+            }
 
-        try {
-            return DataTables::of($query)
-                ->addColumn('checkbox', fn(ThirdParties $tp) =>
-                    '<input type="checkbox" name="selected[]" value="' . $tp->Id . '" class="form-check-input select-row">'
-                )
+            try {
+                return DataTables::of($query)
+                    ->addColumn(
+                        'checkbox',
+                        fn(ThirdParties $tp) =>
+                        '<input type="checkbox" name="selected[]" value="' . $tp->Id . '" class="form-check-input select-row">'
+                    )
 
-                ->addColumn('ThirdPartyType', function (ThirdParties $thirdParty) {
-                    $codes = $thirdParty->types->pluck('Description')->filter()->unique();
-                    if ($codes->isNotEmpty()) {
-                        return $codes->join(', ');
-                    }
+                    ->addColumn('ThirdPartyType', function (ThirdParties $thirdParty) {
+                        $codes = $thirdParty->types->pluck('Description')->filter()->unique();
+                        if ($codes->isNotEmpty()) {
+                            return $codes->join(', ');
+                        }
 
-                    // Fallback: Enum safe conversion
-                    return ThirdPartyTypeEnum::tryFrom($thirdParty->ThirdPartyType)?->label() ?? 'N/A';
-                })
+                        // Fallback: Enum safe conversion
+                        return ThirdPartyTypeEnum::tryFrom($thirdParty->ThirdPartyType)?->label() ?? 'N/A';
+                    })
 
-                ->addColumn('CountryId', fn($tp) => $tp->country->Name ?? '—')
-                ->addColumn('BusinessType', fn($row) => $row->BusinessType?->label())
-                ->addColumn('ApprovalStatus', fn($row) => $row->ApprovalStatus?->label())
-                ->addColumn('Status', fn($row) => $row->Status?->label())
-                ->addColumn('IsPrequalified', fn(ThirdParties $tp) => $tp->IsPrequalified ? 'Yes' : 'No')
-                ->addColumn('PrimaryUser', fn(ThirdParties $tp) =>
-                    trim(($tp->UserFirstName ?? '') . ' ' . ($tp->UserLastName ?? '')) ?: 'N/A'
-                )
-                ->addColumn('PrimaryEmail', fn(ThirdParties $tp) => $tp->UserEmail ?? 'N/A')
-                ->addColumn('actions', fn(ThirdParties $tp) => '
+                    ->addColumn('CountryId', fn($tp) => $tp->country->Name ?? '—')
+                    ->addColumn('BusinessType', fn($row) => $row->BusinessType?->label())
+                    ->addColumn('ApprovalStatus', fn($row) => $row->ApprovalStatus?->label())
+                    ->addColumn('Status', fn($row) => $row->Status?->label())
+                    ->addColumn('IsPrequalified', fn(ThirdParties $tp) => $tp->IsPrequalified ? 'Yes' : 'No')
+                    ->addColumn(
+                        'PrimaryUser',
+                        fn(ThirdParties $tp) =>
+                        trim(($tp->UserFirstName ?? '') . ' ' . ($tp->UserLastName ?? '')) ?: 'N/A'
+                    )
+                    ->addColumn('PrimaryEmail', fn(ThirdParties $tp) => $tp->UserEmail ?? 'N/A')
+                    ->addColumn('actions', fn(ThirdParties $tp) => '
                     <div class="actions text-center">
                         <a href="' . route('thirdparty.parties.show', $tp->Id) . '" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye"></i>
@@ -123,21 +127,20 @@ public function index(Request $request): View|JsonResponse
                     </div>
                 ')
 
-                ->rawColumns(['checkbox', 'actions'])
-                ->make(true);
-
-        } catch (\Throwable $e) {
-            \Log::error('DataTables error in ThirdParty index: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return response()->json([
-                'error' => 'An error occurred while loading the data: ' . $e->getMessage(),
-            ], 500);
+                    ->rawColumns(['checkbox', 'actions'])
+                    ->make(true);
+            } catch (\Throwable $e) {
+                Log::error('DataTables error in ThirdParty index: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                return response()->json([
+                    'error' => 'An error occurred while loading the data: ' . $e->getMessage(),
+                ], 500);
+            }
         }
-    }
 
-    return view('thirdparty.parties.index');
-}
+        return view('thirdparty.parties.index');
+    }
 
 
     public function create(): View
@@ -147,12 +150,12 @@ public function index(Request $request): View|JsonResponse
         $thirdPartyTypes = ThirdPartyType::orderBy('Code')->get();
         $partyTypes = CodeDetail::where('CodeID', 'PartyType')->get();
         $country = Country::all();
-        return view('thirdparty.parties.create', compact('businessTypes', 'approvalStatuses', 'thirdPartyTypes','partyTypes','country'));
+        return view('thirdparty.parties.create', compact('businessTypes', 'approvalStatuses', 'thirdPartyTypes', 'partyTypes', 'country'));
     }
 
-public function store(StoreThirdPartyWithUserRequest $request)
-{
-    try {
+    public function store(StoreThirdPartyWithUserRequest $request)
+    {
+        try {
             DB::beginTransaction();
 
             $validated = $request->validated();
@@ -186,46 +189,46 @@ public function store(StoreThirdPartyWithUserRequest $request)
                 'CreatedBy'          => $creatorId,
             ]);
 
-        $user = ThirdPartyUser::create([
-            'UserID'       => strtoupper(Str::random(6)),
-            'FirstName'    => $request->FirstName,
-            'LastName'     => $request->LastName,
-            'Email'        => $request->UserEmail,
-            'Phone'        => $request->UserPhone,
-            'Gender'       => $request->Gender,
-            'Password'     => bcrypt('12345678'), // default password
-            'IsActive'     => 1,
-            'EmailVerifiedOn' => now(),
-            'CreatedBy'    => $creatorId,
-            'CreatedOn'    => now(),
-            'ThirdPartyId' => $thirdParty->Id, // 🔗 link to company
-        ]);
+            $user = ThirdPartyUser::create([
+                'UserID'       => strtoupper(Str::random(6)),
+                'FirstName'    => $request->FirstName,
+                'LastName'     => $request->LastName,
+                'Email'        => $request->UserEmail,
+                'Phone'        => $request->UserPhone,
+                'Gender'       => $request->Gender,
+                'Password'     => bcrypt('12345678'), // default password
+                'IsActive'     => 1,
+                'EmailVerifiedOn' => now(),
+                'CreatedBy'    => $creatorId,
+                'CreatedOn'    => now(),
+                'ThirdPartyId' => $thirdParty->Id, // link to company
+            ]);
 
-        if (is_array($request->ThirdPartyType)) {
-            foreach ($request->ThirdPartyType as $typeId) {
-                DB::table('t_ThirdPartyType_ThirdParties')->insert([
-                    'TypeId'       => $typeId,
-                    'ThirdPartyId' => $thirdParty->Id,
-                    'CreatedBy'    => Auth::id() ?? 1,
-                    'ModifiedBy'   => Auth::id() ?? 1,
-                    'CreatedOn'    => now(),
-                    'ModifiedOn'   => now(),
-                ]);
+            if (is_array($request->ThirdPartyType)) {
+                foreach ($request->ThirdPartyType as $typeId) {
+                    DB::table('t_ThirdPartyType_ThirdParties')->insert([
+                        'TypeId'       => $typeId,
+                        'ThirdPartyId' => $thirdParty->Id,
+                        'CreatedBy'    => Auth::id() ?? 1,
+                        'ModifiedBy'   => Auth::id() ?? 1,
+                        'CreatedOn'    => now(),
+                        'ModifiedOn'   => now(),
+                    ]);
+                }
             }
+
+
+            DB::commit();
+
+            return redirect()
+                ->route('thirdparty.parties.index')
+                ->with('success', 'Third Party and User created successfully.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return back()->with('error', 'Failed to create third party: ' . $e->getMessage());
         }
-
-
-        DB::commit();
-
-        return redirect()
-            ->route('thirdparty.parties.index')
-            ->with('success', 'Third Party and User created successfully.');
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        report($e);
-        return back()->with('error', 'Failed to create third party: ' . $e->getMessage());
     }
-}
 
 
     public function show(ThirdParties $party): View
@@ -290,7 +293,6 @@ public function store(StoreThirdPartyWithUserRequest $request)
             return redirect()
                 ->route('thirdparty.parties.show', $party->Id)
                 ->with('success', 'Third party information updated successfully.');
-
         } catch (\Exception $e) {
             Log::error('Failed to update third party', [
                 'partyId' => $party->Id,
@@ -425,7 +427,6 @@ public function store(StoreThirdPartyWithUserRequest $request)
                 'errorCount' => $errorCount,
                 'errors' => $errors
             ]);
-
         } catch (\Exception $e) {
             Log::error('Bulk action failed: ' . $e->getMessage(), [
                 'action' => $request->input('action'),

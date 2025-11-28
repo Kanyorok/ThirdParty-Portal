@@ -234,21 +234,8 @@ abstract class ApprovalWorkflowService
     
     $statusValueToSet = $this->getStatusValueForModule($source, $status);
     $table = (new $class)->getTable();
-
-    Log::info("=== EXECUTING WORKFLOW ACTION ===", [
-        'source_alias' => $source,
-        'sourceId' => $sourceId,
-        'resolved_table' => $table,
-        'actor' => $actor->Id,
-        'statusId' => $status->ID,
-        'statusDescription' => $status->Description,
-    ]);
-
-    // Get current stage ID BEFORE calling SP
     $currentStageId = $this->getCurrentStageId($table, $sourceId);
-    Log::info("Current stage ID before action", ['currentStageId' => $currentStageId]);
-
-    //  Check state BEFORE calling SP
+    
     $this->logWorkflowState($table, $sourceId, 'BEFORE_ACTION');
 
     try {
@@ -386,16 +373,6 @@ abstract class ApprovalWorkflowService
                     ->first();
             }
 
-            Log::info("=== WORKFLOW STATE: {$stage} ===", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'currentStage' => $currentStage,
-                'stageName' => $stageRequirements->StageName ?? 'N/A',
-                'pendingCount' => $pendingCount,
-                'approvalCount' => $approvalCount,
-                'requiredApprovals' => $stageRequirements->Count ?? 'N/A',
-                'approvedStatusId' => $approvedStatusId,
-            ]);
 
             // List all pending users
             $pendingUsers = DB::table('t_WorkFlowPending as p')
@@ -441,13 +418,7 @@ abstract class ApprovalWorkflowService
         string $statusColumn = 'Status'
     ): bool {
         $result = $this->_executeWorkflowAction($actor, $status, $source, $sourceId, $remarks, $statusColumn);
-        
-        Log::info("Approve action completed", [
-            'success' => $result['success'] ?? false,
-            'message' => $result['message'] ?? 'No message',
-            'workflowStatus' => $result['workflowStatus'] ?? 'Unknown',
-            'stageCompleted' => $result['stageCompleted'] ?? false,
-        ]);
+    
         
         return $result['success'] ?? false;
     }

@@ -28,13 +28,20 @@ class PropertyNewLeaseController extends Controller
     {
         $this->service = $service;
     }
+
     //
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
-        $newleases = PropertyNewLease::with(['tenant', 'property'])->get();
+        $newleases = PropertyNewLease::with(['tenant', 'property'])->get(); 
+
+        if (request()->wantsJson()) {
+            return response()->json($newleases);
+        }
+        
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
     }
+
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
