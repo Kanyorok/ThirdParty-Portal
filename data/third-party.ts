@@ -32,7 +32,7 @@ export interface ThirdPartyProfile {
     businessType: BusinessTypeEnum;
     registrationNumber: string;
     taxPIN: string;
-    vatNumber: string | null;
+    vatNumber: string | null; // TODO: remove this
     country: string;
     physicalAddress: string;
     email: string;
@@ -42,5 +42,5 @@ export interface ThirdPartyProfile {
     modifiedOn: string | null;
     status: number;
     thirdPartyType: number;
-    approvalStatus: number;
 }
+// Approval happens at indiv thirdpsty level

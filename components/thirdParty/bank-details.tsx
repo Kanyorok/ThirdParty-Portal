@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Loader2, Save, X, Building2, CreditCard } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Building2, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 import { Button } from '@/components/common/button';
@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/select';
 import { Badge } from '@/components/common/badge';
 import { Currency } from '@/data/currencies';
+import { Spinner } from '@/components/common/spinner'
 
 const bankDetailSchema = z.object({
     id: z.number().optional(),
@@ -230,7 +231,7 @@ export default function BankDetailsForm() {
     if (status === 'loading') {
         return (
             <div className="flex justify-center items-center h-48">
-                <Loader2 className="animate-spin h-5 w-5 text-primary" />
+                <Spinner className="animate-spin h-5 w-5 text-primary" />
             </div>
         );
     }
@@ -328,7 +329,7 @@ export default function BankDetailsForm() {
                                         <X className="h-3.5 w-3.5 mr-1" /> Cancel
                                     </Button>
                                     <Button size="sm" disabled={form.formState.isSubmitting}>
-                                        {form.formState.isSubmitting ? <Loader2 className="animate-spin h-3.5 w-3.5 mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+                                        {form.formState.isSubmitting ? <Spinner className="animate-spin h-3.5 w-3.5 mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
                                         {editingBankDetail ? 'Update' : 'Save'}
                                     </Button>
                                 </div>
@@ -341,7 +342,7 @@ export default function BankDetailsForm() {
             <motion.div variants={itemVariants}>
                 {isLoading ? (
                     <div className="flex justify-center items-center py-12 border rounded-lg">
-                        <Loader2 className="animate-spin h-5 w-5 text-primary" />
+                        <Spinner className="animate-spin h-5 w-5 text-primary" />
                     </div>
                 ) : bankDetails.length === 0 ? (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-2 border-dashed rounded-lg">

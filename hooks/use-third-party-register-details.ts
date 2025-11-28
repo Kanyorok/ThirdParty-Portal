@@ -30,7 +30,7 @@ export const useThirdPartyRegisterDetailsForm = (p0: { userId: string | null; on
             email: "",
             phone: "",
             website: "",
-            thirdPartyType: "",
+            // thirdPartyType: "", // TODO: Change this to usertype
         },
     });
 
@@ -42,7 +42,8 @@ export const useThirdPartyRegisterDetailsForm = (p0: { userId: string | null; on
         const fields: (keyof ThirdPartyDetailsFormInputs)[] = [
             "thirdPartyName", "tradingName", "businessType", "registrationNumber",
             "taxPIN", "vatNumber", "country", "physicalAddress", "email",
-            "phone", "website", "thirdPartyType",
+            // "phone", "website", "thirdPartyType",
+            "phone", "website",
         ];
         return fields.reduce(
             (acc, field) => {

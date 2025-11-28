@@ -1,30 +1,11 @@
-"use client"
+import RegistrationPage from "@/components/signin/register-form";
 
-import { useState, useCallback } from "react"
-import { ThemeToggle } from "@/app/dashboard/theme-toggle"
-import UserTypeStep from "@/components/signin/usertype-step"
-import RegistrationFormStep from "@/components/signin/register-form"
-import { UserTypeValue } from "@/types/types"
-import { RegisterFormInputs } from "@/lib/validation"
-
-export default function UserRegister() {
-  const [userType, setUserType] = useState<UserTypeValue | null>(null)
-
-  const handleBack = useCallback(() => {
-    setUserType(null)
-  }, [])
-
-  const handleSubmit = useCallback((data: RegisterFormInputs) => {
-    console.log("Form Submitted", data)
-  }, [])
-
+export default function Page() {
   return (
-    <div className="w-full max-w-xl">
-      {!userType ? (
-        <UserTypeStep onSelect={setUserType} />
-      ) : (
-        <RegistrationFormStep userType={userType} onBack={handleBack} onSubmit={handleSubmit} />
-      )}
-    </div>
+    <main className="min-h-screen w-full bg-white dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto py-16 px-6">
+        <RegistrationPage />
+      </div>
+    </main>
   )
 }

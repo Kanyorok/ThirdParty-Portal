@@ -3,7 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import { DropdownMenuItem } from "@/components/common/dropdown-menu";
-import { MenuItem } from "@/types/navigation";
+import { MenuItem } from "@/types/mini-profile-menu";
 import { cn } from "@/lib/utils";
 
 interface MenuItemComponentProps {

@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { UserNavUI } from "@/app/dashboard/side-nav/user-menu"
+import { UserNavUI } from "@/app/dashboard/side-nav/user-nav-ui"
 
 export const UserNav = () => {
     const { data: session, status } = useSession();

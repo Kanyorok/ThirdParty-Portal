@@ -1,16 +1,18 @@
 import type { Metadata, Viewport } from "next"
-import { Roboto } from "next/font/google"
+import { Geist } from "next/font/google"
 import "@/styles/globals.css"
 import { NextAuthProvider } from "@/app/providers"
 import { CLIENT_APP_NAME, CLIENT_APP_NAME_STRING } from "@/config/client-config"
 
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-roboto",
+const geist = Geist({
+  weight: ['100', '400', '900'],
+  style: ['normal'],
+  variable: "--font-geist",
   subsets: ["latin", "latin-ext"],
   display: "swap",
   preload: true,
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: false,
 })
 
 const appVersion = CLIENT_APP_NAME?.version ?? "0.1.0"
@@ -65,7 +67,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${roboto.variable} smooth-scroll antialiased min-h-screen`}
+        className={`${geist.variable} smooth-scroll antialiased min-h-screen`}
       >
         <NextAuthProvider
           attribute="class"

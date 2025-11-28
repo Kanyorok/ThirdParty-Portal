@@ -1,20 +1,22 @@
 import { z } from "zod";
 import { FieldErrors, FieldValues, DeepRequired } from "react-hook-form";
 
-const USER_TYPE_VALUES = ["tenant", "supplier"] as const;
+const USER_TYPE_VALUES = ["tenant", "supplier", "customer"] as const;
 type UserTypeValue = typeof USER_TYPE_VALUES[number];
 
-const USER_TYPE_API_VALUES = ["T", "S"] as const;
+const USER_TYPE_API_VALUES = ["T", "S", "C"] as const;
 type UserTypeApiValue = typeof USER_TYPE_API_VALUES[number];
 
 const USER_TYPE_MAP: Record<UserTypeValue, UserTypeApiValue> = {
     tenant: "T",
     supplier: "S",
+    customer: "C",
 } as const;
 
 const REVERSE_USER_TYPE_MAP: Record<UserTypeApiValue, UserTypeValue> = {
     T: "tenant",
     S: "supplier",
+    C: "customer",
 } as const;
 
 export const userTypeSchema = z.enum(USER_TYPE_VALUES, {

@@ -19,7 +19,7 @@ export function createPageMetadata(
             "partners",
         ],
         authors: [{ name: "Craft Silicon" }],
-        generator: "Next.js",
+        generator: "Craft Silicon",
         openGraph: {
             title: pageTitle ? `${pageTitle} | ${appTitleWithVersion}` : appTitleWithVersion,
             description: pageDescription ?? CLIENT_APP_NAME.meta.description,

@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useCallback, useMemo } from "react"
+import React, { useCallback, useMemo, useEffect } from "react"
 import { Command, LogOut, User, LucideIcon } from "lucide-react"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
@@ -17,7 +17,11 @@ import {
 } from "@/components/common/sidebar"
 
 import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
-import { sidebarItems, NavMainItem, NavSection } from "@/navigation/sidebar/sidebar-items"
+
+import { sidebarItems } from "@/navigation/sidebar/sidebar-items"
+import { NavMainItem, NavSection, UserProfile } from "@/types/profile-types"
+import { getProfileMenu } from "@/navigation/sidebar/menu-filter"
+import { useProfileStore } from "@/store/profile-store"
 
 import { NavMain } from "@/app/dashboard/side-nav/nav-main"
 import { NavSecondary } from "@/app/dashboard/side-nav/nav-secondary"
@@ -36,6 +40,42 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> { }
 
 export function AppSidebar({ ...props }: AppSidebarProps) {
     useRouter()
+    const { data: session, status } = useSession()
+
+    const {
+        activeProfile,
+        availableProfiles: profilesFromStore,
+        setActiveProfile,
+        initializeProfiles
+    } = useProfileStore()
+
+
+    const availableProfiles: UserProfile[] = useMemo(() => {
+        if (status !== 'authenticated' || !session?.user) {
+            return []
+        }
+
+        const user = session.user as (typeof session.user & {
+            isSupplier?: boolean;
+            isTenant?: boolean;
+            isCustomer?: boolean;
+        })
+
+        const profiles: UserProfile[] = []
+        if (user.isSupplier) profiles.push("Supplier")
+        if (user.isTenant) profiles.push("Tenant")
+        if (user.isCustomer) profiles.push("Customer")
+
+        return profiles.length > 0 ? profiles : ["Customer"]
+    }, [session, status])
+
+    useEffect(() => {
+        if (availableProfiles.length > 0 || status === 'authenticated') {
+            initializeProfiles(availableProfiles)
+        }
+    }, [availableProfiles, initializeProfiles, status])
+
+    const userProfile: UserProfile = activeProfile
     const currentYear = useMemo(() => new Date().getFullYear(), [])
 
     const handleLogout = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
@@ -55,7 +95,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         } catch (error) {
             console.error("Error during backend logout:", error)
         } finally {
-            // Clear NextAuth session and redirect
             await signOut({ callbackUrl: "/signin", redirect: true })
         }
     }, [])
@@ -70,28 +109,31 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         if (path.startsWith(DASHBOARD_ROOT_PATH)) {
             return path
         }
-        const cleanedPath = path.startsWith('/') ? path.substring(1) : path
-        return `${DASHBOARD_ROOT_PATH}/${cleanedPath}`
+        const holyPath = path.startsWith('/') ? path.substring(1) : path
+        return `${DASHBOARD_ROOT_PATH}/${holyPath}`
     }, [])
 
     const mainNavigationSections = useMemo((): NavSection[] => {
-        return sidebarItems
-            .filter(section => section.id !== "utility")
-            .map((group) => ({
-                ...group,
-                items: group.items.map((item: NavMainItem) => ({
-                    ...item,
-                    url: resolveDashboardPath(item.url),
-                    subItems: item.subItems?.map((subItem) => ({
-                        ...subItem,
-                        url: resolveDashboardPath(subItem.url),
-                    })),
+        const filteredSections = getProfileMenu(userProfile, sidebarItems);
+        const mainSections = filteredSections.filter(section => section.id !== "utility");
+
+        return mainSections.map((group) => ({
+            ...group,
+            items: group.items.map((item: NavMainItem) => ({
+                ...item,
+                url: resolveDashboardPath(item.url),
+                subItems: item.subItems?.map((subItem) => ({
+                    ...subItem,
+                    url: resolveDashboardPath(subItem.url),
                 })),
-            }))
-    }, [resolveDashboardPath])
+            })),
+        }))
+    }, [userProfile, resolveDashboardPath])
 
     const bottomNavigationItems = useMemo((): SecondaryNavItem[] => {
-        const utilitySection = sidebarItems.find(section => section.id === "utility")
+        const allFilteredSections = getProfileMenu(userProfile, sidebarItems);
+        const utilitySection = allFilteredSections.find(section => section.id === "utility");
+
         const processedUtilityItems: SecondaryNavItem[] = utilitySection
             ? utilitySection.items.map(item => ({
                 title: item.title,
@@ -99,6 +141,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                 icon: item.icon || User,
             }))
             : []
+
         processedUtilityItems.push({
             title: "Logout",
             url: "/logout",
@@ -106,7 +149,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
             onClick: handleLogout,
         })
         return processedUtilityItems
-    }, [resolveDashboardPath, handleLogout])
+    }, [userProfile, resolveDashboardPath, handleLogout])
 
     return (
         <Sidebar className="bg-blue-50" {...props}>
@@ -127,6 +170,26 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
+
+                {profilesFromStore.length > 1 && (
+                    <div className="p-4 pt-2">
+                        <label htmlFor="profile-select" className="block text-xs font-medium text-gray-700 mb-1">
+                            Active Profile ({userProfile})
+                        </label>
+                        <select
+                            id="profile-select"
+                            value={userProfile}
+                            onChange={(e) => setActiveProfile(e.target.value as UserProfile)}
+                            className="w-full text-sm p-1.5 border border-blue-200 rounded-md shadow-inner bg-white text-gray-800 transition duration-150 ease-in-out hover:border-blue-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            {profilesFromStore.map(profile => (
+                                <option key={profile} value={profile}>
+                                    {profile}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </SidebarHeader>
             <SidebarContent className="flex h-full flex-col">
                 <NavMain items={mainNavigationSections} />
@@ -136,7 +199,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
             </SidebarContent>
             <SidebarFooter>
                 <div className="py-2 text-center text-xs text-gray-500">
-                    &copy; {currentYear} {CLIENT_APP_NAME_STRING} | Version 1.0.0
+                    &copy; {currentYear} {CLIENT_APP_NAME_STRING} | V1.0.0
                 </div>
             </SidebarFooter>
         </Sidebar>

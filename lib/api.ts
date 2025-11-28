@@ -1,3 +1,4 @@
+import { Property } from '@/types/property';
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { getSession, signOut } from 'next-auth/react';
 
@@ -30,7 +31,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-    async (config) => {
+    async (config: InternalAxiosRequestConfig) => {
         try {
             const session = await getSession();
             if (session?.accessToken) {
@@ -101,5 +102,18 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+export async function fetchProperties(): Promise<Property[]> {
+    try {
+        const response = await api.get('/api/properties');
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const message = error.response?.data?.message || error.message;
+            throw new Error(message || `Failed to fetch properties: ${error.response?.statusText}`);
+        }
+        throw new Error('An unknown error occurred while fetching properties.');
+    }
+}
 
 export default api;
