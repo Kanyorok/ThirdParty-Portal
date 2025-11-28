@@ -59,7 +59,7 @@
                 flatpickr(el, {
                     dateFormat: 'Y-m-d',
                     altInput: true,
-                    altFormat: 'd M Y',
+                    altFormat: 'd/m/Y',
                     allowInput: true,
                     minDate: 'today', // disables past dates and greys them out in the calendar
                     defaultDate: new Date(),

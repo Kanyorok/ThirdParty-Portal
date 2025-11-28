@@ -114,7 +114,8 @@
                             : 'N/A' }}
                     </td>
                     <td class="text-num">{{ number_format($need->RequestedQty * $need->EstimatedUnitCost, 2) }}</td>
-                    <td>{{ Carbon::parse($need->RequestedDate)->format('d M Y') }}</td>                   @php
+                    <td>{{ Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
+                    @php
                         // Determine status label and map to badge classes
                         $statusLabel = (is_object($need->Status) && method_exists($need->Status, 'label'))
                             ? $need->Status->label()

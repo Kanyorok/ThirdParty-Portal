@@ -96,9 +96,9 @@
                         <td>{{ $rfq->RFQNumber ?? '-' }}</td>
                         <td>{{ $rfq->requisition->RequisitionNo ?? '-' }}</td>
                         <td>{{ $rfq->Status ?? '-' }}</td>
-                        <td>{{ $rfq->SubmissionDeadline ? Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') : '-' }}</td>
+                        <td>{{ $rfq->SubmissionDeadline ? Carbon::parse($rfq->SubmissionDeadline)->format('d/m/Y') : '-' }}</td>
                         <td>{{ $createdByMap[$rfq->CreatedBy] ?? '-' }}</td>
-                        <td>{{ $rfq->CreatedOn ? Carbon::parse($rfq->CreatedOn)->format('d M Y') : '-' }}</td>
+                        <td>{{ $rfq->CreatedOn ? Carbon::parse($rfq->CreatedOn)->format('d/m/Y') : '-' }}</td>
                         <td>
                             <a href="{{ route('rfqs.show', $rfq->Id) }}" class="btn btn-sm btn-info">View</a>
                         </td>

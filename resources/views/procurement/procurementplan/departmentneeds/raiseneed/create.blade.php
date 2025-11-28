@@ -105,7 +105,7 @@
     flatpickr("#RequestedDate", {
         dateFormat: "Y-m-d",
         altInput: true,
-        altFormat: "d M Y",
+        altFormat: "d/m/Y",
         allowInput: true,
         minDate: "today"
     });

@@ -10,6 +10,7 @@ use App\Models\Procurement\Supplier;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -553,10 +554,24 @@ class InvoiceEntryV2Controller extends Controller
                 'DueDate' => 'required|date',
                 'Amount' => 'required|numeric|min:0.01',
                 'Description' => 'nullable|string',
-                'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240'
+                'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+                'TaxID' => 'nullable|exists:t_FinanceTaxRuleConfiguration,Id',
+                'CurrencyID' => 'nullable|exists:t_Currencies,Id',
+                'ExchangeRate' => 'nullable|numeric',
             ]);
 
             DB::beginTransaction();
+
+            //Calculate Tax Amount and get Tax Percentage
+            $taxAmount = 0;
+            $taxPercentage = 0.0;
+            if ($validated['TaxID']) {
+                $taxConfig = FinanceTaxRuleConfiguration::find($validated['TaxID']);
+                if ($taxConfig) {
+                    $taxPercentage = (float)$taxConfig->Rate;
+                    $taxAmount = round($validated['Amount'] * ($taxPercentage / 100), 2);
+                }
+            }
 
             $invoice = FinanceInvoiceEntry::create([
                 //'ThirdPartyID' => $validated['ThirdPartyID'], // Store in correct field for relationship
@@ -569,7 +584,7 @@ class InvoiceEntryV2Controller extends Controller
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'DueDate' => $validated['DueDate'],
                 // Store inclusive amount for posting/approval
-                'InvoiceAmount' => (function() use ($validated) {
+                'InvoiceAmount' => (function() use ($validated, $taxAmount) {
                     // If form provided Amount, prefer it; otherwise if PO is present, fetch OrdTotIncl
                     $formAmount = (float)$validated['Amount'];
                     if (!empty($validated['POReference'])) {
@@ -578,11 +593,15 @@ class InvoiceEntryV2Controller extends Controller
                             return (float)$ordTotIncl;
                         }
                     }
-                    return $formAmount;
+                    return $formAmount + $taxAmount + $taxAmount;
                 })(),
+                'TaxAmount' => $taxAmount,
+                'TaxPercentage' => $taxPercentage ?? 0.0,
                 'Description' => $validated['Description'],
-                'CurrencyID' => 56, // Set to default currency
-                'ExchangeRate' => 1.0, // Set exchange rate to 1
+                'TaxID' => 1,//$validated['TaxID'] ?? 1,
+                'TotalAmount' => $validated['Amount'] + $taxAmount,
+                'CurrencyID' => $validated['CurrencyID'] ?? 56, // Set to default currency
+                'ExchangeRate' => $validated['ExchangeRate'] ?? 1.0, // Set exchange rate to 1
                 'Status' => 'Draft',
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),

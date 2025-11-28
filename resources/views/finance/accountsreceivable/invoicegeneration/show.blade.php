@@ -212,7 +212,7 @@
                     <table class="table table-hover align-middle mt-2 invoice-items-table">
                         <thead class="table-light">
                         <tr>
-                            <th>#</th>
+                            <th></th>
                             <th>Item</th>
                             <th>Description</th>
                             <th class="text-end">Qty</th>
@@ -227,7 +227,7 @@
                         @forelse($invoice->lines as $line)
                             @php $totalTax += $line->TaxAmount; @endphp
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td></td>
                                 <td class="fw-semibold">{{ $line->InvoiceLineName }}</td>
                                 <td class="small text-muted">{{ $line->Description }}</td>
                                 <td class="text-end">{{ number_format($line->Quantity, 2) }}</td>
