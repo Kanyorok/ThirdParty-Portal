@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\ThirdParies\Supplier;
 use App\Models\Inventory\ItemCategories;
 
 // model representing t_ItemCategories
@@ -43,7 +42,7 @@ class SupplierCategory extends Model
     public function suppliers(): BelongsToMany
     {
         return $this->belongsToMany(
-            Supplier::class,
+            \App\Models\ThirdParies\Supplier::class,
             't_ThirdParty_SupplierCategory',
             'supplier_category_id',
             'third_party_id'
