@@ -48,7 +48,8 @@
                         <td>{{ $item->ItemName}}</td>
                         <td>{{ $item->Quantity }}</td>
                         <td>{{ $item->uom->Name}}</td>
-                        <td>{{ Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') }}</td>                   </tr>
+                        <td>{{ Carbon::parse($rfq->SubmissionDeadline)->format('d/m/Y') }}</td>
+                    </tr>
                 @endforeach
                 </tbody>
                 <tfoot>
@@ -107,7 +108,7 @@
                                             <p class="mb-0">Response No:
                                                 <strong>{{ $response->RFQResponseNumber }}</strong></p>
                                             <p class="mb-0">Submitted:
-                                                <strong>{{ optional($response->CreatedOn)->format('d M Y') ?? '' }}</strong>
+                                                <strong>{{ optional($response->CreatedOn)->format('d/m/Y') ?? '' }}</strong>
                                             </p>
                                         </div>
                                         <div class="col-6 text-end">

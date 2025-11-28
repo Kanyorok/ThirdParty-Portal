@@ -61,7 +61,8 @@
                 <tr>
                   <td>{{ $isPaginator ? ($details->firstItem() + $loop->index) : $loop->iteration }}</td>
                   <td>{{ $item->OrderNo }}</td>
-                    <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d M Y') }}</td>                 <td>{{ $item->ExtOrdNum }}</td>
+                    <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d/m/Y') }}</td>
+                  <td>{{ $item->ExtOrdNum }}</td>
                   <td>{{ $item->Priority }}</td>
                   @php
                     $totalIncl = null;
@@ -79,7 +80,7 @@
                   <td>{{ number_format(($totalIncl ?? 0), 2) }}</td>
                   <td>{{ $item->ordercount }}</td>
                   <td>{{ $item->CreatedBy }}</td>
-                    <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d M Y H:i') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d/m/Y H:i') }}</td>
                     <td>
                       @php
                         // Authoritative status resolution using approvals workflow
