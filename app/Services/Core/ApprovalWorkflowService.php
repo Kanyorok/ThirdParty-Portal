@@ -303,20 +303,29 @@ abstract class ApprovalWorkflowService
         ];
 
         //  Use the properly defined $currentStageId
-        if ($result['stageCompleted']) {
-            Log::info("Stage completed, advancing to next stage", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'currentStageId' => $currentStageId,
-            ]);
-            $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id);
-        } else {
-            Log::info("Stage not completed yet", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'currentStageId' => $currentStageId,
-            ]);
-        }
+    if ($result['stageCompleted']) {
+    // Only advance if there are more stages
+    if ($this->hasNextStage($table, $currentStageId)) {
+        Log::info("Stage completed, advancing to next stage", [
+            'table' => $table,
+            'sourceId' => $sourceId,
+            'currentStageId' => $currentStageId,
+        ]);
+        $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id);
+    } else {
+        Log::info("Stage completed - this was the final stage", [
+            'table' => $table,
+            'sourceId' => $sourceId,
+            'currentStageId' => $currentStageId,
+        ]);
+    }
+} else {
+    Log::info("Stage not completed yet", [
+        'table' => $table,
+        'sourceId' => $sourceId,
+        'currentStageId' => $currentStageId,
+    ]);
+}
         
         return $result;
 
@@ -755,6 +764,26 @@ protected function submittedAction(
     }
 
     /**
+ * Check if there are more stages after the current one
+ */
+private function hasNextStage(string $table, int $currentStageId): bool
+{
+    $currentStage = WorkflowStage::find($currentStageId);
+    if (!$currentStage) {
+        return false;
+    }
+
+    $nextStage = DB::table('t_WorkFlowStages')
+        ->where('WorkFlowId', $currentStage->WorkFlowId)
+        ->where('Order', '>', $currentStage->Order)
+        ->whereNull('DeletedOn')
+        ->orderBy('Order', 'asc')
+        ->first();
+
+    return !is_null($nextStage);
+}
+
+    /**
      * Cancel/withdraw workflow
      */
     public function cancelWorkflow(
@@ -984,54 +1013,69 @@ protected function submittedAction(
 
             DB::commit();
             Log::info("Stage advancement completed successfully");
-        } else {
-            // No next stage - workflow fully approved
-            Log::info("No next stage found - finalizing workflow as fully approved");
-            
-            // Update the source table's status to 'Approved'
-            try {
-                // Get the morph alias from table name
-                $morphAlias = array_search($table, array_map(function($class) {
-                    return (new $class)->getTable();
-                }, Relation::morphMap()));
-                
-                if (!$morphAlias) {
-                    // Fallback: try to determine from table name
-                    $morphAlias = Str::snake(Str::singular(str_replace('t_', '', $table)));
-                }
-                
-                // Get the approved status value for this module
-                $approvedStatusValue = $this->getFinalApprovedStatus($morphAlias, $table);
-                
-                Log::info("Updating source table to approved status", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                    'morphAlias' => $morphAlias,
-                    'approvedStatusValue' => $approvedStatusValue,
-                ]);
-                
-                // Update the status column in the source table
-                DB::statement("
-                    UPDATE {$table}
-                    SET Status = ?,
-                        ModifiedBy = ?,
-                        ModifiedOn = GETDATE()
-                    WHERE Id = ?
-                ", [$approvedStatusValue, $userId, $sourceId]);
-                
-                Log::info("Source table updated to approved status successfully");
-                
-            } catch (\Throwable $e) {
-                Log::error("Failed to update source table status", [
-                    'error' => $e->getMessage(),
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                ]);
-                // Don't throw - workflow is complete, this is just a status update issue
+        }  else {
+    // No next stage - workflow fully approved
+    Log::info("No next stage found - finalizing workflow as fully approved");
+    
+    try {
+        // Get the morph alias from table name
+        $morphAlias = array_search($table, array_map(function($class) {
+            return (new $class)->getTable();
+        }, Relation::morphMap()));
+        
+        if (!$morphAlias) {
+            // Fallback: try to determine from table name
+            $morphAlias = Str::snake(Str::singular(str_replace('t_', '', $table)));
+        }
+        
+        // Get the approved status value for this module
+        $approvedStatusValue = $this->getFinalApprovedStatus($morphAlias, $table);
+        
+        Log::info("Updating source table to approved status", [
+            'table' => $table,
+            'sourceId' => $sourceId,
+            'morphAlias' => $morphAlias,
+            'approvedStatusValue' => $approvedStatusValue,
+        ]);
+        
+        // Dynamically get the primary key column from the model
+        $primaryKeyColumn = 'Id';  // Default fallback
+        try {
+            $modelClass = Relation::getMorphedModel($morphAlias);
+            if ($modelClass && class_exists($modelClass)) {
+                $primaryKeyColumn = (new $modelClass)->getKeyName();  // E.g., 'id', 'PlanID', 'custom_id'
             }
-            
-            DB::commit();
-            Log::info("Workflow finalization completed successfully");
+        } catch (\Throwable $e) {
+            Log::warning("Could not determine primary key for table {$table}, using default 'Id'", [
+                'error' => $e->getMessage(),
+                'morphAlias' => $morphAlias,
+            ]);
+        }
+        
+        Log::info("Using primary key column for update", ['column' => $primaryKeyColumn]);
+        
+        // Update the status column in the source table
+        DB::statement("
+            UPDATE {$table}
+            SET Status = ?,
+                ModifiedBy = ?,
+                ModifiedOn = GETDATE()
+            WHERE {$primaryKeyColumn} = ?
+        ", [$approvedStatusValue, $userId, $sourceId]);
+        
+        Log::info("Source table updated to approved status successfully");
+        
+    } catch (\Throwable $e) {
+        Log::error("Failed to update source table status", [
+            'error' => $e->getMessage(),
+            'table' => $table,
+            'sourceId' => $sourceId,
+        ]);
+        // Don't throw - workflow is complete, this is just a status update issue
+    }
+    
+    DB::commit();
+    Log::info("Workflow finalization completed successfully");
         }
     } catch (\Throwable $e) {
         DB::rollBack();
