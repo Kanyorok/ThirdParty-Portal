@@ -33,6 +33,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Throwable;
 use App\Models\Procurement\TenderInvitation;
+use App\Services\Workflow\ApprovalWorkflow;
 use App\Mail\TenderInvitation as TenderInvitationMail;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Procurement\TenderDocument;
@@ -41,6 +42,12 @@ use App\Enums\Core\ModulesEnum;
 
 class TenderController extends Controller
 {
+
+    protected ApprovalWorkflow $workflow;
+    public function __construct(ApprovalWorkflow $workflow)
+    {
+        $this->workflow = $workflow;  // Injected with codeId via service container
+    }
     public function index()
     {
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
@@ -258,6 +265,7 @@ class TenderController extends Controller
                     ]);
                 }
             }
+       
 
             // Attach Tender Documents to DMS (from create form)
             if ($request->hasFile('documents')) {
@@ -275,6 +283,19 @@ class TenderController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'create'])
                 ->log('Tender created successfully with ID: ' . $tenderId);
+
+                 try {
+                // Initialize workflow for the new tender
+                $this->workflow->submit($tender, Auth::user(), TenderApprovalStatusEnum::PENDING, 'Tender submitted for approval');
+                activity()
+                    ->performedOn($tender)
+                    ->causedBy(Auth::user())
+                    ->withProperties(['action' => 'submit for approva;'])
+                    ->log('Tender submitted for approval with ID: ' . $tenderId);
+            } catch (Throwable $wfEx) {
+                Log::error('Failed to initiate workflow for Tender ID ' . $tenderId . ': ' . $wfEx->getMessage());
+                throw new Exception('Failed to initiate approval workflow. Please contact the system administrator.');
+            }
             // After successful creation, notify selected suppliers (if any) using CRMEmailService
             try {
                 $selectedSupplierIds = collect($request->suppliers ?? [])->map(fn($v) => (int)$v)->unique()->values()->all();
@@ -367,10 +388,15 @@ class TenderController extends Controller
         }
     }
 
+
+    //added maker chekcer   
     public function show(string $id)
     {
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
         $tender = Tender::findOrFail($id);
+        $user = Auth::user();
+        $canApprove = $this->workflow->canApproveModel($tender, $user);
+        Log::info("User {$user->id} canApprove for Tender {$tender->Id}: " . ($canApprove ? 'YES' : 'NO'));
         $show = false;
         if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
             $show = true;
@@ -400,8 +426,7 @@ class TenderController extends Controller
             $manualItem->item_name = ItemMasterList::find($manualItem->item_id)?->ItemName ?? 'N/A';
         }
 
-        return view('procurement.tendering.tendersetup.tenderinitiation.show', compact(
-            'tender',
+        return view('procurement.tendering.tendersetup.tenderinitiation.show', compact(            'tender',
             'tenderCategory',
             'itemCategory',
             'currency',
@@ -411,8 +436,10 @@ class TenderController extends Controller
             'items',
             'suppliers',
             'show',
-            'totalEstimatedCost'
-        ));
+            'canApprove',
+            'totalEstimatedCost',
+            
+         ) );
     }
 
     public function edit(string $id)
@@ -772,66 +799,80 @@ class TenderController extends Controller
         }
     }
 
-    public function approveTender(Request $request)
-    {
-        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+public function approveTender(Request $request)
+{
+    $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
 
-        // Validate the request
-        $request->validate([
-            'tender_id' => 'required|exists:t_Tenders,Id',
-            'reason' => 'required|string|max:1000',
+    $request->validate([
+        'tender_id' => 'required|exists:t_Tenders,Id',
+        'reason' => 'required|string|max:1000',
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $tender = Tender::findOrFail($request->tender_id);
+        $user = Auth::user();
+
+        // Check if user can approve this tender
+        if (!$this->workflow->canApproveModel($tender, $user)) {
+            return redirect()->route('initiatetender.index')->with('error', 'You are not authorized to approve this tender.');
+        }
+
+        // Use workflow to approve
+        $approved = $this->workflow->approve(
+            $tender,
+            $user,
+            TenderApprovalStatusEnum::APPROVED,
+            $request->reason,
+            'ApprovalStatus' // Use the correct status column name
+        );
+
+        if (!$approved) {
+            throw new Exception('Workflow approval failed');
+        }
+
+        // Update tender status to published after approval
+        $tender->update([
+            'Status' => TenderStatusEnum::Published,
+            'ModifiedBy' => $user->id,
+            'ModifiedOn' => now(),
         ]);
 
-        try {
-            DB::beginTransaction();
-
-            // Find the tender
-            $tender = Tender::findOrFail($request->tender_id);
-
-            // Update the approval status and related fields
-            $tender->update([
-                'ApprovalStatus' => TenderApprovalStatusEnum::APPROVED,
-                'ApprovalRemarks' => $request->reason,
-                'Status' => TenderStatusEnum::Published, // Approve and publish as mentioned in the modal
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]);
-
-            // Handle restricted tender invitations
-            $invitationsSent = 0;
-            if ($tender->isRestricted()) {
-                $invitationsSent = $this->sendRestrictedTenderInvitations($tender);
-            }
-
-            // Log the approval activity
-            activity()
-                ->performedOn($tender)
-                ->causedBy(Auth::user())
-                ->withProperties([
-                    'action' => 'approve',
-                    'approval_remarks' => $request->reason,
-                    'previous_status' => 'Pending',
-                    'new_status' => 'Approved',
-                    'tender_type' => $tender->TenderType->value,
-                    'invitations_sent' => $invitationsSent
-                ])
-                ->log('Tender approved and published with ID: ' . $tender->Id . ($invitationsSent > 0 ? ". Invitations sent to {$invitationsSent} suppliers." : ''));
-
-            DB::commit();
-
-            $successMessage = 'Tender approved and published successfully.';
-            if ($invitationsSent > 0) {
-                $successMessage .= " Invitations sent to {$invitationsSent} suppliers.";
-            }
-
-            return redirect()->route('initiatetender.index')->with('success', $successMessage);
-        } catch (Throwable $th) {
-            DB::rollBack();
-            Log::error("--- APPROVE TENDER ERROR --- " . $th->getMessage());
-            Log::error($th);
-            return redirect()->route('initiatetender.index')->with('error', 'Failed to approve Tender. Please try again.');
+        // Handle restricted tender invitations
+        $invitationsSent = 0;
+        if ($tender->isRestricted()) {
+            $invitationsSent = $this->sendRestrictedTenderInvitations($tender);
         }
+
+        activity()
+            ->performedOn($tender)
+            ->causedBy($user)
+            ->withProperties([
+                'action' => 'approve',
+                'approval_remarks' => $request->reason,
+                'previous_status' => 'Pending',
+                'new_status' => 'Approved',
+                'tender_type' => $tender->TenderType->value,
+                'invitations_sent' => $invitationsSent
+            ])
+            ->log('Tender approved and published with ID: ' . $tender->Id);
+
+        DB::commit();
+
+        $successMessage = 'Tender approved and published successfully.';
+        if ($invitationsSent > 0) {
+            $successMessage .= " Invitations sent to {$invitationsSent} suppliers.";
+        }
+
+        return redirect()->route('initiatetender.index')->with('success', $successMessage);
+    } catch (Throwable $th) {
+        DB::rollBack();
+        Log::error("--- APPROVE TENDER ERROR --- " . $th->getMessage());
+        Log::error($th);
+        return redirect()->route('initiatetender.index')->with('error', 'Failed to approve Tender. Please try again.');
     }
+}
 
     // AJAX: return distinct top-level item categories for the selected tender category
 public function allowedCategories(Request $request)
@@ -923,53 +964,62 @@ public function allowedCategories(Request $request)
     return response()->json(['ok' => true, 'categories' => $roots->values()]);
 }
 
-    public function rejectTender(Request $request)
-    {
-        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+ public function rejectTender(Request $request)
+{
+    $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
 
-        // Validate the request
-        $request->validate([
-            'tender_id' => 'required|exists:t_Tenders,Id',
-            'reason' => 'required|string|max:1000',
+    $request->validate([
+        'tender_id' => 'required|exists:t_Tenders,Id',
+        'reason' => 'required|string|max:1000',
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $tender = Tender::findOrFail($request->tender_id);
+        $user = Auth::user();
+
+        // Use workflow to reject
+        $rejected = $this->workflow->reject(
+            $tender,
+            $user,
+            TenderApprovalStatusEnum::REJECTED,
+            $request->reason,
+            'ApprovalStatus' // Use the correct status column name
+        );
+
+        if (!$rejected) {
+            throw new Exception('Workflow rejection failed');
+        }
+
+        // Keep tender as draft when rejected
+        $tender->update([
+            'Status' => TenderStatusEnum::Draft,
+            'ModifiedBy' => $user->id,
+            'ModifiedOn' => now(),
         ]);
 
-        try {
-            DB::beginTransaction();
+        activity()
+            ->performedOn($tender)
+            ->causedBy($user)
+            ->withProperties([
+                'action' => 'reject',
+                'rejection_remarks' => $request->reason,
+                'previous_status' => 'Pending',
+                'new_status' => 'Rejected'
+            ])
+            ->log('Tender rejected with ID: ' . $tender->Id);
 
-            // Find the tender
-            $tender = Tender::findOrFail($request->tender_id);
+        DB::commit();
 
-            // Update the approval status and related fields
-            $tender->update([
-                'ApprovalStatus' => TenderApprovalStatusEnum::REJECTED,
-                'ApprovalRemarks' => $request->reason,
-                'Status' => TenderStatusEnum::Draft, // Keep as draft when rejected
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]);
-
-            // Log the rejection activity
-            activity()
-                ->performedOn($tender)
-                ->causedBy(Auth::user())
-                ->withProperties([
-                    'action' => 'reject',
-                    'rejection_remarks' => $request->reason,
-                    'previous_status' => 'Pending',
-                    'new_status' => 'Rejected'
-                ])
-                ->log('Tender rejected with ID: ' . $tender->Id);
-
-            DB::commit();
-
-            return redirect()->route('initiatetender.index')->with('success', 'Tender rejected successfully.');
-        } catch (Throwable $th) {
-            DB::rollBack();
-            Log::error("--- REJECT TENDER ERROR --- " . $th->getMessage());
-            Log::error($th);
-            return redirect()->route('initiatetender.index')->with('error', 'Failed to reject Tender. Please try again.');
-        }
+        return redirect()->route('initiatetender.index')->with('success', 'Tender rejected successfully.');
+    } catch (Throwable $th) {
+        DB::rollBack();
+        Log::error("--- REJECT TENDER ERROR --- " . $th->getMessage());
+        Log::error($th);
+        return redirect()->route('initiatetender.index')->with('error', 'Failed to reject Tender. Please try again.');
     }
+}
 
     /**
      * Get prequalified suppliers based on active prequalification rounds
@@ -1195,6 +1245,28 @@ public function allowedCategories(Request $request)
         }
         return $all;
     }
+
+    /**
+ * Show workflow history for a tender
+ */
+public function workflowHistory($id)
+{
+    $this->authorize(PermissionEnum::TenderRead, Tender::class);
+    
+    $tender = Tender::findOrFail($id);
+    
+    try {
+        $history = $this->workflow->historyForModel($tender);
+        
+        return view('procurement.tendering.tendersetup.tenderinitiation.workflow-history', compact(
+            'tender',
+            'history'
+        ));
+    } catch (Exception $e) {
+        Log::error('Failed to fetch workflow history: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Failed to load workflow history.');
+    }
+}
 
     /**
      * Send invitations to selected suppliers for restricted tenders
