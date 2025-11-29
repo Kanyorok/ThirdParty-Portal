@@ -22,19 +22,19 @@ class RequisitionItemService
     public static function create(array $data, User $actor): RequisitionLine
     {
         return RequisitionLine::create([
-        'Module' => $data['Module'],
-        'Type' => $data['Type'],
-        'Item' => $data['Item'],
-        'Description' => $data['Description'],
-        'Quantity' => $data['Quantity'],
-        'UOM' => $data['UOM'],
-        'ExpectedPrice' => $data['ExpectedPrice'],
-        'Urgency' => $data['Urgency'],
-        'CategoryId' => $data['CategoryId'],
-        'CreatedBy' => $actor->Id,
-        'ModifiedBy' => $actor->Id
-        // optionally CreatedBy etc.
-                                         ]);
+            'Module' => $data['Module'],
+            'Type' => $data['Type'],
+            'Item' => $data['Item'],
+            'Description' => $data['Description'],
+            'Quantity' => $data['Quantity'],
+            'UOM' => $data['UOM'],
+            'ExpectedPrice' => $data['ExpectedPrice'],
+            'Urgency' => $data['Urgency'],
+            'CategoryId' => $data['CategoryId'],
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id
+            // optionally CreatedBy etc.
+        ]);
     }
 
 
@@ -46,7 +46,13 @@ class RequisitionItemService
             DB::transaction(function () use ($RequisitionId, $Item, $Quantity, $Urgency, $UOM, $EstimatedPrice, $LineItemID, $actor) {
 
                 DB::statement('EXEC p_AddRequisitionLines ?, ?, ?, ?, ?, ?, ?, ?', [
-                    $RequisitionId, $Item, $Quantity, $Urgency, $UOM, $EstimatedPrice, $LineItemID,
+                    $RequisitionId,
+                    $Item,
+                    $Quantity,
+                    $Urgency,
+                    $UOM,
+                    $EstimatedPrice,
+                    $LineItemID,
                     $actor->Id // Pass the User ID, not the entire User model
                 ]);
             });
@@ -55,7 +61,6 @@ class RequisitionItemService
                 'status' => 'success',
                 'message' => 'RequisitionLines successfully created.'
             ];
-
         } catch (QueryException $e) {
             // Log the SQL error
             Log::error('SQL Error executing p_AddRequisitionLines', [
@@ -77,17 +82,18 @@ class RequisitionItemService
             ]);
 
             // Return a custom error message or handle as needed
-            return[
+            return [
                 'status' => 'error',
                 'message' => 'Error executing requisitionlines creation',
                 'error' => $e->getMessage()
             ];
         }
     }
-//
+    //
 
 
-    public static function getRequisitionItems(){
+    public static function getRequisitionItems()
+    {
 
         return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
             ->Join(DB::raw('t_Requisitions WITH (NOLOCK)'), 't_RequisitionLines.RequisitionID', '=', 't_Requisitions.Id')
@@ -127,8 +133,8 @@ class RequisitionItemService
                 else  'Unknown' end as Status,
                 t_RequisitionLines.ExpectedPrice,
                 t_RequisitionLines.Quantity"),
-                )->orderByRaw('t_RequisitionLines.Urgency, t_RequisitionLines.NeededBy ASC')
-                ->get();
+            )->orderByRaw('t_RequisitionLines.Urgency, t_RequisitionLines.NeededBy ASC')
+            ->get();
     }
 
     /**
@@ -169,6 +175,7 @@ class RequisitionItemService
             ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Category', '=', 't_ItemCategories.Id')
             ->leftJoin(DB::raw('t_uom WITH (NOLOCK)'), 't_Items.UOM', '=', 't_uom.Id')
             ->leftJoin(DB::raw('t_ItemTypes WITH (NOLOCK)'), 't_Items.ItemType', '=', 't_ItemTypes.Id')
+            ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
             ->where('t_RequisitionLines.RequisitionId', $RequisitionId)
             ->select([
                 't_RequisitionLines.Id',
@@ -177,7 +184,7 @@ class RequisitionItemService
                 't_Items.ItemDescription as Description',
                 't_Users.Name as UserName',
                 't_uom.Code as UOM',
-                't_ItemTypes.TypeName as Type',
+                't_CodeDetails.Description as Type',
                 't_ItemCategories.Name as Category',
                 // Need ID from the approved plan (if this line came from a plan). N/A otherwise
                 DB::raw("ISNULL((SELECT TOP 1 dn.NeedID\n                              FROM t_PlanLineItem pli WITH (NOLOCK)\n                              JOIN t_DepartmentNeeds dn WITH (NOLOCK)\n                                ON dn.ItemID = pli.ItemID\n                               AND dn.BranchID = pli.BranchID\n                               AND dn.DepartmentID = pli.DepartmentID\n                             WHERE pli.LineItemID = t_RequisitionLines.PlanLineRef), 'N/A') as NeedRef"),
@@ -196,5 +203,4 @@ class RequisitionItemService
             ])
             ->get();
     }
-
 }

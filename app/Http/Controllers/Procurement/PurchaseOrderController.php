@@ -59,7 +59,7 @@ class PurchaseOrderController extends Controller
             'getDirectPlanCategories',
             'getDirectPlanItemsByCategory',
         ]);
-//        $this->authorizeResource(Order::class);
+        //        $this->authorizeResource(Order::class);
     }
 
     /**
@@ -85,24 +85,24 @@ class PurchaseOrderController extends Controller
                 // Order by best-available timestamp: SubmittedDate, then CreatedOn, then ModifiedOn.
                 ->orderByDesc(DB::raw("COALESCE(SubmittedDate, CreatedOn, ModifiedOn)"))
                 ->limit(100)
-        ->get()
-        ->map(function ($p) {
+                ->get()
+                ->map(function ($p) {
                     return [
                         'PlanID' => $p->PlanID ?? $p->Id ?? null,
                         'Title' => $p->Title ?? $p->Name ?? ('Plan #' . ($p->PlanID ?? $p->Id)),
                         'FiscalYear' => $p->FiscalYear ?? null,
                         'ApprovedOn' => $p->ApprovedOn,
-            'PendingItems' => ($p->lineItems
-                ? $p->lineItems
-                    ->where('ExecutionStatus', 'Pending')
-                    ->filter(function($li){
-                        // Count only items whose procurement method is Direct
-                        $mode = $li->procurementMode; // App\Models\Core\CodeDetail
-                        $desc = is_object($mode) ? ($mode->Description ?? '') : '';
-                        return stripos((string)$desc, 'direct') !== false;
-                    })
-                    ->count()
-                : 0),
+                        'PendingItems' => ($p->lineItems
+                            ? $p->lineItems
+                            ->where('ExecutionStatus', 'Pending')
+                            ->filter(function ($li) {
+                                // Count only items whose procurement method is Direct
+                                $mode = $li->procurementMode; // App\Models\Core\CodeDetail
+                                $desc = is_object($mode) ? ($mode->Description ?? '') : '';
+                                return stripos((string)$desc, 'direct') !== false;
+                            })
+                            ->count()
+                            : 0),
                     ];
                 });
 
@@ -130,9 +130,13 @@ class PurchaseOrderController extends Controller
             $rows = DB::table('t_PlanLineItem as li')
                 ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
-                ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                ->where(function ($q) use ($pid) {
+                    $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
+                })
                 ->where('li.ExecutionStatus', 'Pending')
-                ->where(function($q){ $q->where('cd.Description', 'LIKE', '%Direct%'); })
+                ->where(function ($q) {
+                    $q->where('cd.Description', 'LIKE', '%Direct%');
+                })
                 ->select([
                     DB::raw('COALESCE(it.Id, 0) as itemCode'),
                     DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
@@ -153,13 +157,13 @@ class PurchaseOrderController extends Controller
 
     public function getItemDetails($item): JsonResponse
     {
-        try{
+        try {
             $details = $this->itemService->getItemDetails($item);
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);}
-        catch(\Exception $e){
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
@@ -207,8 +211,8 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $suppliers,
-            ]);}
-        catch(\Exception $e){
+            ]);
+        } catch (\Exception $e) {
             Log::error('Error fetching suppliers: ' . $e->getMessage());
 
             return response()->json([
@@ -226,7 +230,7 @@ class PurchaseOrderController extends Controller
     {
         $this->authorize('viewAny', Order::class);
 
-//        User::query()->hasPermission(PermissionEnum::Users->value)->dd();
+        //        User::query()->hasPermission(PermissionEnum::Users->value)->dd();
 
         try {
             $perPage = (int) request()->query('perPage', 20);
@@ -238,13 +242,13 @@ class PurchaseOrderController extends Controller
             Log::error('Create page failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to fetch items.');
         }
-//        return view("procurement.orders.index");
+        //        return view("procurement.orders.index");
     }
 
     /**
      * Show the form for creating a new resource.
      */
-     public function create()
+    public function create()
     {
         $this->authorize('create', Order::class);
         try {
@@ -316,14 +320,16 @@ class PurchaseOrderController extends Controller
                 ->whereNotNull('ExtOrdNum')
                 ->where('DocStatus', 'a')
                 ->pluck('ExtOrdNum')
-                ->map(function($v){ return is_null($v)?'':trim((string)$v); })
+                ->map(function ($v) {
+                    return is_null($v) ? '' : trim((string)$v);
+                })
                 ->filter()
                 ->values()
                 ->toArray();
 
             // Only list RFQs awarded via t_RFQAward (source of truth), excluding ones already converted by approved PO
             $awardedRfqs = $awardedFromRFQAward
-                ->filter(function($r) use ($approvedConvertedRFQIds, $usedReferenceNumbers){
+                ->filter(function ($r) use ($approvedConvertedRFQIds, $usedReferenceNumbers) {
                     $rfqNo = trim((string)($r->RFQNumber ?? ''));
                     return !in_array($r->Id, $approvedConvertedRFQIds) && !in_array($rfqNo, $usedReferenceNumbers);
                 })
@@ -351,8 +357,8 @@ class PurchaseOrderController extends Controller
                     ->where(function ($q) {
                         // Only include tenders that DON'T have contracts
                         $q->whereNull('ta.ContractStatus')
-                          ->orWhere('ta.ContractStatus', '')
-                          ->orWhere('ta.ContractStatus', 'No Contract Required');
+                            ->orWhere('ta.ContractStatus', '')
+                            ->orWhere('ta.ContractStatus', 'No Contract Required');
                     })
                     // Exclude tenders that already have a fully approved Tender-based PO
                     ->whereRaw("NOT EXISTS (SELECT 1 FROM t_Orders o WHERE RTRIM(LTRIM(ISNULL(o.SourceType,'')))='TENDER' AND o.DocStatus='a' AND o.SourceId = t.Id)")
@@ -483,7 +489,7 @@ class PurchaseOrderController extends Controller
                     ->orderBy('DisplayOrder')
                     ->get(['ID', 'Description']);
                 if ($paymentTerms->isEmpty()) {
-                $paymentTerms = DB::table('t_CodeDetails')
+                    $paymentTerms = DB::table('t_CodeDetails')
                         ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
                         ->orderBy('DisplayOrder')
                         ->select('ID', 'Description')
@@ -726,7 +732,6 @@ class PurchaseOrderController extends Controller
 
             return redirect()->route('purchaseOrder.index')
                 ->with('success', $successMessage);
-
         } catch (\Throwable $e) {
             Log::error('Exception occurred while creating order.', [
                 'error' => $e->getMessage(),
@@ -765,10 +770,13 @@ class PurchaseOrderController extends Controller
                 return view('procurement.orders.partials.show_content', compact('orderInfo', 'lineInfo'))->render();
             }
             return view('procurement.orders.show', compact('orderInfo', 'lineInfo'));
-
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $uid = null;
-            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            try {
+                $uid = \Illuminate\Support\Facades\Auth::id();
+            } catch (\Throwable $t) {
+                $uid = null;
+            }
             Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . ($uid ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -784,10 +792,9 @@ class PurchaseOrderController extends Controller
     {
 
 
-//        $this->authorize('view', Order::query()->findOrFail($id));
-//        dd($id);
+        //        $this->authorize('view', Order::query()->findOrFail($id));
+        //        dd($id);
         return view('procurement.orders.index');
-
     }
 
     /**
@@ -819,7 +826,7 @@ class PurchaseOrderController extends Controller
         $this->authorize('viewAny', Order::class);
         try {
             $RFQ = $this->rfqService->fetchRFQ();
-//            \Log::info('RFQ loaded in create():', $RFQ->toArray());
+            //            \Log::info('RFQ loaded in create():', $RFQ->toArray());
         } catch (\Exception $e) {
             Log::error('Error fetching RFQS: ' . $e->getMessage());
             $RFQ = collect(); // fallback to empty collection
@@ -844,10 +851,13 @@ class PurchaseOrderController extends Controller
             $paymentTerms = $paymentTermRow->Description ?? null;
 
             return view('procurement.orders.approval', compact('orderInfo', 'lineInfo', 'paymentTerms'));
-
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $uid = null;
-            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            try {
+                $uid = \Illuminate\Support\Facades\Auth::id();
+            } catch (\Throwable $t) {
+                $uid = null;
+            }
             Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . ($uid ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -857,7 +867,6 @@ class PurchaseOrderController extends Controller
             Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to fetch order.');
         }
-
     }
 
     public function approve(ApproveOrderRequest $orderRequest, $id)
@@ -879,7 +888,11 @@ class PurchaseOrderController extends Controller
             ]);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $uid = null;
-            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            try {
+                $uid = \Illuminate\Support\Facades\Auth::id();
+            } catch (\Throwable $t) {
+                $uid = null;
+            }
             Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . ($uid ?? 'guest'));
 
             return response()->json([
@@ -905,56 +918,58 @@ class PurchaseOrderController extends Controller
             ], 500);
         }
     }
-public function getRFQItems($rfqId)
-{
-    try {
-        $supplierId = (int) request()->query('supplierId'); // ThirdPartyID if provided
-        $supplierLegacyId = (int) request()->query('supplierLegacyId'); // t_Suppliers.Id (fallback)
+    public function getRFQItems($rfqId)
+    {
+        try {
+            $supplierId = (int) request()->query('supplierId'); // ThirdPartyID if provided
+            $supplierLegacyId = (int) request()->query('supplierLegacyId'); // t_Suppliers.Id (fallback)
 
-        // Resolve ThirdPartyID from legacy supplier id if not provided directly
-        if ($supplierId <= 0 && $supplierLegacyId > 0) {
-            try {
-                $resolved = DB::table('t_Suppliers')->where('Id', $supplierLegacyId)->value('ThirdPartyID');
-                $supplierId = (int) ($resolved ?? 0);
-            } catch (\Throwable $e) {
-                $supplierId = 0;
+            // Resolve ThirdPartyID from legacy supplier id if not provided directly
+            if ($supplierId <= 0 && $supplierLegacyId > 0) {
+                try {
+                    $resolved = DB::table('t_Suppliers')->where('Id', $supplierLegacyId)->value('ThirdPartyID');
+                    $supplierId = (int) ($resolved ?? 0);
+                } catch (\Throwable $e) {
+                    $supplierId = 0;
+                }
             }
-        }
 
-        // Pull response items for this RFQ (optionally filtered by ThirdParty supplier), and map to catalog items by name
-        $items = DB::table('t_ResponseItems as ri')
-            ->join('t_RFQResponse as rr', 'ri.RfqResponseId', '=', 'rr.Id')
-            ->where('rr.RFQId', (int) $rfqId)
-            ->when($supplierId > 0, function ($q) use ($supplierId) {
-                // Support both models:
-                // 1) rr.SupplierId stores t_ThirdParties.Id (current)
-                // 2) rr.SupplierId stores t_Suppliers.Id (legacy)
-                $q->where(function ($qq) use ($supplierId) {
-                    $qq->where('rr.SupplierId', $supplierId)
-                        ->orWhereIn('rr.SupplierId', function ($sub) use ($supplierId) {
-                            $sub->from('t_Suppliers')->where('ThirdPartyID', $supplierId)->select('Id');
-                        });
+            // Pull response items for this RFQ (optionally filtered by ThirdParty supplier), and map to catalog items by name
+            $items = DB::table('t_ResponseItems as ri')
+                ->join('t_RFQResponse as rr', 'ri.RfqResponseId', '=', 'rr.Id')
+                ->where('rr.RFQId', (int) $rfqId)
+                ->when($supplierId > 0, function ($q) use ($supplierId) {
+                    // Support both models:
+                    // 1) rr.SupplierId stores t_ThirdParties.Id (current)
+                    // 2) rr.SupplierId stores t_Suppliers.Id (legacy)
+                    $q->where(function ($qq) use ($supplierId) {
+                        $qq->where('rr.SupplierId', $supplierId)
+                            ->orWhereIn('rr.SupplierId', function ($sub) use ($supplierId) {
+                                $sub->from('t_Suppliers')->where('ThirdPartyID', $supplierId)->select('Id');
+                            });
+                    });
+                })
+                ->leftJoin('t_Items as it', 'it.ItemName', '=', 'ri.ItemName')
+                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.Id')
+                ->leftJoin('t_CodeDetails as cd', 'itype.TypeName', '=', 'cd.Id')
+                ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ri.ItemName) as itemName, COALESCE(cd.Description, '') as itemType, ri.Quantity as quantity, ri.QuotedPrice as unitPrice")
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'itemCode' => (int) $row->itemCode,
+                        'itemName' => $row->itemName,
+                        'itemType' => $row->itemType,
+                        'quantity' => (float) $row->quantity,
+                        'unitPrice' => (float) $row->unitPrice,
+                    ];
                 });
-            })
-            ->leftJoin('t_Items as it', 'it.ItemName', '=', 'ri.ItemName')
-            ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ri.ItemName) as itemName, COALESCE(it.ItemType, '') as itemType, ri.Quantity as quantity, ri.QuotedPrice as unitPrice")
-            ->get()
-            ->map(function ($row) {
-                return [
-                    'itemCode' => (int) $row->itemCode,
-                    'itemName' => $row->itemName,
-                    'itemType' => $row->itemType,
-                    'quantity' => (float) $row->quantity,
-                    'unitPrice' => (float) $row->unitPrice,
-                ];
-            });
 
-        return response()->json(['items' => $items]);
-    } catch (\Throwable $e) {
-        Log::error('Failed to fetch RFQ items', ['rfqId' => $rfqId, 'error' => $e->getMessage()]);
-        return response()->json(['items' => []], 200);
+            return response()->json(['items' => $items]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch RFQ items', ['rfqId' => $rfqId, 'error' => $e->getMessage()]);
+            return response()->json(['items' => []], 200);
+        }
     }
-}
 
 
     public function getAwardedRFQs(): JsonResponse
@@ -973,7 +988,9 @@ public function getRFQItems($rfqId)
                 ->whereNotNull('ExtOrdNum')
                 ->where('DocStatus', 'a')
                 ->pluck('ExtOrdNum')
-                ->map(function($v){ return is_null($v)?'':trim((string)$v); })
+                ->map(function ($v) {
+                    return is_null($v) ? '' : trim((string)$v);
+                })
                 ->filter()
                 ->values()
                 ->toArray();
@@ -1019,8 +1036,8 @@ public function getRFQItems($rfqId)
                 ->where(function ($q) {
                     // Only include tenders that DON'T have contracts
                     $q->whereNull('ta.ContractStatus')
-                      ->orWhere('ta.ContractStatus', '')
-                      ->orWhere('ta.ContractStatus', 'No Contract Required');
+                        ->orWhere('ta.ContractStatus', '')
+                        ->orWhere('ta.ContractStatus', 'No Contract Required');
                 })
                 // Exclude tenders already converted to a fully approved PO
                 ->whereRaw("NOT EXISTS (SELECT 1 FROM t_Orders o WHERE RTRIM(LTRIM(ISNULL(o.SourceType,'')))='TENDER' AND o.DocStatus='a' AND o.SourceId = t.Id)")
@@ -1048,8 +1065,10 @@ public function getRFQItems($rfqId)
             // Items defined at tender level
             $items = DB::table('t_TenderItems as ti')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'ti.ItemID')
+                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.Id')
+                ->leftJoin('t_CodeDetails as cd', 'itype.TypeName', '=', 'cd.Id')
                 ->where('ti.TenderID', (int) $tenderId)
-                ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ti.ManualItemDescription) as itemName, COALESCE(it.ItemType, '') as itemType, COALESCE(ti.QtyToTender, ti.PlannedQty) as quantity, COALESCE(it.ItemPrice, 0) as unitPrice")
+                ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ti.ManualItemDescription) as itemName, COALESCE(cd.Description, '') as itemType, COALESCE(ti.QtyToTender, ti.PlannedQty) as quantity, COALESCE(it.ItemPrice, 0) as unitPrice")
                 ->get()
                 ->map(function ($row) {
                     return [
@@ -1087,13 +1106,14 @@ public function getRFQItems($rfqId)
             $items = DB::table('t_TenderItems as ti')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'ti.ItemID')
                 ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.Id')
+                ->leftJoin('t_CodeDetails as cd', 'itype.TypeName', '=', 'cd.Id')
                 ->leftJoin('t_ItemCategories as ic', 'it.Category', '=', 'ic.Id')
                 ->where('ti.TenderID', (int) $contract->TenderID)
                 ->select([
                     DB::raw('COALESCE(it.Id, 0) as itemCode'),
                     DB::raw('COALESCE(it.ItemName, ti.ManualItemDescription) as itemName'),
                     DB::raw('COALESCE(it.ItemDescription, ti.ManualItemDescription) as description'),
-                    DB::raw('COALESCE(itype.TypeName, \'\') as itemType'),
+                    DB::raw('COALESCE(cd.Description, \'\') as itemType'),
                     DB::raw('COALESCE(ic.Name, \'\') as categoryName'),
                     DB::raw('COALESCE(ti.QtyToTender, ti.PlannedQty, 1) as quantity'),
                     DB::raw('COALESCE(it.ItemPrice, 0) as unitPrice')
@@ -1140,9 +1160,9 @@ public function getRFQItems($rfqId)
             $parentCol = collect(['ParentId', 'ParentID', 'Parent'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'ParentId';
 
             $rows = DB::table($catTable)
-                ->where(function($q) use ($parentCol) {
+                ->where(function ($q) use ($parentCol) {
                     $q->whereNull($parentCol)
-                      ->orWhere($parentCol, 0);
+                        ->orWhere($parentCol, 0);
                 })
                 ->orderBy($nameCol)
                 ->get([$idCol . ' as Id', $nameCol . ' as Name']);
@@ -1182,6 +1202,7 @@ public function getRFQItems($rfqId)
 
             $items = DB::table('t_Items as i')
                 ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
+                ->leftJoin('t_CodeDetails as cd', 'it.TypeName', '=', 'cd.Id')
                 ->leftJoin('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
                 ->whereIn('i.Category', $ids->all())
                 ->whereNull('i.DeletedBy')
@@ -1190,7 +1211,7 @@ public function getRFQItems($rfqId)
                     DB::raw('COALESCE(i.ItemName, \'\') as itemName'),
                     DB::raw('COALESCE(i.ItemDescription, \'\') as description'),
                     DB::raw('COALESCE(i.ItemPrice, 0) as unitPrice'),
-                    DB::raw('COALESCE(it.TypeName, \'\') as itemType'),
+                    DB::raw('COALESCE(cd.Description, \'\') as itemType'),
                     DB::raw('COALESCE(ic.Name, \'\') as categoryName')
                 )
                 ->orderBy('i.ItemName')
@@ -1301,11 +1322,11 @@ public function getRFQItems($rfqId)
                 }
 
                 $rows = $supplierQuery->select([
-                        DB::raw('COALESCE(tp.Id, s.ThirdPartyID) as ThirdPartyId'),
-                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
-                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
-                        DB::raw('COALESCE(s.Id, 0) as SupplierId'),
-                    ])
+                    DB::raw('COALESCE(tp.Id, s.ThirdPartyID) as ThirdPartyId'),
+                    DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
+                    DB::raw('COALESCE(s.Id, 0) as SupplierId'),
+                ])
                     ->orderBy('SupplierName')
                     ->get();
             }
@@ -1347,7 +1368,7 @@ public function getRFQItems($rfqId)
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
                 ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
                 ->where('li.ExecutionStatus', 'Pending')
-                ->where(function($q){
+                ->where(function ($q) {
                     // Be permissive on Description matching to handle different capitalizations/localizations
                     $q->where('cd.Description', 'LIKE', '%Direct%');
                 })
@@ -1377,7 +1398,7 @@ public function getRFQItems($rfqId)
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
                 ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
                 ->where('li.ExecutionStatus', 'Pending')
-                ->where(function($q){
+                ->where(function ($q) {
                     $q->where('cd.Description', 'LIKE', '%Direct%');
                 });
 
@@ -1386,11 +1407,11 @@ public function getRFQItems($rfqId)
             }
 
             $items = $query->select([
-                    DB::raw('COALESCE(it.Id, 0) as itemCode'),
-                    DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
-                    DB::raw('COALESCE(it.ItemDescription, li.Description, \'\') as description'),
-                    DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
-                ])
+                DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
+                DB::raw('COALESCE(it.ItemDescription, li.Description, \'\') as description'),
+                DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
+            ])
                 ->orderBy('itemName')
                 ->get();
 
@@ -1441,7 +1462,9 @@ public function getRFQItems($rfqId)
                     ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
                     ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
                     ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
-                    ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                    ->where(function ($q) use ($pid) {
+                        $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
+                    })
                     ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
                     ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
                     ->whereNotNull('ic.Id')
@@ -1459,7 +1482,9 @@ public function getRFQItems($rfqId)
                             ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
                             ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
                             ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
-                            ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                            ->where(function ($q) use ($pid) {
+                                $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
+                            })
                             ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
                             ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
                             ->whereNull('ic.Id')
@@ -1477,11 +1502,13 @@ public function getRFQItems($rfqId)
                 foreach ($nameCols as $nmCol) {
                     $qName = DB::table('t_PlanLineItem as li')
                         ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
-                        ->leftJoin('t_ItemCategories as ic', function($join) use ($nmCol) {
+                        ->leftJoin('t_ItemCategories as ic', function ($join) use ($nmCol) {
                             $join->on(DB::raw("LOWER(RTRIM(LTRIM(ic.Name)))"), '=', DB::raw("LOWER(RTRIM(LTRIM(li.$nmCol)))"));
                         })
                         ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
-                        ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                        ->where(function ($q) use ($pid) {
+                            $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
+                        })
                         ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
                         ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
                         ->whereNotNull("li.$nmCol")
@@ -1495,7 +1522,9 @@ public function getRFQItems($rfqId)
 
                 // Union all and finalize
                 $rows = array_shift($unions);
-                foreach ($unions as $u) { $rows = $rows->union($u); }
+                foreach ($unions as $u) {
+                    $rows = $rows->union($u);
+                }
                 $rows = $rows->get()
                     ->unique('Id')
                     ->filter(fn($r) => !empty($r->Id))
@@ -1538,7 +1567,9 @@ public function getRFQItems($rfqId)
             // Helper to safely apply an IN(...) for computed string expressions by expanding into OR-equals with bindings
             $applyStringIn = function ($q, string $expr, array $values) {
                 $vals = array_values(array_filter($values, fn($v) => $v !== null && $v !== ''));
-                if (empty($vals)) { return; }
+                if (empty($vals)) {
+                    return;
+                }
                 $q->orWhere(function ($qq) use ($expr, $vals) {
                     foreach ($vals as $v) {
                         $qq->orWhereRaw("$expr = ?", [$v]);
@@ -1600,7 +1631,9 @@ public function getRFQItems($rfqId)
             $descNamesLower = $allCats->whereIn('Id', $descIds->all())
                 ->pluck('Name')
                 ->filter()
-                ->map(function ($n) { return strtolower(trim((string)$n)); })
+                ->map(function ($n) {
+                    return strtolower(trim((string)$n));
+                })
                 ->unique()
                 ->values()
                 ->all();
@@ -1626,7 +1659,7 @@ public function getRFQItems($rfqId)
             $itemsQ = DB::table('t_PlanLineItem as li')
                 ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
-                ->leftJoin('t_ItemCategories as ic', function($join) use ($catIdCol, $itemCatRef) {
+                ->leftJoin('t_ItemCategories as ic', function ($join) use ($catIdCol, $itemCatRef) {
                     $join->on(DB::raw("ic.$catIdCol"), '=', DB::raw("it.$itemCatRef"));
                 })
                 ->where(function ($q) use ($pid) {
@@ -1637,41 +1670,41 @@ public function getRFQItems($rfqId)
                 // Case-insensitive Direct
                 ->whereRaw("LOWER(ISNULL(cd.$cdDescCol,'')) like '%direct%'");
 
-                        // Apply category filter by:
-                        // - numeric category IDs on item or line-item (TRY_CAST)
-                        // - string-based category names on item/line-item/category (normalized lower trim) as fallback
-                                    $itemsQ->where(function ($q) use ($descIds, $liCatCols, $liCatNameCols, $catIdCol, $catNameCol, $itemCatRef, $itemCatNameCols, $descNamesLower, $castInt, $applyStringIn) {
-                                            $ids = $descIds->all();
-                                            $idStr = array_map('strval', $ids);
-                            // Numeric matches
-                                            $q->whereIn(DB::raw($castInt("it.$itemCatRef")), $ids)
-                                                ->orWhereIn(DB::raw($castInt("ic.$catIdCol")), $ids)
-                                                // Direct string equality fallback
-                                                ->orWhereIn("it.$itemCatRef", $idStr)
-                                                ->orWhereIn("ic.$catIdCol", $idStr);
-                            foreach ($liCatCols as $col) {
-                                                    $q->orWhereIn(DB::raw($castInt("li.$col")), $ids)
-                                                        ->orWhereIn("li.$col", $idStr);
-                            }
-                            // Name-based fallbacks
-                            if (!empty($descNamesLower)) {
-                                $applyStringIn($q, "LOWER(RTRIM(LTRIM(ic.$catNameCol)))", $descNamesLower);
-                                foreach ($liCatNameCols as $col) {
-                                    $applyStringIn($q, "LOWER(RTRIM(LTRIM(li.$col)))", $descNamesLower);
-                                }
-                                foreach ($itemCatNameCols as $col) {
-                                    $applyStringIn($q, "LOWER(RTRIM(LTRIM(it.$col)))", $descNamesLower);
-                                }
-                            }
-                        });
+            // Apply category filter by:
+            // - numeric category IDs on item or line-item (TRY_CAST)
+            // - string-based category names on item/line-item/category (normalized lower trim) as fallback
+            $itemsQ->where(function ($q) use ($descIds, $liCatCols, $liCatNameCols, $catIdCol, $catNameCol, $itemCatRef, $itemCatNameCols, $descNamesLower, $castInt, $applyStringIn) {
+                $ids = $descIds->all();
+                $idStr = array_map('strval', $ids);
+                // Numeric matches
+                $q->whereIn(DB::raw($castInt("it.$itemCatRef")), $ids)
+                    ->orWhereIn(DB::raw($castInt("ic.$catIdCol")), $ids)
+                    // Direct string equality fallback
+                    ->orWhereIn("it.$itemCatRef", $idStr)
+                    ->orWhereIn("ic.$catIdCol", $idStr);
+                foreach ($liCatCols as $col) {
+                    $q->orWhereIn(DB::raw($castInt("li.$col")), $ids)
+                        ->orWhereIn("li.$col", $idStr);
+                }
+                // Name-based fallbacks
+                if (!empty($descNamesLower)) {
+                    $applyStringIn($q, "LOWER(RTRIM(LTRIM(ic.$catNameCol)))", $descNamesLower);
+                    foreach ($liCatNameCols as $col) {
+                        $applyStringIn($q, "LOWER(RTRIM(LTRIM(li.$col)))", $descNamesLower);
+                    }
+                    foreach ($itemCatNameCols as $col) {
+                        $applyStringIn($q, "LOWER(RTRIM(LTRIM(it.$col)))", $descNamesLower);
+                    }
+                }
+            });
 
             $items = $itemsQ->select([
-                    DB::raw('COALESCE(it.Id, 0) as itemCode'),
-                    DB::raw("COALESCE(NULLIF(RTRIM(LTRIM(it.ItemName)), ''), $liDescExpr) as itemName"),
-                    DB::raw("COALESCE(it.ItemDescription, " . $liDescExpr . ", '') as description"),
-                    DB::raw($liQtyExpr . ' as quantity'),
-                    DB::raw('COALESCE(it.ItemPrice, ' . $liUnitCostExpr . ', 0) as unitPrice'),
-                ])
+                DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                DB::raw("COALESCE(NULLIF(RTRIM(LTRIM(it.ItemName)), ''), $liDescExpr) as itemName"),
+                DB::raw("COALESCE(it.ItemDescription, " . $liDescExpr . ", '') as description"),
+                DB::raw($liQtyExpr . ' as quantity'),
+                DB::raw('COALESCE(it.ItemPrice, ' . $liUnitCostExpr . ', 0) as unitPrice'),
+            ])
                 ->orderBy('itemName')
                 ->get();
 
@@ -1679,24 +1712,24 @@ public function getRFQItems($rfqId)
                 // Fallback: Populate from plan needs without strict Direct/Pending filters
                 $fallbackQ = DB::table('t_PlanLineItem as li')
                     ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
-                    ->leftJoin('t_ItemCategories as ic', function($join) use ($catIdCol, $itemCatRef) {
+                    ->leftJoin('t_ItemCategories as ic', function ($join) use ($catIdCol, $itemCatRef) {
                         $join->on(DB::raw("ic.$catIdCol"), '=', DB::raw("it.$itemCatRef"));
                     })
                     ->where(function ($q) use ($pid) {
                         $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
                     });
 
-                                $fallbackQ->where(function ($q) use ($descIds, $liCatCols, $liCatNameCols, $catIdCol, $catNameCol, $itemCatRef, $itemCatNameCols, $descNamesLower, $castInt, $applyStringIn) {
-                                        $ids = $descIds->all();
-                                        $idStr = array_map('strval', $ids);
+                $fallbackQ->where(function ($q) use ($descIds, $liCatCols, $liCatNameCols, $catIdCol, $catNameCol, $itemCatRef, $itemCatNameCols, $descNamesLower, $castInt, $applyStringIn) {
+                    $ids = $descIds->all();
+                    $idStr = array_map('strval', $ids);
                     // Numeric
-                                        $q->whereIn(DB::raw($castInt("it.$itemCatRef")), $ids)
-                                            ->orWhereIn(DB::raw($castInt("ic.$catIdCol")), $ids)
-                                            ->orWhereIn("it.$itemCatRef", $idStr)
-                                            ->orWhereIn("ic.$catIdCol", $idStr);
+                    $q->whereIn(DB::raw($castInt("it.$itemCatRef")), $ids)
+                        ->orWhereIn(DB::raw($castInt("ic.$catIdCol")), $ids)
+                        ->orWhereIn("it.$itemCatRef", $idStr)
+                        ->orWhereIn("ic.$catIdCol", $idStr);
                     foreach ($liCatCols as $col) {
-                                                $q->orWhereIn(DB::raw($castInt("li.$col")), $ids)
-                                                    ->orWhereIn("li.$col", $idStr);
+                        $q->orWhereIn(DB::raw($castInt("li.$col")), $ids)
+                            ->orWhereIn("li.$col", $idStr);
                     }
                     // Names
                     if (!empty($descNamesLower)) {
@@ -1711,12 +1744,12 @@ public function getRFQItems($rfqId)
                 });
 
                 $items = $fallbackQ->select([
-                        DB::raw('COALESCE(it.Id, 0) as itemCode'),
-                        DB::raw("COALESCE(NULLIF(RTRIM(LTRIM(it.ItemName)), ''), $liDescExpr) as itemName"),
-                        DB::raw("COALESCE(it.ItemDescription, " . $liDescExpr . ", '') as description"),
-                        DB::raw($liQtyExpr . ' as quantity'),
-                        DB::raw('COALESCE(it.ItemPrice, ' . $liUnitCostExpr . ', 0) as unitPrice'),
-                    ])
+                    DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                    DB::raw("COALESCE(NULLIF(RTRIM(LTRIM(it.ItemName)), ''), $liDescExpr) as itemName"),
+                    DB::raw("COALESCE(it.ItemDescription, " . $liDescExpr . ", '') as description"),
+                    DB::raw($liQtyExpr . ' as quantity'),
+                    DB::raw('COALESCE(it.ItemPrice, ' . $liUnitCostExpr . ', 0) as unitPrice'),
+                ])
                     ->orderBy('itemName')
                     ->get();
 
@@ -1746,10 +1779,10 @@ public function getRFQItems($rfqId)
                     'categoryId' => $cid,
                     'descIds' => $descIds->all(),
                     'liCatCols' => $liCatCols->all(),
-            'liCatNameCols' => $liCatNameCols->all(),
-            'itemCatRef' => $itemCatRef,
-            'itemCatNameCols' => $itemCatNameCols->all(),
-            'descNamesLower' => $descNamesLower,
+                    'liCatNameCols' => $liCatNameCols->all(),
+                    'itemCatRef' => $itemCatRef,
+                    'itemCatNameCols' => $itemCatNameCols->all(),
+                    'descNamesLower' => $descNamesLower,
                 ]);
 
                 // Final fallback: return all plan needs (lines) regardless of category so user can proceed

@@ -48,7 +48,6 @@ class OrderService
             });
 
             return $response;
-
         } catch (QueryException $e) {
             Log::error('SQL Error executing p_AddPurchaseOrder', [
                 'message' => $e->getMessage(),
@@ -75,9 +74,9 @@ class OrderService
     }
 
 
-//
+    //
 
-    public static function addPOLines($item,$quantity,$price,$tax,$discount,$linetotal,User $actor, $orderId)
+    public static function addPOLines($item, $quantity, $price, $tax, $discount, $linetotal, User $actor, $orderId)
     {
         try {
             // Start transaction and execute the stored procedure
@@ -90,7 +89,7 @@ class OrderService
                     $tax,
                     $discount,
                     $linetotal,
-                    $actor->Id ,// Pass the User ID, not the entire User model
+                    $actor->Id, // Pass the User ID, not the entire User model
                     $orderId
                 ]);
             });
@@ -99,7 +98,6 @@ class OrderService
                 'status' => 'success',
                 'message' => 'Order successfully created.'
             ];
-
         } catch (QueryException $e) {
             // Log the SQL error
             Log::error('SQL Error executing p_AddPurchaseOrder', [
@@ -121,7 +119,7 @@ class OrderService
             ]);
 
             // Return a custom error message or handle as needed
-            return[
+            return [
                 'status' => 'error',
                 'message' => 'Error executing order creation',
                 'error' => $e->getMessage()
@@ -240,8 +238,8 @@ class OrderService
             ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), function ($join) {
                 $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
-                        ->where('t_CodeDetails.CodeID', '=', 'PaymentTerm');
-                })
+                    ->where('t_CodeDetails.CodeID', '=', 'PaymentTerm');
+            })
             ->where('t_Orders.Id', '=', $id)
             ->select(DB::raw('
                 t_Orders.Id,
@@ -297,6 +295,7 @@ class OrderService
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_OrderLines.iStockCodeID', '=', 't_Items.Id')
             ->leftJoin(DB::raw('t_ItemTypes AS itype WITH (NOLOCK)'), 't_Items.ItemType', '=', 'itype.Id')
+            ->leftJoin(DB::raw('t_CodeDetails AS cd WITH (NOLOCK)'), 'itype.TypeName', '=', 'cd.Id')
             ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Category', '=', 't_ItemCategories.Id')
             ->where('t_OrderLines.iOrderID', '=', $id)
             ->select(DB::raw('
@@ -310,7 +309,7 @@ class OrderService
                 t_OrderLines.fTaxRate,
                 t_Items.Id as ItemID,
                 t_Items.ItemName,
-                COALESCE(itype.TypeName, CAST(t_Items.ItemType AS NVARCHAR(50))) as ItemTypeName,
+                COALESCE(cd.Description, CAST(t_Items.ItemType AS NVARCHAR(50))) as ItemTypeName,
                 t_Items.ItemDescription as Description,
                 t_OrderLines.LineTotal
             '))
@@ -334,7 +333,6 @@ class OrderService
                 'status' => 'success',
                 'message' => 'Order successfully updated.'
             ];
-
         } catch (QueryException $e) {
             // Log the SQL error
             Log::error('SQL Error executing p_AddPurchaseOrderSum', [
@@ -363,6 +361,4 @@ class OrderService
             ];
         }
     }
-
-
 }

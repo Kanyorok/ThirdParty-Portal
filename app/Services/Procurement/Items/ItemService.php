@@ -136,10 +136,12 @@ class ItemService
         // logger('Fetching items for type: ' . $type);
 
         return DB::table('t_ItemTypes')
-            ->select('t_ItemTypes.Id', 't_ItemTypes.TypeName')
-            ->where('Active', 1)
-            ->whereNull('DeletedBy')
-            ->wherenull('DeletedOn')
+            ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
+            ->select('t_ItemTypes.Id', 't_CodeDetails.Description as TypeName')
+            ->where('t_ItemTypes.Active', 1)
+            ->whereNull('t_ItemTypes.DeletedBy')
+            ->wherenull('t_ItemTypes.DeletedOn')
+            ->orderBy('t_CodeDetails.Description')
             ->get();
     }
 }

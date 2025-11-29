@@ -33,7 +33,12 @@ class EnhancedGoodsReceiptController extends Controller
         // Quick config check for Service GL transaction code
         $serviceGlConfigured = DB::table('t_FinanceTransactionTypes')->where('Code', 'GRN-SERVICE')->exists();
         $query = EnhancedGoodsReceipt::with([
-            'receiver', 'supplier', 'item', 'order', 'qualityChecker', 'poster'
+            'receiver',
+            'supplier',
+            'item',
+            'order',
+            'qualityChecker',
+            'poster'
         ]);
 
         // Apply filters
@@ -106,8 +111,11 @@ class EnhancedGoodsReceiptController extends Controller
             ->whereNull('o.DeletedOn')
             ->whereNull('ol.DeletedOn')
             ->select([
-                'o.Id', 'o.OrderNo', 'o.AccountID',
-                'tp.TradingName as SupplierName', 'tp.ThirdPartyName as SupplierFullName'
+                'o.Id',
+                'o.OrderNo',
+                'o.AccountID',
+                'tp.TradingName as SupplierName',
+                'tp.ThirdPartyName as SupplierFullName'
             ])
             ->distinct()
             ->get()
@@ -206,7 +214,6 @@ class EnhancedGoodsReceiptController extends Controller
                 'success' => true,
                 'data' => $poDetails,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to get PO details', [
                 'po_id' => $poId,
@@ -293,7 +300,6 @@ class EnhancedGoodsReceiptController extends Controller
             return redirect()
                 ->route('goods-receipt.show', ['grnId' => $request->grn_id, 'poId' => $request->po_id])
                 ->with('success', 'Goods Receipt Note created successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -315,8 +321,14 @@ class EnhancedGoodsReceiptController extends Controller
     public function show($grnId, $poId)
     {
         $grnLines = EnhancedGoodsReceipt::with([
-            'item.itemType', 'item.uom', 'receiver', 'qualityChecker',
-            'poster', 'supplier.thirdParty', 'order', 'orderLine'
+            'item.itemType',
+            'item.uom',
+            'receiver',
+            'qualityChecker',
+            'poster',
+            'supplier.thirdParty',
+            'order',
+            'orderLine'
         ])
             ->byGRN($grnId)
             ->byPO($poId)
@@ -396,7 +408,6 @@ class EnhancedGoodsReceiptController extends Controller
                 'message' => $message,
                 'data' => $results,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to process GRN', [
                 'grn_id' => $grnId,
@@ -439,7 +450,6 @@ class EnhancedGoodsReceiptController extends Controller
                     'can_post' => $grnLine->canBePosted(),
                 ],
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -485,7 +495,7 @@ class EnhancedGoodsReceiptController extends Controller
             return EnhancedGoodsReceipt::ITEM_TYPE_STOCK;
         }
 
-        $itemTypeName = $item->itemType->TypeName ?? 'Stock';
+        $itemTypeName = $item->itemType->typeNameText ?? 'Stock';
 
         $typeMapping = [
             'Stock' => EnhancedGoodsReceipt::ITEM_TYPE_STOCK,

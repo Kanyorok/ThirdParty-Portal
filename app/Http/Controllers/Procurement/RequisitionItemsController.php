@@ -17,39 +17,21 @@ use Throwable;
 
 class RequisitionItemsController extends Controller
 {
-    public function __construct(protected RequisitionItemService $service,protected ItemService $itemService)
+    public function __construct(protected RequisitionItemService $service, protected ItemService $itemService)
     {
 
         $this->middleware('ajax')->except(['index', 'create', 'show']);
-       // $this->authorizeResource(RequisitionLines::class);
+        // $this->authorizeResource(RequisitionLines::class);
     }
     /**
      * Display a listing of the resource.
      *
      */
 
-//    public function getItems(string $type): JsonResponse
-//    {
-////        $this->authorize('view',RequisitionLines::class);
-//        try{
-//            $items = $this->itemService->getItemByType($type);
-//            return response()->json([
-//                'success' => true,
-//                'data' => $items,
-//            ]);}
-//        catch(\Exception $e){
-//            return response()->json([
-//                'success' => false,
-//                'message' => 'Failed to fetch items.',
-//                'error' => $e->getMessage(),
-//            ], 500);
-//        }
-//    }
-
     public function getItems(string $type, Request $request): JsonResponse
     {
-//        $this->authorize('view',RequisitionLines::class);
-        try{
+        //        $this->authorize('view',RequisitionLines::class);
+        try {
             $requisitionId = $request->query('requisition_id');
             // Attempt plan-aware fetch first
             $planRef = null;
@@ -145,7 +127,7 @@ class RequisitionItemsController extends Controller
 
     public function getRequisitionItems(): JsonResponse
     {
-        try{
+        try {
             $details = $this->service->getRequisitionItems();
             return response()->json([
                 'success' => true,
@@ -165,8 +147,8 @@ class RequisitionItemsController extends Controller
         $this->authorize('viewAny', RequisitionLine::class);
         // use for requisitionItem approval
 
-//        return view ('procurement.requisitionItems.approval');
-//
+        //        return view ('procurement.requisitionItems.approval');
+        //
         try {
             $details = $this->service->getRequisitionPriorityList();
             return view('procurement.requisitionItems.priorityList', compact('details'));
@@ -234,7 +216,6 @@ class RequisitionItemsController extends Controller
                 'message' => $requisitionAddLines['message'],
                 'error' => $requisitionAddLines['error'] ?? 'Unknown error'
             ], 500);
-
         } catch (Throwable $e) {
             Log::error('Exception occurred while creating requisitionLines.', [
                 'error' => $e->getMessage(),
@@ -253,7 +234,7 @@ class RequisitionItemsController extends Controller
      */
     public function show($id)
     {
-//        dd($id);
+        //        dd($id);
         $this->authorize('view', Requisitions::query()->findOrFail($id));
         try {
             $details = $this->service->getRequisitionRelatedItems($id);

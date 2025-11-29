@@ -133,10 +133,14 @@ class TenderCategoryController extends Controller
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
 
         $category = TenderCategory::findOrFail($id);
-        $allTypes = DB::table('t_ItemTypes')->select('Id','TypeName','StockTracked','RequiresTagging','Active')->orderBy('TypeName')->get();
-        $selected = DB::table('t_TenderCategoryItemTypes')->where('TenderCategoryId',$id)->pluck('ItemTypeId')->toArray();
+        $allTypes = DB::table('t_ItemTypes')
+            ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
+            ->select('t_ItemTypes.Id', 't_CodeDetails.Description as TypeName', 't_ItemTypes.StockTracked', 't_ItemTypes.RequiresTagging', 't_ItemTypes.Active')
+            ->orderBy('t_CodeDetails.Description')
+            ->get();
+        $selected = DB::table('t_TenderCategoryItemTypes')->where('TenderCategoryId', $id)->pluck('ItemTypeId')->toArray();
 
-        return view('procurement.tendering.tendersetup.tendercategory.map_itemtypes', compact('category','allTypes','selected'));
+        return view('procurement.tendering.tendersetup.tendercategory.map_itemtypes', compact('category', 'allTypes', 'selected'));
     }
 
     // Update mapping: replace rows with submitted set
@@ -145,10 +149,10 @@ class TenderCategoryController extends Controller
         //Check if user has permission to edit tender categories
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
 
-        $ids = collect($request->input('item_type_ids', []))->map(fn($v)=>(int)$v)->filter()->unique()->values();
+        $ids = collect($request->input('item_type_ids', []))->map(fn($v) => (int)$v)->filter()->unique()->values();
 
-        DB::transaction(function() use ($id,$ids){
-            DB::table('t_TenderCategoryItemTypes')->where('TenderCategoryId',$id)->delete();
+        DB::transaction(function () use ($id, $ids) {
+            DB::table('t_TenderCategoryItemTypes')->where('TenderCategoryId', $id)->delete();
             foreach ($ids as $typeId) {
                 DB::table('t_TenderCategoryItemTypes')->insert([
                     'TenderCategoryId' => $id,
@@ -158,6 +162,6 @@ class TenderCategoryController extends Controller
             }
         });
 
-        return redirect()->route('tendercategory.itemtypes', $id)->with('success','Mapping updated.');
+        return redirect()->route('tendercategory.itemtypes', $id)->with('success', 'Mapping updated.');
     }
 }
