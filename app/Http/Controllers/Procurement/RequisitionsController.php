@@ -17,14 +17,19 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Enums\ProcurementPlanStatusEnum;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class RequisitionsController extends Controller
 {
+    protected ApprovalWorkflow $workflow;
+
+
+
     public function __construct(protected RequisitionService $service, protected RequisitionItemService $requisitionItemService, protected DocumentApprovalService $documentApprovalService)
     {
-        $this->middleware('ajax')->except(['index', 'show', 'create', 'approval', 'approve']);
+        $this->middleware(middleware: 'ajax')->except(['index', 'show', 'create', 'approval', 'approve']);
 //         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
