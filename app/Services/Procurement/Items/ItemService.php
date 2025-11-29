@@ -25,9 +25,9 @@ class ItemService
                     ->join('t_PlanLineItem as i', 'pi.PlanID', '=', 'i.PlanID')
                     ->leftJoin('t_CodeDetails as cd', 'i.ProcurementMethod', '=', 'cd.Id')
                     ->join('t_Items as t', 'i.ItemID', '=', 't.Id')
-                    ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.Id')
+                    ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.TypeName')
                     ->where('pi.PlanID', $requisition->PlanRef)
-                    ->where('t.ItemType', $type)
+                    ->where('f.Id', $type)
                     ->where('cd.Description', 'RFQ') // RFQ-only for requisitions
                     ->select(
                         't.Id',
@@ -44,7 +44,7 @@ class ItemService
 
         return DB::table('t_Items')
             ->leftJoin('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
-            ->leftJoin('t_ItemTypes', 't_Items.ItemType', '=', 't_ItemTypes.Id')
+            ->leftJoin('t_ItemTypes', 't_Items.ItemType', '=', 't_ItemTypes.TypeName')
             ->where('t_ItemTypes.Id', $type)
             ->select(
                 't_Items.Id',
@@ -76,7 +76,7 @@ class ItemService
                         ->where('pi.PlanID', '=', $planId);
                 })
                 ->join('t_Items as t', 'i.ItemID', '=', 't.Id')
-                ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.Id')
+                ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.TypeName')
                 ->leftJoin('t_ItemCategories as c', 't.Category', '=', 'c.Id')
                 ->leftJoin('t_uom as u', 't.UOM', '=', 'u.Id')
                 ->where('t.Id', $itemId)
@@ -110,7 +110,7 @@ class ItemService
             ->leftJoin('t_ItemCategories as c', 't.Category', '=', 'c.Id')
             ->leftJoin('t_uom as u', 't.UOM', '=', 'u.Id')
             ->leftJoin('t_Pricing as p', 't.Id', '=', 'p.ItemID')
-            ->leftJoin('t_ItemTypes as f', 't.ItemType', '=', 'f.Id')
+            ->leftJoin('t_ItemTypes as f', 't.ItemType', '=', 'f.TypeName')
             ->where('t.Id', $itemId)
             ->select([
                 't.ItemDescription',
@@ -136,10 +136,12 @@ class ItemService
         // logger('Fetching items for type: ' . $type);
 
         return DB::table('t_ItemTypes')
-            ->select('t_ItemTypes.Id', 't_ItemTypes.TypeName')
-            ->where('Active', 1)
-            ->whereNull('DeletedBy')
-            ->wherenull('DeletedOn')
+            ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
+            ->select('t_ItemTypes.Id', 't_CodeDetails.Description as TypeName')
+            ->where('t_ItemTypes.Active', 1)
+            ->whereNull('t_ItemTypes.DeletedBy')
+            ->wherenull('t_ItemTypes.DeletedOn')
+            ->orderBy('t_CodeDetails.Description')
             ->get();
     }
 }

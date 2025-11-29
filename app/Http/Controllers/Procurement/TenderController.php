@@ -86,12 +86,12 @@ class TenderController extends Controller
             })
             ->orderBy('ItemName')
             ->get()->map(function ($item) use ($categoryToTopLevel) {
-            return [
-                'Id' => $item->Id,
-                'ItemName' => $item->ItemName,
-                'Category' => $categoryToTopLevel[$item->Category] ?? $item->Category,
-            ];
-        });
+                return [
+                    'Id' => $item->Id,
+                    'ItemName' => $item->ItemName,
+                    'Category' => $categoryToTopLevel[$item->Category] ?? $item->Category,
+                ];
+            });
 
         Log::info('All Items With Category IDs count: ' . $allItemsWithCategoryIds->count());
         if ($allItemsWithCategoryIds->count() > 0) {
@@ -112,9 +112,13 @@ class TenderController extends Controller
 
         $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'BranchID', 'DepartmentID', 'ProcurementMethod')
             ->with([
-                'item' => function ($query) { $query->select('Id', 'ItemName'); },
+                'item' => function ($query) {
+                    $query->select('Id', 'ItemName');
+                },
                 'procurementMode',
-                'departmentNeed' => function ($q) { $q->select('NeedID', 'ItemID', 'BranchID', 'DepartmentID'); }
+                'departmentNeed' => function ($q) {
+                    $q->select('NeedID', 'ItemID', 'BranchID', 'DepartmentID');
+                }
             ])
             ->whereIn('PlanID', $approvedPlanIds)
             ->whereNotIn('LineItemID', $usedPlanItemIds)
@@ -128,7 +132,9 @@ class TenderController extends Controller
         foreach ($itemsCategories as $lineItem) {
             $planId = $lineItem->PlanID;
             $item = $lineItem->item;
-            if (!$item) { continue; }
+            if (!$item) {
+                continue;
+            }
             $needId = optional($lineItem->departmentNeed)->NeedID;
 
             $entry = [
@@ -262,7 +268,9 @@ class TenderController extends Controller
             // Attach Tender Documents to DMS (from create form)
             if ($request->hasFile('documents')) {
                 foreach ((array) $request->file('documents') as $uploadedFile) {
-                    if (!$uploadedFile) { continue; }
+                    if (!$uploadedFile) {
+                        continue;
+                    }
                     // Create DMS document and relate to this tender
                     $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
                 }
@@ -331,7 +339,10 @@ class TenderController extends Controller
                         foreach ($uniqueEmails as $recipientEmail) {
                             $recipientName = null;
                             foreach ($supplierList as $s) {
-                                if (strtolower($s['email']) === $recipientEmail) { $recipientName = $s['name']; break; }
+                                if (strtolower($s['email']) === $recipientEmail) {
+                                    $recipientName = $s['name'];
+                                    break;
+                                }
                             }
 
                             $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
@@ -341,7 +352,10 @@ class TenderController extends Controller
                                 if ($otherEmail === $recipientEmail) continue;
                                 $otherName = null;
                                 foreach ($supplierList as $s) {
-                                    if (strtolower($s['email']) === $otherEmail) { $otherName = $s['name']; break; }
+                                    if (strtolower($s['email']) === $otherEmail) {
+                                        $otherName = $s['name'];
+                                        break;
+                                    }
                                 }
                                 $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
                             }
@@ -473,7 +487,7 @@ class TenderController extends Controller
             $manualItem->item_name = ItemMasterList::find($manualItem->item_id)?->ItemName ?? 'N/A';
         }
 
-    return view('procurement.tendering.tendersetup.tenderinitiation.edit', compact(
+        return view('procurement.tendering.tendersetup.tenderinitiation.edit', compact(
             'tender',
             'tenderCategory',
             'tenderCategories',
@@ -525,7 +539,9 @@ class TenderController extends Controller
                 // Attach Tender Documents to DMS (from edit form)
                 if ($request->hasFile('documents')) {
                     foreach ((array) $request->file('documents') as $uploadedFile) {
-                        if (!$uploadedFile) { continue; }
+                        if (!$uploadedFile) {
+                            continue;
+                        }
                         $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
                     }
                 }
@@ -697,9 +713,9 @@ class TenderController extends Controller
             $catId = $request->input('tender_category_id') ?? $request->input('TenderCategory');
             if (!is_null($catId) && !is_numeric($catId)) {
                 $label = match ((string)$catId) {
-                    'G','Goods','goods' => 'Goods',
-                    'S','Services','services' => 'Services',
-                    'W','Works','works' => 'Works',
+                    'G', 'Goods', 'goods' => 'Goods',
+                    'S', 'Services', 'services' => 'Services',
+                    'W', 'Works', 'works' => 'Works',
                     default => null,
                 };
                 if ($label) {
@@ -834,94 +850,99 @@ class TenderController extends Controller
     }
 
     // AJAX: return distinct top-level item categories for the selected tender category
-public function allowedCategories(Request $request)
-{
-    $tenderCategoryId = (int) $request->query('tender_category_id', 0);
-    if ($tenderCategoryId <= 0) {
-        return response()->json(['ok' => true, 'categories' => []]);
-    }
+    public function allowedCategories(Request $request)
+    {
+        $tenderCategoryId = (int) $request->query('tender_category_id', 0);
+        if ($tenderCategoryId <= 0) {
+            return response()->json(['ok' => true, 'categories' => []]);
+        }
 
-    // PRIMARY PATH: Two-level hierarchy (child -> parent or self if already root)
-    $rows = DB::table('t_Items as i')
-        ->join('t_TenderCategoryItemTypes as t', function ($j) use ($tenderCategoryId) {
-            $j->on('t.ItemTypeId', '=', 'i.ItemType')
-              ->where('t.TenderCategoryId', '=', $tenderCategoryId)
-              ->where('t.IsActive', '=', 1);
-        })
-        ->join('t_ItemCategories as c', 'c.Id', '=', 'i.Category')
-        ->leftJoin('t_ItemCategories as p', 'p.Id', '=', 'c.ParentId')
-        // If you soft delete or have active flags, uncomment as appropriate:
-        // ->whereNull('i.DeletedOn')
-        // ->whereNull('c.DeletedOn')
-        // ->where(function ($q) { $q->whereNull('p.DeletedOn')->orWhereNull('c.ParentId')->orWhere('c.ParentId', 0); })
-        ->distinct()
-        ->selectRaw('
+        // PRIMARY PATH: Two-level hierarchy (child -> parent or self if already root)
+        $rows = DB::table('t_Items as i')
+            ->join('t_ItemTypes as it', 'i.ItemType', '=', 'it.TypeName')
+            ->join('t_TenderCategoryItemTypes as t', function ($j) use ($tenderCategoryId) {
+                $j->on('t.ItemTypeId', '=', 'it.Id')
+                    ->where('t.TenderCategoryId', '=', $tenderCategoryId)
+                    ->where('t.IsActive', '=', 1);
+            })
+            ->join('t_ItemCategories as c', 'c.Id', '=', 'i.Category')
+            ->leftJoin('t_ItemCategories as p', 'p.Id', '=', 'c.ParentId')
+            // If you soft delete or have active flags, uncomment as appropriate:
+            // ->whereNull('i.DeletedOn')
+            // ->whereNull('c.DeletedOn')
+            // ->where(function ($q) { $q->whereNull('p.DeletedOn')->orWhereNull('c.ParentId')->orWhere('c.ParentId', 0); })
+            ->distinct()
+            ->selectRaw('
             COALESCE(NULLIF(c.ParentId, 0), c.Id) AS Id,
             COALESCE(p.Name, c.Name)            AS Name
         ')
-        ->orderBy('Id')
-        ->get();
+            ->orderBy('Id')
+            ->get();
 
-    if ($rows->isNotEmpty()) {
+        if ($rows->isNotEmpty()) {
+            try {
+                Log::info('allowedCategories primary', [
+                    'tenderCategoryId' => $tenderCategoryId,
+                    'count' => $rows->count(),
+                    'ids' => $rows->pluck('Id')->take(20)->values(), // cap to 20 for log brevity
+                ]);
+            } catch (\Throwable $e) {
+                // no-op logging guard
+            }
+            return response()->json(['ok' => true, 'categories' => $rows->values()]);
+        }
+
+        // FALLBACK: If the join path returns nothing (edge data states), compute
+        // roots from the same two-level logic via a simpler pass.
+        $allowedTypeIds = DB::table('t_TenderCategoryItemTypes')
+            ->where('TenderCategoryId', $tenderCategoryId)
+            ->where('IsActive', 1)
+            ->pluck('ItemTypeId');
+
+        if ($allowedTypeIds->isEmpty()) {
+            return response()->json(['ok' => true, 'categories' => []]);
+        }
+
+        $codeDetailIds = DB::table('t_ItemTypes')
+            ->whereIn('Id', $allowedTypeIds)
+            ->pluck('TypeName');
+
+        $catIds = DB::table('t_Items')
+            ->whereIn('ItemType', $codeDetailIds)
+            ->pluck('Category');
+
+        if ($catIds->isEmpty()) {
+            return response()->json(['ok' => true, 'categories' => []]);
+        }
+
+        // Map each category to its root (two-level)
+        $cats = DB::table('t_ItemCategories')->whereIn('Id', $catIds)->get(['Id', 'ParentId']);
+        $parentMap = DB::table('t_ItemCategories')
+            ->whereIn('Id', $cats->pluck('ParentId')->filter()->unique())
+            ->pluck('Id')
+            ->flip(); // keys = parent ids
+
+        $rootIds = $cats->map(function ($c) use ($parentMap) {
+            $pid = (int) ($c->ParentId ?? 0);
+            return $pid > 0 && $parentMap->has($pid) ? $pid : (int) $c->Id;
+        })->unique()->values();
+
+        $roots = DB::table('t_ItemCategories')
+            ->whereIn('Id', $rootIds)
+            ->orderBy('Id')
+            ->get(['Id', 'Name']);
+
         try {
-            Log::info('allowedCategories primary', [
+            Log::info('allowedCategories fallback', [
                 'tenderCategoryId' => $tenderCategoryId,
-                'count' => $rows->count(),
-                'ids' => $rows->pluck('Id')->take(20)->values(), // cap to 20 for log brevity
+                'count' => $roots->count(),
+                'ids' => $roots->pluck('Id')->take(20)->values(),
             ]);
         } catch (\Throwable $e) {
             // no-op logging guard
         }
-        return response()->json(['ok' => true, 'categories' => $rows->values()]);
+        return response()->json(['ok' => true, 'categories' => $roots->values()]);
     }
-
-    // FALLBACK: If the join path returns nothing (edge data states), compute
-    // roots from the same two-level logic via a simpler pass.
-    $allowedTypeIds = DB::table('t_TenderCategoryItemTypes')
-        ->where('TenderCategoryId', $tenderCategoryId)
-        ->where('IsActive', 1)
-        ->pluck('ItemTypeId');
-
-    if ($allowedTypeIds->isEmpty()) {
-        return response()->json(['ok' => true, 'categories' => []]);
-    }
-
-    $catIds = DB::table('t_Items')
-        ->whereIn('ItemType', $allowedTypeIds)
-        ->pluck('Category');
-
-    if ($catIds->isEmpty()) {
-        return response()->json(['ok' => true, 'categories' => []]);
-    }
-
-    // Map each category to its root (two-level)
-    $cats = DB::table('t_ItemCategories')->whereIn('Id', $catIds)->get(['Id','ParentId']);
-    $parentMap = DB::table('t_ItemCategories')
-        ->whereIn('Id', $cats->pluck('ParentId')->filter()->unique())
-        ->pluck('Id')
-        ->flip(); // keys = parent ids
-
-    $rootIds = $cats->map(function ($c) use ($parentMap) {
-        $pid = (int) ($c->ParentId ?? 0);
-        return $pid > 0 && $parentMap->has($pid) ? $pid : (int) $c->Id;
-    })->unique()->values();
-
-    $roots = DB::table('t_ItemCategories')
-        ->whereIn('Id', $rootIds)
-        ->orderBy('Id')
-        ->get(['Id','Name']);
-
-    try {
-        Log::info('allowedCategories fallback', [
-            'tenderCategoryId' => $tenderCategoryId,
-            'count' => $roots->count(),
-            'ids' => $roots->pluck('Id')->take(20)->values(),
-        ]);
-    } catch (\Throwable $e) {
-        // no-op logging guard
-    }
-    return response()->json(['ok' => true, 'categories' => $roots->values()]);
-}
 
     public function rejectTender(Request $request)
     {
@@ -1003,7 +1024,7 @@ public function allowedCategories(Request $request)
 
         $suppliers = collect();
 
-    foreach ($prequalifiedSuppliers as $supplier) {
+        foreach ($prequalifiedSuppliers as $supplier) {
             if (!$supplier->thirdParty) continue;
 
             $thirdParty = $supplier->thirdParty;
@@ -1036,7 +1057,7 @@ public function allowedCategories(Request $request)
 
             $supplierCategoryIds = $supplierCategoryIds->filter()->unique()->values();
 
-        // From all supplier categories, collect mapped item categories (including all descendants)
+            // From all supplier categories, collect mapped item categories (including all descendants)
             if ($supplierCategoryIds->isNotEmpty()) {
                 try {
                     $parentItemCats = DB::table('t_SupplierCategory_ItemCategory')
@@ -1044,9 +1065,11 @@ public function allowedCategories(Request $request)
                         ->whereNull('DeletedOn')
                         ->pluck('ItemCategoryID');
 
-            // Expand to all descendants so parent prequalification covers all subcategories
-            $expanded = $this->getAllDescendantCategoryIds($parentItemCats->all(), includeSelf: true);
-            foreach ($expanded as $cid) { $itemCategoryIds[] = (int)$cid; }
+                    // Expand to all descendants so parent prequalification covers all subcategories
+                    $expanded = $this->getAllDescendantCategoryIds($parentItemCats->all(), includeSelf: true);
+                    foreach ($expanded as $cid) {
+                        $itemCategoryIds[] = (int)$cid;
+                    }
                 } catch (\Throwable $e) {
                     Log::warning('Failed reading category mappings', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
                 }
@@ -1057,7 +1080,9 @@ public function allowedCategories(Request $request)
                 $topLevelSet = [];
                 foreach ($itemCategoryIds as $cid) {
                     $top = $this->resolveTopLevelCategoryId((int)$cid);
-                    if ($top) { $topLevelSet[] = (int)$top; }
+                    if ($top) {
+                        $topLevelSet[] = (int)$top;
+                    }
                 }
                 $itemCategoryIds = array_merge($itemCategoryIds, $topLevelSet);
             }
@@ -1105,7 +1130,9 @@ public function allowedCategories(Request $request)
 
         if (empty($ids)) {
             $label = \App\Models\Procurement\TenderCategory::where('Id', $tenderCategoryId)->value('TenderCategory');
-            $types = DB::table('t_ItemTypes')->pluck('Id', 'TypeName');
+            $types = DB::table('t_ItemTypes')
+                ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
+                ->pluck('t_ItemTypes.Id', 't_CodeDetails.Description');
             return match (strtoupper((string)$label)) {
                 'GOODS' => array_values(array_filter([
                     $types['Stock'] ?? null,
@@ -1128,7 +1155,7 @@ public function allowedCategories(Request $request)
     // Validate an item is within tender's top-level category and allowed item types
     private function isItemAllowedForTender(int $itemId, int $tenderTopCategoryId, array $allowedTypeIds): bool
     {
-        $item = ItemMasterList::select('Id','Category','ItemType')->find($itemId);
+        $item = ItemMasterList::select('Id', 'Category', 'ItemType')->find($itemId);
         if (!$item) return false;
 
         // Top-level category match
@@ -1159,10 +1186,10 @@ public function allowedCategories(Request $request)
                 return (int)$current;
             }
             $seen[] = $current;
-            $row = ItemCategories::select('Id','ParentId')->find($current);
+            $row = ItemCategories::select('Id', 'ParentId')->find($current);
             if (!$row) {
                 // missing link; return last known good
-                return (int)($seen[count($seen)-1] ?? $categoryId);
+                return (int)($seen[count($seen) - 1] ?? $categoryId);
             }
             $parent = $row->ParentId;
             if ($parent === null || (int)$parent === 0) {
@@ -1252,7 +1279,6 @@ public function allowedCategories(Request $request)
                     $invitationsSent++;
 
                     Log::info("Tender invitation sent to {$thirdParty->ThirdPartyName} ({$thirdParty->Email}) for tender {$tender->TenderNo}");
-
                 } catch (Exception $emailException) {
                     Log::error("Failed to send email to {$thirdParty->Email}: " . $emailException->getMessage());
 
@@ -1265,7 +1291,6 @@ public function allowedCategories(Request $request)
             }
 
             Log::info("Restricted tender invitations process completed. Total sent: {$invitationsSent}");
-
         } catch (Exception $e) {
             Log::error("Error in sendRestrictedTenderInvitations: " . $e->getMessage());
             throw $e; // Re-throw to be caught by the main transaction
