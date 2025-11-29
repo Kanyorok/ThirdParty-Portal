@@ -859,8 +859,9 @@ class TenderController extends Controller
 
         // PRIMARY PATH: Two-level hierarchy (child -> parent or self if already root)
         $rows = DB::table('t_Items as i')
+            ->join('t_ItemTypes as it', 'i.ItemType', '=', 'it.TypeName')
             ->join('t_TenderCategoryItemTypes as t', function ($j) use ($tenderCategoryId) {
-                $j->on('t.ItemTypeId', '=', 'i.ItemType')
+                $j->on('t.ItemTypeId', '=', 'it.Id')
                     ->where('t.TenderCategoryId', '=', $tenderCategoryId)
                     ->where('t.IsActive', '=', 1);
             })
@@ -902,8 +903,12 @@ class TenderController extends Controller
             return response()->json(['ok' => true, 'categories' => []]);
         }
 
+        $codeDetailIds = DB::table('t_ItemTypes')
+            ->whereIn('Id', $allowedTypeIds)
+            ->pluck('TypeName');
+
         $catIds = DB::table('t_Items')
-            ->whereIn('ItemType', $allowedTypeIds)
+            ->whereIn('ItemType', $codeDetailIds)
             ->pluck('Category');
 
         if ($catIds->isEmpty()) {
