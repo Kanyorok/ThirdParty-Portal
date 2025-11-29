@@ -950,7 +950,7 @@ class PurchaseOrderController extends Controller
                     });
                 })
                 ->leftJoin('t_Items as it', 'it.ItemName', '=', 'ri.ItemName')
-                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.Id')
+                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.TypeName')
                 ->leftJoin('t_CodeDetails as cd', 'itype.TypeName', '=', 'cd.Id')
                 ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ri.ItemName) as itemName, COALESCE(cd.Description, '') as itemType, ri.Quantity as quantity, ri.QuotedPrice as unitPrice")
                 ->get()
@@ -1065,7 +1065,7 @@ class PurchaseOrderController extends Controller
             // Items defined at tender level
             $items = DB::table('t_TenderItems as ti')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'ti.ItemID')
-                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.Id')
+                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.TypeName')
                 ->leftJoin('t_CodeDetails as cd', 'itype.TypeName', '=', 'cd.Id')
                 ->where('ti.TenderID', (int) $tenderId)
                 ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ti.ManualItemDescription) as itemName, COALESCE(cd.Description, '') as itemType, COALESCE(ti.QtyToTender, ti.PlannedQty) as quantity, COALESCE(it.ItemPrice, 0) as unitPrice")
@@ -1105,7 +1105,7 @@ class PurchaseOrderController extends Controller
             // Get tender items for the contract's tender with item details
             $items = DB::table('t_TenderItems as ti')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'ti.ItemID')
-                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.Id')
+                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.TypeName')
                 ->leftJoin('t_CodeDetails as cd', 'itype.TypeName', '=', 'cd.Id')
                 ->leftJoin('t_ItemCategories as ic', 'it.Category', '=', 'ic.Id')
                 ->where('ti.TenderID', (int) $contract->TenderID)
@@ -1201,7 +1201,7 @@ class PurchaseOrderController extends Controller
             }
 
             $items = DB::table('t_Items as i')
-                ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
+                ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.TypeName')
                 ->leftJoin('t_CodeDetails as cd', 'it.TypeName', '=', 'cd.Id')
                 ->leftJoin('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
                 ->whereIn('i.Category', $ids->all())

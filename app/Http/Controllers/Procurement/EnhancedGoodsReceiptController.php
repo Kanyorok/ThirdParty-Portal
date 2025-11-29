@@ -495,7 +495,7 @@ class EnhancedGoodsReceiptController extends Controller
             return EnhancedGoodsReceipt::ITEM_TYPE_STOCK;
         }
 
-        $itemTypeName = $item->itemType->typeNameText ?? 'Stock';
+        $itemTypeName = $item->itemType->Description ?? 'Stock';
 
         $typeMapping = [
             'Stock' => EnhancedGoodsReceipt::ITEM_TYPE_STOCK,
