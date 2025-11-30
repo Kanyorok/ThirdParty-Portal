@@ -371,7 +371,13 @@ class WorkFlowController extends Controller
         }
 
         // Use the SP logic via DB select
-        $users = DB::select('SELECT * FROM f_getUserWithPermission(?)', [$stage->PermissionId]);
+        $userIds = collect(DB::select('SELECT * FROM f_getUserWithPermission(?)', [$stage->PermissionId]))
+            ->pluck('Id')
+            ->toArray();
+
+        $users = \App\Models\Auth\User::whereIn('Id', $userIds)
+            ->select('Id', 'Name', 'Email')
+            ->get();
 
         return response()->json(['users' => $users]);
     }
