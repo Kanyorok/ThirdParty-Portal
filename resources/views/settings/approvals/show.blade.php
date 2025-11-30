@@ -33,8 +33,7 @@
         <dt class="col-sm-3">Description</dt>
         <dd class="col-sm-9">{{ $approval->Description }}</dd>
 
-        <dt class="col-sm-3">Document Type</dt>
-        <dd class="col-sm-9">{{ class_basename($approval->Source) }}</dd>
+
 
         <dt class="col-sm-3">Has Final Stage</dt>
         <dd class="col-sm-9">
@@ -43,8 +42,7 @@
             </span>
         </dd>
 
-        <dt class="col-sm-3">Created By</dt>
-        <dd class="col-sm-9">{{ optional($approval->createdByUser)->Name ?? 'N/A' }}</dd>
+
 
         <dt class="col-sm-3">Created On</dt>
         <dd class="col-sm-9">{{ \Carbon\Carbon::parse($approval->CreatedOn)->format('d-m-Y H:i') }}</dd>
@@ -187,9 +185,9 @@
                         <span class="badge bg-success ms-2">FINAL</span>
                         @endif
                     </td>
-                    <td>{{ $stage->type->TypeID ?? '-' }}</td>
-                    <td>{{ $stage->role_name ?? '-' }}</td>
-                    <td>{{ $stage->MaxAmount ?? '-' }}</td>
+                    <td>{{ $stage->type_name->Name ?? $stage->type_name->TypeID ?? '-' }}</td>
+                    <td>{{ $stage->permission->roles->pluck('name')->implode(', ') ?? '-' }}</td>
+                    <td>{{ $stage->EscalationLimit ?? '-' }}</td>
                     <td>
                         <span class="badge {{ $isFinalStage ? 'bg-success' : 'bg-secondary' }}">
                             {{ $isFinalStage ? 'Yes' : 'No' }}
@@ -384,9 +382,9 @@
                         const finalBadge = stage.IsFinalStage ? '<span class="badge bg-success ms-2">FINAL</span>' : '';
                         const finalBadgeCell = stage.IsFinalStage ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>';
 
-                        const typeText = (stage.type && stage.type.TypeID) ? stage.type.TypeID : '-';
+                        const typeText = (stage.type && stage.type.Name) ? stage.type.Name : ((stage.type && stage.type.TypeID) ? stage.type.TypeID : '-');
                         const roleNameText = stage.role_name ? stage.role_name : '-';
-                        const maxAmountText = stage.MaxAmount ? stage.MaxAmount : '-';
+                        const maxAmountText = stage.EscalationLimit ? stage.EscalationLimit : '-';
 
                         $('#stagesTable').append(
                             '<tr id="stage-' + stage.Id + '" class="' + rowClass + '">' +

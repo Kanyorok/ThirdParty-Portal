@@ -228,7 +228,7 @@ class WorkFlowController extends Controller
 
         // Get stages with fresh data
         $stages = WorkflowStage::where('WorkFlowId', $id)
-            ->with(['type_name', 'workflow'])
+            ->with(['type_name', 'workflow', 'permission.roles'])
             ->orderBy('Order')
             ->get();
 
