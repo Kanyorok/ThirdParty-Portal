@@ -3,6 +3,7 @@
 
 @section('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
 <style>
     .select2-container--bootstrap4 .select2-selection--single {
         border: 1px solid #ced4da;
@@ -90,12 +91,14 @@
             <div class="row mb-3" id="limitGroup" style="display: none;">
                 <div class="col-md-4">
                     <label class="form-label">Approval Limit (AMOUNT only)</label>
-                    {{-- <select name="WorkFlowLimitId" id="WorkflowLimitID" class="form-control select2">
-                        <option value="">Select WorkFlow Limit</option>
-                        @foreach($workflowLimits as $limit)
-                        <option value="{{ $limit->Id }}">{{ $limit->Source }}</option>
+                    {{--
+                        <select name="WorkFlowLimitId" id="WorkflowLimitID" class="form-control select2">
+                            <option value="">Select WorkFlow Limit</option>
+                            @foreach($workflowLimits as $limit)
+                                <option value="{{ $limit->Id }}">{{ $limit->Source }}</option>
                     @endforeach
-                    </select> --}}
+                    </select>
+                    --}}
                 </div>
             </div>
 
@@ -214,21 +217,23 @@
 </div>
 @endsection
 
-@section('scripts')
-@section('scripts')
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
-        let workflowHasFinalStage = {
-            {
-                $approval - > IsFinalStage ? 'true' : 'false'
-            }
-        };
+        // safer boolean export
+        let workflowHasFinalStage = @json(!empty($approval->FinalStage));
         const STORAGE_KEY = 'workflow-stage-form-{{ $approval->Id }}';
 
         // Enhanced save form state with better error handling
         function saveFormState() {
             try {
+                var permData = $('#PermissionId').select2('data');
+                var permissionText = (permData && permData.length > 0 && permData[0].text) ? permData[0].text : '';
+
+                var limitData = $('#WorkflowLimitID').select2('data');
+                var workFlowLimitText = (limitData && limitData.length > 0 && limitData[0].text) ? limitData[0].text : '';
+
                 const formData = {
                     StageName: $('input[name="StageName"]').val(),
                     EscalationLimit: $('input[name="EscalationLimit"]').val(),
@@ -237,9 +242,8 @@
                     Count: $('input[name="Count"]').val(),
                     PermissionId: $('#PermissionId').val(),
                     IsFinalStage: $('#IsFinalStage').is(':checked'),
-                    // Save Select2 display values too
-                    PermissionText: $('#PermissionId').select2('data')?.[0]?.text || '',
-                    WorkFlowLimitText: $('#WorkflowLimitID').select2('data')?.[0]?.text || '',
+                    PermissionText: permissionText,
+                    WorkFlowLimitText: workFlowLimitText,
                     lastUpdated: Date.now()
                 };
                 sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
@@ -249,7 +253,6 @@
             }
         }
 
-        // Enhanced load form state with better timing
         function loadFormState() {
             try {
                 const saved = sessionStorage.getItem(STORAGE_KEY);
@@ -257,18 +260,14 @@
                     const formData = JSON.parse(saved);
                     console.log('Loading saved form state:', formData);
 
-                    // Basic fields
                     $('input[name="StageName"]').val(formData.StageName || '');
                     $('input[name="EscalationLimit"]').val(formData.EscalationLimit || '');
 
-                    // WorkFlowTypeId with proper event triggering
                     if (formData.WorkFlowTypeId) {
                         $('#TypeID').val(formData.WorkFlowTypeId).trigger('change');
                     }
 
-                    // Wait for any animations/rendering to complete
-                    setTimeout(() => {
-                        // Dependent fields after type change
+                    setTimeout(function() {
                         if (formData.WorkFlowLimitId) {
                             $('#WorkflowLimitID').val(formData.WorkFlowLimitId).trigger('change');
                         }
@@ -279,7 +278,7 @@
                             $('#PermissionId').val(formData.PermissionId).trigger('change');
                         }
 
-                        $('#IsFinalStage').prop('checked', formData.IsFinalStage || false);
+                        $('#IsFinalStage').prop('checked', !!formData.IsFinalStage);
 
                         console.log('Form state loaded successfully');
                     }, 300);
@@ -289,7 +288,6 @@
             }
         }
 
-        // Clear saved form state
         function clearFormState() {
             try {
                 sessionStorage.removeItem(STORAGE_KEY);
@@ -299,17 +297,14 @@
             }
         }
 
-        // Initialize Select2 first
         $('.select2').select2({
             theme: 'bootstrap4',
             placeholder: '🔍 Type to search...',
             allowClear: true
         });
 
-        // Load form state after a brief delay to ensure DOM is ready
         setTimeout(loadFormState, 100);
 
-        // Save form state on any input change with debouncing
         let saveTimeout;
 
         function debouncedSave() {
@@ -320,39 +315,32 @@
         $('#stageForm').on('input change keyup', '.form-control, .form-select, .form-check-input', debouncedSave);
         $('#stageForm').on('select2:select select2:unselect', debouncedSave);
 
-        // Toggle AMT/CNT fields
         function toggleFields() {
             const selected = $('#TypeID').find(':selected').data('code');
             $('#limitGroup').toggle(selected === 'AMT');
             $('#countGroup').toggle(selected === 'CNT');
-
-            // Save state after toggle
             debouncedSave();
         }
 
         $('#TypeID').on('change', toggleFields);
-
-        // Initial toggle
         setTimeout(toggleFields, 200);
 
-        // Renumber table rows
         function renumberStages() {
             $('#stagesTable tr:not(#noStages)').each(function(i) {
                 $(this).find('td:first').text(i + 1);
             });
         }
 
-        // Update form visibility based on final stage status
         function updateFormVisibility(hasFinalStage) {
             workflowHasFinalStage = hasFinalStage;
             if (hasFinalStage) {
                 $('#stageForm').hide();
                 if ($('#stageFormCard .alert-warning').length === 0) {
-                    $('#stageFormCard').prepend(`
-                    <div class="alert alert-warning">
-                        <strong>⚠️ Notice:</strong> This workflow already has a final stage. You cannot add more stages until you remove the final stage designation.
-                    </div>
-                `);
+                    $('#stageFormCard').prepend(
+                        '<div class="alert alert-warning">' +
+                        '<strong>⚠️ Notice:</strong> This workflow already has a final stage. You cannot add more stages until you remove the final stage designation.' +
+                        '</div>'
+                    );
                 }
             } else {
                 $('#stageForm').show();
@@ -360,7 +348,6 @@
             }
         }
 
-        // AJAX form submit
         $('#stageForm').on('submit', function(e) {
             e.preventDefault();
 
@@ -377,7 +364,6 @@
                 }
             }
 
-            // Show loading state
             const submitBtn = $(this).find('button[type="submit"]');
             const originalText = submitBtn.html();
             submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
@@ -391,42 +377,49 @@
 
                     if (res.status === 'success') {
                         const stage = res.stage;
+
                         $('#noStages').remove();
 
                         const rowClass = stage.IsFinalStage ? 'final-stage-row' : '';
                         const finalBadge = stage.IsFinalStage ? '<span class="badge bg-success ms-2">FINAL</span>' : '';
                         const finalBadgeCell = stage.IsFinalStage ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>';
 
-                        $('#stagesTable').append(`
-                        <tr id="stage-${stage.Id}" class="${rowClass}">
-                            <td></td>
-                            <td>
-                                ${stage.StageName}
-                                ${finalBadge}
-                            </td>
-                            <td>${stage.type?.TypeID ?? '-'}</td>
-                            <td>${stage.role_name ?? '-'}</td>
-                            <td>${stage.MaxAmount ?? '-'}</td>
-                            <td>${finalBadgeCell}</td>
-                            <td>
-                                <form class="deleteStageForm" data-id="${stage.Id}" data-is-final="${stage.IsFinalStage ? '1' : '0'}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
-                                </form>
-                            </td>
-                        </tr>
-                    `);
+                        const typeText = (stage.type && stage.type.TypeID) ? stage.type.TypeID : '-';
+                        const roleNameText = stage.role_name ? stage.role_name : '-';
+                        const maxAmountText = stage.MaxAmount ? stage.MaxAmount : '-';
+
+                        $('#stagesTable').append(
+                            '<tr id="stage-' + stage.Id + '" class="' + rowClass + '">' +
+                            '<td></td>' +
+                            '<td>' +
+                            stage.StageName +
+                            ' ' +
+                            finalBadge +
+                            '</td>' +
+                            '<td>' + typeText + '</td>' +
+                            '<td>' + roleNameText + '</td>' +
+                            '<td>' + maxAmountText + '</td>' +
+                            '<td>' + finalBadgeCell + '</td>' +
+                            '<td>' +
+                            '<div class="d-flex">' +
+                            '<button type="button" class="btn btn-sm btn-info view-approvers me-1" data-id="' + stage.Id + '" title="View Approvers">👀</button>' +
+                            '<form class="deleteStageForm" data-id="' + stage.Id + '" data-is-final="' + (stage.IsFinalStage ? '1' : '0') + '">' +
+                            '@csrf' +
+                            '@method("DELETE")' +
+                            '<button type="submit" class="btn btn-sm btn-danger">🗑️</button>' +
+                            '</form>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>'
+                        );
 
                         renumberStages();
                         $('#stageForm')[0].reset();
                         $('#PermissionId').val(null).trigger('change');
                         $('#WorkflowLimitID').val(null).trigger('change');
 
-                        // Clear the saved form state
                         clearFormState();
 
-                        // If this was a final stage, hide the form
                         if (stage.IsFinalStage) {
                             updateFormVisibility(true);
                         }
@@ -438,13 +431,15 @@
                 },
                 error: function(xhr) {
                     submitBtn.prop('disabled', false).html(originalText);
-                    const errorMsg = xhr.responseJSON?.message || 'Error creating stage';
+                    var errorMsg = 'Error creating stage';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
                     alert(errorMsg);
                 }
             });
         });
 
-        // AJAX delete stage
         $(document).on('submit', '.deleteStageForm', function(e) {
             e.preventDefault();
 
@@ -463,22 +458,24 @@
 
             let id = $(this).data('id');
 
-            // Get CSRF token
             const token = $('meta[name="csrf-token"]').attr('content');
 
             $.ajax({
-                url: `/settings/workflow-stages/${id}`, // matches the POST route
+                url: '/settings/workflow-stages/' + id,
                 method: 'POST',
-                data: $(this).serialize() + `&_method=DELETE&_token=${token}`, // add CSRF token
+                data: $(this).serialize() + '&_method=DELETE&_token=' + encodeURIComponent(token),
                 success: function(res) {
                     deleteBtn.prop('disabled', false).html(originalText);
 
                     if (res.status === 'success') {
-                        $(`#stage-${id}`).remove();
+                        $('#stage-' + id).remove();
                         renumberStages();
 
                         if (isFinal) {
-                            $('dd.col-sm-9:eq(3) .badge').removeClass('bg-success').addClass('bg-secondary').text('No');
+                            $('dd.col-sm-9:eq(3) .badge')
+                                .removeClass('bg-success')
+                                .addClass('bg-secondary')
+                                .text('No');
                             updateFormVisibility(false);
                         }
 
@@ -492,28 +489,22 @@
                 },
                 error: function(err) {
                     deleteBtn.prop('disabled', false).html(originalText);
-                    console.error(err); // log full error
+                    console.error(err);
                     alert('Error deleting stage');
                 }
             });
         });
 
-
-        // Enhanced page event handling
         $(window).on('beforeunload', function() {
-            // Force save before unload
             saveFormState();
         });
 
-        // Save state when navigating away via links
         $(document).on('click', 'a', function() {
             saveFormState();
         });
 
-        // Periodically save state (as backup)
-        setInterval(saveFormState, 30000); // Every 30 seconds
+        setInterval(saveFormState, 30000);
 
-        // View Approvers
         $(document).on('click', '.view-approvers', function() {
             const stageId = $(this).data('id');
             const modal = new bootstrap.Modal(document.getElementById('approversModal'));
@@ -522,11 +513,15 @@
             list.html('<li class="list-group-item text-center">Loading...</li>');
             modal.show();
 
-            $.get(`/settings/workflow/stage/${stageId}/approvers`, function(res) {
+            $.get('/settings/workflow/stage/' + stageId + '/approvers', function(res) {
                 list.empty();
                 if (res.users && res.users.length > 0) {
-                    res.users.forEach(user => {
-                        list.append(`<li class="list-group-item">${user.Name} <small class="text-muted">(${user.Email})</small></li>`);
+                    $.each(res.users, function(i, user) {
+                        list.append(
+                            '<li class="list-group-item">' +
+                            user.Name + ' <small class="text-muted">(' + user.Email + ')</small>' +
+                            '</li>'
+                        );
                     });
                 } else {
                     list.append('<li class="list-group-item text-center text-muted">No users found with this permission.</li>');
@@ -539,5 +534,4 @@
         console.log('Workflow stage form state management initialized');
     });
 </script>
-@endsection
-@endsection
+@endpush
