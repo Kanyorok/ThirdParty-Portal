@@ -92,6 +92,7 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
 
         Route::resource('roles', 'RoleController'); // remove ->except(['show'])
         Route::post('roles/seed-permissions', 'RoleController@seedPermissions')->name('roles.seedPermissions');
+        Route::get('settings/workflow/stage/{stageId}/approvers', [\App\Http\Controllers\Settings\WorkFlowController::class, 'getApprovers'])->name('workflow.stage.approvers');
         Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
 
 

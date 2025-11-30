@@ -360,4 +360,19 @@ class WorkFlowController extends Controller
             ], 500);
         }
     }
+    /**
+     * Get approvers for a specific stage
+     */
+    public function getApprovers($stageId)
+    {
+        $stage = \App\Models\Core\Approval\WorkflowStage::find($stageId);
+        if (!$stage || !$stage->PermissionId) {
+            return response()->json(['users' => []]);
+        }
+
+        // Use the SP logic via DB select
+        $users = DB::select('SELECT * FROM f_getUserWithPermission(?)', [$stage->PermissionId]);
+
+        return response()->json(['users' => $users]);
+    }
 }

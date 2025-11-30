@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Auth\User;
 use App\Models\Core\Approval\WorkflowStage;
+use App\Models\Core\Approval\Permission;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Settings\WorkFlow;
@@ -85,12 +87,31 @@ class WorkFlowStageService
                 }
             }
 
-            // Attach permission to admin role (ID 2)
-            $defaultRoleId = 2; // admin role
-            DB::table('t_RolePermissions')->updateOrInsert(
-                ['role_id' => $defaultRoleId, 'permission_id' => $permission->id],
-                ['CreatedBy' => $user->Id, 'ModifiedBy' => $user->Id, 'CreatedOn' => now(), 'ModifiedOn' => now()]
-            );
+            // Assign permission to the creator's roles
+            /** @var \App\Models\Auth\User $currentUser */
+            $currentUser = Auth::user();
+            if ($currentUser) {
+                $currentUser->load('roles'); // Eager load roles if not already
+                foreach ($currentUser->roles as $role) {
+                    try {
+                        $role->givePermissionTo($permission->id);
+                    } catch (\Throwable $e) {
+                        // Ignore if already exists or other minor issues
+                        Log::warning("Could not assign permission {$permission->name} to role {$role->name}: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // Also ensure Admin (Role 2) has it as a fallback/standard
+            $adminRole = Role::find(2);
+            if ($adminRole) {
+                try {
+                    $adminRole->givePermissionTo($permission->id);
+                } catch (\Throwable $e) {
+                    // Ignore
+                    Log::warning("Could not assign permission {$permission->name} to Admin role: " . $e->getMessage());
+                }
+            }
 
             // Update FinalStage logic
             if (!empty($data['IsFinalStage'])) {
