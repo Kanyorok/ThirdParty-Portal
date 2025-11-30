@@ -6,7 +6,7 @@ use App\Models\Auth\User;
 use App\Models\Core\Approval\WorkflowStage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\Approval\WorkFlow;
+use App\Models\Settings\WorkFlow;
 use Illuminate\Support\Facades\DB;
 use App\DTOs\WorkflowStageResult;
 use App\Exceptions\ErroredException;
@@ -67,23 +67,30 @@ class WorkFlowStageService
                 throw new ErroredException('Stage creation failed.');
             }
 
-            // === Create Permission for this Stage ===
-            $permissionName = 'workflow-stage-' . $stage->Id;
-            $permission = \App\Models\Core\Approval\Permission::firstOrCreate(
-                ['name' => $permissionName],
-                [
-                    'guard_name' => 'web',
-                    'ModuleId' => $moduleId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
+            // === Get Permission for this Stage (created by SP) ===
+            $permission = \App\Models\Core\Approval\Permission::find($dto->permissionId);
 
-            // Optional: Attach permission to default role(s)
-            // $defaultRoleId = 1; // admin role
-            // DB::table('t_RolePermissions')->updateOrInsert(
-            //     ['role_id' => $defaultRoleId, 'permission_id' => $permission->id]
-            // );
+            if (!$permission) {
+                // Fallback: try to find by name if ID lookup fails (shouldn't happen)
+                $permissionName = 'workflowstage_' . str_replace(' ', '', $data['StageName']);
+                $permission = \App\Models\Core\Approval\Permission::where('name', $permissionName)->first();
+
+                if (!$permission) {
+                    // Last resort: create it (though SP should have done it)
+                    $permission = \App\Models\Core\Approval\Permission::create([
+                        'name' => $permissionName,
+                        'guard_name' => 'web',
+                        'ModuleId' => $moduleId,
+                    ]);
+                }
+            }
+
+            // Attach permission to admin role (ID 2)
+            $defaultRoleId = 2; // admin role
+            DB::table('t_RolePermissions')->updateOrInsert(
+                ['role_id' => $defaultRoleId, 'permission_id' => $permission->id],
+                ['CreatedBy' => $user->Id, 'ModifiedBy' => $user->Id, 'CreatedOn' => now(), 'ModifiedOn' => now()]
+            );
 
             // Update FinalStage logic
             if (!empty($data['IsFinalStage'])) {

@@ -12,6 +12,7 @@ use App\Models\Settings\WorkFlow;
 use App\Models\Core\Approval\WorkflowStage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Enums\Core\ModulesEnum;
 
 class WorkFlowController extends Controller
 {
@@ -37,7 +38,61 @@ class WorkFlowController extends Controller
             })
             ->toArray();
 
-        return view('settings.approvals.sections', compact('workFlowGroups', 'sourceOptions', 'tableToAlias'));
+        // Fetch all modules
+        $allModules = DB::table('t_Modules')
+            ->select('ModuleID', 'Name', 'ParentID')
+            ->orderBy('Name')
+            ->get();
+
+        // Build tree
+        $moduleTree = [];
+        foreach ($allModules as $m) {
+            $moduleTree[$m->ParentID ?? 0][] = $m;
+        }
+
+        // Flatten recursively
+        $modules = collect();
+        $flatten = function ($parentId = 0, $depth = 0) use (&$flatten, $moduleTree, &$modules) {
+            if (isset($moduleTree[$parentId])) {
+                foreach ($moduleTree[$parentId] as $module) {
+                    $module->indentation = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $depth);
+                    $modules->push($module);
+                    $flatten($module->ModuleID, $depth + 1);
+                }
+            }
+        };
+
+        // Start with root items (ParentID is null or 0)
+        // Note: DB dump showed ParentID as null for roots, but let's handle 0 just in case
+        $flatten(0);
+        // Also handle null explicitly if 0 didn't catch them (depends on how we keyed the array)
+        if (isset($moduleTree[''])) { // null key often casts to empty string in PHP arrays or needs special handling
+            // Actually, let's be safer with the keying
+        }
+
+        // Re-doing the tree building to be safer with nulls
+        $moduleTree = [];
+        foreach ($allModules as $m) {
+            $pid = $m->ParentID ?? 'root';
+            $moduleTree[$pid][] = $m;
+        }
+
+        $modules = collect();
+        $flatten = function ($parentId = 'root', $depth = 0) use (&$flatten, $moduleTree, &$modules) {
+            if (isset($moduleTree[$parentId])) {
+                // Sort by Name within the level
+                usort($moduleTree[$parentId], fn($a, $b) => strcmp($a->Name, $b->Name));
+
+                foreach ($moduleTree[$parentId] as $module) {
+                    $module->indentation = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $depth);
+                    $modules->push($module);
+                    $flatten($module->ModuleID, $depth + 1);
+                }
+            }
+        };
+        $flatten('root');
+
+        return view('settings.approvals.sections', compact('workFlowGroups', 'sourceOptions', 'tableToAlias', 'modules'));
     }
 
     public function create()
@@ -58,12 +113,25 @@ class WorkFlowController extends Controller
                 throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
             }
 
-            $moduleId = DB::table(table: 't_ModuleSources')
+            $moduleId = DB::table('t_ModuleSources')
                 ->where('DocumentType', $tableName)
                 ->value('ModuleID');
 
             if (!$moduleId) {
-                Log::warning("No module found for document type: {$tableName}");
+                if ($request->filled('ModuleID')) {
+                    $moduleId = $request->input('ModuleID');
+                    DB::table('t_ModuleSources')->insert([
+                        'DocumentType' => $tableName,
+                        'ModuleID' => $moduleId,
+                        'CreatedBy' => Auth::id(),
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
+                    ]);
+                    Log::info("Inserted new module source mapping for {$tableName} -> {$moduleId}");
+                } else {
+                    Log::warning("No module found for document type: {$tableName}");
+                }
             }
 
             $workFlow = WorkFlow::create([

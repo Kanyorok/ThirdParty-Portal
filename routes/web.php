@@ -91,6 +91,7 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
         Route::resource('branches', 'CrmBranchController')->parameters(['branches' => 'crm_branch'])->except(['edit', 'create', 'show']);
 
         Route::resource('roles', 'RoleController'); // remove ->except(['show'])
+        Route::post('roles/seed-permissions', 'RoleController@seedPermissions')->name('roles.seedPermissions');
         Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
 
 
