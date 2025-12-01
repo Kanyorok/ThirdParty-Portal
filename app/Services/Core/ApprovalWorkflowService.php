@@ -328,9 +328,7 @@ abstract class ApprovalWorkflowService
     }
 }
 
-    /**
- * Advance to the next stage after current stage is completed
- */
+
 /**
  * Advance to the next stage after current stage is completed
  */
