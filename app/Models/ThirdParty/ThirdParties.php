@@ -62,7 +62,6 @@ class ThirdParties extends Model
         'BusinessType' => BusinessTypeEnum::class,
         'Status' => ThirdPartyStatusEnum::class,
         'ApprovalStatus' => ThirdPartyApprovalStatusEnum::class,
-        'ThirdPartyType' => ThirdPartyTypeEnum::class,
         'IsPrequalified' => 'boolean',
     ];
 
