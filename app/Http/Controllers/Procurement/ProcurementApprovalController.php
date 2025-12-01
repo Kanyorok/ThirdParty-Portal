@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Core\Workflow;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use Carbon\Carbon;
 use App\Services\Procurement\ProcurementPlan\ProcurementPlanWorkflow;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 
 class ProcurementApprovalController extends Controller
 {
@@ -71,30 +73,11 @@ class ProcurementApprovalController extends Controller
                         $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Rejected, $request->comments);
                         break;
                     case 'RETURNED':
-                        // RETURNED usually means sending back to draft or previous stage. 
-                        // If we treat it as "Reject" to Draft, we can use reject with Draft status?
-                        // Or maybe we need a 'Return' method in workflow?
-                        // For now, let's assume 'RETURNED' maps to 'Draft' status via reject or a specific logic.
-                        // But ProcurementPlanStatusEnum::Draft is 'Dr'.
-                        // The workflow service 'reject' method takes a status enum.
-                        // Let's use reject with Draft status if that's the intention, or Rejected status.
-                        // The original code set status to Draft for RETURNED.
-                        // So let's use reject but pass Draft status if possible, or just use reject.
-                        // However, 'reject' usually sets status to Rejected.
-                        // If we want to move back to Draft, we might need to use 'cancel' or just 'reject' with a note.
-                        // Let's stick to 'reject' with Rejected status for now as 'RETURNED' isn't a standard workflow action in the generic service usually.
-                        // Wait, the original code set status to Draft.
-                        // If I use $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Draft, ...), 
-                        // the service will look for CodeDetail for 'Draft' (Dr).
-                        // If that exists, it might work.
                         $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Draft, $request->comments);
                         break;
                 }
             });
 
-            // Activity logging is handled by the service or we can keep it here if needed.
-            // The generic service logs to Log facade but maybe not activity() package.
-            // Let's keep the activity log for consistency with previous code.
             activity()
                 ->causedBy($user)
                 ->performedOn($plan)
@@ -103,8 +86,8 @@ class ProcurementApprovalController extends Controller
 
             return redirect()->route('planning.approval.index')->with('success', 'Your decision has been recorded.');
         } catch (\Exception $e) {
-            Log::error('Error submitting decision: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'An error occurred while processing your decision: ' . $e->getMessage());
+            Log::error('Workflow decision failed', ['error' => $e->getMessage(), 'planId' => $plan->PlanID]);
+            return redirect()->back()->with('error', 'Failed to process decision: ' . $e->getMessage());
         }
     }
 }

@@ -30,7 +30,7 @@ class RequisitionsController extends Controller
     public function __construct(protected RequisitionService $service, protected RequisitionItemService $requisitionItemService, protected DocumentApprovalService $documentApprovalService)
     {
         $this->middleware(middleware: 'ajax')->except(['index', 'show', 'create', 'approval', 'approve']);
-//         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
+        //         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
     /**
@@ -39,7 +39,7 @@ class RequisitionsController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Requisitions::class);
-//        return view('procurement.requisitions.approval');
+        //        return view('procurement.requisitions.approval');
         try {
             $details = $this->service->fetchRequisition();
             return view('procurement.requisitions.approval', compact('details'));
@@ -48,14 +48,15 @@ class RequisitionsController extends Controller
         }
     }
 
-    public function approvalList(){
+    public function approvalList()
+    {
         return view("procurement.requisitions.approval");
-//        try {
-//            $details = $this->service->fetchRequisition();
-//            return view('procurement.requisition.approval', compact('details'));
-//        } catch (\Exception $e) {
-//            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
-//        }
+        //        try {
+        //            $details = $this->service->fetchRequisition();
+        //            return view('procurement.requisition.approval', compact('details'));
+        //        } catch (\Exception $e) {
+        //            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        //        }
     }
 
 
@@ -137,7 +138,7 @@ class RequisitionsController extends Controller
             if ($requisitionAdd['status'] === 'success') {
                 return response()->json([
                     'message' => $requisitionAdd['message'],
-                    'route' =>route('requisition.create')
+                    'route' => route('requisition.create')
                 ], 200);
             }
 
@@ -151,7 +152,6 @@ class RequisitionsController extends Controller
             return response()->json([
                 'message' => 'Failed to create requisition. Please try again later.'
             ], 500);
-
         } catch (\Throwable $e) {
             Log::error('Exception occurred while creating requisition.', [
                 'error' => $e->getMessage(),
@@ -179,7 +179,6 @@ class RequisitionsController extends Controller
                 ->value('ApprovalType');
 
             return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus', 'approvalType'));
-
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $uid = null;
             try {
@@ -285,8 +284,9 @@ class RequisitionsController extends Controller
         ]);
     }
 
-    public function getRequisitions(): JsonResponse{
-        try{
+    public function getRequisitions(): JsonResponse
+    {
+        try {
             $details = $this->service->fetchRequisition();
             return response()->json([
                 'success' => true,

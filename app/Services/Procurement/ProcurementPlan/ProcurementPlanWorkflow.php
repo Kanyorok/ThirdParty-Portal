@@ -3,25 +3,16 @@
 namespace App\Services\Procurement\ProcurementPlan;
 
 use App\Enums\ProcurementPlanStatusEnum;
-use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Services\Core\ApprovalWorkflowService;
-use Illuminate\Database\Eloquent\Collection;
 
 class ProcurementPlanWorkflow extends ApprovalWorkflowService
 {
-    // Match CodeID used for Procurement Plan in t_CodeDetails
     public const CODE_ID = 'ProcurementPlanStatus';
 
     /**
-     * Submit a Procurement Plan for approval
-     * 
-     * @param ConsolidatedProcurementPlan $plan
-     * @param User $actor
-     * @param string $remarks
-     * @return bool
-     * @throws ErroredException
+     * Submit the plan for approval.
      */
     public function submit(ConsolidatedProcurementPlan $plan, User $actor, string $remarks = 'Submitted'): bool
     {
@@ -38,10 +29,9 @@ class ProcurementPlanWorkflow extends ApprovalWorkflowService
         );
     }
 
-
-
-
-
+    /**
+     * Approve the plan.
+     */
     public function approve(ConsolidatedProcurementPlan $plan, User $actor, ProcurementPlanStatusEnum $targetStatus, string $remarks = 'Approved', string $statusColumn = 'Status'): bool
     {
         $status = self::codeDetail($targetStatus, self::CODE_ID);
@@ -56,6 +46,9 @@ class ProcurementPlanWorkflow extends ApprovalWorkflowService
         );
     }
 
+    /**
+     * Reject the plan.
+     */
     public function reject(ConsolidatedProcurementPlan $plan, User $actor, ProcurementPlanStatusEnum $targetStatus, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
     {
         $status = self::codeDetail($targetStatus, self::CODE_ID);
@@ -70,44 +63,13 @@ class ProcurementPlanWorkflow extends ApprovalWorkflowService
         );
     }
 
-    /**
-     * Get workflow history for Procurement Plans
-     * 
-     * @param int $limit
-     * @return Collection
-     * @throws ErroredException
-     */
-    public function history(int $limit = 1000): Collection
+    public function history(ConsolidatedProcurementPlan $plan)
     {
-        return $this->historyData(ConsolidatedProcurementPlan::getPrimaryKey(), $limit);
+        return $this->historyData(ConsolidatedProcurementPlan::getPrimaryKey(), 1000); // Assuming limit 1000
     }
 
-    /**
-     * Get workflow history for a specific Procurement Plan
-     * 
-     * @param ConsolidatedProcurementPlan $plan
-     * @return Collection
-     */
-    public function historyForPlan(ConsolidatedProcurementPlan $plan): Collection
-    {
-        return $plan->workflowHistory()
-            ->with(['creator', 'status', 'stage'])
-            ->get();
-    }
-
-    /**
-     * Check if a user can approve a specific Procurement Plan
-     * 
-     * @param ConsolidatedProcurementPlan $plan
-     * @param User $user
-     * @return bool
-     */
     public function canApprovePlan(ConsolidatedProcurementPlan $plan, User $user): bool
     {
-        return parent::canApprove(
-            ConsolidatedProcurementPlan::getPrimaryKey(),
-            $plan->getKey(),
-            $user
-        );
+        return parent::canApprove(ConsolidatedProcurementPlan::getPrimaryKey(), $plan->getKey(), $user);
     }
 }
