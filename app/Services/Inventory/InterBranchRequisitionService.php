@@ -11,9 +11,17 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Inventory\StockItem;
 use Illuminate\Validation\ValidationException;
+use App\Services\Workflow\ApprovalWorkflow;
 
 class InterBranchRequisitionService
 {
+    protected ApprovalWorkflow $workflow;
+
+    public function __construct(ApprovalWorkflow $workflow)
+    {
+        $this->workflow = $workflow;
+    }
+
     protected function generateReqNo(InterBranchRequisition $requisition): string
     {
         $year = now()->format('Y');
@@ -26,12 +34,11 @@ class InterBranchRequisitionService
         $fromBranch = $data['FromBranch'];
 
         foreach ($items as $index => $item) {
-            $stock = \App\Models\Inventory\StockItem::where('ItemID', $item['Item'])
+            $stock = StockItem::where('ItemID', $item['Item'])
                 ->where('Branch', $fromBranch)
                 ->first();
 
             if (!$stock || $stock->CurrentQty < $item['RequestedQty']) {
-                // 👇 Throw a validation error instead of raw Exception
                 throw ValidationException::withMessages([
                     "items.$index.RequestedQty" => "Insufficient stock for Item ID {$item['Item']} in Branch {$fromBranch}. Requested {$item['RequestedQty']}, available " . ($stock->CurrentQty ?? 0) . ".",
                 ]);
@@ -40,7 +47,7 @@ class InterBranchRequisitionService
 
         unset($data['items']);
         $requisition = new InterBranchRequisition($data);
-        $requisition->Status = InterBranchRequisitionEnum::Submitted->value;
+        $requisition->Status = InterBranchRequisitionEnum::Pending->value;
         $requisition->CreatedBy = Auth::id();
         $requisition->ModifiedBy = Auth::id();
         $requisition->CreatedOn = Carbon::now();
@@ -59,32 +66,12 @@ class InterBranchRequisitionService
             InterBranchRequisitionItem::create($item);
         }
 
-        Workflow::create([
-            'Source' => 'InterBranchRequisition',
-            'SourceID' => $requisition->Id,
-            'Stage' => InterBranchRequisitionEnum::Submitted->label(),
-            'Status' => InterBranchRequisitionEnum::Submitted->value,
-            'Notes' => 'Requisition submitted, awaiting approval',
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => Carbon::now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => Carbon::now(),
-        ]);
-
-        PendingWorkflow::updateOrCreate(
-            [
-                'Source' => 'InterBranchRequisition',
-                'SourceID' => $requisition->Id,
-            ],
-            [
-                'Stage' => InterBranchRequisitionEnum::Submitted->label(),
-                'UserId' => Auth::id(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => Carbon::now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now(),
-            ]
-        );
+            $this->workflow->submit(
+                $requisition,
+                $user = Auth::user(),
+                InterBranchRequisitionEnum::Pending,  
+                'Submitted for approval'
+            );
 
         activity()
             ->performedOn($requisition)
@@ -202,7 +189,7 @@ class InterBranchRequisitionService
         $enum = match ($action) {
             'APPROVED' => InterBranchRequisitionEnum::Approved,
             'REJECTED' => InterBranchRequisitionEnum::Rejected,
-            default => InterBranchRequisitionEnum::Submitted
+            default => InterBranchRequisitionEnum::Pending,
         };
 
         Workflow::create([
@@ -240,7 +227,7 @@ class InterBranchRequisitionService
     public function getApprovalLevelFromStatus($status)
     {
         return match ($status) {
-            InterBranchRequisitionEnum::Submitted->value => InterBranchRequisitionEnum::Submitted->label(),
+            InterBranchRequisitionEnum::Pending->value => InterBranchRequisitionEnum::Pending->label(),
             InterBranchRequisitionEnum::Approved->value => InterBranchRequisitionEnum::Approved->label(),
             InterBranchRequisitionEnum::Rejected->value => InterBranchRequisitionEnum::Rejected->label(),
             default => 'N/A',

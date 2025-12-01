@@ -117,7 +117,7 @@ class InterBranchRequisitionController extends Controller
         }
 
         if (!isset($data['Status'])) {
-            $data['Status'] = InterBranchRequisitionEnum::Submitted->value;
+            $data['Status'] = InterBranchRequisitionEnum::Pending->value;
         }
         $this->service->create($data);
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition submitted successfully.');

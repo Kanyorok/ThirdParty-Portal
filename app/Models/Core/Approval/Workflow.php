@@ -2,7 +2,9 @@
 
 namespace App\Models\Core\Approval;
 use App\Enums\WorkflowStatus;
-
+use App\Models\Settings\WorkFlowStage;
+use App\Models\Settings\WorkflowType;   
+use App\Models\Settings\WorkFlowLimit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 

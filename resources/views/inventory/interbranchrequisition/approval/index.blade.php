@@ -55,7 +55,7 @@
                 <div class="col-md-4"><strong>To Branch:</strong> {{ $requisition->toBranch->Name ?? '-' }}</div>
                 <div class="col-md-4"><strong>Status:</strong>
                     @php
-                        $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
+                        $statusEnum = InterBranchRequisitionEnum::tryFrom($requisition->Status);
                     @endphp
                     @if($statusEnum)
                         <span

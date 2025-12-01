@@ -26,4 +26,10 @@ return [
         'Pending' => \App\Enums\ProcurementPlanStatusEnum::Pending->value,    // 'P'
         'Submitted for Approval' => \App\Enums\ProcurementPlanStatusEnum::Submitted->value,  // 'Su'
     ],
+
+    'interbranchrequisitions' => [
+        'Approved' => \App\Enums\Inventory\InterBranchRequisitionEnum::Approved->value,  // 'Ap'
+        'Rejected' => \App\Enums\Inventory\InterBranchRequisitionEnum::Rejected->value,  // 'Re'
+        'Submitted for Approval' => \App\Enums\Inventory\InterBranchRequisitionEnum::Pending->value,  // 'P'
+    ],
 ];

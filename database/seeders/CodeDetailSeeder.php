@@ -10,6 +10,7 @@ use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\TicketStatusEnum;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;
@@ -107,6 +108,15 @@ class CodeDetailSeeder extends Seeder
                 'CodeID' => 'SchedulePlanStatus',
                 'Value' => $scheduleplanEnum->value,
                 'Description' => $scheduleplanEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (InterBranchRequisitionEnum::cases() as $index => $interBranchRequisitionEnum) {
+            $entries->push([
+                'CodeID' => 'InterBranchRequisitionStatus',
+                'Value' => $interBranchRequisitionEnum->value,
+                'Description' => $interBranchRequisitionEnum->name,
                 'DisplayOrder' => $index + 1,
             ]);
         }

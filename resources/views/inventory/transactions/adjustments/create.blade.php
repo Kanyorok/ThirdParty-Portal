@@ -2,17 +2,6 @@
 @section('title', 'Create Stock Adjustment')
 
 @section('content')
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <strong>There were some issues with your submission:</strong>
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">Stock Adjustment Form</h4>
 
@@ -91,9 +80,9 @@
                                 <input type="number" step="any" name="items[{{ $index }}][AdjustmentQty]"
                                        class="form-control adjustment-qty @error("items.$index.AdjustmentQty") is-invalid @enderror"
                                        value="{{ $item['AdjustmentQty'] ?? '' }}" onchange="calculateNewQty(this)">
-                                <div class="invalid-feedback adjustment-qty-feedback">
-                                    @error("items.$index.AdjustmentQty") {{ $message }} @enderror
-                                </div>
+                                @error("items.$index.AdjustmentQty")
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </td>
                             <td>
                                 <input type="number" class="form-control new-qty" readonly>
@@ -117,6 +106,9 @@
                                 <input type="text" name="items[{{ $index }}][Remarks]"
                                        class="form-control @error("items.$index.Remarks") is-invalid @enderror"
                                        value="{{ $item['Remarks'] ?? '' }}" placeholder="Optional remarks">
+                                @error("items.$index.Remarks")
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-danger remove-row">Remove</button>
