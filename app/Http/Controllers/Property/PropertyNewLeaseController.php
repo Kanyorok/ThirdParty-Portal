@@ -6,6 +6,7 @@ use App\Enums\Core\ApprovalEnum;
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
 use App\Models\Core\Approval\CodeDetail;
@@ -144,6 +145,7 @@ class PropertyNewLeaseController extends Controller
             $data['ServiceCharge'],
             $data['ParkingFee'],
             $data['OtherCharges'],
+            PropertyNewLeaseEnum::OfferLetter->value,
             ApprovalEnum::Pending->value,
             false,
             $data['DueDay'],

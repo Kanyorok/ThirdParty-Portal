@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class RequisitionService {
+class RequisitionService
+{
     /**
      * Create a new class instance.
      */
@@ -21,7 +22,7 @@ class RequisitionService {
     {
         try {
             // Start transaction and execute the stored procedure
-             DB::transaction(function () use ($branch, $department, $remarks, $category, $actor) {
+            DB::transaction(function () use ($branch, $department, $remarks, $category, $actor) {
 
                 DB::statement('EXEC p_AddRequisition ?, ?, ?, ?, ?', [
                     $branch,
@@ -36,7 +37,6 @@ class RequisitionService {
                 'status' => 'success',
                 'message' => 'Requisition successfully created.'
             ];
-
         } catch (QueryException $e) {
             // Log the SQL error
             Log::error('SQL Error executing p_AddRequisition', [
@@ -58,7 +58,7 @@ class RequisitionService {
             ]);
 
             // Return a custom error message or handle as needed
-            return[
+            return [
                 'status' => 'error',
                 'message' => 'Error executing requisition creation',
                 'error' => $e->getMessage()
@@ -70,16 +70,18 @@ class RequisitionService {
     {
         try {
             return DB::table('t_ItemTypes')
-                ->select('Id', 'TypeName')
-                ->where('Active', true)
-                ->whereNull('DeletedOn')
+                ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
+                ->select('t_ItemTypes.Id', 't_CodeDetails.Description as TypeName')
+                ->where('t_ItemTypes.Active', true)
+                ->whereNull('t_ItemTypes.DeletedOn')
+                ->orderBy('t_CodeDetails.Description')
                 ->get();
         } catch (QueryException $e) {
             Log::error('Error fetching item types: ' . $e->getMessage());
             return collect(); // Return an empty collection on error
         }
     }
-//
+    //
     public static function fetchRequisition()
     {
         return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
@@ -157,8 +159,6 @@ class RequisitionService {
                 't_Users.Name'
             )
             ->first();
-
-
     }
 
     public static function fetchBranches()
@@ -189,5 +189,4 @@ class RequisitionService {
             ->whereNull('DeletedOn')
             ->get();
     }
-
 }

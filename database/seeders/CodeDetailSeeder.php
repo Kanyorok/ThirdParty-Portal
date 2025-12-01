@@ -219,6 +219,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'Source', 'Description' => 'Stock Adjustment', 'Value' => 'Sa'],
             ['CodeID' => 'Source', 'Description' => 'Transaction Transfer', 'Value' => 'Tt'],
 
+            //procurement plan status
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Draft', 'Value' => 'Dr'],
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Submitted for Approval', 'Value' => 'Su'],
+
             // Defects Condition
             ['CodeID' => 'DefectsCondition', 'Description' => 'Contaminated', 'Value' => 'C'],
             ['CodeID' => 'DefectsCondition', 'Description' => 'Irreparable', 'Value' => 'Ir'],

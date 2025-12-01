@@ -42,7 +42,8 @@
             <td>{{ $receipt->GRNID }}</td>
             <td>{{ $receipt->POID }}</td>
               <td>{{ $receipt->supplier?->thirdParty?->ThirdPartyName ?? $receipt->supplier?->thirdParty?->TradingName ?? $receipt->supplier->SupplierName ?? 'N/A' }}</td>
-              <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d M Y') }}</td>           <td>
+              <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d/m/Y') }}</td>
+            <td>
               <span class="badge bg-{{ $receipt->InspectionStatus->badgeColor() }}">
                 {{ $receipt->InspectionStatus->label() }}
               </span>
