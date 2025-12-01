@@ -36,8 +36,7 @@
                         <td>{{ $schedule->InspectionNo ?? '-' }}</td>
                         <td>{{ $schedule->vehicle->RegistrationNo ?? '-' }}</td>
                         <td>{{ $schedule->InspectionType }}</td>
-                        <td>{{ \Carbon\Carbon::parse($schedule->InspectionDate)->format('d/m/Y') }}</td>
-                        <td>{{ $schedule->DueDate ? \Carbon\Carbon::parse($schedule->DueDate)->format('d/m/Y') : '-' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($schedule->InspectionDate)->format('d M Y') }}</td>                       <td>{{ $schedule->DueDate ? \Carbon\Carbon::parse($schedule->DueDate)->format('d M Y') : '-' }}</td>
 
                         @php
                             $statusColor = match(strtolower($schedule->inspectionStatus->Description ?? '')) {

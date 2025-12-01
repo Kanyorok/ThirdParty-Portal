@@ -81,9 +81,9 @@
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-muted">
             <div>
                 Created by: <strong>{{ $newtenant->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $newtenant->CreatedOn ? \Carbon\Carbon::parse($newtenant->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $newtenant->CreatedOn ? \Carbon\Carbon::parse($newtenant->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by: <strong>{{ $newtenant->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $newtenant->ModifiedOn ? \Carbon\Carbon::parse($newtenant->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $newtenant->ModifiedOn ? \Carbon\Carbon::parse($newtenant->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
 
             <div>

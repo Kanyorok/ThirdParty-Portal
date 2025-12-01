@@ -19,10 +19,10 @@
             <dd class="col-sm-9">{{ $schedule->InspectionType ?? '-' }}</dd>
 
             <dt class="col-sm-3">Inspection Date</dt>
-            <dd class="col-sm-9">{{ $schedule->InspectionDate ? \Carbon\Carbon::parse($schedule->InspectionDate)->format('d/m/Y') : '-' }}</dd>
+            <dd class="col-sm-9">{{ $schedule->InspectionDate ? \Carbon\Carbon::parse($schedule->InspectionDate)->format('d M Y') : '-' }}</dd>
 
             <dt class="col-sm-3">Due Date</dt>
-            <dd class="col-sm-9">{{ $schedule->DueDate ? \Carbon\Carbon::parse($schedule->DueDate)->format('d/m/Y') : '-' }}</dd>
+            <dd class="col-sm-9">{{ $schedule->DueDate ? \Carbon\Carbon::parse($schedule->DueDate)->format('d M Y') : '-' }}</dd>
 
             <dt class="col-sm-3">Status</dt>
             <dd class="col-sm-9">

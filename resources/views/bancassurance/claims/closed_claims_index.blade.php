@@ -95,8 +95,7 @@
                                     {{ $claim->FinalStatus->label() }}
                                 </span>
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($claim->ClosureDate)->format('d/m/Y') }}</td>
-                        </tr>
+                            <td>{{ \Carbon\Carbon::parse($claim->ClosureDate)->format('d M Y') }}</td>                        </tr>
                         @empty
                         <tr>
                             <td colspan="7" class="text-center text-muted py-4">

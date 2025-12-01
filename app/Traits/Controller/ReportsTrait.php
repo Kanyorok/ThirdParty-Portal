@@ -61,7 +61,7 @@ trait ReportsTrait
                     throw new ErroredException('invalid report.');
                 }
                 $data = $service->parseReportXml($xmlResponse);
-            } catch (ConnectionException|ErroredException $e) {
+            } catch (ConnectionException | ErroredException $e) {
                 Log::error('Error Load Report :');
                 Log::error($e);
                 try {
@@ -69,13 +69,15 @@ trait ReportsTrait
                     $ssrsReport = $service->getReportByPath($report->Path);
                     $parameters = $service->getReportParametersValidated($ssrsReport['Id'], $request->all());
                 } catch (ErroredException $e) {
+                    Log::error('Error Load Report :');
+                    Log::error($e);
                     return view('snippets.errors')->with('message', 'cannot connect to the report server.');
                 } catch (ConnectionException $e) {
                     return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');
                 }
                 return view('reports.table', compact('report'))->with('data', collect())->with('params', SSRSService::queryParams($parameters->put('_key', md5($report->Path))->toArray()))
                     ->with('module', Str::lower(self::MODULE->name))->with('message', 'Cannot generate preview, try export');
-            } catch (Throwable|Exception $e) {
+            } catch (Throwable | Exception $e) {
                 Log::error('Error Load Report :');
                 Log::error($e);
                 return view('snippets.errors')->with('message', 'cannot retrieve report data.');
@@ -85,15 +87,15 @@ trait ReportsTrait
                 ->with('module', Str::lower(self::MODULE->name))->with('message', 'Report has no data. Please check your report parameters and try again.');
         }
 
-        try {
-            $service = new SSRSService();
-            $ssrsReport = $service->getReportByPath($report->Path);
-            if (!array_key_exists('Type', $ssrsReport) || $ssrsReport['Type'] !== "Report") {
-                throw new ErroredException('invalid report.');
-            }
-            $parameters = (array_key_exists('HasParameters', $ssrsReport) && $ssrsReport['HasParameters'] === true) ?
-                $service->getReportParameters($ssrsReport['Id']) : [];
-        } catch (ConnectionException) {
+        // try {
+        $service = new SSRSService();
+        $ssrsReport = $service->getReportByPath($report->Path);
+        if (!array_key_exists('Type', $ssrsReport) || $ssrsReport['Type'] !== "Report") {
+            throw new ErroredException('invalid report.');
+        }
+        $parameters = (array_key_exists('HasParameters', $ssrsReport) && $ssrsReport['HasParameters'] === true) ?
+            $service->getReportParameters($ssrsReport['Id']) : [];
+        /*} catch (ConnectionException) {
             return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
             return redirect()->back()->with('fail', $e->getMessage() ?? 'cannot retrieve report data.');
@@ -102,7 +104,7 @@ trait ReportsTrait
                 return redirect()->back()->with('fail', 'report not found.');
             }
             return redirect()->back()->with('fail', 'cannot retrieve report data.');
-        }
+        }*/
 
         return view('reports.show', compact('report', 'parameters'));
     }
@@ -126,7 +128,7 @@ trait ReportsTrait
             return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
             return redirect()->back()->with('fail', $e->getMessage() ?? 'cannot retrieve report data.');
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             return redirect()->back()->with('fail', 'cannot retrieve report data.');
         }
     }

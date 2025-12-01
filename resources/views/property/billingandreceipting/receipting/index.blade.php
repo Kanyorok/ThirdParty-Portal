@@ -51,26 +51,26 @@
                 <td>{{ $receipt->invoice->InvoiceNumber ?? '-' }}</td>
                 <td>{{ $receipt->invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                 <td>{{ $receipt->BillingMonth ?? '-' }}</td>
-                <td>{{ $receipt->PaymentDate ? \Carbon\Carbon::parse($receipt->PaymentDate)->format('d/m/Y') : '-' }}</td>
+                <td>{{ $receipt->PaymentDate ? \Carbon\Carbon::parse($receipt->PaymentDate)->format('d M Y') : '-' }}</td>
                 <td class="text-end">{{ number_format($receipt->Balance, 2) ?? '-' }}</td>
                 <td class="text-end">{{ number_format($receipt->AmountPaidNow, 2) ?? '-' }}</td>
                 <td>
                   <div class="action-buttons">
-                    <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}" 
-                       target="_blank" 
-                       class="btn btn-sm btn-outline-secondary" 
+                    <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}"
+                       target="_blank"
+                       class="btn btn-sm btn-outline-secondary"
                        title="Print Receipt">
                       <i class="bi bi-printer"></i>
                     </a>
 
-                    <a href="{{ route('rentreceipt.show', $receipt->Id) }}" 
-                       class="btn btn-sm btn-info text-white" 
+                    <a href="{{ route('rentreceipt.show', $receipt->Id) }}"
+                       class="btn btn-sm btn-info text-white"
                        title="View Receipt">
                       <i class="bi bi-eye"></i>
                     </a>
 
-                    <form action="{{ route('rentreceipt.destroy', $receipt->Id) }}" 
-                          method="POST" 
+                    <form action="{{ route('rentreceipt.destroy', $receipt->Id) }}"
+                          method="POST"
                           class="d-inline"
                           onsubmit="return confirm('Are you sure you want to return this payment?');">
                       @csrf

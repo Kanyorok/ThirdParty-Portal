@@ -69,29 +69,28 @@
                                 <td>{{ $item->CurrentQty }}</td>
                                 <td>{{ $item->Min }}</td>
                                 <td>{{ $item->Reorder }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->LastReceived)->format('d/m/Y') }}</td>
-                                <td>
+                                <td>{{ \Carbon\Carbon::parse($item->LastReceived)->format('d M Y') }}</td>                               <td>
                                     <span class="badge {{ $item->Status ? 'bg-success' : 'bg-warning' }}">
                                         {{ $item->Status ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('sku.show', $item->Id) }}" 
-                                           class="btn btn-view btn-sm" 
-                                           data-bs-toggle="tooltip" 
+                                        <a href="{{ route('sku.show', $item->Id) }}"
+                                           class="btn btn-view btn-sm"
+                                           data-bs-toggle="tooltip"
                                            title="View Item">
                                             <i class="bi bi-eye"></i>
                                         </a>
 
-                                        <a href="{{ route('sku.edit', $item->Id) }}" 
-                                           class="btn btn-edit btn-sm" 
-                                           data-bs-toggle="tooltip" 
+                                        <a href="{{ route('sku.edit', $item->Id) }}"
+                                           class="btn btn-edit btn-sm"
+                                           data-bs-toggle="tooltip"
                                            title="Edit Item">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
 
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn btn-delete btn-sm delete-btn"
                                                 data-id="{{ $item->Id }}"
                                                 data-name="{{ $item->SKUCode }}"
@@ -100,9 +99,9 @@
                                         </button>
                                     </div>
 
-                                    <form id="delete-form-{{ $item->Id }}" 
-                                          action="{{ route('sku.destroy', $item->Id) }}" 
-                                          method="POST" 
+                                    <form id="delete-form-{{ $item->Id }}"
+                                          action="{{ route('sku.destroy', $item->Id) }}"
+                                          method="POST"
                                           style="display:none;">
                                         @csrf
                                         @method('DELETE')

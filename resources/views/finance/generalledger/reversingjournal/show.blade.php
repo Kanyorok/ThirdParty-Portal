@@ -234,7 +234,7 @@
                             <h6 class="mb-3 text-primary"><i class="fas fa-receipt me-2"></i>Journal Info</h6>
                             <ul class="info-list">
                             <li><span class="label">Original Journal Ref</span><span>{{ $originalJournalRef }}</span></li>
-                            <li><span class="label">Date</span><span>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') }}</span></li>
+                            <li><span class="label">Date</span><span>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('d M Y') }}</span></li>
                             <li><span class="label">Type</span>
                                 <span>
                                     @if($journalEntry->Type === 'recurring')
@@ -256,15 +256,15 @@
                         <div class="audit-trail-card h-100">
                             <h6 class="mb-3 text-primary"><i class="fas fa-history me-2"></i>Audit Trail</h6>
                             <ul class="audit-list">
-                                <li><span class="label">Created By</span><span>{{ $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d/m/Y H:i') }}</span></li>
+                                <li><span class="label">Created By</span><span>{{ $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d M Y H:i') }}</span></li>
                                 @if($journalEntry->ModifiedBy && $journalEntry->ModifiedBy != $journalEntry->CreatedBy)
-                                    <li><span class="label">Last Modified By</span><span>{{ $journalEntry->modifiedBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d/m/Y H:i') }}</span></li>
+                                    <li><span class="label">Last Modified By</span><span>{{ $journalEntry->modifiedBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d M Y H:i') }}</span></li>
                                 @endif
                                 @if($journalEntry->ApprovalStatus == 'posted' || $journalEntry->ApprovalStatus == 'rejected')
-                                    <li><span class="label">Approval Action</span><span>{{ ucfirst($journalEntry->ApprovalStatus) }} by {{ $journalEntry->modifiedBy->Name ?? $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d/m/Y H:i') }}</span></li>
+                                    <li><span class="label">Approval Action</span><span>{{ ucfirst($journalEntry->ApprovalStatus) }} by {{ $journalEntry->modifiedBy->Name ?? $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d M Y H:i') }}</span></li>
                                 @endif
                                 @if($journalEntry->Type === 'reversing')
-                                    <li><span class="label">Reversal Journal</span><span>This is a reversing journal — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d/m/Y H:i') }}</span></li>
+                                    <li><span class="label">Reversal Journal</span><span>This is a reversing journal — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d M Y H:i') }}</span></li>
                                 @endif
                             </ul>
                         </div>

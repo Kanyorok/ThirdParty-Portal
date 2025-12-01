@@ -79,8 +79,8 @@
                         <td>{{ $policy->insurer->Name ?? '—' }}</td>
                         <td class="text-end">{{ number_format($policy->SumAssured, 2) }}</td>
                         <td class="text-end">{{ number_format($policy->PremiumAmount, 2) }}</td>
-                        <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d M Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</td>
                         <td>
                             <span class="badge 
                                     @if($policy->Status->value === 'approved') bg-success 

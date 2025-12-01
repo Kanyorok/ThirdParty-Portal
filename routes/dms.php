@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\DMS\DocumentValidationController;
 use App\Http\Controllers\DMS\Files\DocumentActionsController;
 use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentCheckOutController;
@@ -12,6 +11,7 @@ use App\Http\Controllers\DMS\Files\DocumentPreviewController;
 use App\Http\Controllers\DMS\Files\DocumentRecentController;
 use App\Http\Controllers\DMS\Files\DocumentTagsController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
+use App\Http\Controllers\DMS\Files\TrashDocumentController;
 use App\Http\Controllers\DMS\LegalHold\DocumentLegalHoldController;
 use App\Http\Controllers\DMS\LegalHold\LegalHoldController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
@@ -22,6 +22,7 @@ use App\Http\Controllers\DMS\SearchController;
 use App\Http\Controllers\DMS\Tags\DocumentTagController;
 use App\Http\Controllers\DMS\Tags\TagController;
 use App\Http\Controllers\DMS\Tags\TaggingRuleController;
+use App\Http\Controllers\DMS\Verification\DocumentValidationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(function () {
@@ -68,6 +69,11 @@ Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(fun
     Route::resource('legal-hold/{d_m_s_legal_hold}/hold-files', DocumentLegalHoldController::class)->parameters(['hold-files' => 'document'])->except('edit');
     Route::post('legal-hold/{dMSLegalHold}/release', [LegalHoldController::class, 'release'])->name('legal-hold.release');
     Route::resource('legal-hold', LegalHoldController::class)->parameters(['legal-hold' => 'dMSLegalHold'])->except('edit');
+
+    Route::resource('document-trashed', TrashDocumentController::class)->parameters(['document-trashed' => 'document'])
+        ->names([
+            'update' => 'document-trashed.restore',
+        ])->only(['index', 'store', 'update', 'destroy']);
 
     //settings
     Route::get('document-signature/{dMSSignature}/documents', \App\Http\Controllers\DMS\Settings\SignatureDocumentsController::class)->name('document-signature.documents');

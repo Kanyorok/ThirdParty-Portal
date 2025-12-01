@@ -73,8 +73,7 @@
                             <td>{{ optional($receipt->transfer)->TransferID ?? 'N/A' }}</td>
                             <td>{{ optional(optional($receipt->transfer)->fromBranch)->Name ?? 'N/A' }}</td>
                             <td>{{$receipt->receivedBy->Name ?? 'N/A'}}</td>
-                            <td>{{ Carbon::parse($receipt->ReceivedDate)->format('d/m/Y') }}</td>
-                            <td>
+                            <td>{{ Carbon::parse($receipt->ReceivedDate)->format('d M Y') }}</td>                           <td>
                                 @php
                                     $statusEnum = $receipt->Status instanceof Transfers
                                         ? $receipt->Status

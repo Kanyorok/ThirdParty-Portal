@@ -9,39 +9,30 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Show login form with branch selection.
-     */
+    public function __construct()
+    {
+        $this->middleware('ajax')->only('store');
+    }
+
     public function create(): View
     {
         return view('auth.login')
             ->with('branches', Branch::query()->orderBy('Name')->get(['BranchID', 'Name']));
     }
 
-    /**
-     * Handle an incoming authentication request.
-     *
-     * @param LoginRequest $request
-     * @return RedirectResponse
-     * @throws ValidationException
-     */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): JsonResponse
     {
         // Authenticate
         $request->authenticate();
 
-        return redirect()->intended('/');
+        return $this->succeeded(message: 'Logged in successfully.', route: route('home'));
+
     }
 
-
-    /**
-     * Logout
-     */
     public function destroy(Request $request): RedirectResponse
     {
         $actor = $request->user();

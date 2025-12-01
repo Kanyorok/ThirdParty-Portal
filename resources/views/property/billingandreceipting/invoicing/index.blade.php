@@ -53,7 +53,7 @@
                                 <td>{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                                 <td>{{ $invoice->lease->LeaseNumber ?? '-' }}</td>
                                 <td>{{ $invoice->BillingMonth ? \Carbon\Carbon::parse($invoice->BillingMonth)->format('m/Y') : '-' }}</td>
-                                <td>{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '-' }}</td>
+                                <td>{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y') : '-' }}</td>
                                 <td class="text-end">{{ number_format($invoice->RentAmount, 2) ?? '-' }}</td>
                                 <td>
                                     @if($invoice->Status instanceof \App\Enums\Property\PropertyInvoiceEnum)

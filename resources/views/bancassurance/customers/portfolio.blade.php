@@ -135,9 +135,7 @@
                                 <td>{{ $policy->PolicyNumber ?? $policy->Id }}</td>
                                 <td>{{ $policy->product->Name ?? 'N/A' }}</td>
                                 <td>{{ $policy->insurer->Name ?? 'N/A' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
-                                <td>
+                                <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d M Y') }}</td>                               <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</td>                               <td>
                                     @php
                                         $statusLabel = $policy->Status->label() ?? 'N/A';
                                         $badgeClass = match(strtolower($statusLabel)) {

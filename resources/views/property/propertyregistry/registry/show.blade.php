@@ -47,7 +47,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Acquisition Date</label>
                         <input type="text" class="form-control"
-                               value="{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d/m/Y') : '-' }}"
+                               value="{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d M Y') : '-' }}"
                                readonly>
                     </div>
 
@@ -103,13 +103,13 @@
                     <strong>Created By:</strong> {{ $property->createdByUser->Name ?? '-' }}
                 </div>
                 <div class="col-md-3">
-                    <strong>Created On:</strong> {{ $property->CreatedOn ? \Carbon\Carbon::parse($property->CreatedOn)->format('d/m/Y') : '-' }}
+                    <strong>Created On:</strong> {{ $property->CreatedOn ? \Carbon\Carbon::parse($property->CreatedOn)->format('d M Y') : '-' }}
                 </div>
                 <div class="col-md-3">
                     <strong>Modified By:</strong> {{ $property->modifiedByUser->Name ?? '-' }}
                 </div>
                 <div class="col-md-3">
-                    <strong>Modified On:</strong> {{ $property->ModifiedOn ? \Carbon\Carbon::parse($property->ModifiedOn)->format('d/m/Y') : '-' }}
+                    <strong>Modified On:</strong> {{ $property->ModifiedOn ? \Carbon\Carbon::parse($property->ModifiedOn)->format('d M Y') : '-' }}
                 </div>
             </div>
         </div>

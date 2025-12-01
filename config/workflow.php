@@ -21,6 +21,7 @@ return [
     ],
 
     'PlanID' => [
+        'Draft'=> \App\Enums\ProcurementPlanStatusEnum::Draft->value,  // 'Dr'
         'Approved' => \App\Enums\ProcurementPlanStatusEnum::Approved->value,  // 'Ap'
         'Rejected' => \App\Enums\ProcurementPlanStatusEnum::Rejected->value,  // 'Re'
         'Pending' => \App\Enums\ProcurementPlanStatusEnum::Pending->value,    // 'P'
