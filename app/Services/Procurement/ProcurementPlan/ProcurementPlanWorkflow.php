@@ -5,246 +5,212 @@ namespace App\Services\Procurement\ProcurementPlan;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
-use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Services\Core\ApprovalWorkflowService;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Collection;
 
 class ProcurementPlanWorkflow extends ApprovalWorkflowService
 {
-    // CodeID for procurement plans in t_CodeDetails
+    // Match CodeID used for Procurement Plan in t_CodeDetails
     public const CODE_ID = 'ProcurementPlanStatus';
 
     /**
-     * Get mapped status value from config
+     * Submit a Procurement Plan for approval
+     * 
+     * @param ConsolidatedProcurementPlan $plan
+     * @param User $actor
+     * @param string $remarks
+     * @return bool
+     * @throws ErroredException
      */
-    public function getMappedStatus(string $statusDescription): string
+    public function submit(ConsolidatedProcurementPlan $plan, User $actor, string $remarks = 'Submitted'): bool
     {
-        $mappings = config('workflow.PlanID', []);
-        
-        if (isset($mappings[$statusDescription])) {
-            return $mappings[$statusDescription];
-        }
-        
-        // Fallback to first character lowercase
-        return strtolower(substr($statusDescription, 0, 1));
-    }
+        // On submit, use Pending status (P) as per workflow requirement
+        $status = self::codeDetail(ProcurementPlanStatusEnum::Pending, self::CODE_ID);
 
-    /**
-     * Submit plan for approval
-     */
-    public function submit(
-        ConsolidatedProcurementPlan $plan,
-        User $actor,
-        ProcurementPlanStatusEnum $status,
-        string $remarks = 'Submitted for approval'
-    ): bool {
-        // Get the mapped status value (e.g., 'P' for Pending)
-        $mappedStatusValue = $this->getMappedStatus('Pending');
-        
-        // Find the CodeDetail entry
-        $codeDetail = CodeDetail::query()
-            ->where('CodeID', self::CODE_ID)
-            ->where('Value', $mappedStatusValue)
-            ->first();
-
-        if (!$codeDetail) {
-            Log::error("CodeDetail not found for Pending status", [
-                'codeId' => self::CODE_ID,
-                'mappedValue' => $mappedStatusValue,
-            ]);
-            throw new ErroredException('Invalid status configuration for Pending');
-        }
-
-        Log::info("Found CodeDetail", [
-            'id' => $codeDetail->ID,
-            'value' => $codeDetail->Value,
-            'description' => $codeDetail->Description,
-        ]);
-
-        Log::info("ProcurementPlanWorkflow: Submitting plan", [
-            'planId' => $plan->PlanID,
-            'table' => $plan->getTable(),
-            'pendingStatus' => $status->value,
-            'mappedStatus' => $mappedStatusValue,
-            'codeDetailId' => $codeDetail->ID,
-        ]);
-
-        // Calculate total amount for workflow routing
-        $totalAmount = $plan->lineItems->sum(function ($item) {
-            $quantity = (float) ($item->MergedQty ?? $item->OriginalQTY ?? 0);
-            $unitCost = ($item->AdjustedCost > 0)
-                ? $item->AdjustedCost
-                : ($item->EstimatedUnitCost ?? 0);
-            return $quantity * $unitCost;
-        });
-
-        // Temporarily set the amount on the model for workflow processing
-        $plan->Amount = $totalAmount;
-
-        // Use parent's submittedAction method
-        $result = $this->submittedAction(
+        return $this->submittedAction(
             $actor,
-            $codeDetail,
+            $status,
             $plan,
-            'PlanID', // morph alias
-            $plan->PlanID,
+            ConsolidatedProcurementPlan::getPrimaryKey(),
+            $plan->getKey(),
             $remarks
         );
-
-        if ($result) {
-            Log::info("Workflow history created", [
-                'table' => $plan->getTable(),
-                'sourceId' => $plan->PlanID,
-                'stageId' => $this->getCurrentStageId($plan->getTable(), $plan->PlanID),
-                'statusId' => $codeDetail->ID,
-            ]);
-            
-            Log::info("Pending approvers created successfully");
-        }
-
-        return $result;
     }
 
     /**
-     * Approve plan
+     * Approve a Procurement Plan
+     * 
+     * @param ConsolidatedProcurementPlan $plan
+     * @param User $actor
+     * @param string $remarks
+     * @param string $statusColumn
+     * @return bool
+     * @throws ErroredException
      */
-    public function approve(
-        ConsolidatedProcurementPlan $plan,
-        User $actor,
-        ProcurementPlanStatusEnum $status,
-        string $remarks = 'Approved'
-    ): bool {
-        // Get the mapped status value (e.g., 'Ap' for Approved)
-        $mappedStatusValue = $this->getMappedStatus('Approved');
-        
-        // Find the CodeDetail entry
-        $codeDetail = CodeDetail::query()
-            ->where('CodeID', self::CODE_ID)
-            ->where('Value', $mappedStatusValue)
-            ->first();
+    public function approve(ConsolidatedProcurementPlan $plan, User $actor, string $remarks = 'Approved', string $statusColumn = 'Status'): bool
+    {
+        $status = self::codeDetail(ProcurementPlanStatusEnum::Approved, self::CODE_ID);
 
-        if (!$codeDetail) {
-            Log::error("CodeDetail not found for Approved status", [
-                'codeId' => self::CODE_ID,
-                'mappedValue' => $mappedStatusValue,
-            ]);
-            throw new ErroredException('Invalid status configuration for Approved');
-        }
-
-        Log::info("Found CodeDetail", [
-            'id' => $codeDetail->ID,
-            'value' => $codeDetail->Value,
-            'description' => $codeDetail->Description,
-        ]);
-
-        Log::info("ProcurementPlanWorkflow: Approving plan", [
-            'planId' => $plan->PlanID,
-            'approvedStatus' => $status->value,
-            'mappedStatus' => $mappedStatusValue,
-            'codeDetailId' => $codeDetail->ID,
-        ]);
-
-        // Use parent's approveAction method
         return $this->approveAction(
             $actor,
-            $codeDetail,
-            'PlanID', // morph alias
-            $plan->PlanID,
+            $status,
+            ConsolidatedProcurementPlan::getPrimaryKey(),
+            $plan->getKey(),
             $remarks,
-            'Status'
+            $statusColumn
         );
     }
 
     /**
-     * Reject plan
+     * Reject a Procurement Plan
+     * 
+     * @param ConsolidatedProcurementPlan $plan
+     * @param User $actor
+     * @param string $remarks
+     * @param string $statusColumn
+     * @return bool
+     * @throws ErroredException
      */
-    public function reject(
-        ConsolidatedProcurementPlan $plan,
-        User $actor,
-        ProcurementPlanStatusEnum $status,
-        string $remarks = 'Rejected'
-    ): bool {
-        // Get the mapped status value (e.g., 'R' for Rejected)
-        $mappedStatusValue = $this->getMappedStatus('Rejected');
-        
-        // Find the CodeDetail entry
-        $codeDetail = CodeDetail::query()
-            ->where('CodeID', self::CODE_ID)
-            ->where('Value', $mappedStatusValue)
-            ->first();
+    public function reject(ConsolidatedProcurementPlan $plan, User $actor, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
+    {
+        // If the intention of 'RETURNED' was to go to Draft, we might need to handle it here.
+        // But typically reject goes to Rejected status.
+        // If the status passed is Draft, we use Draft.
+        // But here we hardcode Rejected status for the 'reject' action.
+        // If we want to support dynamic status, we should accept the enum as argument.
+        // But to match DepartmentNeedsWorkflow signature, we keep it simple.
+        // However, the controller calls reject with specific status.
+        // Let's update the signature to accept status if needed, or just use the passed status if we change the signature.
+        // But wait, the controller calls: $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Rejected, ...);
+        // So the signature in Controller call includes the status.
+        // My previous draft had: public function reject(..., ProcurementPlanStatusEnum $status, ...)
+        // But DepartmentNeedsWorkflow had: public function reject(DepartmentNeed $need, User $actor, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
+        // It didn't take status as arg!
 
-        if (!$codeDetail) {
-            Log::error("CodeDetail not found for Rejected status", [
-                'codeId' => self::CODE_ID,
-                'mappedValue' => $mappedStatusValue,
-            ]);
-            throw new ErroredException('Invalid status configuration for Rejected');
-        }
+        // Let's check DepartmentNeedsWorkflow again.
+        // public function reject(DepartmentNeed $need, User $actor, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
+        // {
+        //     $status = self::codeDetail(DepartmentNeedsEnum::Rejected, self::CODE_ID);
+        //     ...
+        // }
 
-        Log::info("ProcurementPlanWorkflow: Rejecting plan", [
-            'planId' => $plan->PlanID,
-            'rejectedStatus' => $status->value,
-            'mappedStatus' => $mappedStatusValue,
-            'codeDetailId' => $codeDetail->ID,
-        ]);
+        // So DepartmentNeedsWorkflow hardcodes the status to Rejected.
+        // If I want to support 'RETURNED' -> 'Draft', I should probably add a 'returnToDraft' method or make 'reject' more flexible.
+        // But since I updated the controller to call `reject` with a status argument in my previous thought, 
+        // I should check if I actually updated the controller to pass the status.
 
-        // Use parent's rejectAction method
+        // In the controller update I wrote:
+        // $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Rejected, $request->comments);
+        // $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Draft, $request->comments);
+
+        // So I am passing the status enum!
+        // So I must update the signature of `reject` (and `approve`) to accept the status enum.
+        // This deviates slightly from DepartmentNeedsWorkflow but is more flexible.
+        // OR I can stick to DepartmentNeedsWorkflow pattern and create a `return` method.
+
+        // Let's look at `DepartmentNeedsWorkflow` again.
+        // It does NOT accept status enum in `approve` or `reject`.
+
+        // So my controller update was assuming a different signature than `DepartmentNeedsWorkflow`.
+        // I should probably align with `DepartmentNeedsWorkflow` for consistency if `ApprovalWorkflowService` expects that?
+        // `ApprovalWorkflowService` doesn't dictate the child class methods, only the protected methods it offers.
+
+        // I will update `ProcurementPlanWorkflow` to accept the status enum, as that gives me control in the controller.
+
+        $statusDetail = self::codeDetail($remarks instanceof ProcurementPlanStatusEnum ? $remarks : ProcurementPlanStatusEnum::Rejected, self::CODE_ID);
+        // Wait, the arguments are: ($plan, $actor, $remarks, $statusColumn).
+        // If I pass an Enum as 3rd argument, type hinting will fail if it expects string.
+
+        // I should change the signature to:
+        // public function reject(ConsolidatedProcurementPlan $plan, User $actor, ProcurementPlanStatusEnum $targetStatus, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
+
+        // And update the controller to match.
+        // In the controller I already wrote:
+        // $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Rejected, $request->comments);
+
+        // So I need to define `reject` to accept the enum.
+
+        $status = self::codeDetail($targetStatus, self::CODE_ID);
+
         return $this->rejectAction(
             $actor,
-            $codeDetail,
-            'PlanID', // morph alias
-            $plan->PlanID,
+            $status,
+            ConsolidatedProcurementPlan::getPrimaryKey(),
+            $plan->getKey(),
             $remarks,
-            'Status'
+            $statusColumn
         );
     }
 
-    /**
-     * Cancel/withdraw plan from workflow
-     */
-    public function cancel(
-        ConsolidatedProcurementPlan $plan,
-        User $actor,
-        string $reason = 'Cancelled by submitter'
-    ): bool {
-        return $this->cancelWorkflow(
+    // I need to redefine the methods with the correct signature to match my controller usage.
+
+    public function approve(ConsolidatedProcurementPlan $plan, User $actor, ProcurementPlanStatusEnum $targetStatus, string $remarks = 'Approved', string $statusColumn = 'Status'): bool
+    {
+        $status = self::codeDetail($targetStatus, self::CODE_ID);
+
+        return $this->approveAction(
             $actor,
-            'PlanID', // morph alias
-            $plan->PlanID,
-            $reason
+            $status,
+            ConsolidatedProcurementPlan::getPrimaryKey(),
+            $plan->getKey(),
+            $remarks,
+            $statusColumn
+        );
+    }
+
+    public function reject(ConsolidatedProcurementPlan $plan, User $actor, ProcurementPlanStatusEnum $targetStatus, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
+    {
+        $status = self::codeDetail($targetStatus, self::CODE_ID);
+
+        return $this->rejectAction(
+            $actor,
+            $status,
+            ConsolidatedProcurementPlan::getPrimaryKey(),
+            $plan->getKey(),
+            $remarks,
+            $statusColumn
         );
     }
 
     /**
-     * Get workflow history for plan
+     * Get workflow history for Procurement Plans
+     * 
+     * @param int $limit
+     * @return Collection
+     * @throws ErroredException
      */
-    public function historyForModel(ConsolidatedProcurementPlan $plan): Collection
+    public function history(int $limit = 1000): Collection
     {
-        return $this->historyData('PlanID', 1000);
+        return $this->historyData(ConsolidatedProcurementPlan::getPrimaryKey(), $limit);
     }
 
     /**
-     * Check if user can approve this plan
+     * Get workflow history for a specific Procurement Plan
+     * 
+     * @param ConsolidatedProcurementPlan $plan
+     * @return Collection
      */
-    public function canApproveModel(ConsolidatedProcurementPlan $plan, User $user): bool
+    public function historyForPlan(ConsolidatedProcurementPlan $plan): Collection
     {
-        return $this->canApprove(
-            'PlanID', // morph alias
-            $plan->PlanID,
+        return $plan->workflowHistory()
+            ->with(['creator', 'status', 'stage'])
+            ->get();
+    }
+
+    /**
+     * Check if a user can approve a specific Procurement Plan
+     * 
+     * @param ConsolidatedProcurementPlan $plan
+     * @param User $user
+     * @return bool
+     */
+    public function canApprovePlan(ConsolidatedProcurementPlan $plan, User $user): bool
+    {
+        return parent::canApprove(
+            ConsolidatedProcurementPlan::getPrimaryKey(),
+            $plan->getKey(),
             $user
-        );
-    }
-
-    /**
-     * Get workflow status for plan
-     */
-    public function getStatus(ConsolidatedProcurementPlan $plan): array
-    {
-        return $this->getWorkflowStatus(
-            'PlanID', // morph alias
-            $plan->PlanID
         );
     }
 }
