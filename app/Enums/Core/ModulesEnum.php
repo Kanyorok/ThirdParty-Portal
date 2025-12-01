@@ -26,7 +26,7 @@ enum ModulesEnum: int
     public function description(): string
     {
         return match ($this) {
-            self::ThirdParty => 'Third Party',
+            self::ThirdParty => 'Third Parties',
             self::CRM => 'Customer Management',
             self::Procurement => 'Procurement',
             self::Inventory => 'Inventory',

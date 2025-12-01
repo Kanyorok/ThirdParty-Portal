@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\ThirdParty\ThirdPartiesBankDetails;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartiesBankDetails;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Enums\ThirdPartyStatusEnum;
 
 class ThirdPartiesBankDetailsSeeder extends Seeder
 {

@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyUser;
+use Illuminate\Database\Seeder;
 
 // Import the ThirdParties model
-use App\Models\ThirdParty\ThirdPartyUser;
 
 // Import the ThirdPartyUser model to get a creator ID
-use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\BusinessTypeEnum;
-use App\Enums\ThirdPartyStatusEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
 
 class ThirdPartiesSeeder extends Seeder
 {

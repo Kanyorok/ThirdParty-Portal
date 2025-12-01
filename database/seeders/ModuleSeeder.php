@@ -39,12 +39,9 @@ class ModuleSeeder extends Seeder
 
     protected function _thirdParty(bool $fresh): Collection
     {
-        $values = collect([
-            ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 101000, 'Name' => 'Parties', 'Icon' => null, 'Description' => '', 'Route' => 'thirdparty.parties.index', 'ParentID' => 100000],
-
+        return collect([
+            ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => null, 'Route' => 'thirdparty.parties.index'],
         ]);
-        return $values;
     }
 
     protected function _crm(): Collection
