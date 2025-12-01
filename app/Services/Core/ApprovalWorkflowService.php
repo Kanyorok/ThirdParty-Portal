@@ -158,6 +158,36 @@ abstract class ApprovalWorkflowService
     }
 
     /**
+ * Get the status column name for a given morph alias/table
+ */
+private function getStatusColumnForTable(string $morphAlias, string $table): string
+{
+    // Check configuration first
+    $columnMappings = config('workflow.status_columns', []);
+    
+    if (isset($columnMappings[$morphAlias])) {
+        Log::info("Found status column from config", [
+            'morphAlias' => $morphAlias,
+            'column' => $columnMappings[$morphAlias],
+        ]);
+        return $columnMappings[$morphAlias];
+    }
+    
+    // Check if table has ApprovalStatus column
+    $hasApprovalStatus = DB::getSchemaBuilder()
+        ->hasColumn($table, 'ApprovalStatus');
+    
+    if ($hasApprovalStatus) {
+        Log::info("Table has ApprovalStatus column", ['table' => $table]);
+        return 'ApprovalStatus';
+    }
+    
+    // Default to Status
+    Log::info("Using default Status column", ['table' => $table]);
+    return 'Status';
+}
+
+    /**
      * Create a workflow history entry
      */
     protected function createHistoryEntry(
@@ -469,10 +499,19 @@ private function advanceToNextStage(string $table, string|int $sourceId, ?int $c
                     'sourceId' => $sourceId,
                 ]);
                 
+                // Determine the correct status column
+                $statusColumn = $this->getStatusColumnForTable($morphAlias, $table);
+                
+                Log::info("Determined status column for final update", [
+                    'table' => $table,
+                    'morphAlias' => $morphAlias,
+                    'statusColumn' => $statusColumn,
+                ]);
+                
                 // Update the source table status
                 $updateSql = "
                     UPDATE {$table}
-                    SET Status = ?,
+                    SET {$statusColumn} = ?,
                         ModifiedBy = ?,
                         ModifiedOn = GETDATE()
                     WHERE {$primaryKeyColumn} = ?

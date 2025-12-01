@@ -102,14 +102,17 @@ class PropertyNewLeaseService
             );
         }
 
-            // Submit to workflow (this creates WorkflowHistory and WorkflowPending)
-            $this->workflow->submit(
-                $newlease,
-                $user,
-                ApprovalEnum::Pending,  // Required: Pending status enum
-                'Submitted for approval'
-            );
-
+            
+            //create workflow instance and submit for approval
+        $leaseWorkflow = new ApprovalWorkflow('LeaseApprovalStatus',  'ApprovalStatus' );
+        $leaseWorkflow->submit(
+            $newlease,
+            $user,
+            ApprovalEnum::Pending,
+            'Lease Submitted for Approval'
+        );
+            
+           
         PropertyLeaseScheduleService::create(
             leaseId: $newlease->Id,
             paymentFrequencyId: $PaymentFrequency->ID,
