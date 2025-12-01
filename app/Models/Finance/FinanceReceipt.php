@@ -2,6 +2,7 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use App\Traits\Model\DocumentsTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -87,7 +88,7 @@ class FinanceReceipt extends Model
 
     public function paymentMethod()
     {
-        return $this->belongsTo(\App\Models\Core\CodeDetail::class, 'PaymentMethod', 'Value')
+        return $this->belongsTo(CodeDetail::class, 'PaymentMethod', 'Value')
             ->where('CodeID', 'PaymentMethod');
     }
 

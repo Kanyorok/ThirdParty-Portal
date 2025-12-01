@@ -109,22 +109,26 @@
                                     <tr>
                                         <td class="text-muted">Invoice Amount (After Tax)</td>
                                         <td class="text-end">
-                                            <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
+                                            <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->TotalAmount ?? 0), 2) }}</strong>
                                         </td>
                                     </tr>
                                     @if(!empty($invoice->order))
                                         @php
                                             $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
-                                            $poTax = (float)($invoice->order->OrdTotTax ?? 0);
                                             $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
-                                            $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                            // Calculate tax based on order percentage
+                                            $taxPct = (float)($invoice->order->TaxPercentage ?? 0);
+                                            $poTax = $poExcl * ($taxPct / 100);
+                                            $poIncl = $poExcl + $poTax;
                                         @endphp
+                                        @if($poDisc > 0)
+                                            <tr>
+                                                <td class="text-muted">PO Discount</td>
+                                                <td class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</td>
+                                            </tr>
+                                        @endif
                                         <tr>
-                                            <td class="text-muted">PO Discount</td>
-                                            <td class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">PO Tax</td>
+                                            <td class="text-muted">PO Tax ({{ number_format($taxPct, 1) }}%)</td>
                                             <td class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</td>
                                         </tr>
                                         <tr>
@@ -143,14 +147,14 @@
                                             </td>
                                         </tr>
                                     @endif
-                                    @if(property_exists($invoice, 'TaxAmount') || isset($invoice->TaxAmount))
+                                    {{-- @if(property_exists($invoice, 'TaxAmount') || isset($invoice->TaxAmount))
                                         <tr>
                                             <td class="text-muted">Tax Amount</td>
                                             <td class="text-end">
                                                 <span>{{ $currencySymbol }} {{ number_format((float)($invoice->TaxAmount ?? 0), 2) }}</span>
                                             </td>
                                         </tr>
-                                    @endif
+                                    @endif --}}
                                     @if(property_exists($invoice, 'WithholdingTax') || isset($invoice->WithholdingTax))
                                         <tr>
                                             <td class="text-muted">Withholding</td>
@@ -163,12 +167,12 @@
                                         $netPayable = (float)($invoice->InvoiceAmount ?? 0)
                                                       - (float)($invoice->WithholdingTax ?? 0);
                                     @endphp
-                                    <tr class="table-light">
+                                    {{-- <tr class="table-light">
                                         <td class="fw-semibold">Net Payable</td>
                                         <td class="text-end fw-semibold">
                                             {{ $currencySymbol }} {{ number_format($netPayable, 2) }}
                                         </td>
-                                    </tr>
+                                    </tr> --}}
                                     </tbody>
                                 </table>
                             </div>
@@ -297,17 +301,20 @@
                                 @if(!empty($invoice->order))
                                     @php
                                         $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
-                                        $poTax = (float)($invoice->order->OrdTotTax ?? 0);
                                         $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
-                                        $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                        $taxPct = (float)($invoice->order->TaxPercentage ?? 0);
+                                        $poTax = $poExcl * ($taxPct / 100);
+                                        $poIncl = $poExcl + $poTax;
                                     @endphp
                                     <tfoot class="table-light">
+                                        @if($poDisc > 0)
+                                            <tr>
+                                                <th colspan="3" class="text-end">Discount</th>
+                                                <th class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</th>
+                                            </tr>
+                                        @endif
                                         <tr>
-                                            <th colspan="3" class="text-end">Discount</th>
-                                            <th class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</th>
-                                        </tr>
-                                        <tr>
-                                            <th colspan="3" class="text-end">Tax</th>
+                                            <th colspan="3" class="text-end">Tax ({{ number_format($taxPct, 1) }}%)</th>
                                             <th class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</th>
                                         </tr>
                                         <tr>
@@ -374,7 +381,7 @@
             </div>
             <div style="flex:1; border:1px solid #e9ecef; padding:8px;">
                 <div style="font-weight:600; margin-bottom:4px;">Summary</div>
-                <div>Invoice Amount: {{ $currencySymbol }} {{ $amount }}</div>
+                <div>Invoice Amount: {{ $currencySymbol }} {{ number_format((float)($invoice->TotalAmount ?? 0), 2) }}</div>
                 <div>PO Subtotal: {{ $currencySymbol }} {{ number_format($poSub, 2) }}</div>
             </div>
         </div>
@@ -485,6 +492,16 @@
     </div>
 
     @if($invoice->ApprovalStatus==='draft')
+        @php
+            // Calculate inclusive amount for display in modals
+            $displayAmount = (float)($invoice->InvoiceAmount ?? 0);
+            if (!empty($invoice->order)) {
+                $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                $taxPct = (float)($invoice->order->TaxPercentage ?? 0);
+                $poTax = $poExcl * ($taxPct / 100);
+                $displayAmount = $poExcl + $poTax;
+            }
+        @endphp
         <!-- Approve Modal -->
         <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-md modal-dialog-centered">
@@ -500,7 +517,7 @@
                         <div class="modal-body">
                             <div class="alert alert-info small">
                                 You’re about to approve this invoice.
-                                <div class="mt-1"><strong>Amount:</strong> {{ ($invoice->currency->Symbol ?? '') . number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</div>
+                                <div class="mt-1"><strong>Amount:</strong> {{ ($invoice->currency->Symbol ?? '') . number_format($displayAmount, 2) }}</div>
                                 @if(!empty($invoice->order?->OrderNo))
                                     <div><strong>PO:</strong> {{ $invoice->order->OrderNo }}</div>
                                 @endif
@@ -539,7 +556,7 @@
                         <div class="modal-body">
                             <div class="alert alert-warning small">
                                 You’re about to reject this invoice.
-                                <div class="mt-1"><strong>Amount:</strong> {{ ($invoice->currency->Symbol ?? '') . number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</div>
+                                <div class="mt-1"><strong>Amount:</strong> {{ ($invoice->currency->Symbol ?? '') . number_format($displayAmount, 2) }}</div>
                                 @if(!empty($invoice->order?->OrderNo))
                                     <div><strong>PO:</strong> {{ $invoice->order->OrderNo }}</div>
                                 @endif

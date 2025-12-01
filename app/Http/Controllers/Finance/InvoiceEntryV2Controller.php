@@ -112,7 +112,9 @@ class InvoiceEntryV2Controller extends Controller
                     'Id' => $orderData->Id,
                     'OrderNo' => $orderData->OrderNo,
                     'Description' => $orderData->Description ?? '',
-                    'OrdTotExcl' => $orderData->OrdTotExcl ?? 0
+                    'OrdTotExcl' => $orderData->OrdTotExcl ?? 0,
+                    'TaxPercentage' => $orderData->TaxPercentage ?? 0,
+                    'TaxID' => $orderData->TaxID ?? null
                 ];
             }
         }
@@ -160,7 +162,7 @@ class InvoiceEntryV2Controller extends Controller
             'invDate'        => $invoice->InvoiceDate
                 ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y')
                 : '—',
-            'amount'         => number_format((float)($invoice->InvoiceAmount ?? 0), 2),
+            'amount'         => number_format((float)($invoice->TotalAmount ?? 0), 2),
             'exRate'         => $invoice->ExchangeRate ?? 1.0,
             'vendorName'     => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
             'poNo'           => $invoice->order->OrderNo ?? '—',
@@ -350,9 +352,8 @@ class InvoiceEntryV2Controller extends Controller
                     'o.OrderNo',
                     'o.Description',
                     DB::raw('COALESCE(o.OrdTotExcl, 0) as OrdTotExcl'),
-                    DB::raw('COALESCE(o.OrdTotTax, 0) as OrdTotTax'),
                     DB::raw('COALESCE(o.OrdDiscAmnt, 0) as OrdDiscAmnt'),
-                    DB::raw('COALESCE(o.OrdTotIncl, 0) as OrdTotIncl'),
+                    DB::raw('COALESCE(o.TaxPercentage, 0) as TaxPercentage'),
                     'o.OrderDate'
                 )
                 ->orderByRaw(Schema::hasColumn('t_Orders', 'OrderDate') ? 'OrderDate desc' : 'Id desc')
@@ -367,16 +368,21 @@ class InvoiceEntryV2Controller extends Controller
                     // For now, manually set to currency ID 56 (or default)
                     $currency = Currency::find(56) ?: $defaultCurrency;
 
+                    $ordTotExcl = (float)$order->OrdTotExcl;
+                    $taxPercentage = (float)$order->TaxPercentage;
+                    $ordTotTax = $ordTotExcl * ($taxPercentage / 100);
+                    $ordTotIncl = $ordTotExcl + $ordTotTax;
+
                     return [
                         'Id' => $order->Id,
                         'OrderNo' => $order->OrderNo,
                         'Description' => $order->Description ?? '',
-                        'OrdTotExcl' => number_format((float)$order->OrdTotExcl, 2),
+                        'OrdTotExcl' => number_format($ordTotExcl, 2),
                         'OrdDiscAmnt' => number_format((float)$order->OrdDiscAmnt, 2),
-                        'OrdTotTax' => number_format((float)$order->OrdTotTax, 2),
-                        'OrdTotIncl' => number_format((float)$order->OrdTotIncl, 2),
+                        'OrdTotTax' => number_format($ordTotTax, 2),
+                        'OrdTotIncl' => number_format($ordTotIncl, 2),
                         // Backward compatibility: treat TotalAmount as inclusive amount
-                        'TotalAmount' => number_format((float)$order->OrdTotIncl, 2),
+                        'TotalAmount' => number_format($ordTotIncl, 2),
                         'OrderDate' => $order->OrderDate ? \Carbon\Carbon::parse($order->OrderDate)->format('d M Y') : '',
                         'Currency' => [
                             'Id' => $currency->Id ?? $defaultCurrency->Id,
@@ -453,6 +459,8 @@ class InvoiceEntryV2Controller extends Controller
         try {
             $rows = DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
+                ->leftJoin('t_FinanceTaxRuleConfiguration as trc', 'ol.TaxID', '=', 'trc.Id')
+                ->leftJoin('t_FinanceTaxType as tt', 'trc.TaxTypeId', '=', 'tt.Id')
                 ->where('ol.iOrderID', $orderId)
                 ->select(
                     DB::raw('COALESCE(i.ItemName, ol.cDescription, \'Unknown Item\') as ItemName'),
@@ -461,8 +469,9 @@ class InvoiceEntryV2Controller extends Controller
                     DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as fUnitPriceExcl'),
                     DB::raw('COALESCE(ol.fUnitPriceIncl, 0) as fUnitPriceIncl'),
                     DB::raw('COALESCE(ol.fLineDiscount, 0) as fLineDiscount'),
-                    DB::raw('COALESCE(ol.fTaxRate, 0) as fTaxRate'),
-                    DB::raw('COALESCE(ol.LineTotal, 0) as LineTotal')
+                    DB::raw('COALESCE(ol.LineTotal, 0) as LineTotal'),
+                    'ol.TaxPercentage',
+                    'tt.TaxTypeName'
                 )
                 ->get();
 
@@ -471,7 +480,9 @@ class InvoiceEntryV2Controller extends Controller
                 $unitExcl = (float)($r->fUnitPriceExcl ?? 0);
                 $unitIncl = (float)($r->fUnitPriceIncl ?? 0);
                 $discount = (float)($r->fLineDiscount ?? 0); // assume line amount
-                $taxRate = (float)($r->fTaxRate ?? 0);
+                // Use TaxPercentage only as per new requirement
+                $taxRate = (float)($r->TaxPercentage ?? 0);
+                $taxName = $r->TaxTypeName ?? 'Tax';
 
                 $lineExcl = $quantity * $unitExcl;
                 if ($unitIncl > 0) {
@@ -491,6 +502,7 @@ class InvoiceEntryV2Controller extends Controller
                     'UnitPriceIncl' => $unitIncl,
                     'Discount' => $discount,
                     'TaxRate' => $taxRate,
+                    'TaxName' => $taxName,
                     'TaxAmount' => $lineTax,
                     'LineExclusive' => $lineExcl,
                     'LineInclusive' => $lineIncl,
@@ -584,22 +596,36 @@ class InvoiceEntryV2Controller extends Controller
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'DueDate' => $validated['DueDate'],
                 // Store inclusive amount for posting/approval
-                'InvoiceAmount' => (function() use ($validated, $taxAmount) {
-                    // If form provided Amount, prefer it; otherwise if PO is present, fetch OrdTotIncl
-                    $formAmount = (float)$validated['Amount'];
+                'InvoiceAmount' => (function() use ($validated) {
+                    // Calculate based on PO if available
                     if (!empty($validated['POReference'])) {
-                        $ordTotIncl = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->value('OrdTotIncl');
-                        if ($ordTotIncl !== null) {
-                            return (float)$ordTotIncl;
+                        $order = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->first();
+                        if ($order) {
+                            $excl = (float)($order->OrdTotExcl ?? 0);
+                            $taxPct = (float)($order->TaxPercentage ?? 0);
+                            $taxAmt = $excl * ($taxPct / 100);
+                            return $excl + $taxAmt;
                         }
                     }
-                    return $formAmount + $taxAmount + $taxAmount;
+                    // Fallback to form amount (assumed inclusive if no PO logic)
+                    return (float)$validated['Amount'];
                 })(),
                 'TaxAmount' => $taxAmount,
                 'TaxPercentage' => $taxPercentage ?? 0.0,
                 'Description' => $validated['Description'],
                 'TaxID' => 1,//$validated['TaxID'] ?? 1,
-                'TotalAmount' => $validated['Amount'] + $taxAmount,
+                'TotalAmount' => (function() use ($validated) {
+                    if (!empty($validated['POReference'])) {
+                        $order = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->first();
+                        if ($order) {
+                            $excl = (float)($order->OrdTotExcl ?? 0);
+                            $taxPct = (float)($order->TaxPercentage ?? 0);
+                            $taxAmt = $excl * ($taxPct / 100);
+                            return $excl + $taxAmt;
+                        }
+                    }
+                    return (float)$validated['Amount'];
+                })(),
                 'CurrencyID' => $validated['CurrencyID'] ?? 56, // Set to default currency
                 'ExchangeRate' => $validated['ExchangeRate'] ?? 1.0, // Set exchange rate to 1
                 'Status' => 'Draft',
