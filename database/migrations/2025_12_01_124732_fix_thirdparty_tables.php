@@ -13,6 +13,9 @@ return new class extends Migration {
         DB::table('t_ScheduleLease')->delete();
         DB::table('t_LeaseCreation')->delete();
         DB::table('t_TenantMaintenance')->delete();
+
+        DB::table('t_BancassuranceCustomers')->delete();
+
         DB::table('t_ThirdParties')->delete();
         DB::table('t_ThirdPartyType_ThirdParties')->delete();
         DB::table('t_Suppliers')->delete();
@@ -36,28 +39,43 @@ return new class extends Migration {
             $table->softDeletes('DeletedOn');
         });
 
+
         Schema::table('t_ThirdParties', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('CountryId');//dropped because of previous created
+
             $table->string('TradingName')->nullable()->change();
             $table->string('ThirdPartyName')->nullable(false)->change();
-            $table->jsonb('Extra')->nullable();
-            $table->dropColumn(['BusinessType', 'IDNumber', 'Country', 'ApprovalStatus', 'Status', 'ThirdPartyType', 'PassportNo', 'IsPrequalified', 'CategoryId']);
-            $table->dropConstrainedForeignId('CreatedBy');
-            $table->dropConstrainedForeignId('DeletedBy');
+            $table->dropUnique(['RegistrationNumber']);
 
-            $table->unique(['CountryId', 'ThirdPartyName']);
-            $table->unique(['CountryId', 'TaxPIN']);
+            $table->jsonb('Extra')->nullable();
+            $table->foreignId('ImageId')->nullable()->constrained('t_Images', 'ImageID');
+            $table->foreignId('LocationId')->constrained('t_Localities', 'ID');
+            $table->dropColumn(['BusinessType', 'IDNumber', 'Country', 'ApprovalStatus', 'Status', 'ThirdPartyType', 'PassportNo', 'IsPrequalified', 'CategoryId', 'CreatedOn', 'DeletedOn', 'ModifiedOn']);
+            $table->dropConstrainedForeignId('CreatedBy');
+            $table->dropConstrainedForeignId('ModifiedBy');
+            $table->dropConstrainedForeignId('DeletedBy');
         });
 
         Schema::table('t_ThirdParties', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->constrained('t_Countries', 'Id');
+            $table->string('RegistrationNumber')->nullable(false)->change();
+
+            $table->unique(['CountryId', 'TaxPIN']);
+
+            $table->unique(['CountryId', 'RegistrationNumber']);
             $table->foreignId('Status')->comment('CodeID: ThirdPartyStatus')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('BusinessType')->comment('CodeID: BusinessType')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
         });
 
         Schema::table('t_Suppliers', static function (Blueprint $table) {
             $table->dropIndex('uq_t_suppliers_round_tp_cat');
-            $table->dropColumn('ThirdPartyId');
+            $table->dropConstrainedForeignId('ThirdPartyId');
 
             $table->foreignId('SupplierMasterId')->constrained('t_SupplierMaster', 'Id');
             $table->unique(['SupplierMasterId', 'RoundID', 'CategoryId']);
@@ -74,12 +92,14 @@ return new class extends Migration {
 
         Schema::table('t_ThirdPartyUsers', static function (Blueprint $table) {
             $table->jsonb('Extra')->nullable();
+            $table->dropColumn('Gender');
             $table->dropConstrainedForeignId('CreatedBy');
             $table->dropConstrainedForeignId('ModifiedBy');
             $table->dropConstrainedForeignId('DeletedBy');
         });
         Schema::table('t_ThirdPartyUsers', static function (Blueprint $table) {
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->foreignId('Gender')->comment('CodeID: Gender')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
         });
@@ -115,11 +135,21 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        DB::table('t_SupplierPrequalificationApplications')->truncate();
-        DB::table('t_ThirdPartiesBankDetails')->truncate();
-        DB::table('t_ThirdPartyType_ThirdParties')->truncate();
-        DB::table('t_ThirdParties')->truncate();
-        DB::table('t_Suppliers')->truncate();
+        DB::table('t_ScheduleLease')->delete();
+        DB::table('t_LeaseCreation')->delete();
+        DB::table('t_TenantMaintenance')->delete();
+
+        DB::table('t_BancassuranceCustomers')->delete();
+
+        DB::table('t_SupplierMaster')->delete();
+
+        DB::table('t_ThirdParties')->delete();
+        DB::table('t_ThirdPartyType_ThirdParties')->delete();
+        DB::table('t_Suppliers')->delete();
+        DB::table('t_ThirdPartiesBankDetails')->delete();
+        DB::table('t_SupplierPrequalificationApplications')->delete();
+        DB::table('t_ThirdPartyUsers')->delete();
+        DB::table('t_ThirdPartyTypes')->delete();
 
         Schema::table('t_ThirdPartyType_ThirdParties', static function (Blueprint $table) {
             $table->dropIndex(['PartyType', 'PartyID']);
@@ -128,7 +158,7 @@ return new class extends Migration {
 
         Schema::table('t_SupplierPrequalificationApplications', static function (Blueprint $table) {
             $table->dropForeign('t_supplierprequalificationapplications_supplierid_foreign');
-            $table->foreignId('SupplierId')->constrained('t_ThirdParties', 'Id');
+            $table->foreign('SupplierId')->references('Id')->on('t_ThirdParties')->onDelete('cascade');
         });
 
         Schema::table('t_ThirdPartiesBankDetails', static function (Blueprint $table) {
@@ -141,12 +171,14 @@ return new class extends Migration {
 
         Schema::table('t_ThirdPartyUsers', static function (Blueprint $table) {
             $table->dropColumn('Extra');
+            $table->dropConstrainedForeignId('Gender');
             $table->dropConstrainedForeignId('CreatedBy');
             $table->dropConstrainedForeignId('ModifiedBy');
             $table->dropConstrainedForeignId('DeletedBy');
         });
 
         Schema::table('t_ThirdPartyUsers', static function (Blueprint $table) {
+            $table->string('Gender')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_ThirdPartyUsers', 'Id');
             $table->foreignId('ModifiedBy')->constrained('t_ThirdPartyUsers', 'Id');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_ThirdPartyUsers', 'Id');
@@ -160,15 +192,21 @@ return new class extends Migration {
         });
 
         Schema::table('t_ThirdParties', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('ImageId');
+            $table->dropConstrainedForeignId('LocationId');
             $table->dropConstrainedForeignId('Status');
             $table->dropConstrainedForeignId('BusinessType');
             $table->dropColumn(['Extra']);
             $table->dropConstrainedForeignId('CreatedBy');
             $table->dropConstrainedForeignId('DeletedBy');
+
+            $table->dropUnique(['CountryId', 'RegistrationNumber']);
+            $table->dropUnique(['CountryId', 'TaxPIN']);
         });
 
         Schema::table('t_ThirdParties', static function (Blueprint $table) {
             $table->string('ThirdPartyName')->nullable()->change();
+            $table->string('RegistrationNumber')->nullable()->unique()->change();
             $table->string('TradingName')->nullable()->change();
             $table->string('Country')->nullable();
             $table->string('BusinessType')->nullable();
@@ -177,6 +215,7 @@ return new class extends Migration {
             $table->string('Status')->nullable();
             $table->string('ThirdPartyType')->nullable();
             $table->string('PassportNo')->nullable();
+            $table->string('CategoryId')->nullable();
             $table->boolean('IsPrequalified')->default(false);
 
             $table->foreignId('CreatedBy')->constrained('t_ThirdPartyUsers', 'Id');
@@ -184,8 +223,10 @@ return new class extends Migration {
         });
 
         Schema::table('t_Suppliers', static function (Blueprint $table) {
+            $table->dropUnique(['SupplierMasterId', 'RoundID', 'CategoryId']);
             $table->dropConstrainedForeignId('SupplierMasterId');
             $table->foreignId('ThirdPartyId')->constrained('t_ThirdParties', 'Id');
+            $table->index(['ThirdPartyId', 'RoundID', 'CategoryId'], 'uq_t_suppliers_round_tp_cat');
         });
 
         Schema::dropIfExists('t_SupplierMaster');

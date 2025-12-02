@@ -5,6 +5,7 @@ namespace App\Models\ThirdParty;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SupplierMaster extends Model
@@ -18,9 +19,6 @@ class SupplierMaster extends Model
     protected $table = 't_SupplierMaster';
     protected $primaryKey = 'Id';
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'ThirdPartyId', 'SupplierID', 'ApprovalStatus', 'IsPrequalified', 'Extra',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
@@ -57,6 +55,11 @@ class SupplierMaster extends Model
         return $this->hasMany(\App\Models\Procurement\Prequalification\PrequalificationApplication::class, 'SupplierID', 'Id')
             ->whereNull('DeletedOn')
             ->with('category');
+    }
+
+    public function party(): BelongsTo
+    {
+        return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
     }
 
 }

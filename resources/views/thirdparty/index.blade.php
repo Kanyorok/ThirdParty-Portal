@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title','Third Parties')
+
 @section('styles')
     <style>
         .mouse_pointer {
@@ -9,26 +10,30 @@
     </style>
 @endsection
 
-
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
                 <form class="card-body row  px-2" id="searchForm">
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-sm-6 col-md-3 mb-2">
                         <input type="search" class="form-control w-100 search-form-item"
                                name="id_number" autocomplete="off" maxlength="50" id="id_number"
                                placeholder="id number or Reg No">
                     </div>
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-sm-6 col-md-3 mb-2">
                         <input type="search" class="form-control w-100 search-form-item"
                                name="name" autocomplete="off" maxlength="50" id="name" placeholder="name">
                     </div>
-                    <div class="col-12 col-md-3">
-                        <input type="search" class="form-control w-100 search-form-item"
-                               name="email" autocomplete="off" maxlength="50" id="email" placeholder="Email">
+                    <div class="col-12 col-sm-6 col-md-2 mb-2">
+                        <select id="filterBusinessTypes" class="form-select">
+                            <option value="all">All Business Types</option>
+                            @foreach ($businessTypes as $type)
+                                <option
+                                    value="{{ $type->Value }}">{{ \Illuminate\Support\Str::of($type->Description)->plural() }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="col-12 col-md-2">
+                    <div class="col-12 col-sm-6 col-md-2 mb-2">
                         <select id="filterType" class="form-select">
                             <option value="all">All Types</option>
                             @foreach ($types as $type)
@@ -37,10 +42,15 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12 col-md-1">
+                    <div class="col-12 col-md-1 col-sm-6 mb-2">
                         <button class="btn btn-primary w-100" id="searchFormBtn" type="submit"><i
                                 class="fas fa-magnifying-glass"></i>
                         </button>
+                    </div>
+                    <div class="col-12 col-md-1 col-sm-6 mb-2">
+                        <a class="btn btn-primary w-100" href="{{ route('thirdparty.parties.create') }}">
+                            <i class="fas fa-plus-circle"></i>
+                        </a>
                     </div>
                 </form>
             </div>
@@ -48,8 +58,8 @@
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <table id="thirdPartiesTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                    <div class="table-responsive">
+                        <table id="thirdPartiesTable" class="table table-striped dataTable no-footer dtr-inline w-100 ">
                         <thead>
                         <tr>
                             <th>Name</th>
@@ -62,6 +72,7 @@
                         </thead>
                         <tbody></tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -75,12 +86,12 @@
 
             $('form#searchForm').submit(function (e) {
                 e.preventDefault();
-                fetchTable();
+                fetchThirdPartyTable();
                 searchBtn.addClass('disabled');
                 searchQuery.addClass('disabled');
             });
 
-            fetchTable();
+            fetchThirdPartyTable();
         });
 
         function getUrl() {
@@ -88,7 +99,7 @@
         }
 
 
-        function fetchTable() {
+        function fetchThirdPartyTable() {
             searchBtn.html('<i class="fas fa-spinner fa-spin"></i>')
             if (thirdPartiesTable === null) {
                 thirdPartiesTable = $('#thirdPartiesTable').DataTable({
@@ -97,7 +108,7 @@
                     responsive: true,
                     dom: '<"row"<"col-12"r><"col-12 w-100 my-3"t><"col-6"i><"col-6"p>>',
                     ajax: {
-                        url: getDocumentUrl() + "?_type=" + $('#filterType').val() + "&id_number=" + $('#id_number').val() + "&phone=" + $('#phone').val() + "&name=" + $('#name').val(),
+                        url: getDocumentUrl() + "?_type=" + $('#filterType').val() + "&id_number=" + $('#id_number').val() + "&_business=" + $('#filterBusinessTypes').val() + "&name=" + $('#name').val(),
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -106,10 +117,21 @@
                         searchBtn.removeClass('disabled').html('<i class="fas fa-magnifying-glass"></i>');
                         searchQuery.removeClass('disabled');
                     },
+                    columnDefs: [
+                        // {"className": "text-center", "targets": [3]},
+                        {
+                            "render": function (data, type, row) {
+                                return row.country.Flag + ' ' + data;
+                                //return data + " " + row.OtherNames;
+                            },
+                            "targets": 4 // the place of col2
+                        },
+                        // {"visible": false, "targets": [0, 1]}
+                    ],
                     columns: [
                         {data: 'ThirdPartyName', name: 'ThirdPartyName'},
                         {data: 'RegistrationNumber', name: 'RegistrationNumber'},
-                        {data: 'businessType.Description', name: 'businessType.Description'},
+                        {data: 'business_type.Description', name: 'business_type.Description'},
                         {data: 'types', name: 'types', orderable: false, searchable: false},
                         {data: 'country.Name', name: 'country.Name'},
                         {data: 'status.Description', name: 'status.Description'},
@@ -127,7 +149,7 @@
             } else {
                 thirdPartiesTable.clear().destroy();
                 thirdPartiesTable = null;
-                fetchTable();
+                fetchThirdPartyTable();
                 /* thirdPartiesTable.ajax.reload();*/
             }
         }

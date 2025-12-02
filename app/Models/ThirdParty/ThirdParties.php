@@ -4,17 +4,21 @@ namespace App\Models\ThirdParty;
 
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
+use App\Models\Core\Locality;
 use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\ImageTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ThirdParties extends Model
 {
-    use SoftDeletes, DocumentsTrait;
+    use SoftDeletes, DocumentsTrait, ImageTrait;
 
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
@@ -28,8 +32,8 @@ class ThirdParties extends Model
     }
 
     protected $fillable = [
-        'ThirdPartyName', 'TradingName', 'BusinessType', 'RegistrationNumber', 'TaxPIN', 'VATNumber', 'CountryId', 'PhysicalAddress', 'Email', 'Phone',
-        'Website', 'Status', 'Extra', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'ThirdPartyName', 'TradingName', 'BusinessType', 'RegistrationNumber', 'TaxPIN', 'VATNumber', 'CountryId', 'LocationId', 'PhysicalAddress', 'Email', 'Phone',
+        'ImageId', 'Website', 'Status', 'Extra', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
@@ -57,6 +61,11 @@ class ThirdParties extends Model
         return $this->hasMany(ThirdPartiesBankDetails::class, 'ThirdPartyId', 'Id');
     }
 
+    protected function getImageName(): string
+    {
+        return $this->ThirdPartyName;
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(ThirdPartyUser::class, 'ThirdPartyId', 'Id');
@@ -72,6 +81,11 @@ class ThirdParties extends Model
         return $this->belongsTo(Country::class, 'CountryId', 'Id');
     }
 
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Locality::class, 'LocationId', 'ID');
+    }
+
     /**
      * All Types that the thirdparty has.
      *
@@ -80,7 +94,7 @@ class ThirdParties extends Model
     public function types(): BelongsToMany
     {
         return $this->belongsToMany(ThirdPartyType::class, 't_ThirdPartyType_ThirdParties', 'ThirdPartyId', 'TypeId')
-            ->using(ThirdPartyTypeTypes::class)
+            // ->using(ThirdPartyTypeTypes::class)
             ->withTimestamps('CreatedOn', 'ModifiedOn')
             ->withPivot('Id', 'PartyType', 'PartyID', 'CreatedBy', 'ModifiedBy', 'DeletedBy')->wherePivotNull('DeletedOn');
     }
@@ -95,17 +109,41 @@ class ThirdParties extends Model
         return $this->types()->wherePivot('PartyType', BancassuranceCustomer::getPrimaryKey());
     }
 
+    public function scopeTenants(): BelongsToMany
+    {
+        return $this->types()->wherePivot('PartyType', PropertyNewTenant::getPrimaryKey());
+    }
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(\App\Models\Finance\CustomerWallet::class, 'CustomerID', 'Id');
+    }
+
+    public function creditProfiles(): HasMany
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceCreditManagement::class, 'CustomerID', 'Id');
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceInvoice::class, 'CustomerID', 'Id');
+    }
+
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
+    }
+
 
     /**
      * =======================================| TODO: Upto there the rest to be removed or moved to appropriate classes  |======================================
      */
 
 
-
-
     public function categories(): BelongsToMany
     {
         // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
+        //todo move to supplier master model
         return $this->belongsToMany(
             SupplierCategory::class,
             't_ThirdParty_SupplierCategory',
@@ -114,32 +152,12 @@ class ThirdParties extends Model
         );
     }
 
-    // Finance relationships
-    public function wallet()
-    {
-        return $this->hasOne(\App\Models\Finance\CustomerWallet::class, 'CustomerID', 'Id');
-    }
-
-    public function creditProfiles()
-    {
-        return $this->hasMany(\App\Models\Finance\FinanceCreditManagement::class, 'CustomerID', 'Id');
-    }
-
-    public function invoices()
-    {
-        return $this->hasMany(\App\Models\Finance\FinanceInvoice::class, 'CustomerID', 'Id');
-    }
-
-    public function receipts()
-    {
-        return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
-    }
 
     /**
      * Legacy category mappings (t_ThirdPartiesCategories -> CodeDetail) used by prequalification screen.
      */
     public function legacyCategories()
-    {
+    {  //todo move to supplier master model
         return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
             ->whereNull('DeletedOn')
             ->with('category');

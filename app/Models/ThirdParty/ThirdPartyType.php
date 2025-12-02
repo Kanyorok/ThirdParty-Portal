@@ -30,6 +30,11 @@ class ThirdPartyType extends Model
         'Type' => 'integer',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'Code';
+    }
+
     public function parties(): HasManyThrough
     {
         return $this->hasManyThrough(ThirdParties::class, ThirdPartyTypeTypes::class, 'TypeId', 'Id', 'TypeId', 'ThirdPartyId');

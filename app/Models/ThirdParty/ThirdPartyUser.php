@@ -2,9 +2,9 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Enums\Employee\GenderEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
@@ -45,7 +45,6 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
-        'Gender' => GenderEnum::class,
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
@@ -70,6 +69,12 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
     public function getRouteKeyName(): string
     {
         return 'UserID';
+    }
+
+
+    public function gender(): BelongsTo
+    {
+        return $this->belongsTo(CodeDetail::class, 'Gender', 'Id');
     }
 
     public function thirdParty(): BelongsTo
