@@ -175,6 +175,11 @@ class FinanceInvoice extends Model
         return $this->belongsTo(Currency::class,'CurrencyID','Id');
     }
 
+    public function taxRule()
+    {
+        return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'TaxID', 'Id');
+    }
+
     public function creditAppliedByUser()
     {
         return $this->belongsTo(User::class, 'CreditAppliedBy', 'Id');

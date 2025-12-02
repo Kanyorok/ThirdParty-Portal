@@ -103,6 +103,14 @@
                 </tbody>
             </table>
 
+            {{-- Amount in Words --}}
+            @if(isset($amountInWords) && $amountInWords)
+                <div class="mt-3 p-3 bg-light rounded border">
+                    <strong class="text-muted">Amount in Words:</strong>
+                    <span class="text-uppercase fw-bold text-dark">{{ $amountInWords }} {{ $voucher->invoice->currency->Code ?? '' }} ONLY</span>
+                </div>
+            @endif
+
             {{-- Remarks Section --}}
             @if(!empty($voucher->Description))
                 <div class="mt-4">
@@ -176,4 +184,138 @@
             </form>
         </div>
     </div>
+
+    <!-- Print-optimized layout (hidden on screen, visible on print) -->
+    <div id="printRootVoucher" class="print-only" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+            <div>
+                <div style="font-size:20px; font-weight:700;">Payment Voucher</div>
+                <div style="color:#666;">Voucher #: {{ $voucher->VoucherNo }}</div>
+                <div style="color:#666;">Date: {{ optional($voucher->CreatedOn)->format('d M Y') }}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:24px; font-weight:700;">{{ $voucher->invoice->currency->Symbol ?? '' }} {{ number_format($voucher->TotalAmount ?? 0, 2) }}</div>
+                <div style="color:#666;">Invoice Ref: {{ $voucher->invoice->InvoiceNumber ?? 'N/A' }}</div>
+                <div style="color:#666;">Status: {{ ucfirst($voucher->ApprovalStatus) }}</div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:20px; margin-bottom:20px;">
+            <div style="flex:1; border:1px solid #e9ecef; padding:15px;">
+                <div style="font-weight:600; margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:5px;">Payee Details</div>
+                <div style="font-weight:bold;">{{ ($voucher->invoice->thirdParty->TradingName ?? $voucher->invoice->thirdParty->ThirdPartyName) ?? 'N/A' }}</div>
+                <div>{{ $voucher->invoice->thirdParty->Email ?? '' }}</div>
+                <div>{{ $voucher->invoice->thirdParty->Phone ?? '' }}</div>
+                <div>{{ $voucher->invoice->thirdParty->PhysicalAddress ?? '' }}</div>
+            </div>
+            <div style="flex:1; border:1px solid #e9ecef; padding:15px;">
+                <div style="font-weight:600; margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:5px;">Payment Details</div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Method:</span>
+                    <strong>{{ $voucher->PaymentMethod ?? 'N/A' }}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Type:</span>
+                    <strong>{{ ucfirst($voucher->PaymentType ?? 'N/A') }}</strong>
+                </div>
+                @if($voucher->PaymentType === 'Scheduled')
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Scheduled:</span>
+                        <strong>{{ $voucher->StartDate ? \Carbon\Carbon::parse($voucher->StartDate)->format('d M Y') : 'N/A' }}</strong>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <div style="border:1px solid #e9ecef; margin-bottom:20px;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:10px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Description</th>
+                        <th style="text-align:right; padding:10px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid #f1f3f5;">Invoice Total</td>
+                        <td style="padding:10px; text-align:right; border-bottom:1px solid #f1f3f5;">{{ number_format($voucher->invoice->InvoiceAmount ?? 0, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid #f1f3f5;">Cumulative Amount Paid</td>
+                        <td style="padding:10px; text-align:right; border-bottom:1px solid #f1f3f5;">{{ number_format($amtPaidOnInvoice ?? 0, 2) }}</td>
+                    </tr>
+                    <tr style="font-weight:bold; background-color:#f8f9fa;">
+                        <td style="padding:10px; border-top:1px solid #e9ecef;">Balance</td>
+                        <td style="padding:10px; text-align:right; border-top:1px solid #e9ecef;">{{ number_format(($voucher->invoice->InvoiceAmount ?? 0) - ($amtPaidOnInvoice ?? 0), 2) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        @if(isset($amountInWords) && $amountInWords)
+            <div style="border:1px solid #e9ecef; padding:15px; margin-bottom:20px; background-color:#f8f9fa;">
+                <div style="font-weight:600; margin-bottom:5px;">Amount in Words</div>
+                <div style="text-transform:uppercase; font-weight:bold;">{{ $amountInWords }} {{ $voucher->invoice->currency->Code ?? '' }} ONLY</div>
+            </div>
+        @endif
+
+        @if(!empty($voucher->Description))
+            <div style="border:1px solid #e9ecef; padding:15px; margin-bottom:20px;">
+                <div style="font-weight:600; margin-bottom:5px;">Remarks</div>
+                <div>{{ $voucher->Description }}</div>
+            </div>
+        @endif
+
+        <div style="margin-top:40px; display:flex; justify-content:space-between;">
+            <div style="text-align:center; width:200px;">
+                <div style="border-bottom:1px solid #000; height:30px;"></div>
+                <div style="margin-top:5px;">Prepared By</div>
+            </div>
+            <div style="text-align:center; width:200px;">
+                <div style="border-bottom:1px solid #000; height:30px;"></div>
+                <div style="margin-top:5px;">Approved By</div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script>
+        // Print styles
+        const printCSS = `
+        @page { size: A4 portrait; margin: 12mm; }
+        @media print {
+            html, body { font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .navbar, .btn, .modal, .lifecycle, .attachments-section, .breadcrumb { display: none !important; }
+            .card, .shadow, .shadow-sm, .shadow-lg { box-shadow: none !important; border: 1px solid #e9ecef !important; }
+            .rounded-top-4 { background: #ffffff !important; }
+            .p-4, .p-md-5 { padding: 12px !important; }
+            .mt-4, .mt-3 { margin-top: 10px !important; }
+            h1, h5 { margin: 0 0 6px 0 !important; }
+            .table-responsive { overflow: visible !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { padding: 6px 8px !important; }
+            thead th { background: #f8f9fa !important; }
+            .card, .table-responsive, table { page-break-inside: avoid; }
+            a[href]:after { content: "" !important; }
+        }
+        `;
+        const style = document.createElement('style');
+        style.innerHTML = printCSS;
+        document.head.appendChild(style);
+
+        // Toggle print-only vs screen
+        const printRoot = document.getElementById('printRootVoucher');
+        const screenRootCards = document.querySelectorAll('.card');
+
+        window.addEventListener('beforeprint', () => {
+            printRoot && (printRoot.style.display = 'block');
+            screenRootCards.forEach(c => c.classList.add('d-print-none'));
+        });
+
+        window.addEventListener('afterprint', () => {
+            printRoot && (printRoot.style.display = 'none');
+            screenRootCards.forEach(c => c.classList.remove('d-print-none'));
+        });
+    </script>
+@endpush

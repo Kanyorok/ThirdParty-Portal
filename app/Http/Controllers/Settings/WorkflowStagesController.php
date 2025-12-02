@@ -21,13 +21,15 @@ class WorkflowStagesController extends Controller
     {
         try {
             $validated = $request->validated();
-            
+
             // Create the stage
             $result = $this->stageService->createStage($validated);
-            
+
             // Get the stage with relationships
             $stage = $result['stage'];
-            
+
+            $permission = $result['permission'] ?? null;
+
             // Prepare response data with all necessary relationships
             $stageData = [
                 'Id' => $stage->Id,
@@ -42,17 +44,16 @@ class WorkflowStagesController extends Controller
                     'TypeID' => $stage->type_name->TypeID,
                     'Name' => $stage->type_name->Name,
                 ] : null,
-                'role_name' => $stage->role_name ?? null,
+                'role_name' => $permission ? $permission->roles->pluck('name')->implode(', ') : '-',
             ];
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Workflow stage created successfully' 
-    . (($stage->StageName === $stage->workflow->FinalStage) ? ' (final stage)' : ''),
+                'message' => 'Workflow stage created successfully'
+                    . (($stage->StageName === $stage->workflow->FinalStage) ? ' (final stage)' : ''),
                 'stage' => $stageData,
                 'workflow_has_final_stage' => (bool) $stage->workflow->IsFinalStage,
             ]);
-
         } catch (\App\Exceptions\ErroredException $e) {
             Log::error('Failed to create workflow stage', [
                 'error' => $e->getMessage(),
@@ -63,7 +64,6 @@ class WorkflowStagesController extends Controller
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 422);
-
         } catch (\Throwable $e) {
             Log::error('Unexpected error in workflow stage creation', [
                 'error' => $e->getMessage(),
@@ -83,12 +83,11 @@ class WorkflowStagesController extends Controller
             // Call service and get the result array with all the metadata
             $result = $this->stageService->deleteStage((int) $id);
 
-          return response()->json([
-    'status' => 'success',
-    'message' => 'Workflow stage deleted successfully.',
-    'final_stage' => $result['final_stage']
-              ]);
-
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Workflow stage deleted successfully.',
+                'final_stage' => $result['final_stage']
+            ]);
         } catch (\Throwable $e) {
             Log::error('Failed to delete workflow stage', [
                 'stage_id' => $id,
@@ -114,13 +113,11 @@ class WorkflowStagesController extends Controller
                 'message' => 'Workflow stage updated successfully.',
                 'stage' => $stage,
             ]);
-
         } catch (\App\Exceptions\ErroredException $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 422);
-
         } catch (\Throwable $e) {
             Log::error('Failed to update workflow stage', [
                 'stage_id' => $id,

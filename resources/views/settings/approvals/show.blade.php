@@ -3,19 +3,22 @@
 
 @section('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
 <style>
-.select2-container--bootstrap4 .select2-selection--single {
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    height: calc(2.375rem + 2px);
-    padding: 0.375rem 0.75rem;
-}
-.select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
-    line-height: 1.5;
-}
-.final-stage-row {
-    background-color: #d4edda !important;
-}
+    .select2-container--bootstrap4 .select2-selection--single {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        height: calc(2.375rem + 2px);
+        padding: 0.375rem 0.75rem;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5;
+    }
+
+    .final-stage-row {
+        background-color: #d4edda !important;
+    }
 </style>
 @endsection
 
@@ -30,18 +33,16 @@
         <dt class="col-sm-3">Description</dt>
         <dd class="col-sm-9">{{ $approval->Description }}</dd>
 
-        <dt class="col-sm-3">Document Type</dt>
-        <dd class="col-sm-9">{{ class_basename($approval->Source) }}</dd>
+
 
         <dt class="col-sm-3">Has Final Stage</dt>
         <dd class="col-sm-9">
-    <span class="badge {{ !empty($approval->FinalStage) ? 'bg-success' : 'bg-secondary' }}">
-        {{ !empty($approval->FinalStage) ? 'Yes' : 'No' }}
-    </span>
-</dd>
+            <span class="badge {{ !empty($approval->FinalStage) ? 'bg-success' : 'bg-secondary' }}">
+                {{ !empty($approval->FinalStage) ? 'Yes' : 'No' }}
+            </span>
+        </dd>
 
-        <dt class="col-sm-3">Created By</dt>
-        <dd class="col-sm-9">{{ optional($approval->createdByUser)->Name ?? 'N/A' }}</dd>
+
 
         <dt class="col-sm-3">Created On</dt>
         <dd class="col-sm-9">{{ \Carbon\Carbon::parse($approval->CreatedOn)->format('d-m-Y H:i') }}</dd>
@@ -50,7 +51,7 @@
     <hr>
 
     {{-- Add Stage Form --}}
-     <div class="card shadow p-4 rounded-4 mt-4" id="stageFormCard">
+    <div class="card shadow p-4 rounded-4 mt-4" id="stageFormCard">
         <h4 class="mb-4">➕ Add Approval Stage</h4>
 
         @if(!empty($approval->FinalStage))
@@ -88,12 +89,14 @@
             <div class="row mb-3" id="limitGroup" style="display: none;">
                 <div class="col-md-4">
                     <label class="form-label">Approval Limit (AMOUNT only)</label>
-                    {{-- <select name="WorkFlowLimitId" id="WorkflowLimitID" class="form-control select2">
-                        <option value="">Select WorkFlow Limit</option>
-                        @foreach($workflowLimits as $limit)
-                        <option value="{{ $limit->Id }}">{{ $limit->Source }}</option>
-                        @endforeach
-                    </select> --}}
+                    {{--
+                        <select name="WorkFlowLimitId" id="WorkflowLimitID" class="form-control select2">
+                            <option value="">Select WorkFlow Limit</option>
+                            @foreach($workflowLimits as $limit)
+                                <option value="{{ $limit->Id }}">{{ $limit->Source }}</option>
+                    @endforeach
+                    </select>
+                    --}}
                 </div>
             </div>
 
@@ -135,6 +138,23 @@
         @endif
     </div>
 
+    {{-- Approvers Modal --}}
+    <div class="modal fade" id="approversModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Approvers for Stage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="approversList" class="list-group">
+                        <li class="list-group-item text-center">Loading...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Added Stages Table --}}
     <div class="mt-5">
         <h5 class="mb-3">🧾 Added Stages</h5>
@@ -153,9 +173,9 @@
             <tbody id="stagesTable">
                 @forelse ($stages as $index => $stage)
                 @php
-                    // Check if this is the last stage (final stage)
-                    $isLastStage = $index === count($stages) - 1;
-                    $isFinalStage = $approval->IsFinalStage && $isLastStage;
+                // Check if this is the last stage (final stage)
+                $isLastStage = $index === count($stages) - 1;
+                $isFinalStage = $approval->IsFinalStage && $isLastStage;
                 @endphp
                 <tr id="stage-{{ $stage->Id }}" class="{{ $isFinalStage ? 'final-stage-row' : '' }}">
                     <td>{{ $index + 1 }}</td>
@@ -165,20 +185,23 @@
                         <span class="badge bg-success ms-2">FINAL</span>
                         @endif
                     </td>
-                    <td>{{ $stage->type->TypeID ?? '-' }}</td>
-                    <td>{{ $stage->role_name ?? '-' }}</td>
-                    <td>{{ $stage->MaxAmount ?? '-' }}</td>
+                    <td>{{ $stage->type_name->Name ?? $stage->type_name->TypeID ?? '-' }}</td>
+                    <td>{{ $stage->permission->roles->pluck('name')->implode(', ') ?? '-' }}</td>
+                    <td>{{ $stage->EscalationLimit ?? '-' }}</td>
                     <td>
                         <span class="badge {{ $isFinalStage ? 'bg-success' : 'bg-secondary' }}">
                             {{ $isFinalStage ? 'Yes' : 'No' }}
                         </span>
                     </td>
                     <td>
-                        <form class="deleteStageForm" data-id="{{ $stage->Id }}" data-is-final="{{ $isFinalStage ? '1' : '0' }}">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
-                        </form>
+                        <div class="d-flex">
+                            <button type="button" class="btn btn-sm btn-info view-approvers me-1" data-id="{{ $stage->Id }}" title="View Approvers">👀</button>
+                            <form class="deleteStageForm" data-id="{{ $stage->Id }}" data-is-final="{{ $isFinalStage ? '1' : '0' }}">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty
@@ -192,302 +215,321 @@
 </div>
 @endsection
 
-@section('scripts')
-@section('scripts')
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-$(document).ready(function() {
-    let workflowHasFinalStage = {{ $approval->IsFinalStage ? 'true' : 'false' }};
-    const STORAGE_KEY = 'workflow-stage-form-{{ $approval->Id }}';
+    $(document).ready(function() {
+        // safer boolean export
+        let workflowHasFinalStage = @json(!empty($approval->FinalStage));
+        const STORAGE_KEY = 'workflow-stage-form-{{ $approval->Id }}';
 
-    // Enhanced save form state with better error handling
-    function saveFormState() {
-        try {
-            const formData = {
-                StageName: $('input[name="StageName"]').val(),
-                EscalationLimit: $('input[name="EscalationLimit"]').val(),
-                WorkFlowTypeId: $('#TypeID').val(),
-                WorkFlowLimitId: $('#WorkflowLimitID').val(),
-                Count: $('input[name="Count"]').val(),
-                PermissionId: $('#PermissionId').val(),
-                IsFinalStage: $('#IsFinalStage').is(':checked'),
-                // Save Select2 display values too
-                PermissionText: $('#PermissionId').select2('data')?.[0]?.text || '',
-                WorkFlowLimitText: $('#WorkflowLimitID').select2('data')?.[0]?.text || '',
-                lastUpdated: Date.now()
-            };
-            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-            console.log('Form state saved:', formData);
-        } catch (error) {
-            console.error('Error saving form state:', error);
+        // Enhanced save form state with better error handling
+        function saveFormState() {
+            try {
+                var permData = $('#PermissionId').select2('data');
+                var permissionText = (permData && permData.length > 0 && permData[0].text) ? permData[0].text : '';
+
+                var limitData = $('#WorkflowLimitID').select2('data');
+                var workFlowLimitText = (limitData && limitData.length > 0 && limitData[0].text) ? limitData[0].text : '';
+
+                const formData = {
+                    StageName: $('input[name="StageName"]').val(),
+                    EscalationLimit: $('input[name="EscalationLimit"]').val(),
+                    WorkFlowTypeId: $('#TypeID').val(),
+                    WorkFlowLimitId: $('#WorkflowLimitID').val(),
+                    Count: $('input[name="Count"]').val(),
+                    PermissionId: $('#PermissionId').val(),
+                    IsFinalStage: $('#IsFinalStage').is(':checked'),
+                    PermissionText: permissionText,
+                    WorkFlowLimitText: workFlowLimitText,
+                    lastUpdated: Date.now()
+                };
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+                console.log('Form state saved:', formData);
+            } catch (error) {
+                console.error('Error saving form state:', error);
+            }
         }
-    }
 
-    // Enhanced load form state with better timing
-    function loadFormState() {
-        try {
-            const saved = sessionStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                const formData = JSON.parse(saved);
-                console.log('Loading saved form state:', formData);
-                
-                // Basic fields
-                $('input[name="StageName"]').val(formData.StageName || '');
-                $('input[name="EscalationLimit"]').val(formData.EscalationLimit || '');
-                
-                // WorkFlowTypeId with proper event triggering
-                if (formData.WorkFlowTypeId) {
-                    $('#TypeID').val(formData.WorkFlowTypeId).trigger('change');
+        function loadFormState() {
+            try {
+                const saved = sessionStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const formData = JSON.parse(saved);
+                    console.log('Loading saved form state:', formData);
+
+                    $('input[name="StageName"]').val(formData.StageName || '');
+                    $('input[name="EscalationLimit"]').val(formData.EscalationLimit || '');
+
+                    if (formData.WorkFlowTypeId) {
+                        $('#TypeID').val(formData.WorkFlowTypeId).trigger('change');
+                    }
+
+                    setTimeout(function() {
+                        if (formData.WorkFlowLimitId) {
+                            $('#WorkflowLimitID').val(formData.WorkFlowLimitId).trigger('change');
+                        }
+                        if (formData.Count) {
+                            $('input[name="Count"]').val(formData.Count);
+                        }
+                        if (formData.PermissionId) {
+                            $('#PermissionId').val(formData.PermissionId).trigger('change');
+                        }
+
+                        $('#IsFinalStage').prop('checked', !!formData.IsFinalStage);
+
+                        console.log('Form state loaded successfully');
+                    }, 300);
                 }
-                
-                // Wait for any animations/rendering to complete
-                setTimeout(() => {
-                    // Dependent fields after type change
-                    if (formData.WorkFlowLimitId) {
-                        $('#WorkflowLimitID').val(formData.WorkFlowLimitId).trigger('change');
-                    }
-                    if (formData.Count) {
-                        $('input[name="Count"]').val(formData.Count);
-                    }
-                    if (formData.PermissionId) {
-                        $('#PermissionId').val(formData.PermissionId).trigger('change');
-                    }
-                    
-                    $('#IsFinalStage').prop('checked', formData.IsFinalStage || false);
-                    
-                    console.log('Form state loaded successfully');
-                }, 300);
+            } catch (error) {
+                console.error('Error loading form state:', error);
             }
-        } catch (error) {
-            console.error('Error loading form state:', error);
         }
-    }
 
-    // Clear saved form state
-    function clearFormState() {
-        try {
-            sessionStorage.removeItem(STORAGE_KEY);
-            console.log('Form state cleared');
-        } catch (error) {
-            console.error('Error clearing form state:', error);
+        function clearFormState() {
+            try {
+                sessionStorage.removeItem(STORAGE_KEY);
+                console.log('Form state cleared');
+            } catch (error) {
+                console.error('Error clearing form state:', error);
+            }
         }
-    }
 
-    // Initialize Select2 first
-    $('.select2').select2({ 
-        theme: 'bootstrap4', 
-        placeholder: '🔍 Type to search...', 
-        allowClear: true 
-    });
-
-    // Load form state after a brief delay to ensure DOM is ready
-    setTimeout(loadFormState, 100);
-
-    // Save form state on any input change with debouncing
-    let saveTimeout;
-    function debouncedSave() {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(saveFormState, 500);
-    }
-
-    $('#stageForm').on('input change keyup', '.form-control, .form-select, .form-check-input', debouncedSave);
-    $('#stageForm').on('select2:select select2:unselect', debouncedSave);
-
-    // Toggle AMT/CNT fields
-    function toggleFields() {
-        const selected = $('#TypeID').find(':selected').data('code');
-        $('#limitGroup').toggle(selected === 'AMT');
-        $('#countGroup').toggle(selected === 'CNT');
-        
-        // Save state after toggle
-        debouncedSave();
-    }
-    
-    $('#TypeID').on('change', toggleFields);
-    
-    // Initial toggle
-    setTimeout(toggleFields, 200);
-
-    // Renumber table rows
-    function renumberStages() {
-        $('#stagesTable tr:not(#noStages)').each(function(i){
-            $(this).find('td:first').text(i+1);
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            placeholder: '🔍 Type to search...',
+            allowClear: true
         });
-    }
 
-    // Update form visibility based on final stage status
-    function updateFormVisibility(hasFinalStage) {
-        workflowHasFinalStage = hasFinalStage;
-        if (hasFinalStage) {
-            $('#stageForm').hide();
-            if ($('#stageFormCard .alert-warning').length === 0) {
-                $('#stageFormCard').prepend(`
-                    <div class="alert alert-warning">
-                        <strong>⚠️ Notice:</strong> This workflow already has a final stage. You cannot add more stages until you remove the final stage designation.
-                    </div>
-                `);
+        setTimeout(loadFormState, 100);
+
+        let saveTimeout;
+
+        function debouncedSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveFormState, 500);
+        }
+
+        $('#stageForm').on('input change keyup', '.form-control, .form-select, .form-check-input', debouncedSave);
+        $('#stageForm').on('select2:select select2:unselect', debouncedSave);
+
+        function toggleFields() {
+            const selected = $('#TypeID').find(':selected').data('code');
+            $('#limitGroup').toggle(selected === 'AMT');
+            $('#countGroup').toggle(selected === 'CNT');
+            debouncedSave();
+        }
+
+        $('#TypeID').on('change', toggleFields);
+        setTimeout(toggleFields, 200);
+
+        function renumberStages() {
+            $('#stagesTable tr:not(#noStages)').each(function(i) {
+                $(this).find('td:first').text(i + 1);
+            });
+        }
+
+        function updateFormVisibility(hasFinalStage) {
+            workflowHasFinalStage = hasFinalStage;
+            if (hasFinalStage) {
+                $('#stageForm').hide();
+                if ($('#stageFormCard .alert-warning').length === 0) {
+                    $('#stageFormCard').prepend(
+                        '<div class="alert alert-warning">' +
+                        '<strong>⚠️ Notice:</strong> This workflow already has a final stage. You cannot add more stages until you remove the final stage designation.' +
+                        '</div>'
+                    );
+                }
+            } else {
+                $('#stageForm').show();
+                $('#stageFormCard .alert-warning').remove();
             }
-        } else {
-            $('#stageForm').show();
-            $('#stageFormCard .alert-warning').remove();
-        }
-    }
-
-    // AJAX form submit
-    $('#stageForm').on('submit', function(e){
-        e.preventDefault();
-        
-        if (workflowHasFinalStage) {
-            alert('This workflow already has a final stage. Cannot add more stages.');
-            return;
         }
 
-        const isFinalStage = $('#IsFinalStage').is(':checked');
-        
-        if (isFinalStage) {
-            if (!confirm('Are you sure you want to mark this as the FINAL stage? You will not be able to add more stages after this.')) {
+        $('#stageForm').on('submit', function(e) {
+            e.preventDefault();
+
+            if (workflowHasFinalStage) {
+                alert('This workflow already has a final stage. Cannot add more stages.');
                 return;
             }
-        }
 
-        // Show loading state
-        const submitBtn = $(this).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+            const isFinalStage = $('#IsFinalStage').is(':checked');
 
-        $.ajax({
-            url: "{{ route('settings.workflow_stages.store') }}",
-            method: "POST",
-            data: $(this).serialize(),
-            success: function(res){
-                submitBtn.prop('disabled', false).html(originalText);
-                
-                if(res.status === 'success'){
-                    const stage = res.stage;
-                    $('#noStages').remove();
+            if (isFinalStage) {
+                if (!confirm('Are you sure you want to mark this as the FINAL stage? You will not be able to add more stages after this.')) {
+                    return;
+                }
+            }
 
-                    const rowClass = stage.IsFinalStage ? 'final-stage-row' : '';
-                    const finalBadge = stage.IsFinalStage ? '<span class="badge bg-success ms-2">FINAL</span>' : '';
-                    const finalBadgeCell = stage.IsFinalStage ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>';
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
 
-                    $('#stagesTable').append(`
-                        <tr id="stage-${stage.Id}" class="${rowClass}">
-                            <td></td>
-                            <td>
-                                ${stage.StageName}
-                                ${finalBadge}
-                            </td>
-                            <td>${stage.type?.TypeID ?? '-'}</td>
-                            <td>${stage.role_name ?? '-'}</td>
-                            <td>${stage.MaxAmount ?? '-'}</td>
-                            <td>${finalBadgeCell}</td>
-                            <td>
-                                <form class="deleteStageForm" data-id="${stage.Id}" data-is-final="${stage.IsFinalStage ? '1' : '0'}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
-                                </form>
-                            </td>
-                        </tr>
-                    `);
+            $.ajax({
+                url: "{{ route('settings.workflow_stages.store') }}",
+                method: "POST",
+                data: $(this).serialize(),
+                success: function(res) {
+                    submitBtn.prop('disabled', false).html(originalText);
 
-                    renumberStages();
-                    $('#stageForm')[0].reset();
-                    $('#PermissionId').val(null).trigger('change');
-                    $('#WorkflowLimitID').val(null).trigger('change');
-                    
-                    // Clear the saved form state
-                    clearFormState();
-                    
-                    // If this was a final stage, hide the form
-                    if (stage.IsFinalStage) {
-                        updateFormVisibility(true);
+                    if (res.status === 'success') {
+                        const stage = res.stage;
+
+                        $('#noStages').remove();
+
+                        const rowClass = stage.IsFinalStage ? 'final-stage-row' : '';
+                        const finalBadge = stage.IsFinalStage ? '<span class="badge bg-success ms-2">FINAL</span>' : '';
+                        const finalBadgeCell = stage.IsFinalStage ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>';
+
+                        const typeText = (stage.type && stage.type.Name) ? stage.type.Name : ((stage.type && stage.type.TypeID) ? stage.type.TypeID : '-');
+                        const roleNameText = stage.role_name ? stage.role_name : '-';
+                        const maxAmountText = stage.EscalationLimit ? stage.EscalationLimit : '-';
+
+                        $('#stagesTable').append(
+                            '<tr id="stage-' + stage.Id + '" class="' + rowClass + '">' +
+                            '<td></td>' +
+                            '<td>' +
+                            stage.StageName +
+                            ' ' +
+                            finalBadge +
+                            '</td>' +
+                            '<td>' + typeText + '</td>' +
+                            '<td>' + roleNameText + '</td>' +
+                            '<td>' + maxAmountText + '</td>' +
+                            '<td>' + finalBadgeCell + '</td>' +
+                            '<td>' +
+                            '<div class="d-flex">' +
+                            '<button type="button" class="btn btn-sm btn-info view-approvers me-1" data-id="' + stage.Id + '" title="View Approvers">👀</button>' +
+                            '<form class="deleteStageForm" data-id="' + stage.Id + '" data-is-final="' + (stage.IsFinalStage ? '1' : '0') + '">' +
+                            '@csrf' +
+                            '@method("DELETE")' +
+                            '<button type="submit" class="btn btn-sm btn-danger">🗑️</button>' +
+                            '</form>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>'
+                        );
+
+                        renumberStages();
+                        $('#stageForm')[0].reset();
+                        $('#PermissionId').val(null).trigger('change');
+                        $('#WorkflowLimitID').val(null).trigger('change');
+
+                        clearFormState();
+
+                        if (stage.IsFinalStage) {
+                            updateFormVisibility(true);
+                        }
+
+                        alert(res.message);
+                    } else {
+                        alert(res.message || 'Failed to create stage');
                     }
-                    
-                    alert(res.message);
-                } else {
-                    alert(res.message || 'Failed to create stage');
+                },
+                error: function(xhr) {
+                    submitBtn.prop('disabled', false).html(originalText);
+                    var errorMsg = 'Error creating stage';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    alert(errorMsg);
                 }
-            },
-            error: function(xhr){ 
-                submitBtn.prop('disabled', false).html(originalText);
-                const errorMsg = xhr.responseJSON?.message || 'Error creating stage';
-                alert(errorMsg);
-            }
+            });
         });
-    });
 
-    // AJAX delete stage
-   $(document).on('submit', '.deleteStageForm', function(e){
-    e.preventDefault();
-    
-    const isFinal = $(this).data('is-final') == '1';
-    let confirmMsg = 'Are you sure you want to delete this stage?';
-    
-    if (isFinal) {
-        confirmMsg = 'This is the FINAL stage. Deleting it will allow you to add more stages. Are you sure?';
-    }
-    
-    if(!confirm(confirmMsg)) return;
+        $(document).on('submit', '.deleteStageForm', function(e) {
+            e.preventDefault();
 
-    const deleteBtn = $(this).find('button');
-    const originalText = deleteBtn.html();
-    deleteBtn.prop('disabled', true).html('...');
+            const isFinal = $(this).data('is-final') == '1';
+            let confirmMsg = 'Are you sure you want to delete this stage?';
 
-    let id = $(this).data('id');
-
-    // Get CSRF token
-    const token = $('meta[name="csrf-token"]').attr('content');
-
-    $.ajax({
-        url: `/settings/workflow-stages/${id}`, // matches the POST route
-        method: 'POST',
-        data: $(this).serialize() + `&_method=DELETE&_token=${token}`, // add CSRF token
-        success: function(res){
-            deleteBtn.prop('disabled', false).html(originalText);
-            
-            if(res.status === 'success'){
-                $(`#stage-${id}`).remove();
-                renumberStages();
-
-                if (isFinal) {
-                    $('dd.col-sm-9:eq(3) .badge').removeClass('bg-success').addClass('bg-secondary').text('No');
-                    updateFormVisibility(false);
-                }
-
-                if($('#stagesTable tr:not(#noStages)').length === 0){
-                    $('#stagesTable').append('<tr id="noStages"><td colspan="7" class="text-center text-muted">No stages added yet.</td></tr>');
-                }
-                alert(res.message);
-            } else {
-                alert(res.message || 'Failed to delete stage');
+            if (isFinal) {
+                confirmMsg = 'This is the FINAL stage. Deleting it will allow you to add more stages. Are you sure?';
             }
-        },
-        error: function(err){ 
-            deleteBtn.prop('disabled', false).html(originalText);
-            console.error(err); // log full error
-            alert('Error deleting stage'); 
-        }
+
+            if (!confirm(confirmMsg)) return;
+
+            const deleteBtn = $(this).find('button');
+            const originalText = deleteBtn.html();
+            deleteBtn.prop('disabled', true).html('...');
+
+            let id = $(this).data('id');
+
+            const token = $('meta[name="csrf-token"]').attr('content');
+
+            $.ajax({
+                url: '/settings/workflow-stages/' + id,
+                method: 'POST',
+                data: $(this).serialize() + '&_method=DELETE&_token=' + encodeURIComponent(token),
+                success: function(res) {
+                    deleteBtn.prop('disabled', false).html(originalText);
+
+                    if (res.status === 'success') {
+                        $('#stage-' + id).remove();
+                        renumberStages();
+
+                        if (isFinal) {
+                            $('dd.col-sm-9:eq(3) .badge')
+                                .removeClass('bg-success')
+                                .addClass('bg-secondary')
+                                .text('No');
+                            updateFormVisibility(false);
+                        }
+
+                        if ($('#stagesTable tr:not(#noStages)').length === 0) {
+                            $('#stagesTable').append('<tr id="noStages"><td colspan="7" class="text-center text-muted">No stages added yet.</td></tr>');
+                        }
+                        alert(res.message);
+                    } else {
+                        alert(res.message || 'Failed to delete stage');
+                    }
+                },
+                error: function(err) {
+                    deleteBtn.prop('disabled', false).html(originalText);
+                    console.error(err);
+                    alert('Error deleting stage');
+                }
+            });
+        });
+
+        $(window).on('beforeunload', function() {
+            saveFormState();
+        });
+
+        $(document).on('click', 'a', function() {
+            saveFormState();
+        });
+
+        setInterval(saveFormState, 30000);
+
+        $(document).on('click', '.view-approvers', function() {
+            const stageId = $(this).data('id');
+            const modal = new bootstrap.Modal(document.getElementById('approversModal'));
+            const list = $('#approversList');
+
+            list.html('<li class="list-group-item text-center">Loading...</li>');
+            modal.show();
+
+            $.get('/settings/workflow/stage/' + stageId + '/approvers', function(res) {
+                list.empty();
+                if (res.users && res.users.length > 0) {
+                    $.each(res.users, function(i, user) {
+                        list.append(
+                            '<li class="list-group-item">' +
+                            user.Name + ' <small class="text-muted">(' + user.Email + ')</small>' +
+                            '</li>'
+                        );
+                    });
+                } else {
+                    list.append('<li class="list-group-item text-center text-muted">No users found with this permission.</li>');
+                }
+            }).fail(function() {
+                list.html('<li class="list-group-item text-center text-danger">Failed to load approvers.</li>');
+            });
+        });
+
+        console.log('Workflow stage form state management initialized');
     });
-});
-
-
-    // Enhanced page event handling
-    $(window).on('beforeunload', function() {
-        // Force save before unload
-        saveFormState();
-    });
-
-    // Save state when navigating away via links
-    $(document).on('click', 'a', function() {
-        saveFormState();
-    });
-
-    // Periodically save state (as backup)
-    setInterval(saveFormState, 30000); // Every 30 seconds
-
-    console.log('Workflow stage form state management initialized');
-});
 </script>
-@endsection
-@endsection
+@endpush
