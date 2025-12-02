@@ -130,9 +130,9 @@
                                 </a>
                             </th>
                             <th class="text-end">
-                                <a href="{{ route('invoiceentry.index', array_merge(request()->query(), ['sort_by' => 'InvoiceAmount', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'InvoiceAmount' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
+                                <a href="{{ route('invoiceentry.index', array_merge(request()->query(), ['sort_by' => 'TotalAmount', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'TotalAmount' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
                                     Amount
-                                    @if(request('sort_by') == 'InvoiceAmount')
+                                    @if(request('sort_by') == 'TotalAmount')
                                         <i class="fas fa-sort-{{ request('sort_direction') == 'asc' ? 'up' : 'down' }} ms-1 text-muted"></i>
                                     @else
                                         <i class="fas fa-sort ms-1 text-muted opacity-50"></i>
@@ -159,7 +159,7 @@
                                 <td>{{ ($item->thirdParty->TradingName ?? optional($item->thirdParty)->ThirdPartyName) ?? '-' }}</td>
                                 <td>{{ $item->InvoiceNumber ?? '-' }}</td>
                                 <td>{{ $item->InvoiceDate ? \Carbon\Carbon::parse($item->InvoiceDate)->format('d-m-Y') : '-' }}</td>
-                                <td class="text-end">{{ $item->InvoiceAmount ? number_format($item->InvoiceAmount, 2) : '-' }}</td>
+                                <td class="text-end">{{ $item->TotalAmount ? number_format($item->TotalAmount, 2) : '-' }}</td>
                                 <td>
                                     @php
                                         $statusClass = match($item->ApprovalStatus) {

@@ -61,7 +61,12 @@
                             <div class="row mb-2">
                                 <div class="col-5"><strong>Amount:</strong></div>
                                 <div class="col-7">
-                                    <span class="h5 text-primary">KSh {{ number_format($invoice->Amount, 2) }}</span>
+                                    <span class="h5 text-primary">KSh {{ number_format($invoice->TotalAmount, 2) }}</span>
+                                    @if($invoice->order && $invoice->order->TaxPercentage > 0)
+                                        <div class="small text-muted mt-1">
+                                            (Incl. {{ number_format($invoice->order->TaxPercentage, 1) }}% Tax: KSh {{ number_format($invoice->order->OrdTotExcl * ($invoice->order->TaxPercentage / 100), 2) }})
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
