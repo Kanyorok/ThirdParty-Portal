@@ -26,6 +26,7 @@ class Authenticate extends Middleware
      */
     public function handle($request, Closure $next, ...$guards): mixed
     {
+
         $this->authenticate($request, $guards);
         $actor = $request->user();
         $branch = $actor->branch;
@@ -33,7 +34,7 @@ class Authenticate extends Middleware
             $this->unauthenticated($request, $guards, $actor);
         }
 
-        if (session()?->has('branch_id')) {
+        if (session()?->has('branch_id') === false) {
             $modelRole = ModelRole::query()->where('model_id', $actor->Id)
                 ->where('model_type', User::getPrimaryKey())
                 ->where('BranchId', $branch->Id)->with('role')->first();
