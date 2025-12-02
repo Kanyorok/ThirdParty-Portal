@@ -69,6 +69,9 @@ class WorkFlowStageService
                 throw new ErroredException('Stage creation failed.');
             }
 
+            // Clear permission cache to ensure the new permission (created by SP) is visible to Spatie
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
             // === Get Permission for this Stage (created by SP) ===
             $permission = \App\Models\Core\Approval\Permission::find($dto->permissionId);
 
