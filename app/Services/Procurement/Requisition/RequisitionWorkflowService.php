@@ -1,37 +1,47 @@
 <?php
 
 namespace App\Services\Procurement\Requisition;
+
 use App\Enums\WorkflowStatus;
 use App\Models\Auth\User;
 use App\Models\Core\Approval;
 use App\Models\Procurement\Requisitions;
+use App\Models\Core\Approval\CodeDetail;
 use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Support\Facades\DB;
 
 
 
-class RequisitionWorkFlowService extends ApprovalWorkflowService
+class RequisitionWorkflowService extends ApprovalWorkflowService
 {
     protected string $codeId = 'RequisitionStatus'; // Purchase Requisition Code ID
-
-  
 
     /**
      * Submit a purchase requisition for approval
      */
-    public function submit(Requisitions $requisition, User $actor, string $remarks): bool
+    public function submit(Requisitions $requisition, User $actor, string $remarks,): bool
     {
         $status = self::codeDetail(WorkflowStatus::Submitted, $this->codeId);
-        return $this->submittedAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks);
+        return $this->submittedAction(
+            $actor,
+            $status,
+            $requisition,
+            $requisition->getMorphClass(),
+            $requisition->getKey(),
+            $remarks
+        );
     }
 
+    /**
+     * Approve a purchase requisition
+     */
     /**
      * Approve a purchase requisition
      */
     public function approve(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::APPROVED, $this->codeId);
-        return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks);
+        return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
     /**
@@ -40,7 +50,7 @@ class RequisitionWorkFlowService extends ApprovalWorkflowService
     public function reject(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::REJECTED, $this->codeId);
-        return $this->rejectAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks);
+        return $this->rejectAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
     /**
@@ -49,7 +59,7 @@ class RequisitionWorkFlowService extends ApprovalWorkflowService
     public function return(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::RETURNED, $this->codeId);
-        return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks);
+        return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
     /**
@@ -58,7 +68,7 @@ class RequisitionWorkFlowService extends ApprovalWorkflowService
     public function markUnderReview(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::UnderReview, $this->codeId);
-        return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks);
+        return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
     /**
@@ -67,7 +77,7 @@ class RequisitionWorkFlowService extends ApprovalWorkflowService
     public function comment(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::COMMENTED, $this->codeId);
-        return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks);
+        return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
     /**
@@ -140,4 +150,3 @@ class RequisitionWorkFlowService extends ApprovalWorkflowService
         return $pendingCount[0]->count === 0;
     }
 }
-
