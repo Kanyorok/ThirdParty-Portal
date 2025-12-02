@@ -165,7 +165,7 @@
                                             @if($plan->ApprovedOn)
                                                 <div class="text-success small">
                                                     <i class="fas fa-calendar-check me-1"></i>
-                                                    {{ $plan->ApprovedOn->format('d M Y') }}
+                                                    {{ $plan->ApprovedOn->format('d/m/Y') }}
                                                 </div>
                                                 <div class="text-muted small">
                                                     {{ $plan->ApprovedOn->format('H:i') }}
@@ -173,7 +173,7 @@
                                             @elseif($plan->CreatedOn)
                                                 <div class="text-muted small">
                                                     <i class="fas fa-calendar me-1"></i>
-                                                    {{ $plan->CreatedOn->format('d M Y') }}
+                                                    {{ $plan->CreatedOn->format('d/m/Y') }}
                                                 </div>
                                             @else
                                                 <span class="text-muted">N/A</span>

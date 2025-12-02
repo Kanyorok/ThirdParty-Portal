@@ -127,7 +127,8 @@
                             <td>{{ $need->department->Name ?? 'N/A' }}</td>
                             <td>{{ $need->RequestedQty }}</td>
                             <td>{{ number_format($need->EstimatedUnitCost * $need->RequestedQty, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('d M Y') }}</td>                           <td>{{ $need->Justification }}</td>
+                            <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
+                            <td>{{ $need->Justification }}</td>
                             <td>
                                 <select name="budget_line_id[{{ $need->Id }}]"
                                         class="form-select budget-select" {{ old('selected_needs') && !in_array($need->Id, old('selected_needs', [])) ? 'disabled' : '' }}>

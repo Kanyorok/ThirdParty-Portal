@@ -119,8 +119,8 @@
                                     {{ $tender->currency ? $tender->currency->Code : 'N/A' }}
                                 </td>
                                 {{-- <td>{{ $tender->RelatedPRID ? 'PR/' . $tender->RelatedPRID : 'N/A' }}</td> --}}
-                                <td>{{ $tender->SubmissionDeadline ? $tender->SubmissionDeadline->format('d M Y') : 'N/A' }}</td>
-                                <td>{{ $tender->OpeningDate ? $tender->OpeningDate->format('d M Y') : 'N/A' }}</td>
+                                <td>{{ $tender->SubmissionDeadline ? $tender->SubmissionDeadline->format('d/m/Y') : 'N/A' }}</td>
+                                <td>{{ $tender->OpeningDate ? $tender->OpeningDate->format('d/m/Y') : 'N/A' }}</td>
                                 <td>
                                     @if($tender->Status)
                                         <span class="badge rounded-pill

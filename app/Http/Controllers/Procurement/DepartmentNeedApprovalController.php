@@ -55,7 +55,7 @@ class DepartmentNeedApprovalController extends Controller
 
     Log::info("Can approve for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
 
-    return view('procurement.procurementplan.departmentneeds.approval.show', [
+    return view('procurement.procurementplan.departmentneeds.approval.show', data: [
         'need'       => $need,
         'canApprove' => $canApprove,
         'history'    => $this->workflow->historyForModel($need),
