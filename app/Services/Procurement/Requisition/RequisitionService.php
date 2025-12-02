@@ -121,7 +121,8 @@ class RequisitionService
                 't_Departments.Name',
                 't_Branches.Name',
                 't_ConsolidatedProcurementPlan.Title',
-                't_ConsolidatedProcurementPlan.ReferenceNumber'
+                't_ConsolidatedProcurementPlan.ReferenceNumber',
+                't_Requisitions.DocStatus'
             )
             ->get();
     }
@@ -170,7 +171,8 @@ class RequisitionService
                 't_ConsolidatedProcurementPlan.Title',
                 't_ConsolidatedProcurementPlan.ReferenceNumber',
                 't_Requisitions.CreatedBy',
-                't_Users.Name'
+                't_Users.Name',
+                't_Requisitions.DocStatus'
             )
             ->first();
     }
