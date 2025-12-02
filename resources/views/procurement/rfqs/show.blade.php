@@ -2,9 +2,6 @@
 @extends('layouts.app')
 @section('title', 'RFQ Details')
 @section('content')
-<div class="alert alert-info">
-    Debug: User ID: {{ Auth::id() }}, Name: {{ Auth::user()->name }}, Can Approve: {{ $canApprove ? 'YES' : 'NO' }}
-</div>
 <div class="container-fluid">
     <button type="button" class="btn btn-primary mb-3"
         data-bs-toggle="modal" data-bs-target="#createRFQModal"
@@ -249,7 +246,7 @@
         @endif
     </div>
     <div class="text-end">
-        @if (in_array($rfq->Status, ['Approved', 'Ap', 'AP']))
+        @if (in_array($rfq->Status, ['Approved', 'Ap', 'AP', 'a', 'A']))
         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#publishModal">Publish to Suppliers</button>
         <button type="button" class="btn btn-secondary btn-sm" onclick="printRFQ()">Print</button>
 
