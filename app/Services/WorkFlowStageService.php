@@ -38,6 +38,18 @@ class WorkFlowStageService
                 throw new ErroredException('Module not found for workflow source.');
             }
 
+            Log::info('Executing p_AddWorkflowStage2', [
+                'Order' => $nextOrder,
+                'StageName' => $data['StageName'],
+                'EscalationLimit' => $data['EscalationLimit'],
+                'WorkFlowId' => $data['WorkFlowId'],
+                'WorkFlowTypeId' => $data['WorkFlowTypeId'],
+                'Count' => $data['Count'] ?? null,
+                'StatusId' => $data['StatusId'] ?? null,
+                'CreatedBy' => $user->Id,
+                'ModuleID' => $moduleId
+            ]);
+
             $results = DB::select('EXEC p_AddWorkflowStage2 
             @Order = ?, 
             @StageName = ?, 
@@ -59,21 +71,62 @@ class WorkFlowStageService
                 $moduleId
             ]);
 
+            Log::info('p_AddWorkflowStage2 Result', ['result' => $results]);
+
+            // Fix for SP leaving transaction open
+            try {
+                $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
+                $laravelTranCount = DB::transactionLevel();
+
+                Log::info('Transaction Check', ['DB_TRANCOUNT' => $dbTranCount, 'Laravel_Level' => $laravelTranCount]);
+
+                while ($dbTranCount > $laravelTranCount) {
+                    DB::unprepared('COMMIT TRANSACTION');
+                    $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
+                    Log::warning('Fixed mismatched transaction count from SP (Forced COMMIT)');
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Could not check/fix transaction count: ' . $e->getMessage());
+            }
+
             $dto = WorkflowStageResult::fromDatabaseResult($results[0] ?? null);
             if ($dto->isError()) {
                 throw new ErroredException($dto->message);
             }
 
             $stage = WorkflowStage::find($dto->newStageId);
+
             if (!$stage) {
-                throw new ErroredException('Stage creation failed.');
+                // Debug: Check if it exists via raw DB
+                $rawStage = DB::table('t_WorkflowStages')->where('Id', $dto->newStageId)->first();
+                Log::info('Raw DB Check for Stage', ['id' => $dto->newStageId, 'found' => $rawStage]);
+
+                if ($rawStage) {
+                    // If found via raw DB but not Eloquent, it's a model issue. 
+                    // Try to hydrate manually or investigate model scopes.
+                    Log::warning('Stage found via raw DB but not Eloquent. Possible scope or casting issue.');
+                    $stage = new WorkflowStage((array)$rawStage);
+                    $stage->exists = true;
+                } else {
+                    throw new ErroredException('Stage creation failed - Record not found after SP execution.');
+                }
             }
 
             // Clear permission cache to ensure the new permission (created by SP) is visible to Spatie
             app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-            // === Get Permission for this Stage (created by SP) ===
-            $permission = \App\Models\Core\Approval\Permission::find($dto->permissionId);
+            // === Handle Permission ===
+            // If user selected a permission, use it. Otherwise fall back to SP result or auto-creation.
+            if (!empty($data['PermissionId'])) {
+                $permission = \App\Models\Core\Approval\Permission::find($data['PermissionId']);
+                if ($permission) {
+                    $stage->PermissionId = $permission->id;
+                    $stage->save();
+                }
+            } else {
+                // Fallback: use permission from SP result
+                $permission = \App\Models\Core\Approval\Permission::find($dto->permissionId);
+            }
 
             if (!$permission) {
                 // Fallback: try to find by name if ID lookup fails (shouldn't happen)
@@ -88,6 +141,10 @@ class WorkFlowStageService
                         'ModuleId' => $moduleId,
                     ]);
                 }
+
+                // Ensure stage is linked to this new/found permission
+                $stage->PermissionId = $permission->id;
+                $stage->save();
             }
 
             // Assign permission to the creator's roles
