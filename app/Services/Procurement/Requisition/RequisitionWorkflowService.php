@@ -113,7 +113,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
         return \DB::select("
             SELECT 
                 p.*, 
-                ws.Name as stage_name, 
+                ws.StageName as stage_name, 
                 u.Name as user_name,
                 u.Email as user_email,
                 wt.TypeID as workflow_type
