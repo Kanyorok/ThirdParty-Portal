@@ -163,6 +163,8 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('propertyterminatelease/show/{Id}', [PropertyLeaseTerminationController::class, 'show'])->name('terminatelease.show');
     Route::get('propertyterminatelease/edit/{Id}', [PropertyLeaseTerminationController::class, 'edit'])->name('terminatelease.edit');
     Route::put('propertyterminatelease/edit/{Id}', [PropertyLeaseTerminationController::class, 'update'])->name('terminatelease.update');
+    Route::get('terminatelease/letter/{Id}', [PropertyLeaseTerminationController::class, 'leaseTerminationLetter'])->name('terminatelease.letter');
+
 
 
     //Route::resource('schedulelease', PropertyLeaseScheduleController::class);

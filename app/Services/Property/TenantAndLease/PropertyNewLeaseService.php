@@ -104,7 +104,7 @@ class PropertyNewLeaseService
 
             
             //create workflow instance and submit for approval
-        $leaseWorkflow = new ApprovalWorkflow('LeaseApprovalStatus',  'ApprovalStatus' );
+        $leaseWorkflow = new ApprovalWorkflow('ApprovalStatus',  'ApprovalStatus' );
         $leaseWorkflow->submit(
             $newlease,
             $user,

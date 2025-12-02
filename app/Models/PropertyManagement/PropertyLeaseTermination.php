@@ -24,6 +24,7 @@ class PropertyLeaseTermination extends Model
         'TerminationDate',
         'TerminationReason',
         'Remarks',
+        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
