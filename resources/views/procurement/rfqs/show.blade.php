@@ -2,7 +2,10 @@
 @extends('layouts.app')
 @section('title', 'RFQ Details')
 @section('content')
-<div class="container">
+<div class="alert alert-info">
+    Debug: User ID: {{ Auth::id() }}, Name: {{ Auth::user()->name }}, Can Approve: {{ $canApprove ? 'YES' : 'NO' }}
+</div>
+<div class="container-fluid">
     <button type="button" class="btn btn-primary mb-3"
         data-bs-toggle="modal" data-bs-target="#createRFQModal"
         @if($rfq->rfqLines->where('RFQId', $rfq->Id)->count()) disabled @endif>
@@ -61,10 +64,9 @@
                         @if ($canApprove)
                         <form id="approveForm" action="{{ route('rfqs.approve', $rfq->Id) }}" method="POST">
                             @csrf
-                            <button type="button"
+                            <button type="submit"
                                 class="btn btn-success btn-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#approveModal"
+                                onclick="return confirm('Are you sure you want to approve this RFQ?');"
                                 {{ $rfq->rfqLines->isEmpty() ? 'disabled title=Please add at least one RFQ line' : '' }}>
                                 Approve
                             </button>
@@ -248,6 +250,7 @@
     </div>
     <div class="text-end">
         @if (in_array($rfq->Status, ['Approved', 'Ap', 'AP']))
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#publishModal">Publish to Suppliers</button>
         <button type="button" class="btn btn-secondary btn-sm" onclick="printRFQ()">Print</button>
 
         @endif
@@ -277,14 +280,14 @@
             </div>
         </div>
     </div>
-    <!-- Approve Modal -->
-    <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <!-- Publish Modal -->
+    <div class="modal fade" id="publishModal" tabindex="-1" aria-labelledby="publishModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <form id="supplierSelectionForm" action="{{ route('rfqs.approve', $rfq->Id) }}" method="POST">
+                <form id="supplierSelectionForm" action="{{ route('rfqs.publish', $rfq->Id) }}" method="POST">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title" id="approveModalLabel">Select Suppliers</h5>
+                        <h5 class="modal-title" id="publishModalLabel">Select Suppliers to Publish To</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -299,7 +302,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Send Emails & Approve</button>
+                        <button type="submit" class="btn btn-success">Send Emails & Publish</button>
                     </div>
                 </form>
             </div>

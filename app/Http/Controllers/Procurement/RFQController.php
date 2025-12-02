@@ -147,16 +147,12 @@ class RFQController extends Controller
     /**
      * Approve the RFQ and notify suppliers.
      */
+    /**
+     * Approve the RFQ (Workflow).
+     */
     public function approve(Request $request, $id)
     {
         $rfq = RFQ::findOrFail($id);
-        // $this->authorize('approve', $rfq); // Workflow service handles permission check usually, but good to keep
-
-        $request->validate([
-            'suppliers' => 'required|array',
-            'suppliers.*' => 'exists:t_Suppliers,Id',
-        ]);
-
 
         // Check if RFQ has at least one line item
         if ($rfq->rfqLines()->count() < 1) {
@@ -166,112 +162,129 @@ class RFQController extends Controller
         // Use Workflow Service to approve
         $this->workflowService->approve($rfq, Auth::user(), 'Approved via UI');
 
+        return redirect()->back()->with('success', 'RFQ has been approved.');
+    }
+
+    /**
+     * Publish the RFQ to suppliers (Send Emails).
+     */
+    public function publish(Request $request, $id)
+    {
+        $rfq = RFQ::findOrFail($id);
+        // Ensure RFQ is approved before publishing
+        // We check for 'Approved' or 'Ap' or 'AP'
+        if (!in_array($rfq->Status, ['Approved', 'Ap', 'AP'])) {
+            return redirect()->back()->with('error', 'RFQ must be approved before publishing to suppliers.');
+        }
+
+        $request->validate([
+            'suppliers' => 'required|array',
+            'suppliers.*' => 'exists:t_Suppliers,Id',
+        ]);
+
         // Ensure unique supplier IDs to avoid duplicate pivot entries
         $supplierIds = collect($request->suppliers)->map(fn($v) => (int)$v)->unique()->values()->all();
 
         // Update supplier statuses in the pivot table
         $rfq->suppliers()->syncWithPivotValues($supplierIds, ['Status' => 'Approved']);
 
-        // Check if fully approved before sending emails
-        if ($this->workflowService->isFullyApproved($rfq)) {
-            // Build recipients (unique emails for selected suppliers)
-            $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
-                ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
-                ->whereNull('tpu.DeletedOn')
-                ->groupBy('tpu.ThirdPartyId');
+        // Build recipients (unique emails for selected suppliers)
+        $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
+            ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
+            ->whereNull('tpu.DeletedOn')
+            ->groupBy('tpu.ThirdPartyId');
 
-            $recipientRows = DB::table('t_Suppliers as s')
-                ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
-                    $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
-                })
-                ->whereIn('s.Id', $supplierIds)
-                ->whereNull('s.DeletedOn')
-                ->whereNull('tp.DeletedOn')
-                ->select('tp.TradingName', DB::raw('tpu.Email as Email'))
-                ->get();
+        $recipientRows = DB::table('t_Suppliers as s')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
+                $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
+            })
+            ->whereIn('s.Id', $supplierIds)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('tp.DeletedOn')
+            ->select('tp.TradingName', DB::raw('tpu.Email as Email'))
+            ->get();
 
-            $cc = [];
-            $usedEmails = [];
-            foreach ($recipientRows as $row) {
-                $email = trim((string)$row->Email);
-                if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && !in_array(strtolower($email), $usedEmails, true)) {
-                    $cc[] = [$row->TradingName => $email];
-                    $usedEmails[] = strtolower($email);
-                }
-            }
-
-            // Send email via UserService (actor as sender), including suppliers in CC
-            $actor = Auth::user();
-            if ($actor) {
-                $subject = 'RFQ Approved: ' . $rfq->RFQNumber;
-                // Read SubmissionDeadline explicitly from the t_RFQ table to ensure we use the stored DB value
-                $rawSubmissionDeadline = DB::table('t_RFQ')->where('Id', $rfq->Id)->value('SubmissionDeadline');
-                $submissionDeadlineFormatted = 'N/A';
-                if ($rawSubmissionDeadline) {
-                    try {
-                        $submissionDeadlineFormatted = \Carbon\Carbon::parse($rawSubmissionDeadline)->format('Y-m-d');
-                    } catch (\Throwable $e) {
-                        // fallback to the raw value if parsing fails
-                        $submissionDeadlineFormatted = $rawSubmissionDeadline;
-                    }
-                }
-
-                // We'll build a personalized body for each recipient inside the loop below
-                $bodyTemplate = '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
-                    '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
-                    '<p>Selected suppliers have been notified.</p>';
-
-                // Prepare list of unique supplier email addresses and mapping to names
-                $supplierList = [];
-                foreach ($cc as $entry) {
-                    foreach ($entry as $name => $email) {
-                        $supplierList[] = ['name' => $name, 'email' => $email];
-                    }
-                }
-
-                // Send one email per supplier so that each supplier sees themselves in To and the others in BCC
-                $uniqueEmails = array_values(array_unique(array_map(fn($s) => strtolower($s['email']), $supplierList)));
-                foreach ($uniqueEmails as $idx => $recipientEmail) {
-                    // find display name
-                    $recipientName = null;
-                    foreach ($supplierList as $s) {
-                        if (strtolower($s['email']) === $recipientEmail) {
-                            $recipientName = $s['name'];
-                            break;
-                        }
-                    }
-
-                    // Build to array: only the current recipient
-                    $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
-
-                    // Build bcc array: all other supplier emails
-                    $bcc = [];
-                    foreach ($uniqueEmails as $otherEmail) {
-                        if ($otherEmail === $recipientEmail) continue;
-                        // Attempt to find name for the bcc entry
-                        $otherName = null;
-                        foreach ($supplierList as $s) {
-                            if (strtolower($s['email']) === $otherEmail) {
-                                $otherName = $s['name'];
-                                break;
-                            }
-                        }
-                        $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
-                    }
-
-                    // Build personalized body so recipient sees their own name in the salutation
-                    $salutationName = $recipientName ?? $recipientEmail;
-                    $personalBody = '<p>Hello ' . e($salutationName) . ',</p>' . $bodyTemplate;
-
-                    // Use CRMEmailService::createRaw to persist and send the email with explicit To/BCC
-                    $service = \App\Services\CRMEmailService::createRaw($actor, $subject, $personalBody, $to, 'ThirdParty', '', [], $bcc, EmailPriorityEnum::Important);
-                    $service->send(true);
-                }
+        $cc = [];
+        $usedEmails = [];
+        foreach ($recipientRows as $row) {
+            $email = trim((string)$row->Email);
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && !in_array(strtolower($email), $usedEmails, true)) {
+                $cc[] = [$row->TradingName => $email];
+                $usedEmails[] = strtolower($email);
             }
         }
 
-        return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');
+        // Send email via UserService (actor as sender), including suppliers in CC
+        $actor = Auth::user();
+        if ($actor) {
+            $subject = 'RFQ Invitation: ' . $rfq->RFQNumber;
+            // Read SubmissionDeadline explicitly from the t_RFQ table to ensure we use the stored DB value
+            $rawSubmissionDeadline = DB::table('t_RFQ')->where('Id', $rfq->Id)->value('SubmissionDeadline');
+            $submissionDeadlineFormatted = 'N/A';
+            if ($rawSubmissionDeadline) {
+                try {
+                    $submissionDeadlineFormatted = \Carbon\Carbon::parse($rawSubmissionDeadline)->format('Y-m-d');
+                } catch (\Throwable $e) {
+                    // fallback to the raw value if parsing fails
+                    $submissionDeadlineFormatted = $rawSubmissionDeadline;
+                }
+            }
+
+            // We'll build a personalized body for each recipient inside the loop below
+            $bodyTemplate = '<p>You are invited to submit a quotation for RFQ <b>' . e($rfq->RFQNumber) . '</b>.</p>' .
+                '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
+                '<p>Please log in to the supplier portal to view details and submit your response.</p>';
+
+            // Prepare list of unique supplier email addresses and mapping to names
+            $supplierList = [];
+            foreach ($cc as $entry) {
+                foreach ($entry as $name => $email) {
+                    $supplierList[] = ['name' => $name, 'email' => $email];
+                }
+            }
+
+            // Send one email per supplier so that each supplier sees themselves in To and the others in BCC
+            $uniqueEmails = array_values(array_unique(array_map(fn($s) => strtolower($s['email']), $supplierList)));
+            foreach ($uniqueEmails as $idx => $recipientEmail) {
+                // find display name
+                $recipientName = null;
+                foreach ($supplierList as $s) {
+                    if (strtolower($s['email']) === $recipientEmail) {
+                        $recipientName = $s['name'];
+                        break;
+                    }
+                }
+
+                // Build to array: only the current recipient
+                $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
+
+                // Build bcc array: all other supplier emails
+                $bcc = [];
+                foreach ($uniqueEmails as $otherEmail) {
+                    if ($otherEmail === $recipientEmail) continue;
+                    // Attempt to find name for the bcc entry
+                    $otherName = null;
+                    foreach ($supplierList as $s) {
+                        if (strtolower($s['email']) === $otherEmail) {
+                            $otherName = $s['name'];
+                            break;
+                        }
+                    }
+                    $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
+                }
+
+                // Build personalized body so recipient sees their own name in the salutation
+                $salutationName = $recipientName ?? $recipientEmail;
+                $personalBody = '<p>Hello ' . e($salutationName) . ',</p>' . $bodyTemplate;
+
+                // Use CRMEmailService::createRaw to persist and send the email with explicit To/BCC
+                $service = \App\Services\CRMEmailService::createRaw($actor, $subject, $personalBody, $to, 'ThirdParty', '', [], $bcc, EmailPriorityEnum::Important);
+                $service->send(true);
+            }
+        }
+
+        return redirect()->back()->with('success', 'RFQ published and emails sent to selected suppliers.');
     }
 
     /**
