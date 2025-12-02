@@ -111,6 +111,14 @@
             </div>
 
         @endif
+         {{-- Attached Documents --}}
+            <h6 class="mb-3 text-dark">Attached Documents</h6>
+            <div class="p-3 border rounded bg-light text-dark">
+                @forelse($tender->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                    {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                @empty
+                    <span>No documents attached.</span>
+                @endforelse
 
         <!-- check tender status -->
         @if (!$show)
