@@ -95,7 +95,14 @@ class RequisitionService
             COALESCE(t_Branches.Name,t_Requisitions.BranchID) as BranchID ,
             COALESCE(t_Departments.Name,t_Requisitions.DepartmentID) as DepartmentID ,
             t_Requisitions.Remarks,
-            t_CodeDetails.Description as Status,
+            CASE 
+                WHEN t_Requisitions.DocStatus = \'Ap\' THEN \'Approved\'
+                WHEN t_Requisitions.DocStatus = \'AP\' THEN \'Approved\'
+                WHEN t_Requisitions.DocStatus = \'pe\' THEN \'Pending\'
+                WHEN t_Requisitions.DocStatus = \'Re\' THEN \'Rejected\'
+                WHEN t_Requisitions.DocStatus = \'RE\' THEN \'Rejected\'
+                ELSE t_CodeDetails.Description 
+            END as Status,
             t_Requisitions.CreatedOn,
             t_Requisitions.Id,
             -- Sum of (Quantity * ExpectedPrice) to get the total cost per requisition
@@ -135,7 +142,14 @@ class RequisitionService
                 DB::raw('COALESCE(t_Branches.Name, t_Requisitions.BranchID) AS BranchID'),
                 DB::raw('COALESCE(t_Departments.Name, t_Requisitions.DepartmentID) AS DepartmentID'),
                 't_Requisitions.Remarks',
-                DB::raw('t_CodeDetails.Description AS Status'),
+                DB::raw("CASE 
+                    WHEN t_Requisitions.DocStatus = 'Ap' THEN 'Approved'
+                    WHEN t_Requisitions.DocStatus = 'AP' THEN 'Approved'
+                    WHEN t_Requisitions.DocStatus = 'pe' THEN 'Pending'
+                    WHEN t_Requisitions.DocStatus = 'Re' THEN 'Rejected'
+                    WHEN t_Requisitions.DocStatus = 'RE' THEN 'Rejected'
+                    ELSE t_CodeDetails.Description 
+                END AS Status"),
                 't_Requisitions.CreatedOn',
                 DB::raw('isnull(t_Users.Name, t_Requisitions.CreatedBy) AS CreatedBy'),
                 't_Requisitions.Id',
