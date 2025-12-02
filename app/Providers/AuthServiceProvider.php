@@ -10,6 +10,7 @@ class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
         ThirdPartiesBankDetails::class => ThirdPartyBankDetailPolicy::class,
+        \App\Models\Core\Approval\WorkflowStage::class => \App\Policies\WorkflowStagePolicy::class,
     ];
 
     public function boot(): void
