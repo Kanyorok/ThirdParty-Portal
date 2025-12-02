@@ -227,29 +227,29 @@ export default function RfqDetailPage() {
             }
             // if response present (already submitted), seed fields and lock editing
             if (normalized.response) {
-                    const responseMap: Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }> = {};
-                    const respItems = (normalized.response as SupplierResponse).items || [];
-                    normalized.lines.forEach((l, idx) => {
-                        // try to find matching item by rfqLineId
-                        let it = respItems.find((x: any) => x && String(x.rfqLineId ?? x.lineId ?? x.RFQLineID ?? "") === String(l.id));
-                        // fallback: use item at same index if available
-                        if (!it) it = respItems[idx];
+                const responseMap: Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }> = {};
+                const respItems = (normalized.response as SupplierResponse).items || [];
+                normalized.lines.forEach((l, idx) => {
+                    // try to find matching item by rfqLineId
+                    let it = respItems.find((x: any) => x && String(x.rfqLineId ?? x.lineId ?? x.RFQLineID ?? "") === String(l.id));
+                    // fallback: use item at same index if available
+                    if (!it) it = respItems[idx];
 
-                        const itAny = it as any;
-                        const quoted = (itAny?.quotedPrice ?? itAny?.QuotedPrice ?? itAny?.unitPrice) ?? undefined;
-                        const total = (itAny?.totalPayable ?? itAny?.TotalPayable ?? itAny?.totalPrice) ?? (quoted != null ? Number((quoted * l.quantity).toFixed(2)) : undefined);
-                        const perItemLead = itAny?.leadTimeDays ?? itAny?.leadTime ?? undefined;
-                        const comments = (itAny?.comments ?? itAny?.Comments ?? "") || "";
+                    const itAny = it as any;
+                    const quoted = (itAny?.quotedPrice ?? itAny?.QuotedPrice ?? itAny?.unitPrice) ?? undefined;
+                    const total = (itAny?.totalPayable ?? itAny?.TotalPayable ?? itAny?.totalPrice) ?? (quoted != null ? Number((quoted * l.quantity).toFixed(2)) : undefined);
+                    const perItemLead = itAny?.leadTimeDays ?? itAny?.leadTime ?? undefined;
+                    const comments = (itAny?.comments ?? itAny?.Comments ?? "") || "";
 
-                        responseMap[l.id] = {
-                            lineItemId: l.id,
-                            unitPrice: quoted ?? undefined,
-                            totalPrice: total ?? undefined,
-                            // prefer per-item lead time, else use response.durationDays
-                            leadTimeDays: perItemLead ?? (normalized.response?.durationDays ?? undefined),
-                            comments: comments ?? "",
-                        } as any;
-                    });
+                    responseMap[l.id] = {
+                        lineItemId: l.id,
+                        unitPrice: quoted ?? undefined,
+                        totalPrice: total ?? undefined,
+                        // prefer per-item lead time, else use response.durationDays
+                        leadTimeDays: perItemLead ?? (normalized.response?.durationDays ?? undefined),
+                        comments: comments ?? "",
+                    } as any;
+                });
                 setLineResponses(responseMap);
                 if (normalized.response.currency) setCurrency(normalized.response.currency);
                 if (normalized.response.durationDays) setDurationDays(String(normalized.response.durationDays));
@@ -338,6 +338,8 @@ export default function RfqDetailPage() {
                 rfqLineId: r.lineItemId,
                 quotedPrice: r.unitPrice ?? null,
                 totalPayable: r.totalPrice ?? null,
+                leadTimeDays: r.leadTimeDays ?? null,
+                comments: r.comments ?? null,
             }));
         const duration = Number.parseInt(durationDays || "0", 10);
         return {
@@ -493,7 +495,6 @@ export default function RfqDetailPage() {
                             <TableHead>Description</TableHead>
                             <TableHead>Qty</TableHead>
                             <TableHead>UOM</TableHead>
-                            <TableHead>Specification / Notes</TableHead>
                             <TableHead>Unit price</TableHead>
                             <TableHead>Total price</TableHead>
                             <TableHead>Lead time (days)</TableHead>
@@ -510,7 +511,6 @@ export default function RfqDetailPage() {
                                     </TableCell>
                                     <TableCell>{l.quantity}</TableCell>
                                     <TableCell>{l.unitOfMeasure}</TableCell>
-                                    <TableCell className="max-w-[320px] text-muted-foreground">{l.specification || "-"}</TableCell>
                                     <TableCell className="w-40">
                                         <Input inputMode="decimal" value={r.unitPrice != null ? String(r.unitPrice) : ""} onChange={(e) => onChangeUnitPrice(l.id, e.target.value.replace(/[^0-9.]/g, ""))} disabled={isSubmitted} />
                                     </TableCell>
