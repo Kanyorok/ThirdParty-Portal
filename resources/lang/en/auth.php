@@ -7,6 +7,7 @@ return [
     'login_successful' => 'Login successful.',
     'login_failed_general' => 'Login failed. Please try again later.',
     'logout_successful' => 'Successfully logged out.',
+    'validation_failed' => 'Validation Failed',
     'not_authenticated' => 'You are not authenticated. Please log in.',
     'email_not_verified' => 'Your email address is not verified. Please verify your email to log in.',
     'acc_not_approved' => 'Account not approved. Please contact support.',
@@ -59,4 +60,8 @@ return [
     'registration_number_already_exists' => 'Registration number already exists',
     'tax_pin_exists' => 'Tax Pin already registered',
     'email_exists' => 'This Email address is in use',
+    'invalid_phone_format' => 'Invalid Phone Number. Use this format, e.g., +254712345678',
+    'pwd_required' => 'Password Required',
+    'email_required' => 'Email Required',
+    'account_not_linked' => 'Account not Linked to Third Party',
 ];

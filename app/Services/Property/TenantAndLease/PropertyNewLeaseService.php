@@ -2,6 +2,7 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
@@ -13,7 +14,7 @@ use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
-use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
+use App\Services\Workflow\ApprovalWorkflow;
 use DateTime;
 use Illuminate\Http\UploadedFile;
 
@@ -22,11 +23,14 @@ class PropertyNewLeaseService
     /**
      * Create a new class instance.
      */
-    public function __construct(PropertyNewLease $propertyNewLease)
+    protected ApprovalWorkflow $workflow;
+
+    public function __construct(PropertyNewLease $propertyNewLease, ApprovalWorkflow $workflow)
     {
+        $this->workflow = $workflow;
     }
 
-    public static function create(
+    public function create(
         PropertyNewTenant $Tenant,
         PropertyRegistry $PropertyID,
         PropertyBlock $BlockID,
@@ -40,6 +44,9 @@ class PropertyNewLeaseService
         float $ServiceCharge,
         float $ParkingFee,
         float $OtherCharges,
+        string $Status,
+        string $ApprovalStatus,
+        bool $IsOfferGenerated,
         int $DueDay,
         string $SpecialTerms = null,
         User $user,
@@ -79,6 +86,9 @@ class PropertyNewLeaseService
             'ParkingFee' => $ParkingFee,
             'OtherCharges' => $OtherCharges,
             'SpecialTerms' => $SpecialTerms,
+            'Status' => $Status,
+            'ApprovalStatus' => $ApprovalStatus,
+            'IsOfferGenerated' => $IsOfferGenerated,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
@@ -92,6 +102,17 @@ class PropertyNewLeaseService
             );
         }
 
+            
+            //create workflow instance and submit for approval
+        $leaseWorkflow = new ApprovalWorkflow('LeaseApprovalStatus',  'ApprovalStatus' );
+        $leaseWorkflow->submit(
+            $newlease,
+            $user,
+            ApprovalEnum::Pending,
+            'Lease Submitted for Approval'
+        );
+            
+           
         PropertyLeaseScheduleService::create(
             leaseId: $newlease->Id,
             paymentFrequencyId: $PaymentFrequency->ID,
@@ -109,12 +130,12 @@ class PropertyNewLeaseService
             ->event('create')
             ->log("Added New Lease {$newlease->Id}.");
 
-        return new self($newlease);
+        return new self($newlease, $this->workflow);
     }
 
 
     //Update
-    public static function update(
+    public function update(
         PropertyNewLease $lease,
         PropertyRegistry $PropertyID,
         PropertyBlock $BlockID,
@@ -181,7 +202,7 @@ class PropertyNewLeaseService
             ->event('update')
             ->log("Updated Lease {$lease->Id}.");
 
-        return new self($lease);
+        return new self($lease, $this->workflow);
     }
 
 

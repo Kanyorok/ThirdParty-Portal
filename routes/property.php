@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Property\PropertyApprovalController;
 use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
@@ -14,6 +15,8 @@ use App\Http\Controllers\Property\PropertyMaintenanceRequestController;
 use App\Http\Controllers\Property\PropertyMaintenanceWorkCompletionController;
 use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
+use App\Http\Controllers\Property\PropertyRateAndPricingControllert;
+use App\Http\Controllers\Property\PropertyRatesAndPricingControllert;
 use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
@@ -81,7 +84,20 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
 
     //Property Settings
     Route::resource('propertysettings', PropertyUnitController::class);
-    //Route::get('propertysettings', [PropertyRegistryController::class,'index'])->name('propertysettings.index');
+    
+
+    //Property Rate and Pricing
+    Route::get('propertyrateandpricing', [PropertyRateAndPricingControllert::class, 'index'])->name('propertyrateandpricing.index');
+    Route::get('propertyrateandpricing/create', [PropertyRateAndPricingControllert::class, 'create'])->name('propertyrateandpricing.create');
+    Route::post('propertyrateandpricing', [PropertyRateAndPricingControllert::class, 'store'])->name('propertyrateandpricing.store');
+    Route::get('Propertyrateandpricing/show/{Id}', [PropertyRateAndPricingControllert::class, 'show'])->name('propertyrateandpricing.show');
+    Route::get('propertyrateandpricing/edit/{Id}', [PropertyRateAndPricingControllert::class, 'edit'])->name('propertyrateandpricing.edit');
+    Route::put('propertyrateandpricing/edit/{Id}', [PropertyRateAndPricingControllert::class, 'update'])->name('propertyrateandpricing.update');
+    Route::delete('propertyrateandpricing/delete/{Id}', [PropertyRateAndPricingControllert::class, 'destroy'])->name('propertyrateandpricing.destroy');
+    Route::get('/propertyrateandpricing/blocks/{PropertyId}', [PropertyRateAndPricingControllert::class, 'getBlockByProperty'])->name('getblockbyproperty.rate');
+    Route::get('/propertyrateandpricing/floors/{BlockId}', [PropertyRateAndPricingControllert::class, 'getFloorByBlock'])->name('getfloorbyblock.rate');
+    Route::get('/propertyrateandpricing/Units/{FloorId}', [PropertyRateAndPricingControllert::class, 'getUnitsByFloor'])->name('getunitsbyfloor.rate');
+
 
     //Route::resource('addfloor', PropertyFloorController::class);
     Route::get('propertyaddfloor', [PropertyFloorController::class, 'index'])->name('addfloor.index');
@@ -135,6 +151,9 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty.lease');
     Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock.lease');
     Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor.lease');
+    Route::get('lease-offer/{Id}', [PropertyNewLeaseController::class, 'leaseOfferLetter'])->name('addlease.offer');
+
+    
 
 
     //Route::resource('terminatelease', PropertyLeaseTerminationController::class);
@@ -169,6 +188,19 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'edit'])->name('renewlease.edit');
     Route::put('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'update'])->name('renewlease.update');
     Route::delete('renewlease/delete/{Id}', [PropertyLeaseRenewalController::class, 'destroy'])->name('renewlease.destroy');
+
+    //Property Approval
+    //Route::resource('approval', PropertyApprovalController::class);
+    Route::resource('approvals', PropertyApprovalController::class)->only([
+        'index',
+    ])->names([
+        'index' => 'propertyapproval.index'
+    ]);
+    // Approval actions: view, approve, reject
+    Route::get('approvals/{Id}', [PropertyApprovalController::class, 'show'])->name('propertyapproval.show');
+    Route::post('approvals/approve/{Id}', [PropertyApprovalController::class, 'approve'])->name('propertyapproval.approve');
+    Route::post('approvals/reject/{Id}', [PropertyApprovalController::class, 'reject'])->name('propertyapproval.reject');
+    
 
     //Route::resource('rentinvoice', PropertyInvoiceController::class);
     Route::get('rentinvoice', [PropertyInvoiceController::class, 'index'])->name('rentinvoice.index');

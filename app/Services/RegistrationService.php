@@ -4,61 +4,59 @@ namespace App\Services;
 
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Auth\Events\Registered;
 use App\Models\Auth\User;
 
 class RegistrationService
 {
-    public function registerUser(array $userData): ThirdPartyUser
+    public function registerThirdParty(array $userData): ThirdParties
     {
-        $user = ThirdPartyUser::create([
-            'FirstName' => $userData['FirstName'],
-            'LastName' => $userData['LastName'],
-            'Email' => $userData['Email'],
-            'Phone' => $userData['Phone'],
-            'Password' => Hash::make($userData['Password']),
-            'IsActive' => false,
-        ]);
-
-        event(new Registered($user));
-
-        return $user;
-    }
-
-    public function registerThirdPartyDetails(string $userId, array $thirdPartyData): ThirdParties
-    {
-        return DB::transaction(function () use ($userId, $thirdPartyData) {
-            $user = ThirdPartyUser::where('UserID', $userId)->firstOrFail();
-
-            if ($user->ThirdPartyId !== null) {
-                throw new \Exception('User is already associated with a third party.');
-            }
-
-            // Resolve ERPSYS system user from t_Users
+        return DB::transaction(function () use ($userData) {
             $systemUser = User::where('UserID', 'ERPSYS')->first();
             $systemUserId = $systemUser?->Id;
 
-            $thirdParty = ThirdParties::create([
-                'ThirdPartyName' => $thirdPartyData['ThirdPartyName'],
-                'TradingName' => $thirdPartyData['TradingName'] ?? null,
-                'BusinessType' => $thirdPartyData['BusinessType'],
-                'RegistrationNumber' => $thirdPartyData['RegistrationNumber'],
-                'TaxPIN' => $thirdPartyData['TaxPIN'] ?? null,
-                'VATNumber' => $thirdPartyData['VATNumber'] ?? null,
-                'Country' => $thirdPartyData['Country'],
-                'PhysicalAddress' => $thirdPartyData['PhysicalAddress'],
-                'Email' => $thirdPartyData['Email'],
-                'Phone' => $thirdPartyData['Phone'],
-                'Website' => $thirdPartyData['Website'] ?? null,
+            $user = ThirdPartyUser::create([
+                'FirstName' => $userData['FirstName'],
+                'LastName' => $userData['LastName'],
+                'Email' => $userData['Email'],
+                'Phone' => $userData['Phone'],
+                'Password' => $userData['Password'],
+                'IsActive' => false,
                 'CreatedBy' => $systemUserId,
                 'ModifiedBy' => $systemUserId,
             ]);
 
-            if (!empty($thirdPartyData['ThirdPartyType'])) {
+            $initialName = $userData['ThirdPartyName']
+                ?? ($userData['FirstName'] . ' ' . $userData['LastName'])
+                ?? $userData['Email'];
+
+            $thirdParty = ThirdParties::create([
+                'ThirdPartyName' => $initialName,
+                'TradingName' => $userData['TradingName'] ?? $initialName,
+                'BusinessType' => $userData['BusinessType'] ?? null,
+                'RegistrationNumber' => $userData['RegistrationNumber'] ?? null,
+                'TaxPIN' => $userData['TaxPIN'] ?? null,
+                'VATNumber' => $userData['VATNumber'] ?? null,
+                'CountryId' => $userData['CountryId'] ?? null,
+                'PhysicalAddress' => $userData['PhysicalAddress'] ?? null,
+                'Email' => $userData['Email'] ?? null,
+                'Phone' => $userData['Phone'] ?? null,
+                'Website' => $userData['Website'] ?? null,
+
+                'IsActive' => false,
+                'ApprovalStatus' => 'P',
+
+                'CreatedBy' => $systemUserId,
+                'ModifiedBy' => $systemUserId,
+            ]);
+
+            $user->ThirdPartyId = $thirdParty->Id;
+            $user->save();
+
+            if (!empty($userData['ThirdPartyType'])) {
                 DB::table('t_ThirdPartyType_ThirdParties')->insert([
-                    'TypeId' => $thirdPartyData['ThirdPartyType'],
+                    'TypeId' => $userData['ThirdPartyType'],
                     'ThirdPartyId' => $thirdParty->Id,
                     'CreatedBy' => $systemUserId,
                     'ModifiedBy' => $systemUserId,
@@ -67,8 +65,7 @@ class RegistrationService
                 ]);
             }
 
-            $user->ThirdPartyId = $thirdParty->Id;
-            $user->save();
+            event(new Registered($user));
 
             return $thirdParty;
         });

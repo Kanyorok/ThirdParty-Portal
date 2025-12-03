@@ -55,6 +55,14 @@ class CategoryMasterSeeder extends Seeder
                 'CreatedBy' => 1,
                 'ModifiedBy' => 1,
             ],
+            [
+                'Name' => 'Customer',
+                'Description' => 'Customer category',
+                'Type' => 'CustomerCategory',
+                'Code' => '800000',
+                'CreatedBy' => 1,
+                'ModifiedBy' => 1,
+            ],
         ];
 
         foreach ($categories as $data) {

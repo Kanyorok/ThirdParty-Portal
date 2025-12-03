@@ -158,6 +158,36 @@ abstract class ApprovalWorkflowService
     }
 
     /**
+ * Get the status column name for a given morph alias/table
+ */
+private function getStatusColumnForTable(string $morphAlias, string $table): string
+{
+    // Check configuration first
+    $columnMappings = config('workflow.status_columns', []);
+    
+    if (isset($columnMappings[$morphAlias])) {
+        Log::info("Found status column from config", [
+            'morphAlias' => $morphAlias,
+            'column' => $columnMappings[$morphAlias],
+        ]);
+        return $columnMappings[$morphAlias];
+    }
+    
+    // Check if table has ApprovalStatus column
+    $hasApprovalStatus = DB::getSchemaBuilder()
+        ->hasColumn($table, 'ApprovalStatus');
+    
+    if ($hasApprovalStatus) {
+        Log::info("Table has ApprovalStatus column", ['table' => $table]);
+        return 'ApprovalStatus';
+    }
+    
+    // Default to Status
+    Log::info("Using default Status column", ['table' => $table]);
+    return 'Status';
+}
+
+    /**
      * Create a workflow history entry
      */
     protected function createHistoryEntry(
@@ -384,16 +414,6 @@ abstract class ApprovalWorkflowService
                     ->first();
             }
 
-            Log::info("=== WORKFLOW STATE: {$stage} ===", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'currentStage' => $currentStage,
-                'stageName' => $stageRequirements->StageName ?? 'N/A',
-                'pendingCount' => $pendingCount,
-                'approvalCount' => $approvalCount,
-                'requiredApprovals' => $stageRequirements->Count ?? 'N/A',
-                'approvedStatusId' => $approvedStatusId,
-            ]);
 
             // List all pending users
             $pendingUsers = DB::table('t_WorkFlowPending as p')

@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\BusinessTypeEnum;
 use App\Traits\Model\DocumentsTrait;
+use App\Enums\ThirdPartyTypeEnum;
 
 class ThirdParties extends Model
 {
@@ -42,7 +44,7 @@ class ThirdParties extends Model
         'Phone',
         'Website',
         'Status',
-        'ThirdPartyType', //legacy column deprecated (kept temporarily for backward compatibility)
+        'ThirdPartyType',
         'IsPrequalified',
         'ApprovalStatus',
         'IDNumber',
@@ -60,8 +62,10 @@ class ThirdParties extends Model
         'BusinessType' => BusinessTypeEnum::class,
         'Status' => ThirdPartyStatusEnum::class,
         'ApprovalStatus' => ThirdPartyApprovalStatusEnum::class,
+        'IsPrequalified' => 'boolean',
     ];
 
+    // you can only prequalify suppliers
     protected static function booted()
     {
         static::saving(function ($model) {
@@ -81,14 +85,56 @@ class ThirdParties extends Model
         });
     }
 
-    public function setIsPrequalifiedAttribute($value)
+    public function getPrimaryTypeAttribute(): ?ThirdPartyTypeEnum
     {
-        $this->attributes['IsPrequalified'] = $value;
+        if ($this->relationLoaded('types') && $this->types->count() === 1) {
+            $newTypeCode = $this->types->first()->Code;
+
+            if (str_starts_with($newTypeCode, 'SU-')) {
+                return ThirdPartyTypeEnum::Supplier;
+            }
+            if (str_starts_with($newTypeCode, 'TE-')) {
+                return ThirdPartyTypeEnum::Tenant;
+            }
+            if (str_starts_with($newTypeCode, 'CU-')) {
+                return ThirdPartyTypeEnum::Customer;
+            }
+        }
+        return $this->ThirdPartyType; // fallback to legacy enum
     }
 
-    public function users(): BelongsToMany
+    public function getPrimaryTypeLabelAttribute(): string
     {
-        return $this->belongsToMany(ThirdPartyUser::class, 't_ThirdPartyUser_ThirdParty', 'third_party_id', 'third_party_user_id');
+        return $this->primary_type?->label() ?? 'N/A';
+    }
+
+    public function isSupplier(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'SU-'));
+        }
+        return $this->ThirdPartyType === ThirdPartyTypeEnum::Supplier;
+    }
+
+    public function isTenant(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'TE-'));
+        }
+        return $this->ThirdPartyType === ThirdPartyTypeEnum::Tenant;
+    }
+
+    public function isCustomer(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'CU-'));
+        }
+        return $this->ThirdPartyType === ThirdPartyTypeEnum::Customer; // fall back
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved;
     }
 
     public function getLabelAttribute(): string
@@ -106,6 +152,12 @@ class ThirdParties extends Model
         return $this->TaxPIN ?: $this->RegistrationNumber;
     }
 
+    // can associate one user to a thirdparty
+    public function user(): HasOne
+    {
+        return $this->hasOne(ThirdPartyUser::class, 'ThirdPartyId', 'Id');
+    }
+
     public function bankDetails(): HasMany
     {
         return $this->hasMany(ThirdPartiesBankDetails::class, 'ThirdPartyId', 'Id');
@@ -113,7 +165,7 @@ class ThirdParties extends Model
 
     public function categories(): BelongsToMany
     {
-        // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
+        // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id @Kimxons
         return $this->belongsToMany(
             SupplierCategory::class,
             't_ThirdParty_SupplierCategory',
@@ -127,7 +179,7 @@ class ThirdParties extends Model
         return $this->belongsTo(Country::class, 'CountryId', 'Id');
     }
 
-    // New pivot relationship to multiple types
+    // @Kimxons: thirdparty can have multiple types 
     public function types(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -138,7 +190,6 @@ class ThirdParties extends Model
         );
     }
 
-    // Finance relationships
     public function wallet()
     {
         return $this->hasOne(\App\Models\Finance\CustomerWallet::class, 'CustomerID', 'Id');
