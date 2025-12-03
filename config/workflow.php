@@ -35,6 +35,13 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
     ],
 
+    'LeaseTerminationId' => [
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'r'
+        'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,    // 'p'
+        'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Status Column Mappings

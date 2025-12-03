@@ -39,7 +39,7 @@
                             <th>Lease Number</th>
                             <th>Termination Date</th>
                             <th>Reason</th>
-                            <th>Remarks</th>
+                            <th>Status</th>
                             <th style="width: 10%">Actions</th>
                         </tr>
                     </thead>
@@ -50,7 +50,15 @@
                                 <td>{{ $leasetermination->lease->LeaseNumber ?? '-' }}</td>
                                 <td>{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d M Y') : '-' }}</td>
                                 <td>{{ $leasetermination->code->Description ?? '-' }}</td>
-                                <td>{{ $leasetermination->Remarks ?? '-' }}</td>
+                                <td>
+                                    @if($leasetermination->Status)
+                                        <span class="badge bg-{{ $leasetermination->Status->badgeColor() }}">
+                                            {{ $leasetermination->Status->label() }}
+                                        </span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>
                                     <div class="action-buttons">
                                         <a href="{{ route('terminatelease.show', $leasetermination->Id) }}"

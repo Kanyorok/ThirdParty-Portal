@@ -199,9 +199,12 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
         'index' => 'propertyapproval.index'
     ]);
     // Approval actions: view, approve, reject
-    Route::get('approvals/{Id}', [PropertyApprovalController::class, 'show'])->name('propertyapproval.show');
-    Route::post('approvals/approve/{Id}', [PropertyApprovalController::class, 'approve'])->name('propertyapproval.approve');
-    Route::post('approvals/reject/{Id}', [PropertyApprovalController::class, 'reject'])->name('propertyapproval.reject');
+    Route::get('approvals/offer/{Id}', [PropertyApprovalController::class, 'show'])->name('propertyapproval.show');
+    Route::post('approvals/offer/approve/{Id}', [PropertyApprovalController::class, 'approve'])->name('propertyapproval.approve');
+    Route::post('approvals/offer/reject/{Id}', [PropertyApprovalController::class, 'reject'])->name('propertyapproval.reject');
+    Route::get('approvals/terminate/{Id}', [PropertyApprovalController::class, 'showTermination'])->name('propertyapproval.showTermination');
+    Route::post('approvals/terminate/approve/{Id}', [PropertyApprovalController::class, 'approveTermination'])->name('propertyapproval.approveTermination');
+    Route::post('approvals/terminate/reject/{Id}', [PropertyApprovalController::class, 'rejectTermination'])->name('propertyapproval.rejectTermination');
     
 
     //Route::resource('rentinvoice', PropertyInvoiceController::class);
