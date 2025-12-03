@@ -2,6 +2,8 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ApprovalEnum;
+use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
@@ -12,6 +14,8 @@ use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyUnit;
+use App\Services\Workflow\ApprovalWorkflow;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
@@ -29,6 +33,7 @@ class PropertyLeaseTerminationService
         string     $TerminationDate,
         CodeDetail $TerminationReason,
         string $Remarks = null,
+        string $Status,
         User $user,
         UploadedFile $document = null
     ): self {
@@ -41,6 +46,7 @@ class PropertyLeaseTerminationService
                 'TerminationDate' => $TerminationDate,
                 'TerminationReason' => $TerminationReason->ID,
                 'Remarks' => $Remarks,
+                'Status' => $Status,
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
             ]);
@@ -53,6 +59,30 @@ class PropertyLeaseTerminationService
                     $user
                 );
             }
+
+            // **Generate Termination Letter PDF immediately**
+            $pdf = Pdf::loadView(
+                'property.tenantmanagement.leasemanagement.leasetermination.TerminationLetter',
+                compact('termination')
+            )->output();
+
+            $termination->newDocumentFromContent(
+                module: ModulesEnum::Property,
+                extension: ExtensionsEnum::Pdf,
+                fileName: "Lease_Termination_{$LeaseID->LeaseNumber}.pdf",
+                content: $pdf,
+                actor: $user,
+                permissions: [PermissionEnum::PropertyLeaseTerminationView->value]
+            );
+
+            //create workflow instance and submit for approval
+            $terminationflow = new ApprovalWorkflow('ApprovalStatus',  'Status' );
+            $terminationflow->submit(
+                $termination,
+                $user,
+                ApprovalEnum::Pending,
+                'Lease Termination Submitted for Approval'
+            );
 
             // Deactivate the main lease
             $LeaseID->IsActive = false;
