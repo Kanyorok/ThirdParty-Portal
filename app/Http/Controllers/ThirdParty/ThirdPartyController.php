@@ -155,10 +155,11 @@ class ThirdPartyController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($thirdParties)
+    public function show(ThirdParties $thirdParties)
     {
-        $thirdParties = ThirdParties::query()->with(['types', 'country:Id,Name,Flag'])->findOrFail($thirdParties);
-        dd($thirdParties);
+        return view('thirdparty.show', [
+            'party' => $thirdParties->load(['types', 'country:Id,Name,Flag'])
+        ]);
     }
 
     /**

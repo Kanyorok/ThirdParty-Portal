@@ -177,36 +177,6 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         return $query->with('thirdParty');
     }
 
-    public function isApproved(): bool
-    {
-        return $this->IsActive && $this->thirdParty && $this->thirdParty->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved;
-    }
-
-    public function isSupplier(): bool
-    {
-        if ($this->thirdParty && $this->thirdParty->relationLoaded('types')) {
-            return $this->thirdParty->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'SU-'))
-                || $this->thirdParty->types->pluck('TypeId')->contains(fn($id) => $id === $this->thirdParty->ThirdPartyType); // safety
-        }
-        // Fallback to legacy enum column
-        return $this->thirdParty?->ThirdPartyType === ThirdPartyTypeEnum::Supplier;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->IsActive === true;
-    }
-
-    public function canBeDeleted(): bool
-    {
-        return !$this->isActive();
-    }
-
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new \App\Notifications\VerifyEmail);
-    }
-
     public static function getPrimaryKey(): string
     {
         return 'ThirdPartyUserId';
