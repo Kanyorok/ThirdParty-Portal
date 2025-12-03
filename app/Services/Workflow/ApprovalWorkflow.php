@@ -10,14 +10,17 @@ use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Database\Eloquent\Collection;
 use BackedEnum;  
 use Illuminate\Support\Facades\Log;
+
 class ApprovalWorkflow extends ApprovalWorkflowService
 {
     private string $codeId;
+    private string $statusColumn;
 
     /**
      * Constructor to configure the workflow for a specific module.
      * 
      * @param string $codeId The CodeID for the module 
+     * @param string  $statusColumn The dynamic status column to be passed
      */
     public function __construct(string $codeId, string $statusColumn = 'Status')
     {

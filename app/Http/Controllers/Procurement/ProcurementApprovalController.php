@@ -7,10 +7,20 @@ use App\Http\Controllers\Controller;
 use App\Models\Core\Workflow;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use Carbon\Carbon;
+use App\Services\Procurement\ProcurementPlan\ProcurementPlanWorkflow;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 class ProcurementApprovalController extends Controller
 {
+    protected ProcurementPlanWorkflow $workflow;
+
+    public function __construct(ProcurementPlanWorkflow $workflow)
+    {
+        $this->workflow = $workflow;
+    }
+
     public function index(Request $request)
     {
         $draftPlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Submitted)->get();
@@ -53,46 +63,31 @@ class ProcurementApprovalController extends Controller
 
         $plan = ConsolidatedProcurementPlan::findOrFail($request->planId);
 
-        switch ($request->action) {
-            case 'APPROVED':
-                $plan->Status = ProcurementPlanStatusEnum::Approved;
-                break;
-            case 'REJECTED':
-                $plan->Status = ProcurementPlanStatusEnum::Rejected;
-                break;
-            case 'RETURNED':
-                $plan->Status = ProcurementPlanStatusEnum::Draft;
-                break;
+        try {
+            DB::transaction(function () use ($request, $plan, $user) {
+                switch ($request->action) {
+                    case 'APPROVED':
+                        $this->workflow->approve($plan, $user, ProcurementPlanStatusEnum::Approved, $request->comments);
+                        break;
+                    case 'REJECTED':
+                        $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Rejected, $request->comments);
+                        break;
+                    case 'RETURNED':
+                        $this->workflow->reject($plan, $user, ProcurementPlanStatusEnum::Draft, $request->comments);
+                        break;
+                }
+            });
+
+            activity()
+                ->causedBy($user)
+                ->performedOn($plan)
+                ->event(strtolower($request->action))
+                ->log("{$request->action} procurement plan (PlanID: {$plan->PlanID}) with comment: '{$request->comments}'");
+
+            return redirect()->route('planning.approval.index')->with('success', 'Your decision has been recorded.');
+        } catch (\Exception $e) {
+            Log::error('Workflow decision failed', ['error' => $e->getMessage(), 'planId' => $plan->PlanID]);
+            return redirect()->back()->with('error', 'Failed to process decision: ' . $e->getMessage());
         }
-
-        $plan->Remarks = $request->comments;
-        $plan->ModifiedBy = auth()->id();
-        $plan->ModifiedOn = Carbon::now();
-        $plan->save();
-
-        // Update or insert Workflow record
-        Workflow::create([
-            'Source' => 'ProcurementPlan',
-            'SourceID' => $plan->PlanID,
-            'Stage' => $this->getApprovalLevelFromStatus($plan->Status),
-            'Status' => match ($request->action) {
-                'APPROVED' => 'Ap',
-                'REJECTED' => 'Re',
-                'RETURNED' => 'Dr',
-            },
-            'Notes' => $request->comments,
-            'CreatedBy' => auth()->id(),
-            'CreatedOn' => Carbon::now(),
-            'ModifiedBy' => auth()->id(),
-            'ModifiedOn' => Carbon::now(),
-        ]);
-
-        activity()
-            ->causedBy($user)
-            ->performedOn($plan)
-            ->event(strtolower($request->action))
-            ->log("{$request->action} procurement plan (PlanID: {$plan->PlanID}) with comment: '{$request->comments}'");
-
-        return redirect()->route('planning.approval.index')->with('success', 'Your decision has been recorded.');
     }
 }

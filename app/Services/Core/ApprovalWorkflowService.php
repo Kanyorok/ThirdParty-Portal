@@ -339,7 +339,7 @@ private function getStatusColumnForTable(string $morphAlias, string $table): str
                 ]);
 
                 // Always call advanceToNextStage - it handles both moving to next stage AND finalizing if no next stage exists
-                $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id);
+                $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id, $statusColumn);
             } else {
                 Log::info("Stage not completed yet", [
                     'table' => $table,
@@ -857,7 +857,7 @@ private function getStatusColumnForTable(string $morphAlias, string $table): str
     }
 
     //advancing to the nect stage
-    private function advanceToNextStage(string $table, string|int $sourceId, ?int $currentStageId, int $userId): void
+    private function advanceToNextStage(string $table, string|int $sourceId, ?int $currentStageId, int $userId, string $statusColumn = 'Status'): void
     {
         try {
             DB::beginTransaction();
@@ -1062,7 +1062,7 @@ private function getStatusColumnForTable(string $morphAlias, string $table): str
                     // Update the status column in the source table
                     DB::statement("
             UPDATE {$table}
-            SET Status = ?,
+            SET {$statusColumn} = ?,
                 ModifiedBy = ?,
                 ModifiedOn = GETDATE()
             WHERE {$primaryKeyColumn} = ?
