@@ -2,27 +2,24 @@
 
 namespace App\Http\Controllers\Procurement\Prequalification;
 
-use App\Http\Controllers\Controller;
-use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use App\Models\Procurement\Prequalification\PrequalificationRound;
-use App\Models\Procurement\Prequalification\ApplicationCategoryStatus;
-use App\Models\ThirdParty\SupplierCategory as SupplierCategoryModel;
+use App\Enums\Procurement\PrequalificationApplicationEnum;
 use App\Enums\Procurement\PrequalificationRoundEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StorePrequalificationApplicationRequest;
+use App\Http\Resources\Procurement\PrequalificationRoundResource;
+use App\Models\Procurement\Prequalification\ApplicationCategoryStatus;
+use App\Models\Procurement\Prequalification\PrequalificationApplication;
+use App\Models\Procurement\Prequalification\PrequalificationApplicationDocument;
+use App\Models\Procurement\Prequalification\PrequalificationResult;
+use App\Models\Procurement\Prequalification\PrequalificationRound;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
-use App\Enums\Procurement\PrequalificationApplicationEnum;
-use App\Http\Resources\Procurement\PrequalificationRoundResource;
-use App\Http\Resources\Procurement\PrequalificationApplicationResource;
-use Illuminate\Support\Facades\Auth;
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Models\Procurement\Prequalification\PrequalificationResult;
-use App\Models\Procurement\Prequalification\PrequalificationApplicationDocument;
+use Illuminate\View\View;
 
 class PrequalificationApplicationController extends Controller
 {
@@ -57,7 +54,7 @@ class PrequalificationApplicationController extends Controller
             if (!Auth::check() && !$bearerToken) {
                 return response()->json(['message' => 'Unauthorized - No authentication provided'], 401);
             }
-            
+
             // Log authentication attempt for debugging
             if ($bearerToken) {
                 Log::info('PrequalificationRounds API access with bearer token', [
@@ -89,29 +86,29 @@ class PrequalificationApplicationController extends Controller
         $sortOrder = $request->get('sortOrder', 'asc');
     $status = $request->get('status', 'open');
         $search = $request->get('q', '');
-        
-        // Validate and sanitize parameters
+
+            // Validate and sanitize parameters
         $pageSize = max(1, min(100, $pageSize)); // Limit between 1-100
         $page = max(1, $page); // Minimum page 1
-        
-        // Validate sortBy parameter
+
+            // Validate sortBy parameter
         $allowedSortFields = ['startDate', 'endDate', 'title', 'createdOn'];
         if (!in_array($sortBy, $allowedSortFields)) {
             $sortBy = 'startDate';
         }
-        
-        // Validate sortOrder parameter
+
+            // Validate sortOrder parameter
         $sortOrder = in_array(strtolower($sortOrder), ['asc', 'desc']) ? strtolower($sortOrder) : 'asc';
-        
-        // Map frontend sortBy to database column names
+
+            // Map frontend sortBy to database column names
         $sortColumnMap = [
             'startDate' => 't_PrequalificationRounds.StartDate',
-            'endDate' => 't_PrequalificationRounds.EndDate', 
+            'endDate' => 't_PrequalificationRounds.EndDate',
             'title' => 't_PrequalificationRounds.Title',
             'createdOn' => 't_PrequalificationRounds.CreatedOn'
         ];
-        
-        $sortColumn = $sortColumnMap[$sortBy] ?? 't_PrequalificationRounds.StartDate';
+
+            $sortColumn = $sortColumnMap[$sortBy] ?? 't_PrequalificationRounds.StartDate';
 
             // Build the query (rounds only; applications fetched separately)
             $query = PrequalificationRound::query()
