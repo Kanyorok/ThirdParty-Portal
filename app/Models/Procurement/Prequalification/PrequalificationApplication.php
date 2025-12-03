@@ -2,22 +2,21 @@
 
 namespace App\Models\Procurement\Prequalification;
 
+use App\Enums\Procurement\PrequalificationApplicationEnum;
+use App\Models\ThirdParty\SupplierCategory;
+use App\Models\ThirdParty\SupplierMaster;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\ThirdParty\SupplierCategory;
-use App\Models\ThirdParty\ThirdParties;
-use App\Enums\Procurement\PrequalificationApplicationEnum;
 
 class PrequalificationApplication extends Model
 {
     use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_SupplierPrequalificationApplications';
     protected $primaryKey = 'ApplicationID';
@@ -41,9 +40,9 @@ class PrequalificationApplication extends Model
         'Status' => PrequalificationApplicationEnum::class,
     ];
 
-    public function supplier()
+    public function supplier(): BelongsTo
     {
-        return $this->belongsTo(ThirdParties::class, 'SupplierID', 'Id');
+        return $this->belongsTo(SupplierMaster::class, 'SupplierID', 'Id');
     }
 
     public function round(): BelongsTo
@@ -56,7 +55,7 @@ class PrequalificationApplication extends Model
         return $this->hasMany(PrequalificationEvaluation::class, 'ApplicationID', 'ApplicationID');
     }
 
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(SupplierCategory::class, 'CategoryID', 'SupplierCategoryID');
     }
@@ -64,7 +63,7 @@ class PrequalificationApplication extends Model
     /**
      * One-to-one prequalification result.
      */
-    public function result()
+    public function result(): \Illuminate\Database\Eloquent\Relations\HasOne|PrequalificationApplication
     {
         return $this->hasOne(PrequalificationResult::class, 'ApplicationID', 'ApplicationID');
     }
@@ -78,7 +77,7 @@ class PrequalificationApplication extends Model
         return (string)($this->attributes['ApplicationID'] ?? '');
     }
 
-    public function categoryStatuses()
+    public function categoryStatuses(): HasMany|PrequalificationApplication
     {
         return $this->hasMany(ApplicationCategoryStatus::class, 'ApplicationId', 'ApplicationID');
     }

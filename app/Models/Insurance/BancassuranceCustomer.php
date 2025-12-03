@@ -3,17 +3,16 @@
 namespace App\Models\Insurance;
 
 use App\Models\Auth\User;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParty\ThirdParties;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Core\Approval\CodeDetail;
-use App\Traits\Model\UserActorTrait;
 
 class BancassuranceCustomer extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    //
     protected $table = 't_BancassuranceCustomers';
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -21,15 +20,8 @@ class BancassuranceCustomer extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'ThirdPartyId',
-        'ReferralID',
-        'DateOfBirth',
-        'Gender',
-        'MaritalStatus',
-        'Occupation',
-        'CreatedBy',
-        'ModifiedBy',
-        'DeletedBy'
+        'ThirdPartyId', 'ReferralID', 'DateOfBirth', 'Gender', 'MaritalStatus', 'Occupation',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     public static function getPrimaryKey(): string

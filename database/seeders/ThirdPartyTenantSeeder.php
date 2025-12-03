@@ -2,17 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Enums\ThirdPartyStatusEnum;
 use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Models\Auth\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
 
 class ThirdPartyTenantSeeder extends Seeder
 {

@@ -2,9 +2,10 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Enums\Employee\GenderEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Enums\ThirdPartyTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
+use App\Models\Core\Approval\CodeDetail;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,31 +18,20 @@ use Laravel\Sanctum\HasApiTokens;
 
 class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
 {
-    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
+    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail, UserActorTrait;
 
     public static $snakeAttributes = false;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ThirdPartyUsers';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'FirstName',
-        'LastName',
-        'Email',
-        'Phone',
-        'ImageId',
-        'Gender',
-        'ThirdPartyId',
-        'IsActive',
-        'CreatedBy',
-        'ModifiedBy',
-        'DeletedBy',
-        'Password',
-        'EmailVerifiedOn',
+        'FirstName', 'LastName', 'Email', 'Phone', 'ImageId', 'Gender', 'ThirdPartyId', 'Password', 'EmailVerifiedOn', 'IsActive',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $hidden = [
@@ -55,10 +45,6 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
-        'Gender' => GenderEnum::class,
-        'IsActive' => 'boolean',
-        'ThirdPartyId' => 'integer',
-        'ImageId' => 'integer',
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
@@ -81,6 +67,12 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
     public function getRouteKeyName(): string
     {
         return 'UserID';
+    }
+
+
+    public function gender(): BelongsTo
+    {
+        return $this->belongsTo(CodeDetail::class, 'Gender', 'Id');
     }
 
     public function thirdParty(): BelongsTo
@@ -183,5 +175,40 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
     public function scopeWithThirdParty(Builder $query): Builder
     {
         return $query->with('thirdParty');
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->IsActive && $this->thirdParty && $this->thirdParty->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved;
+    }
+
+    public function isSupplier(): bool
+    {
+        if ($this->thirdParty && $this->thirdParty->relationLoaded('types')) {
+            return $this->thirdParty->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'SU-'))
+                || $this->thirdParty->types->pluck('TypeId')->contains(fn($id) => $id === $this->thirdParty->ThirdPartyType); // safety
+        }
+        // Fallback to legacy enum column
+        return $this->thirdParty?->ThirdPartyType === ThirdPartyTypeEnum::Supplier;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->IsActive === true;
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return !$this->isActive();
+    }
+
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\VerifyEmail);
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'ThirdPartyUserId';
     }
 }

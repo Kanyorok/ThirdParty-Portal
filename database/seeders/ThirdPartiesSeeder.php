@@ -2,6 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
+use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Database\Seeder;
 
 // Import the ThirdParties model
