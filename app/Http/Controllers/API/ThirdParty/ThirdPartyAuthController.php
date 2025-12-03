@@ -4,7 +4,7 @@ namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyUserRequest;
+use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyRequest;
 use App\Http\Requests\ThirdPartyAuth\LoginThirdPartyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -25,7 +25,7 @@ class ThirdPartyAuthController extends Controller
         $this->registrationService = $registrationService;
     }
 
-    public function register(RegisterThirdPartyUserRequest $request): JsonResponse
+    public function register(RegisterThirdPartyRequest $request): JsonResponse
     {
         try {
             $userData = $this->registrationService->registerUser($request->validated());

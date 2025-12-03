@@ -28,7 +28,7 @@ abstract class ApprovalWorkflowService
             ->where('CodeID', $CodeID)
             ->where('Value', $status->value)
             ->first();
-            
+
         if ($code instanceof CodeDetail) {
             Log::info("CodeDetail retrieved", [
                 'CodeID' => $CodeID,
@@ -38,7 +38,7 @@ abstract class ApprovalWorkflowService
             ]);
             return $code;
         }
-        
+
         Log::error("CodeDetail not found", [
             'CodeID' => $CodeID,
             'Value' => $status->value,
@@ -52,7 +52,7 @@ abstract class ApprovalWorkflowService
     protected function getPermissionFromStage(string $table): ?WorkflowStage
     {
         Log::info('Getting workflow stage', ['table' => $table]);
-        
+
         $workflow = Workflow::where('Source', $table)
             ->whereNull('DeletedOn')
             ->first();
@@ -158,14 +158,44 @@ abstract class ApprovalWorkflowService
     }
 
     /**
+ * Get the status column name for a given morph alias/table
+ */
+private function getStatusColumnForTable(string $morphAlias, string $table): string
+{
+    // Check configuration first
+    $columnMappings = config('workflow.status_columns', []);
+    
+    if (isset($columnMappings[$morphAlias])) {
+        Log::info("Found status column from config", [
+            'morphAlias' => $morphAlias,
+            'column' => $columnMappings[$morphAlias],
+        ]);
+        return $columnMappings[$morphAlias];
+    }
+    
+    // Check if table has ApprovalStatus column
+    $hasApprovalStatus = DB::getSchemaBuilder()
+        ->hasColumn($table, 'ApprovalStatus');
+    
+    if ($hasApprovalStatus) {
+        Log::info("Table has ApprovalStatus column", ['table' => $table]);
+        return 'ApprovalStatus';
+    }
+    
+    // Default to Status
+    Log::info("Using default Status column", ['table' => $table]);
+    return 'Status';
+}
+
+    /**
      * Create a workflow history entry
      */
     protected function createHistoryEntry(
-        string $table, 
-        string|int $sourceId, 
-        int $statusId, 
-        int $stageId, 
-        int $actorId, 
+        string $table,
+        string|int $sourceId,
+        int $statusId,
+        int $stageId,
+        int $actorId,
         string $notes = null,
         float $amount = null
     ): WorkflowHistory {
@@ -203,9 +233,8 @@ abstract class ApprovalWorkflowService
                 'table' => $table,
                 'sourceId' => $sourceId,
             ]);
-            
-            return $entry;
 
+            return $entry;
         } catch (\Throwable $e) {
             Log::error("Exception creating WorkflowHistory entry", [
                 'error' => $e->getMessage(),
@@ -219,46 +248,45 @@ abstract class ApprovalWorkflowService
      * Execute workflow action (approve/reject) via stored procedure
      */
     private function _executeWorkflowAction(
-        User $actor, 
-        CodeDetail $status, 
-        string $source, 
-        string|int $sourceId, 
-        string $remarks, 
+        User $actor,
+        CodeDetail $status,
+        string $source,
+        string|int $sourceId,
+        string $remarks,
         string $statusColumn
-    ): array
-    {
+    ): array {
         $class = Relation::getMorphedModel($source);
-    if (!($class && class_exists($class))) {
-        throw new ErroredException('Invalid Related Entity');
-    }
-    
-    $statusValueToSet = $this->getStatusValueForModule($source, $status);
-    $table = (new $class)->getTable();
+        if (!($class && class_exists($class))) {
+            throw new ErroredException('Invalid Related Entity');
+        }
 
-    Log::info("=== EXECUTING WORKFLOW ACTION ===", [
-        'source_alias' => $source,
-        'sourceId' => $sourceId,
-        'resolved_table' => $table,
-        'actor' => $actor->Id,
-        'statusId' => $status->ID,
-        'statusDescription' => $status->Description,
-    ]);
+        $statusValueToSet = $this->getStatusValueForModule($source, $status);
+        $table = (new $class)->getTable();
 
-    // Get current stage ID BEFORE calling SP
-    $currentStageId = $this->getCurrentStageId($table, $sourceId);
-    Log::info("Current stage ID before action", ['currentStageId' => $currentStageId]);
+        Log::info("=== EXECUTING WORKFLOW ACTION ===", [
+            'source_alias' => $source,
+            'sourceId' => $sourceId,
+            'resolved_table' => $table,
+            'actor' => $actor->Id,
+            'statusId' => $status->ID,
+            'statusDescription' => $status->Description,
+        ]);
 
-    //  Check state BEFORE calling SP
-    $this->logWorkflowState($table, $sourceId, 'BEFORE_ACTION');
+        // Get current stage ID BEFORE calling SP
+        $currentStageId = $this->getCurrentStageId($table, $sourceId);
+        Log::info("Current stage ID before action", ['currentStageId' => $currentStageId]);
 
-    try {
-        DB::beginTransaction();
+        //  Check state BEFORE calling SP
+        $this->logWorkflowState($table, $sourceId, 'BEFORE_ACTION');
 
-        
-        DB::statement("SET NOCOUNT OFF");
-        
-        $result = DB::select(
-            'EXEC p_ProcessWorkflowAction 
+        try {
+            DB::beginTransaction();
+
+
+            DB::statement("SET NOCOUNT OFF");
+
+            $result = DB::select(
+                'EXEC p_ProcessWorkflowAction 
                 @Source = ?, 
                 @SourceID = ?, 
                 @UserID = ?, 
@@ -267,76 +295,76 @@ abstract class ApprovalWorkflowService
                 @StatusColumn = ?, 
                 @StatusID = ?, 
                 @StatusValueToSet = ?',
-            [
-                $table,
-                (string)$sourceId,
-                $actor->Id,
-                $actor->Name ?? $actor->UserID,
-                $remarks,
-                $statusColumn,
-                $status->ID,
-                $statusValueToSet
-            ]
-        );
+                [
+                    $table,
+                    (string)$sourceId,
+                    $actor->Id,
+                    $actor->Name ?? $actor->UserID,
+                    $remarks,
+                    $statusColumn,
+                    $status->ID,
+                    $statusValueToSet
+                ]
+            );
 
-        Log::info("p_ProcessWorkflowAction result", ['result' => $result]);
+            Log::info("p_ProcessWorkflowAction result", ['result' => $result]);
 
-        if (!empty($result) && isset($result[0]->Status)) {
-            if ($result[0]->Status === 'ERROR') {
-                Log::error("p_ProcessWorkflowAction returned ERROR", [
-                    'message' => $result[0]->Message ?? 'Unknown error',
-                ]);
-                throw new ErroredException($result[0]->Message ?? 'Workflow action failed');
+            if (!empty($result) && isset($result[0]->Status)) {
+                if ($result[0]->Status === 'ERROR') {
+                    Log::error("p_ProcessWorkflowAction returned ERROR", [
+                        'message' => $result[0]->Message ?? 'Unknown error',
+                    ]);
+                    throw new ErroredException($result[0]->Message ?? 'Workflow action failed');
+                }
             }
-        }
 
-        //  Check state AFTER calling SP
-        $this->logWorkflowState($table, $sourceId, 'AFTER_ACTION');
+            //  Check state AFTER calling SP
+            $this->logWorkflowState($table, $sourceId, 'AFTER_ACTION');
 
-        DB::commit();
-        
-        $result = [
-            'success' => true,
-            'message' => $result[0]->Message ?? 'Action recorded successfully',
-            'workflowStatus' => $result[0]->WorkflowStatus ?? 'Unknown',
-            'stageCompleted' => $result[0]->StageCompleted ?? false,
-        ];
+            DB::commit();
 
-        //  Use the properly defined $currentStageId
-        if ($result['stageCompleted']) {
-            Log::info("Stage completed, advancing to next stage", [
+            $result = [
+                'success' => true,
+                'message' => $result[0]->Message ?? 'Action recorded successfully',
+                'workflowStatus' => $result[0]->WorkflowStatus ?? 'Unknown',
+                'stageCompleted' => $result[0]->StageCompleted ?? false,
+            ];
+
+            //  Use the properly defined $currentStageId
+            if ($result['stageCompleted']) {
+                Log::info("Stage completed, processing next steps (advance or finalize)", [
+                    'table' => $table,
+                    'sourceId' => $sourceId,
+                    'currentStageId' => $currentStageId,
+                ]);
+
+                // Always call advanceToNextStage - it handles both moving to next stage AND finalizing if no next stage exists
+                $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id, $statusColumn);
+            } else {
+                Log::info("Stage not completed yet", [
+                    'table' => $table,
+                    'sourceId' => $sourceId,
+                    'currentStageId' => $currentStageId,
+                ]);
+            }
+
+            return $result;
+        } catch (ErroredException $e) {
+            DB::rollBack();
+            Log::error("ErroredException in _executeWorkflowAction", [
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Error in _executeWorkflowAction', [
+                'error' => $e->getMessage(),
                 'table' => $table,
                 'sourceId' => $sourceId,
-                'currentStageId' => $currentStageId,
+                'trace' => $e->getTraceAsString(),
             ]);
-            $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id);
-        } else {
-            Log::info("Stage not completed yet", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'currentStageId' => $currentStageId,
-            ]);
+            throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         }
-        
-        return $result;
-
-    } catch (ErroredException $e) {
-        DB::rollBack();
-        Log::error("ErroredException in _executeWorkflowAction", [
-            'message' => $e->getMessage(),
-        ]);
-        throw $e;
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        Log::error('Error in _executeWorkflowAction', [
-            'error' => $e->getMessage(),
-            'table' => $table,
-            'sourceId' => $sourceId,
-            'trace' => $e->getTraceAsString(),
-        ]);
-        throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
-    }
-
     }
 
     /**
@@ -386,16 +414,6 @@ abstract class ApprovalWorkflowService
                     ->first();
             }
 
-            Log::info("=== WORKFLOW STATE: {$stage} ===", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'currentStage' => $currentStage,
-                'stageName' => $stageRequirements->StageName ?? 'N/A',
-                'pendingCount' => $pendingCount,
-                'approvalCount' => $approvalCount,
-                'requiredApprovals' => $stageRequirements->Count ?? 'N/A',
-                'approvedStatusId' => $approvedStatusId,
-            ]);
 
             // List all pending users
             $pendingUsers = DB::table('t_WorkFlowPending as p')
@@ -420,7 +438,6 @@ abstract class ApprovalWorkflowService
                 ->get();
 
             Log::info("Approval history:", ['approvals' => $approvals->toArray()]);
-
         } catch (\Throwable $e) {
             Log::error("Failed to log workflow state", [
                 'error' => $e->getMessage(),
@@ -433,22 +450,22 @@ abstract class ApprovalWorkflowService
      * Approve action
      */
     protected function approveAction(
-        User $actor, 
-        CodeDetail $status, 
-        string $source, 
-        string|int $sourceId, 
-        string $remarks, 
+        User $actor,
+        CodeDetail $status,
+        string $source,
+        string|int $sourceId,
+        string $remarks,
         string $statusColumn = 'Status'
     ): bool {
         $result = $this->_executeWorkflowAction($actor, $status, $source, $sourceId, $remarks, $statusColumn);
-        
+
         Log::info("Approve action completed", [
             'success' => $result['success'] ?? false,
             'message' => $result['message'] ?? 'No message',
             'workflowStatus' => $result['workflowStatus'] ?? 'Unknown',
             'stageCompleted' => $result['stageCompleted'] ?? false,
         ]);
-        
+
         return $result['success'] ?? false;
     }
 
@@ -456,11 +473,11 @@ abstract class ApprovalWorkflowService
      * Reject action
      */
     protected function rejectAction(
-        User $actor, 
-        CodeDetail $status, 
-        string $source, 
-        string|int $sourceId, 
-        string $remarks, 
+        User $actor,
+        CodeDetail $status,
+        string $source,
+        string|int $sourceId,
+        string $remarks,
         string $statusColumn = 'Status'
     ): bool {
         $result = $this->_executeWorkflowAction($actor, $status, $source, $sourceId, $remarks, $statusColumn);
@@ -508,172 +525,129 @@ abstract class ApprovalWorkflowService
         return trim($cleanMessage) ?: 'Database operation failed';
     }
 
+
     /**
      * Submit a record for approval workflow
      */
-    /**
- * Submit a record for approval workflow
- */
-protected function submittedAction(
-    User $actor, 
-    CodeDetail $status, 
-    $model, 
-    string $source, 
-    string|int $sourceId, 
-    string $remarks
-): bool {
-    $class = Relation::getMorphedModel($source);
-    if (!($class && class_exists($class))) {
-        Log::error("Invalid morph alias", ['source' => $source]);
-        throw new ErroredException('Invalid Related Entity');
-    }
-
-    $table = $model->getTable();
-    $sourceId = $sourceId ?? $model->getKey();
-
-    Log::info("=== STARTING WORKFLOW SUBMISSION ===", [
-        'source_alias' => $source,
-        'table' => $table,
-        'sourceId' => $sourceId,
-        'actorId' => $actor->Id,
-    ]);
-
-    // STEP 1: Create workflow history entry
-    try {
-        
-
-        // Prevent double submission
-        $existingSubmission = DB::table('t_WorkFlowHistory')
-            ->where('Source', $table)
-            ->where('SourceID', (string)$sourceId)
-            ->where('isApproved', null)
-            ->whereNull('DeletedOn')
-            ->first();
-
-        if ($existingSubmission) {
-            Log::warning("Already submitted", ['table' => $table, 'sourceId' => $sourceId]);
-            throw new ErroredException("This item has already been submitted for approval");
+    protected function submittedAction(
+        User $actor,
+        CodeDetail $status,
+        $model,
+        string $source,
+        string|int $sourceId,
+        string $remarks
+    ): bool {
+        $class = Relation::getMorphedModel($source);
+        if (!($class && class_exists($class))) {
+            Log::error("Invalid morph alias", ['source' => $source]);
+            throw new ErroredException('Invalid Related Entity');
         }
 
-        // Get first stage
-        $stage = $this->getPermissionFromStage($table);
-        if (!$stage || !$stage->PermissionId) {
-            Log::error("No workflow configuration", ['table' => $table]);
-            throw new ErroredException("No workflow configuration found for {$table}");
-        }
+        $table = $model->getTable();
+        $sourceId = $sourceId ?? $model->getKey();
 
-        $amount = $model->Amount ?? null;
+        Log::info("=== STARTING WORKFLOW SUBMISSION ===", [
+            'source_alias' => $source,
+            'table' => $table,
+            'sourceId' => $sourceId,
+            'actorId' => $actor->Id,
+        ]);
 
-        // Create workflow history
-        $history = $this->createHistoryEntry(
-            $table,
-            $sourceId,
-            $status->ID,
-            (int)$stage->Id,
-            $actor->Id,
-            $remarks,
-            $amount
-        );
+        try {
+            // Start a SINGLE transaction for everything
+            DB::beginTransaction();
 
-        Log::info("=== WORKFLOW HISTORY CREATED ===", ['historyId' => $history->Id]);
+            // Prevent double submission
+            $existingSubmission = DB::table('t_WorkFlowHistory')
+                ->where('Source', $table)
+                ->where('SourceID', (string)$sourceId)
+                ->where('isApproved', null)
+                ->whereNull('DeletedOn')
+                ->first();
 
-       
-        Log::info("Transaction committed successfully for WorkflowHistory");
-
-    } catch (ErroredException $e) {
-        DB::rollBack();
-        throw $e;
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        Log::error('Error creating workflow history', ['error' => $e->getMessage()]);
-        throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
-    }
-
-    // STEP 2: Create pending approvers (SEPARATE from history transaction)
-    try {
-        // Use DB::select with positional parameters (?) instead of named parameters (:name)
-        $result = DB::select(
-            'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
-            [
-                $table,
-                (string)$sourceId,
-                (int)$stage->Id
-            ]
-        );
-
-        Log::info("p_ProcessWorkflowPending result", ['result' => $result]);
-
-        // Check for errors returned by SP
-        if (!empty($result) && isset($result[0]->Status)) {
-            if ($result[0]->Status === 'ERROR') {
-                Log::error("p_ProcessWorkflowPending returned ERROR", [
-                    'message' => $result[0]->Message ?? 'Unknown error',
-                ]);
-                
-                // Rollback the history entry since pending creation failed
-                $this->rollbackSubmission($table, $sourceId, $actor->Id);
-                
-                throw new ErroredException($result[0]->Errors ?? 'Failed to create pending approvals');
+            if ($existingSubmission) {
+                Log::warning("Already submitted", ['table' => $table, 'sourceId' => $sourceId]);
+                throw new ErroredException("This item has already been submitted for approval");
             }
-            
-            Log::info("Pending approvals created successfully", [
-                'insertedCount' => $result[0]->InsertedPendingCount ?? 0,
-                'approvalsRequired' => $result[0]->ApprovalsRequired ?? 'N/A',
-                'effectivePermission' => $result[0]->EffectivePermissionId ?? 'N/A',
-                'limitType' => $result[0]->LimitType ?? 'DEFAULT',
+
+            // Get first stage
+            $stage = $this->getPermissionFromStage($table);
+            if (!$stage || !$stage->PermissionId) {
+                Log::error("No workflow configuration", ['table' => $table]);
+                throw new ErroredException("No workflow configuration found for {$table}");
+            }
+
+            $amount = $model->Amount ?? null;
+
+            // Create workflow history (within the main transaction)
+            $history = $this->createHistoryEntry(
+                $table,
+                $sourceId,
+                $status->ID,
+                (int)$stage->Id,
+                $actor->Id,
+                $remarks,
+                $amount
+            );
+
+            Log::info("=== WORKFLOW HISTORY CREATED ===", ['historyId' => $history->Id]);
+
+            // Call stored procedure (still within the same transaction)
+            $result = DB::select(
+                'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
+                [
+                    $table,
+                    (string)$sourceId,
+                    (int)$stage->Id
+                ]
+            );
+
+            Log::info("p_ProcessWorkflowPending result", ['result' => $result]);
+
+            // Check for errors returned by SP
+            if (!empty($result) && isset($result[0]->Status)) {
+                if ($result[0]->Status === 'ERROR') {
+                    Log::error("p_ProcessWorkflowPending returned ERROR", [
+                        'message' => $result[0]->Message ?? 'Unknown error',
+                    ]);
+                    throw new ErroredException($result[0]->Message ?? 'Failed to create pending approvals');
+                }
+
+                Log::info("Pending approvals created successfully", [
+                    'insertedCount' => $result[0]->InsertedPendingCount ?? 0,
+                    'approvalsRequired' => $result[0]->ApprovalsRequired ?? 'N/A',
+                    'effectivePermission' => $result[0]->EffectivePermissionId ?? 'N/A',
+                    'limitType' => $result[0]->LimitType ?? 'DEFAULT',
+                ]);
+            }
+
+            // Log state after creating pending approvals
+            $this->logWorkflowState($table, $sourceId, 'AFTER_SUBMISSION');
+
+            // Commit everything together
+            DB::commit();
+            Log::info("Workflow submission completed successfully");
+
+            return true;
+        } catch (ErroredException $e) {
+            DB::rollBack();
+            Log::error("ErroredException in submittedAction", [
+                'message' => $e->getMessage(),
+                'table' => $table,
+                'sourceId' => $sourceId,
             ]);
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Error in submittedAction', [
+                'error' => $e->getMessage(),
+                'table' => $table,
+                'sourceId' => $sourceId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         }
-
-        // Log state after creating pending approvals
-        $this->logWorkflowState($table, $sourceId, 'AFTER_SUBMISSION');
-
-    } catch (ErroredException $e) {
-        throw $e;
-    } catch (\Throwable $e) {
-        Log::error('Error executing p_ProcessWorkflowPending', [
-            'error' => $e->getMessage(),
-            'table' => $table,
-            'sourceId' => $sourceId,
-        ]);
-        
-        // Rollback the history entry since pending creation failed
-        $this->rollbackSubmission($table, $sourceId, $actor->Id);
-        
-        throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
     }
-
-    return true;
-}
-
-/**
- * Rollback a failed submission by soft-deleting the history entry
- */
-private function rollbackSubmission(string $table, string|int $sourceId, int $userId): void
-{
-    try {
-        DB::table('t_WorkFlowHistory')
-            ->where('Source', $table)
-            ->where('SourceID', (string)$sourceId)
-            ->whereNull('DeletedOn')
-            ->update([
-                'DeletedOn' => now(),
-                'DeletedBy' => $userId,
-                'ModifiedOn' => now(),
-                'ModifiedBy' => $userId,
-            ]);
-        
-        Log::info("Rolled back failed submission", [
-            'table' => $table,
-            'sourceId' => $sourceId,
-        ]);
-    } catch (\Throwable $e) {
-        Log::error("Failed to rollback submission", [
-            'error' => $e->getMessage(),
-            'table' => $table,
-            'sourceId' => $sourceId,
-        ]);
-    }
-}
 
     /**
      * Get workflow history
@@ -690,7 +664,7 @@ private function rollbackSubmission(string $table, string|int $sourceId, int $us
         return WorkflowHistory::query()
             ->where('Source', $table)
             ->with(['creator', 'status'])
-            ->orderBy('CreatedOn', 'desc')  
+            ->orderBy('CreatedOn', 'desc')
             ->limit($limit)
             ->get();
     }
@@ -712,7 +686,7 @@ private function rollbackSubmission(string $table, string|int $sourceId, int $us
             ->where('UserId', $user->Id)
             ->whereNull('DeletedOn')
             ->exists();
-            
+
         if (!$hasPending) {
             return false;
         }
@@ -797,12 +771,32 @@ private function rollbackSubmission(string $table, string|int $sourceId, int $us
     }
 
     /**
+     * Check if there are more stages after the current one
+     */
+    private function hasNextStage(string $table, int $currentStageId): bool
+    {
+        $currentStage = WorkflowStage::find($currentStageId);
+        if (!$currentStage) {
+            return false;
+        }
+
+        $nextStage = DB::table('t_WorkFlowStages')
+            ->where('WorkFlowId', $currentStage->WorkFlowId)
+            ->where('Order', '>', $currentStage->Order)
+            ->whereNull('DeletedOn')
+            ->orderBy('Order', 'asc')
+            ->first();
+
+        return !is_null($nextStage);
+    }
+
+    /**
      * Cancel/withdraw workflow
      */
     public function cancelWorkflow(
-        User $actor, 
-        string $source, 
-        string|int $sourceId, 
+        User $actor,
+        string $source,
+        string|int $sourceId,
         string $reason = 'Cancelled by submitter'
     ): bool {
         $class = Relation::getMorphedModel($source);
@@ -855,7 +849,6 @@ private function rollbackSubmission(string $table, string|int $sourceId, int $us
 
             DB::commit();
             return true;
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Error cancelling workflow', ['error' => $e->getMessage()]);
@@ -863,243 +856,249 @@ private function rollbackSubmission(string $table, string|int $sourceId, int $us
         }
     }
 
-    private function advanceToNextStage(string $table, string|int $sourceId, ?int $currentStageId, int $userId): void
-{
-     try {
-        DB::beginTransaction();
+    //advancing to the nect stage
+    private function advanceToNextStage(string $table, string|int $sourceId, ?int $currentStageId, int $userId, string $statusColumn = 'Status'): void
+    {
+        try {
+            DB::beginTransaction();
 
-        //  Better logging
-        Log::info("=== ADVANCING TO NEXT STAGE ===", [
-            'table' => $table,
-            'sourceId' => $sourceId,
-            'currentStageId' => $currentStageId,
-            'userId' => $userId,
-        ]);
-
-        if (!$currentStageId) {
-            Log::warning("Cannot advance: currentStageId is null", ['table' => $table, 'sourceId' => $sourceId]);
-            DB::rollBack();
-            return;
-        }
-
-        // Get current stage order
-      $currentStage = WorkflowStage::query() // Use the model defined in your earlier response
-    ->where('Id', $currentStageId)
-    ->whereNull('DeletedOn')
-    ->first();
-
-        if (!$currentStage) {
-            Log::warning("Current stage not found", ['stageId' => $currentStageId]);
-            DB::rollBack();
-            return;
-        }
-
-        $currentOrder = $currentStage->Order;
-        $workflowId = $currentStage->WorkFlowId;
-
-        Log::info("Current stage info", [
-            'stageId' => $currentStageId,
-            'stageName' => $currentStage->StageName,
-            'order' => $currentOrder,
-            'workflowId' => $workflowId,
-        ]);
-
-        // Find next stage
-        $nextStage = DB::table('t_WorkFlowStages')
-            ->where('WorkFlowId', $workflowId)
-            ->where('Order', '>', $currentOrder)
-            ->whereNull('DeletedOn')
-            ->orderBy('Order', 'asc')
-            ->first();
-
-        if ($nextStage) {
-            Log::info("Next stage found", [
-                'nextStageId' => $nextStage->Id,
-                'nextStageName' => $nextStage->StageName,
-                'nextOrder' => $nextStage->Order,
-                'permissionId' => $nextStage->PermissionId,
-            ]);
-
-            // Clean up any existing pending for this stage
-            $deleted = DB::table('t_WorkFlowPending')
-                ->where('Source', $table)
-                ->where('SourceID', (string)$sourceId)
-                ->where('Stage', (string)$nextStage->Id)
-                ->delete();
-
-            if ($deleted > 0) {
-                Log::info("Cleaned up existing pending entries", ['count' => $deleted]);
-            }
-
-            // Get submitter for maker-checker rule
-            $submitterId = DB::table('t_WorkFlowHistory')
-                ->where('Source', $table)
-                ->where('SourceID', (string)$sourceId)
-                ->whereNull('DeletedOn')
-                ->orderBy('CreatedOn', 'asc')
-                ->value('CreatedBy');
-
-            Log::info("Submitter ID for maker-checker", ['submitterId' => $submitterId]);
-
-            // Get approved/rejected status IDs
-            $approvedStatusId = DB::table('t_CodeDetails')->where('Description', 'Approved')->value('ID');
-            $rejectedStatusId = DB::table('t_CodeDetails')->where('Description', 'Rejected')->value('ID');
-
-            //  Use the function properly with parameter binding to avoid SQL injection
-            $usersToInsert = DB::select("
-                SELECT DISTINCT u.Id, u.Name, u.Email
-                FROM dbo.f_getUserWithPermission(?) perm
-                JOIN t_Users u ON perm.Id = u.Id
-                WHERE u.DeletedOn IS NULL
-                  AND u.Id != ?
-                  AND NOT EXISTS (
-                      SELECT 1 
-                      FROM t_WorkFlowHistory h
-                      WHERE h.Source = ? 
-                        AND h.SourceID = ? 
-                        AND h.Stage = ?
-                        AND h.CreatedBy = u.Id
-                        AND h.StatusId IN (?, ?)
-                        AND h.DeletedOn IS NULL
-                  )
-            ", [
-                $nextStage->PermissionId,
-                $submitterId ?? 0,
-                $table,
-                (string)$sourceId,
-                (string)$nextStage->Id,
-                $approvedStatusId,
-                $rejectedStatusId
-            ]);
-
-            $usersToInsert = collect($usersToInsert);
-
-            Log::info("Users eligible for next stage", ['count' => $usersToInsert->count()]);
-
-            foreach ($usersToInsert as $user) {
-                DB::table('t_WorkFlowPending')->insert([
-                    'Source' => $table,
-                    'SourceID' => (string)$sourceId,
-                    'Stage' => (string)$nextStage->Id,
-                    'UserId' => $user->Id,
-                    'CreatedBy' => $userId,
-                    'CreatedOn' => now(),
-                    'ModifiedBy' => $userId,
-                    'ModifiedOn' => now(),
-                ]);
-            }
-
-            Log::info("Advanced to next stage successfully", [
+            Log::info("=== ADVANCING TO NEXT STAGE ===", [
                 'table' => $table,
                 'sourceId' => $sourceId,
-                'nextStageId' => $nextStage->Id,
-                'nextStageName' => $nextStage->StageName,
-                'insertedPending' => $usersToInsert->count(),
+                'currentStageId' => $currentStageId,
+                'userId' => $userId,
             ]);
 
-            // Notify next-stage approvers
-            if ($usersToInsert->count() > 0) {
-                $this->notifyNextStageApprovers(collect($usersToInsert), $nextStage, $table, $sourceId);
-            }
-
-            DB::commit();
-            Log::info("Stage advancement completed successfully");
-            
-        } else {
-            //  No next stage - dynamically determine final status
-            Log::info("No next stage found - finalizing workflow as fully approved");
-            
-            // Get the workflow to find the source table details
-            $workflow = DB::table('t_WorkFlows')
-                ->where('Id', $workflowId)
-                ->first();
-            
-            if (!$workflow) {
-                Log::error("Workflow not found for final approval", ['workflowId' => $workflowId]);
+            if (!$currentStageId) {
+                Log::warning("Cannot advance: currentStageId is null", ['table' => $table, 'sourceId' => $sourceId]);
                 DB::rollBack();
                 return;
             }
 
-            //  Get the approved status value for this specific module
-            $finalStatus = $this->getFinalApprovedStatus($workflow->Source, $table);
-            
-            Log::info("Final status determined", [
-                'workflowSource' => $workflow->Source,
-                'table' => $table,
-                'finalStatus' => $finalStatus,
-            ]);
+            $currentStage = WorkflowStage::query()
+                ->where('Id', $currentStageId)
+                ->whereNull('DeletedOn')
+                ->first();
 
-            // Update the main record with dynamic final status
-            $updated = DB::table($table)
-                ->where('Id', $sourceId)
-                ->update([
-                    'Status' => $finalStatus,
-                    'ModifiedBy' => $userId,
-                    'ModifiedOn' => now(),
-                ]);
-
-            if ($updated) {
-                Log::info("Main record status updated successfully", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                    'finalStatus' => $finalStatus,
-                    'rowsAffected' => $updated,
-                ]);
-            } else {
-                Log::warning("No rows affected when updating main record status", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                ]);
+            if (!$currentStage) {
+                Log::warning("Current stage not found", ['stageId' => $currentStageId]);
+                DB::rollBack();
+                return;
             }
 
-            // Mark all approved history entries as finalized
-            $approvedStatusId = DB::table('t_CodeDetails')->where('Description', 'Approved')->value('ID');
-            $historyUpdated = DB::table('t_WorkFlowHistory')
-                ->where('Source', $table)
-                ->where('SourceID', (string)$sourceId)
-                ->where('StatusId', $approvedStatusId)
-                ->whereNull('DeletedOn')
-                ->update([
-                    'isApproved' => 1,
-                    'ModifiedBy' => $userId,
-                    'ModifiedOn' => now(),
-                ]);
+            $currentOrder = $currentStage->Order;
+            $workflowId = $currentStage->WorkFlowId;
 
-            Log::info("Workflow history marked as approved", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'historyRecordsUpdated' => $historyUpdated,
-            ]);
-
-            Log::info("Workflow fully completed - final stage approved", [
-                'table' => $table, 
-                'sourceId' => $sourceId,
-                'finalStatus' => $finalStatus,
+            Log::info("Current stage info", [
+                'stageId' => $currentStageId,
+                'stageName' => $currentStage->StageName,
+                'order' => $currentOrder,
                 'workflowId' => $workflowId,
             ]);
-            
-            DB::commit();
+
+            $nextStage = DB::table('t_WorkFlowStages')
+                ->where('WorkFlowId', $workflowId)
+                ->where('Order', '>', $currentOrder)
+                ->whereNull('DeletedOn')
+                ->orderBy('Order', 'asc')
+                ->first();
+
+            if ($nextStage) {
+                Log::info("Next stage found", [
+                    'nextStageId' => $nextStage->Id,
+                    'nextStageName' => $nextStage->StageName,
+                    'nextOrder' => $nextStage->Order,
+                    'permissionId' => $nextStage->PermissionId,
+                    'workflowTypeId' => $nextStage->WorkFlowTypeId,
+                    'configuredCount' => $nextStage->Count,
+                ]);
+
+                // Retrieve the amount from the history table (mirrors SP logic)
+                $amount = 0;
+                try {
+                    $historyAmountResult = DB::table('t_WorkFlowHistory')
+                        ->where('Source', $table)
+                        ->where('SourceID', (string)$sourceId)
+                        ->whereNull('DeletedOn')
+                        ->whereNotNull('Amount')
+                        ->orderBy('CreatedOn', 'desc')
+                        ->limit(1)
+                        ->value('Amount');
+
+                    $amount = $historyAmountResult ?? 0;
+                    Log::info("Retrieved amount for next stage from History", ['amount' => $amount]);
+                } catch (\Throwable $e) {
+                    Log::warning("Could not retrieve amount from history for next stage", ['error' => $e->getMessage()]);
+                }
+
+                // Determine effective permission for next stage based on amount
+                $effectivePermissionId = $nextStage->PermissionId;
+                $limitType = 'DEFAULT';
+
+                if ($amount > 0) {
+                    try {
+                        $permissionResult = DB::select("
+                        SELECT PermissionId, MaxAmount, LimitType
+                        FROM dbo.f_getPermissionForAmount(?, ?)
+                    ", [$nextStage->Id, $amount]);
+
+                        if (!empty($permissionResult)) {
+                            $effectivePermissionId = $permissionResult[0]->PermissionId;
+                            $limitType = $permissionResult[0]->LimitType;
+                            Log::info("Effective permission for next stage (amount-based)", [
+                                'stageId' => $nextStage->Id,
+                                'amount' => $amount,
+                                'basePermissionId' => $nextStage->PermissionId,
+                                'effectivePermissionId' => $effectivePermissionId,
+                                'limitType' => $limitType,
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                        Log::error("Error determining amount-based permission", ['error' => $e->getMessage()]);
+                    }
+                }
+
+                // Use the stored procedure to handle pending creation
+                // This is more efficient and consistent with submission logic
+                Log::info("Calling p_ProcessWorkflowPending for next stage", [
+                    'table' => $table,
+                    'sourceId' => $sourceId,
+                    'nextStageId' => $nextStage->Id,
+                ]);
+
+                try {
+                    $spResult = DB::select(
+                        'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
+                        [$table, (string)$sourceId, (int)$nextStage->Id]
+                    );
+
+                    Log::info("p_ProcessWorkflowPending result for next stage", ['result' => $spResult]);
+
+                    if (!empty($spResult) && isset($spResult[0]->Status)) {
+                        if ($spResult[0]->Status === 'ERROR') {
+                            Log::error("p_ProcessWorkflowPending returned ERROR during advancement", [
+                                'message' => $spResult[0]->Message ?? 'Unknown error',
+                            ]);
+                            throw new ErroredException($spResult[0]->Message ?? 'Failed to create pending approvals for next stage');
+                        }
+
+                        Log::info("Advanced to next stage successfully", [
+                            'table' => $table,
+                            'sourceId' => $sourceId,
+                            'nextStageId' => $nextStage->Id,
+                            'nextStageName' => $nextStage->StageName,
+                            'insertedPendingCount' => $spResult[0]->InsertedPendingCount ?? 0,
+                            'approvalsRequired' => $spResult[0]->ApprovalsRequired ?? 'N/A',
+                        ]);
+                    }
+
+                    // Get the users who were just inserted for notification
+                    $insertedUsers = DB::table('t_WorkFlowPending as p')
+                        ->join('t_Users as u', 'p.UserId', '=', 'u.Id')
+                        ->where('p.Source', $table)
+                        ->where('p.SourceID', (string)$sourceId)
+                        ->where('p.Stage', (string)$nextStage->Id)
+                        ->whereNull('p.DeletedOn')
+                        ->select('u.Id', 'u.Name', 'u.Email')
+                        ->get();
+
+                    // Notify next-stage approvers
+                    if ($insertedUsers->count() > 0) {
+                        $this->notifyNextStageApprovers($insertedUsers, $nextStage, $table, $sourceId);
+                    }
+                } catch (ErroredException $e) {
+                    throw $e;
+                } catch (\Throwable $e) {
+                    Log::error("Error calling p_ProcessWorkflowPending for next stage", [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    throw new ErroredException("Failed to advance to next stage: " . $e->getMessage());
+                }
+
+                DB::commit();
+                Log::info("Stage advancement completed successfully");
+            } else {
+                // No next stage - workflow fully approved
+                Log::info("No next stage found - finalizing workflow as fully approved");
+
+                try {
+                    // Get the morph alias from table name
+                    $morphAlias = array_search($table, array_map(function ($class) {
+                        return (new $class)->getTable();
+                    }, Relation::morphMap()));
+
+                    if (!$morphAlias) {
+                        // Fallback: try to determine from table name
+                        $morphAlias = Str::snake(Str::singular(str_replace('t_', '', $table)));
+                    }
+
+                    // Get the approved status value for this module
+                    $approvedStatusValue = $this->getFinalApprovedStatus($morphAlias, $table);
+
+                    Log::info("Updating source table to approved status", [
+                        'table' => $table,
+                        'sourceId' => $sourceId,
+                        'morphAlias' => $morphAlias,
+                        'approvedStatusValue' => $approvedStatusValue,
+                    ]);
+
+                    // Dynamically get the primary key column from the model
+                    $primaryKeyColumn = 'Id';  // Default fallback
+                    try {
+                        $modelClass = Relation::getMorphedModel($morphAlias);
+                        if ($modelClass && class_exists($modelClass)) {
+                            $primaryKeyColumn = (new $modelClass)->getKeyName();  // E.g., 'id', 'PlanID', 'custom_id'
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning("Could not determine primary key for table {$table}, using default 'Id'", [
+                            'error' => $e->getMessage(),
+                            'morphAlias' => $morphAlias,
+                        ]);
+                    }
+
+                    Log::info("Using primary key column for update", ['column' => $primaryKeyColumn]);
+
+                    // Update the status column in the source table
+                    DB::statement("
+            UPDATE {$table}
+            SET {$statusColumn} = ?,
+                ModifiedBy = ?,
+                ModifiedOn = GETDATE()
+            WHERE {$primaryKeyColumn} = ?
+        ", [$approvedStatusValue, $userId, $sourceId]);
+
+                    Log::info("Source table updated to approved status successfully");
+                } catch (\Throwable $e) {
+                    Log::error("Failed to update source table status", [
+                        'error' => $e->getMessage(),
+                        'table' => $table,
+                        'sourceId' => $sourceId,
+                    ]);
+                    // Don't throw - workflow is complete, this is just a status update issue
+                }
+
+                DB::commit();
+                Log::info("Workflow finalization completed successfully");
+            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Failed to advance stage", [
+                'error' => $e->getMessage(),
+                'table' => $table,
+                'sourceId' => $sourceId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        Log::error("Failed to advance stage", [
-            'error' => $e->getMessage(),
-            'table' => $table,
-            'sourceId' => $sourceId,
-            'trace' => $e->getTraceAsString(),
-        ]);
-        throw $e;
     }
-}
-
-
 
     /**
- *  Notify next-stage approvers via email
- */
-private function notifyNextStageApprovers(Collection $users, object $nextStage, string $table, string|int $sourceId): void
-{
-     // Get system user ID (similar to SP)
+     *  Notify next-stage approvers via email
+     */
+    private function notifyNextStageApprovers(Collection $users, object $nextStage, string $table, string|int $sourceId): void
+    {
+        // Get system user ID (similar to SP)
         $systemUserId = DB::table('t_Users')
             ->where('UserID', 'ERPSYS')
             ->whereNull('DeletedOn')
@@ -1150,110 +1149,106 @@ private function notifyNextStageApprovers(Collection $users, object $nextStage, 
                 ]);
             }
         }
+    }
 
-}
+    /**
+     * NEW: Dynamically determine the final approved status for a module
+     */
+    private function getFinalApprovedStatus(string $workflowSource, string $table): string
+    {
+        try {
+            // Check workflow configuration or module mapping
+            $mappings = config('workflow', []);
 
-/**
- * NEW: Dynamically determine the final approved status for a module
- */
-private function getFinalApprovedStatus(string $workflowSource, string $table): string
-{
-    try {
-        // Check workflow configuration or module mapping
-        $mappings = config('workflow', []);
-        
-        // Try to find the mapping for this workflow source
-        if (isset($mappings[$workflowSource]) && isset($mappings[$workflowSource]['Approved'])) {
-            return $mappings[$workflowSource]['Approved'];
-        }
-        
-        // Look for common status patterns in the table's code details
-        $commonApprovedStatuses = ['a', 'approved', 'complete', 'completed', 'done', 'final'];
-        
-        foreach ($commonApprovedStatuses as $status) {
-            $exists = DB::table('t_CodeDetails')
-                ->where('CodeID', 'LIKE', '%' . $workflowSource . '%')
-                ->where('Value', $status)
-                ->where('Description', 'LIKE', '%Approved%')
-                ->exists();
-                
-            if ($exists) {
-                Log::info("Found approved status from code details", [
-                    'workflowSource' => $workflowSource,
-                    'status' => $status,
-                ]);
-                return $status;
+            // Try to find the mapping for this workflow source
+            if (isset($mappings[$workflowSource]) && isset($mappings[$workflowSource]['Approved'])) {
+                return $mappings[$workflowSource]['Approved'];
             }
-        }
-        
-        //  Get from the table's typical status values
-        $tableStatus = DB::table('t_CodeDetails')
-            ->where('CodeID', 'LIKE', '%' . $workflowSource . '%')
-            ->where('Description', 'LIKE', '%Approved%')
-            ->value('Value');
-            
-        if ($tableStatus) {
-            Log::info("Found approved status from table code details", [
+
+            // Look for common status patterns in the table's code details
+            $commonApprovedStatuses = ['a', 'approved', 'complete', 'completed', 'done', 'final'];
+
+            foreach ($commonApprovedStatuses as $status) {
+                $exists = DB::table('t_CodeDetails')
+                    ->where('CodeID', 'LIKE', '%' . $workflowSource . '%')
+                    ->where('Value', $status)
+                    ->where('Description', 'LIKE', '%Approved%')
+                    ->exists();
+
+                if ($exists) {
+                    Log::info("Found approved status from code details", [
+                        'workflowSource' => $workflowSource,
+                        'status' => $status,
+                    ]);
+                    return $status;
+                }
+            }
+
+            //  Get from the table's typical status values
+            $tableStatus = DB::table('t_CodeDetails')
+                ->where('CodeID', 'LIKE', '%' . $workflowSource . '%')
+                ->where('Description', 'LIKE', '%Approved%')
+                ->value('Value');
+
+            if ($tableStatus) {
+                Log::info("Found approved status from table code details", [
+                    'workflowSource' => $workflowSource,
+                    'status' => $tableStatus,
+                ]);
+                return $tableStatus;
+            }
+
+            //  Fallback - analyze the table structure and common values
+            $fallbackStatus = $this->determineFallbackStatus($table);
+
+            Log::warning("Using fallback approved status", [
+                'table' => $table,
                 'workflowSource' => $workflowSource,
-                'status' => $tableStatus,
+                'fallbackStatus' => $fallbackStatus,
             ]);
-            return $tableStatus;
+
+            return $fallbackStatus;
+        } catch (\Throwable $e) {
+            Log::error("Error determining final approved status", [
+                'workflowSource' => $workflowSource,
+                'table' => $table,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Ultimate fallback
+            return 'a';
         }
-        
-        //  Fallback - analyze the table structure and common values
-        $fallbackStatus = $this->determineFallbackStatus($table);
-        
-        Log::warning("Using fallback approved status", [
-            'table' => $table,
-            'workflowSource' => $workflowSource,
-            'fallbackStatus' => $fallbackStatus,
-        ]);
-        
-        return $fallbackStatus;
-        
-    } catch (\Throwable $e) {
-        Log::error("Error determining final approved status", [
-            'workflowSource' => $workflowSource,
-            'table' => $table,
-            'error' => $e->getMessage(),
-        ]);
-        
-        // Ultimate fallback
+    }
+
+    /**
+     *  Determine fallback status by analyzing the table
+     */
+    private function determineFallbackStatus(string $table): string
+    {
+        try {
+            // Convert table name to morph alias (adjust if needed)
+            $morphAlias = Str::snake($table); // e.g., 'department_needs'
+
+            // Load status mapping from config
+            $statusMapping = config("workflow.{$morphAlias}", []);
+
+            if (!empty($statusMapping)) {
+                // Prefer 'Approved' if defined
+                if (isset($statusMapping['Approved'])) {
+                    return $statusMapping['Approved'];
+                }
+
+                // Otherwise return the first mapped status
+                return reset($statusMapping);
+            }
+        } catch (\Throwable $e) {
+            Log::error("Error determining fallback status from config", [
+                'table' => $table,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Ultimate fallback if config is missing
         return 'a';
     }
-}
-
-/**
- *  Determine fallback status by analyzing the table
- */
-    private function determineFallbackStatus(string $table): string
-{
-    try {
-        // Convert table name to morph alias (adjust if needed)
-        $morphAlias = Str::snake($table); // e.g., 'department_needs'
-
-        // Load status mapping from config
-        $statusMapping = config("workflow.{$morphAlias}", []);
-
-        if (!empty($statusMapping)) {
-            // Prefer 'Approved' if defined
-            if (isset($statusMapping['Approved'])) {
-                return $statusMapping['Approved'];
-            }
-
-            // Otherwise return the first mapped status
-            return reset($statusMapping);
-        }
-
-    } catch (\Throwable $e) {
-        Log::error("Error determining fallback status from config", [
-            'table' => $table,
-            'error' => $e->getMessage(),
-        ]);
-    }
-
-    // Ultimate fallback if config is missing
-    return 'a';
-}
-
 }

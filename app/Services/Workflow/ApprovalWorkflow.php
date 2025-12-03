@@ -10,18 +10,27 @@ use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Database\Eloquent\Collection;
 use BackedEnum;  
 use Illuminate\Support\Facades\Log;
+
 class ApprovalWorkflow extends ApprovalWorkflowService
 {
     private string $codeId;
+    private string $statusColumn;
 
     /**
      * Constructor to configure the workflow for a specific module.
      * 
      * @param string $codeId The CodeID for the module 
+     * @param string  $statusColumn The dynamic status column to be passed
      */
-    public function __construct(string $codeId)
+    public function __construct(string $codeId, string $statusColumn = 'Status')
     {
         $this->codeId = $codeId;
+        $this->statusColumn = $statusColumn;
+        
+        Log::info("ApprovalWorkflow initialized", [
+            'codeId' => $codeId,
+            'statusColumn' => $statusColumn,
+        ]);
     }
 
     /**
@@ -60,9 +69,17 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      * @return bool
      * @throws ErroredException
      */
-    public function approve($model, User $actor, BackedEnum $approvedStatus, string $remarks = 'Approved', string $statusColumn = 'Status'): bool
+    public function approve($model, User $actor, BackedEnum $approvedStatus, string $remarks = 'Approved', ?string $statusColumn = null): bool
 {
     $status = self::codeDetail($approvedStatus, $this->codeId);
+    // Use provided column or fall back to instance default
+        $columnToUse = $statusColumn ?? $this->statusColumn;
+        
+        Log::info("Approving with status column", [
+            'providedColumn' => $statusColumn,
+            'instanceColumn' => $this->statusColumn,
+            'columnToUse' => $columnToUse,
+        ]);
 
     // Capture the result from approveAction
     $result = $this->approveAction(
@@ -90,9 +107,17 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      * @return bool
      * @throws ErroredException
      */
-    public function reject($model, User $actor, BackedEnum $rejectedStatus, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
+    public function reject($model, User $actor, BackedEnum $rejectedStatus, string $remarks = 'Rejected', ?string $statusColumn = null): bool
     {
         $status = self::codeDetail($rejectedStatus, $this->codeId);
+            // Use provided column or fall back to instance default
+        $columnToUse = $statusColumn ?? $this->statusColumn;
+        
+        Log::info("Rejecting  with status column", [
+            'providedColumn' => $statusColumn,
+            'instanceColumn' => $this->statusColumn,
+            'columnToUse' => $columnToUse,
+        ]);
         
         return $this->rejectAction(
             $actor, 
@@ -155,5 +180,13 @@ class ApprovalWorkflow extends ApprovalWorkflowService
     public function getStatus($model): array
     {
         return $this->getWorkflowStatus($model::getPrimaryKey(), $model->getKey());
+    }
+
+    /**
+     * Get the status column being used by this workflow instance
+     */
+    public function getStatusColumn(): string
+    {
+        return $this->statusColumn;
     }
 }

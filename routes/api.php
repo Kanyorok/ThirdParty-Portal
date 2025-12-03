@@ -4,10 +4,11 @@ use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
@@ -58,7 +59,7 @@ Route::prefix('third-party-auth')->group(function () {
 });
 
 // step 2: Register company info (associated third party)
-Route::post('third-parties/register-details', [ThirdPartyController::class, 'store']);
+Route::post('third-parties/register-details', [ThirdPartiesController::class, 'store']);
 
 // Health check endpoint
 Route::get('/health', function () {
@@ -172,21 +173,21 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
     });
 
     Route::prefix('third-party-profile')->group(function () {
-        Route::get('/', [ThirdPartyUserProfileController::class, 'show']);
-        Route::put('/', [ThirdPartyUserProfileController::class, 'update']);
-        Route::patch('/', [ThirdPartyUserProfileController::class, 'partialUpdate']);
-        Route::delete('/', [ThirdPartyUserProfileController::class, 'destroy']);
-        Route::put('/password', [ThirdPartyUserProfileController::class, 'changePassword']);
+        Route::get('/', [ThirdPartyProfileController::class, 'show']);
+        Route::put('/', [ThirdPartyProfileController::class, 'update']);
+        Route::patch('/', [ThirdPartyProfileController::class, 'partialUpdate']);
+        Route::delete('/', [ThirdPartyProfileController::class, 'destroy']);
+        Route::put('/password', [ThirdPartyProfileController::class, 'changePassword']);
     });
 
     Route::prefix('third-parties')->group(function () {
-        Route::get('/', [ThirdPartyController::class, 'index']);
+        Route::get('/', [ThirdPartiesController::class, 'index']);
 
-        Route::get('me', [ThirdPartyController::class, 'showMyThirdPartyDetails']);
+        Route::get('me', [ThirdPartiesController::class, 'showMyThirdPartyDetails']);
 
-        Route::get('{third_party}', [ThirdPartyController::class, 'show']);
-        Route::put('{third_party}', [ThirdPartyController::class, 'update']);
-        Route::delete('{third_party}', [ThirdPartyController::class, 'destroy']);
+        Route::get('{third_party}', [ThirdPartiesController::class, 'show']);
+        Route::put('{third_party}', [ThirdPartiesController::class, 'update']);
+        Route::delete('{third_party}', [ThirdPartiesController::class, 'destroy']);
         // Upload supporting documents for a third party
         Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
         // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);

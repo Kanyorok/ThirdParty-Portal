@@ -69,27 +69,31 @@ class ThirdPartyTypesSeeder extends Seeder
          $existingColumns = DB::getSchemaBuilder()->getColumnListing('t_ThirdPartyTypes');
          $useCodeColumn = in_array('Code', $existingColumns); // will be true after migration adding Code
 
-         $tenantCode = 'TN';
-         $supplierCode = 'SU';
-         $customerCode = 'CU';
+        $tenantCode = 'TE-0001';
+        $supplierCode = 'SU-0001';
+        $customerCode = 'CU-0001';
 
-         $tenantDescription = 'Tenant';
-         $supplierDescription = 'Supplier';
-         $customerDescription = 'Customer';
+        $tenantDescription = 'Tenant';
+        $supplierDescription = 'Supplier';
+        $customerDescription = 'Customer';
 
-         // Resolve CategoryMaster IDs for Tenant (Name=Tenant, Type=TenantCategory) and Supplier (Name=Supplier, Type=SupplierCategory)
-         $tenantCategoryId = DB::table('t_CategoryMaster')
-             ->where('Name', 'Tenant')
-             ->where('Type', 'TenantCategory')
-             ->value('Id');
-         $supplierCategoryId = DB::table('t_CategoryMaster')
-             ->where('Name', 'Supplier')
-             ->where('Type', 'SupplierCategory')
-             ->value('Id');
+        // Resolve CategoryMaster IDs for Tenant (Name=Tenant, Type=TenantCategory) and Supplier (Name=Supplier, Type=SupplierCategory)
+        $tenantCategoryId = DB::table('t_CategoryMaster')
+            ->where('Name', 'Tenant')
+            ->where('Type', 'TenantCategory')
+            ->value('Id');
+        $supplierCategoryId = DB::table('t_CategoryMaster')
+            ->where('Name', 'Supplier')
+            ->where('Type', 'SupplierCategory')
+            ->value('Id');
+        $customerCategoryId = DB::table('t_CategoryMaster')
+            ->where('Name', 'Customer')
+            ->where('Type', 'CustomerCategory')
+            ->value('Id');
 
-         if (!$tenantCategoryId || !$supplierCategoryId) {
-             $this->command?->warn('Required CategoryMaster records (Tenant/Supplier) missing; run CategoryMasterSeeder first.');
-         }
+        if (!$tenantCategoryId || !$supplierCategoryId || !$customerCategoryId) {
+            $this->command?->warn('Required CategoryMaster records (Tenant/Supplier/Customer) missing; run CategoryMasterSeeder first.');
+        }
 
          // Helper closure to upsert single record
          $upsert = function (string $code, ?int $categoryId, string $codeDesc) use ($useCodeColumn, $now, $userId, $creditorRoleId, $debtorRoleId) {
@@ -121,11 +125,13 @@ class ThirdPartyTypesSeeder extends Seeder
              }
          };
 
-         $upsert($tenantCode, $tenantCategoryId, $tenantDescription);
-         $upsert($supplierCode, $supplierCategoryId, $supplierDescription);
+        $upsert($tenantCode, $tenantCategoryId,$tenantDescription);
+        $upsert($supplierCode, $supplierCategoryId,$supplierDescription);
+        $upsert($customerCode, $customerCategoryId,$customerDescription);
 
-         //Add manually the Descriptions
-         DB::table('t_ThirdPartyTypes')->where('Code', $tenantCode)->update(['Description' => 'Tenant']);
-         DB::table('t_ThirdPartyTypes')->where('Code', $supplierCode)->update(['Description' => 'Supplier']);*/
+        //Add manually the Descriptions
+        DB::table('t_ThirdPartyTypes')->where('Code', $tenantCode)->update(['Description' => 'Tenant']);
+        DB::table('t_ThirdPartyTypes')->where('Code', $supplierCode)->update(['Description' => 'Supplier']);
+        DB::table('t_ThirdPartyTypes')->where('Code', $customerCode)->update(['Description' => 'Customer']);
     }
 }

@@ -10,6 +10,7 @@ use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -47,23 +48,21 @@ class Tender extends Model
         'SubmissionDeadline',
         'OpeningDate',
         'Status',
-        //'RelatedPRID',
         'ProcurementModeId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
         'StartDate',
         'CurrencyId',
-        // 'TenderCategory',
         'ApprovalRemarks',
-        'ApprovalStatus', // 1 for approved, 2 for rejected, 0 for pending
+        'ApprovalStatus',
+        'ItemCategoryId', // Added this field
     ];
 
     protected $casts = [
         'TenderType' => TenderTypeEnum::class,
         'Status' => TenderStatusEnum::class,
         'ApprovalStatus' => TenderApprovalStatusEnum::class,
-        // 'TenderCategory' => TenderCategoryEnum::class,
         'SubmissionDeadline' => 'datetime',
         'OpeningDate' => 'datetime',
         'ModifiedOn' => 'datetime',
@@ -78,6 +77,7 @@ class Tender extends Model
     {
         return $this->belongsTo(TenderCategory::class, 'TenderCategory', 'Id');
     }
+
     public function procurementMode(): BelongsTo
     {
         return $this->belongsTo(ProcurementMode::class, 'ProcurementModeId');
@@ -94,15 +94,6 @@ class Tender extends Model
     {
         return $this->belongsTo(ItemCategories::class, 'ItemCategoryId', 'Id');
     }
-
-    //TODO: with tenderinvitations
-    // public function suppliers(): BelongsToMany
-    // {
-    //     return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'SupplierID')
-    //         ->using(TenderVendor::class)
-    //         ->withPivot('InvitationStatus', 'InvitationDate', 'ResponseDate')
-    //         ->withTimestamps('CreatedOn', 'ModifiedOn', 'DeletedOn');
-    // }
 
     public function invitations(): HasMany
     {
@@ -122,6 +113,7 @@ class Tender extends Model
                 'ConfirmationAttachment'
             ]);
     }
+
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
@@ -137,10 +129,10 @@ class Tender extends Model
         return $this->belongsTo(ProcurementPlan::class, 'RelatedPRID');
     }
 
-    public function documents(): HasMany
-    {
-        return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
-    }
+    // public function documents(): HasMany
+    // {
+    //     return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
+    // }
 
     public function submissions(): HasMany
     {
@@ -162,7 +154,6 @@ class Tender extends Model
      */
     public function getEvaluationReadiness()
     {
-        // Use DB-backed checks to avoid false negatives from lazy or filtered relations
         $activeSectionsCount = TenderSection::where('TenderID', $this->Id)
             ->where('IsActive', true)
             ->count();
@@ -195,11 +186,6 @@ class Tender extends Model
         ];
     }
 
-    // public function creator(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class, 'CreatedBy');
-    // }
-
     public function modifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
@@ -208,7 +194,6 @@ class Tender extends Model
     // Scopes
     public function scopeActiveTenders($query)
     {
-        // Active if published and deadline is today or later (inclusive day)
         return $query->where('Status', TenderStatusEnum::Published->value)
             ->whereDate('SubmissionDeadline', '>=', Carbon::now()->toDateString());
     }
@@ -278,14 +263,30 @@ class Tender extends Model
         return $this->hasMany(TenderItems::class, 'TenderID', 'Id');
     }
 
+    /**
+     * Get the primary key for workflow (morph alias)
+     * This returns the string identifier for the workflow system
+     */
     public static function getPrimaryKey(): string
     {
-        return (new self())->getRouteKeyName();
+        return 'tender'; // This is the morph alias for workflow, not the database column
     }
 
+    /**
+     * Keep your existing route key name to avoid breaking other modules
+     */
     public function getRouteKeyName(): string
     {
-        return 'TenderID';
+        return 'TenderID'; // Keep this as is for your routes
+    }
+
+    /**
+     * Workflow history relationship - FIXED
+     * The morphMany relationship should use 'source' as the method name in WorkflowHistory
+     */
+    public function workflowHistory(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Core\Approval\WorkflowHistory::class, 'source', 'Source', 'SourceID');
     }
 
     /**

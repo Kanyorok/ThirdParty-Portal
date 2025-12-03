@@ -49,13 +49,13 @@
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Date Needed</label>
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-                    {{ Carbon::parse($need->RequestedDate)->format('d M Y') }}
+                    {{ Carbon::parse($need->RequestedDate)->format('d/m/Y') }}
                 </div>
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Submitted On</label>
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
-                    {{ Carbon::parse($need->CreatedOn)->format('d M Y') }}
+                    {{ Carbon::parse($need->CreatedOn)->format('d/m/Y') }}
                 </div>
             </div>
 
