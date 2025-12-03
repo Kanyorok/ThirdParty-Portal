@@ -185,7 +185,7 @@ class TenderController extends Controller
         ));
     }
 
-   public function store(Request $request, User $user)
+   public function store(Request $request)
 {
     DB::beginTransaction();
 
@@ -193,6 +193,10 @@ class TenderController extends Controller
         // Create the tender model
         $tender = $this->createTenderModel($request);
         $tenderId = $tender->Id;
+
+
+        //document upload to dms
+        $this->attachDocuments($request, $tender);
 
         // Process plan items
         if (!empty($request->plan_items)) {
@@ -261,21 +265,6 @@ class TenderController extends Controller
                     'CreatedBy' => Auth::id(),
                     'ModifiedBy' => Auth::id(),
                 ]);
-            }
-        }
-
-        // Attach documents to DMS (from create form)
-        if ($request->hasFile('documents')) {
-            foreach ((array) $request->file('documents') as $uploadedFile) {
-                if (!$uploadedFile) {
-                    continue;
-                }
-                $tender->newDocument(
-                    ModulesEnum::Procurement, 
-                    $uploadedFile, 
-                    [PermissionEnum::TenderRead->value], 
-                    $user
-                );
             }
         }
 
@@ -469,7 +458,7 @@ class TenderController extends Controller
         // Build addable suppliers list using the prequalification helper and filter by tender's top-level category
         $topCategoryId = (int) $tender->ItemCategoryId;
         $prequalified = $this->getPrequalifiedSuppliers(); // Collection of arrays
-        $otherSuppliers = collect($prequalified)
+        $otherSuppliers = collect(value: $prequalified)
             ->filter(function ($s) use ($topCategoryId, $existingSupplierIds) {
                 $id = (int) ($s['Id'] ?? 0);
                 $cats = collect($s['ItemCategoryIds'] ?? []);
@@ -884,100 +873,71 @@ public function approveTender(Request $request)
 }
 
     // AJAX: return distinct top-level item categories for the selected tender category
-    public function allowedCategories(Request $request)
-    {
-        $tenderCategoryId = (int) $request->query('tender_category_id', 0);
-        if ($tenderCategoryId <= 0) {
-            return response()->json(['ok' => true, 'categories' => []]);
+   public function allowedCategories(Request $request)
+{
+    try {
+        $tenderCategoryId = $request->input('tender_category_id');
+        
+        if (!$tenderCategoryId) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Tender category ID is required',
+                'categories' => []
+            ], 400);
         }
 
-        // PRIMARY PATH: Two-level hierarchy (child -> parent or self if already root)
-        $rows = DB::table('t_Items as i')
-            ->join('t_ItemTypes as it', 'i.ItemType', '=', 'it.TypeName')
-            ->join('t_TenderCategoryItemTypes as t', function ($j) use ($tenderCategoryId) {
-                $j->on('t.ItemTypeId', '=', 'it.Id')
-                    ->where('t.TenderCategoryId', '=', $tenderCategoryId)
-                    ->where('t.IsActive', '=', 1);
-            })
-            ->join('t_ItemCategories as c', 'c.Id', '=', 'i.Category')
-            ->leftJoin('t_ItemCategories as p', 'p.Id', '=', 'c.ParentId')
-            // If you soft delete or have active flags, uncomment as appropriate:
-            // ->whereNull('i.DeletedOn')
-            // ->whereNull('c.DeletedOn')
-            // ->where(function ($q) { $q->whereNull('p.DeletedOn')->orWhereNull('c.ParentId')->orWhere('c.ParentId', 0); })
-            ->distinct()
-            ->selectRaw('
-            COALESCE(NULLIF(c.ParentId, 0), c.Id) AS Id,
-            COALESCE(p.Name, c.Name)            AS Name
-        ')
-            ->orderBy('Id')
-            ->get();
+        Log::info("Fetching allowed categories for tender category: {$tenderCategoryId}");
 
-        if ($rows->isNotEmpty()) {
-            try {
-                Log::info('allowedCategories primary', [
-                    'tenderCategoryId' => $tenderCategoryId,
-                    'count' => $rows->count(),
-                    'ids' => $rows->pluck('Id')->take(20)->values(), // cap to 20 for log brevity
-                ]);
-            } catch (\Throwable $e) {
-                // no-op logging guard
-            }
-            return response()->json(['ok' => true, 'categories' => $rows->values()]);
-        }
-
-        // FALLBACK: If the join path returns nothing (edge data states), compute
-        // roots from the same two-level logic via a simpler pass.
-        $allowedTypeIds = DB::table('t_TenderCategoryItemTypes')
+        // Query the junction table to get allowed item types for this tender category
+        $allowedItemTypes = DB::table('t_TenderCategoryItemTypes')
             ->where('TenderCategoryId', $tenderCategoryId)
             ->where('IsActive', 1)
-            ->pluck('ItemTypeId');
+            ->pluck('ItemTypeId')
+            ->toArray();
 
-        if ($allowedTypeIds->isEmpty()) {
-            return response()->json(['ok' => true, 'categories' => []]);
-        }
+        Log::info("Found item type IDs", ['item_types' => $allowedItemTypes]);
 
-        $codeDetailIds = DB::table('t_ItemTypes')
-            ->whereIn('Id', $allowedTypeIds)
-            ->pluck('TypeName');
-
-        $catIds = DB::table('t_Items')
-            ->whereIn('ItemType', $codeDetailIds)
-            ->pluck('Category');
-
-        if ($catIds->isEmpty()) {
-            return response()->json(['ok' => true, 'categories' => []]);
-        }
-
-        // Map each category to its root (two-level)
-        $cats = DB::table('t_ItemCategories')->whereIn('Id', $catIds)->get(['Id', 'ParentId']);
-        $parentMap = DB::table('t_ItemCategories')
-            ->whereIn('Id', $cats->pluck('ParentId')->filter()->unique())
-            ->pluck('Id')
-            ->flip(); // keys = parent ids
-
-        $rootIds = $cats->map(function ($c) use ($parentMap) {
-            $pid = (int) ($c->ParentId ?? 0);
-            return $pid > 0 && $parentMap->has($pid) ? $pid : (int) $c->Id;
-        })->unique()->values();
-
-        $roots = DB::table('t_ItemCategories')
-            ->whereIn('Id', $rootIds)
-            ->orderBy('Id')
-            ->get(['Id', 'Name']);
-
-        try {
-            Log::info('allowedCategories fallback', [
-                'tenderCategoryId' => $tenderCategoryId,
-                'count' => $roots->count(),
-                'ids' => $roots->pluck('Id')->take(20)->values(),
+        if (empty($allowedItemTypes)) {
+            Log::warning("No active item types found for tender category: {$tenderCategoryId}");
+            return response()->json([
+                'ok' => true,
+                'message' => 'No item categories configured for this tender category',
+                'categories' => []
             ]);
-        } catch (\Throwable $e) {
-            // no-op logging guard
         }
-        return response()->json(['ok' => true, 'categories' => $roots->values()]);
-    }
 
+        // Fetch the actual item categories
+        $categories = DB::table('t_ItemType')
+            ->whereIn('Id', $allowedItemTypes)
+            ->whereNull('DeletedBy')
+            ->select('Id', 'Name')
+            ->orderBy('Name')
+            ->get();
+
+        Log::info("Retrieved categories", [
+            'count' => $categories->count(),
+            'categories' => $categories->toArray()
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'categories' => $categories,
+            'message' => 'Categories retrieved successfully'
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error("Error fetching allowed categories", [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'ok' => false,
+            'message' => 'An error occurred while fetching categories',
+            'categories' => []
+        ], 500);
+    }
+}
  public function rejectTender(Request $request)
 {
     $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
