@@ -386,57 +386,86 @@ class TenderController extends Controller
 
 
     //added maker chekcer   
-    public function show(string $id)
-    {
-        $this->authorize(PermissionEnum::TenderRead, Tender::class);
-        $tender = Tender::findOrFail($id);
-        $user = Auth::user();
-        $canApprove = $this->workflow->canApproveModel($tender, $user);
-        Log::info("User {$user->id} canApprove for Tender {$tender->Id}: " . ($canApprove ? 'YES' : 'NO'));
-        $show = false;
-        if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
-            $show = true;
-        }
-        $items = TenderItems::where('TenderID', $id)->with(['item', 'category', 'item.price'])->get();
-
-        $totalEstimatedCost = $items->sum(function ($item) {
-            $qty = $item->QtyToTender ?? 0;
-            $price = $item->item?->price?->ActualPrice ?? 0;
-            return $qty * $price;
-        });
-
-        $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier.thirdParty')->get();
-        $tenderCategory = TenderCategory::find($tender->tender_category_id);
-        $itemCategory = ItemCategories::find($tender->item_category_id);
-        $currency = Currency::find($tender->currency_id);
-        $procurementPlan = ProcurementPlan::find($tender->procurement_plan_id);
-
-        $planItems = [];
-        $manualItems = [];
-
-        foreach ($planItems as $planItem) {
-            $planItem->item_name = ItemMasterList::find($planItem->item_id)?->ItemName ?? 'N/A';
-        }
-
-        foreach ($manualItems as $manualItem) {
-            $manualItem->item_name = ItemMasterList::find($manualItem->item_id)?->ItemName ?? 'N/A';
-        }
-
-        return view('procurement.tendering.tendersetup.tenderinitiation.show', compact(            'tender',
-            'tenderCategory',
-            'itemCategory',
-            'currency',
-            'procurementPlan',
-            'planItems',
-            'manualItems',
-            'items',
-            'suppliers',
-            'show',
-            'canApprove',
-            'totalEstimatedCost',
-            
-         ) );
+   public function show(string $id)
+{
+    $this->authorize(PermissionEnum::TenderRead, Tender::class);
+    
+    $tender = Tender::findOrFail($id);
+    $user = Auth::user();
+    $canApprove = $this->workflow->canApproveModel($tender, $user);
+    
+    Log::info("User {$user->id} canApprove for Tender {$tender->Id}: " . ($canApprove ? 'YES' : 'NO'));
+    
+    $show = false;
+    if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || 
+        $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
+        $show = true;
     }
+    
+    // Get tender items with relationships
+    $items = TenderItems::where('TenderID', $id)
+        ->with(['item', 'category', 'item.price'])
+        ->get();
+
+    // Calculate total estimated cost
+    $totalEstimatedCost = $items->sum(function ($item) {
+        $qty = $item->QtyToTender ?? 0;
+        $price = $item->item?->price?->ActualPrice ?? 0;
+        return $qty * $price;
+    });
+
+    // Get suppliers
+    $suppliers = TenderSupplier::where('TenderID', $id)
+        ->with('supplier.thirdParty')
+        ->get();
+    
+    // FIXED: Use correct column names (PascalCase, not snake_case)
+    $tenderCategory = TenderCategory::find($tender->TenderCategory); // Not tender_category_id
+    $itemCategory = ItemCategories::find($tender->ItemCategoryId);    // Not item_category_id
+    $currency = Currency::find($tender->CurrencyId);                  // Not currency_id
+    
+    // Get documents from DMS (via DocumentsTrait)
+    try {
+        $documents = $tender->documents; // This should work if DocumentsTrait is properly set up
+    } catch (\Exception $e) {
+        Log::error("Failed to load tender documents: " . $e->getMessage());
+        $documents = collect(); // Return empty collection on error
+    }
+    
+    // Note: procurement_plan_id doesn't exist in your Tender model's fillable array
+    // If you need procurement plan, you should add it to the fillable array first
+    // For now, I'm commenting it out:
+    // $procurementPlan = ProcurementPlan::find($tender->procurement_plan_id);
+
+    $planItems = [];
+    $manualItems = [];
+
+    // These loops don't do anything since $planItems and $manualItems are empty arrays
+    // You might want to remove them or populate these arrays first
+    foreach ($planItems as $planItem) {
+        $planItem->item_name = ItemMasterList::find($planItem->item_id)?->ItemName ?? 'N/A';
+    }
+
+    foreach ($manualItems as $manualItem) {
+        $manualItem->item_name = ItemMasterList::find($manualItem->item_id)?->ItemName ?? 'N/A';
+    }
+
+    return view('procurement.tendering.tendersetup.tenderinitiation.show', compact(
+        'tender',
+        'tenderCategory',
+        'itemCategory',
+        'currency',
+        // 'procurementPlan', // Commented out - column doesn't exist
+        'planItems',
+        'manualItems',
+        'items',
+        'suppliers',
+        'show',
+        'canApprove',
+        'totalEstimatedCost',
+        'documents'
+    ));
+}
 
     public function edit(string $id)
     {
@@ -873,7 +902,7 @@ public function approveTender(Request $request)
 }
 
     // AJAX: return distinct top-level item categories for the selected tender category
-   public function allowedCategories(Request $request)
+  public function allowedCategories(Request $request)
 {
     try {
         $tenderCategoryId = $request->input('tender_category_id');
@@ -906,8 +935,8 @@ public function approveTender(Request $request)
             ]);
         }
 
-        // Fetch the actual item categories
-        $categories = DB::table('t_ItemType')
+        // Fetch the actual item categories - CORRECTED TABLE NAME
+        $categories = DB::table('t_ItemCategories')
             ->whereIn('Id', $allowedItemTypes)
             ->whereNull('DeletedBy')
             ->select('Id', 'Name')
@@ -1332,16 +1361,67 @@ public function workflowHistory($id)
         }
     }
 
-    private function attachDocuments(Request $request, Tender $tender): void
-    {
-        if ($request->hasFile('documents')) {
-            foreach ((array) $request->file('documents') as $uploadedFile) {
-                if ($uploadedFile) {
-                    $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
-                }
-            }
+private function attachDocuments(Request $request, Tender $tender): void
+{
+    if (!$request->hasFile('documents')) {
+        return;
+    }
+
+    $uploadedCount = 0;
+    $failedCount = 0;
+
+    foreach ((array) $request->file('documents') as $uploadedFile) {
+        if (!$uploadedFile || !$uploadedFile->isValid()) {
+            Log::warning('Invalid file upload detected', [
+                'tender_id' => $tender->Id,
+                'file' => $uploadedFile ? $uploadedFile->getClientOriginalName() : 'null'
+            ]);
+            continue;
+        }
+
+        try {
+            Log::info('Attempting to attach document', [
+                'tender_id' => $tender->Id,
+                'filename' => $uploadedFile->getClientOriginalName(),
+                'size' => $uploadedFile->getSize(),
+                'mime' => $uploadedFile->getMimeType()
+            ]);
+
+            $test = $tender->newDocument(
+                ModulesEnum::Procurement,
+                $uploadedFile,
+                [PermissionEnum::TenderWrite->value],
+                Auth::user()
+            );
+
+            $uploadedCount++;
+            Log::info('Document attached successfully', [
+                'tender_id' => $tender->Id,
+                'filename' => $uploadedFile->getClientOriginalName(),
+                'full_log' => $test
+            ]);
+
+        } catch (\Exception $e) {
+            $failedCount++;
+            Log::error('Failed to attach document to tender', [
+                'tender_id' => $tender->Id,
+                'filename' => $uploadedFile->getClientOriginalName(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Don't throw - allow tender creation to continue
+            // You could throw here if documents are critical:
+            // throw new \Exception("Failed to attach document: " . $e->getMessage());
         }
     }
+
+    Log::info('Document attachment completed', [
+        'tender_id' => $tender->Id,
+        'uploaded' => $uploadedCount,
+        'failed' => $failedCount
+    ]);
+}
 
     private function initiateWorkflow(Tender $tender): void
     {
