@@ -31,46 +31,18 @@ class ThirdPartyController extends Controller
                 $query = ThirdParties::query()
                     ->with(['businessType:Id,Description', 'country:Id,Name,Flag', 'types:TypeId,Code,Description', 'status:Id,Description']);
 
-                return DataTables::of($query)
-                    ->addIndexColumn()
-                    ->addColumn('actions', function (ThirdParties $thirdParties) {
-                        $showUrl = route('thirdparty.parties.show', $thirdParties->Id);
-                        $editUrl = route('thirdparty.parties.edit', $thirdParties->Id);
-                        
-                        return '
-                            <div class="action-buttons">
-                                <a href="' . $showUrl . '" class="btn btn-sm btn-info" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button class="btn btn-sm btn-danger delete-btn" 
-                                        data-id="' . $thirdParties->Id . '" 
-                                        data-name="' . e($thirdParties->ThirdPartyName) . '"
-                                        title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        ';
-                    })
-                    ->editColumn('types', function (ThirdParties $thirdParties) {
-                        return $thirdParties->types->pluck('Description')->map(fn($type) => "<span class='badge bg-primary me-1'>{$type}</span>")->implode(' ');
-                    })
-                    ->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')
-                    ->setRowData([
-                        'dbl_click_url' => function (ThirdParties $thirdParties) {
-                            return route('thirdparty.parties.show', $thirdParties->Id);
-                        },
-                    ])
-                    ->rawColumns(['types', 'actions'])
-                    ->make();
+                return DataTables::of($query)->editColumn('types', function (ThirdParties $thirdParties) {
+                    return $thirdParties->types->pluck('Description')->map(fn($type) => "<span class='badge bg-primary'>{$type}</span>")->implode(' ');
+                })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
+                    'dbl_click_url' => function (ThirdParties $thirdParties) {
+                        return route('thirdparty.parties.show', $thirdParties->Id);
+                    },
+                ])->addIndexColumn()->rawColumns(['types'])->make();
             } catch (Throwable $e) {
                 Log::error('Failed to load third parties: ' . $e->getMessage());
                 return $this->errored('unexpected error occurred while loading the data. please try again later.');
             }
         }
-        
         return view('thirdparty.index', [
             'types' => ThirdPartyType::query()->get(['Code', 'Description']),
             'businessTypes' => CodeDetail::query()->where('CodeID', 'BusinessType')->orderBy('DisplayOrder')->get(['Value', 'Description'])
@@ -222,7 +194,7 @@ class ThirdPartyController extends Controller
 
         // Get available tabs based on third party types
         $availableTabs = $this->getAvailableTabs($thirdParty);
-        
+
         // Get tab data
         $tabData = [
             'profile' => $this->getProfileTabData($thirdParty),
@@ -251,27 +223,27 @@ class ThirdPartyController extends Controller
     private function getAvailableTabs(ThirdParties $thirdParty): array
     {
         $tabs = ['profile']; // Profile tab is always available
-        
+
         $typeCodes = $thirdParty->types->pluck('Code')->toArray();
-        
+
         // Check for supplier type (assuming 'SU' or similar)
         if (in_array('SU', $typeCodes)) {
             $tabs[] = 'supplier';
         }
-        
+
         // Check for customer type (from your form - 'CU')
         if (in_array('CU', $typeCodes)) {
             $tabs[] = 'customer';
         }
-        
+
         // Check for tenant type (from your form - 'TN')
         if (in_array('TN', $typeCodes)) {
             $tabs[] = 'tenant';
         }
-        
+
         // Attribution tab - maybe always available or based on permissions
         $tabs[] = 'attribution';
-        
+
         return $tabs;
     }
 
@@ -334,11 +306,11 @@ class ThirdPartyController extends Controller
     private function getCustomerTabData(ThirdParties $thirdParty): array
     {
         $customer = $thirdParty->customerDetails;
-        
+
         if (!$customer) {
             return ['exists' => false];
         }
-        
+
         return [
             'exists' => true,
             'demographics' => [
@@ -372,13 +344,14 @@ class ThirdPartyController extends Controller
      * Get tenant tab data (From Step 2 - Tenant Details)
      */
     private function getTenantTabData(ThirdParties $thirdParty): array
+    public function show(ThirdParties $thirdParties)
     {
         $tenant = $thirdParty->tenantDetails;
-        
+
         if (!$tenant) {
             return ['exists' => false];
         }
-        
+
         return [
             'exists' => true,
             'tenantInfo' => [
@@ -411,18 +384,18 @@ class ThirdPartyController extends Controller
     private function getSupplierTabData(ThirdParties $thirdParty): array
     {
         $supplier = $thirdParty->supplierInfo;
-        
+
         if (!$supplier) {
             return ['exists' => false];
         }
-        
+
         // Get products from categories/item categories if needed
         $products = [];
         $categories = [];
-        
+
         if ($supplier->categories) {
             $categories = $supplier->categories->map(function($category) {
-                $itemCategories = $category->itemCategories ? 
+                $itemCategories = $category->itemCategories ?
                     $category->itemCategories->map(function($itemCat) {
                         return [
                             'id' => $itemCat->Id ?? $itemCat->ItemCategoryID,
@@ -432,7 +405,7 @@ class ThirdPartyController extends Controller
                             'unitPrice' => 0,
                         ];
                     })->toArray() : [];
-                
+
                 return [
                     'id' => $category->SupplierCategoryID,
                     'name' => $category->CategoryName,
@@ -442,7 +415,7 @@ class ThirdPartyController extends Controller
                     'item_categories_count' => count($itemCategories),
                 ];
             })->toArray();
-            
+
             // Flatten item categories as products for backward compatibility
             foreach ($categories as $category) {
                 foreach ($category['item_categories'] as $itemCategory) {
@@ -456,11 +429,11 @@ class ThirdPartyController extends Controller
                 }
             }
         }
-        
+
         // Get prequalification applications
-        $prequalApplications = $supplier->prequalificationApplications ? 
+        $prequalApplications = $supplier->prequalificationApplications ?
             $supplier->prequalificationApplications : collect([]);
-        
+
         return [
             'exists' => true,
             'supplierInfo' => [
@@ -559,13 +532,13 @@ class ThirdPartyController extends Controller
     private function formatBytes($bytes, $precision = 2): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
-        
+
         $bytes /= (1 << (10 * $pow));
-        
+
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
@@ -577,13 +550,13 @@ class ThirdPartyController extends Controller
         $request->validate([
             'tab' => 'required|in:profile,supplier,customer,tenant,attribution',
         ]);
-        
+
         $thirdParty = ThirdParties::with($this->getTabRelationships($request->tab))
             ->findOrFail($thirdPartyId);
-        
+
         $tab = $request->get('tab');
         $method = 'get' . ucfirst($tab) . 'TabData';
-        
+
         if (method_exists($this, $method)) {
             $data = $this->$method($thirdParty);
             return response()->json([
@@ -595,7 +568,7 @@ class ThirdPartyController extends Controller
                 'title' => $this->getTabTitle($tab),
             ]);
         }
-        
+
         return response()->json([
             'success' => false,
             'message' => 'Tab not found',
@@ -608,7 +581,7 @@ class ThirdPartyController extends Controller
     private function getTabRelationships(string $tab): array
     {
         $relationships = ['types', 'country:id,Name,Flag,PhoneCode'];
-        
+
         switch ($tab) {
             case 'customer':
                 $relationships[] = 'customerDetails';
@@ -639,7 +612,7 @@ class ThirdPartyController extends Controller
                 $relationships[] = 'logo';
                 break;
         }
-        
+
         return $relationships;
     }
 
@@ -655,8 +628,11 @@ class ThirdPartyController extends Controller
             'tenant' => 'Tenant Details',
             'attribution' => 'Attributions & Documents',
         ];
-        
+
         return $titles[$tab] ?? ucfirst($tab);
+        return view('thirdparty.show', [
+            'party' => $thirdParties->load(['types', 'country:Id,Name,Flag'])
+        ]);
     }
 
     /**
