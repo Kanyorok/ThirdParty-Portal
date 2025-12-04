@@ -6,7 +6,9 @@ use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\BR\Product;
 
 class SupplierMaster extends Model
 {
@@ -62,4 +64,54 @@ class SupplierMaster extends Model
         return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
     }
 
+    /**
+     * Get supplier categories through pivot table
+     */
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            SupplierCategory::class,
+            't_ThirdParty_SupplierCategory',
+            'third_party_id',
+            'supplier_category_id',
+            'ThirdPartyId',
+            'SupplierCategoryID'
+        )->whereNull('t_ThirdParty_SupplierCategory.DeletedOn');
+    }
+
+    /**
+     * Get item categories through supplier categories
+     */
+    public function itemCategories()
+    {
+        // Get item categories through supplier categories
+        return $this->hasManyThrough(
+            \App\Models\Inventory\ItemCategories::class,
+            SupplierCategory::class,
+            'SupplierCategoryID',
+            'Id',
+            'ThirdPartyId',
+            'SupplierCategoryID'
+        );
+    }
+
+    /**
+     * Placeholder products relationship - remove or keep as placeholder
+     */
+    public function products()
+    {
+        // Return empty relationship for now to avoid errors
+        return $this->hasMany(Product::class, 'SupplierId', 'Id')
+            ->where('Id', '<', 0);
+    }
+
+    /**
+     * Placeholder contracts relationship
+     */
+    public function contracts()
+    {
+        // Return empty relationship for now
+        return $this->hasMany(\App\Models\Contract::class, 'SupplierId', 'Id')
+            ->where('Id', '<', 0);
+    }
 }
