@@ -125,10 +125,9 @@ class Tender extends Model
     }
 
     public function procurementPlan(): BelongsTo
-    {
-        return $this->belongsTo(ProcurementPlan::class, 'RelatedPRID');
-    }
-
+{
+    return $this->belongsTo(ConsolidatedProcurementPlan::class, 'ProcurementModeId', 'PlanID');
+}
     // public function documents(): HasMany
     // {
     //     return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');

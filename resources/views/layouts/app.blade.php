@@ -526,6 +526,76 @@
         // SidebarState handles highlighting/expansion now.
     })();
   </script>
+<script>
+// Global DataTable Protection - IMPROVED VERSION
+(function() {
+    'use strict';
+    
+    // Wait for jQuery to be available
+    var checkJQuery = setInterval(function() {
+        if (typeof jQuery === 'undefined') return;
+        
+        clearInterval(checkJQuery);
+        
+        var $ = jQuery;
+        
+        // Single global observer for all DataTables
+        function setupDataTableObserver() {
+            // Watch for sidebar state changes
+            var sidebar = document.querySelector('.pc-sidebar');
+            var sidebarToggleButtons = document.querySelectorAll('#sidebar-hide, #mobile-collapse');
+            
+            if (sidebarToggleButtons.length) {
+                sidebarToggleButtons.forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        console.log('[Global DT] Sidebar toggled');
+                        
+                        // Wait for sidebar animation
+                        setTimeout(function() {
+                            // Adjust all DataTables on the page
+                            if ($.fn.DataTable) {
+                                $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                                console.log('[Global DT] All tables adjusted');
+                            }
+                        }, 400);
+                    });
+                });
+            }
+            
+            // Handle window resize for all tables
+            var resizeTimer;
+            $(window).on('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if ($.fn.DataTable) {
+                        $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                        console.log('[Global DT] Tables adjusted on resize');
+                    }
+                }, 250);
+            });
+        }
+        
+        // Initialize on page load
+        $(document).ready(function() {
+            setupDataTableObserver();
+            console.log('[Global DT] Protection initialized');
+        });
+        
+        // Reinitialize after partial navigation
+        document.addEventListener('partial:loaded', function() {
+            console.log('[Global DT] Partial loaded, reinitializing');
+            setTimeout(setupDataTableObserver, 100);
+            
+            // Adjust any existing tables
+            setTimeout(function() {
+                if ($.fn.DataTable) {
+                    $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                }
+            }, 500);
+        });
+        
+    }, 100);
+})();
+</script>
 </body>
-
 </html>
