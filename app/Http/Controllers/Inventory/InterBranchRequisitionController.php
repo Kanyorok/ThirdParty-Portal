@@ -27,36 +27,74 @@ class InterBranchRequisitionController extends Controller
         $this->service = $service;
     }
 
-    public function index(Request $request)
-    {
-        $this->authorize('viewAny', InterBranchRequisition::class);
+   public function index(Request $request)
+{
+    $this->authorize('viewAny', InterBranchRequisition::class);
 
-        $branchId = auth()->user()->employee?->BranchId;
-        $currentBranch = Branch::findOrFail($branchId);
-        
-        $isHeadOffice = $currentBranch->IsHQ;
+    $branchId = auth()->user()->employee?->BranchId;
+    $currentBranch = Branch::findOrFail($branchId);
+    
+    $isHeadOffice = $currentBranch->IsHQ;
 
-        $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
+    // Base query with relationships
+    $baseQuery = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items', 'creator']);
 
-        if (!$isHeadOffice) {
-            $query->where(function ($q) use ($branchId) {
-                $q->where('FromBranch', $branchId)
-                ->orWhere('ToBranch', $branchId);
-            });
-        }
-
-        if ($request->filled('status')) {
-            $enum = InterBranchRequisitionEnum::tryFrom($request->status);
-            $status = $enum ? $enum->value : $request->status;
-            $query->where('Status', $status);
-        }
-
-        $groupedRequisitions = $query->latest()->get();
-
-        return view('inventory.interbranchrequisition.index', compact('groupedRequisitions', 'isHeadOffice'));
+    // Apply status filter if provided
+    if ($request->filled('status')) {
+        $enum = InterBranchRequisitionEnum::tryFrom($request->status);
+        $status = $enum ? $enum->value : $request->status;
+        $baseQuery->where('Status', $status);
     }
 
+    if ($isHeadOffice) {
+        // For Head Office: Show all requisitions
+        $allRequisitions = $baseQuery->latest()->get();
+        
+        // Outgoing: HQ to branches
+        $outgoingRequisitions = (clone $baseQuery)
+            ->where('FromBranch', $branchId)
+            ->get();
+            
+        // Incoming: Doesn't apply for HQ (empty collection)
+        $incomingRequisitions = collect();
+        
+        // For backward compatibility
+        $groupedRequisitions = $allRequisitions;
+    } else {
+        // For Non-HQ Branches: Only see requisitions involving their branch
+        $filteredQuery = (clone $baseQuery)
+            ->where(function ($q) use ($branchId) {
+                $q->where('FromBranch', $branchId)
+                  ->orWhere('ToBranch', $branchId);
+            });
+            
+        $allRequisitions = $filteredQuery->latest()->get();
+        
+        // Incoming: Other branches to current branch
+        $incomingRequisitions = (clone $baseQuery)
+            ->where('ToBranch', $branchId)
+            ->latest()
+            ->get();
+            
+        // Outgoing: Current branch to other branches
+        $outgoingRequisitions = (clone $baseQuery)
+            ->where('FromBranch', $branchId)
+            ->latest()
+            ->get();
+            
+        // For backward compatibility
+        $groupedRequisitions = $allRequisitions;
+    }
 
+    return view('inventory.interbranchrequisition.index', compact(
+        'groupedRequisitions',
+        'allRequisitions',
+        'incomingRequisitions',
+        'outgoingRequisitions',
+        'isHeadOffice',
+        'currentBranch'
+    ));
+}
   public function create()
     {
         $this->authorize('create', InterBranchRequisition::class);
