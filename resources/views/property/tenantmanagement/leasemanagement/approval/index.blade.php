@@ -227,9 +227,6 @@
                     </td>
                 </tr>
                 @empty
-                <tr>
-                    <td colspan="12" class="text-center p-3">No pending approvals found.</td>
-                </tr>
                 @endforelse
                     </tbody>
                 </table>
@@ -363,9 +360,6 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
-                            <td colspan="9" class="text-center p-3">No pending terminations found.</td>
-                        </tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -21,7 +21,7 @@ class PropertyRegistryController extends Controller
 {
     public function index()
     {
-        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
+        //$this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
 
         $properties = PropertyRegistry::with('type')->orderBy('Id', 'desc')->get();
 

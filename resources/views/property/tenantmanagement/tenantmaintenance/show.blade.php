@@ -39,7 +39,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Country of Origin</label>
                     <input type="text" class="form-control bg-light"
-                           value="{{ $newtenant->thirdParty->Country ?? '-' }}" readonly>
+                           value="{{ $newtenant->thirdParty->Country->Name ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
