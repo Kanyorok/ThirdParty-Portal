@@ -247,6 +247,9 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])
         ->middleware(\App\Http\Middleware\CanAction::class . ':approve,rfqs')
         ->name('rfqs.reject');
+    Route::post('/rfqs/{rfq}/publish', [RFQController::class, 'publish'])
+        ->middleware(\App\Http\Middleware\CanAction::class . ':approve,rfqs')
+        ->name('rfqs.publish');
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');
@@ -743,3 +746,12 @@ Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController
 Route::get('committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
 Route::get('tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show.typed');
 Route::get('rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
+
+Route::get('/fix-rfq-1', function () {
+    $s = app(\App\Services\Procurement\RFQ\RFQWorkflowService::class);
+    $r = \App\Models\Procurement\RFQ::find(1);
+    $u = \App\Models\Auth\User::find(4); // User 4 is likely the admin/current user
+    if (!$u) $u = \App\Models\Auth\User::first();
+    $s->submit($r, $u, 'Manual Fix Submission');
+    return 'Submitted RFQ 1';
+});
