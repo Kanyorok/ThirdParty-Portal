@@ -25,31 +25,40 @@ class InterBranchRequisitionApprovalController extends Controller
     public function __construct(InterBranchRequisitionService $service, ApprovalWorkflow $workflow)
     {
         $this->service = $service;
-        $this->workflow = $workflow;
+        $this->workflow = new ApprovalWorkflow('InterBranchRequisitionStatus','Status');
     }
 
-    public function index()
-    {
-        $this->authorize('viewAny', InterBranchRequisition::class);
+   public function index(Request $request)
+{
+    $this->authorize('viewAny', InterBranchRequisition::class);
 
-        $branchId = auth()->user()->employee?->BranchId;
-        $currentBranch = Branch::findOrFail($branchId);
-        $isHeadOffice = $currentBranch->IsHQ;
+    $branchId = auth()->user()->employee?->BranchId;
+    $currentBranch = Branch::findOrFail($branchId);
+    $isHeadOffice = $currentBranch->IsHQ;
 
-        $query = InterBranchRequisition::where('Status', '!=', InterBranchRequisitionEnum::Approved->value)
-                    ->where('Status', '!=', InterBranchRequisitionEnum::Rejected->value);
+    $query = InterBranchRequisition::where('Status', '!=', InterBranchRequisitionEnum::Approved->value)
+                ->where('Status', '!=', InterBranchRequisitionEnum::Rejected->value)->get();
 
-        if (!$isHeadOffice) {
-            $query->where('ToBranch', $branchId);
-        }
-
-        $pendingRequisitions = $query->get();
-
-        return view('inventory.interbranchrequisition.approval.index', [
-            'pendingRequisitions' => $pendingRequisitions,
-            'isHeadOffice' => $isHeadOffice,
-        ]);
+    if (!$isHeadOffice) {
+        $query->where('ToBranch', $branchId);
     }
+
+    $pendingRequisitions = $query;
+    
+    $requisition = null;
+    
+    // Load selected requisition if ID is provided
+    if ($request->filled('ReqId')) {
+        $requisition = InterBranchRequisition::with(['fromBranch', 'toBranch', 'creator', 'items', 'items.item'])
+            ->find($request->ReqId);
+    }
+
+    return view('inventory.interbranchrequisition.approval.index', [
+        'pendingRequisitions' => $pendingRequisitions,
+        'requisition' => $requisition,
+        'isHeadOffice' => $isHeadOffice,
+    ]);
+}
 
     public function show($Id)
     {
@@ -101,7 +110,7 @@ class InterBranchRequisitionApprovalController extends Controller
 
         try {
             DB::transaction(function () use ($requisition, $user) {
-                $this->workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, 'Approved via UI');
+                $this->workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, 'Approved via UI',);
             });
         } catch (ErroredException $e) {
             return redirect()->back()->with('error', $e->getMessage());
@@ -154,7 +163,6 @@ class InterBranchRequisitionApprovalController extends Controller
         return redirect()->route('interbranchrequisitionapproval.index')->with('success', 'Requisition rejected successfully.');
     }
 
-    // Keep your existing method for complex approval with quantities and remarks
     public function submitDecision(Request $request)
     {
         $request->validate([

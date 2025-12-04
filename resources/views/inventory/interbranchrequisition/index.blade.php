@@ -44,7 +44,7 @@
             <select id="filterStatus" name="status" class="form-select form-select-sm me-2" style="width: 170px;">
                 <option value="">Show All</option>
                 <option value="Ap" {{ request('status') == 'Ap' ? 'selected' : '' }}>Approved</option>
-                <option value="su" {{ request('status') == 'su' ? 'selected' : '' }}>Pending Approval</option>
+                <option value="P" {{ request('status') == 'P' ? 'selected' : '' }}>Pending Approval</option>
                 <option value="Re" {{ request('status') == 'Re' ? 'selected' : '' }}>Rejected</option>
             </select>
             <button type="submit" class="btn btn-primary btn-sm">Filter</button>
@@ -97,17 +97,17 @@
                                         <i class="bi bi-eye text-white"></i>
                                     </a>
                                     <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
-                                       class="btn btn-edit btn-sm @if($requisition->Status !== 'su') disabled @endif"
+                                       class="btn btn-edit btn-sm @if($requisition->Status !== 'P') disabled @endif"
                                        data-bs-toggle="tooltip"
-                                       title="@if($requisition->Status !== 'su') Cannot edit - decision made @else Edit Requisition @endif"
-                                       onclick="@if($requisition->Status !== 'su') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
+                                       title="@if($requisition->Status !== 'P') Cannot edit - decision made @else Edit Requisition @endif"
+                                       onclick="@if($requisition->Status !== 'P') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
                                         <i class="bi bi-pencil text-white"></i>
                                     </a>
                                     <button type="button"
-                                            class="btn btn-delete btn-sm @if($requisition->Status !== 'su') disabled @endif"
+                                            class="btn btn-delete btn-sm @if($requisition->Status !== 'P') disabled @endif"
                                             data-bs-toggle="tooltip"
-                                            title="@if($requisition->Status !== 'su') Cannot delete - decision made @else Delete Requisition @endif"
-                                            @if($requisition->Status === 'su')
+                                            title="@if($requisition->Status !== 'P') Cannot delete - decision made @else Delete Requisition @endif"
+                                            @if($requisition->Status === 'P')
                                             onclick="confirmDelete('{{ $requisition->Id }}', '{{ $requisition->ReqNo }}')"
                                             @else
                                             onclick="return showCustomError('You cannot delete this requisition because a decision has already been made.');"

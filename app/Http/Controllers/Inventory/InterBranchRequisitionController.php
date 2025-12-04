@@ -64,16 +64,13 @@ class InterBranchRequisitionController extends Controller
         $branchId = auth()->user()->employee?->BranchId;
         $currentBranch = Branch::findOrFail($branchId);
         
-        // Use IsHQ column to determine head office status
         $isHeadOffice = $currentBranch->IsHQ;
 
         if ($isHeadOffice) {
-            // Head Office: Fixed as From Branch, can send to any other branch
             $fromBranch = $currentBranch;
             $branches = Branch::where('Id', '!=', $branchId)->get();
         } else {
-            // Non-Head Office: Can request from any branch except own, fixed as To Branch
-            $fromBranch = null; // Will be selected by user
+            $fromBranch = null; 
             $branches = Branch::where('Id', '!=', $branchId)->get();
         }
 

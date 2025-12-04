@@ -66,12 +66,15 @@ class InterBranchRequisitionService
             InterBranchRequisitionItem::create($item);
         }
 
-            $this->workflow->submit(
+            //create workflow instance and submit for approval
+            $requisitionflow = new ApprovalWorkflow('InterBranchRequisitionStatus',  'Status' );
+            $requisitionflow->submit(
                 $requisition,
                 $user = Auth::user(),
-                InterBranchRequisitionEnum::Pending,  
-                'Submitted for approval'
+                InterBranchRequisitionEnum::Pending,
+                'Interbranch Requisition Submitted for Approval'
             );
+ 
 
         activity()
             ->performedOn($requisition)
@@ -153,84 +156,53 @@ class InterBranchRequisitionService
         return true;
     }
 
-    public function submitDecision(
-        InterBranchRequisition $requisition,
-        string                 $action,
-        string                 $comments,
-        array                  $approvedQty = [],
-        array                  $itemRemarks = [],
-                               $user = null
-    ): void
-    {
-        $user = $user ?: Auth::user();
+        public function submitDecision(
+            InterBranchRequisition $requisition,
+            string                 $action,
+            string                 $comments,
+            array                  $approvedQty = [],
+            array                  $itemRemarks = [],
+            $user = null
+        ): void
+        {
+            $user = $user ?: Auth::user();
 
-        if (!empty($approvedQty)) {
-            foreach ($approvedQty as $itemId => $qty) {
-                $item = $requisition->items()->find($itemId);
-                if ($item) {
-                    $item->ApprovedQty = $qty;
-                    $item->Remarks = $itemRemarks[$itemId] ?? $item->Remarks;
-                    $item->ModifiedBy = $user->Id;
-                    $item->ModifiedOn = Carbon::now();
-                    $item->save();
+            // Update item quantities and remarks if provided
+            if (!empty($approvedQty)) {
+                foreach ($approvedQty as $itemId => $qty) {
+                    $item = $requisition->items()->find($itemId);
+                    if ($item) {
+                        $item->ApprovedQty = $qty;
+                        $item->Remarks = $itemRemarks[$itemId] ?? $item->Remarks;
+                        $item->ModifiedBy = $user->Id;
+                        $item->ModifiedOn = Carbon::now();
+                        $item->save();
+                    }
                 }
             }
+
+            $workflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
+            
+            if ($action === 'APPROVED') {
+                $workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, $comments);
+            } elseif ($action === 'REJECTED') {
+                $workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $comments);
+            }
+
+            // Log activity
+            activity()
+                ->causedBy($user)
+                ->performedOn($requisition)
+                ->event(strtolower($action))
+                ->log("{$action} inter-branch requisition (ID: {$requisition->Id}) with comment: '{$comments}'");
         }
-
-        if ($action === 'APPROVED') {
-            $requisition->Status = InterBranchRequisitionEnum::Approved->value;
-        } elseif ($action === 'REJECTED') {
-            $requisition->Status = InterBranchRequisitionEnum::Rejected->value;
+            public function getApprovalLevelFromStatus($status)
+            {
+                return match ($status) {
+                    InterBranchRequisitionEnum::Pending->value => InterBranchRequisitionEnum::Pending->label(),
+                    InterBranchRequisitionEnum::Approved->value => InterBranchRequisitionEnum::Approved->label(),
+                    InterBranchRequisitionEnum::Rejected->value => InterBranchRequisitionEnum::Rejected->label(),
+                    default => 'N/A',
+                };
+            }
         }
-        $requisition->ModifiedBy = $user->Id;
-        $requisition->ModifiedOn = Carbon::now();
-        $requisition->save();
-
-        $enum = match ($action) {
-            'APPROVED' => InterBranchRequisitionEnum::Approved,
-            'REJECTED' => InterBranchRequisitionEnum::Rejected,
-            default => InterBranchRequisitionEnum::Pending,
-        };
-
-        Workflow::create([
-            'Source' => 'InterBranchRequisition',
-            'SourceID' => $requisition->Id,
-            'Stage' => $enum->label(),
-            'Status' => $enum->value,
-            'Notes' => $comments,
-            'CreatedBy' => $user->Id,
-            'CreatedOn' => Carbon::now(),
-            'ModifiedBy' => $user->Id,
-            'ModifiedOn' => Carbon::now(),
-        ]);
-
-        $pending = PendingWorkflow::where([
-            'Source' => 'InterBranchRequisition',
-            'SourceID' => $requisition->Id,
-        ])->first();
-
-        if ($pending) {
-            $pending->UserId = $user->Id;
-            $pending->Stage = $enum->label();
-            $pending->ModifiedBy = $user->Id;
-            $pending->ModifiedOn = Carbon::now();
-            $pending->save();
-        }
-
-        activity()
-            ->causedBy($user)
-            ->performedOn($requisition)
-            ->event(strtolower($action))
-            ->log("{$action} inter-branch requisition (ID: {$requisition->Id}) with comment: '{$comments}'");
-    }
-
-    public function getApprovalLevelFromStatus($status)
-    {
-        return match ($status) {
-            InterBranchRequisitionEnum::Pending->value => InterBranchRequisitionEnum::Pending->label(),
-            InterBranchRequisitionEnum::Approved->value => InterBranchRequisitionEnum::Approved->label(),
-            InterBranchRequisitionEnum::Rejected->value => InterBranchRequisitionEnum::Rejected->label(),
-            default => 'N/A',
-        };
-    }
-}
