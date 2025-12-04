@@ -132,6 +132,9 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
     Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
     Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
+    Route::post('purchaseOrder/submit/{id}', [PurchaseOrderController::class, 'submit'])->name('purchaseOrder.submit');
+    Route::post('purchaseOrder/reject/{id}', [PurchaseOrderController::class, 'reject'])->name('purchaseOrder.reject');
+    Route::post('purchaseOrder/return/{id}', [PurchaseOrderController::class, 'return'])->name('purchaseOrder.return');
     Route::get('purchaseOrder/approval/{id}', [PurchaseOrderController::class, 'approval'])->name('purchaseOrder.approval');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
