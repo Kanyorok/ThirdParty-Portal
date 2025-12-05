@@ -208,6 +208,30 @@ class TenderController extends Controller
 
    public function store(Request $request)
 {
+
+    $validated = $request->validate([
+        'tender_category_id' => 'required|integer|exists:t_TenderCategories,Id',
+        'item_category_id' => 'required|integer|exists:t_ItemCategories,Id',
+        'submission_deadline' => [
+            'required',
+            'date',
+            'after_or_equal:today'
+        ],
+        'opening_date' => [
+            'required',
+            'date',
+            'after_or_equal:submission_deadline'
+        ],
+        'title' => 'required|string|max:255',
+        'tender_type' => 'required|string',
+        'scope_of_work' => 'nullable|string',
+        'instructions' => 'nullable|string',
+        'currency_id' => 'required|integer|exists:t_Currencies,Id',
+        'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+    ], [
+        'submission_deadline.after_or_equal' => 'Submission deadline must be today or a future date.',
+        'opening_date.after_or_equal' => 'Opening date must be on or after the submission deadline.',
+    ]);
     DB::beginTransaction();
 
        try {
@@ -1361,7 +1385,7 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
         return false;
     }
 
-    // **FIX: Normalize both arrays to integers for comparison**
+    //  Normalize both arrays to integers for comparison**
     $allowedTypeIds = array_map('intval', $allowedTypeIds);
     $itemTypeRecordId = (int)$itemTypeRecord->Id;
 
