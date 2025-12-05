@@ -178,6 +178,12 @@ class TenderController extends Controller
         $procurementPlansOutput[$planId][] = $entry;
         $planItemData[$planId][] = $entry;
     }
+    //  Get the IDs of plans that actually have items with remaining quantity
+    $plansWithRemainingItems = array_keys($procurementPlansOutput);
+
+    //  Filter the main $procurementPlan collection to only show these IDs
+    $procurementPlan = $procurementPlan->whereIn('PlanID', $plansWithRemainingItems);
+
 
         // Get suppliers with their supplier categories and item categories mapping
         $suppliers = $this->getPrequalifiedSuppliers();
@@ -206,9 +212,8 @@ class TenderController extends Controller
         ));
     }
 
-   public function store(Request $request)
+public function store(Request $request)
 {
-
     $validated = $request->validate([
         'tender_category_id' => 'required|integer|exists:t_TenderCategories,Id',
         'item_category_id' => 'required|integer|exists:t_ItemCategories,Id',
@@ -232,18 +237,21 @@ class TenderController extends Controller
         'submission_deadline.after_or_equal' => 'Submission deadline must be today or a future date.',
         'opening_date.after_or_equal' => 'Opening date must be on or after the submission deadline.',
     ]);
+    
     DB::beginTransaction();
 
-       try {
+    try {
         // Create the tender model
         $tender = $this->createTenderModel($request);
         $tenderId = $tender->Id;
 
-        //  Track which procurement plan this tender is based on**
+        // Track which procurement plan this tender is based on
         $procurementPlanId = null;
-        if (!empty($request->plan_items)) {
+        $planItems = $request->input('plan_items', []); // FIX: Use input() method
+        
+        if (!empty($planItems)) {
             // Extract plan ID from first plan item
-            $firstPlanItem = reset($request->plan_items);
+            $firstPlanItem = reset($planItems);
             $procurementPlanId = $firstPlanItem['plan_id'] ?? null;
             
             if ($procurementPlanId) {
@@ -261,16 +269,16 @@ class TenderController extends Controller
             ->pluck('UsedQty', 'PlanItemID');
 
         // Process plan items
-        if (!empty($request->plan_items)) {
+        if (!empty($planItems)) { // FIX: Use the variable instead of $request->plan_items
             Log::info('Plan items received', [
-                'count' => count($request->plan_items),
-                'sample_keys' => array_slice(array_keys($request->plan_items), 0, 3),
-                'sample_data' => array_slice($request->plan_items, 0, 2)
+                'count' => count($planItems),
+                'sample_keys' => array_slice(array_keys($planItems), 0, 3),
+                'sample_data' => array_slice($planItems, 0, 2)
             ]);
             
             $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
             
-            foreach ($request->plan_items as $compositeKey => $item) {
+            foreach ($planItems as $compositeKey => $item) { // FIX: Use the variable
                 $split = explode('-', $compositeKey);
                 $planItemId = (int)end($split);
                 $itemId = $item['item_id'] ?? null;
@@ -311,8 +319,8 @@ class TenderController extends Controller
                     'SourceType' => 'PLAN',
                     'ItemID' => $itemId,
                     'PlanItemID' => $planItemId,
-                    'PlannedQty' => $plannedQty,  // Original plan quantity
-                    'QtyToTender' => $qtyRequested,  // Quantity for this tender
+                    'PlannedQty' => $plannedQty,
+                    'QtyToTender' => $qtyRequested,
                     'ItemCategory' => $request->item_category_id,
                     'Remarks' => null,
                     'RelatedPRID' => $item['pr_ref'] ?? null,
@@ -323,9 +331,10 @@ class TenderController extends Controller
         }
 
         // Process manual items
-        if (!empty($request->manual_items)) {
+        $manualItems = $request->input('manual_items', []); // FIX: Use input() method
+        if (!empty($manualItems)) {
             $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
-            foreach ($request->manual_items as $manualItem) {
+            foreach ($manualItems as $manualItem) {
                 if (empty($manualItem['item_id'])) {
                     continue;
                 }
@@ -352,8 +361,9 @@ class TenderController extends Controller
         }
 
         // Process suppliers
-        if (!empty($request->suppliers)) {
-            foreach ($request->suppliers as $supplierId) {
+        $suppliers = $request->input('suppliers', []); // FIX: Use input() method
+        if (!empty($suppliers)) {
+            foreach ($suppliers as $supplierId) {
                 TenderSupplier::create([
                     'TenderID' => $tenderId,
                     'SupplierID' => $supplierId,
@@ -380,96 +390,11 @@ class TenderController extends Controller
                 ->withProperties(['action' => 'submit for approval'])
                 ->log('Tender submitted for approval with ID: ' . $tenderId);
         } catch (Throwable $wfEx) {
-        //     Log::error('Failed to initiate workflow for Tender ID ' . $tenderId . ': ' . $wfEx->getMessage());
-        //     throw new Exception('Failed to initiate approval workflow. Please contact the system administrator.');
-         }
+            // Workflow error handling
+        }
 
         // Send supplier notifications after successful creation
-        try {
-            $selectedSupplierIds = collect($request->suppliers ?? [])->map(fn($v) => (int)$v)->unique()->values()->all();
-
-            if (!empty($selectedSupplierIds)) {
-                $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
-                    ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
-                    ->whereNull('tpu.DeletedOn')
-                    ->groupBy('tpu.ThirdPartyId');
-
-                $recipientRows = DB::table('t_Suppliers as s')
-                    ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                    ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
-                        $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
-                    })
-                    ->whereIn('s.Id', $selectedSupplierIds)
-                    ->whereNull('s.DeletedOn')
-                    ->whereNull('tp.DeletedOn')
-                    ->select('tp.TradingName', DB::raw('tpu.Email as Email'))
-                    ->get();
-
-                $supplierList = [];
-                $usedEmails = [];
-                foreach ($recipientRows as $row) {
-                    $email = trim((string)$row->Email);
-                    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && !in_array(strtolower($email), $usedEmails, true)) {
-                        $supplierList[] = ['name' => $row->TradingName, 'email' => $email];
-                        $usedEmails[] = strtolower($email);
-                    }
-                }
-
-                if (!empty($supplierList)) {
-                    $actor = Auth::user();
-                    $subject = 'New Tender Published: ' . ($tender->TenderNo ?? 'Tender');
-
-                    $rawSubmission = $tender->SubmissionDeadline;
-                    $submissionFormatted = $rawSubmission ? (string)$rawSubmission : 'N/A';
-                    $openingFormatted = $tender->OpeningDate ? (string)$tender->OpeningDate : 'N/A';
-
-                    $bodyTemplate = '<p>A new tender has been created with the following details:</p>' .
-                        '<ul>' .
-                        '<li><strong>Tender No:</strong> ' . e($tender->TenderNo) . '</li>' .
-                        '<li><strong>Title:</strong> ' . e($tender->Title) . '</li>' .
-                        '<li><strong>Submission Deadline:</strong> ' . e($submissionFormatted) . '</li>' .
-                        '<li><strong>Opening Date:</strong> ' . e($openingFormatted) . '</li>' .
-                        '<li><strong>Scope:</strong> ' . e($tender->ScopeOfWork ?? 'N/A') . '</li>' .
-                        '<li><strong>Instructions:</strong> ' . e($tender->Instructions ?? 'N/A') . '</li>' .
-                        '</ul>' .
-                        '<p>Please log in to the procurement portal to view full details and respond accordingly.</p>';
-
-                    $uniqueEmails = array_values(array_unique(array_map(fn($s) => strtolower($s['email']), $supplierList)));
-                    foreach ($uniqueEmails as $recipientEmail) {
-                        $recipientName = null;
-                        foreach ($supplierList as $s) {
-                            if (strtolower($s['email']) === $recipientEmail) {
-                                $recipientName = $s['name'];
-                                break;
-                            }
-                        }
-
-                        $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
-
-                        $bcc = [];
-                        foreach ($uniqueEmails as $otherEmail) {
-                            if ($otherEmail === $recipientEmail) continue;
-                            $otherName = null;
-                            foreach ($supplierList as $s) {
-                                if (strtolower($s['email']) === $otherEmail) {
-                                    $otherName = $s['name'];
-                                    break;
-                                }
-                            }
-                            $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
-                        }
-
-                        $salutation = $recipientName ?? $recipientEmail;
-                        $personalBody = '<p>Hello ' . e($salutation) . ',</p>' . $bodyTemplate;
-
-                        $service = \App\Services\CRMEmailService::createRaw($actor, $subject, $personalBody, $to, 'ThirdParty', '', [], $bcc, EmailPriorityEnum::Important);
-                        $service->send(true);
-                    }
-                }
-            }
-        } catch (\Throwable $mailEx) {
-            Log::error('Failed sending tender notifications: ' . $mailEx->getMessage());
-        }
+        $this->sendSupplierNotifications($request, $tender);
 
         return redirect()->route('initiatetender.index')->with('success', 'Tender created successfully.');
     } catch (Exception $e) {

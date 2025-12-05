@@ -119,9 +119,9 @@
                         onchange="loadPlanItemsForPlan()">
                         <option selected disabled>-- Choose Procurement Plan --</option>
                         @foreach ($procurementPlan as $item)
-                            @if (!$item->isUsed())
+                            {{-- @if (!$item->isUsed()) --}}
                                 <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
-                            @endif
+                           
                         @endforeach
                     </select>
         </div>
@@ -351,6 +351,7 @@
   // ---- Helpersd
   // ---- Manual Entry: add rows with Item Master select
   let manualRowSeq = 0;
+// 2. UPDATED: Add Manual Item Row
   function addManualItemRow() {
     const tbody = document.getElementById('manualItemsBody');
     if (!tbody) return;
@@ -359,7 +360,7 @@
     const key = `m${Date.now()}_${manualRowSeq}`;
     const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
 
-    // Build options: prefer filtering by selected Item Category; if none, show full list
+    // Build options logic...
     let optionsHtml = '';
     if (selectedItemCategory) {
       optionsHtml = getFilteredItemOptions(selectedItemCategory);
@@ -398,8 +399,11 @@
 
     tbody.appendChild(tr);
 
-    // Ensure options are filtered to current category if user changes it later
+    // Ensure options are filtered
     updateManualItemSelects();
+    
+    // --- NEW LINE: Lock the Plan tab now that we have a manual item ---
+    updateTabStatus();
   }
 
   // Expose for the "Add Item" button
@@ -467,6 +471,116 @@
     });
     return html;
   }
+
+  // ... existing variables ...
+
+  // 1. NEW FUNCTION: Check grid status and lock/unlock Manual Tab
+// 1. UPDATED: Check BOTH grids and lock the opposite tab
+  function updateTabStatus() {
+    const planBody   = document.querySelector('#planItemsGrid tbody[name="plan_items"]');
+    const manualBody = document.getElementById('manualItemsBody');
+    
+    const manualTabBtn = document.getElementById('manual-tab');
+    const planTabBtn   = document.getElementById('fromPlan-tab');
+
+    // Count rows
+    const planCount   = planBody ? planBody.children.length : 0;
+    const manualCount = manualBody ? manualBody.children.length : 0;
+
+    // Reset everything first (clean slate)
+    manualTabBtn.classList.remove('disabled');
+    manualTabBtn.removeAttribute('disabled');
+    manualTabBtn.removeAttribute('title');
+
+    planTabBtn.classList.remove('disabled');
+    planTabBtn.removeAttribute('disabled');
+    planTabBtn.removeAttribute('title');
+
+    // Apply Logic
+    if (planCount > 0) {
+      // Case A: Plan has items -> Lock Manual Tab
+      manualTabBtn.classList.add('disabled');
+      manualTabBtn.setAttribute('disabled', 'disabled');
+      manualTabBtn.title = "You cannot add Manual items while Procurement Plan items are present.";
+    } 
+    else if (manualCount > 0) {
+      // Case B: Manual has items -> Lock Plan Tab
+      planTabBtn.classList.add('disabled');
+      planTabBtn.setAttribute('disabled', 'disabled');
+      planTabBtn.title = "You cannot add Procurement Plan items while Manual items are present.";
+    }
+  }
+
+  // 2. UPDATE: Add Plan Item function
+  function addPlanItemToGrid() {
+    const planSel = document.getElementById('selectedProcurementPlan');
+    const itemSel = document.getElementById('planItemSelect');
+    const tbody   = document.querySelector('#planItemsGrid tbody[name="plan_items"]');
+
+    if (!planSel || !itemSel || !tbody) return;
+
+    const opt = itemSel.options[itemSel.selectedIndex];
+    if (!opt || !opt.dataset.planLineItemId) {
+      alert('Please select a plan item first.');
+      return;
+    }
+
+    // ... (Your existing variable definitions for planId, pli, etc.) ...
+    const planId = opt.dataset.planId;
+    const pli    = opt.dataset.planLineItemId;
+    const itemId = opt.dataset.itemId;
+    const needId = opt.dataset.needId || '—';
+    const plannedQty = Number(opt.dataset.plannedQty || 0);
+    const label = opt.textContent || 'Item';
+
+    // Avoid duplicates
+    const compositeKey = `plan-${planId}-${pli}`;
+    if (tbody.querySelector(`tr[data-key="${compositeKey}"]`)) {
+      alert('This plan item is already added.');
+      return;
+    }
+
+    const row = document.createElement('tr');
+    row.dataset.key = compositeKey;
+    row.innerHTML = `
+      <td>${label}</td>
+      <td>${needId}</td>
+      <td>${plannedQty}</td>
+      <td>
+        <input type="number" class="form-control form-control-sm" min="1" step="1"
+               name="plan_items[${compositeKey}][qty]" value="${Math.max(1, plannedQty)}" required>
+      </td>
+      <td>
+        <input type="file" class="form-control form-control-sm" name="plan_items[${compositeKey}][specs]">
+      </td>
+      <td>
+        <input type="text" class="form-control form-control-sm" name="plan_items[${compositeKey}][pr_ref]" placeholder="Optional">
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
+      </td>
+      <input type="hidden" name="plan_items[${compositeKey}][item_id]" value="${itemId}">
+      <input type="hidden" name="plan_items[${compositeKey}][plan_line_item_id]" value="${pli}">
+      <input type="hidden" name="plan_items[${compositeKey}][plan_id]" value="${planId}">
+    `;
+
+    tbody.appendChild(row);
+
+    // --- NEW LINE: Update tab status immediately after adding ---
+    updateTabStatus(); 
+  }
+
+  // 3. UPDATE: Remove Row Listener
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.classList.contains('remove-row')) {
+      const tr = e.target.closest('tr');
+      if (tr) {
+        tr.remove();
+        // --- NEW LINE: Check if we should re-enable the tab after removing ---
+        updateTabStatus(); 
+      }
+    }
+  });
 
   function getAllItemOptions() {
     let html = '<option selected disabled>-- Select Item --</option>';
@@ -648,46 +762,84 @@
         // Form submission validation
         const form = submissionDeadline.closest('form');
         if (form) {
-            form.addEventListener('submit', function(event) {
-                let isValid = true;
-                const submissionValue = submissionDeadline.value;
-                const openingValue = openingDate.value;
+         let isSubmitting = false;
 
-                // Check submission deadline
-                if (!submissionValue) {
-                    submissionDeadline.classList.add('is-invalid');
-                    isValid = false;
-                } else if (submissionValue < today) {
-                    alert('Submission deadline cannot be in the past.');
-                    submissionDeadline.classList.add('is-invalid');
-                    isValid = false;
-                }
+    form.addEventListener('submit', function(event) {
+        // 1. BLOCK REPEATED SUBMISSIONS
+        if (isSubmitting) {
+            event.preventDefault();
+            return false;
+        }
 
-                // Check opening date
-                if (!openingValue) {
-                    openingDate.classList.add('is-invalid');
-                    isValid = false;
-                } else if (openingValue < today) {
-                    alert('Opening date cannot be in the past.');
-                    openingDate.classList.add('is-invalid');
-                    isValid = false;
-                } else if (submissionValue && openingValue < submissionValue) {
-                    alert('Opening date must be on or after the submission deadline.');
-                    openingDate.classList.add('is-invalid');
-                    isValid = false;
-                }
+        let isValid = true;
+        const submissionValue = submissionDeadline.value;
+        const openingValue = openingDate.value;
+        
+        // Reset invalid classes tracking
+        submissionDeadline.classList.remove('is-invalid');
+        openingDate.classList.remove('is-invalid');
 
-                if (!isValid) {
-                    event.preventDefault();
-                    return false;
-                }
-            });
+        // --- EXISTING VALIDATION LOGIC ---
+
+        // Check submission deadline
+        if (!submissionValue) {
+            submissionDeadline.classList.add('is-invalid');
+            isValid = false;
+        } else if (submissionValue < today) {
+            alert('Submission deadline cannot be in the past.');
+            submissionDeadline.classList.add('is-invalid');
+            isValid = false;
+        }
+
+        // Check opening date
+        if (!openingValue) {
+            openingDate.classList.add('is-invalid');
+            isValid = false;
+        } else if (openingValue < today) {
+            alert('Opening date cannot be in the past.');
+            openingDate.classList.add('is-invalid');
+            isValid = false;
+        } else if (submissionValue && openingValue < submissionValue) {
+            alert('Opening date must be on or after the submission deadline.');
+            openingDate.classList.add('is-invalid');
+            isValid = false;
+        }
+
+        // --- FINAL CHECK ---
+        
+        if (!isValid) {
+            event.preventDefault();
+            // Do NOT set isSubmitting to true here, allow user to fix errors
+            return false;
+        }
+
+        // 2. LOCK THE FORM IF VALID
+        // If we reached here, validation passed. Lock the UI.
+        isSubmitting = true;
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            // Optional: Store original text and show loading state
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = 'Saving...';
+            
+            // Just in case the backend crashes or returns, you might want to 
+            // re-enable after a timeout (optional, e.g., 10 seconds), 
+            // but for a standard submit, leaving it disabled is safer.
+        }
+    });
         }
 
         // Trigger validation on page load if there are old values
         if (submissionDeadline.value) {
             submissionDeadline.dispatchEvent(new Event('change'));
         }
+
+        // (In case items exist from a previous validation attempt)
+    if (typeof updateTabStatus === 'function') {
+        updateTabStatus();
+    }
     });
 })();
 </script>
