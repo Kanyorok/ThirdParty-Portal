@@ -665,7 +665,33 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed', 'Value' => 'A'],
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Dismissed', 'Value' => 'D'],
 
+            //Finance Cheque Management
+            //Cheque Leaf Status
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Available', 'Value' => 'A'],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Issued', 'Value' => 'I'],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Used', 'Value' => 'U'],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Posted', 'Value' => 'P'],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Post-Dated Cheque', 'Value' => 'PD'],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Presented', 'Value' => 'PR'], // optional
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Cleared', 'Value' => 'C'],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Bounced', 'Value' => 'B'],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Void', 'Value' => 'V'],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Spoiled', 'Value' => 'S'],
 
+            //Cheque Book Status
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Completed', 'Value' => 'C'],
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Active', 'Value' => 'A'],
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Cancelled', 'Value' => 'Ca'],
+
+            //Cheque Book Sizes pages
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '25', 'Value' => '25'],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '30', 'Value' => '30'],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '50', 'Value' => '50'],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '100', 'Value' => '100'],
+
+            //Cheque Party Type
+            ['CodeID' => 'ChequePartyType', 'Description' => 'Vendor', 'Value' => 'V'],
+            ['CodeID' => 'ChequePartyType', 'Description' => 'Tenant', 'Value' => 'T'],
 
         ];
 

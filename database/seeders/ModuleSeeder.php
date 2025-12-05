@@ -681,9 +681,9 @@ class ModuleSeeder extends Seeder
             //  ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103050],
 
 
-            //  ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
-            //  ['ModuleID' => 1103605, 'Name' => 'Cheques', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103600],
-            //  ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600],
+              ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+              ['ModuleID' => 1103605, 'Name' => 'Cheques', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103600],
+              ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600],
 
 
             //  ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],

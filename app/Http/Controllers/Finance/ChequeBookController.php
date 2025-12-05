@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Finance\BankAccount;
 use App\Models\Finance\ChequeBook;
 use App\Models\Finance\ChequeLeaf;
@@ -11,10 +12,38 @@ use Illuminate\Support\Facades\DB;
 
 class ChequeBookController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $rows = ChequeBook::with('bankAccount.bank')->orderByDesc('ChequeBookID')->paginate(25);
-        return view('finance.cheques.books.index', compact('rows'));
+        $query = ChequeBook::with('bankAccount.bank')->orderByDesc('ChequeBookID');
+
+        // Filters
+        if ($request->filled('bank_id')) {
+            $query->where('BankAccountID', $request->bank_id);
+        }
+        if ($request->filled('status')) {
+            $status = $request->status;
+            if ($status === 'active') $query->where('IsActive', 1);
+            if ($status === 'inactive') $query->where('IsActive', 0);
+        }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function($q) use ($s) {
+                $q->where('BookName', 'like', "%$s%")
+                  ->orWhere('Prefix', 'like', "%$s%")
+                  ->orWhere('ChequeBookID', $s);
+            });
+        }
+
+        $rows = $query->paginate($request->get('per_page', 25))->withQueryString();
+        $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
+        
+        // Fetch CodeDetails
+        $chequeBookStatuses = CodeDetail::where('CodeID', 'ChequeBookStatus')
+            ->where('IsActive', 1)
+            ->orderBy('DisplayOrder')
+            ->get();
+
+        return view('finance.cheques.books.index', compact('rows', 'bankAccounts', 'chequeBookStatuses'));
     }
 
     public function create()
@@ -22,7 +51,14 @@ class ChequeBookController extends Controller
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
         // Optional: pick first account to show an initial preview on the form
         $firstId = optional($bankAccounts->first())->AccountID;
-        return view('finance.cheques.books.create', compact('bankAccounts', 'firstId'));
+        
+        // Fetch CodeDetails
+        $chequeBookSizes = CodeDetail::where('CodeID', 'ChequeBookSizes')
+            ->where('IsActive', 1)
+            ->orderBy('DisplayOrder')
+            ->get();
+        
+        return view('finance.cheques.books.create', compact('bankAccounts', 'firstId', 'chequeBookSizes'));
     }
 
     /**
@@ -125,7 +161,19 @@ class ChequeBookController extends Controller
     {
         $row = ChequeBook::findOrFail($id);
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
-        return view('finance.cheques.books.edit', compact('row', 'bankAccounts'));
+        
+        // Fetch CodeDetails
+        $chequeBookSizes = CodeDetail::where('CodeID', 'ChequeBookSizes')
+            ->where('IsActive', 1)
+            ->orderBy('DisplayOrder')
+            ->get();
+            
+        $chequeBookStatuses = CodeDetail::where('CodeID', 'ChequeBookStatus')
+            ->where('IsActive', 1)
+            ->orderBy('DisplayOrder')
+            ->get();
+        
+        return view('finance.cheques.books.edit', compact('row', 'bankAccounts', 'chequeBookSizes', 'chequeBookStatuses'));
     }
 
     public function update(Request $request, $id)
@@ -138,7 +186,7 @@ class ChequeBookController extends Controller
             'Suffix' => 'nullable|string|max:20',
             'StartNumber' => 'required|integer|min:1',
             'EndNumber' => 'required|integer|gt:StartNumber',
-            'NextLeafNumber' => 'required|integer|between:StartNumber,EndNumber',
+            'NextLeafNumber' => 'required|integer|gte:StartNumber|lte:EndNumber',
             'IsActive' => 'nullable|boolean',
         ]);
 
