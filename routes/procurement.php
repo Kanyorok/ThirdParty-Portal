@@ -306,7 +306,9 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     // Map Tender Category to Item Types
     Route::get('tendercategory/{id}/itemtypes', [TenderCategoryController::class, 'itemTypes'])->name('tendercategory.itemtypes');
     Route::post('tendercategory/{id}/itemtypes', [TenderCategoryController::class, 'updateItemTypes'])->name('tendercategory.itemtypes.update');
-    Route::resource('tendertype', TenderTypeController::class);
+    Route::resource('tendertype', TenderTypeController::class);Route::get('/tender-category/generate-code', [TenderCategoryController::class, 'generateCategoryCode'])
+    ->name('tendercategory.generateCode');
+
     //Route for tender approval and Reject
     Route::post('/tenderapproval', [TenderController::class, 'approveTender'])->name('tender.approve');
     Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])->name('tender.reject');
