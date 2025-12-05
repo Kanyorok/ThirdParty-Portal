@@ -33,4 +33,14 @@ return [
         'Rejected' => \App\Enums\Inventory\InterBranchRequisitionEnum::Rejected->value,  // 'Re'
         'Submitted for Approval' => \App\Enums\Inventory\InterBranchRequisitionEnum::Pending->value,  // 'P'
     ],
+
+    'TransferId' => [
+        'Approved' => \App\Enums\Inventory\Transfers::Approved->value,  // 'Ap'
+        'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'
+        'Pending' => \App\Enums\Inventory\Transfers::Pending->value,  // 'P'
+        'In Transit' => \App\Enums\Inventory\Transfers::InTransit->value,  // 'it'
+        'Delivered'=> \App\Enums\Inventory\Transfers::Delivered->value,  // 'de'
+
+
+    ],
 ];

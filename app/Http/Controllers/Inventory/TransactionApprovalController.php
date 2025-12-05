@@ -13,21 +13,19 @@ use App\Policies\Inventory\TransactionTransferPolicy;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionApprovalController extends Controller
 {
-    protected $adjustmentService;
-    protected $transferService;
+    protected StockAdjustmentService $adjustmentService;
+    protected TransactionTransferService $transferService;
 
-    public function __construct(
-        StockAdjustmentService $adjustmentService,
-        TransactionTransferService $transferService
-    )
+    public function __construct(StockAdjustmentService $adjustmentService, TransactionTransferService $transferService)
     {
         $this->adjustmentService = $adjustmentService;
         $this->transferService = $transferService;
     }
-
+  
     public function index(Request $request)
     {
         $transactionType = $request->get('transaction_type', 'Stock Transfer');
@@ -42,21 +40,16 @@ class TransactionApprovalController extends Controller
                 ->where('Status', Transfers::Pending->value)
                 ->where('FromBranch', $branchId);
 
-
             if ($branch) {
                 $query->whereHas('fromBranch', function ($q) use ($branch) {
                     $q->where('Name', 'like', "%$branch%")
                         ->orWhere('Id', $branch);
                 });
             }
-
-
-
         } elseif ($transactionType === 'Stock Adjustment') {
             $query = StockAdjustment::with('branch')
-                ->where('Status', Transfers::Pending)
+                ->where('Status', Transfers::Pending->value)
                 ->where('Branch', $branchId);
-
 
             if ($branch) {
                 $query->whereHas('branch', function ($q) use ($branch) {
@@ -64,7 +57,6 @@ class TransactionApprovalController extends Controller
                         ->orWhere('Id', $branch);
                 });
             }
-
         } else {
             $query = collect(); // fallback if type is unknown
         }
@@ -89,13 +81,14 @@ class TransactionApprovalController extends Controller
     public function approve(Request $request, $id)
     {
         $transactionType = $request->input('transaction_type');
+        $comments = $request->input('comments', null);
 
         try {
             if ($transactionType === 'Stock Transfer') {
                 $transfer = TransactionTransfer::findOrFail($id);
                 $this->authorize('approve', $transfer);
 
-                $this->transferService->approve($id);
+                $this->transferService->approve($id, $comments);
                 return redirect()->back()->with('success', 'Stock Transfer approved.');
             }
 
@@ -103,7 +96,7 @@ class TransactionApprovalController extends Controller
                 $adjustment = StockAdjustment::findOrFail($id);
                 $this->authorize('approve', $adjustment);
 
-                $this->adjustmentService->approve($id);
+                $this->adjustmentService->approve($id, $comments);
                 return redirect()->back()->with('success', 'Stock Adjustment approved.');
             }
         } catch (Exception $e) {
@@ -113,34 +106,33 @@ class TransactionApprovalController extends Controller
         return redirect()->back()->with('error', 'Unknown transaction type.');
     }
 
-
     public function reject(Request $request, $id)
     {
         $transactionType = $request->input('transaction_type');
+        $comments = $request->input('comments', null);
 
         try {
             if ($transactionType === 'Stock Transfer') {
                 $transfer = TransactionTransfer::findOrFail($id);
                 $this->authorize('approve', $transfer);
 
-                $this->transferService->reject($id);
+                $this->transferService->reject($id, $comments);
                 return redirect()->back()->with('success', 'Stock Transfer rejected.');
             }
 
-        if ($transactionType === 'Stock Adjustment') {
-            $adjustment = StockAdjustment::findOrFail($id);
-            $this->authorize('approve', $adjustment);
+            if ($transactionType === 'Stock Adjustment') {
+                $adjustment = StockAdjustment::findOrFail($id);
+                $this->authorize('approve', $adjustment);
 
-            $this->adjustmentService->reject($id);
-            return redirect()->back()->with('success', 'Stock Adjustment rejected.');
-        }
+                $this->adjustmentService->reject($id, $comments);
+                return redirect()->back()->with('success', 'Stock Adjustment rejected.');
+            }
         } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 
         return redirect()->back()->with('error', 'Reject not supported for this transaction type.');
     }
-
 
     public function show($id, Request $request)
     {
@@ -150,10 +142,17 @@ class TransactionApprovalController extends Controller
             $record = TransactionTransfer::with([
                 'fromBranch', 'toBranch', 'transferredBy', 'items.item.uom'
             ])->findOrFail($id);
+            
+            // Check if current user can approve this transfer
+            $user = Auth::user();
+            $canApprove = $this->transferService->getWorkflow()->canApproveModel($record, $user);
+            
         } elseif ($transactionType === 'Stock Adjustment') {
             $record = StockAdjustment::with([
                 'branch', 'adjustedBy', 'items.item.uom'
             ])->findOrFail($id);
+            
+            $canApprove = false; // You'll need to implement this for StockAdjustment
         } else {
             // Try to find as Transfer
             $record = TransactionTransfer::with([
@@ -162,6 +161,8 @@ class TransactionApprovalController extends Controller
 
             if ($record) {
                 $transactionType = 'Stock Transfer';
+                $user = Auth::user();
+                $canApprove = $this->transferService->getWorkflow()->canApproveModel($record, $user);
             } else {
                 // Try to find as Adjustment
                 $record = StockAdjustment::with([
@@ -170,13 +171,13 @@ class TransactionApprovalController extends Controller
 
                 if ($record) {
                     $transactionType = 'Stock Adjustment';
+                    $canApprove = false;
                 } else {
                     abort(404, 'Transaction type not found');
                 }
             }
         }
 
-        return view('inventory.transactions.transactionsapprovals.show', compact('record', 'transactionType'));
+        return view('inventory.transactions.transactionsapprovals.show', compact('record', 'transactionType', 'canApprove'));
     }
-
 }
