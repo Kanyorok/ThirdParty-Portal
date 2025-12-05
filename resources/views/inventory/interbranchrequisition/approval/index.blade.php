@@ -24,8 +24,8 @@
 
     <form method="GET" action="{{ route('interbranchrequisitionapproval.index') }}" id="requisition-selection-form">
         <div class="mb-3">
-            <label for="ReqId" class="form-label">Select Pending Requisition</label>
-            <select name="ReqId" id="ReqId" class="form-select" onchange="this.form.submit()">
+            <label for="ReqId" class="form-label">Select Pending Requisition <span class="text-danger">*</span></label>
+            <select name="ReqId" id="ReqId" class="form-select" onchange="this.form.submit()" required>
                 <option value="">-- Choose Requisition To Approve --</option>
                 @foreach($pendingRequisitions as $requisitionOption)
                     <option
@@ -77,7 +77,7 @@
                             <th>#</th>
                             <th>Item Name</th>
                             <th>Requested Qty</th>
-                            <th>Approved Qty</th>
+                            <th>Approved Qty <span class="text-danger">*</span></th>
                             <th>Remarks</th>
                         </tr>
                         </thead>
@@ -88,10 +88,12 @@
                                 <td>{{ $requisitionItem->item?->ItemName ?? 'N/A' }}</td>
                                 <td>{{ $requisitionItem->RequestedQty }}</td>
                                 <td>
-                                    <input type="number" min="0" name="approved_qty[{{ $requisitionItem->Id }}]"
+                                    <input type="number" min="0" max="{{ $requisitionItem->RequestedQty }}" 
+                                           name="approved_qty[{{ $requisitionItem->Id }}]"
                                            class="form-control"
                                            value="{{ old('approved_qty.' . $requisitionItem->Id, $requisitionItem->RequestedQty) }}"
-                                           form="approval-form">
+                                           form="approval-form" required>
+                                    <small class="text-muted">Max: {{ $requisitionItem->RequestedQty }}</small>
                                 </td>
                                 <td>
                                     <input type="text" name="item_remarks[{{ $requisitionItem->Id }}]"
@@ -116,21 +118,23 @@
                     <input type="hidden" name="ReqId" value="{{ $requisition->Id }}">
 
                     <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea name="comments" rows="3" class="form-control">{{ old('comments') }}</textarea>
+                        <label class="form-label">Notes <span class="text-danger">*</span></label>
+                        <textarea name="comments" class="form-control" rows="4" required>{{ old('comments') }}</textarea>
+                        <small class="text-muted">Required. Explain your decision to approve or reject.</small>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Action</label>
+                        <label class="form-label">Action <span class="text-danger">*</span></label>
                         <select name="action" class="form-select" required>
                             <option value="">-- Choose Action --</option>
-                            <option value="APPROVED">Approve</option>
-                            <option value="REJECTED">Reject</option>
+                            <option value="APPROVED" {{ old('action') == 'APPROVED' ? 'selected' : '' }}>Approve</option>
+                            <option value="REJECTED" {{ old('action') == 'REJECTED' ? 'selected' : '' }}>Reject</option>
                         </select>
                     </div>
 
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ route('interbranchrequisitionapproval.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Submit Decision</button>
                     </div>
                 </form>
             </div>
@@ -139,4 +143,83 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+    // Client-side validation for the approval form
+    document.addEventListener('DOMContentLoaded', function() {
+        const approvalForm = document.getElementById('approval-form');
+        if (approvalForm) {
+            approvalForm.addEventListener('submit', function(e) {
+                const actionSelect = this.querySelector('select[name="action"]');
+                const commentsTextarea = this.querySelector('textarea[name="comments"]');
+                
+                // Validate action selection
+                if (!actionSelect.value) {
+                    e.preventDefault();
+                    alert('Please select an action (Approve or Reject).');
+                    actionSelect.focus();
+                    return false;
+                }
+                
+                // Validate comments
+                if (!commentsTextarea.value.trim()) {
+                    e.preventDefault();
+                    alert('Please enter notes for your decision.');
+                    commentsTextarea.focus();
+                    return false;
+                }
+                
+                // Validate approved quantities if approving
+                if (actionSelect.value === 'APPROVED') {
+                    const qtyInputs = this.querySelectorAll('input[name^="approved_qty"]');
+                    let allValid = true;
+                    
+                    qtyInputs.forEach(input => {
+                        const requestedQty = parseFloat(input.max) || 0;
+                        const approvedQty = parseFloat(input.value) || 0;
+                        
+                        if (approvedQty < 0) {
+                            e.preventDefault();
+                            alert('Approved quantity cannot be negative.');
+                            input.focus();
+                            allValid = false;
+                            return;
+                        }
+                        
+                        if (approvedQty > requestedQty) {
+                            e.preventDefault();
+                            alert('Approved quantity cannot exceed requested quantity.');
+                            input.focus();
+                            allValid = false;
+                            return;
+                        }
+                        
+                        if (isNaN(approvedQty)) {
+                            e.preventDefault();
+                            alert('Please enter a valid number for approved quantity.');
+                            input.focus();
+                            allValid = false;
+                            return;
+                        }
+                    });
+                    
+                    if (!allValid) {
+                        return false;
+                    }
+                }
+                
+                // Confirmation message
+                const actionText = actionSelect.value === 'APPROVED' ? 'approve' : 'reject';
+                if (!confirm(`Are you sure you want to ${actionText} this requisition? This action cannot be undone.`)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+    });
+</script>
+@endpush
 @endsection

@@ -14,7 +14,6 @@
     @endif
 
     <div class="container mt-4">
-        <h4 class="fw-bold mb-3">New Inter-Branch Requisition</h4>
 
         <form action="{{ route('interbranchrequisition.store') }}" method="POST">
             @csrf
