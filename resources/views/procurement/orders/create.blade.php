@@ -7,13 +7,15 @@
             width: 100% !important;
         }
 
-        /*input,*/
-        /*textarea {*/
-        /*    background: transparent;*/
-        /*    !*border: none; !* optional: removes border too *!*!*/
-        /*    outline: none; !* optional: removes outline on focus *!*/
-        /*    box-shadow: none; !* optional: removes inner shadows *!*/
-        /*}*/
+        /* Alignment helpers */
+        .table-form th, .table-form td { vertical-align: middle; }
+        .number-input { text-align: right; }
+        .textarea-compact { height: 64px; resize: vertical; }
+        .form-label { margin-bottom: .25rem; }
+        .w-min-80 { min-width: 80px; }
+        .w-min-100 { min-width: 100px; }
+        .w-min-150 { min-width: 150px; }
+        .w-min-200 { min-width: 200px; }
 
     </style>
 @endsection
@@ -114,7 +116,7 @@
 
             <!-- Tender Selection -->
             <div class="row mb-4 source-tender d-none">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label>Tender No <span class="text-danger">*</span></label>
                     <select class="form-control" id="tenderNo">
                         <option selected disabled>Select Tender</option>
@@ -137,19 +139,17 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label>LPO Number <span class="text-danger">*</span></label>
                     <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
                 </div>
-                <div class="col-md-4">
-                    <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
-                </div>
+                <!-- Date input removed for Tender-based flow -->
+                <input type="hidden" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" />
             </div>
 
             <!-- Contract Selection -->
-            <div class="row mb-4 source-contract d-none">
-                    <div class="col-md-4">
+                <div class="row mb-4 source-contract d-none">
+                    <div class="col-md-6">
                     <label>Contract Ref <span class="text-danger">*</span></label>
                     <select class="form-control" id="contractRef">
                         <option selected disabled>Select Active Contract</option>
@@ -164,14 +164,12 @@
                         @endforeach
                         </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label>LPO Number <span class="text-danger">*</span></label>
                     <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
                 </div>
-                <div class="col-md-4">
-                    <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
-                </div>
+                <!-- Date input removed for Contract-based flow -->
+                <input type="hidden" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" />
             </div>
 
             <!-- Supplier & Details -->
@@ -249,17 +247,17 @@
 
             <!-- Line Items Table -->
             <div class="table-responsive mb-4">
-                <table class="table table-bordered" id="line-items-table">
+                <table class="table table-bordered table-form" id="line-items-table">
                     <thead class="table-light">
                     <tr>
-                        <th style="width: 3%; min-width: 30px;">#</th>
-                        <th style="width: 15%; min-width: 150px;">Item Code <span class="text-danger">*</span></th>
-                        <th style="width: 20%; min-width: 200px;">Item Name</th>
-                        <th style="width: 5%; min-width: 80px;">Quantity <span class="text-danger">*</span></th>
-                        <th style="width: 10%; min-width: 100px;">Unit Price <span class="text-danger">*</span></th>
-                        <th style="width: 5%; min-width: 80px;">Tax %</th>
-                        <th style="width: 5%; min-width: 80px;">Discount %</th>
-                        <th style="width: 15%; min-width: 150px;">Line Total</th>
+                        <th class="w-min-80" style="width: 3%;">#</th>
+                        <th class="w-min-150" style="width: 15%;">Item Code <span class="text-danger">*</span></th>
+                        <th class="w-min-200" style="width: 20%;">Item Name</th>
+                        <th class="w-min-80 text-end" style="width: 5%;">Quantity <span class="text-danger">*</span></th>
+                        <th class="w-min-100 text-end" style="width: 10%;">Unit Price <span class="text-danger">*</span></th>
+                        <th class="w-min-80 text-end" style="width: 5%;">Tax %</th>
+                        <th class="w-min-80 text-end" style="width: 5%;">Discount %</th>
+                        <th class="w-min-150 text-end" style="width: 15%;">Line Total</th>
                     </tr>
                     </thead>
                     <tbody id="item-rows">
@@ -269,21 +267,13 @@
                             <input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required>
                         </td>
                         <td class="text-start">
-                            <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                                      id="Description" cols="30"
-                                      rows="5" readonly
-                                      style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+                            <textarea class="form-control form-control-sm itemDescription textarea-compact" name="itemDescription[]" id="Description" rows="3" readonly></textarea>
                         </td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                      name="quantity[]" id="Quantity" step="any" required></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                      name="unitPrice[]" id="Price" step="any" required></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                      name="tax[]" id="Tax" step="any"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                      name="discount[]" id="Discount" step="any"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step="any" readonly></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity number-input" name="quantity[]" id="Quantity" step="any" required></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price number-input" name="unitPrice[]" id="Price" step="any" required></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm tax number-input" name="tax[]" id="Tax" step="any"></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm discount number-input" name="discount[]" id="Discount" step="any"></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm line-total number-input" name="lineTotal[]" id="lineTotal" step="any" readonly></td>
                         <td class="text-center align-middle">
                             <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
                         </td>
@@ -397,16 +387,16 @@
 
                 // Item description
                 const itemDescription = it.description || it.itemName || '';
-                $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
+                $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription textarea-compact" name="itemDescription[]" rows="3" readonly>${itemDescription}</textarea></td>`);
 
                 // Other fields
-                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${it.quantity ?? ''}"></td>`);
-                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
-                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" step="any"></td>');
-                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>');
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm qty quantity number-input" name="quantity[]" step="any" required value="${it.quantity ?? ''}"></td>`);
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price number-input" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
+                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm tax number-input" name="tax[]" step="any"></td>');
+                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount number-input" name="discount[]" step="any"></td>');
 
                 const lineTotal = (+it.quantity || 0) * (+it.unitPrice || 0);
-                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly value="${lineTotal.toFixed(2)}"></td>`);
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm line-total number-input" name="lineTotal[]" step="any" readonly value="${lineTotal.toFixed(2)}"></td>`);
                 $tr.append('<td class="text-center align-middle"><button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button></td>');
                 $tbody.append($tr);
             };
@@ -868,22 +858,22 @@
                         <input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required>
                     </td>
                     <td class="text-start">
-                        <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;"></textarea>
+                        <textarea class="form-control form-control-sm itemDescription textarea-compact" name="itemDescription[]" rows="3" readonly></textarea>
                     </td>
                     <td class="text-start">
-                        <input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required>
+                        <input type="number" class="form-control form-control-sm qty quantity number-input" name="quantity[]" step="any" required>
                     </td>
                     <td class="text-start">
-                        <input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required>
+                        <input type="number" class="form-control form-control-sm unit-price number-input" name="unitPrice[]" step="any" required>
                     </td>
                     <td class="text-start">
-                        <input type="number" class="form-control form-control-sm tax" name="tax[]" step="any">
+                        <input type="number" class="form-control form-control-sm tax number-input" name="tax[]" step="any">
                     </td>
                     <td class="text-start">
-                        <input type="number" class="form-control form-control-sm discount" name="discount[]" step="any">
+                        <input type="number" class="form-control form-control-sm discount number-input" name="discount[]" step="any">
                     </td>
                     <td class="text-start">
-                        <input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly>
+                        <input type="number" class="form-control form-control-sm line-total number-input" name="lineTotal[]" step="any" readonly>
                     </td>
                     <td class="text-center align-middle">
                         <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item">
