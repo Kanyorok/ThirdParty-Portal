@@ -107,7 +107,8 @@ foreach ($directories as $dir) {
             $obfuscatedCode = $printer->prettyPrintFile($stmts);
 
             // 4. Save to dist folder
-            $relativePath = str_replace(__DIR__, '', $file->getPathname());
+            // Use substr to remove the base directory prefix correctly
+            $relativePath = substr($file->getPathname(), strlen(__DIR__));
             $targetPath = $outputDir . $relativePath;
 
             if (!is_dir(dirname($targetPath))) {
