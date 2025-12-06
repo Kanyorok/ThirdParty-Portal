@@ -36,7 +36,7 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
         return '_' . $str; // Start with underscore to ensure valid var name
     }
 
-    public function enterNode(Node $node)
+    public function leaveNode(Node $node)
     {
         // 1. Obfuscate Strings
         if ($node instanceof String_) {
