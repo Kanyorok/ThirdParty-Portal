@@ -94,6 +94,7 @@ foreach ($directories as $dir) {
         if ($file->getExtension() !== 'php') continue;
 
         $code = file_get_contents($file->getPathname());
+        echo "Processing: " . $file->getPathname() . "\n";
 
         try {
             // 1. Parse
