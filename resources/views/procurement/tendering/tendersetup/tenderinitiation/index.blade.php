@@ -3,6 +3,8 @@
 @section('title', 'Initiated Tenders')
 
 @push('styles')
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <style>
         .table th, .table td {
             vertical-align: middle;
@@ -17,28 +19,137 @@
         .action-buttons form {
             margin-bottom: 0;
         }
+        
+        /* CRITICAL: Force DataTables controls to always be visible */
+        div.dataTables_wrapper {
+            width: 100% !important;
+            overflow: visible !important;
+        }
+        
+        div.dataTables_wrapper div.dataTables_length,
+        div.dataTables_wrapper div.dataTables_filter {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 0 1rem 0 !important;
+        }
+        
+        div.dataTables_wrapper div.dataTables_filter {
+            text-align: right !important;
+            float: none !important;
+        }
+        
+        div.dataTables_wrapper div.dataTables_filter label {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+        
+        div.dataTables_wrapper div.dataTables_filter input {
+            display: inline-block !important;
+            width: auto !important;
+            min-width: 200px !important;
+            margin-left: 0.5rem !important;
+        }
+        
+        div.dataTables_wrapper div.dataTables_length label {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+        
+        div.dataTables_wrapper div.dataTables_length select {
+            display: inline-block !important;
+            width: auto !important;
+            margin: 0 0.5rem !important;
+        }
+        
+        /* Fix for Bootstrap grid system conflicts */
+        .dataTables_wrapper .row {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            margin-right: -0.75rem !important;
+            margin-left: -0.75rem !important;
+        }
+        
+        .dataTables_wrapper .col-sm-12,
+        .dataTables_wrapper .col-md-6,
+        .dataTables_wrapper .col-md-5,
+        .dataTables_wrapper .col-md-7 {
+            padding-right: 0.75rem !important;
+            padding-left: 0.75rem !important;
+            position: relative !important;
+            width: 100% !important;
+        }
+        
+        @media (min-width: 768px) {
+            .dataTables_wrapper .col-md-6 {
+                flex: 0 0 50% !important;
+                max-width: 50% !important;
+            }
+            .dataTables_wrapper .col-md-5 {
+                flex: 0 0 41.666667% !important;
+                max-width: 41.666667% !important;
+            }
+            .dataTables_wrapper .col-md-7 {
+                flex: 0 0 58.333333% !important;
+                max-width: 58.333333% !important;
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 767px) {
+            div.dataTables_wrapper div.dataTables_filter {
+                text-align: left !important;
+                margin-top: 0.5rem !important;
+            }
+            
+            div.dataTables_wrapper div.dataTables_filter input {
+                min-width: 150px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+        
+        /* Ensure table stays within card */
+        .card-body {
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+        }
+        
+        /* Prevent sidebar transitions from affecting DataTables */
+        .main-sidebar {
+            transition: margin-left 0.3s ease-in-out, left 0.3s ease-in-out !important;
+        }
+        
+        body:not(.sidebar-collapse) .content-wrapper,
+        body:not(.sidebar-collapse) .main-header,
+        body:not(.sidebar-collapse) .main-footer {
+            transition: margin-left 0.3s ease-in-out !important;
+        }
     </style>
 @endpush
 
 @section('content')
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
         @php
-            // Ensure newest (last) record appears first in the listing.
             $isPaginator = isset($tenders) && method_exists($tenders, 'links');
             if ($isPaginator) {
-                $tendersSorted = $tenders; // assume controller handled ordering for paginator
+                $tendersSorted = $tenders;
             } else {
                 $tendersCollection = isset($tenders) ? collect($tenders) : collect();
                 if ($tendersCollection->isNotEmpty()) {
-                    // Prefer sorting by Id (descending) as a proxy for newest items
                     $tendersSorted = $tendersCollection->sortByDesc(fn($t) => $t->Id ?? null)->values();
                 } else {
                     $tendersSorted = $tendersCollection;
                 }
             }
         @endphp
+        
         @php
-            // Load TenderStatus descriptions from t_CodeDetails (Value -> Description)
             $tenderStatusMap = [];
             try {
                 $rows = \Illuminate\Support\Facades\DB::table('t_CodeDetails')->where('CodeID', 'TenderStatus')->get();
@@ -49,6 +160,7 @@
                 // ignore and fallback to enum displayName
             }
         @endphp
+        
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="mb-0 text-primary"><i class="fas fa-list-alt me-2"></i>Initiated Tenders</h3>
             @canWrite('tender')
@@ -62,7 +174,9 @@
             <i class="fa fa-info-circle me-2"></i>
             <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.'">
                 <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
+            </span>
         </div>
+        
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
@@ -74,9 +188,7 @@
                             <th>Title</th>
                             <th>Type</th>
                             <th>Category</th>
-                            {{-- <th>Est. Value</th> --}}
                             <th>Currency</th>
-                            {{-- <th>PR No.</th> --}}
                             <th>Deadline</th>
                             <th>Opening Date</th>
                             <th>Status</th>
@@ -114,11 +226,9 @@
                                         N/A
                                     @endif
                                 </td>
-                                {{-- <td>{{ $tender->EstimatedValue ? number_format($tender->EstimatedValue, 2) : 'N/A' }}</td> --}}
                                 <td>
                                     {{ $tender->currency ? $tender->currency->Code : 'N/A' }}
                                 </td>
-                                {{-- <td>{{ $tender->RelatedPRID ? 'PR/' . $tender->RelatedPRID : 'N/A' }}</td> --}}
                                 <td>{{ $tender->SubmissionDeadline ? $tender->SubmissionDeadline->format('d/m/Y') : 'N/A' }}</td>
                                 <td>{{ $tender->OpeningDate ? $tender->OpeningDate->format('d/m/Y') : 'N/A' }}</td>
                                 <td>
@@ -202,44 +312,216 @@
                                 </td>
                             </tr>
                         @empty
-                            {{-- <tr>
-                                <td colspan="12" class="text-center py-4">
+                            <tr>
+                                <td colspan="11" class="text-center py-4">
                                     <i class="fas fa-folder-open fa-2x text-muted mb-2"></i><br>
-                                    No initiated tenders found. <a href="{{ route('initiatetender.create') }}">Create a new one?</a>
+                                    No initiated tenders found. 
+                                    @canWrite('tender')
+                                        <a href="{{ route('initiatetender.create') }}">Create a new one?</a>
+                                    @endcanWrite
                                 </td>
-                            </tr> --}}
+                            </tr>
                         @endforelse
                         </tbody>
                     </table>
-{{--                </div>--}}
-{{--                @if($tenders->hasPages())--}}
-{{--                    <div class="mt-3 d-flex justify-content-center">--}}
-{{--                        {{ $tenders->links() }}--}}
-{{--                    </div>--}}
-{{--                @endif--}}
+                </div>
             </div>
         </div>
     </div>
 @endsection
 
 @push('scripts')
-     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#tendersTable').DataTable({
-                "pageLength": 10,
-                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
-            });
-        });
+        // Wrap in IIFE to avoid conflicts with partial navigation
+        (function() {
+            'use strict';
+            
+            var tableInstance = null;
+            var isInitialized = false;
+            
+            function initializeDataTable() {
+                console.log('Initializing DataTable...');
+                
+                // Check if table exists
+                if (!$('#tendersTable').length) {
+                    console.warn('Table not found');
+                    return;
+                }
+                
+                // Destroy existing instance if present
+                if ($.fn.DataTable.isDataTable('#tendersTable')) {
+                    $('#tendersTable').DataTable().destroy();
+                    console.log('Destroyed existing DataTable instance');
+                }
+                
+                // Initialize fresh DataTable
+                tableInstance = $('#tendersTable').DataTable({
+                    "pageLength": 10,
+                    "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    "responsive": false,
+                    "autoWidth": false,
+                    "processing": false,
+                    "stateSave": false,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "paging": true,
+                    "lengthChange": true,
+                    "dom": '<"row mb-3"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                           '<"row"<"col-sm-12"tr>>' +
+                           '<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                    "language": {
+                        "search": "Search:",
+                        "searchPlaceholder": "Search tenders...",
+                        "lengthMenu": "Show _MENU_ entries",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                        "infoEmpty": "Showing 0 to 0 of 0 entries",
+                        "infoFiltered": "(filtered from _MAX_ total entries)",
+                        "zeroRecords": "No matching tenders found",
+                        "emptyTable": "No tenders available",
+                        "paginate": {
+                            "first": "First",
+                            "last": "Last",
+                            "next": "Next",
+                            "previous": "Previous"
+                        }
+                    },
+                    "initComplete": function() {
+                        console.log('DataTable initialized successfully');
+                        enforceControlVisibility();
+                        isInitialized = true;
+                    },
+                    "drawCallback": function() {
+                        enforceControlVisibility();
+                    }
+                });
+                
+                console.log('DataTable instance created');
+            }
 
-        // Auto-dismiss of alerts disabled to keep the initiated tender list and guidance visible.
-        // If you want alerts to auto-dismiss later, re-enable with a timeout value.
-        // Example re-enable (uncomment):
-        // window.setTimeout(function() {
-        //     $(".alert").fadeTo(500, 0).slideUp(500, function(){
-        //         $(this).remove();
-        //     });
-        // }, 5000);
+            function enforceControlVisibility() {
+                var $wrapper = $('.dataTables_wrapper');
+                if (!$wrapper.length) return;
+                
+                var $length = $wrapper.find('.dataTables_length');
+                var $filter = $wrapper.find('.dataTables_filter');
+                var $info = $wrapper.find('.dataTables_info');
+                var $paginate = $wrapper.find('.dataTables_paginate');
+                
+                // Force visibility
+                $length.css({
+                    'display': 'block',
+                    'visibility': 'visible',
+                    'opacity': '1'
+                }).show();
+                
+                $filter.css({
+                    'display': 'block',
+                    'visibility': 'visible',
+                    'opacity': '1',
+                    'text-align': 'right'
+                }).show();
+                
+                $info.css('display', 'block').show();
+                $paginate.css('display', 'block').show();
+                
+                // Ensure inner controls are visible
+                $filter.find('input').css({
+                    'display': 'inline-block',
+                    'visibility': 'visible'
+                }).show();
+                
+                $length.find('select').css({
+                    'display': 'inline-block',
+                    'visibility': 'visible'
+                }).show();
+            }
+
+            // Handle sidebar toggle
+            function handleSidebarToggle() {
+                if (!tableInstance) return;
+                
+                setTimeout(function() {
+                    tableInstance.columns.adjust();
+                    enforceControlVisibility();
+                }, 350);
+            }
+
+            // Attach sidebar toggle handlers
+            $(document).on('click', '#sidebar-hide, #mobile-collapse, .pc-sidebar-collapse, .pc-sidebar-popup', handleSidebarToggle);
+
+            // Handle window resize with debounce
+            var resizeTimer;
+            $(window).on('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (tableInstance) {
+                        tableInstance.columns.adjust();
+                        enforceControlVisibility();
+                    }
+                }, 250);
+            });
+
+            // Protection against other scripts hiding controls
+            var protectionInterval = setInterval(function() {
+                var $filter = $('.dataTables_filter');
+                var $length = $('.dataTables_length');
+                
+                if ($filter.length && $filter.is(':hidden')) {
+                    console.warn('Filter hidden, restoring...');
+                    enforceControlVisibility();
+                }
+                
+                if ($length.length && $length.is(':hidden')) {
+                    console.warn('Length hidden, restoring...');
+                    enforceControlVisibility();
+                }
+            }, 1000);
+
+            // Initialize on document ready
+            $(document).ready(function() {
+                initializeDataTable();
+                
+                // Initial enforcement
+                setTimeout(enforceControlVisibility, 200);
+            });
+
+            // Re-initialize after partial content loads (AJAX navigation)
+            document.addEventListener('partial:loaded', function(e) {
+                console.log('Partial content loaded, reinitializing DataTable...');
+                
+                // Wait for DOM to settle
+                setTimeout(function() {
+                    if ($('#tendersTable').length) {
+                        initializeDataTable();
+                    }
+                }, 100);
+            });
+
+            // Cleanup on page unload
+            $(window).on('beforeunload', function() {
+                clearInterval(protectionInterval);
+                if (tableInstance) {
+                    tableInstance.destroy();
+                    tableInstance = null;
+                }
+            });
+
+            // Override jQuery.hide() for DataTables controls
+            var originalHide = $.fn.hide;
+            $.fn.hide = function() {
+                if (this.hasClass('dataTables_filter') || 
+                    this.hasClass('dataTables_length') ||
+                    this.hasClass('dataTables_info') ||
+                    this.hasClass('dataTables_paginate')) {
+                    console.warn('Blocked hide() on DataTables control');
+                    return this;
+                }
+                return originalHide.apply(this, arguments);
+            };
+
+        })();
     </script>
 @endpush

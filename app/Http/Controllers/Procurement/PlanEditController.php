@@ -8,6 +8,7 @@ use App\Models\Procurement\PlanLineItem;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Policies\Procurement\PlanEditPolicy;
+use Illuminate\Support\Facades\Auth;
 
 class PlanEditController extends Controller
 {
@@ -38,7 +39,7 @@ class PlanEditController extends Controller
     public function updateDraftItems(Request $request)
     {
 
-        $user = auth()->user();
+        $user = Auth::user();
         $itemIds = $request->input('lineItemIds', []);
         $errors = [];
 
@@ -52,7 +53,9 @@ class PlanEditController extends Controller
             $qty = (int)$qty;
             $cost = (float)$cost;
 
-            if ($qty > $item->OriginalQTY) {
+            // Enforce upper bound only for non-manual items
+            $isManual = strtolower((string)($item->SourceType ?? '')) === 'manual';
+            if (!$isManual && $qty > $item->OriginalQTY) {
                 $errors[] = "Cannot set quantity for item '{$item->item->ItemName}' (ID: $id) greater than original quantity ({$item->OriginalQTY}).";
                 continue;
             }
@@ -62,7 +65,7 @@ class PlanEditController extends Controller
                 'EstimatedUnitCost' => $cost,
                 'ChangeRemarks' => $remarks,
                 'ModifiedOn' => now(),
-                'ModifiedBy' => auth()->id(),
+                'ModifiedBy' => Auth::user()?->Id,
             ]);
             $updatedItem = PlanLineItem::find($id);
             activity()
@@ -80,7 +83,7 @@ class PlanEditController extends Controller
 
     public function deleteDraftItem($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $item = PlanLineItem::find($id);
         $this->authorize('delete', $item);
