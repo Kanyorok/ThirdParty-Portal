@@ -21,7 +21,7 @@ return [
     ],
 
     'PlanID' => [
-        'Draft'=> \App\Enums\ProcurementPlanStatusEnum::Draft->value,  // 'Dr'
+        'Draft' => \App\Enums\ProcurementPlanStatusEnum::Draft->value,  // 'Dr'
         'Approved' => \App\Enums\ProcurementPlanStatusEnum::Approved->value,  // 'Ap'
         'Rejected' => \App\Enums\ProcurementPlanStatusEnum::Rejected->value,  // 'Re'
         'Pending' => \App\Enums\ProcurementPlanStatusEnum::Pending->value,    // 'P'
@@ -35,6 +35,13 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
     ],
 
+    'OrderID' => [
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'A'
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'R'
+        'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,    // 'P'
+        'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 'S'
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Status Column Mappings
@@ -42,7 +49,7 @@ return [
     | Maps morph aliases to their status column names
     | This allows different modules to use different column names
     */
-    
+
     'status_columns' => [
         'department_need' => 'Status',
         'property_new_lease' => 'ApprovalStatus',
