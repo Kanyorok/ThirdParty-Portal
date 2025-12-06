@@ -110,7 +110,12 @@ RUN php artisan config:cache && \
 # Permissions Setup
 # (Optimized to single layer to save space)
 RUN rm -rf database/ && \
-    mkdir -p /var/www/storage/logs /var/www/bootstrap/cache && \
+    mkdir -p /var/www/storage/app/public \
+             /var/www/storage/framework/cache \
+             /var/www/storage/framework/sessions \
+             /var/www/storage/framework/views \
+             /var/www/storage/logs \
+             /var/www/bootstrap/cache && \
     touch /var/www/storage/logs/worker.log && \
     chown -R www-data:www-data /var/www && \
     chmod -R 775 /var/www/storage /var/www/bootstrap/cache
