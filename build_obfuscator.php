@@ -77,6 +77,7 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
         // 2. Obfuscate Variables
         // Note: This is risky in Laravel due to compact(), dynamic properties, etc.
         // Use with caution. Safe for internal logic methods.
+        /*
         if ($node instanceof Node\Expr\Variable) {
             $name = $node->name;
 
@@ -88,6 +89,7 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
                 $node->name = $this->variableMap[$name];
             }
         }
+        */
     }
 }
 
