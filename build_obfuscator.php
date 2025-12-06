@@ -8,6 +8,7 @@ use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\NodeVisitor\ParentConnectingVisitor;
 
 // --- CONFIGURATION ---
 // Directories to obfuscate (Don't obfuscate the whole vendor folder!)
@@ -40,6 +41,19 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
     {
         // 1. Obfuscate Strings
         if ($node instanceof String_) {
+            // Check parent to avoid invalid constant expressions
+            $parent = $node->getAttribute('parent');
+
+            if (
+                $parent instanceof Node\Stmt\PropertyProperty ||
+                $parent instanceof Node\Const_ || // Handles const and class const
+                $parent instanceof Node\Param ||
+                $parent instanceof Node\Attribute ||
+                $parent instanceof Node\Expr\StaticVar
+            ) {
+                return null; // Skip obfuscation for these contexts
+            }
+
             // Skip specific strings if needed (like configuration keys)
             // Simple Base64 encoding wrapper
             $original = $node->value;
@@ -82,6 +96,7 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
 // In php-parser 5.x, use createForNewestSupportedVersion() to auto-detect the best parser
 $parser = (new ParserFactory)->createForNewestSupportedVersion();
 $traverser = new NodeTraverser();
+$traverser->addVisitor(new ParentConnectingVisitor()); // Add this first!
 $traverser->addVisitor(new ObfuscatorVisitor());
 $printer = new PrettyPrinter\Standard();
 
