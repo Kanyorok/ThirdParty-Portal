@@ -92,6 +92,19 @@ COPY --from=obfuscator_builder /app/dist/app /var/www/app
 # Ensure you have a .env.production file in your project root!
 COPY .env.production /var/www/.env
 
+# 4. Permissions Setup (Must be done BEFORE composer install)
+# Create storage structure and set permissions so artisan commands can run
+RUN rm -rf database/ && \
+    mkdir -p /var/www/storage/app/public \
+    /var/www/storage/framework/cache \
+    /var/www/storage/framework/sessions \
+    /var/www/storage/framework/views \
+    /var/www/storage/logs \
+    /var/www/bootstrap/cache && \
+    touch /var/www/storage/logs/worker.log && \
+    chown -R www-data:www-data /var/www && \
+    chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
 # 4. Install PHP Dependencies (No Dev tools)
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
@@ -107,18 +120,7 @@ RUN php artisan config:cache && \
     php artisan route:cache && \
     php artisan view:cache
 
-# Permissions Setup
-# (Optimized to single layer to save space)
-RUN rm -rf database/ && \
-    mkdir -p /var/www/storage/app/public \
-    /var/www/storage/framework/cache \
-    /var/www/storage/framework/sessions \
-    /var/www/storage/framework/views \
-    /var/www/storage/logs \
-    /var/www/bootstrap/cache && \
-    touch /var/www/storage/logs/worker.log && \
-    chown -R www-data:www-data /var/www && \
-    chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Permissions Setup moved to before composer install
 
 # Expose Ports
 EXPOSE 80
