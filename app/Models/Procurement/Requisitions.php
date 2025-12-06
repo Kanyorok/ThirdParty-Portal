@@ -90,12 +90,25 @@ class Requisitions extends Model
         ]);
     }
 
+    public function statusDetail()
+    {
+        return $this->belongsTo(\App\Models\Core\Approval\CodeDetail::class, 'StatusID', 'ID');
+    }
+
+    public function getStatusAttribute()
+    {
+        return $this->statusDetail?->Value;
+    }
+
     // Auto-submit for approval when created
     protected static function boot()
     {
         parent::boot();
 
         static::created(function (Requisitions $requisition) {
+            // Reload to get status relationship
+            $requisition->load('statusDetail');
+
             if ($requisition->isPendingApproval()) {
                 // Use the workflow service to submit for approval
                 $workflowService = app(RequisitionWorkflowService::class);
