@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use App\Enums\TenderStatusEnum;
 use App\Models\Auth\User;
 use App\Models\ThirdParies\Supplier;
+use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -208,7 +209,7 @@ class TenderAward extends Model
             'ModifiedBy' => $user->Id,
         ]);
     }
-
+   
     public function cancel(User $user, string $reason)
     {
         $this->update([
@@ -221,5 +222,19 @@ class TenderAward extends Model
     public static function getPrimaryKey(): string
     {
         return 'Id';
+    }
+
+     /**
+     * Workflow history relationship
+     */
+    public function workflowHistory()
+    {
+        return $this->morphMany(
+            WorkflowHistory::class,
+            'source',
+            'Source',
+            'SourceID',
+            'Id'
+        );
     }
 }

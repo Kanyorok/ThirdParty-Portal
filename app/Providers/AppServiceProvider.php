@@ -263,6 +263,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\RequisitionsController;
+use App\Http\Controllers\Procurement\AwardsController;
 use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
@@ -307,6 +308,16 @@ class AppServiceProvider extends ServiceProvider
                 'DocStatus'          // Status column name for requisitions
             );
         });
+
+        //bind awards workflow
+        $this->app->when(AwardsController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'TenderAwardApprovalStatus',  // CodeID for tender award approval workflow
+                    'AwardStatus'             // Status column name
+                );
+            });
     
     }
 

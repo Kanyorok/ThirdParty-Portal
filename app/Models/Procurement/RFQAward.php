@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models\Procurement;
-
+use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -38,6 +38,20 @@ class RFQAward extends Model
     public function supplier()
     {
         return $this->belongsTo(\App\Models\ThirdParies\Supplier::class, 'SupplierId', 'Id');
+    }
+
+     /**
+     * Workflow history relationship
+     */
+    public function workflowHistory()
+    {
+        return $this->morphMany(
+            WorkflowHistory::class,
+            'source',
+            'Source',
+            'SourceID',
+            'Id'
+        );
     }
 }
 

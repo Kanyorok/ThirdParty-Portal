@@ -521,4 +521,36 @@ public function create()
 
         return redirect()->route('rfqs.index')->with('success', 'RFQ deleted successfully.');
     }
+
+    /**
+ * Get categories from requisition for RFQ line creation
+ * Add this method to your RFQController
+ */
+public function getRequisitionCategories($requisitionId)
+{
+    try {
+        // Get distinct item categories from requisition lines
+        $categories = DB::table('t_RequisitionLines as rl')
+            ->join('t_ItemCategories as ic', 'rl.ItemCategoryId', '=', 'ic.Id')
+            ->where('rl.RequisitionID', $requisitionId)
+            ->whereNull('rl.DeletedOn')
+            ->whereNull('ic.DeletedOn')
+            ->select('ic.Id', 'ic.Name')
+            ->distinct()
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'categories' => $categories
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Failed to fetch requisition categories: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to load categories',
+            'categories' => []
+        ], 500);
+    }
+}
 }

@@ -99,7 +99,7 @@ class RequisitionService
         }
     }
     //
-    public static function fetchRequisition()
+  public static function fetchRequisition()
 {
     return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
         ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.Id', '=', 't_RequisitionLines.RequisitionId')
