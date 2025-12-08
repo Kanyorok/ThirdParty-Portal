@@ -44,25 +44,6 @@ class PropertyApprovalController extends Controller
         return view('property.tenantmanagement.leasemanagement.approval.index', compact('approvals', 'terminationapprovals'));
     }
 
-    // public function show($Id)
-    // {
-    //     $lease = PropertyNewLease::findOrFail($Id);
-
-    //     $this->authorize('view', $lease);
-    //     $lease->load(['tenant', 'property', 'block', 'floor', 'unit']);
-
-    //     $user = Auth::user();
-    //     $canApprove = $this->workflow->canApproveModel($lease, $user);
-
-    //     Log::info("Can approve lease {$lease->Id} for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
-
-    //     return view('property.tenantmanagement.leasemanagement.approval.show', [
-    //         'lease' => $lease,
-    //         'canApprove' => $canApprove,
-    //         //'history' => $this->workflow->historyForModel($lease),
-    //     ]);
-    // }
-
     public function approve($Id)
     {
         $lease = PropertyNewLease::findOrFail($Id);
@@ -137,25 +118,6 @@ class PropertyApprovalController extends Controller
 
         return redirect()->route('propertyapproval.index')->with('success', 'Lease rejected successfully.');
     }
-
-    // public function showTermination($Id)
-    // {
-    //     $termination = PropertyLeaseTermination::findOrFail($Id);
-
-    //     $this->authorize('view', $termination);
-    //     $termination->load(['lease', 'lease.tenant', 'lease.property', 'lease.block', 'lease.floor', 'lease.unit', 'code']);
-
-    //     $user = Auth::user();
-    //     $canApprove = $this->workflowterm->canApproveModel($termination, $user);
-
-    //     Log::info("Can approve termination {$termination->Id} for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
-
-    //     return view('property.tenantmanagement.leasemanagement.approval.showTermination', [
-    //         'termination' => $termination,
-    //         'canApprove' => $canApprove,
-    //         'history' => $this->workflowterm->historyForModel($termination),
-    //     ]);
-    // }
 
     public function approveTermination($Id)
     {

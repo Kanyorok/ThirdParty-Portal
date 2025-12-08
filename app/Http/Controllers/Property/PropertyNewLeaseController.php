@@ -130,33 +130,6 @@ class PropertyNewLeaseController extends Controller
         return response()->json($units);
     }
 
-    /**
-     * Lease-only endpoint: return pricing for a unit to autofill New Lease form
-     */
-    // public function getPricingByUnit($UnitId)
-    // {
-    //     $pricing = PropertyRateAndPricing::where('UnitId', $UnitId)->first();
-
-    //     if (! $pricing) {
-    //         return response()->json(['message' => 'Pricing not found for this unit'], 404);
-    //     }
-
-    //     return response()->json([
-    //         'Id' => $pricing->Id,
-    //         'PropertyId' => $pricing->PropertyId,
-    //         'BlockId' => $pricing->BlockId,
-    //         'FloorId' => $pricing->FloorId,
-    //         'UnitId' => $pricing->UnitId,
-    //         'Rent' => $pricing->Rent,
-    //         'ParkingFee' => $pricing->ParkingFee,
-    //         'ServiceCharge' => $pricing->ServiceCharge,
-    //         'OtherCharges' => $pricing->OtherCharges,
-    //         'DepositAmount' => $pricing->DepositAmount,
-    //         'CurrencyId' => $pricing->CurrencyId,
-    //         'TaxId' => $pricing->TaxId,
-    //     ]);
-    // }
-
 
     public function show($Id)
     {
@@ -278,21 +251,18 @@ class PropertyNewLeaseController extends Controller
     {
         $lease = PropertyNewLease::with(['tenant.thirdParty', 'property', 'block', 'floor', 'unit', 'code'])->findOrFail($Id);
 
-        // Update IsOfferGenerated to true
         $lease->update([
             'IsOfferGenerated' => true,
             'ModifiedBy' => auth()->user()->Id,
             'ModifiedOn' => now(),
         ]);
 
-        // Log the activity
         activity()
             ->causedBy(auth()->user()->Id)
             ->performedOn($lease)
             ->event('offer_generated')
             ->log("Generated Lease Offer Letter for {$lease->LeaseNumber}.");
 
-        // Generate PDF
         $pdf = Pdf::loadView('property.tenantmanagement.leasemanagement.leasemaintenance.Offerletter', compact('lease'))->output();
 
         $lease->newDocumentFromContent(module: ModulesEnum::Property, extension: ExtensionsEnum::Pdf,
@@ -300,13 +270,8 @@ class PropertyNewLeaseController extends Controller
             actor: auth()->user(), permissions: [PermissionEnum::PropertyNewLeaseView->value]
         );
 
-        //todo start approval
-
         return redirect()->route('addlease.index')->with('success', 'Lease Offer Letter generated successfully.');
-        //   return $pdf->download("Lease_Offer_{$lease->LeaseNumber}.pdf");
 
-        // OR display in browser as HTML
-        // return view('property.tenantmanagement.leasemanagement.leasemaintenance.letter', compact('lease'));
     }
 
 
