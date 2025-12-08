@@ -59,16 +59,27 @@ class RFQController extends Controller
         // paginate RFQs 10 per page, preserving query string
         $rfqs = $query->paginate(10)->withQueryString();
 
-        $requisitions = DB::table('t_Requisitions as r')
-            ->join('t_CodeDetails as cd', 'r.StatusID', '=', 'cd.Id')
-            ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
-            ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
-            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
-            ->where('cd.Description', 'Approved')
-            ->whereNull('rfql.Id')
-            ->select('r.Id', 'r.RequisitionNo', DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle"))
-            ->distinct()
-            ->get();
+          
+    $requisitions = DB::table('t_Requisitions as r')
+        ->join('t_CodeDetails as cd', function($join){
+            $join->on('r.DocStatus', '=', 'cd.Value')
+         ->where('cd.CodeId', '=', 'RequisitionStatus');
+        })
+        ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
+        ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+        ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
+        ->where('cd.Description', 'Approved')
+        ->where('cd.IsActive', 1)
+        ->whereNull('cd.DeletedOn')
+        ->whereNull('r.DeletedOn') // Also check requisition not deleted
+        ->whereNull('rfql.Id') // Requisition line not already in an RFQ
+        ->select(
+            'r.Id', 
+            'r.RequisitionNo', 
+            DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
+        )
+        ->distinct()
+        ->get();
 
         // Build CreatedBy map (Id -> Name) for users referenced by the RFQs on this page
         $createdByIds = $rfqs->pluck('CreatedBy')->unique()->filter()->values()->all();
@@ -90,13 +101,72 @@ class RFQController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        $this->authorize('create', RFQ::class);
-        $categories = ItemCategories::all();
-        $suppliers = Supplier::all(); // Fetch all suppliers for selection
-        return view('procurement.rfqs.create', compact('categories', 'suppliers'));
-    }
+public function create22()
+{
+    $this->authorize('create', RFQ::class);
+
+    
+    // Let's check what requisitions exist first
+    $allRequisitions = DB::table('t_Requisitions as r')
+        ->select('r.Id', 'r.RequisitionNo', 'r.DocStatus')
+        ->get();
+    
+    dd([
+        'all_requisitions' => $allRequisitions,
+        'code_details' => DB::table('t_CodeDetails')->where('Description', 'Approved')->get(),
+    ]);
+    
+    $requisitions = DB::table('t_Requisitions as r')
+        ->join('t_CodeDetails as cd', 'r.DocStatus', '=', 'cd.Description') // Changed from cd.Code to cd.CodeId
+        ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
+        ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+        ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
+        ->where('cd.Description', 'Approved')
+        ->whereNull('rfql.Id') // Ensures we only get requisitions that haven't been used yet
+        ->select(
+            'r.Id', 
+            'r.RequisitionNo', 
+            DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
+        )
+        ->distinct()
+        ->get();
+
+    $categories = ItemCategories::all();
+    $suppliers = Supplier::all(); 
+
+    return view('procurement.rfqs.create', compact('categories', 'suppliers', 'requisitions'));
+}
+
+public function create()
+{
+    $this->authorize('create', RFQ::class);
+    
+    $requisitions = DB::table('t_Requisitions as r')
+        ->join('t_CodeDetails as cd', function($join){
+            $join->on('r.DocStatus', '=', 'cd.Value')
+         ->where('cd.CodeId', '=', 'RequisitionStatus');
+        })
+        ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
+        ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+        ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
+        ->where('cd.Description', 'Approved')
+        ->where('cd.IsActive', 1)
+        ->whereNull('cd.DeletedOn')
+        ->whereNull('r.DeletedOn') // Also check requisition not deleted
+        ->whereNull('rfql.Id') // Requisition line not already in an RFQ
+        ->select(
+            'r.Id', 
+            'r.RequisitionNo', 
+            DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
+        )
+        ->distinct()
+        ->get();
+
+    $categories = ItemCategories::all();
+    $suppliers = Supplier::all(); 
+
+    return view('procurement.rfqs.create', compact('categories', 'suppliers', 'requisitions'));
+}
 
     /**
      * Store a newly created resource in storage.

@@ -261,6 +261,9 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Http\Controllers\Procurement\TenderController;
+use App\Http\Controllers\Procurement\RequisitionsController;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
 
@@ -280,6 +283,30 @@ class AppServiceProvider extends ServiceProvider
          $this->app->bind(ApprovalWorkflow::class, function ($app) {
         return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
     });
+
+       // Bind Tender Workflow
+    $this->app->when(TenderController::class)
+        ->needs(ApprovalWorkflow::class)
+        ->give(function () {
+            return new ApprovalWorkflow(
+                'TenderStatus',  // CodeID for tender approval workflow
+                'ApprovalStatus'    // Status column name
+            );
+        });
+
+         $this->app->singleton(RequisitionWorkflowService::class, function ($app) {
+        return new RequisitionWorkflowService();
+    });
+
+        //bind requistions workflow 
+         $this->app->when(RequisitionsController::class)
+        ->needs(ApprovalWorkflow::class)
+        ->give(function () {
+            return new ApprovalWorkflow(
+                'RequisitionStatus', // CodeID for requisition workflow
+                'DocStatus'          // Status column name for requisitions
+            );
+        });
     
     }
 

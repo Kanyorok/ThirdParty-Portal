@@ -112,7 +112,10 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 
     // this route is static affecting orders\create.blade.php & requisitions\show
-    Route::get('requisitionItem/getItemDetails/{item}', [RequisitionItemsController::class, 'getItemDetails'])->name('requisitionItem.getItemDetails');
+    Route::get('requisitionItem/getItemDetails/{item}', action: [RequisitionItemsController::class, 'getItemDetails'])->name('requisitionItem.getItemDetails');
+
+    Route::get('procurement/requisition/getPlanDetails/{id}', [RequisitionsController::class, 'getPlanDetails'])
+    ->name('requisition.getPlanDetails');
 
     //    Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
     //    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
@@ -310,10 +313,14 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     ->name('tendercategory.generateCode');
 
     //Route for tender approval and Reject
-    Route::post('/tenderapproval', [TenderController::class, 'approveTender'])->name('tender.approve');
-    Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])->name('tender.reject');
+    Route::post('/tenderapproval', [TenderController::class, 'approveTender'])->name('initiatetender.approve');
+    Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])->name('initiatetender.reject');
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
     Route::resource('tenderresponse', TenderResponseController::class);
+    Route::post('procurement/tendering/initiatetender/{id}/submit', [App\Http\Controllers\Procurement\TenderController::class, 'submitForApproval'])->name('initiatetender.submit');
+    // Workflow history route (if not already added)
+Route::get('/tenders/{id}/workflow-history', [TenderController::class, 'workflowHistory'])
+    ->name('initiatetender.workflow-history');
 
     Route::resource('tenderopening', TenderOpeningController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);

@@ -262,54 +262,111 @@
                                             Pending
                                          </span>
                                     @endif
-                                </td>
-                                <td class="action-buttons">
-                                    @canRead('tender')
-                                        <a href="{{ route('initiatetender.show', $tender->Id) }}" class="btn btn-sm btn-outline-info" title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    @endcanRead
+                           <td class="action-buttons">
+    {{-- 1. View Button (Always visible to those with read permission) --}}
+    @canRead('tender')
+        <a href="{{ route('initiatetender.show', $tender->Id) }}" 
+           class="btn btn-sm btn-outline-info" 
+           title="View">
+            <i class="fas fa-eye"></i>
+        </a>
+    @endcanRead
 
-                                    @if ($tender->ApprovalStatus === \App\Enums\TenderApprovalStatusEnum::APPROVED)
-                                        {{-- Approved: hide Edit and Delete actions --}}
-                                    @elseif ($tender->ApprovalStatus === \App\Enums\TenderApprovalStatusEnum::REJECTED)
-                                        {{-- Rejected: keep Edit disabled (read-only) --}}
-                                        @canUpdate('tender')
-                                            <a href="{{ route('initiatetender.edit', $tender->Id) }}"
-                                               class="btn btn-sm btn-outline-primary disabled" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                        @endcanUpdate
-                                        @canDelete('tender')
-                                            <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST" style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                                        onclick="return confirm('Are you sure you want to delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        @endcanDelete
-                                    @else
-                                        {{-- Other statuses: allow Edit and Delete --}}
-                                        @canUpdate('tender')
-                                            <a href="{{ route('initiatetender.edit', $tender->Id) }}"
-                                               class="btn btn-sm btn-outline-primary" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                        @endcanUpdate
-                                        @canDelete('tender')
-                                            <form action="{{ route('initiatetender.destroy', $tender->Id) }}" method="POST" style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                                        onclick="return confirm('Are you sure you want to delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        @endcanDelete
-                                    @endif
-                                </td>
+    {{-- Logic based on ApprovalStatus --}}
+    @if ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::APPROVED)
+        {{-- APPROVED: No Edit/Delete/Submit buttons --}}
+        {{-- View button only (already shown above) --}}
+        
+    @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::PENDING)
+        {{-- PENDING APPROVAL: No Edit/Delete/Submit buttons --}}
+        {{-- Only View button available --}}
+        {{-- Approve/Reject buttons are in the show/view page, not in the list --}}
+        
+    @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::REJECTED)
+        {{-- REJECTED: Can Edit, Delete, and Re-submit --}}
+        @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
+            @canUpdate('tender')
+                <a href="{{ route('initiatetender.edit', $tender->Id) }}"
+                   class="btn btn-sm btn-outline-primary" 
+                   title="Edit">
+                    <i class="fas fa-edit"></i>
+                </a>
+            @endcanUpdate
+            
+            @canUpdate('tender')
+                <form action="{{ route('initiatetender.submit', $tender->Id) }}" 
+                      method="POST" 
+                      style="display: inline;">
+                    @csrf
+                    @method('POST')
+                    <button type="submit" 
+                            class="btn btn-sm btn-outline-success" 
+                            title="Resubmit for Approval"
+                            onclick="return confirm('Resubmit Tender \'{{ $tender->TenderNo }}\' for approval?')">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            @endcanUpdate
+        @endif
+        
+        @canDelete('tender')
+            <form action="{{ route('initiatetender.destroy', $tender->Id) }}" 
+                  method="POST" 
+                  style="display: inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" 
+                        class="btn btn-sm btn-outline-danger" 
+                        title="Delete"
+                        onclick="return confirm('Delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </form>
+        @endcanDelete
+        
+    @else
+        {{-- NEW/DRAFT (No approval status set yet) --}}
+        @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
+            @canUpdate('tender')
+                <a href="{{ route('initiatetender.edit', $tender->Id) }}"
+                   class="btn btn-sm btn-outline-primary" 
+                   title="Edit">
+                    <i class="fas fa-edit"></i>
+                </a>
+            @endcanUpdate
+            
+            @canUpdate('tender')
+                <form action="{{ route('initiatetender.submit', $tender->Id) }}" 
+                      method="POST" 
+                      style="display: inline;">
+                    @csrf
+                    @method('POST')
+                    <button type="submit" 
+                            class="btn btn-sm btn-outline-success" 
+                            title="Submit for Approval"
+                            onclick="return confirm('Submit Tender \'{{ $tender->TenderNo }}\' for approval?')">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            @endcanUpdate
+        @endif
+        
+        @canDelete('tender')
+            <form action="{{ route('initiatetender.destroy', $tender->Id) }}" 
+                  method="POST" 
+                  style="display: inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" 
+                        class="btn btn-sm btn-outline-danger" 
+                        title="Delete"
+                        onclick="return confirm('Delete tender \'{{ $tender->TenderNo }}\'? This action cannot be undone.')">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </form>
+        @endcanDelete
+    @endif
+</td>
                             </tr>
                         @empty
                             <tr>

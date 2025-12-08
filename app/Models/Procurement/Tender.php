@@ -303,4 +303,34 @@ class Tender extends Model
     {
         return $this->hasOne(TenderAward::class, 'TenderID', 'Id');
     }
+
+     /**
+     * Check if tender is approved
+     */
+    public function isApproved(): bool
+    {
+        return $this->ApprovalStatus === TenderApprovalStatusEnum::APPROVED;
+    }
+
+     /**
+     * Check if tender is rejected
+     */
+    public function isRejected(): bool
+    {
+        return $this->ApprovalStatus === TenderApprovalStatusEnum::REJECTED;
+    }
+
+    /**
+     * Get approval status badge color
+     */
+    public function getApprovalStatusBadgeAttribute(): string
+    {
+        return match($this->ApprovalStatus) {
+            TenderApprovalStatusEnum::PENDING => 'warning',
+            TenderApprovalStatusEnum::APPROVED => 'success',
+            TenderApprovalStatusEnum::REJECTED => 'danger',
+            default => 'secondary',
+        };
+    }
+
 }
