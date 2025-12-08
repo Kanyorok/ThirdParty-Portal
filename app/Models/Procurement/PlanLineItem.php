@@ -137,5 +137,9 @@ class PlanLineItem extends Model
 
     return (float) $quantity * (float) $unitCost;
     }
+    public function tenderItems()
+    {
+        return $this->hasMany(TenderItems::class, 'PlanItemID', 'LineItemID');
+    }
 
 }

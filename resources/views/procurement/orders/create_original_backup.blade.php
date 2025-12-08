@@ -46,6 +46,19 @@
         .readonly-input {
             background-color: #f8f9fa !important;
         }
+
+        /* Align form controls nicely */
+        .form-label { margin-bottom: .25rem; }
+
+        /* Tidy table inputs and vertical centering */
+        .table-form th,
+        .table-form td { vertical-align: middle; }
+        .number-input { text-align: right; }
+        .textarea-compact { height: 64px; resize: vertical; }
+        .w-min-80 { min-width: 80px; }
+        .w-min-100 { min-width: 100px; }
+        .w-min-150 { min-width: 150px; }
+        .w-min-200 { min-width: 200px; }
     </style>
 @endsection
 
@@ -159,18 +172,18 @@
 
             <!-- Line Items Table -->
             <div class="table-responsive mb-4">
-                <table class="table table-bordered" id="line-items-table">
+                <table class="table table-bordered table-form" id="line-items-table">
                     <thead class="table-light">
                     <tr>
-                        <th style="width: 3%; min-width: 30px;">#</th>
-                        <th style="width: 10%; min-width: 100px;">Item Type <span class="text-danger">*</span></th>
-                        <th style="width: 15%; min-width: 150px;">Item Name <span class="text-danger">*</span></th>
-                        <th style="width: 20%; min-width: 200px;">Item Description</th>
-                        <th style="width: 5%; min-width: 80px;">Quantity <span class="text-danger">*</span></th>
-                        <th style="width: 10%; min-width: 100px;">Unit Price <span class="text-danger">*</span></th>
-                        <th style="width: 5%; min-width: 80px;">Tax %</th>
-                        <th style="width: 5%; min-width: 80px;">Discount %</th>
-                        <th style="width: 15%; min-width: 150px;">Line Total</th>
+                        <th class="w-min-80" style="width: 3%;">#</th>
+                        <th class="w-min-100" style="width: 10%;">Item Type <span class="text-danger">*</span></th>
+                        <th class="w-min-150" style="width: 15%;">Item Name <span class="text-danger">*</span></th>
+                        <th class="w-min-200" style="width: 20%;">Item Description</th>
+                        <th class="w-min-80 text-end" style="width: 5%;">Quantity <span class="text-danger">*</span></th>
+                        <th class="w-min-100 text-end" style="width: 10%;">Unit Price <span class="text-danger">*</span></th>
+                        <th class="w-min-80 text-end" style="width: 5%;">Tax %</th>
+                        <th class="w-min-80 text-end" style="width: 5%;">Discount %</th>
+                        <th class="w-min-150 text-end" style="width: 15%;">Line Total</th>
                     </tr>
                     </thead>
                     <tbody id="item-rows">
@@ -190,21 +203,13 @@
                             </select>
                         </td>
                         <td class="text-start">
-                            <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                                      id="Description" cols="30"
-                                      rows="5" readonly
-                                      style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+                            <textarea class="form-control form-control-sm itemDescription textarea-compact" name="itemDescription[]" id="Description" rows="3" readonly></textarea>
                         </td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
-                                                      name="quantity[]" id="Quantity" step="any" required></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                      name="unitPrice[]" id="Price" step="any" required></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                      name="tax[]" id="Tax" step="any"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                      name="discount[]" id="Discount" step="any"></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                      name="lineTotal[]" id="lineTotal" step="any" readonly></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity number-input" name="quantity[]" id="Quantity" step="any" required></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price number-input" name="unitPrice[]" id="Price" step="any" required></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm tax number-input" name="tax[]" id="Tax" step="any"></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm discount number-input" name="discount[]" id="Discount" step="any"></td>
+                        <td class="text-start"><input type="number" class="form-control form-control-sm line-total number-input" name="lineTotal[]" id="lineTotal" step="any" readonly></td>
                         <td class="text-center align-middle">
                             <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i
                                     class="fa fa-trash"></i> Remove
@@ -487,15 +492,13 @@
                 </select>
             </td>
             <td>
-                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                          id="Description" cols="30"
-                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
+                <textarea class="form-control form-control-sm itemDescription textarea-compact" name="itemDescription[]" id="Description" rows="3" readonly></textarea>
             </td>
-            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" required></td>
-            <td><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" id="Price" required></td>
-            <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
-            <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
-            <td><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]"  id="lineTotal" readonly></td>
+            <td><input type="number" class="form-control form-control-sm qty quantity number-input" name="quantity[]" id="Quantity" required></td>
+            <td><input type="number" class="form-control form-control-sm unit-price number-input" name="unitPrice[]" id="Price" required></td>
+            <td><input type="number" class="form-control form-control-sm tax number-input" name="tax[]" id="Tax" ></td>
+            <td><input type="number" class="form-control form-control-sm discount number-input" name="discount[]" id="Discount" ></td>
+            <td><input type="number" class="form-control form-control-sm line-total number-input" name="lineTotal[]"  id="lineTotal" readonly></td>
             <td class="text-center align-middle">
                 <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
             </td>

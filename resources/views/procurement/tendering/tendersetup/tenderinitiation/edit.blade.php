@@ -324,9 +324,12 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
-                        <form action="" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PATCH')
+                            <input type="hidden" name="type" value="crudItem">
+                            <input type="hidden" name="crudType" value="updateQty">
+                            <input type="hidden" name="item_id" value="{{ $item->Id ?? $item->id }}">
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label for="item_id" class="form-label">Item</label>
@@ -340,8 +343,8 @@
                     </div>
 
                                 <div class="mb-3">
-                                    <label for="QtyToTender" class="form-label">Quantity to Tender</label>
-                                    <input type="number" name="QtyToTender" value="{{$item->QtyToTender}}"
+                                     <label for="QtyToTender" class="form-label">Quantity to Tender (Manual items only)</label>
+                                     <input type="number" step="any" name="QtyToTender" value="{{$item->QtyToTender}}"
                                            id="QtyToTender" class="form-control" required>
                                 </div>
 
@@ -360,7 +363,7 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
                                 </button>
-                                <button type="submit" class="btn btn-success">Edit Item</button>
+                                <button type="submit" class="btn btn-success">Update Quantity</button>
                             </div>
                         </form>
                     </div>
