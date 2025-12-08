@@ -31,8 +31,25 @@ class PropertyRateAndPricingRequest extends FormRequest
             'ServiceCharge' => ['nullable', 'numeric', 'min:0'],
             'OtherCharges' => ['nullable', 'numeric', 'min:0'],
             'DepositAmount' => ['nullable', 'numeric', 'min:0'],
-            'CurrencyId' => ['required', 'exists:t_Currencies,Id'],
+            'CurrencyId' => [
+                'required',
+                'exists:t_Currencies,Id',
+                function ($attribute, $value, $fail) {
+                    $exists = \DB::table('t_PropertyRateAndPricing')
+                        ->where('PropertyId', $this->PropertyId)
+                        ->where('BlockId', $this->BlockId)
+                        ->where('FloorId', $this->FloorId)
+                        ->where('UnitId', $this->UnitId)
+                        ->where('CurrencyId', $value)
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('This combination of property, block, floor, unit, and currency already exists.');
+                    }
+                },
+            ],
             'TaxId' => ['required', 'exists:t_FinanceTaxRuleConfiguration,Id'],
         ];
     }
+
 }

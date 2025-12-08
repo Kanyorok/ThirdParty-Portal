@@ -97,6 +97,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('/propertyrateandpricing/blocks/{PropertyId}', [PropertyRateAndPricingControllert::class, 'getBlockByProperty'])->name('getblockbyproperty.rate');
     Route::get('/propertyrateandpricing/floors/{BlockId}', [PropertyRateAndPricingControllert::class, 'getFloorByBlock'])->name('getfloorbyblock.rate');
     Route::get('/propertyrateandpricing/Units/{FloorId}', [PropertyRateAndPricingControllert::class, 'getUnitsByFloor'])->name('getunitsbyfloor.rate');
+    Route::get('/propertyrateandpricing/unit/{UnitId}', [PropertyRateAndPricingControllert::class, 'getPricingByUnit'])->name('getpricing.byunit');
 
 
     //Route::resource('addfloor', PropertyFloorController::class);
@@ -151,6 +152,8 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty.lease');
     Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock.lease');
     Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor.lease');
+    // Lease-only pricing lookup for autofill on new lease form
+    Route::get('/propertyaddlease/pricing/{UnitId}', [PropertyNewLeaseController::class, 'getPricingUnit'])->name('getpricingunit.lease');
     Route::get('lease-offer/{Id}', [PropertyNewLeaseController::class, 'leaseOfferLetter'])->name('addlease.offer');
 
     

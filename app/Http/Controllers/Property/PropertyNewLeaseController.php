@@ -17,6 +17,7 @@ use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
+use App\Models\PropertyManagement\PropertyRateAndPricing;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DateTime;
@@ -64,6 +65,25 @@ class PropertyNewLeaseController extends Controller
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
     }
 
+    public function getPricingUnit($UnitId)
+    {
+        $pricing = PropertyRateAndPricing::where('UnitId', $UnitId)->first();
+
+        if (!$pricing) {
+            return response()->json(null, 200);
+        }
+
+        return response()->json([
+            'Rent'          => $pricing->Rent,
+            'DepositAmount' => $pricing->DepositAmount,
+            'ServiceCharge' => $pricing->ServiceCharge,
+            'ParkingFee'    => $pricing->ParkingFee,
+            'OtherCharges'  => $pricing->OtherCharges,
+        ]);
+    }
+
+
+
     public function getBlockByProperty($PropertyId)
     {
         $blocks = PropertyBlock::where('PropertyID', $PropertyId)
@@ -109,6 +129,33 @@ class PropertyNewLeaseController extends Controller
 
         return response()->json($units);
     }
+
+    /**
+     * Lease-only endpoint: return pricing for a unit to autofill New Lease form
+     */
+    // public function getPricingByUnit($UnitId)
+    // {
+    //     $pricing = PropertyRateAndPricing::where('UnitId', $UnitId)->first();
+
+    //     if (! $pricing) {
+    //         return response()->json(['message' => 'Pricing not found for this unit'], 404);
+    //     }
+
+    //     return response()->json([
+    //         'Id' => $pricing->Id,
+    //         'PropertyId' => $pricing->PropertyId,
+    //         'BlockId' => $pricing->BlockId,
+    //         'FloorId' => $pricing->FloorId,
+    //         'UnitId' => $pricing->UnitId,
+    //         'Rent' => $pricing->Rent,
+    //         'ParkingFee' => $pricing->ParkingFee,
+    //         'ServiceCharge' => $pricing->ServiceCharge,
+    //         'OtherCharges' => $pricing->OtherCharges,
+    //         'DepositAmount' => $pricing->DepositAmount,
+    //         'CurrencyId' => $pricing->CurrencyId,
+    //         'TaxId' => $pricing->TaxId,
+    //     ]);
+    // }
 
 
     public function show($Id)
