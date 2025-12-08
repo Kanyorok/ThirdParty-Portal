@@ -516,10 +516,14 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
 
 
-            ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'PE'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'IT'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'DE'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'Rejected', 'Value' => 'RJ'],
+            
+            ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'it'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'de'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Returned', 'Value' => 'rt'],
+
 
             // Fleet Management
 

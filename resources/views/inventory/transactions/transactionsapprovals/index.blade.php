@@ -49,11 +49,6 @@
                         </option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Search Branch</label>
-                    <input type="text" name="branch" class="form-control" placeholder="Branch ID or Name"
-                           value="{{ request('branch') }}">
-                </div>
                 <div class="col-md-2">
                     <label class="form-label">From Date</label>
                     <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
@@ -80,7 +75,6 @@
                     <th>DATE</th>
                     <th>INITIATED BY</th>
                     <th>STATUS</th>
-                    <th>APPROVE</th>
                     <th>ACTIONS</th>
                 </tr>
                 </thead>
@@ -133,64 +127,42 @@
                             @endif
                         </td>
                         <td>
-                            <form method="POST"
-                                  action="{{ route('transactionsapproval.approve', ['Id' => $record->Id]) }}"
-                                  onsubmit="return confirm('Are you sure you want to approve this {{ strtolower($transactionType) }}?')">
-                                @csrf
-                                <input type="hidden" name="transaction_type" value="{{ $transactionType }}">
-                                <button type="submit" class="btn btn-success btn-sm" title="Approve">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                            </form>
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
+                            <div class="btn-group" role="group" aria-label="Action buttons">
+                                <!-- Approve Button -->
+                                <form method="POST"
+                                      action="{{ route('transactionsapproval.approve', ['Id' => $record->Id]) }}"
+                                      onsubmit="return confirm('Are you sure you want to approve this {{ strtolower($transactionType) }}?')"
+                                      class="me-1">
+                                    @csrf
+                                    <input type="hidden" name="transaction_type" value="{{ $transactionType }}">
+                                    <button type="submit" class="btn btn-success btn-sm" title="Approve">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                </form>
+                                
+                                <!-- Reject Button -->
+                                <form method="POST"
+                                      action="{{ route('transactionsapproval.reject', ['Id' => $record->Id]) }}"
+                                      onsubmit="return confirm('Are you sure you want to reject this {{ strtolower($transactionType) }}?')">
+                                    @csrf
+                                    <input type="hidden" name="transaction_type" value="{{ $transactionType }}">
+                                    <input type="hidden" name="reason" value="Rejected via approval interface">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Reject">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </form>
+                                
+                                <!-- View Details Button -->
                                 <a href="{{ route('transactionsapproval.show', ['Id' => $record->Id, 'transaction_type' => $transactionType]) }}"
-                                   class="btn btn-sm btn-primary" title="View Details">
+                                   class="btn btn-sm btn-primary ms-1" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-danger" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#rejectModal{{ $record->Id }}"
-                                        title="Reject">
-                                    <i class="fas fa-times"></i>
-                                </button>
                             </div>
                         </td>
                     </tr>
-
-                    <!-- Reject Modal -->
-                    <div class="modal fade" id="rejectModal{{ $record->Id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Reject {{ $transactionType }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <form method="POST" action="{{ route('transactionsapproval.reject', ['Id' => $record->Id]) }}">
-                                    @csrf
-                                    <div class="modal-body">
-                                        <input type="hidden" name="transaction_type" value="{{ $transactionType }}">
-                                        <div class="mb-3">
-                                            <label class="form-label">Reason for Rejection</label>
-                                            <textarea name="reason" class="form-control" rows="4" 
-                                                      placeholder="Please provide a reason for rejecting this {{ strtolower($transactionType) }}..."
-                                                      required></textarea>
-                                            <div class="form-text">Maximum 2000 characters.</div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-danger">Reject</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
                 @empty
                     <tr>
-                        <td colspan="10" class="text-center py-4">
+                        <td colspan="9" class="text-center py-4">
                             <div class="text-muted">
                                 <i class="fas fa-inbox fa-2x mb-2"></i>
                                 <p>No pending {{ strtolower($transactionType) }}s found for your branch.</p>
@@ -228,7 +200,7 @@
                     }
                 },
                 columnDefs: [
-                    {orderable: false, targets: [8, 9]} // Action columns
+                    {orderable: false, targets: [8]} // Action column
                 ],
                 order: [[5, 'desc']] // Default order by date descending
             });

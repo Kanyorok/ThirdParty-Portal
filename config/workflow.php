@@ -40,6 +40,7 @@ return [
         'Pending' => \App\Enums\Inventory\Transfers::Pending->value,  // 'P'
         'In Transit' => \App\Enums\Inventory\Transfers::InTransit->value,  // 'it'
         'Delivered'=> \App\Enums\Inventory\Transfers::Delivered->value,  // 'de'
+        'Returned'=> \App\Enums\Inventory\Transfers::Returned->value,  // 'rt'
 
 
     ],
