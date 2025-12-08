@@ -140,7 +140,7 @@ class TenderController extends Controller
     foreach ($itemsCategories as $lineItem) {
         $planId = $lineItem->PlanID;
         $item = $lineItem->item;
-        
+
         if (!$item) {
             continue;
         }
@@ -170,7 +170,7 @@ class TenderController extends Controller
             'remainingQty' => $remainingQty,
             'needId' => $needId,
         ];
-        
+
         $procurementPlansOutput[$planId][] = $entry;
         $planItemData[$planId][] = $entry;
     }
@@ -252,7 +252,7 @@ public function store(Request $request)
         if (!empty($planItems)) {
             $firstPlanItem = reset($planItems);
             $procurementPlanId = $firstPlanItem['plan_id'] ?? null;
-            
+
             if ($procurementPlanId) {
                 $tender->update(['ProcurementPlanId' => $procurementPlanId]);
             }
@@ -272,7 +272,7 @@ public function store(Request $request)
             Log::info('Plan items received', [
                 'count' => count($planItems),
             ]);
-            
+
             $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
             
             foreach ($planItems as $compositeKey => $item) {
@@ -280,31 +280,31 @@ public function store(Request $request)
                 $planItemId = (int)end($split);
                 $itemId = $item['item_id'] ?? null;
                 $qtyRequested = (float)($item['qty'] ?? 0);
-                
+
                 // Validate remaining quantity
                 $planLineItem = PlanLineItem::find($planItemId);
                 if (!$planLineItem) {
                     Log::warning("Plan line item not found: {$planItemId}");
                     continue;
                 }
-                
+
                 $plannedQty = (float)$planLineItem->MergedQty;
                 $usedQty = (float)($usedQuantities[$planItemId] ?? 0);
                 $remainingQty = $plannedQty - $usedQty;
-                
+
                 if ($qtyRequested > $remainingQty) {
                     DB::rollBack();
                     return redirect()->back()
                         ->withErrors(['error' => "Item '{$planLineItem->item->ItemName}' only has {$remainingQty} remaining, but {$qtyRequested} was requested."])
                         ->withInput();
                 }
-                
+
                 // Validate item type
                 if ($itemId && !$this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
                     Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
                     continue;
                 }
-                
+
                 TenderItems::create([
                     'TenderID' => $tenderId,
                     'SourceType' => 'PLAN',
@@ -329,12 +329,12 @@ public function store(Request $request)
                 if (empty($manualItem['item_id'])) {
                     continue;
                 }
-                
+
                 if (!$this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
                     Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
                     continue;
                 }
-                
+
                 TenderItems::create([
                     'TenderID' => $tenderId,
                     'SourceType' => 'MANUAL',
@@ -455,7 +455,7 @@ public function submitForApproval($id)
 public function show(string $id)
 {
     $this->authorize(PermissionEnum::TenderRead, Tender::class);
-    
+
     $tender = Tender::with(['procurementPlan'])->findOrFail($id);
     $user = Auth::user();
     
@@ -503,7 +503,7 @@ public function show(string $id)
     // Separate by source type
     $planItems = $items->where('SourceType', 'PLAN')->map(function($tenderItem) {
         $planLineItem = $tenderItem->planLineItem;
-        
+
         return [
             'id' => $tenderItem->Id,
             'item' => $tenderItem->item,
@@ -517,7 +517,7 @@ public function show(string $id)
             'remarks' => $tenderItem->Remarks,
         ];
     });
-    
+
     $manualItems = $items->where('SourceType', 'MANUAL')->map(function($tenderItem) {
         return [
             'id' => $tenderItem->Id,
@@ -541,11 +541,11 @@ public function show(string $id)
     $suppliers = TenderSupplier::where('TenderID', $id)
         ->with('supplier.thirdParty')
         ->get();
-    
+
     $tenderCategory = TenderCategory::find($tender->TenderCategory);
     $itemCategory = ItemCategories::find($tender->ItemCategoryId);
     $currency = Currency::find($tender->CurrencyId);
-    
+
     // Get documents from DMS
     try {
         $documents = $tender->documents;
@@ -764,6 +764,35 @@ public function show(string $id)
                     Log::error("--- DELETE TENDER ITEM ERROR --- " . $e->getMessage());
                     Log::error($e);
                     return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Item. Please try again.');
+                }
+            } elseif ($crudType == 'updateQty') {
+                // Allow adjusting quantity up or down for MANUAL items only
+                $validated = $request->validate([
+                    'item_id' => 'required|integer|exists:t_TenderItems,Id',
+                    'QtyToTender' => 'required|numeric|min:0.01',
+                ]);
+                DB::beginTransaction();
+                try {
+                    $tenderItem = TenderItems::findOrFail($validated['item_id']);
+                    if (strtoupper((string)$tenderItem->SourceType) !== 'MANUAL') {
+                        return redirect()->route('initiatetender.edit', $id)->with('error', 'Only manually added items can be adjusted.');
+                    }
+                    $tenderItem->QtyToTender = $validated['QtyToTender'];
+                    $tenderItem->ModifiedBy = Auth::id();
+                    $tenderItem->save();
+
+                    DB::commit();
+                    activity()
+                        ->performedOn($tenderItem)
+                        ->causedBy(Auth::user())
+                        ->withProperties(['action' => 'updateQty'])
+                        ->log('Tender Item quantity updated for ID: ' . $tenderItem->Id);
+
+                    return redirect()->route('initiatetender.edit', $id)->with('success', 'Quantity updated successfully.');
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::error("--- UPDATE TENDER ITEM QTY ERROR --- " . $e->getMessage());
+                    return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to update quantity.');
                 }
             }
         } elseif ($type == 'crudSupplier') {
@@ -1034,7 +1063,7 @@ public function allowedCategories(Request $request)
 {
     try {
         $tenderCategoryId = $request->input('tender_category_id');
-        
+
         if (!$tenderCategoryId) {
             return response()->json([
                 'ok' => false,
@@ -1352,7 +1381,7 @@ public function allowedCategories(Request $request)
 private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
 {
     if (!$tenderCategoryId) return [];
-    
+
     // **FIX: Map results to integers**
     $ids = DB::table('t_TenderCategoryItemTypes')
         ->where('TenderCategoryId', $tenderCategoryId)
@@ -1360,7 +1389,7 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
         ->pluck('ItemTypeId')
         ->map(fn($id) => (int)$id)  // Ensure integers
         ->toArray();
-        
+
     Log::info("Allowed ItemType IDs for tender category {$tenderCategoryId}", ['type_ids' => $ids]);
 
     if (empty($ids)) {
@@ -1369,7 +1398,7 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
             ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
             ->pluck('t_ItemTypes.Id', 't_CodeDetails.Description')
             ->map(fn($id) => (int)$id);  // Ensure integers here too
-            
+
         return match (strtoupper((string)$label)) {
             'GOODS' => array_values(array_filter([
                 $types['Stock'] ?? null,
@@ -1394,7 +1423,7 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
  private function isItemAllowedForTender(int $itemId, int $tenderTopCategoryId, array $allowedTypeIds): bool
 {
     $item = ItemMasterList::select('Id', 'Category', 'ItemType')->find($itemId);
-    
+
     if (!$item) {
         Log::error("Item not found", ['item_id' => $itemId]);
         return false;
@@ -1407,7 +1436,7 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
         ->where('TypeName', $item->ItemType)
         ->where('Active', 1)
         ->first();
-    
+
     if (!$itemTypeRecord) {
         Log::warning("Item has no valid ItemType mapping", [
             'item_id' => $itemId,
@@ -1436,7 +1465,7 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
         ]);
         return false;
     }
-    
+
     Log::info("Item ALLOWED for tender", [
         'item_id' => $itemId,
         'item_type_record_id' => $itemTypeRecordId
@@ -1504,12 +1533,12 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
 public function workflowHistory($id)
 {
     $this->authorize(PermissionEnum::TenderRead, Tender::class);
-    
+
     $tender = Tender::findOrFail($id);
-    
+
     try {
         $history = $this->workflow->historyForModel($tender);
-        
+
         return view('procurement.tendering.tendersetup.tenderinitiation.workflow-history', compact(
             'tender',
             'history'
@@ -1652,7 +1681,7 @@ private function attachDocuments(Request $request, Tender $tender): void
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             // Don't throw - allow tender creation to continue
             // You could throw here if documents are critical:
             // throw new \Exception("Failed to attach document: " . $e->getMessage());

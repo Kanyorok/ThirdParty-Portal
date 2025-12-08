@@ -8,6 +8,7 @@ use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\NodeVisitor\ParentConnectingVisitor;
 
 // --- CONFIGURATION ---
 // Directories to obfuscate (Don't obfuscate the whole vendor folder!)
@@ -36,10 +37,23 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
         return '_' . $str; // Start with underscore to ensure valid var name
     }
 
-    public function enterNode(Node $node)
+    public function leaveNode(Node $node)
     {
         // 1. Obfuscate Strings
         if ($node instanceof String_) {
+            // Check parent to avoid invalid constant expressions
+            $parent = $node->getAttribute('parent');
+
+            if (
+                $parent instanceof Node\Stmt\PropertyProperty ||
+                $parent instanceof Node\Const_ || // Handles const and class const
+                $parent instanceof Node\Param ||
+                $parent instanceof Node\Attribute ||
+                $parent instanceof Node\Expr\StaticVar
+            ) {
+                return null; // Skip obfuscation for these contexts
+            }
+
             // Skip specific strings if needed (like configuration keys)
             // Simple Base64 encoding wrapper
             $original = $node->value;
@@ -63,6 +77,7 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
         // 2. Obfuscate Variables
         // Note: This is risky in Laravel due to compact(), dynamic properties, etc.
         // Use with caution. Safe for internal logic methods.
+        /*
         if ($node instanceof Node\Expr\Variable) {
             $name = $node->name;
 
@@ -74,6 +89,7 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
                 $node->name = $this->variableMap[$name];
             }
         }
+        */
     }
 }
 
@@ -82,6 +98,7 @@ class ObfuscatorVisitor extends NodeVisitorAbstract
 // In php-parser 5.x, use createForNewestSupportedVersion() to auto-detect the best parser
 $parser = (new ParserFactory)->createForNewestSupportedVersion();
 $traverser = new NodeTraverser();
+$traverser->addVisitor(new ParentConnectingVisitor()); // Add this first!
 $traverser->addVisitor(new ObfuscatorVisitor());
 $printer = new PrettyPrinter\Standard();
 
@@ -94,6 +111,7 @@ foreach ($directories as $dir) {
         if ($file->getExtension() !== 'php') continue;
 
         $code = file_get_contents($file->getPathname());
+        echo "Processing: " . $file->getPathname() . "\n";
 
         try {
             // 1. Parse
@@ -106,7 +124,8 @@ foreach ($directories as $dir) {
             $obfuscatedCode = $printer->prettyPrintFile($stmts);
 
             // 4. Save to dist folder
-            $relativePath = str_replace(__DIR__, '', $file->getPathname());
+            // Use substr to remove the base directory prefix correctly
+            $relativePath = substr($file->getPathname(), strlen(__DIR__));
             $targetPath = $outputDir . $relativePath;
 
             if (!is_dir(dirname($targetPath))) {

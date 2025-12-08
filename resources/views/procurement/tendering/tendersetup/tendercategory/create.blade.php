@@ -19,7 +19,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="TenderCategory" class="form-label">Category Type <span class="text-danger">*</span></label>
-                        <select name="TenderCategory" id="TenderCategory" 
+                        <select name="TenderCategory" id="TenderCategory"
                                 class="form-select @error('TenderCategory') is-invalid @enderror" required>
                             <option value="">-- Select Category Type --</option>
                             @foreach($tenderCatOptions as $option)
@@ -84,7 +84,7 @@
         // Update code when category changes
         categorySelect.addEventListener('change', function() {
             const selectedValue = this.value;
-            
+
             if (!selectedValue) {
                 codeInput.value = '';
                 return;
@@ -120,7 +120,7 @@
                 categorySelect.focus();
                 return false;
             }
-            
+
             if (!codeInput.value || codeInput.value === 'ERROR') {
                 event.preventDefault();
                 alert('Please wait for the category code to be generated.');

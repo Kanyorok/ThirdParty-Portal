@@ -7,6 +7,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use App\Models\Procurement\Requisitions;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 
 class RequisitionService
 {
@@ -31,6 +33,21 @@ class RequisitionService
                     $category,
                     $actor->Id // Pass the User ID, not the entire User model
                 ]);
+
+                // Manually trigger workflow since DB::statement doesn't fire Eloquent events
+                $requisition = Requisitions::where('CreatedBy', $actor->Id)
+                    ->orderBy('CreatedOn', 'desc')
+                    ->first();
+
+                if ($requisition) {
+                    // Reload to ensure relationships (like statusDetail) are available
+                    $requisition->load('statusDetail');
+
+                    if ($requisition->isPendingApproval()) {
+                        $workflowService = app(RequisitionWorkflowService::class);
+                        $workflowService->submit($requisition, $actor, 'Initial submission');
+                    }
+                }
             });
 
             return [
