@@ -193,6 +193,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'edit'])->name('renewlease.edit');
     Route::put('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'update'])->name('renewlease.update');
     Route::delete('renewlease/delete/{Id}', [PropertyLeaseRenewalController::class, 'destroy'])->name('renewlease.destroy');
+    Route::get('lease-renewaloffer/{Id}', [PropertyLeaseRenewalController::class, 'leaseOfferLetter'])->name('renewlease.renewaloffer');
 
     //Property Approval
     //Route::resource('approval', PropertyApprovalController::class);
@@ -202,12 +203,12 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
         'index' => 'propertyapproval.index'
     ]);
     // Approval actions: view, approve, reject
-    Route::get('approvals/offer/{Id}', [PropertyApprovalController::class, 'show'])->name('propertyapproval.show');
     Route::post('approvals/offer/approve/{Id}', [PropertyApprovalController::class, 'approve'])->name('propertyapproval.approve');
     Route::post('approvals/offer/reject/{Id}', [PropertyApprovalController::class, 'reject'])->name('propertyapproval.reject');
-    Route::get('approvals/terminate/{Id}', [PropertyApprovalController::class, 'showTermination'])->name('propertyapproval.showTermination');
     Route::post('approvals/terminate/approve/{Id}', [PropertyApprovalController::class, 'approveTermination'])->name('propertyapproval.approveTermination');
     Route::post('approvals/terminate/reject/{Id}', [PropertyApprovalController::class, 'rejectTermination'])->name('propertyapproval.rejectTermination');
+    Route::post('approvals/renewal/approve/{Id}', [PropertyApprovalController::class, 'approveRenewal'])->name('propertyapproval.approveRenewal');
+    Route::post('approvals/renewal/reject/{Id}', [PropertyApprovalController::class, 'rejectRenewal'])->name('propertyapproval.rejectRenewal');
     
 
     //Route::resource('rentinvoice', PropertyInvoiceController::class);

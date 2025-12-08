@@ -94,6 +94,12 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="renewal-tab" data-bs-toggle="tab" data-bs-target="#renewal"
+                type="button" role="tab" aria-controls="renewal" aria-selected="false">
+                Lease Renewal <span class="badge bg-primary ms-2">{{ count($renewalapprovals) }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="termination-tab" data-bs-toggle="tab" data-bs-target="#termination" type="button" role="tab" aria-controls="termination" aria-selected="false">
                 Lease Termination <span class="badge bg-warning ms-2">{{ count($terminationapprovals) }}</span>
             </button>
@@ -254,6 +260,126 @@
             </div>
         </div>
 
+        {{-- Lease Renewal --}}
+        <div class="tab-pane fade" id="renewal" role="tabpanel" aria-labelledby="renewal-tab">
+            <div class="table-responsive lease-table-wrapper">
+                <table id="renewal-approval" class="table table-hover table-bordered lease-table align-middle text-center">
+                    <thead class="table-light">
+                        <tr class="font-size">
+                            <th>#</th>
+                            <th>Lease No.</th>
+                            <th>Tenant</th>
+                            <th>Property</th>
+                            <th>Unit</th>
+                            <th>Old End Date</th>
+                            <th>New Start</th>
+                            <th>New End</th>
+                            <th>New Rent</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse($renewalapprovals as $renewal)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $renewal->lease->LeaseNumber }}</td>
+                            <td>{{ $renewal->lease->tenant->thirdParty->ThirdPartyName }}</td>
+                            <td>{{ $renewal->lease->property->PropertyName }}</td>
+                            <td>{{ $renewal->lease->unit->UnitCode }}</td>
+                            <td>{{ \Carbon\Carbon::parse($renewal->EndDateCurrentLease)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($renewal->NewStartDate)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($renewal->NewEndDate)->format('d/m/Y') }}</td>
+                            <td>{{ number_format($renewal->NewMonthlyRent, 2) }}</td>
+
+                            <td>
+                                @php $status = ApprovalEnum::tryFrom($renewal->Status); @endphp
+                                <span class="badge bg-{{ $status?->badgeColor() }}">{{ $status?->label() }}</span>
+                            </td>
+
+                            <td>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#renewalModal-{{ $renewal->Id }}">
+                                    View & Approve
+                                </button>
+
+                                {{-- Modal --}}
+                                <div class="modal fade" id="renewalModal-{{ $renewal->Id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                        <div class="modal-content">
+
+                                            <div class="modal-header bg-primary text-white">
+                                                <h5 class="modal-title">Lease Renewal Approval</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <h6 class="mb-2">Tenant & Property Info</h6>
+                                                <p><strong>Tenant:</strong> {{ $renewal->lease->tenant->thirdParty->ThirdPartyName }}</p>
+                                                <p><strong>Property:</strong> {{ $renewal->lease->property->PropertyName }}</p>
+                                                <p><strong>Unit:</strong> {{ $renewal->lease->unit->UnitCode }}</p>
+
+                                                <h6 class="mt-3">Lease Period</h6>
+                                                <p><strong>Previous End:</strong> {{ $renewal->EndDateCurrentLease }}</p>
+                                                <p><strong>New Start:</strong> {{ $renewal->NewStartDate }}</p>
+                                                <p><strong>New End:</strong> {{ $renewal->NewEndDate }}</p>
+
+                                                <h6 class="mt-3">New Charges</h6>
+                                                <p><strong>Rent:</strong> KES {{ number_format($renewal->NewMonthlyRent) }}</p>
+                                                <p><strong>Service Charge:</strong> KES {{ number_format($renewal->ServiceCharge) }}</p>
+                                                <p><strong>Parking Fee:</strong> KES {{ number_format($renewal->ParkingFee) }}</p>
+
+                                                {{-- Reject area --}}
+                                                <div id="renewal-reject-{{ $renewal->Id }}" class="reject-area" style="display:none;">
+                                                    <form method="POST" action="{{ route('propertyapproval.rejectRenewal', $renewal->Id) }}">
+                                                        @csrf
+                                                        <label>Reason for Rejection</label>
+                                                        <textarea name="reason" class="form-control" required></textarea>
+
+                                                        <div class="mt-3 text-end">
+                                                            <button type="submit" class="btn btn-danger">Confirm Reject</button>
+                                                            <button type="button" class="btn btn-secondary"
+                                                                onclick="document.getElementById('renewal-reject-{{ $renewal->Id }}').style.display='none'">
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <form method="POST" action="{{ route('propertyapproval.approveRenewal', $renewal->Id) }}">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-success">Approve</button>
+                                                </form>
+
+                                                <button class="btn btn-outline-danger"
+                                                    onclick="document.getElementById('renewal-reject-{{ $renewal->Id }}').style.display='block'">
+                                                    Reject
+                                                </button>
+
+                                                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </td>
+                        </tr>
+
+                        @empty
+                        <tr>
+                            <td colspan="11">No lease renewals pending approval.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         {{-- Lease Termination Tab --}}
         <div class="tab-pane fade" id="termination" role="tabpanel" aria-labelledby="termination-tab">
             <div class="table-responsive lease-table-wrapper">
@@ -373,7 +499,7 @@
 
     <script>
         $(document).ready(function() {
-            $('#lease-approval, #termination-approval').DataTable({
+            $('#lease-approval, #renewal-approval, #termination-approval').DataTable({
                 pageLength: 10,
                 ordering: true,
                 searching: true,
