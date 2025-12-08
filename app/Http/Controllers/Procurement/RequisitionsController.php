@@ -12,6 +12,7 @@ use App\Models\HRM\Employee;
 use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Requisition\RequisitionItemService;
 use App\Services\Procurement\Requisition\RequisitionService;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class RequisitionsController extends Controller
     public function __construct(protected RequisitionService $service, protected RequisitionItemService $requisitionItemService, protected DocumentApprovalService $documentApprovalService)
     {
         $this->middleware(middleware: 'ajax')->except(['index', 'show', 'create', 'approval', 'approve']);
-//         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
+        //         $this->authorizeResource(Requisitions::class); // Uncomment if using authorization
     }
 
     /**
@@ -39,7 +40,7 @@ class RequisitionsController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Requisitions::class);
-//        return view('procurement.requisitions.approval');
+        //        return view('procurement.requisitions.approval');
         try {
             $details = $this->service->fetchRequisition();
             return view('procurement.requisitions.approval', compact('details'));
@@ -48,14 +49,15 @@ class RequisitionsController extends Controller
         }
     }
 
-    public function approvalList(){
+    public function approvalList()
+    {
         return view("procurement.requisitions.approval");
-//        try {
-//            $details = $this->service->fetchRequisition();
-//            return view('procurement.requisition.approval', compact('details'));
-//        } catch (\Exception $e) {
-//            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
-//        }
+        //        try {
+        //            $details = $this->service->fetchRequisition();
+        //            return view('procurement.requisition.approval', compact('details'));
+        //        } catch (\Exception $e) {
+        //            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+        //        }
     }
 
 
@@ -137,7 +139,7 @@ class RequisitionsController extends Controller
             if ($requisitionAdd['status'] === 'success') {
                 return response()->json([
                     'message' => $requisitionAdd['message'],
-                    'route' =>route('requisition.create')
+                    'route' => route('requisition.create')
                 ], 200);
             }
 
@@ -151,7 +153,6 @@ class RequisitionsController extends Controller
             return response()->json([
                 'message' => 'Failed to create requisition. Please try again later.'
             ], 500);
-
         } catch (\Throwable $e) {
             Log::error('Exception occurred while creating requisition.', [
                 'error' => $e->getMessage(),
@@ -168,93 +169,66 @@ class RequisitionsController extends Controller
     {
         try {
             $requisition = Requisitions::findOrFail($id);
-            $this->authorize('view', $requisition); // Authorize the order object itself
+            $this->authorize('view', $requisition);
 
             $requisitionInfo = $this->service->getRelatedRequisition($id);
             $requisitionlineInfo = $this->requisitionItemService->getRequisitionRelatedItems($id);
-            $approvalStatus = $this->getApprovalStatus('purchase_requisition', $id);
-            // Determine approval type configured for this document
-            $approvalType = \Illuminate\Support\Facades\DB::table('t_ApprovalGroups')
-                ->where('DocType', 'purchase_requisition')
-                ->value('ApprovalType');
+            
+            // Use workflow service to get status
+            /** @var RequisitionWorkflowService $workflowService */
+            $workflowService = app(RequisitionWorkflowService::class);
+            $approvalStatus = $workflowService->getWorkflowStatus($requisition->getMorphClass(), $requisition->getKey());
 
-            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus', 'approvalType'));
+            // Check if user can approve
+            $canApprove = $workflowService->canApprove($requisition->getMorphClass(), $requisition->getKey(), Auth::user());
 
+            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus', 'canApprove'));
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            $uid = null;
-            try {
-                $uid = \Illuminate\Support\Facades\Auth::id();
-            } catch (\Throwable $t) {
-                $uid = null;
-            }
-            Log::warning("Unauthorized access attempt to view Requisition ID: {$id} by user ID: " . ($uid ?? 'guest'));
+            Log::warning("Unauthorized access attempt to view Requisition ID: {$id}");
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error("Requisition ID {$id} not found. Exception: " . $e->getMessage());
+            Log::error("Requisition ID {$id} not found.");
             return redirect()->back()->with('error', 'Requisition not found.');
         } catch (\Exception $e) {
-            Log::error("Failed to fetch Requisition ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error("Failed to fetch Requisition ID {$id}. Exception: " . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to fetch Requisition.');
         }
     }
 
-    public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
+    public function approve(Request $request, $id)
     {
         $requisition = Requisitions::findOrFail($id);
         $this->authorize('approve', $requisition);
-        // Block APPROVE action if approval type is not configured for purchase requisitions
-        if (strtolower($requisitionRequest->input('action')) === 'approve') {
-            $approvalType = DB::table('t_ApprovalGroups')
-                ->where('DocType', 'purchase_requisition')
-                ->value('ApprovalType');
 
-            $validTypes = ['ALL', 'ANY', 'MAJ', 'AMT'];
-            if (!$approvalType || !in_array(strtoupper($approvalType), $validTypes, true)) {
-                return back()->with('error', 'Approval type is not set for Purchase Requisitions. Please contact the administrator.');
-            }
+        $action = strtolower($request->input('action'));
+        $remarks = (string) ($request->input('comments') ?? $request->input('remarks') ?? ''); // Support both field names and ensure string
+
+        /** @var RequisitionWorkflowService $workflowService */
+        $workflowService = app(RequisitionWorkflowService::class);
+
+        try {
+            DB::transaction(function () use ($workflowService, $requisition, $action, $remarks) {
+                $user = Auth::user();
+                switch ($action) {
+                    case 'approve':
+                        $workflowService->approve($requisition, $user, $remarks);
+                        break;
+                    case 'reject':
+                        $workflowService->reject($requisition, $user, $remarks);
+                        break;
+                    case 'return':
+                        $workflowService->return($requisition, $user, $remarks);
+                        break;
+                    default:
+                        throw new \Exception("Invalid action: $action");
+                }
+            });
+
+            return redirect()->route('requisition.index')->with('success', 'Requisition processed successfully.');
+        } catch (\Exception $e) {
+            Log::error("Workflow action failed for Requisition ID {$id}: " . $e->getMessage());
+            return back()->with('error', 'Failed to process requisition: ' . $e->getMessage());
         }
-
-        // Allow rejection even if no lines; enforce line check only for approval action
-        if ($requisitionRequest->input('action') === 'approve') {
-            $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();
-            if (!$hasLines) {
-                return back()->with('error', 'Cannot approve a requisition without items.');
-            }
-        }
-
-        return $this->documentApprovalService->approve($requisitionRequest, $id);
-    }
-
-    private function getApprovalStatus(string $docType, int $documentId)
-    {
-        $permissionId = DB::table('t_ApprovalGroups')
-            ->where('DocType', $docType)
-            ->value('Permission');
-
-        if (!$permissionId) return [];
-
-        $approverUsers = DB::table('t_ModelRoles as mr')
-            ->join('t_RolePermissions as rp', 'mr.role_id', '=', 'rp.role_id')
-            ->join('t_Users as u', 'mr.model_id', '=', 'u.Id')
-            ->where('mr.model_type', 'UserID')
-            ->where('rp.permission_id', $permissionId)
-            ->select('u.Id', 'u.Name')
-            ->distinct()
-            ->get();
-
-        $approvedUserIds = DB::table('t_Approvals')
-            ->where('DocType', $docType)
-            ->where('DocumentId', $documentId)
-            ->where('Status', 'approved')
-            ->pluck('UserId')
-            ->toArray();
-
-        return $approverUsers->map(function ($user) use ($approvedUserIds) {
-            return [
-                'name' => $user->Name,
-                'approved' => in_array($user->Id, $approvedUserIds),
-            ];
-        });
     }
 
     public function getPlanDetails($id)
@@ -285,8 +259,9 @@ class RequisitionsController extends Controller
         ]);
     }
 
-    public function getRequisitions(): JsonResponse{
-        try{
+    public function getRequisitions(): JsonResponse
+    {
+        try {
             $details = $this->service->fetchRequisition();
             return response()->json([
                 'success' => true,

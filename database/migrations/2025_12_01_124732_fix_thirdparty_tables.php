@@ -3,13 +3,97 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
+
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
+
+    /* -----------------------------------------
+     * SAFE HELPERS for SQL Server constraint drops
+     * -----------------------------------------
+     */
+
+    private function dropFkIfExists(string $table, string $column)
+    {
+        $fk = DB::select("
+            SELECT fk.name AS fk_name
+            FROM sys.foreign_keys fk
+            JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+            JOIN sys.columns c ON fkc.parent_object_id = c.object_id AND fkc.parent_column_id = c.column_id
+            JOIN sys.tables t ON fk.parent_object_id = t.object_id
+            WHERE t.name = ? AND c.name = ?
+        ", [$table, $column]);
+
+        if (!empty($fk)) {
+            $name = $fk[0]->fk_name;
+            DB::statement("ALTER TABLE [$table] DROP CONSTRAINT [$name]");
+        }
+    }
+
+    private function dropIndexIfExists(string $table, string $index)
+    {
+        $exists = DB::select("
+            SELECT name FROM sys.indexes
+            WHERE name = ? AND object_id = OBJECT_ID(?)
+        ", [$index, $table]);
+
+        if (!empty($exists)) {
+            Schema::table($table, function (Blueprint $t) use ($index) {
+                $t->dropIndex($index);
+            });
+        }
+    }
+
+
+    /* -----------------------------------------
+     * MIGRATION UP
+     * -----------------------------------------
+
+    /* -----------------------------------------
+     * SAFE HELPERS for SQL Server constraint drops
+     * -----------------------------------------
+     */
+
+    private function dropFkIfExists(string $table, string $column)
+    {
+        $fk = DB::select("
+            SELECT fk.name AS fk_name
+            FROM sys.foreign_keys fk
+            JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+            JOIN sys.columns c ON fkc.parent_object_id = c.object_id AND fkc.parent_column_id = c.column_id
+            JOIN sys.tables t ON fk.parent_object_id = t.object_id
+            WHERE t.name = ? AND c.name = ?
+        ", [$table, $column]);
+
+        if (!empty($fk)) {
+            $name = $fk[0]->fk_name;
+            DB::statement("ALTER TABLE [$table] DROP CONSTRAINT [$name]");
+        }
+    }
+
+    private function dropIndexIfExists(string $table, string $index)
+    {
+        $exists = DB::select("
+            SELECT name FROM sys.indexes
+            WHERE name = ? AND object_id = OBJECT_ID(?)
+        ", [$index, $table]);
+
+        if (!empty($exists)) {
+            Schema::table($table, function (Blueprint $t) use ($index) {
+                $t->dropIndex($index);
+            });
+        }
+    }
+
+
+    /* -----------------------------------------
+     * MIGRATION UP
+     * -----------------------------------------
      */
     public function up(): void
     {
+        // CLEAR TABLES
         DB::table('t_ScheduleLease')->delete();
         DB::table('t_LeaseCreation')->delete();
         DB::table('t_TenantMaintenance')->delete();
@@ -39,10 +123,21 @@ return new class extends Migration {
             $table->softDeletes('DeletedOn');
         });
 
+        /* -----------------------------------------
+         * MODIFY t_ThirdParties (DROP COLUMNS & FKs)
+         * -----------------------------------------
+         */
+        Schema::table('t_ThirdParties', function (Blueprint $table) {
+            // COUNTRY ID FK DROP SAFELY
+            // (We drop via manual function)
+        });
 
-        Schema::table('t_ThirdParties', static function (Blueprint $table) {
-            $table->dropConstrainedForeignId('CountryId');//dropped because of previous created
+        $this->dropFkIfExists('t_ThirdParties', 'CountryId');
+        Schema::table('t_ThirdParties', function (Blueprint $table) {
+            $table->dropColumn('CountryId');
+        });
 
+        Schema::table('t_ThirdParties', function (Blueprint $table) {
             $table->string('TradingName')->nullable()->change();
             $table->string('ThirdPartyName')->nullable(false)->change();
             $table->dropUnique(['RegistrationNumber']);
@@ -50,21 +145,37 @@ return new class extends Migration {
             $table->jsonb('Extra')->nullable();
             $table->foreignId('ImageId')->nullable()->constrained('t_Images', 'ImageID');
             $table->foreignId('LocationId')->constrained('t_Localities', 'ID');
-            $table->dropColumn(['BusinessType', 'IDNumber', 'Country', 'ApprovalStatus', 'Status', 'ThirdPartyType', 'PassportNo', 'IsPrequalified', 'CategoryId', 'CreatedOn', 'DeletedOn', 'ModifiedOn']);
-            $table->dropConstrainedForeignId('CreatedBy');
-            $table->dropConstrainedForeignId('ModifiedBy');
-            $table->dropConstrainedForeignId('DeletedBy');
+
+            $table->dropColumn([
+                'BusinessType', 'IDNumber', 'Country', 'ApprovalStatus',
+                'Status', 'ThirdPartyType', 'PassportNo',
+                'IsPrequalified', 'CategoryId', 'CreatedOn',
+                'DeletedOn', 'ModifiedOn'
+            ]);
         });
 
-        Schema::table('t_ThirdParties', static function (Blueprint $table) {
+        // Drop CreatedBy/ModifiedBy/DeletedBy FKs
+        foreach (['CreatedBy','ModifiedBy','DeletedBy'] as $col) {
+            $this->dropFkIfExists('t_ThirdParties', $col);
+            if (Schema::hasColumn('t_ThirdParties', $col)) {
+                Schema::table('t_ThirdParties', fn(Blueprint $t) => $t->dropColumn($col));
+            }
+        }
+
+        /* -----------------------------------------
+         * ADD BACK NEW STRUCTURE TO t_ThirdParties
+         * -----------------------------------------
+         */
+        Schema::table('t_ThirdParties', function (Blueprint $table) {
             $table->foreignId('CountryId')->constrained('t_Countries', 'Id');
             $table->string('RegistrationNumber')->nullable(false)->change();
 
             $table->unique(['CountryId', 'TaxPIN']);
 
             $table->unique(['CountryId', 'RegistrationNumber']);
-            $table->foreignId('Status')->comment('CodeID: ThirdPartyStatus')->constrained('t_CodeDetails', 'ID');
-            $table->foreignId('BusinessType')->comment('CodeID: BusinessType')->constrained('t_CodeDetails', 'ID');
+
+            $table->foreignId('Status')->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('BusinessType')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -73,29 +184,84 @@ return new class extends Migration {
             $table->softDeletes('DeletedOn');
         });
 
-        Schema::table('t_Suppliers', static function (Blueprint $table) {
-            $table->dropIndex('uq_t_suppliers_round_tp_cat');
-            $table->dropConstrainedForeignId('ThirdPartyId');
+        /* -----------------------------------------
+         * MODIFY t_Suppliers
+         * -----------------------------------------
+         */
+        $this->dropIndexIfExists('t_Suppliers', 'uq_t_suppliers_round_tp_cat');
+        $this->dropFkIfExists('t_Suppliers', 'ThirdPartyId');
 
+        if (Schema::hasColumn('t_Suppliers', 'ThirdPartyId')) {
+            Schema::table('t_Suppliers', fn(Blueprint $t) => $t->dropColumn('ThirdPartyId'));
+        }
+
+        Schema::table('t_Suppliers', function (Blueprint $table) {
+
+        /* -----------------------------------------
+         * MODIFY t_Suppliers
+         * -----------------------------------------
+         */
+        $this->dropIndexIfExists('t_Suppliers', 'uq_t_suppliers_round_tp_cat');
+        $this->dropFkIfExists('t_Suppliers', 'ThirdPartyId');
+
+        if (Schema::hasColumn('t_Suppliers', 'ThirdPartyId')) {
+            Schema::table('t_Suppliers', fn(Blueprint $t) => $t->dropColumn('ThirdPartyId'));
+        }
+
+        Schema::table('t_Suppliers', function (Blueprint $table) {
             $table->foreignId('SupplierMasterId')->constrained('t_SupplierMaster', 'Id');
             $table->unique(['SupplierMasterId', 'RoundID', 'CategoryId']);
         });
 
 
-        Schema::table('t_ThirdPartyTypes', static function (Blueprint $table) {
-            $table->dropIndex(['Type']);
+        /* -----------------------------------------
+         * t_ThirdPartyTypes
+         * -----------------------------------------
+         */
+        $this->dropIndexIfExists('t_ThirdPartyTypes', 't_ThirdPartyTypes_Type_index');
+
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
+
+
+        /* -----------------------------------------
+         * t_ThirdPartyTypes
+         * -----------------------------------------
+         */
+        $this->dropIndexIfExists('t_ThirdPartyTypes', 't_ThirdPartyTypes_Type_index');
+
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
             $table->dropUnique(['Code']);
-            $table->dropConstrainedForeignId('Type');
+        });
+
+        $this->dropFkIfExists('t_ThirdPartyTypes', 'Type');
+        if (Schema::hasColumn('t_ThirdPartyTypes', 'Type')) {
+            Schema::table('t_ThirdPartyTypes', fn(Blueprint $t) => $t->dropColumn('Type'));
+        }
+
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
+        });
+
+        $this->dropFkIfExists('t_ThirdPartyTypes', 'Type');
+        if (Schema::hasColumn('t_ThirdPartyTypes', 'Type')) {
+            Schema::table('t_ThirdPartyTypes', fn(Blueprint $t) => $t->dropColumn('Type'));
+        }
+
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
             $table->string('Description')->nullable(false)->change();
             $table->string('Code')->unique()->nullable(false)->change();
         });
 
-        Schema::table('t_ThirdPartyUsers', static function (Blueprint $table) {
+        /* -----------------------------------------
+         * t_ThirdPartyUsers
+         * -----------------------------------------
+         */
+        foreach (['CreatedBy','ModifiedBy','DeletedBy'] as $col) {
+            $this->dropFkIfExists('t_ThirdPartyUsers', $col);
+        }
+
+        Schema::table('t_ThirdPartyUsers', function (Blueprint $table) {
             $table->jsonb('Extra')->nullable();
-            $table->dropColumn('Gender');
-            $table->dropConstrainedForeignId('CreatedBy');
-            $table->dropConstrainedForeignId('ModifiedBy');
-            $table->dropConstrainedForeignId('DeletedBy');
+            $table->dropColumn(['Gender','CreatedBy','ModifiedBy','DeletedBy']);
         });
         Schema::table('t_ThirdPartyUsers', static function (Blueprint $table) {
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
@@ -110,12 +276,24 @@ return new class extends Migration {
             $table->foreignId('BranchID')->constrained('t_BankBranches', 'BranchID');
         });
 
-        Schema::table('t_SupplierPrequalificationApplications', static function (Blueprint $table) {
-            $table->dropForeign('t_supplierprequalificationapplications_supplierid_foreign');
-            $table->foreign('SupplierId')->references('Id')->on('t_SupplierMaster')->onDelete('cascade');
+        /* -----------------------------------------
+         * t_SupplierPrequalificationApplications
+         * -----------------------------------------
+         */
+        $this->dropFkIfExists('t_SupplierPrequalificationApplications', 'SupplierId');
+
+        Schema::table('t_SupplierPrequalificationApplications', function (Blueprint $table) {
+            $table->foreign('SupplierId')
+                ->references('Id')
+                ->on('t_SupplierMaster')
+                ->onDelete('cascade');
         });
 
-        Schema::table('t_ThirdPartyType_ThirdParties', static function (Blueprint $table) {
+        /* -----------------------------------------
+         * t_ThirdPartyType_ThirdParties
+         * -----------------------------------------
+         */
+        Schema::table('t_ThirdPartyType_ThirdParties', function (Blueprint $table) {
             $table->string('PartyType', 100)->comment('Supplier, Customer, Tenant');
             $table->string('PartyID', 100);
             $table->index(['PartyType', 'PartyID']);

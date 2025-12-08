@@ -220,9 +220,9 @@
         <!-- Upload -->
                     <div class="mb-3">
             <label for="tenderDocuments" class="form-label fw-bold">Attach Tender Document:</label>
-            <input class="form-control" type="file" id="tenderDocuments" name="documents[]" multiple>
+            <input class="form-control" type="file" id="tenderDocuments" name="documents[]"  class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple required>
+            <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
                     </div>
-
         <!-- Restricted Suppliers -->
         <div class="mb-3" id="restrictedSuppliersSection" style="display: none;">
             <label for="suppliersList" class="form-label fw-bold">Add Suppliers to Invite:</label>
@@ -348,7 +348,7 @@
   window.loadPlanItemsForPlan = loadPlanItemsForPlan;
   window.addPlanItemToGrid = addPlanItemToGrid;
 
-  // ---- Helpers
+  // ---- Helpersd
   // ---- Manual Entry: add rows with Item Master select
   let manualRowSeq = 0;
   function addManualItemRow() {

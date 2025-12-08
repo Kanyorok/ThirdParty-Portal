@@ -171,7 +171,7 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index'],
-            ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
+             ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
             ['ModuleID' => 398300, 'Name' => 'Approval Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'approval-setup.index'],
             ['ModuleID' => 398500, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'tendercommittee.index'],
             ['ModuleID' => 398600, 'Name' => 'Member Response', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'memberresponse.index'],
@@ -318,6 +318,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 502320, 'Name' => 'Lease Schedule', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'schedulelease.index'],
             ['ModuleID' => 502330, 'Name' => 'Lease Renewal', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'renewlease.index'],
             ['ModuleID' => 502340, 'Name' => 'Lease Termination', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'terminatelease.index'],
+            ['ModuleID' => 502390, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => null],
+            ['ModuleID' => 502391, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index'],
+            //['ModuleID' => 502392, 'Name' => 'Renewal Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'renewalapproval.index'],
+            //['ModuleID' => 502393, 'Name' => 'Termination Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'terminationapproval.index'],
             //['ModuleID' => 502350, 'Name' => 'Payment Frequency', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'paymentfrequency.index'],
 
             // First level - Billing & Receipting
@@ -338,6 +342,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 505000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],
             ['ModuleID' => 505100, 'Name' => 'Property Type', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertytype.index'],
             ['ModuleID' => 505200, 'Name' => 'Property Category', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertycategory.index'],
+            ['ModuleID' => 505300, 'Name' => 'Property Rates & Pricing', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertyrateandpricing.index'],
 
             // First level - Reports
             ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'property-reports.index'],
@@ -708,7 +713,7 @@ class ModuleSeeder extends Seeder
             //            ['ModuleID' => 1107000, 'Name' => 'Period Management', 'Icon' => '<i class="fas fa-calendar-alt"></i>', 'Description' => '', 'Route' => 'periodmanagement.index', 'ParentID' => 1100000],
 
 
-            //            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
+                        ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
             //            ['ModuleID' => 1108100, 'Name' => 'Account Setup', 'Icon' => null, 'Description' => '', 'Route' => 'bankaccountsetup.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108200, 'Name' => 'Cash Book', 'Icon' => null, 'Description' => '', 'Route' => 'cashbook.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108300, 'Name' => 'Cash Management', 'Icon' => null, 'Description' => '', 'Route' => 'cashmanagement.index', 'ParentID' => 1108000],

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Imports\OpeningStockImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class OpeningStockController extends Controller
 {
@@ -27,10 +28,23 @@ class OpeningStockController extends Controller
             'excel_file' => 'required|file|mimes:xlsx,xls'
         ]);
 
-        Excel::import(new OpeningStockImport, $request->file('excel_file'));
+        try {
+            Excel::import(new OpeningStockImport, $request->file('excel_file'));
 
-        return redirect()->route('sku.index')
-            ->with('success', 'File uploaded successfully. Import is processing in the background.');
+            return redirect()->route('sku.index')
+                ->with('success', 'File uploaded successfully.');
+        }
+
+        catch (ValidationException $e) {
+            $failures = $e->failures();
+
+            return back()->with('error', 'Import failed. Some rows contain invalid or missing data.')
+                        ->with('failures', $failures);
+        }
+
+        catch (\Exception $e) {
+            return back()->with('error', 'Invalid or corrupted Excel file! Please upload a valid Opening Stock template.');
+        }
     }
 
 }

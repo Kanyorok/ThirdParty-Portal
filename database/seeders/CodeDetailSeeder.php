@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\BusinessTypeEnum;
 use App\Enums\CampaignStatusEnum;
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\DMS\DocumentCheckOutStatusEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
@@ -174,11 +175,21 @@ class CodeDetailSeeder extends Seeder
             ]);
         }
 
+        foreach (ApprovalEnum::cases() as $index => $approvalEnum) {
+            $entries->push([
+                'CodeID' => 'ApprovalStatus',
+                'Value' => $approvalEnum->value,
+                'Description' => $approvalEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
         // STATIC ENTRIES (from various modules)
         $static = [
             //ThirdPartyType
             ['CodeID' => 'PartyType', 'Description' => 'Individual', 'Value' => 'IN'],
             ['CodeID' => 'PartyType', 'Description' => 'Cooperate', 'Value' => 'CO'],
+            
 
             // Requisition Status
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved', 'Value' => 'Ap'],

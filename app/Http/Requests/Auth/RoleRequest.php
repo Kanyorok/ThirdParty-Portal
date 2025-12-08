@@ -19,12 +19,12 @@ class RoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'RoleName' => [
-                               'required',
-                               'string',
-                               'max:200',
-                              ],
-               ];
+            'RoleName' => [
+                'required',
+                'string',
+                'max:200',
+            ],
+        ];
     }
 
     /**
@@ -49,21 +49,22 @@ class RoleRequest extends FormRequest
      */
     public function getPermissions(): array
     {
-        $roles = collect();
+        $allPermissions = Permission::all();
+        $selectedIds = [];
 
-        foreach (PermissionEnum::getAll() as $permission) {
-            if ($this->get($permission->value) === 'on') {
-                $roles->push($permission);
+        foreach ($allPermissions as $permission) {
+            // PHP converts dots and spaces to underscores in request keys
+            $key = str_replace([' ', '.'], '_', $permission->name);
+
+            if ($this->input($key) === 'on' || $this->input($permission->name) === 'on') {
+                $selectedIds[] = $permission->id;
             }
         }
-        if ($roles->isEmpty()) {
-            throw ValidationException::withMessages(['permissions' => 'select at least one permission']);
-        }
-        $permissions = Permission::query()->whereIn('name', $roles->toArray())->select('id')->pluck('id')->toArray();
-        if (empty($permissions)) {
+
+        if (empty($selectedIds)) {
             throw ValidationException::withMessages(['permissions' => 'select at least one permission']);
         }
 
-        return $permissions;
+        return $selectedIds;
     }
 }

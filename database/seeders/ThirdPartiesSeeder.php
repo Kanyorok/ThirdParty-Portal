@@ -2,12 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\BusinessTypeEnum;
-use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
-use App\Enums\ThirdParty\ThirdPartyStatusEnum;
-use App\Enums\ThirdParty\ThirdPartyTypeEnum;
-use App\Models\ThirdParty\ThirdParties;
-use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Database\Seeder;
 
 // Import the ThirdParties model
@@ -21,7 +15,7 @@ class ThirdPartiesSeeder extends Seeder
      */
     public function run(): void
     {
-        $creatorUser = ThirdPartyUser::first();
+        /*$creatorUser = ThirdPartyUser::first();
 
         if (!$creatorUser) {
             $this->command->error('No ThirdPartyUser found. Please run ThirdPartyUserSeeder first.');
@@ -69,6 +63,6 @@ class ThirdPartiesSeeder extends Seeder
             'IsPrequalified' => false,
         ]));
 
-        $this->command->info('Third Parties seeded successfully!');
+        $this->command->info('Third Parties seeded successfully!');*/
     }
 }

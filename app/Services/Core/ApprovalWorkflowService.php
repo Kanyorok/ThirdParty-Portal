@@ -158,6 +158,36 @@ abstract class ApprovalWorkflowService
     }
 
     /**
+ * Get the status column name for a given morph alias/table
+ */
+private function getStatusColumnForTable(string $morphAlias, string $table): string
+{
+    // Check configuration first
+    $columnMappings = config('workflow.status_columns', []);
+    
+    if (isset($columnMappings[$morphAlias])) {
+        Log::info("Found status column from config", [
+            'morphAlias' => $morphAlias,
+            'column' => $columnMappings[$morphAlias],
+        ]);
+        return $columnMappings[$morphAlias];
+    }
+    
+    // Check if table has ApprovalStatus column
+    $hasApprovalStatus = DB::getSchemaBuilder()
+        ->hasColumn($table, 'ApprovalStatus');
+    
+    if ($hasApprovalStatus) {
+        Log::info("Table has ApprovalStatus column", ['table' => $table]);
+        return 'ApprovalStatus';
+    }
+    
+    // Default to Status
+    Log::info("Using default Status column", ['table' => $table]);
+    return 'Status';
+}
+
+    /**
      * Create a workflow history entry
      */
     protected function createHistoryEntry(
@@ -309,7 +339,7 @@ abstract class ApprovalWorkflowService
                 ]);
 
                 // Always call advanceToNextStage - it handles both moving to next stage AND finalizing if no next stage exists
-                $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id);
+                $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id, $statusColumn);
             } else {
                 Log::info("Stage not completed yet", [
                     'table' => $table,
@@ -384,16 +414,6 @@ abstract class ApprovalWorkflowService
                     ->first();
             }
 
-            Log::info("=== WORKFLOW STATE: {$stage} ===", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'currentStage' => $currentStage,
-                'stageName' => $stageRequirements->StageName ?? 'N/A',
-                'pendingCount' => $pendingCount,
-                'approvalCount' => $approvalCount,
-                'requiredApprovals' => $stageRequirements->Count ?? 'N/A',
-                'approvedStatusId' => $approvedStatusId,
-            ]);
 
             // List all pending users
             $pendingUsers = DB::table('t_WorkFlowPending as p')
@@ -837,7 +857,7 @@ abstract class ApprovalWorkflowService
     }
 
     //advancing to the nect stage
-    private function advanceToNextStage(string $table, string|int $sourceId, ?int $currentStageId, int $userId): void
+    private function advanceToNextStage(string $table, string|int $sourceId, ?int $currentStageId, int $userId, string $statusColumn = 'Status'): void
     {
         try {
             DB::beginTransaction();
@@ -1042,7 +1062,7 @@ abstract class ApprovalWorkflowService
                     // Update the status column in the source table
                     DB::statement("
             UPDATE {$table}
-            SET Status = ?,
+            SET {$statusColumn} = ?,
                 ModifiedBy = ?,
                 ModifiedOn = GETDATE()
             WHERE {$primaryKeyColumn} = ?

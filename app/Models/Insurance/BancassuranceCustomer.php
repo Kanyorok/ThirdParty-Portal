@@ -26,7 +26,7 @@ class BancassuranceCustomer extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'BancassuranceCustomersId';
+        return 'Id';
     }
 
     public function referrals()
