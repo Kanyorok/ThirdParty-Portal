@@ -96,7 +96,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="Website" class="form-label">Website</label>
-                                    <input type="url" class="form-control" id="Website" name="Website">
+                                    <input type="text" class="form-control" id="Website" name="Website">
                                     <p id="Website_error" class="invalid-feedback d-none error" role="alert"></p>
                                 </div>
                                 <div class="col-md-6 mb-3">

@@ -93,7 +93,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
     /**
      * @Kimxons: Cases handled
      * 1. user of a Third Party: Requires user active + company/business approved.
-     * 2. Individual Customer: Requires only user active ("self-approved"). 
+     * 2. Individual Customer: Requires only user active ("self-approved").
      */
     public function isApproved(): bool
     {

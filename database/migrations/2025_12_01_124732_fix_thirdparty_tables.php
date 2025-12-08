@@ -6,7 +6,49 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 
+
 return new class extends Migration {
+
+    /* -----------------------------------------
+     * SAFE HELPERS for SQL Server constraint drops
+     * -----------------------------------------
+     */
+
+    private function dropFkIfExists(string $table, string $column)
+    {
+        $fk = DB::select("
+            SELECT fk.name AS fk_name
+            FROM sys.foreign_keys fk
+            JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+            JOIN sys.columns c ON fkc.parent_object_id = c.object_id AND fkc.parent_column_id = c.column_id
+            JOIN sys.tables t ON fk.parent_object_id = t.object_id
+            WHERE t.name = ? AND c.name = ?
+        ", [$table, $column]);
+
+        if (!empty($fk)) {
+            $name = $fk[0]->fk_name;
+            DB::statement("ALTER TABLE [$table] DROP CONSTRAINT [$name]");
+        }
+    }
+
+    private function dropIndexIfExists(string $table, string $index)
+    {
+        $exists = DB::select("
+            SELECT name FROM sys.indexes
+            WHERE name = ? AND object_id = OBJECT_ID(?)
+        ", [$index, $table]);
+
+        if (!empty($exists)) {
+            Schema::table($table, function (Blueprint $t) use ($index) {
+                $t->dropIndex($index);
+            });
+        }
+    }
+
+
+    /* -----------------------------------------
+     * MIGRATION UP
+     * -----------------------------------------
 
     /* -----------------------------------------
      * SAFE HELPERS for SQL Server constraint drops
@@ -137,7 +179,6 @@ return new class extends Migration {
 
             $table->foreignId('Status')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('BusinessType')->constrained('t_CodeDetails', 'ID');
-
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
 
@@ -147,6 +188,19 @@ return new class extends Migration {
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });
+
+        /* -----------------------------------------
+         * MODIFY t_Suppliers
+         * -----------------------------------------
+         */
+        $this->dropIndexIfExists('t_Suppliers', 'uq_t_suppliers_round_tp_cat');
+        $this->dropFkIfExists('t_Suppliers', 'ThirdPartyId');
+
+        if (Schema::hasColumn('t_Suppliers', 'ThirdPartyId')) {
+            Schema::table('t_Suppliers', fn(Blueprint $t) => $t->dropColumn('ThirdPartyId'));
+        }
+
+        Schema::table('t_Suppliers', function (Blueprint $table) {
 
         /* -----------------------------------------
          * MODIFY t_Suppliers
@@ -172,7 +226,24 @@ return new class extends Migration {
         $this->dropIndexIfExists('t_ThirdPartyTypes', 't_ThirdPartyTypes_Type_index');
 
         Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
+
+
+        /* -----------------------------------------
+         * t_ThirdPartyTypes
+         * -----------------------------------------
+         */
+        $this->dropIndexIfExists('t_ThirdPartyTypes', 't_ThirdPartyTypes_Type_index');
+
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
             $table->dropUnique(['Code']);
+        });
+
+        $this->dropFkIfExists('t_ThirdPartyTypes', 'Type');
+        if (Schema::hasColumn('t_ThirdPartyTypes', 'Type')) {
+            Schema::table('t_ThirdPartyTypes', fn(Blueprint $t) => $t->dropColumn('Type'));
+        }
+
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
         });
 
         $this->dropFkIfExists('t_ThirdPartyTypes', 'Type');

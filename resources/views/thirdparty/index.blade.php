@@ -7,6 +7,13 @@
         .mouse_pointer {
             cursor: pointer;
         }
+        .action-buttons {
+            white-space: nowrap;
+        }
+        .action-buttons .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
     </style>
 @endsection
 
@@ -59,15 +66,17 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="thirdPartiesTable" class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                        <table id="thirdPartiesTable" class="table table-striped dataTable no-footer dtr-inline w-100">
                         <thead>
                         <tr>
+                            <th>#</th>
                             <th>Name</th>
                             <th>ID / Reg No.</th>
                             <th>Type</th>
-                            <th>Profiles</th>
+                            <th>Business Type</th>
                             <th>Country</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody></tbody>
@@ -78,9 +87,12 @@
         </div>
     </div>
 @endsection
+
 @section('scripts')
-    <script>const searchBtn = $('#searchFormBtn'), searchQuery = $('.search-form-item');
+    <script>
+        const searchBtn = $('#searchFormBtn'), searchQuery = $('.search-form-item');
         let thirdPartiesTable = null;
+        
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
 
@@ -94,13 +106,13 @@
             fetchThirdPartyTable();
         });
 
-        function getUrl() {
-            return getDocumentUrl() + '?q=' + searchQuery.val();
+        function getDocumentUrl() {
+            return '{{ route("thirdparty.parties.index") }}';
         }
 
-
         function fetchThirdPartyTable() {
-            searchBtn.html('<i class="fas fa-spinner fa-spin"></i>')
+            searchBtn.html('<i class="fas fa-spinner fa-spin"></i>');
+            
             if (thirdPartiesTable === null) {
                 thirdPartiesTable = $('#thirdPartiesTable').DataTable({
                     processing: true,
@@ -117,40 +129,106 @@
                         searchBtn.removeClass('disabled').html('<i class="fas fa-magnifying-glass"></i>');
                         searchQuery.removeClass('disabled');
                     },
-                    columnDefs: [
-                        // {"className": "text-center", "targets": [3]},
-                        {
-                            "render": function (data, type, row) {
-                                return row.country.Flag + ' ' + data;
-                                //return data + " " + row.OtherNames;
-                            },
-                            "targets": 4 // the place of col2
-                        },
-                        // {"visible": false, "targets": [0, 1]}
-                    ],
                     columns: [
-                        {data: 'ThirdPartyName', name: 'ThirdPartyName'},
-                        {data: 'RegistrationNumber', name: 'RegistrationNumber'},
-                        {data: 'business_type.Description', name: 'business_type.Description'},
-                        {data: 'types', name: 'types', orderable: false, searchable: false},
-                        {data: 'country.Name', name: 'country.Name'},
-                        {data: 'status.Description', name: 'status.Description'},
-                        /* {data: 'accounts_count', name: 'accounts_count', orderable: false, searchable: false},*/
-                    ], "oLanguage": {
+                        {
+                            data: 'DT_RowIndex',
+                            name: 'DT_RowIndex',
+                            orderable: false,
+                            searchable: false,
+                            width: '5%'
+                        },
+                        {
+                            data: 'ThirdPartyName',
+                            name: 'ThirdPartyName'
+                        },
+                        {
+                            data: 'RegistrationNumber',
+                            name: 'RegistrationNumber'
+                        },
+                        {
+                            data: 'types',
+                            name: 'types',
+                            orderable: false,
+                            searchable: false
+                        },
+                        {
+                            data: 'business_type.Description',
+                            name: 'business_type.Description'
+                        },
+                        {
+                            data: 'country.Name',
+                            name: 'country.Name',
+                            render: function(data, type, row) {
+                                if (row.country && row.country.Flag) {
+                                    return row.country.Flag + ' ' + data;
+                                }
+                                return data;
+                            }
+                        },
+                        {
+                            data: 'status.Description',
+                            name: 'status.Description',
+                            render: function(data) {
+                                return '<span class="badge bg-success">' + data + '</span>';
+                            }
+                        },
+                        {
+                            data: 'actions',
+                            name: 'actions',
+                            orderable: false,
+                            searchable: false,
+                            width: '15%'
+                        }
+                    ],
+                    "oLanguage": {
                         "sEmptyTable": "<div class='text-center'><img class='img-fluid' style='height:30vh' src='{{ asset('assets/img/errors/404.svg') }}' alt='?'></div>"
+                    },
+                    rowCallback: function(row, data, index) {
+                        // Add double-click functionality
+                        $(row).on('dblclick', function() {
+                            if (data.dbl_click_url) {
+                                window.location.href = data.dbl_click_url;
+                            }
+                        });
                     }
                 });
 
                 $("#thirdPartiesTable_filter").addClass('d-none');
+                
                 thirdPartiesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the list.");
                     console.log(er);
                 });
+
+                // Handle delete button clicks
+                $('#thirdPartiesTable tbody').on('click', '.delete-btn', function() {
+                    const id = $(this).data('id');
+                    const name = $(this).data('name');
+                    
+                    if (confirm('Are you sure you want to delete "' + name + '"? This action cannot be undone.')) {
+                        $.ajax({
+                            url: '{{ route("thirdparty.parties.index") }}/' + id,
+                            type: 'DELETE',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                _method: 'DELETE'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    nSuccess(response.message);
+                                    thirdPartiesTable.ajax.reload();
+                                } else {
+                                    nError(response.message || 'Failed to delete third party.');
+                                }
+                            },
+                            error: function(xhr) {
+                                nError(xhr.responseJSON?.message || 'Failed to delete third party.');
+                            }
+                        });
+                    }
+                });
             } else {
-                thirdPartiesTable.clear().destroy();
-                thirdPartiesTable = null;
-                fetchThirdPartyTable();
-                /* thirdPartiesTable.ajax.reload();*/
+                thirdPartiesTable.ajax.reload();
             }
         }
     </script>

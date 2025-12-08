@@ -7,6 +7,11 @@ use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\ThirdParty\SupplierMaster;;
+use App\Models\Finance\CustomerWallet;
+use App\Models\Finance\FinanceCreditManagement;
+use App\Models\Finance\FinanceInvoice;
+use App\Models\Finance\FinanceReceipt;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\ImageTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +28,7 @@ class ThirdParties extends Model
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
+
     protected $table = 't_ThirdParties';
     protected $primaryKey = 'Id';
 
@@ -44,16 +50,16 @@ class ThirdParties extends Model
         'Extra' => 'array',
     ];
 
+    // -------------------- Relationships --------------------
+
     public function businessType(): BelongsTo
     {
         return $this->belongsTo(CodeDetail::class, 'BusinessType', 'Id');
-        //->where('CodeID', 'BusinessType');
     }
 
     public function status(): BelongsTo
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'Id');
-        //->where('CodeID', 'ThirdPartyStatus');
     }
 
     public function bankDetails(): HasMany
@@ -61,19 +67,9 @@ class ThirdParties extends Model
         return $this->hasMany(ThirdPartiesBankDetails::class, 'ThirdPartyId', 'Id');
     }
 
-    protected function getImageName(): string
-    {
-        return $this->ThirdPartyName;
-    }
-
     public function users(): HasMany
     {
         return $this->hasMany(ThirdPartyUser::class, 'ThirdPartyId', 'Id');
-    }
-
-    public function getLabelAttribute(): string
-    {
-        return $this->ThirdPartyName ?: $this->TradingName ?: "Unnamed #{$this->Id}";
     }
 
     public function country(): BelongsTo
@@ -86,17 +82,12 @@ class ThirdParties extends Model
         return $this->belongsTo(Locality::class, 'LocationId', 'ID');
     }
 
-    /**
-     * All Types that the thirdparty has.
-     *
-     * @return BelongsToMany
-     */
     public function types(): BelongsToMany
     {
         return $this->belongsToMany(ThirdPartyType::class, 't_ThirdPartyType_ThirdParties', 'ThirdPartyId', 'TypeId')
-            // ->using(ThirdPartyTypeTypes::class)
             ->withTimestamps('CreatedOn', 'ModifiedOn')
-            ->withPivot('Id', 'PartyType', 'PartyID', 'CreatedBy', 'ModifiedBy', 'DeletedBy')->wherePivotNull('DeletedOn');
+            ->withPivot('Id', 'PartyType', 'PartyID', 'CreatedBy', 'ModifiedBy', 'DeletedBy')
+            ->wherePivotNull('DeletedOn');
     }
 
     public function scopeSuppliers(): BelongsToMany
@@ -116,34 +107,56 @@ class ThirdParties extends Model
 
     public function wallet(): HasOne
     {
-        return $this->hasOne(\App\Models\Finance\CustomerWallet::class, 'CustomerID', 'Id');
+        return $this->hasOne(CustomerWallet::class, 'CustomerID', 'Id');
     }
 
     public function creditProfiles(): HasMany
     {
-        return $this->hasMany(\App\Models\Finance\FinanceCreditManagement::class, 'CustomerID', 'Id');
+        return $this->hasMany(FinanceCreditManagement::class, 'CustomerID', 'Id');
     }
 
     public function invoices(): HasMany
     {
-        return $this->hasMany(\App\Models\Finance\FinanceInvoice::class, 'CustomerID', 'Id');
+        return $this->hasMany(FinanceInvoice::class, 'CustomerID', 'Id');
     }
 
     public function receipts(): HasMany
     {
-        return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
+        return $this->hasMany(FinanceReceipt::class, 'CustomerID', 'Id');
     }
 
+    // -------------------- Additional / Custom Relationships --------------------
 
     /**
-     * =======================================| TODO: Upto there the rest to be removed or moved to appropriate classes  |======================================
+     * Supplier information
      */
+    public function supplierInfo(): HasOne
+    {
+        return $this->hasOne(SupplierMaster::class, 'ThirdPartyId', 'Id')
+            ->with(['products', 'contracts']);
+    }
 
+    /**
+     * Customer details
+     */
+    public function customerDetails(): HasOne
+    {
+        return $this->hasOne(BancassuranceCustomer::class, 'ThirdPartyId', 'Id');
+    }
 
+    /**
+     * Tenant details
+     */
+    public function tenantDetails(): HasOne
+    {
+        return $this->hasOne(PropertyNewTenant::class, 'ThirdPartyId', 'Id');
+    }
+
+    /**
+     * Categories
+     */
     public function categories(): BelongsToMany
     {
-        // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
-        //todo move to supplier master model
         return $this->belongsToMany(
             SupplierCategory::class,
             't_ThirdParty_SupplierCategory',
@@ -152,16 +165,25 @@ class ThirdParties extends Model
         );
     }
 
-
     /**
-     * Legacy category mappings (t_ThirdPartiesCategories -> CodeDetail) used by prequalification screen.
+     * Legacy categories
      */
-    public function legacyCategories()
-    {  //todo move to supplier master model
-        return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
+    public function legacyCategories(): HasMany
+    {
+        return $this->hasMany(ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
             ->whereNull('DeletedOn')
             ->with('category');
     }
 
+    // -------------------- Helper / Accessor --------------------
 
+    protected function getImageName(): string
+    {
+        return $this->ThirdPartyName;
+    }
+
+    public function getLabelAttribute(): string
+    {
+        return $this->ThirdPartyName ?: $this->TradingName ?: "Unnamed #{$this->Id}";
+    }
 }
