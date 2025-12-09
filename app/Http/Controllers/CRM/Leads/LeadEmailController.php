@@ -4,15 +4,14 @@ namespace App\Http\Controllers\CRM\Leads;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\MailToRequest;
-use App\Models\CRM\Lead;
 use App\Models\Communication\Email;
+use App\Models\CRM\Lead;
 use App\Services\CRMEmailService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use Illuminate\View\View;
 
 
 class LeadEmailController extends Controller
@@ -62,14 +61,18 @@ class LeadEmailController extends Controller
         return $this->succeeded('Email sent successfully', data: ['activity' => $activity]);
     }
 
-    /**
-     * Show full email details for modal view.
-     */
+
     public function show(Lead $lead, Email $leadMail)
     {
-        return view('crm.leads.partials.email-details', [
-            'email' => $leadMail,
+        if (!$lead->crmmails()->where('EmailID', $leadMail->EmailID)->exists()) {
+            return $this->errored('invalid email');
+        }
+
+        return view('crm.emails.summary', [
+            'party' => $lead,
+            'crmEmail' => $leadMail
         ]);
+
     }
 
 
