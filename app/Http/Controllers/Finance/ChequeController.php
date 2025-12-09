@@ -11,14 +11,21 @@ use App\Models\Finance\CashbookLine;
 use App\Models\Finance\Cheque;
 use App\Models\Finance\ChequeBook;
 use App\Models\Finance\FinanceGLMapping;
+use App\Services\ChequeValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ChequeController extends Controller
 {
-    // Module mapping for cheque actions (configure in your t_Modules)
-    private const CHEQUE_MODULE_ID = 1102800;
-    private const CASHBOOK_MODULE_ID = 1102400; // fallback for mappings that use Cashbook
+    const CHEQUE_MODULE_ID = 'FIN004';
+    const CASHBOOK_MODULE_ID = 'FIN002';
+
+    protected $validationService;
+
+    public function __construct(ChequeValidationService $validationService)
+    {
+        $this->validationService = $validationService;
+    }
 
     public function index(Request $request)
     {

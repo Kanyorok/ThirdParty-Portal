@@ -7,11 +7,18 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Finance\BankAccount;
 use App\Models\Finance\ChequeBook;
 use App\Models\Finance\ChequeLeaf;
+use App\Services\ChequeValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ChequeBookController extends Controller
 {
+    protected $validationService;
+
+    public function __construct(ChequeValidationService $validationService)
+    {
+        $this->validationService = $validationService;
+    }
     public function index(Request $request)
     {
         $query = ChequeBook::with('bankAccount.bank')->orderByDesc('ChequeBookID');
@@ -78,6 +85,32 @@ class ChequeBookController extends Controller
             'start' => $start,
             'end' => $end,
             'next_leaf' => $start,
+        ]);
+    }
+
+    /**
+     * AJAX: Get available leaves for a cheque book
+     * GET /finance/chequebooks/{id}/leaves
+     */
+    public function getAvailableLeaves($id)
+    {
+        $book = ChequeBook::findOrFail($id);
+        
+        // Fetch available/unused leaves for this book
+        $leaves = ChequeLeaf::where('ChequeBookID', $book->ChequeBookID)
+            ->where('Status', 'Unused')
+            ->orderBy('LeafNumber')
+            ->get(['LeafID', 'LeafNumber', 'ChequeNumber', 'Status']);
+
+        return response()->json([
+            'success' => true,
+            'book' => [
+                'id' => $book->ChequeBookID,
+                'prefix' => $book->Prefix,
+                'suffix' => $book->Suffix,
+                'next_leaf' => $book->NextLeafNumber,
+            ],
+            'leaves' => $leaves
         ]);
     }
 
@@ -190,6 +223,16 @@ class ChequeBookController extends Controller
             'IsActive' => 'nullable|boolean',
         ]);
 
+        // Business Rule: Check for numbering overlaps, excluding the current book
+        if ($this->validationService->hasNumberingOverlap(
+            $data['BankAccountID'],
+            $data['StartNumber'],
+            $data['EndNumber'],
+            $row->ChequeBookID // Exclude current book from overlap check
+        )) {
+            return back()->withInput()->with('error', 'Cheque number range overlaps with an existing book for this bank account.');
+        }
+
         $row->fill([
             'BankAccountID' => (int)$data['BankAccountID'],
             'BookName' => $data['BookName'] ?? null,
@@ -208,21 +251,21 @@ class ChequeBookController extends Controller
 
     public function destroy($id)
     {
-        $row = ChequeBook::findOrFail($id);
+        $row = ChequeBook::with('leaves')->findOrFail($id);
 
-        $inUse = DB::table('t_ChequeLeaves')
-            ->where('ChequeBookID', $row->ChequeBookID)
-            ->whereIn('Status', ['Reserved', 'Issued', 'Cleared', 'Bounced', 'Cancelled'])
-            ->exists();
-
-        if ($inUse) {
-            return back()->with('error', 'Cannot delete: some leaves are already used.');
+        // Business Rule: Cannot delete if any leaf has been used
+        $validation = $this->validationService->canDeleteBook($row);
+        
+        if (!$validation['canDelete']) {
+            return back()->with('error', $validation['reason']);
         }
 
         return DB::transaction(function () use ($row) {
+            // Delete all leaves first
             DB::table('t_ChequeLeaves')->where('ChequeBookID', $row->ChequeBookID)->delete();
             $row->delete();
-            return redirect()->route('finance.chequebooks.index')->with('success', 'Cheque book deleted.');
+            return redirect()->route('finance.chequebooks.index')
+                ->with('success', 'Cheque book deleted successfully.');
         });
     }
 }

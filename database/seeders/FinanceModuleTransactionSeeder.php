@@ -41,6 +41,8 @@ class FinanceModuleTransactionSeeder extends Seeder
             19 => 1100000,
             20 => 1100000,
             21 => 1100000,
+            22 => 1100000,
+
         ];
 
         // Build the insert array

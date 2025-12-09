@@ -38,7 +38,7 @@
                             {{-- Cheque Book & Number --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Cheque Book <span class="text-danger">*</span></label>
-                                <select name="ChequeBookID" class="form-select select2" required>
+                                <select name="ChequeBookID" id="chequeBookSelect" class="form-select select2" required>
                                     <option value="">-- Select Cheque Book --</option>
                                     @foreach($books as $book)
                                         <option value="{{ $book->ChequeBookID }}" {{ old('ChequeBookID') == $book->ChequeBookID ? 'selected' : '' }}>
@@ -50,11 +50,16 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Cheque Number <small class="text-muted fw-normal">(Auto-picked if empty)</small></label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="fas fa-hashtag"></i></span>
-                                    <input type="text" name="ChequeNumber" class="form-control" value="{{ old('ChequeNumber') }}" placeholder="Auto-generated">
-                                </div>
+                                <label class="form-label fw-bold">
+                                    Cheque Number / Leaf 
+                                    <small class="text-muted fw-normal">(Select book first)</small>
+                                </label>
+                                <select name="ChequeNumber" id="chequeNumberSelect" class="form-select" disabled>
+                                    <option value="">-- Select Cheque Book First --</option>
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-info-circle"></i> Available leaves will appear after selecting a book
+                                </small>
                             </div>
 
                             {{-- Dates & PDC --}}
@@ -72,11 +77,12 @@
                                     <input type="date" name="DueDate" class="form-control" value="{{ old('DueDate', now()->toDateString()) }}">
                                 </div>
                             </div>
-                            <div class="col-md-4 d-flex align-items-end pb-1">
-                                <div class="form-check form-switch w-100">
-                                    <input class="form-check-input" type="checkbox" name="IsPostDated" value="1" id="pdc" {{ old('IsPostDated') ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="pdc">Is Post-Dated?</label>
-                                </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Is Post-Dated?</label>
+                                <select name="IsPostDated" class="form-select">
+                                    <option value="0" {{ old('IsPostDated', '0') == '0' ? 'selected' : '' }}>No</option>
+                                    <option value="1" {{ old('IsPostDated') == '1' ? 'selected' : '' }}>Yes</option>
+                                </select>
                             </div>
 
                             {{-- Amount & Currency --}}
@@ -155,6 +161,63 @@
             // Initialize Select2
             $('.select2').select2({
                 width: '100%'
+            });
+
+            const chequeBookSelect = document.getElementById('chequeBookSelect');
+            const chequeNumberSelect = document.getElementById('chequeNumberSelect');
+
+            // Load leaves when a cheque book is selected
+            $('#chequeBookSelect').on('change', function() {
+                const bookId = this.value;
+                
+                // Reset cheque number dropdown
+                chequeNumberSelect.innerHTML = '<option value="">-- Loading leaves... --</option>';
+                chequeNumberSelect.disabled = true;
+
+                if (!bookId) {
+                    chequeNumberSelect.innerHTML = '<option value="">-- Select Cheque Book First --</option>';
+                    return;
+                }
+
+                // Fetch available leaves via AJAX
+                fetch(`/finance/chequebooks/${bookId}/leaves`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.leaves.length > 0) {
+                            // Populate dropdown with available leaves
+                            chequeNumberSelect.innerHTML = '<option value="">-- Select Leaf / Cheque Number --</option>';
+                            
+                            const nextLeafNumber = data.book.next_leaf;
+                            let nextLeafFound = false;
+                            
+                            data.leaves.forEach(leaf => {
+                                const option = document.createElement('option');
+                                option.value = leaf.ChequeNumber;
+                                option.textContent = `Leaf #${leaf.LeafNumber} — Cheque: ${leaf.ChequeNumber}`;
+                                
+                                // Auto-select the next leaf based on NextLeafNumber
+                                if (leaf.LeafNumber == nextLeafNumber && !nextLeafFound) {
+                                    option.selected = true;
+                                    nextLeafFound = true;
+                                }
+                                
+                                chequeNumberSelect.appendChild(option);
+                            });
+                            
+                            // If next leaf wasn't found, select the first available leaf
+                            if (!nextLeafFound && data.leaves.length > 0) {
+                                chequeNumberSelect.options[1].selected = true; // Skip the placeholder
+                            }
+                            
+                            chequeNumberSelect.disabled = false;
+                        } else {
+                            chequeNumberSelect.innerHTML = '<option value="">No available leaves in this book</option>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching leaves:', error);
+                        chequeNumberSelect.innerHTML = '<option value="">Error loading leaves. Please try again.</option>';
+                    });
             });
 
             document.getElementById('form-issue-cheque').addEventListener('submit', function() {
