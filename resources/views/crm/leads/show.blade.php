@@ -31,7 +31,7 @@
     <li class="breadcrumb-item"><a href="{{ route('leads.index') }}">Leads</a></li>
 @endsection
 @section('content')
-    <div class="row">
+   <div class="row">
         <div class="col-md-4 col-xxl-3">
             <div class="card">
                 @if($won)
@@ -1016,7 +1016,7 @@
                                         <select class="form-control" name="Industry" id="Industry" required>
                                             @foreach($Industries as $Industry)
                                                 <option
-                                                    value="{{ $Industry->ID }}" {{ ($Industry->ID===$lead->Industry)?'selected':'' }} >{{ $Industry->Description }}</option>
+                                                    value="{{ $Industry->ID }}" {{ ($Industry->ID===(integer)$lead->Industry)?'selected':'' }} >{{ $Industry->Description }}</option>
                                             @endforeach
                                         </select>
                                         <p id="Industry_error" class="invalid-feedback d-none error col-12"
@@ -1676,6 +1676,9 @@
             $('form#CallUnreachableForm').submit(async function (e) {
                 e.preventDefault();
                 if (await saveForm($(this), $('#CallUnreachableBtn'), false, true, true)) {
+                    window.setTimeout(function () {
+                           window.location.replace('{{ route('leads.show',[$lead->LeadID]) }}');
+                        }, 3000)
                     $Modal.modal('hide');
                 }
             });
