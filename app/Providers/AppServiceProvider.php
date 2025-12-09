@@ -264,6 +264,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\RequisitionsController;
 use App\Http\Controllers\Procurement\AwardsController;
+use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
@@ -316,6 +317,16 @@ class AppServiceProvider extends ServiceProvider
                 return new ApprovalWorkflow(
                     'TenderAwardApprovalStatus',  // CodeID for tender award approval workflow
                     'AwardStatus'             // Status column name
+                );
+            });
+
+            // Bind Purchase Order Workflow
+        $this->app->when(PurchaseOrderController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'ApprovalStatus',  // CodeID for purchase order approval workflow
+                    'DocStatus'        // Status column name for orders
                 );
             });
     
