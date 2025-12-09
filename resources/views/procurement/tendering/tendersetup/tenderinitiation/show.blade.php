@@ -30,7 +30,117 @@
             </div>
         </div>
 
-        <!-- Items Table -->
+        <!-- Procurement Plan Reference Section -->
+        @if($tender->ProcurementPlanId && isset($procurementPlan) && $procurementPlan)
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> Procurement Plan Reference</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Plan Reference:</strong><br>
+                        <span class="text-primary">{{ $procurementPlan->ReferenceNumber ?? 'N/A' }}</span>
+                    </div>
+                    <div class="col-md-8">
+                        <strong>Plan Title:</strong><br>
+                        {{ $procurementPlan->Title ?? 'N/A' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Items from Procurement Plan -->
+        @if(isset($planItems) && $planItems && $planItems->isNotEmpty())
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-list-alt"></i> Items from Procurement Plan</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Item Name</th>
+                                <th>Plan Reference</th>
+                                <th>Need ID</th>
+                                <th>Total Planned Qty</th>
+                                <th>Qty in Tender</th>
+                                <th>Unit Price</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($planItems as $index => $planItem)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $planItem['item']->ItemName ?? 'N/A' }}</td>
+                                <td><span class="badge bg-info">{{ $planItem['planReference'] ?? 'N/A' }}</span></td>
+                                <td><span class="badge bg-secondary">{{ $planItem['needId'] ?? 'N/A' }}</span></td>
+                                <td>{{ number_format($planItem['plannedQty'] ?? 0, 2) }}</td>
+                                <td><strong>{{ number_format($planItem['qtyToTender'] ?? 0, 2) }}</strong></td>
+                                <td>{{ $currency->Symbol ?? '' }} {{ number_format($planItem['unitPrice'] ?? 0, 2) }}</td>
+                                <td><strong>{{ $currency->Symbol ?? '' }} {{ number_format($planItem['totalPrice'] ?? 0, 2) }}</strong></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="7" class="text-end">Plan Items Subtotal:</th>
+                                <th>{{ $currency->Symbol ?? '' }} {{ number_format($planItems->sum('totalPrice'), 2) }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Manual Items -->
+        @if(isset($manualItems) && $manualItems && $manualItems->isNotEmpty())
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-hand-pointer"></i> Manually Added Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Item Name</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($manualItems as $index => $manualItem)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $manualItem['item']->ItemName ?? $manualItem['description'] ?? 'N/A' }}</td>
+                                <td><strong>{{ number_format($manualItem['qtyToTender'] ?? 0, 2) }}</strong></td>
+                                <td>{{ $currency->Symbol ?? '' }} {{ number_format($manualItem['unitPrice'] ?? 0, 2) }}</td>
+                                <td><strong>{{ $currency->Symbol ?? '' }} {{ number_format($manualItem['totalPrice'] ?? 0, 2) }}</strong></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="4" class="text-end">Manual Items Subtotal:</th>
+                                <th>{{ $currency->Symbol ?? '' }} {{ number_format($manualItems->sum('totalPrice'), 2) }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Legacy Items Table (fallback if planItems/manualItems not available) -->
+        @if((!isset($planItems) || $planItems->isEmpty()) && (!isset($manualItems) || $manualItems->isEmpty()))
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <h5 class="card-title mb-3">📦 Items in this Tender</h5>
@@ -69,6 +179,21 @@
                             </tr>
                         </tfoot>
                     </table>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Total Estimated Cost Summary -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-body bg-light">
+                <div class="row">
+                    <div class="col-md-8 text-end">
+                        <h4>Total Estimated Cost:</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="text-primary"><strong>{{ $currency->Symbol ?? 'KES' }} {{ number_format($totalEstimatedCost ?? 0, 2) }}</strong></h4>
+                    </div>
                 </div>
             </div>
         </div>
@@ -227,4 +352,7 @@
             </form>
         </div>
     </div>
+@endsection
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection
