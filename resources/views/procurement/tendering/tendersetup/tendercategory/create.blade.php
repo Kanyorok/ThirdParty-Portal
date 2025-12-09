@@ -19,9 +19,15 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="TenderCategory" class="form-label">Category Type <span class="text-danger">*</span></label>
-                        <input type="text" name="TenderCategory" id="TenderCategory" class="form-control bg-light"
-                               placeholder="Enter category type"
-                               value="{{ old('TenderCategory') }}" required>
+                        <select name="TenderCategory" id="TenderCategory"
+                                class="form-select @error('TenderCategory') is-invalid @enderror" required>
+                            <option value="">-- Select Category Type --</option>
+                            @foreach($tenderCatOptions as $option)
+                                <option value="{{ $option->value }}" {{ old('TenderCategory') == $option->value ? 'selected' : '' }}>
+                                    {{ $option->displayName() }}
+                                </option>
+                            @endforeach
+                        </select>
                         @error('TenderCategory')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -31,7 +37,7 @@
                         <label for="CategoryCode" class="form-label">Category Code</label>
                         <div class="input-group">
                             <input type="text" class="form-control bg-light" id="CategoryCode"
-                                   name="CategoryCode" value="{{ $newCatCode }}" readonly>
+                                   name="CategoryCode" value="" readonly>
                             <span class="input-group-text bg-light">
                                 <i class="fas fa-hashtag"></i>
                             </span>
@@ -70,15 +76,40 @@
         const categorySelect = document.getElementById('TenderCategory');
         const codeInput = document.getElementById('CategoryCode');
 
+        // Generate code when page loads if there's an old value
+        if (categorySelect.value) {
+            generateCode(categorySelect.value);
+        }
+
         // Update code when category changes
         categorySelect.addEventListener('change', function() {
-            fetch(`/tendercategory/generate-code?category=${this.value}`)
+            const selectedValue = this.value;
+
+            if (!selectedValue) {
+                codeInput.value = '';
+                return;
+            }
+
+            generateCode(selectedValue);
+        });
+
+        // Function to generate category code
+        function generateCode(category) {
+            fetch(`{{ route('tendercategory.generateCode') }}?category_type=${encodeURIComponent(category)}`)
                 .then(response => response.json())
                 .then(data => {
-                    codeInput.value = data.code;
+                    if (data.ok && data.code) {
+                        codeInput.value = data.code;
+                    } else {
+                        console.error('Failed to generate code:', data);
+                        codeInput.value = 'ERROR';
+                    }
                 })
-                .catch(error => console.error('Error:', error));
-        });
+                .catch(error => {
+                    console.error('Error generating code:', error);
+                    codeInput.value = 'ERROR';
+                });
+        }
 
         // Form validation
         const form = document.getElementById('tenderCategoryForm');
@@ -87,6 +118,13 @@
                 event.preventDefault();
                 categorySelect.classList.add('is-invalid');
                 categorySelect.focus();
+                return false;
+            }
+
+            if (!codeInput.value || codeInput.value === 'ERROR') {
+                event.preventDefault();
+                alert('Please wait for the category code to be generated.');
+                return false;
             }
         });
 
@@ -94,6 +132,11 @@
             if (this.value) {
                 this.classList.remove('is-invalid');
             }
+        });
+
+        // Handle reset button
+        form.addEventListener('reset', function() {
+            codeInput.value = '';
         });
     });
 </script>

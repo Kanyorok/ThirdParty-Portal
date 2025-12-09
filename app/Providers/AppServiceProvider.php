@@ -130,6 +130,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
+use App\Models\Procurement\Tender;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\UOMConversion;
@@ -362,6 +363,7 @@ class AppServiceProvider extends ServiceProvider
 
             //PROCUREMENT
 
+            'tender' => Tender::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
