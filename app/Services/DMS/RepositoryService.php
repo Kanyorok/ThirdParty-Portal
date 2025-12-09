@@ -199,6 +199,7 @@ class RepositoryService extends PermissionsService
 
     /**
      * Internal Repository
+     * @throws ErroredException
      */
     public static function internal(): Repository
     {
