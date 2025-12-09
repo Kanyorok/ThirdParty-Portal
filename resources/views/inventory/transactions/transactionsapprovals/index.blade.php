@@ -112,7 +112,7 @@
                             @if($transactionType == 'Stock Transfer')
                                 {{ $record->creator->name ?? $record->creator->Name ?? 'N/A' }}
                             @else
-                                {{ $record->creator->name ?? 'N/A' }}
+                                {{ $record->adjustedBy->name ?? $record->adjustedBy->Name ?? 'N/A' }}
                             @endif
                         </td>
                         <td>

@@ -12,7 +12,6 @@ use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use App\Models\Core\Branch;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use App\Exceptions\ErroredException;
@@ -28,15 +27,21 @@ class TransactionApprovalController extends Controller
         TransactionTransferService $transferService, 
         StockAdjustmentService $adjustmentService,
         ApprovalWorkflow $workflow
-    )
-    {
+    ) {
         $this->transferService = $transferService;
         $this->adjustmentService = $adjustmentService;
-        $this->workflow = new ApprovalWorkflow('TransferStatus', 'Status');
+        $this->workflow = new ApprovalWorkflow('TransferStatus','Status');
+
     }
   
     public function index(Request $request)
     {
+        Log::info('TransactionApprovalController::index called', [
+            'transaction_type' => $request->get('transaction_type'),
+            'user_id' => Auth::id(),
+            'user_branch' => Auth::user()->branch->Id ?? 'none'
+        ]);
+
         $transactionType = $request->get('transaction_type', 'Stock Transfer');
         $fromDate = $request->get('from_date');
         $toDate = $request->get('to_date');
@@ -64,7 +69,7 @@ class TransactionApprovalController extends Controller
             $records = $query->orderByDesc('CreatedOn')->get();
 
         } elseif ($transactionType === 'Stock Adjustment') {
-            $query = StockAdjustment::with(['branch', 'creator'])
+            $query = StockAdjustment::with(['branch', 'creator','adjustedBy'])
                 ->where('Status', Transfers::Pending->value)
                 ->where('Branch', $branchId);
 
@@ -81,6 +86,12 @@ class TransactionApprovalController extends Controller
             $records = collect();
         }
 
+        Log::info('TransactionApprovalController::index results', [
+            'transaction_type' => $transactionType,
+            'record_count' => $records->count(),
+            'branch_id' => $branchId
+        ]);
+
         return view('inventory.transactions.transactionsapprovals.index', [
             'transactionType' => $transactionType,
             'records' => $records,
@@ -91,6 +102,12 @@ class TransactionApprovalController extends Controller
 
     public function show($id, Request $request)
     {
+        Log::info('TransactionApprovalController::show called', [
+            'id' => $id,
+            'transaction_type' => $request->get('transaction_type'),
+            'user_id' => Auth::id()
+        ]);
+
         $transactionType = $request->get('transaction_type');
 
         if ($transactionType === 'Stock Transfer') {
@@ -169,95 +186,98 @@ class TransactionApprovalController extends Controller
 
     public function approve(Request $request, $id)
     {
+        Log::info('=== TransactionApprovalController::approve START ===', [
+            'id' => $id,
+            'transaction_type' => $request->input('transaction_type'),
+            'user_id' => Auth::id()
+        ]);
+
         $transactionType = $request->input('transaction_type');
 
         if ($transactionType === 'Stock Transfer') {
-            $record = TransactionTransfer::findOrFail($id);
-            $this->authorize('approve', $record);
-
-            $currentBranch = Auth::user()->branch;
-            if ($record->FromBranch != $currentBranch->Id) {
-                $message = 'You can only approve transfers from your branch.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 403);
-                }
-                return redirect()->back()->withErrors(['error' => $message]);
-            }
-
-            $user = Auth::user();
-
-            if (!$this->workflow->canApproveModel($record, $user)) {
-                $message = 'You are not authorized to approve this transfer.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 403);
-                }
-                return redirect()->back()->withErrors(['error' => $message]);
-            }
-
-            $lock = Cache::lock('approve-TransactionTransfer-' . $record->Id, 5);
-            if (!$lock->get()) {
-                $message = 'Transfer has been approved, or another user is working on it.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 409);
-                }
-                return redirect()->back()->with('error', $message);
-            }
-
             try {
-                // Use the service's approve method which handles workflow and stock updates
-                $this->transferService->approve($record->Id, 'Approved Transfer');
-                
-                Log::info('Stock Transfer approved successfully', [
-                    'transfer_id' => $record->Id,
-                    'user_id' => $user->Id
-                ]);
+                $record = TransactionTransfer::findOrFail($id);
+                $this->authorize('approve', $record);
 
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Stock Transfer approved successfully.'
+                $currentBranch = Auth::user()->branch;
+                if ($record->FromBranch != $currentBranch->Id) {
+                    $message = 'You can only approve transfers from your branch.';
+                    Log::warning($message, [
+                        'transfer_branch' => $record->FromBranch,
+                        'user_branch' => $currentBranch->Id
                     ]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 403);
+                    }
+                    return redirect()->back()->withErrors(['error' => $message]);
                 }
 
-                return redirect()->route('transactionsapproval.index', ['transaction_type' => 'Stock Transfer'])
-                    ->with('success', 'Stock Transfer approved successfully.');
-            } catch (ErroredException $e) {
-                $errorMessage = $e->getMessage();
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $errorMessage
-                    ], 400);
+                $user = Auth::user();
+
+                if (!$this->workflow->canApproveModel($record, $user)) {
+                    $message = 'You are not authorized to approve this transfer.';
+                    Log::warning($message, [
+                        'transfer_id' => $record->Id,
+                        'user_id' => $user->Id
+                    ]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 403);
+                    }
+                    return redirect()->back()->withErrors(['error' => $message]);
                 }
-                return redirect()->back()->with('error', $errorMessage);
+
+                $lock = Cache::lock('approve-TransactionTransfer-' . $record->Id, 10);
+                if (!$lock->get()) {
+                    $message = 'Transfer has been approved, or another user is working on it.';
+                    Log::warning($message, ['transfer_id' => $record->Id]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 409);
+                    }
+                    return redirect()->back()->with('error', $message);
+                }
+
+                try {
+                    // Use the service's approve method
+                    $this->transferService->approve($record->Id, 'Transfer approved');
+                    
+                    Log::info('Stock Transfer approved successfully', [
+                        'transfer_id' => $record->Id,
+                        'user_id' => $user->Id
+                    ]);
+
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Stock Transfer approved successfully.'
+                        ]);
+                    }
+
+                    return redirect()->route('transactionsapproval.index', ['transaction_type' => 'Stock Transfer'])
+                        ->with('success', 'Stock Transfer approved successfully.');
+                } finally {
+                    optional($lock)->release();
+                }
             } catch (Exception $e) {
-                Log::error('Error approving stock transfer: ' . $e->getMessage());
+                Log::error('Error approving stock transfer: ' . $e->getMessage(), [
+                    'transfer_id' => $id,
+                    'user_id' => Auth::id(),
+                    'exception' => $e
+                ]);
                 
-                $errorMessage = 'Unexpected error, try again later.';
-                $errorLower = strtolower($e->getMessage());
+                $errorMessage = $this->getErrorMessage($e);
                 
-                if (str_contains($errorLower, 'cannot approve your own submission') || 
-                    str_contains($errorLower, 'maker-checker')) {
-                    $errorMessage = 'You cannot approve your own submission. Please have another user approve this transfer.';
-                } elseif (str_contains($errorLower, 'already approved') || 
-                         str_contains($errorLower, 'already actioned')) {
-                    $errorMessage = 'This transfer has already been approved or processed.';
-                } elseif (str_contains($errorLower, 'not in approvable status') ||
-                         str_contains($errorLower, 'no pending approval found')) {
-                    $errorMessage = 'This transfer cannot be approved in its current status or no pending approval found for your user.';
-                } elseif (str_contains($errorLower, 'insufficient stock')) {
-                    $errorMessage = 'Insufficient stock available for one or more items.';
-                }
-
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
@@ -266,104 +286,93 @@ class TransactionApprovalController extends Controller
                 }
                 
                 return redirect()->back()->with('error', $errorMessage);
-            } finally {
-                optional($lock)->release();
             }
         }
 
         if ($transactionType === 'Stock Adjustment') {
-            $record = StockAdjustment::findOrFail($id);
-            $this->authorize('approve', $record);
-
-            $currentBranch = Auth::user()->branch;
-            if ($record->Branch != $currentBranch->Id) {
-                $message = 'You can only approve adjustments for your branch.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 403);
-                }
-                return redirect()->back()->withErrors(['error' => $message]);
-            }
-
-            $user = Auth::user();
-
-            if (!$this->workflow->canApproveModel($record, $user)) {
-                $message = 'You are not authorized to approve this adjustment.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 403);
-                }
-                return redirect()->back()->withErrors(['error' => $message]);
-            }
-
-            $lock = Cache::lock('approve-StockAdjustment-' . $record->Id, 5);
-            if (!$lock->get()) {
-                $message = 'Adjustment has been approved, or another user is working on it.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 409);
-                }
-                return redirect()->back()->with('error', $message);
-            }
-
             try {
-                // Use the adjustment service's approve method if it exists
-                // If not, use the workflow directly
-                if (method_exists($this->adjustmentService, 'approve')) {
-                    $this->adjustmentService->approve($record->Id, 'Approved Adjustment');
-                } else {
-                    // Fallback to workflow if service doesn't have approve method
-                    DB::transaction(function () use ($record, $user) {
-                        $this->workflow->approve($record, $user, Transfers::Approved, 'Approved Adjustment');
-                    });
-                }
-                
-                Log::info('Stock Adjustment approved successfully', [
-                    'adjustment_id' => $record->Id,
-                    'user_id' => $user->Id
-                ]);
+                $record = StockAdjustment::findOrFail($id);
+                $this->authorize('approve', $record);
 
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Stock Adjustment approved successfully.'
+                $currentBranch = Auth::user()->branch;
+                if ($record->Branch != $currentBranch->Id) {
+                    $message = 'You can only approve adjustments for your branch.';
+                    Log::warning($message, [
+                        'adjustment_branch' => $record->Branch,
+                        'user_branch' => $currentBranch->Id
                     ]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 403);
+                    }
+                    return redirect()->back()->withErrors(['error' => $message]);
                 }
 
-                return redirect()->route('transactionsapproval.index', ['transaction_type' => 'Stock Adjustment'])
-                    ->with('success', 'Stock Adjustment approved successfully.');
-            } catch (ErroredException $e) {
-                $errorMessage = $e->getMessage();
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $errorMessage
-                    ], 400);
+                $user = Auth::user();
+
+                if (!$this->workflow->canApproveModel($record, $user)) {
+                    $message = 'You are not authorized to approve this adjustment.';
+                    Log::warning($message, [
+                        'adjustment_id' => $record->Id,
+                        'user_id' => $user->Id
+                    ]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 403);
+                    }
+                    return redirect()->back()->withErrors(['error' => $message]);
                 }
-                return redirect()->back()->with('error', $errorMessage);
+
+                $lock = Cache::lock('approve-StockAdjustment-' . $record->Id, 10);
+                if (!$lock->get()) {
+                    $message = 'Adjustment has been approved, or another user is working on it.';
+                    Log::warning($message, ['adjustment_id' => $record->Id]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 409);
+                    }
+                    return redirect()->back()->with('error', $message);
+                }
+
+                try {
+                    // Use the service's approve method
+                    $this->adjustmentService->approve($record->Id, 'Adjustment approved');
+                    
+                    Log::info('Stock Adjustment approved successfully', [
+                        'adjustment_id' => $record->Id,
+                        'user_id' => $user->Id
+                    ]);
+
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Stock Adjustment approved successfully.'
+                        ]);
+                    }
+
+                    return redirect()->route('transactionsapproval.index', ['transaction_type' => 'Stock Adjustment'])
+                        ->with('success', 'Stock Adjustment approved successfully.');
+                } finally {
+                    optional($lock)->release();
+                }
             } catch (Exception $e) {
-                Log::error('Error approving stock adjustment: ' . $e->getMessage());
+                Log::error('Error approving stock adjustment: ' . $e->getMessage(), [
+                    'adjustment_id' => $id,
+                    'user_id' => Auth::id(),
+                    'exception' => $e
+                ]);
                 
-                $errorMessage = 'Unexpected error, try again later.';
-                $errorLower = strtolower($e->getMessage());
+                $errorMessage = $this->getErrorMessage($e);
                 
-                if (str_contains($errorLower, 'cannot approve your own submission') || 
-                    str_contains($errorLower, 'maker-checker')) {
-                    $errorMessage = 'You cannot approve your own submission. Please have another user approve this adjustment.';
-                } elseif (str_contains($errorLower, 'already approved') || 
-                         str_contains($errorLower, 'already actioned')) {
-                    $errorMessage = 'This adjustment has already been approved or processed.';
-                } elseif (str_contains($errorLower, 'not in approvable status') ||
-                         str_contains($errorLower, 'no pending approval found')) {
-                    $errorMessage = 'This adjustment cannot be approved in its current status or no pending approval found for your user.';
-                }
-
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
@@ -372,12 +381,12 @@ class TransactionApprovalController extends Controller
                 }
                 
                 return redirect()->back()->with('error', $errorMessage);
-            } finally {
-                optional($lock)->release();
             }
         }
 
         $message = 'Unknown transaction type.';
+        Log::error($message, ['transaction_type' => $transactionType]);
+        
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,
@@ -389,93 +398,98 @@ class TransactionApprovalController extends Controller
 
     public function reject(Request $request, $id)
     {
+        Log::info('=== TransactionApprovalController::reject START ===', [
+            'id' => $id,
+            'transaction_type' => $request->input('transaction_type'),
+            'user_id' => Auth::id()
+        ]);
+
         $transactionType = $request->input('transaction_type');
 
         if ($transactionType === 'Stock Transfer') {
-            $record = TransactionTransfer::findOrFail($id);
-            $this->authorize('reject', $record);
-
-            $currentBranch = Auth::user()->branch;
-            if ($record->FromBranch != $currentBranch->Id) {
-                $message = 'You can only reject transfers from your branch.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 403);
-                }
-                return redirect()->back()->withErrors(['error' => $message]);
-            }
-
-            $user = Auth::user();
-
-            if (!$this->workflow->canApproveModel($record, $user)) {
-                $message = 'You are not authorized to reject this transfer.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 403);
-                }
-                return redirect()->back()->withErrors(['error' => $message]);
-            }
-
-            $lock = Cache::lock('reject-TransactionTransfer-' . $record->Id, 5);
-            if (!$lock->get()) {
-                $message = 'Transfer has been processed, or another user is working on it.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 409);
-                }
-                return redirect()->back()->with('error', $message);
-            }
-
             try {
-                // Use the service's reject method
-                $this->transferService->reject($record->Id, 'Rejected via UI');
-                
-                Log::info('Stock Transfer rejected successfully', [
-                    'transfer_id' => $record->Id,
-                    'user_id' => $user->Id
-                ]);
+                $record = TransactionTransfer::findOrFail($id);
+                $this->authorize('reject', $record);
 
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Stock Transfer rejected successfully.'
+                $currentBranch = Auth::user()->branch;
+                if ($record->FromBranch != $currentBranch->Id) {
+                    $message = 'You can only reject transfers from your branch.';
+                    Log::warning($message, [
+                        'transfer_branch' => $record->FromBranch,
+                        'user_branch' => $currentBranch->Id
                     ]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 403);
+                    }
+                    return redirect()->back()->withErrors(['error' => $message]);
                 }
 
-                return redirect()->route('transactionsapproval.index', ['transaction_type' => 'Stock Transfer'])
-                    ->with('success', 'Stock Transfer rejected successfully.');
-            } catch (ErroredException $e) {
-                $errorMessage = $e->getMessage();
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $errorMessage
-                    ], 400);
+                $user = Auth::user();
+
+                if (!$this->workflow->canApproveModel($record, $user)) {
+                    $message = 'You are not authorized to reject this transfer.';
+                    Log::warning($message, [
+                        'transfer_id' => $record->Id,
+                        'user_id' => $user->Id
+                    ]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 403);
+                    }
+                    return redirect()->back()->withErrors(['error' => $message]);
                 }
-                return redirect()->back()->with('error', $errorMessage);
+
+                $lock = Cache::lock('reject-TransactionTransfer-' . $record->Id, 10);
+                if (!$lock->get()) {
+                    $message = 'Transfer has been processed, or another user is working on it.';
+                    Log::warning($message, ['transfer_id' => $record->Id]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 409);
+                    }
+                    return redirect()->back()->with('error', $message);
+                }
+
+                try {
+                    // Use the service's reject method
+                    $this->transferService->reject($record->Id, 'Rejected via UI');
+                    
+                    Log::info('Stock Transfer rejected successfully', [
+                        'transfer_id' => $record->Id,
+                        'user_id' => $user->Id
+                    ]);
+
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Stock Transfer rejected successfully.'
+                        ]);
+                    }
+
+                    return redirect()->route('transactionsapproval.index', ['transaction_type' => 'Stock Transfer'])
+                        ->with('success', 'Stock Transfer rejected successfully.');
+                } finally {
+                    optional($lock)->release();
+                }
             } catch (Exception $e) {
-                Log::error('Error rejecting stock transfer: ' . $e->getMessage());
+                Log::error('Error rejecting stock transfer: ' . $e->getMessage(), [
+                    'transfer_id' => $id,
+                    'user_id' => Auth::id(),
+                    'exception' => $e
+                ]);
                 
-                $errorMessage = 'Unexpected error, try again later.';
-                $errorLower = strtolower($e->getMessage());
+                $errorMessage = $this->getErrorMessage($e);
                 
-                if (str_contains($errorLower, 'cannot approve your own submission') || 
-                    str_contains($errorLower, 'maker-checker')) {
-                    $errorMessage = 'You cannot reject your own submission. Please have another user review this transfer.';
-                } elseif (str_contains($errorLower, 'already rejected') || 
-                         str_contains($errorLower, 'already actioned')) {
-                    $errorMessage = 'This transfer has already been rejected or processed.';
-                } elseif (str_contains($errorLower, 'not in rejectable status') ||
-                         str_contains($errorLower, 'no pending approval found')) {
-                    $errorMessage = 'This transfer cannot be rejected in its current status or no pending approval found for your user.';
-                }
-
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
@@ -484,104 +498,93 @@ class TransactionApprovalController extends Controller
                 }
                 
                 return redirect()->back()->with('error', $errorMessage);
-            } finally {
-                optional($lock)->release();
             }
         }
 
         if ($transactionType === 'Stock Adjustment') {
-            $record = StockAdjustment::findOrFail($id);
-            $this->authorize('reject', $record);
-
-            $currentBranch = Auth::user()->branch;
-            if ($record->Branch != $currentBranch->Id) {
-                $message = 'You can only reject adjustments for your branch.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 403);
-                }
-                return redirect()->back()->withErrors(['error' => $message]);
-            }
-
-            $user = Auth::user();
-
-            if (!$this->workflow->canApproveModel($record, $user)) {
-                $message = 'You are not authorized to reject this adjustment.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 403);
-                }
-                return redirect()->back()->withErrors(['error' => $message]);
-            }
-
-            $lock = Cache::lock('reject-StockAdjustment-' . $record->Id, 5);
-            if (!$lock->get()) {
-                $message = 'Adjustment has been processed, or another user is working on it.';
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $message
-                    ], 409);
-                }
-                return redirect()->back()->with('error', $message);
-            }
-
             try {
-                // Use the adjustment service's reject method if it exists
-                // If not, use the workflow directly
-                if (method_exists($this->adjustmentService, 'reject')) {
-                    $this->adjustmentService->reject($record->Id, 'Rejected via UI');
-                } else {
-                    // Fallback to workflow if service doesn't have reject method
-                    DB::transaction(function () use ($record, $user) {
-                        $this->workflow->reject($record, $user, Transfers::Rejected, 'Rejected via UI');
-                    });
-                }
-                
-                Log::info('Stock Adjustment rejected successfully', [
-                    'adjustment_id' => $record->Id,
-                    'user_id' => $user->Id
-                ]);
+                $record = StockAdjustment::findOrFail($id);
+                $this->authorize('reject', $record);
 
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Stock Adjustment rejected successfully.'
+                $currentBranch = Auth::user()->branch;
+                if ($record->Branch != $currentBranch->Id) {
+                    $message = 'You can only reject adjustments for your branch.';
+                    Log::warning($message, [
+                        'adjustment_branch' => $record->Branch,
+                        'user_branch' => $currentBranch->Id
                     ]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 403);
+                    }
+                    return redirect()->back()->withErrors(['error' => $message]);
                 }
 
-                return redirect()->route('transactionsapproval.index', ['transaction_type' => 'Stock Adjustment'])
-                    ->with('success', 'Stock Adjustment rejected successfully.');
-            } catch (ErroredException $e) {
-                $errorMessage = $e->getMessage();
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => $errorMessage
-                    ], 400);
+                $user = Auth::user();
+
+                if (!$this->workflow->canApproveModel($record, $user)) {
+                    $message = 'You are not authorized to reject this adjustment.';
+                    Log::warning($message, [
+                        'adjustment_id' => $record->Id,
+                        'user_id' => $user->Id
+                    ]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 403);
+                    }
+                    return redirect()->back()->withErrors(['error' => $message]);
                 }
-                return redirect()->back()->with('error', $errorMessage);
+
+                $lock = Cache::lock('reject-StockAdjustment-' . $record->Id, 10);
+                if (!$lock->get()) {
+                    $message = 'Adjustment has been processed, or another user is working on it.';
+                    Log::warning($message, ['adjustment_id' => $record->Id]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $message
+                        ], 409);
+                    }
+                    return redirect()->back()->with('error', $message);
+                }
+
+                try {
+                    // Use the service's reject method
+                    $this->adjustmentService->reject($record->Id, 'Rejected via UI');
+                    
+                    Log::info('Stock Adjustment rejected successfully', [
+                        'adjustment_id' => $record->Id,
+                        'user_id' => $user->Id
+                    ]);
+
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Stock Adjustment rejected successfully.'
+                        ]);
+                    }
+
+                    return redirect()->route('transactionsapproval.index', ['transaction_type' => 'Stock Adjustment'])
+                        ->with('success', 'Stock Adjustment rejected successfully.');
+                } finally {
+                    optional($lock)->release();
+                }
             } catch (Exception $e) {
-                Log::error('Error rejecting stock adjustment: ' . $e->getMessage());
+                Log::error('Error rejecting stock adjustment: ' . $e->getMessage(), [
+                    'adjustment_id' => $id,
+                    'user_id' => Auth::id(),
+                    'exception' => $e
+                ]);
                 
-                $errorMessage = 'Unexpected error, try again later.';
-                $errorLower = strtolower($e->getMessage());
+                $errorMessage = $this->getErrorMessage($e);
                 
-                if (str_contains($errorLower, 'cannot approve your own submission') || 
-                    str_contains($errorLower, 'maker-checker')) {
-                    $errorMessage = 'You cannot reject your own submission. Please have another user review this adjustment.';
-                } elseif (str_contains($errorLower, 'already rejected') || 
-                         str_contains($errorLower, 'already actioned')) {
-                    $errorMessage = 'This adjustment has already been rejected or processed.';
-                } elseif (str_contains($errorLower, 'not in rejectable status') ||
-                         str_contains($errorLower, 'no pending approval found')) {
-                    $errorMessage = 'This adjustment cannot be rejected in its current status or no pending approval found for your user.';
-                }
-
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
@@ -590,12 +593,12 @@ class TransactionApprovalController extends Controller
                 }
                 
                 return redirect()->back()->with('error', $errorMessage);
-            } finally {
-                optional($lock)->release();
             }
         }
 
         $message = 'Unknown transaction type.';
+        Log::error($message, ['transaction_type' => $transactionType]);
+        
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,
@@ -603,5 +606,27 @@ class TransactionApprovalController extends Controller
             ], 400);
         }
         return redirect()->back()->with('error', $message);
+    }
+
+    private function getErrorMessage(Exception $e): string
+    {
+        $errorLower = strtolower($e->getMessage());
+        
+        if (str_contains($errorLower, 'cannot approve your own submission') || 
+            str_contains($errorLower, 'maker-checker')) {
+            return 'You cannot approve your own submission. Please have another user approve this transaction.';
+        } elseif (str_contains($errorLower, 'already approved') || 
+                 str_contains($errorLower, 'already rejected') ||
+                 str_contains($errorLower, 'already actioned')) {
+            return 'This transaction has already been processed.';
+        } elseif (str_contains($errorLower, 'not in approvable status') ||
+                 str_contains($errorLower, 'not in rejectable status') ||
+                 str_contains($errorLower, 'no pending approval found')) {
+            return 'This transaction cannot be processed in its current status or no pending approval found for your user.';
+        } elseif (str_contains($errorLower, 'insufficient stock')) {
+            return 'Insufficient stock available for one or more items.';
+        }
+
+        return 'An unexpected error occurred. Please try again or contact support.';
     }
 }

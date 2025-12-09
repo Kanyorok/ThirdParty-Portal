@@ -44,4 +44,10 @@ return [
 
 
     ],
+
+    'stockadjustmentId' => [
+        'Approved' => \App\Enums\Inventory\Transfers::Approved->value,  // 'Ap'
+        'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'
+        'Pending' => \App\Enums\Inventory\Transfers::Pending->value,  // 'P'
+    ],
 ];

@@ -16,10 +16,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Inventory\StockTransaction;
 use App\Services\Workflow\ApprovalWorkflow;
+use App\Models\Inventory\InterBranchRequisition;
 use Throwable;
 
 class TransactionTransferService
 {
+    protected ApprovalWorkflow $workflow;
+
+    public function __construct(ApprovalWorkflow $workflow)
+    {
+                $this->workflow = new ApprovalWorkflow('TransferStatus','Status');
+
+    }
+
     public function getHQBranchId(): int
     {
         $hqBranch = Branch::where('IsHQ', 1)->first();
@@ -39,17 +48,14 @@ class TransactionTransferService
     {
         Log::info('Creating new transfer', $data);
 
-        $pendingStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Pending')->value('ID');
-        $inTransitStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
-
-        $data['Status'] = $pendingStatusId ?? $data['Status'] ?? null;
+        $data['Status'] = Transfers::Pending->value;
 
         if ($data['RequisitionType'] === 'procurement') {
             $requisition = GoodsReceipt::findOrFail($data['RequisitionId']);
             $fromBranch = $this->getHQBranchId();
             $toBranch = $data['ToBranch']; 
         } else {
-            $requisition = \App\Models\Inventory\InterBranchRequisition::findOrFail($data['RequisitionId']);
+            $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
             $fromBranch = $requisition->FromBranch;
             $toBranch = $requisition->ToBranch;
         }
@@ -65,7 +71,7 @@ class TransactionTransferService
             'FromBranch' => $fromBranch,
             'ToBranch' => $toBranch,
             'RequisitionType' => $data['RequisitionType'],
-            'Status' => $pendingStatusId,
+            'Status' => Transfers::Pending->value,
             'CreatedBy' => Auth::id(),
             'ModifiedBy' => Auth::id(),
             'CreatedOn' => now(),
@@ -83,9 +89,8 @@ class TransactionTransferService
         ]);
 
         try {
-            // Create workflow instance and submit for approval - SAME PATTERN AS INTERBRANCH
-            $transferflow = new ApprovalWorkflow('TransferStatus', 'Status');
-            $transferflow->submit(
+            // Create workflow instance and submit for approval
+            $this->workflow->submit(
                 $transfer,
                 Auth::user(),
                 Transfers::Pending,
@@ -95,7 +100,7 @@ class TransactionTransferService
             Log::info('Workflow submitted for transfer', [
                 'transfer_id' => $transfer->Id,
                 'user_id' => Auth::id(),
-                'status_id' => $transfer->Status,
+                'status' => $transfer->Status,
             ]);
         } catch (Exception $e) {
             Log::error('Failed to submit workflow for transfer', [
@@ -199,7 +204,7 @@ class TransactionTransferService
     
     public function approve(int $id, string $comments = null): void
     {
-        Log::info('Starting transfer approval', [
+        Log::info('=== TransactionTransferService::approve START ===', [
             'transfer_id' => $id,
             'user_id' => Auth::id(),
             'comments' => $comments
@@ -217,17 +222,13 @@ class TransactionTransferService
                 'user_id' => $user->Id
             ]);
 
-            // Create workflow instance and approve - SAME PATTERN AS INTERBRANCH
-            $workflow = new ApprovalWorkflow('TransferStatus', 'Status');
-            
-            // Use workflow to approve - SAME PATTERN AS INTERBRANCH
-            $workflow->approve($transfer, $user, Transfers::InTransit, $comments ?? 'Transfer Approved');
+            // Use workflow to approve
+            $this->workflow->approve($transfer, $user, Transfers::InTransit, $comments ?? 'Transfer Approved');
 
             Log::info('Workflow approval completed successfully');
 
             // Update transfer status to In Transit
-            $inTransitStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
-            $transfer->Status = $inTransitStatusId;
+            $transfer->Status = Transfers::InTransit->value;
             $transfer->ModifiedBy = $user->Id;
             $transfer->ModifiedOn = now();
             $transfer->save();
@@ -339,7 +340,7 @@ class TransactionTransferService
                     'Reason' => $reasonId,
                     'Source' => $sourceId,
                     'SourceID' => $transfer->Id,
-                    'Status' => $inTransitStatusId,
+                    'Status' => Transfers::InTransit->value,
                     'Remarks' => $item->Remarks,
                     'CreatedBy' => $user->Id,
                     'CreatedOn' => now(),
@@ -354,15 +355,16 @@ class TransactionTransferService
 
             DB::commit();
             
-            Log::info('Transfer approved successfully', [
+            Log::info('=== TransactionTransferService::approve SUCCESS ===', [
                 'transfer_id' => $transfer->Id,
                 'user_id' => $user->Id
             ]);
         } catch (Throwable $th) {
             DB::rollBack();
-            Log::error('Transfer approval failed: ' . $th->getMessage(), [
+            Log::error('=== TransactionTransferService::approve FAILED ===', [
                 'transfer_id' => $id,
                 'user_id' => Auth::id(),
+                'error' => $th->getMessage(),
                 'exception' => $th,
                 'trace' => $th->getTraceAsString()
             ]);
@@ -372,7 +374,7 @@ class TransactionTransferService
 
     public function reject(int $id, string $comments = null): void
     {
-        Log::info('Starting transfer rejection', [
+        Log::info('=== TransactionTransferService::reject START ===', [
             'transfer_id' => $id,
             'user_id' => Auth::id(),
             'comments' => $comments
@@ -388,17 +390,13 @@ class TransactionTransferService
                 'user_id' => $user->Id
             ]);
 
-            // Create workflow instance and reject - SAME PATTERN AS INTERBRANCH
-            $workflow = new ApprovalWorkflow('TransferStatus', 'Status');
-            
-            // Use workflow to reject - SAME PATTERN AS INTERBRANCH
-            $workflow->reject($transfer, $user, Transfers::Rejected, $comments ?? 'Rejected via UI');
+            // Use workflow to reject
+            $this->workflow->reject($transfer, $user, Transfers::Rejected, $comments ?? 'Rejected via UI');
 
             Log::info('Workflow rejection completed successfully');
 
             // Update transfer status to Rejected
-            $rejectedStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Rejected')->value('ID');
-            $transfer->Status = $rejectedStatusId;
+            $transfer->Status = Transfers::Rejected->value;
             $transfer->ModifiedBy = $user->Id;
             $transfer->ModifiedOn = now();
             $transfer->save();
@@ -407,14 +405,15 @@ class TransactionTransferService
                 ->withProperties(['attributes' => $transfer->toArray()])
                 ->log('Rejected Transaction Transfer');
             
-            Log::info('Transfer rejected successfully', [
+            Log::info('=== TransactionTransferService::reject SUCCESS ===', [
                 'transfer_id' => $transfer->Id,
                 'new_status' => $transfer->Status
             ]);
         } catch (Throwable $th) {
-            Log::error('Transfer rejection failed: ' . $th->getMessage(), [
+            Log::error('=== TransactionTransferService::reject FAILED ===', [
                 'transfer_id' => $id,
                 'user_id' => Auth::id(),
+                'error' => $th->getMessage(),
                 'exception' => $th,
                 'trace' => $th->getTraceAsString()
             ]);
@@ -424,9 +423,7 @@ class TransactionTransferService
 
     public function getApprovedTransfers()
     {
-        $inTransitId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
-
-        return TransactionTransfer::where('Status', $inTransitId)
+        return TransactionTransfer::where('Status', Transfers::InTransit->value)
             ->orderByDesc('CreatedOn')
             ->get(['Id', 'TransferId', 'TransferDate', 'FromBranch', 'ToBranch']);
     }
