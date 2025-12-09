@@ -2,65 +2,48 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class FinanceModuleTransactionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $now = Carbon::now();
 
-        // Mapping: TransactionTypeID => ModuleID
-        $mappings = [
-            1 => 300000,
-            2 => 300000,
-            3 => 300000,
-            4 => 300000,
-            5 => 400000,
-            6 => 400000,
-            7 => 500000,
-            8 => 500000,
-            9 => 600000,
-            10 => 600000,
-            11 => 800000,
-            12 => 800000,
-            13 => 900000,
-            14 => 900000,
-
-            //Finance
-            15 => 1100000,
-            16 => 1100000,
-            17 => 1100000,
-            18 => 1100000,
-            19 => 1100000,
-            20 => 1100000,
-            21 => 1100000,
-            22 => 1100000,
-
+        // Define the configuration: ModuleID => [TransactionTypeIDs]
+        $moduleConfig = [
+            300000  => range(1, 4),      // 1, 2, 3, 4
+            400000  => [5, 6],
+            500000  => [7, 8],
+            600000  => [9, 10],
+            800000  => [11, 12],
+            900000  => [13, 14],
+            1100000 => range(15, 22),    // 15 through 22
         ];
 
-        // Build the insert array
-        $insertData = [];
-        foreach ($mappings as $transactionTypeId => $moduleId) {
-            $insertData[] = [
-                'ModuleID' => $moduleId,
-                'TransactionTypeID' => $transactionTypeId,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ];
+        $data = [];
+
+        foreach ($moduleConfig as $moduleId => $transactionTypes) {
+            foreach ($transactionTypes as $typeId) {
+                $data[] = [
+                    'ModuleID'          => $moduleId,
+                    'TransactionTypeID' => $typeId,
+                    'CreatedBy'         => 1,
+                    'CreatedOn'         => $now,
+                    'ModifiedBy'        => 1,
+                    'ModifiedOn'        => $now,
+                ];
+            }
         }
 
-        // Insert into the table
-        DB::table('t_FinanceModuleTransactions')->insert($insertData);
+        // upsert prevents duplicates.
+        // Note: Requires a unique key/index on ['ModuleID', 'TransactionTypeID'] in your DB.
+        DB::table('t_FinanceModuleTransactions')->upsert(
+            $data,
+            ['ModuleID', 'TransactionTypeID'], // The unique columns
+            ['ModifiedOn', 'ModifiedBy']       // Columns to update if record exists
+        );
     }
 }

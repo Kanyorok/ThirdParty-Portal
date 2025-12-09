@@ -13,7 +13,10 @@ use App\Models\Finance\ChequeBook;
 use App\Models\Finance\FinanceGLMapping;
 use App\Services\ChequeValidationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Services\Finance\TransactionService;
 
 class ChequeController extends Controller
 {
@@ -21,10 +24,12 @@ class ChequeController extends Controller
     const CASHBOOK_MODULE_ID = 'FIN002';
 
     protected $validationService;
+    protected $transactionService;
 
-    public function __construct(ChequeValidationService $validationService)
+    public function __construct(ChequeValidationService $validationService, TransactionService $transactionService)
     {
         $this->validationService = $validationService;
+        $this->transactionService = $transactionService;
     }
 
     public function index(Request $request)
@@ -159,7 +164,7 @@ class ChequeController extends Controller
                         }
                     }
 
-                    // Create cheque record (as before)
+                    // Create cheque record with Draft status
                     $row = Cheque::create([
                         'Direction' => 'ISSUED',
                         'BankAccountID' => $book->BankAccountID,
@@ -173,13 +178,13 @@ class ChequeController extends Controller
                         'PartyType' => $request->PartyType,
                         'PartyID' => $request->PartyID,
                         'PartyName' => $request->PartyName,
-                        'Status' => 'Issued',
+                        'Status' => 'Draft',
                         'Reference' => $request->Reference,
                         'Narration' => $request->Narration,
                     ]);
 
-                    // Consume the leaf
-                    $leaf->Status = 'Issued';
+                    // Mark the leaf as Draft
+                    $leaf->Status = 'Draft';
                     $leaf->ChequeID = $row->ChequeID;
                     $leaf->UsedOn = now()->toDateString();
                     $leaf->save();
@@ -193,7 +198,7 @@ class ChequeController extends Controller
                     $book->save();
 
                     return redirect()->route('finance.cheques.show', $row->ChequeID)
-                        ->with('success', 'Issued cheque recorded; leaf consumed.');
+                        ->with('success', 'Cheque created as Draft. Please issue it to complete the transaction.');
                 });
             }
 
@@ -319,13 +324,20 @@ class ChequeController extends Controller
         $row = Cheque::with(['bankAccount.bank', 'chequeBook', 'currency'])->findOrFail($id);
         $amountInWords = $this->numberToWords($row->Amount);
         
-        // Fetch CodeDetails
+        // Fetch CodeDetails for statuses and party types
         $chequeLeafStatuses = CodeDetail::where('CodeID', 'ChequeLeafStatus')
             ->where('IsActive', 1)
             ->orderBy('DisplayOrder')
-            ->get();
+            ->get()
+            ->keyBy('Value'); // Key by Value for easy lookup
+        
+        $chequePartyTypes = CodeDetail::where('CodeID', 'ChequePartyType')
+            ->where('IsActive', 1)
+            ->orderBy('DisplayOrder')
+            ->get()
+            ->keyBy('Value'); // Key by Value for easy lookup
             
-        return view('finance.cheques.show', compact('row', 'amountInWords', 'chequeLeafStatuses'));
+        return view('finance.cheques.show', compact('row', 'amountInWords', 'chequeLeafStatuses', 'chequePartyTypes'));
     }
 
     private function numberToWords($number) {
@@ -652,6 +664,163 @@ class ChequeController extends Controller
             }
 
             return redirect()->route('finance.cheques.show', $row->ChequeID)->with('success', 'Cheque cancelled.');
+        }
+    }
+
+    /**
+     * Issue or reject a draft cheque (similar to journal approval workflow)
+     * Approve = Issue the cheque and record transaction with type 22
+     * Reject = Mark cheque as rejected
+     */
+    public function issueCheque(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'action_type' => 'required|in:approve,reject',
+            'Reason' => 'required|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $cheque = Cheque::with(['bankAccount', 'chequeBook', 'currency'])->findOrFail($id);
+
+            // Ensure cheque is in Draft status
+            if ($cheque->Status !== 'Draft') {
+                return back()->with('error', 'Only draft cheques can be issued or rejected.');
+            }
+
+            if ($validated['action_type'] === 'reject') {
+                // Reject the draft cheque
+                $cheque->update([
+                    'Status' => 'Rejected',
+                    'Narration' => trim(($cheque->Narration ? $cheque->Narration . '; ' : '') . 'Rejected: ' . $validated['Reason']),
+                ]);
+
+                // Update leaf status if exists
+                if ($cheque->ChequeBookID) {
+                    $leaf = \App\Models\Finance\ChequeLeaf::where('ChequeBookID', $cheque->ChequeBookID)
+                        ->where('ChequeNumber', $cheque->ChequeNumber)
+                        ->first();
+                    if ($leaf) {
+                        $leaf->Status = 'Rejected';
+                        $leaf->save();
+                    }
+                }
+
+                activity('Cheque Issuance')
+                    ->performedOn($cheque)
+                    ->causedBy(Auth::id())
+                    ->withProperties(['action' => 'rejected', 'cheque_id' => $cheque->ChequeID])
+                    ->log('Rejected Draft Cheque #' . $cheque->ChequeNumber);
+
+                DB::commit();
+                return redirect()->route('finance.cheques.index', ['dir' => 'ISSUED'])
+                    ->with('success', 'Cheque #' . $cheque->ChequeNumber . ' rejected successfully.');
+
+            } elseif ($validated['action_type'] === 'approve') {
+                // Approve and issue the cheque
+                $cheque->update([
+                    'Status' => 'Issued',
+                    'Narration' => trim(($cheque->Narration ? $cheque->Narration . '; ' : '') . 'Issued: ' . $validated['Reason']),
+                ]);
+
+                // Update leaf status to Issued
+                if ($cheque->ChequeBookID) {
+                    $leaf = \App\Models\Finance\ChequeLeaf::where('ChequeBookID', $cheque->ChequeBookID)
+                        ->where('ChequeNumber', $cheque->ChequeNumber)
+                        ->first();
+                    if ($leaf) {
+                        $leaf->Status = 'Issued';
+                        $leaf->save();
+                    }
+                }
+
+                // Record transaction with type 22 (Cheque Issue) using TransactionService
+                $payload = [
+                    'ModuleID' => 1100000, // Finance module
+                    'TransactionTypeID' => 22, // Cheque Issue transaction type
+                    'ThirdPartyID' => null, // Cheques don't have third party in transactions table
+                    'TransactionDate' => $cheque->ChequeDate ?? now()->toDateString(),
+                    'ReferenceNumber' => 'CHQ-ISSUE-' . $cheque->ChequeID,
+                    'TransactionType' => 'CHQ_ISSUE',
+                    'Amount' => $cheque->Amount,
+                    'TaxAmount' => 0, // Cheque issuance has no tax
+                    'BranchID' => session('LoginBranchId', 1), // Add BranchID for consistency
+                    'DepartmentID' => null,
+                    'CurrencyID' => $cheque->CurrencyID,
+                    'CurrencyCode' => $cheque->currency?->Code ?? 'KES',
+                    'ExchangeRate' => 1,
+                    'Narration' => 'Issue Cheque #' . $cheque->ChequeNumber . ' - ' . ($cheque->PartyName ?? 'N/A'),
+                    'SourceTable' => 't_Cheques',
+                    'SystemDescription' => 'Cheque Issue - ' . $cheque->ChequeNumber,
+                    'IdempotencyKey' => 'CHQ-ISSUE-' . $cheque->ChequeID,
+                ];
+
+                try {
+                    $result = $this->transactionService->postFromTypeMapping($payload);
+
+                    // Log the full result for debugging
+                    Log::info('Transaction Service Result', [
+                        'cheque_id' => $cheque->ChequeID,
+                        'result' => $result
+                    ]);
+
+                    // Check if result is an array and has status key
+                    if (!is_array($result) || !isset($result['status'])) {
+                        Log::error('Transaction service returned invalid result', [
+                            'cheque_id' => $cheque->ChequeID,
+                            'payload' => $payload,
+                            'result' => $result
+                        ]);
+                        throw new \Exception('Transaction service returned an invalid response. Please check the logs for details.');
+                    }
+
+                    if (!in_array($result['status'], ['posted', 'success', 'exists'], true)) {
+                        $errorMsg = $result['message'] ?? 'Transaction posting failed with unknown status: ' . ($result['status'] ?? 'null');
+                        Log::error('Transaction posting failed', [
+                            'cheque_id' => $cheque->ChequeID,
+                            'payload' => $payload,
+                            'result' => $result
+                        ]);
+                        throw new \Exception('Failed to record transaction: ' . $errorMsg . 
+                            '. Please ensure TransactionTypeID 22 (Cheque Issue) has a GL mapping configured in t_FinanceGLMapping.');
+                    }
+                } catch (\Exception $e) {
+                    // Re-throw with more context if it's not already a formatted exception
+                    Log::error('Transaction service exception', [
+                        'cheque_id' => $cheque->ChequeID,
+                        'payload' => $payload,
+                        'exception' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    
+                    // Check if it's a mapping error
+                    if (strpos($e->getMessage(), 'No active GL mapping') !== false) {
+                        throw new \Exception('GL Mapping Error: ' . $e->getMessage() . 
+                            ' Please configure a GL mapping for ModuleID 1100000, TransactionTypeID 22 in t_FinanceGLMapping.');
+                    }
+                    
+                    // Re-throw the original exception
+                    throw $e;
+                }
+
+                activity('Cheque Issuance')
+                    ->performedOn($cheque)
+                    ->causedBy(Auth::id())
+                    ->withProperties(['action' => 'approved', 'cheque_id' => $cheque->ChequeID])
+                    ->log('Issued Cheque #' . $cheque->ChequeNumber);
+
+                DB::commit();
+                return redirect()->route('finance.cheques.show', $cheque->ChequeID)
+                    ->with('success', 'Cheque #' . $cheque->ChequeNumber . ' issued successfully and transaction recorded.');
+            }
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Cheque Issue Failed: ' . $th->getMessage(), [
+                'cheque_id' => $id,
+                'action_type' => $validated['action_type'] ?? null,
+                'trace' => $th->getTraceAsString()
+            ]);
+            return back()->with('error', 'Cheque issuance failed: ' . $th->getMessage());
         }
     }
 }

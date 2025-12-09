@@ -432,6 +432,7 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     Route::post('cheques/{id}/clear', [ChequeController::class, 'clear'])->name('cheques.clear');     // both
     Route::post('cheques/{id}/bounce', [ChequeController::class, 'bounce'])->name('cheques.bounce');   // both
     Route::post('cheques/{id}/cancel', [ChequeController::class, 'cancel'])->name('cheques.cancel');   // Draft/Issued/OnHand
+    Route::post('cheques/{id}/issue', [ChequeController::class, 'issueCheque'])->name('cheques.issue');  // Draft -> Issued/Rejected
 
     // Optional: spoil a specific unused leaf (mark as not usable)
     Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function ($book, $leaf) {

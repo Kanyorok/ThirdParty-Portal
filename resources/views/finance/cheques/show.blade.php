@@ -3,6 +3,40 @@
 @section('title', 'Cheque Details')
 
 @section('content')
+    @php
+        // Resolve status description and value from CodeDetails at the top level
+        $statusDescription = $row->Status;
+        $statusCodeDetail = $chequeLeafStatuses->firstWhere('Description', $row->Status)
+            ?? $chequeLeafStatuses->firstWhere('Value', $row->Status);
+        if ($statusCodeDetail) {
+            $statusDescription = $statusCodeDetail->Description;
+        }
+        $currentStatusValue = $statusCodeDetail ? $statusCodeDetail->Value : $row->Status;
+        $currentStatus = $row->Status;
+
+        // Helper flags for status checks
+        $isDraft = strtolower($currentStatus) === 'draft' ||
+                  ($statusCodeDetail && strtolower($statusCodeDetail->Description) === 'draft');
+        $isIssued = in_array($currentStatusValue, ['I']) ||
+                   in_array(strtolower($currentStatus), ['issued']) ||
+                   ($statusCodeDetail && strtolower($statusCodeDetail->Description) === 'issued');
+        $isOnHand = in_array($currentStatusValue, ['A']) ||
+                   in_array(strtolower($currentStatus), ['onhand', 'available']) ||
+                   ($statusCodeDetail && in_array(strtolower($statusCodeDetail->Description), ['available', 'onhand']));
+        $isDeposited = in_array($currentStatusValue, ['P', 'PD']) ||
+                      in_array(strtolower($currentStatus), ['deposited', 'posted', 'post-dated cheque']) ||
+                      ($statusCodeDetail && in_array(strtolower($statusCodeDetail->Description), ['posted', 'deposited', 'post-dated cheque']));
+
+        // Resolve party type description
+        $partyTypeDescription = $row->PartyType;
+        if ($row->PartyType && $chequePartyTypes) {
+            $partyTypeCodeDetail = $chequePartyTypes->firstWhere('Value', $row->PartyType)
+                ?? $chequePartyTypes->firstWhere('Description', $row->PartyType);
+            if ($partyTypeCodeDetail) {
+                $partyTypeDescription = $partyTypeCodeDetail->Description;
+            }
+        }
+    @endphp
     <div class="row justify-content-center">
         <div class="col-12">
             {{-- Top Navigation & Title --}}
@@ -41,35 +75,55 @@
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             @php
-                                $badgeClass = match($row->Status) {
-                                    'Cleared' => 'success',
-                                    'Bounced' => 'danger',
-                                    'Deposited' => 'info',
-                                    'OnHand' => 'warning text-dark',
-                                    'Issued' => 'primary',
-                                    'Cancelled' => 'secondary',
+                                // Map status to badge class
+                                $badgeClass = match(strtolower($currentStatusValue)) {
+                                    'c', 'cleared' => 'success',
+                                    'b', 'bounced' => 'danger',
+                                    'p', 'posted', 'deposited' => 'info',
+                                    'a', 'available', 'onhand' => 'warning text-dark',
+                                    'i', 'issued' => 'primary',
+                                    'draft' => 'warning text-dark',
+                                    'rejected' => 'secondary',
+                                    'v', 'void', 'cancelled', 'ca' => 'secondary',
                                     default => 'dark'
                                 };
                             @endphp
-                            <span class="badge bg-{{ $badgeClass }} fs-6 px-3 py-2 rounded-pill">{{ $row->Status }}</span>
-                            
+                            <span class="badge border border-{{ $badgeClass }} text-{{ $badgeClass }} fs-6 px-3 py-2 rounded-pill bg-transparent">
+                                {{ $statusDescription }}
+                            </span>
+
                             {{-- Action Buttons Dropdown or Group --}}
                             @php
-                                $currentStatus = $row->Status;
-                                
                                 // Check if cheque is in an actionable state (not Cleared, Bounced, Cancelled, Void, Spoiled)
-                                $nonActionableStatuses = ['Cleared', 'Bounced', 'Cancelled', 'Void', 'Spoiled', 'C', 'B', 'V', 'S', 'Ca'];
-                                $isActionable = !in_array($currentStatus, $nonActionableStatuses);
+                                $nonActionableStatusValues = ['C', 'B', 'V', 'S', 'Ca']; // Cleared, Bounced, Void, Spoiled, Cancelled
+                                $nonActionableStatusDescriptions = ['Cleared', 'Bounced', 'Cancelled', 'Void', 'Spoiled'];
+                                $isActionable = !in_array($currentStatusValue, $nonActionableStatusValues)
+                                    && !in_array($currentStatus, $nonActionableStatusDescriptions);
                             @endphp
-                            
+
                             @if($isActionable)
                                 <div class="dropdown ms-2">
                                     <button class="btn btn-primary dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                         Actions
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="actionDropdown">
+                                        {{-- Issue (For ISSUED cheques that are Draft) --}}
+                                        @if($row->Direction==='ISSUED' && $isDraft)
+                                            <li>
+                                                <button class="dropdown-item text-success" data-bs-toggle="modal" data-bs-target="#issueApproveModal">
+                                                    <i class="fas fa-check-circle me-2"></i> Issue Cheque
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#issueRejectModal">
+                                                    <i class="fas fa-times-circle me-2"></i> Reject Draft
+                                                </button>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                        @endif
+
                                         {{-- Deposit (For RECEIVED cheques that are OnHand/Available) --}}
-                                        @if($row->Direction==='RECEIVED' && in_array($currentStatus, ['OnHand', 'A', 'Available']))
+                                        @if($row->Direction==='RECEIVED' && $isOnHand)
                                             <li>
                                                 <button class="dropdown-item text-info" data-bs-toggle="modal" data-bs-target="#depositModal">
                                                     <i class="fas fa-piggy-bank me-2"></i> Deposit
@@ -78,8 +132,8 @@
                                         @endif
 
                                         {{-- Clear (For ISSUED/Issued or RECEIVED/Deposited) --}}
-                                        @if( ($row->Direction==='ISSUED' && in_array($currentStatus, ['Issued', 'I'])) || 
-                                             ($row->Direction==='RECEIVED' && in_array($currentStatus, ['Deposited', 'PD', 'Post-Dated Cheque', 'P', 'Posted'])) )
+                                        @if( ($row->Direction==='ISSUED' && $isIssued) ||
+                                             ($row->Direction==='RECEIVED' && $isDeposited) )
                                             <li>
                                                 <button class="dropdown-item text-success" data-bs-toggle="modal" data-bs-target="#clearModal">
                                                     <i class="fas fa-check-double me-2"></i> Mark Cleared
@@ -88,8 +142,8 @@
                                         @endif
 
                                         {{-- Bounce (For RECEIVED/Deposited or ISSUED/Issued) --}}
-                                        @if( ($row->Direction==='RECEIVED' && in_array($currentStatus, ['Deposited', 'PD', 'Post-Dated Cheque', 'P', 'Posted'])) || 
-                                             ($row->Direction==='ISSUED' && in_array($currentStatus, ['Issued', 'I'])) )
+                                        @if( ($row->Direction==='RECEIVED' && $isDeposited) ||
+                                             ($row->Direction==='ISSUED' && $isIssued) )
                                             <li>
                                                 <button class="dropdown-item text-warning" data-bs-toggle="modal" data-bs-target="#bounceModal">
                                                     <i class="fas fa-exclamation-triangle me-2"></i> Mark Bounced
@@ -98,13 +152,18 @@
                                         @endif
 
                                         {{-- Show divider if there are actions above --}}
-                                        @if( ($row->Direction==='RECEIVED' && in_array($currentStatus, ['OnHand', 'A', 'Available', 'Deposited', 'PD', 'Post-Dated Cheque', 'P', 'Posted'])) || 
-                                             ($row->Direction==='ISSUED' && in_array($currentStatus, ['Issued', 'I', 'Draft'])) )
+                                        @if( ($row->Direction==='RECEIVED' && ($isOnHand || $isDeposited)) ||
+                                             ($row->Direction==='ISSUED' && $isIssued) )
                                             <li><hr class="dropdown-divider"></li>
                                         @endif
 
                                         {{-- Cancel (For Draft, Issued, or OnHand) --}}
-                                        @if(in_array($currentStatus, ['Draft', 'Issued', 'OnHand', 'I', 'A', 'Available', 'U', 'Used']))
+                                        @php
+                                            $canCancel = $isDraft || $isIssued || $isOnHand ||
+                                                       in_array($currentStatusValue, ['U']) ||
+                                                       ($statusCodeDetail && in_array(strtolower($statusCodeDetail->Description ?? ''), ['used']));
+                                        @endphp
+                                        @if($canCancel)
                                             <li>
                                                 <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
                                                     <i class="fas fa-ban me-2"></i> Cancel Cheque
@@ -156,7 +215,7 @@
                                 </div>
                                 <div class="text-truncate">
                                     <div class="fw-bold text-dark text-truncate" title="{{ $row->PartyName }}">{{ $row->PartyName ?: 'N/A' }}</div>
-                                    <div class="small text-muted">{{ $row->PartyType }}</div>
+                                    <div class="small text-muted">{{ $partyTypeDescription ?: 'N/A' }}</div>
                                 </div>
                             </div>
                         </div>
@@ -192,7 +251,7 @@
                     </div>
 
                     {{-- Timeline --}}
-                    @if($row->Direction==='RECEIVED' || $row->Status !== 'Issued')
+                    @if($row->Direction==='RECEIVED' || !$isIssued)
                         <div class="row mt-4">
                             <div class="col-12">
                                 <label class="text-muted small fw-bold text-uppercase mb-2">Status Timeline</label>
@@ -239,17 +298,17 @@
                 </div>
                 <div class="card-body p-4 d-flex justify-content-center" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
                     <div id="cheque-preview" class="position-relative shadow" style="width: 850px; height: 380px; background: linear-gradient(to bottom, #ffffff 0%, #fefefe 100%); border: 2px solid #2c3e50; border-radius: 8px; overflow: hidden;">
-                        
+
                         {{-- Watermark - Behind Content --}}
                         <div class="position-absolute w-100 h-100" style="z-index: 0; overflow: hidden;">
-                            <div class="position-absolute top-50 start-50 text-muted fw-bold" 
-                                 style="font-size: 6rem; 
-                                        opacity: 0.04; 
+                            <div class="position-absolute top-50 start-50 text-muted fw-bold"
+                                 style="font-size: 6rem;
+                                        opacity: 0.04;
                                         transform: translate(-50%, -50%) rotate(-35deg);
-                                        pointer-events: none; 
+                                        pointer-events: none;
                                         user-select: none;
                                         letter-spacing: 8px;">
-                                {{ strtoupper($row->Status) }}
+                                {{ strtoupper($statusDescription ?? $row->Status) }}
                             </div>
                         </div>
 
@@ -377,14 +436,14 @@
 
             var printContents = document.getElementById('cheque-preview').outerHTML;
             var iframeDoc = iframe.contentWindow.document;
-            
+
             iframeDoc.open();
             iframeDoc.write('<html><head><title>Print Cheque - #{{ $row->ChequeNumber }}</title>');
             iframeDoc.write('<style>');
             // Reset and base styles
             iframeDoc.write('* { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }');
             iframeDoc.write('body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #fff; padding: 20px; }');
-            
+
             // Bootstrap utility classes we need
             iframeDoc.write('.position-relative { position: relative !important; }');
             iframeDoc.write('.position-absolute { position: absolute !important; }');
@@ -463,14 +522,14 @@
             iframeDoc.write('.shadow { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; }');
             iframeDoc.write('.badge { display: inline-block; padding: 0.35em 0.65em; font-size: 0.75em; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.25rem; }');
             iframeDoc.write('.font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important; }');
-            
+
             // Font Awesome icons (minimal inline)
             iframeDoc.write('.fas { font-family: "Font Awesome 6 Free"; font-weight: 900; display: inline-block; font-style: normal; font-variant: normal; text-rendering: auto; line-height: 1; }');
             iframeDoc.write('.fa-landmark:before { content: "\\f66f"; }');
-            
+
             // Cheque specific styles
             iframeDoc.write('#cheque-preview { box-shadow: none !important; border: 2px solid #000 !important; }');
-            
+
             // Print styles
             iframeDoc.write('@media print {');
             iframeDoc.write('  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }');
@@ -639,4 +698,76 @@
             });
         });
     </script>
+
+    {{-- Issue Approve Modal --}}
+    @if($isDraft)
+        <div class="modal fade" id="issueApproveModal" tabindex="-1" aria-labelledby="issueApproveModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ route('finance.cheques.issue', $row->ChequeID) }}">
+                    @csrf
+                    <input type="hidden" name="action_type" value="approve">
+                    <div class="modal-content rounded-4 shadow">
+                        <div class="modal-header bg-light border-0">
+                            <h5 class="modal-title text-success" id="issueApproveModalLabel">Issue Cheque</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info border-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Are you sure you want to issue this cheque?</strong><br>
+                                <small>Cheque #{{ $row->ChequeNumber }} for {{ $row->currency?->Code }} {{ number_format($row->Amount, 2) }} to {{ $row->PartyName ?? 'N/A' }}</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="approveReason" class="form-label fw-bold">Reason for Issuing <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="Reason" id="approveReason" rows="3" required
+                                          placeholder="Enter reason for issuing this cheque..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-success" type="submit"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                                <i class="fas fa-check-circle me-1"></i> Issue Cheque
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Issue Reject Modal --}}
+        <div class="modal fade" id="issueRejectModal" tabindex="-1" aria-labelledby="issueRejectModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ route('finance.cheques.issue', $row->ChequeID) }}">
+                    @csrf
+                    <input type="hidden" name="action_type" value="reject">
+                    <div class="modal-content rounded-4 shadow">
+                        <div class="modal-header bg-light border-0">
+                            <h5 class="modal-title text-danger" id="issueRejectModalLabel">Reject Draft Cheque</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning border-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Are you sure you want to reject this draft cheque?</strong><br>
+                                <small>Cheque #{{ $row->ChequeNumber }} for {{ $row->currency?->Code }} {{ number_format($row->Amount, 2) }}</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="rejectReason" class="form-label fw-bold">Reason for Rejection <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="Reason" id="rejectReason" rows="3" required
+                                          placeholder="Enter reason for rejecting this draft cheque..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-danger" type="submit"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                                <i class="fas fa-times-circle me-1"></i> Reject Draft
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 @endsection
