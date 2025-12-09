@@ -24,7 +24,7 @@
             <div class="col-md-6">
               <label class="form-label">Tenant / Lease<span class="text-danger">*</span></label>
               <select name="LeaseId" class="form-select" required>
-                <option>--Select the tenant</option>
+                <option  value="">--Select the tenant</option>
                 @foreach ($newtenants as $newtenant)
                   <option value="{{ $newtenant->LeaseID }}">
                       Name:{{ $newtenant->lease->tenant->thirdParty->TradingName }} &nbsp;&nbsp; LeaseNo:
@@ -43,21 +43,21 @@
           <div class="row g-3 mb-3">
             <div class="col-md-3">
               <label class="form-label">Final Inspection Done?<span class="text-danger">*</span></label>
-              <select class="form-select" name="FinalInspection">
+              <select class="form-select" name="FinalInspection" required>
                 <option value="1">Yes</option>
                 <option value="0">No</option>
               </select>
             </div>
             <div class="col-md-3">
               <label class="form-label">All Dues Paid?<span class="text-danger">*</span></label>
-              <select class="form-select" name="AllDuesPaid">
+              <select class="form-select" name="AllDuesPaid" required>
                 <option value="1">Yes</option>
                 <option value="0">No</option>
               </select>
             </div>
             <div class="col-md-3">
               <label class="form-label">Keys Returned?<span class="text-danger">*</span></label>
-              <select class="form-select" name="KeysReturned">
+              <select class="form-select" name="KeysReturned" required>
                 <option value="1">Yes</option>
                 <option value="0">No</option>
               </select>
@@ -65,7 +65,7 @@
             <div class="col-md-3">
               <label class="form-label">Deposit Refunded?<span class="text-danger">*</span></label>
               <select class="form-select" name="DepositRefunded" required>
-                <option>--Select the tenant Type</option>
+                <option  value="">--Select the tenant Type</option>
                 @foreach ($codedetails as $codedetail)
                   <option value="{{ $codedetail->ID }}">{{ $codedetail->Description }}</option>
                 @endforeach

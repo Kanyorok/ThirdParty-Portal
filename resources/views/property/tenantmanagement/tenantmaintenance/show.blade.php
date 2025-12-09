@@ -87,7 +87,6 @@
             </div>
 
             <div>
-                <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-sm btn-primary">Edit</a>
                 <a href="{{ route('addtenant.index') }}" class="btn btn-sm btn-secondary">Back</a>
             </div>
         </div>
