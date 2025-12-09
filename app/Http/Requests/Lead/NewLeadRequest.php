@@ -61,7 +61,7 @@ class NewLeadRequest extends FormRequest
                     return $query->where('CodeID', StaticListsService::MarketingModes);
                 }),
             ],
-            'Phone' => ['required', (new Phone)->countryField('Country'),],
+            'Phone' => ['required', (new Phone)->countryField('Country')],
             'Email' => [
                 'nullable', Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(), 'max:250',
             ],

@@ -126,11 +126,12 @@
                                 </button>
                             </div>
                             <div class="col-12 mt-2">
+                                <div class="table-responsive">
                                 <table id="activeLeadsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                     <thead>
                                     <tr>
-                                        <th>No.</th>
+                                        <th>Image / Logo</th>
                                         <th>Name</th>
                                         <th class="d-none">otherNames</th>
                                         <th>Type</th>
@@ -142,6 +143,7 @@
                                     </thead>
                                     <tbody></tbody>
                                 </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -297,8 +299,8 @@
                         {data: 'Name', name: 'Name'},
                         {data: 'OtherNames', name: 'OtherNames'},
                         {data: 'Type', name: 'Type'},
-                        {data: 'location', name: 'location.Name', searchable: false},
-                        {data: 'industry', name: 'industry.Description', searchable: false},
+                        {data: 'location', name: 'location.Name'},
+                        {data: 'industry', name: 'industry.Description'},
                         {data: 'Status', name: 'Status'},
                         {data: 'LastContacted', name: 'LastContacted'},
                     ], "oLanguage": {
