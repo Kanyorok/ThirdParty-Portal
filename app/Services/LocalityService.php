@@ -18,12 +18,12 @@ class LocalityService
             return ($array) ? [
                 'ID' => $this->locality->ID,
                 'Name' => $this->locality->Name . ' - ' . $this->locality->in?->Name,
-            ] : $this->locality->Name . ' - ' . $this->locality->in?->Name;
+            ] : $this->locality->country?->Flag . ' ' . $this->locality->Name . ' - ' . $this->locality->in?->Name . ', ' . $this->locality->country?->Name;
         }
 
         return ($array) ? [
             'ID' => $this->locality->ID,
             'Name' => $this->locality->Name,
-        ] : $this->locality->Name;
+        ] : $this->locality->country?->Flag . ' ' . $this->locality->Name . ', ' . $this->locality->country?->Name;
     }
 }
