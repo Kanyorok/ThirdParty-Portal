@@ -303,11 +303,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('goods-receipt/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'show'])->name('goods-receipt.show');
     Route::get('goods-receipt/dashboard', [EnhancedGoodsReceiptController::class, 'dashboard'])->name('goods-receipt.dashboard');
 
-    //Tenders
-    Route::get('initiatetender/allowed-categories', [TenderController::class, 'allowedCategories'])
-        ->name('initiatetender.allowedCategories');
-
-    Route::resource('initiatetender', TenderController::class);
+    
 
     // Tender Categories CRUD
     Route::resource('tendercategory', TenderCategoryController::class);
@@ -318,15 +314,37 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::resource('tendertype', TenderTypeController::class);Route::get('/tender-category/generate-code', [TenderCategoryController::class, 'generateCategoryCode'])
     ->name('tendercategory.generateCode');
 
-    //Route for tender approval and Reject
-    Route::post('/tenderapproval', [TenderController::class, 'approveTender'])->name('initiatetender.approve');
-    Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])->name('initiatetender.reject');
+  //tendering routes
+  
+Route::middleware(['auth', 'module:300000'])->prefix('procurement/tendering')->group(function () {
+    
+    // Tender Initiation Routes
+    Route::resource('initiatetender', TenderController::class);
+    
+    // Submit for approval (must be authenticated)
+    Route::post('initiatetender/{id}/submit', [TenderController::class, 'submitForApproval'])
+        ->name('initiatetender.submit');
+    
+    //  Approval/Rejection (must be authenticated)
+    Route::post('/tenderapproval', [TenderController::class, 'approveTender'])
+        ->name('initiatetender.approve');
+    
+    Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])
+        ->name('initiatetender.reject');
+    
+    // Workflow History
+    Route::get('tenders/{id}/workflow-history', [TenderController::class, 'workflowHistory'])
+        ->name('initiatetender.workflow-history');
+    
+    // AJAX Route for Allowed Categories
+    Route::get('/allowed-categories', [TenderController::class, 'allowedCategories'])
+        ->name('initiatetender.allowedCategories');
+    
+    // Other Tender Resources
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
     Route::resource('tenderresponse', TenderResponseController::class);
-    Route::post('procurement/tendering/initiatetender/{id}/submit', [App\Http\Controllers\Procurement\TenderController::class, 'submitForApproval'])->name('initiatetender.submit');
-    // Workflow history route (if not already added)
-Route::get('/tenders/{id}/workflow-history', [TenderController::class, 'workflowHistory'])
-    ->name('initiatetender.workflow-history');
+});
+
 
     Route::resource('tenderopening', TenderOpeningController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);
@@ -631,9 +649,9 @@ Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])
 Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.rfq');
 Route::get('/awards/unified/{id}', [AwardsController::class, 'showUnifiedAward'])->name('awards.unified');
 Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->name('awards.switch-type');
-// Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
-// Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
-// Route::post('/awards/{award}/cancel', [AwardsController::class, 'cancel'])->name('awards.cancel');
+Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
+Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
+Route::post('/awards/{award}/cancel', [AwardsController::class, 'cancel'])->name('awards.cancel');
 
   // Workflow history
     Route::get('/{id}/workflow-history', [AwardsController::class, 'workflowHistory'])->name('workflow-history');

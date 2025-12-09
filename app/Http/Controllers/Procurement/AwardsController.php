@@ -23,7 +23,7 @@ class AwardsController extends Controller
 
     protected ApprovalWorkflow $workflow;
 
-    public construct(ApprovalWorkflow $workflow)
+    public function __construct(ApprovalWorkflow $workflow)
     {
         $this->workflow =$workflow;
     }

@@ -101,7 +101,7 @@ class TenderAward extends Model
     public function winningThirdParty()
     {
         return $this->hasOneThrough(
-            \App\Models\ThirdParies\ThirdParty::class,
+            \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParies\Supplier::class,
             'Id', // Foreign key on suppliers table
             'Id', // Foreign key on third_parties table

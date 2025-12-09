@@ -242,58 +242,115 @@
 </div>
 <script>
 (function () {
-  // ---- DOM refs
-  const tenderCatSel    = document.getElementById('tenderCategory');
-  const itemCatSel      = document.getElementById('itemCategory');
-  const openTender      = document.getElementById('openTender');
-  const restricted      = document.getElementById('restrictedTender');
-  const suppliersSection= document.getElementById('restrictedSuppliersSection');
-  const suppliersList   = document.getElementById('suppliersList');
+  'use strict';
+  
+  // ============================================================================
+  // DOM REFERENCES
+  // ============================================================================
+  const tenderCatSel = document.getElementById('tenderCategory');
+  const itemCatSel = document.getElementById('itemCategory');
+  const openTender = document.getElementById('openTender');
+  const restricted = document.getElementById('restrictedTender');
+  const suppliersSection = document.getElementById('restrictedSuppliersSection');
+  const suppliersList = document.getElementById('suppliersList');
   const supplierMatchCount = document.getElementById('supplierMatchCount');
-  const DEBUG = Boolean(@json(config('app.debug')));
+  const DEBUG = Boolean(@json(config('app.debug', false)));
 
-  // ---- Data injected from Blade
-  // Prequalified suppliers injected from backend; default to [] if unavailable
+  // ============================================================================
+  // DATA FROM BACKEND
+  // ============================================================================
   const suppliers = @json($suppliers ?? []);
-  const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
+  const allItemsWithCategoryIds = @json($allItemsWithCategoryIds ?? []);
   const planItemsByPlan = @json($procurementPlansOutput ?? []);
-  // Pre-filtered list of available plans (excluding already used), populated only after category selection
   const availablePlans = @json(
-    ($procurementPlan ?? collect())->filter(function($p){ return !$p->isUsed(); })
-      ->map(function($p){ return ['PlanID'=>$p->PlanID, 'Title'=>$p->Title, 'ReferenceNumber'=>$p->ReferenceNumber]; })
-      ->values()
+    ($procurementPlan ?? collect())->map(function($p) { 
+      return [
+        'PlanID' => $p->PlanID, 
+        'Title' => $p->Title, 
+        'ReferenceNumber' => $p->ReferenceNumber
+      ]; 
+    })->values()
   );
 
-  // ---- Plan -> Plan Item population
+  // 🔥 DEBUG: Log data on page load
+  if (DEBUG) {
+    console.log('=== TENDER FORM DEBUG ===');
+    console.log('Available Plans:', availablePlans);
+    console.log('Plan Items by Plan:', planItemsByPlan);
+    console.log('All Items with Categories:', allItemsWithCategoryIds.length);
+    console.log('Suppliers:', suppliers.length);
+  }
+
+  // ============================================================================
+  // PLAN ITEMS: Load items for selected plan
+  // ============================================================================
   function loadPlanItemsForPlan() {
     const planSel = document.getElementById('selectedProcurementPlan');
     const itemSel = document.getElementById('planItemSelect');
-    if (!planSel || !itemSel) return;
+    
+    if (!planSel || !itemSel) {
+      console.error('Plan or item select not found');
+      return;
+    }
 
     const planId = planSel.value;
-    itemSel.innerHTML = '<option selected disabled>-- Select Item (Tender-method, not already used) --</option>';
+    itemSel.innerHTML = '<option selected disabled>-- Select Item --</option>';
 
-    const items = (planItemsByPlan && planItemsByPlan[planId]) ? planItemsByPlan[planId] : [];
+    if (!planId) {
+      if (DEBUG) console.log('No plan selected');
+      return;
+    }
+
+    // 🔥 FIX: Ensure planId is treated as string for object key lookup
+    const items = planItemsByPlan[String(planId)] || [];
+    
+    if (DEBUG) {
+      console.log('Loading items for plan:', planId);
+      console.log('Found items:', items.length);
+      console.log('Items data:', items);
+    }
+
+    if (items.length === 0) {
+      const opt = document.createElement('option');
+      opt.disabled = true;
+      opt.textContent = 'No available items in this plan';
+      itemSel.appendChild(opt);
+      return;
+    }
+
     items.forEach(it => {
-      // expected shape: { id: planId, planLineItemId, itemId, name, plannedQty, needId }
       const opt = document.createElement('option');
       opt.value = String(it.planLineItemId);
-      opt.textContent = `${it.name}${it.needId ? ' - ' + it.needId : ''} (Planned: ${it.plannedQty})`;
+      
+      // 🔥 FIX: Show remaining quantity instead of planned quantity
+      const qtyDisplay = it.remainingQty !== undefined ? it.remainingQty : it.plannedQty;
+      opt.textContent = `${it.name}${it.needId ? ' - ' + it.needId : ''} (Available: ${qtyDisplay})`;
+      
       opt.dataset.planId = planId;
       opt.dataset.planLineItemId = it.planLineItemId;
       opt.dataset.itemId = it.itemId;
-      opt.dataset.plannedQty = it.plannedQty;
+      opt.dataset.plannedQty = it.plannedQty || 0;
+      opt.dataset.remainingQty = it.remainingQty || it.plannedQty || 0;
       opt.dataset.needId = it.needId || '';
+      
       itemSel.appendChild(opt);
     });
+
+    if (DEBUG) console.log('Populated item select with', items.length, 'items');
   }
 
+  // ============================================================================
+  // PLAN ITEMS: Add selected item to grid
+  // ============================================================================
   function addPlanItemToGrid() {
     const planSel = document.getElementById('selectedProcurementPlan');
     const itemSel = document.getElementById('planItemSelect');
-    const tbody   = document.querySelector('#planItemsGrid tbody[name="plan_items"]');
+    const tbody = document.querySelector('#planItemsGrid tbody[name="plan_items"]');
 
-    if (!planSel || !itemSel || !tbody) return;
+    if (!planSel || !itemSel || !tbody) {
+      console.error('Required elements not found');
+      return;
+    }
 
     const opt = itemSel.options[itemSel.selectedIndex];
     if (!opt || !opt.dataset.planLineItemId) {
@@ -302,18 +359,22 @@
     }
 
     const planId = opt.dataset.planId;
-    const pli    = opt.dataset.planLineItemId;
+    const pli = opt.dataset.planLineItemId;
     const itemId = opt.dataset.itemId;
     const needId = opt.dataset.needId || '—';
     const plannedQty = Number(opt.dataset.plannedQty || 0);
+    const remainingQty = Number(opt.dataset.remainingQty || plannedQty);
     const label = opt.textContent || 'Item';
 
-    // Avoid duplicates
+    // Check for duplicates
     const compositeKey = `plan-${planId}-${pli}`;
     if (tbody.querySelector(`tr[data-key="${compositeKey}"]`)) {
       alert('This plan item is already added.');
       return;
     }
+
+    // 🔥 FIX: Default qty to remainingQty, not plannedQty
+    const defaultQty = Math.max(1, Math.floor(remainingQty));
 
     const row = document.createElement('tr');
     row.dataset.key = compositeKey;
@@ -322,14 +383,20 @@
       <td>${needId}</td>
       <td>${plannedQty}</td>
       <td>
-        <input type="number" class="form-control form-control-sm" min="1" step="1"
-               name="plan_items[${compositeKey}][qty]" value="${Math.max(1, plannedQty)}" required>
+        <input type="number" class="form-control form-control-sm" 
+               min="1" max="${remainingQty}" step="1"
+               name="plan_items[${compositeKey}][qty]" 
+               value="${defaultQty}" required>
+        <small class="text-muted">Max: ${remainingQty}</small>
       </td>
       <td>
-        <input type="file" class="form-control form-control-sm" name="plan_items[${compositeKey}][specs]">
+        <input type="file" class="form-control form-control-sm" 
+               name="plan_items[${compositeKey}][specs]">
       </td>
       <td>
-        <input type="text" class="form-control form-control-sm" name="plan_items[${compositeKey}][pr_ref]" placeholder="Optional">
+        <input type="text" class="form-control form-control-sm" 
+               name="plan_items[${compositeKey}][pr_ref]" 
+               placeholder="Optional">
       </td>
       <td>
         <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
@@ -340,39 +407,45 @@
     `;
 
     tbody.appendChild(row);
+    
+    if (DEBUG) console.log('Added plan item to grid:', compositeKey);
+    
+    // Update tab status after adding
+    updateTabStatus();
+    
+    // Reset select
+    itemSel.selectedIndex = 0;
   }
 
-  // Remove row handler for plan grid
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.classList.contains('remove-row')) {
-      const tr = e.target.closest('tr');
-      if (tr) tr.remove();
-    }
-  });
-
-  // Expose functions to be callable from inline handlers
-  window.loadPlanItemsForPlan = loadPlanItemsForPlan;
-  window.addPlanItemToGrid = addPlanItemToGrid;
-
-  // ---- Helpersd
-  // ---- Manual Entry: add rows with Item Master select
+  // ============================================================================
+  // MANUAL ITEMS: Add new row
+  // ============================================================================
   let manualRowSeq = 0;
-// 2. UPDATED: Add Manual Item Row
+
   function addManualItemRow() {
     const tbody = document.getElementById('manualItemsBody');
-    if (!tbody) return;
+    if (!tbody) {
+      console.error('Manual items tbody not found');
+      return;
+    }
 
     manualRowSeq += 1;
     const key = `m${Date.now()}_${manualRowSeq}`;
     const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
 
-    // Build options logic...
-    let optionsHtml = '';
+    // 🔥 FIX: Build options based on selected category
+    let optionsHtml = '<option selected disabled>-- Select Item --</option>';
+    
     if (selectedItemCategory) {
-      optionsHtml = getFilteredItemOptions(selectedItemCategory);
+      // Filter items by selected category
+      allItemsWithCategoryIds
+        .filter(item => String(item.Category) === String(selectedItemCategory))
+        .forEach(item => {
+          optionsHtml += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+        });
     } else {
-      optionsHtml = '<option selected disabled>-- Select Item (choose Item Category first) --</option>';
-      (allItemsWithCategoryIds || []).forEach(item => {
+      // Show all items if no category selected
+      allItemsWithCategoryIds.forEach(item => {
         optionsHtml += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
       });
     }
@@ -387,8 +460,10 @@
         </select>
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" min="1" step="1"
-               name="manual_items[${key}][qty]" value="1" required>
+        <input type="number" class="form-control form-control-sm" 
+               min="1" step="1"
+               name="manual_items[${key}][qty]" 
+               value="1" required>
       </td>
       <td>
         <input type="file" class="form-control form-control-sm"
@@ -396,7 +471,8 @@
       </td>
       <td>
         <input type="text" class="form-control form-control-sm"
-               name="manual_items[${key}][pr_ref]" placeholder="Optional">
+               name="manual_items[${key}][pr_ref]" 
+               placeholder="Optional">
       </td>
       <td>
         <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
@@ -405,32 +481,97 @@
 
     tbody.appendChild(tr);
 
-    // Ensure options are filtered
-    updateManualItemSelects();
-    
-    // --- NEW LINE: Lock the Plan tab now that we have a manual item ---
+    if (DEBUG) console.log('Added manual item row:', key);
+
+    // Update tab status
     updateTabStatus();
   }
 
-  // Expose for the "Add Item" button
-  window.addManualItemRow = addManualItemRow;
+  // ============================================================================
+  // TAB LOCKING: Prevent mixing plan and manual items
+  // ============================================================================
+  function updateTabStatus() {
+    const planBody = document.querySelector('#planItemsGrid tbody[name="plan_items"]');
+    const manualBody = document.getElementById('manualItemsBody');
+    const manualTabBtn = document.getElementById('manual-tab');
+    const planTabBtn = document.getElementById('fromPlan-tab');
 
-  // Auto-add a first row when opening the Manual Entry tab if empty
-  const manualTabBtn = document.getElementById('manual-tab');
-  if (manualTabBtn) {
-    // When Bootstrap finishes showing the tab
-    manualTabBtn.addEventListener('shown.bs.tab', () => {
-      const body = document.getElementById('manualItemsBody');
-      if (body && body.children.length === 0) addManualItemRow();
-    });
-    // Fallback: on click (in case shown.bs.tab isn't available)
-    manualTabBtn.addEventListener('click', () => {
-      const body = document.getElementById('manualItemsBody');
-      if (body && body.children.length === 0) addManualItemRow();
+    const planCount = planBody ? planBody.children.length : 0;
+    const manualCount = manualBody ? manualBody.children.length : 0;
+
+    // Reset
+    if (manualTabBtn) {
+      manualTabBtn.classList.remove('disabled');
+      manualTabBtn.removeAttribute('disabled');
+      manualTabBtn.removeAttribute('title');
+    }
+
+    if (planTabBtn) {
+      planTabBtn.classList.remove('disabled');
+      planTabBtn.removeAttribute('disabled');
+      planTabBtn.removeAttribute('title');
+    }
+
+    // Apply locking logic
+    if (planCount > 0 && manualTabBtn) {
+      manualTabBtn.classList.add('disabled');
+      manualTabBtn.setAttribute('disabled', 'disabled');
+      manualTabBtn.title = "Cannot add manual items while plan items exist";
+    } else if (manualCount > 0 && planTabBtn) {
+      planTabBtn.classList.add('disabled');
+      planTabBtn.setAttribute('disabled', 'disabled');
+      planTabBtn.title = "Cannot add plan items while manual items exist";
+    }
+  }
+
+  // ============================================================================
+  // ROW REMOVAL: Remove from grid
+  // ============================================================================
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.classList.contains('remove-row')) {
+      const tr = e.target.closest('tr');
+      if (tr) {
+        tr.remove();
+        updateTabStatus();
+      }
+    }
+  });
+
+  // ============================================================================
+  // ITEM CATEGORY: Update manual item selects when category changes
+  // ============================================================================
+  function updateManualItemSelects() {
+    const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
+    
+    document.querySelectorAll('.manual-item-select').forEach(select => {
+      const prevValue = select.value;
+      
+      let optionsHtml = '<option selected disabled>-- Select Item --</option>';
+      
+      if (selectedItemCategory) {
+        allItemsWithCategoryIds
+          .filter(item => String(item.Category) === String(selectedItemCategory))
+          .forEach(item => {
+            optionsHtml += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+          });
+      } else {
+        allItemsWithCategoryIds.forEach(item => {
+          optionsHtml += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+        });
+      }
+      
+      select.innerHTML = optionsHtml;
+      
+      // Restore previous value if still available
+      if ([...select.options].some(opt => opt.value === prevValue)) {
+        select.value = prevValue;
+      }
     });
   }
 
-  // ---- Helpers
+  // ============================================================================
+  // TENDER CATEGORY: Refresh item categories via AJAX
+  // ============================================================================
   async function refreshItemCategories() {
     const catId = tenderCatSel && tenderCatSel.value ? tenderCatSel.value : '';
     if (!catId || !itemCatSel) return;
@@ -442,177 +583,46 @@
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         credentials: 'same-origin'
       });
+      
       if (!res.ok) {
-        console.warn('allowedCategories HTTP error', res.status, res.statusText);
+        console.warn('allowedCategories HTTP error', res.status);
         return;
       }
+      
       const data = await res.json();
       const previous = itemCatSel.value;
 
       itemCatSel.innerHTML = '<option value="" disabled selected>-- Item Categories --</option>';
+      
       if (data && data.ok && Array.isArray(data.categories)) {
         data.categories.forEach(c => {
           const opt = document.createElement('option');
-          opt.value = c.Id; opt.textContent = c.Name;
+          opt.value = c.Id;
+          opt.textContent = c.Name;
           if (String(c.Id) === String(previous)) opt.selected = true;
           itemCatSel.appendChild(opt);
         });
       }
 
-      // When item categories change, refresh manual-items options and suppliers (if restricted)
+      // Update manual items and suppliers
       updateManualItemSelects();
-      if (restricted.checked) populateSuppliers(itemCatSel.value);
+      if (restricted && restricted.checked) {
+        populateSuppliers(itemCatSel.value);
+      }
 
     } catch (e) {
       console.warn('allowedCategories fetch failed', e);
     }
   }
 
-  function getFilteredItemOptions(categoryId) {
-    let html = '<option selected disabled>-- Select Item --</option>';
-    (allItemsWithCategoryIds || []).forEach(item => {
-      if (String(item.Category) === String(categoryId)) {
-        html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
-      }
-    });
-    return html;
-  }
-
-  // ... existing variables ...
-
-  // 1. NEW FUNCTION: Check grid status and lock/unlock Manual Tab
-// 1. UPDATED: Check BOTH grids and lock the opposite tab
-  function updateTabStatus() {
-    const planBody   = document.querySelector('#planItemsGrid tbody[name="plan_items"]');
-    const manualBody = document.getElementById('manualItemsBody');
-    
-    const manualTabBtn = document.getElementById('manual-tab');
-    const planTabBtn   = document.getElementById('fromPlan-tab');
-
-    // Count rows
-    const planCount   = planBody ? planBody.children.length : 0;
-    const manualCount = manualBody ? manualBody.children.length : 0;
-
-    // Reset everything first (clean slate)
-    manualTabBtn.classList.remove('disabled');
-    manualTabBtn.removeAttribute('disabled');
-    manualTabBtn.removeAttribute('title');
-
-    planTabBtn.classList.remove('disabled');
-    planTabBtn.removeAttribute('disabled');
-    planTabBtn.removeAttribute('title');
-
-    // Apply Logic
-    if (planCount > 0) {
-      // Case A: Plan has items -> Lock Manual Tab
-      manualTabBtn.classList.add('disabled');
-      manualTabBtn.setAttribute('disabled', 'disabled');
-      manualTabBtn.title = "You cannot add Manual items while Procurement Plan items are present.";
-    } 
-    else if (manualCount > 0) {
-      // Case B: Manual has items -> Lock Plan Tab
-      planTabBtn.classList.add('disabled');
-      planTabBtn.setAttribute('disabled', 'disabled');
-      planTabBtn.title = "You cannot add Procurement Plan items while Manual items are present.";
-    }
-  }
-
-  // 2. UPDATE: Add Plan Item function
-  function addPlanItemToGrid() {
-    const planSel = document.getElementById('selectedProcurementPlan');
-    const itemSel = document.getElementById('planItemSelect');
-    const tbody   = document.querySelector('#planItemsGrid tbody[name="plan_items"]');
-
-    if (!planSel || !itemSel || !tbody) return;
-
-    const opt = itemSel.options[itemSel.selectedIndex];
-    if (!opt || !opt.dataset.planLineItemId) {
-      alert('Please select a plan item first.');
-      return;
-    }
-
-    // ... (Your existing variable definitions for planId, pli, etc.) ...
-    const planId = opt.dataset.planId;
-    const pli    = opt.dataset.planLineItemId;
-    const itemId = opt.dataset.itemId;
-    const needId = opt.dataset.needId || '—';
-    const plannedQty = Number(opt.dataset.plannedQty || 0);
-    const label = opt.textContent || 'Item';
-
-    // Avoid duplicates
-    const compositeKey = `plan-${planId}-${pli}`;
-    if (tbody.querySelector(`tr[data-key="${compositeKey}"]`)) {
-      alert('This plan item is already added.');
-      return;
-    }
-
-    const row = document.createElement('tr');
-    row.dataset.key = compositeKey;
-    row.innerHTML = `
-      <td>${label}</td>
-      <td>${needId}</td>
-      <td>${plannedQty}</td>
-      <td>
-        <input type="number" class="form-control form-control-sm" min="1" step="1"
-               name="plan_items[${compositeKey}][qty]" value="${Math.max(1, plannedQty)}" required>
-      </td>
-      <td>
-        <input type="file" class="form-control form-control-sm" name="plan_items[${compositeKey}][specs]">
-      </td>
-      <td>
-        <input type="text" class="form-control form-control-sm" name="plan_items[${compositeKey}][pr_ref]" placeholder="Optional">
-      </td>
-      <td>
-        <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
-      </td>
-      <input type="hidden" name="plan_items[${compositeKey}][item_id]" value="${itemId}">
-      <input type="hidden" name="plan_items[${compositeKey}][plan_line_item_id]" value="${pli}">
-      <input type="hidden" name="plan_items[${compositeKey}][plan_id]" value="${planId}">
-    `;
-
-    tbody.appendChild(row);
-
-    // --- NEW LINE: Update tab status immediately after adding ---
-    updateTabStatus(); 
-  }
-
-  // 3. UPDATE: Remove Row Listener
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.classList.contains('remove-row')) {
-      const tr = e.target.closest('tr');
-      if (tr) {
-        tr.remove();
-        // --- NEW LINE: Check if we should re-enable the tab after removing ---
-        updateTabStatus(); 
-      }
-    }
-  });
-
-  function getAllItemOptions() {
-    let html = '<option selected disabled>-- Select Item --</option>';
-    (allItemsWithCategoryIds || []).forEach(item => {
-      html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
-    });
-    return html;
-  }
-
-  function updateManualItemSelects() {
-    const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
-    document.querySelectorAll('.manual-item-select').forEach(select => {
-      const prevValue = select.value;
-      select.innerHTML = selectedItemCategory ? getFilteredItemOptions(selectedItemCategory) : getAllItemOptions();
-      if ([...select.options].some(opt => opt.value === prevValue)) {
-        select.value = prevValue;
-      }
-    });
-  }
-
-  // Backend already filters to priced items, no need for client-side price checks.
-
+  // ============================================================================
+  // SUPPLIERS: Populate supplier list for restricted tenders
+  // ============================================================================
   async function populateSuppliers(categoryId = null) {
+    if (!suppliersList) return;
+    
     suppliersList.innerHTML = '';
 
-    // Require a category for restricted tenders to narrow the list meaningfully
     if (!categoryId) {
       const opt = document.createElement('option');
       opt.disabled = true;
@@ -625,23 +635,22 @@
     try {
       const url = `{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${encodeURIComponent(categoryId)}`;
       const res = await fetch(url, { credentials: 'same-origin' });
+      
       if (!res.ok) {
-        if (DEBUG) console.warn('prequalified-suppliers HTTP error', res.status, res.statusText);
-        const opt = document.createElement('option');
-        opt.disabled = true;
-        opt.textContent = 'Failed to load suppliers';
-        suppliersList.appendChild(opt);
-        if (supplierMatchCount) supplierMatchCount.textContent = '';
-        return;
+        throw new Error(`HTTP ${res.status}`);
       }
+      
       const { success, data } = await res.json();
       const rows = Array.isArray(data) ? data : [];
 
-      if (supplierMatchCount) supplierMatchCount.textContent = `Matching suppliers: ${rows.length}`;
+      if (supplierMatchCount) {
+        supplierMatchCount.textContent = `Matching suppliers: ${rows.length}`;
+      }
+      
       if (!rows.length) {
         const opt = document.createElement('option');
         opt.disabled = true;
-        opt.textContent = 'No prequalified suppliers match this category';
+        opt.textContent = 'No prequalified suppliers for this category';
         suppliersList.appendChild(opt);
         return;
       }
@@ -659,8 +668,9 @@
           opt.textContent = label;
           suppliersList.appendChild(opt);
         });
+        
     } catch (e) {
-      if (DEBUG) console.warn('prequalified-suppliers fetch failed', e);
+      console.warn('Failed to load suppliers', e);
       const opt = document.createElement('option');
       opt.disabled = true;
       opt.textContent = 'Failed to load suppliers';
@@ -669,27 +679,34 @@
     }
   }
 
-  // ---- Events
+  // ============================================================================
+  // EVENT LISTENERS
+  // ============================================================================
+  
+  // Tender category change
   if (tenderCatSel) {
     tenderCatSel.addEventListener('change', refreshItemCategories);
   }
+
+  // Item category change
   if (itemCatSel) {
     itemCatSel.addEventListener('change', () => {
       updateManualItemSelects();
+      
       if (restricted && restricted.checked) {
         suppliersSection.style.display = 'block';
         populateSuppliers(itemCatSel.value);
       }
 
-      // Enable and populate Procurement Plan select only after Item Category selection
+      // Enable plan select after category selection
       const planSel = document.getElementById('selectedProcurementPlan');
       if (planSel) {
         const hasCategory = Boolean(itemCatSel.value);
         planSel.disabled = !hasCategory;
         planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan --</option>';
+        
         if (hasCategory) {
-          // Populate with prefiltered available plans; further filtering by category can be added if needed
-          (availablePlans || []).forEach(p => {
+          availablePlans.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p.PlanID;
             opt.textContent = `${p.Title} - ${p.ReferenceNumber}`;
@@ -699,26 +716,55 @@
       }
     });
   }
+
+  // Tender type: Open
   if (openTender) {
     openTender.addEventListener('change', () => {
-      suppliersSection.style.display = 'none';
-      suppliersList.innerHTML = '';
-    });
-  }
-  if (restricted) {
-    restricted.addEventListener('change', () => {
-      suppliersSection.style.display = 'block';
-      if (itemCatSel.value) populateSuppliers(itemCatSel.value);
+      if (suppliersSection) suppliersSection.style.display = 'none';
+      if (suppliersList) suppliersList.innerHTML = '';
     });
   }
 
-  // ---- Initial load
-  // Populate categories if a tender category is preselected
-  if (tenderCatSel && tenderCatSel.value) {
-    refreshItemCategories(); // call immediately (don’t rely on DOMContentLoaded timing)
+  // Tender type: Restricted
+  if (restricted) {
+    restricted.addEventListener('change', () => {
+      if (suppliersSection) suppliersSection.style.display = 'block';
+      if (itemCatSel && itemCatSel.value) {
+        populateSuppliers(itemCatSel.value);
+      }
+    });
   }
-  // Ensure plan select starts disabled until Item Category is chosen
-  (function initPlanSelectGate(){
+
+  // Manual tab: Auto-add first row when opened
+  const manualTabBtn = document.getElementById('manual-tab');
+  if (manualTabBtn) {
+    manualTabBtn.addEventListener('shown.bs.tab', () => {
+      const body = document.getElementById('manualItemsBody');
+      if (body && body.children.length === 0) {
+        addManualItemRow();
+      }
+    });
+  }
+
+  // ============================================================================
+  // EXPOSE FUNCTIONS TO GLOBAL SCOPE (for onclick handlers)
+  // ============================================================================
+  window.loadPlanItemsForPlan = loadPlanItemsForPlan;
+  window.addPlanItemToGrid = addPlanItemToGrid;
+  window.addManualItemRow = addManualItemRow;
+
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
+  
+  // Initialize on DOM ready
+  document.addEventListener('DOMContentLoaded', function() {
+    // Refresh categories if tender category is preselected
+    if (tenderCatSel && tenderCatSel.value) {
+      refreshItemCategories();
+    }
+
+    // Disable plan select until item category is chosen
     const planSel = document.getElementById('selectedProcurementPlan');
     if (planSel) {
       const hasCategory = itemCatSel && itemCatSel.value;
@@ -727,155 +773,21 @@
         planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan (select Item Category first) --</option>';
       }
     }
-  })();
-  // Show supplier section if Restricted was preselected
-  if (restricted && restricted.checked) {
-    suppliersSection.style.display = 'block';
-    if (itemCatSel && itemCatSel.value) populateSuppliers(itemCatSel.value);
-  }
 
-  document.addEventListener('DOMContentLoaded', function() {
-        const submissionDeadline = document.getElementById('submissionDeadline');
-        const openingDate = document.getElementById('openingDate');
-        const today = new Date().toISOString().split('T')[0];
-
-        // Set minimum dates to today
-        submissionDeadline.setAttribute('min', today);
-        openingDate.setAttribute('min', today);
-
-        // Update opening date minimum when submission deadline changes
-        submissionDeadline.addEventListener('change', function() {
-            const selectedDate = this.value;
-
-            // Validate submission deadline is not in the past
-            if (selectedDate < today) {
-                this.value = '';
-                alert('Submission deadline cannot be in the past. Please select today or a future date.');
-                this.classList.add('is-invalid');
-                return;
-            }
-
-            this.classList.remove('is-invalid');
-
-            // Update opening date minimum to match submission deadline
-            if (selectedDate) {
-                openingDate.setAttribute('min', selectedDate);
-
-                // If opening date is already set and is before the new submission deadline, clear it
-                if (openingDate.value && openingDate.value < selectedDate) {
-                    openingDate.value = '';
-                    alert('Opening date must be on or after the submission deadline. Please select a new opening date.');
-                }
-            }
-        });
-
-        // Validate opening date
-        openingDate.addEventListener('change', function() {
-            const selectedOpeningDate = this.value;
-            const selectedSubmissionDate = submissionDeadline.value;
-
-            // Validate opening date is not in the past
-            if (selectedOpeningDate < today) {
-                this.value = '';
-                alert('Opening date cannot be in the past. Please select today or a future date.');
-                this.classList.add('is-invalid');
-                return;
-            }
-
-            // Validate opening date is not before submission deadline
-            if (selectedSubmissionDate && selectedOpeningDate < selectedSubmissionDate) {
-                this.value = '';
-                alert('Opening date must be on or after the submission deadline (' + selectedSubmissionDate + ').');
-                this.classList.add('is-invalid');
-                return;
-            }
-
-            this.classList.remove('is-invalid');
-        });
-
-        // Form submission validation
-        const form = submissionDeadline.closest('form');
-        if (form) {
-         let isSubmitting = false;
-
-    form.addEventListener('submit', function(event) {
-        // 1. BLOCK REPEATED SUBMISSIONS
-        if (isSubmitting) {
-            event.preventDefault();
-            return false;
-        }
-
-        let isValid = true;
-        const submissionValue = submissionDeadline.value;
-        const openingValue = openingDate.value;
-        
-        // Reset invalid classes tracking
-        submissionDeadline.classList.remove('is-invalid');
-        openingDate.classList.remove('is-invalid');
-
-        // --- EXISTING VALIDATION LOGIC ---
-
-        // Check submission deadline
-        if (!submissionValue) {
-            submissionDeadline.classList.add('is-invalid');
-            isValid = false;
-        } else if (submissionValue < today) {
-            alert('Submission deadline cannot be in the past.');
-            submissionDeadline.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        // Check opening date
-        if (!openingValue) {
-            openingDate.classList.add('is-invalid');
-            isValid = false;
-        } else if (openingValue < today) {
-            alert('Opening date cannot be in the past.');
-            openingDate.classList.add('is-invalid');
-            isValid = false;
-        } else if (submissionValue && openingValue < submissionValue) {
-            alert('Opening date must be on or after the submission deadline.');
-            openingDate.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        // --- FINAL CHECK ---
-        
-        if (!isValid) {
-            event.preventDefault();
-            // Do NOT set isSubmitting to true here, allow user to fix errors
-            return false;
-        }
-
-        // 2. LOCK THE FORM IF VALID
-        // If we reached here, validation passed. Lock the UI.
-        isSubmitting = true;
-        
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            // Optional: Store original text and show loading state
-            const originalText = submitBtn.innerText;
-            submitBtn.innerText = 'Saving...';
-            
-            // Just in case the backend crashes or returns, you might want to 
-            // re-enable after a timeout (optional, e.g., 10 seconds), 
-            // but for a standard submit, leaving it disabled is safer.
-        }
-    });
-        }
-
-        // Trigger validation on page load if there are old values
-        if (submissionDeadline.value) {
-            submissionDeadline.dispatchEvent(new Event('change'));
-        }
-
-        // (In case items exist from a previous validation attempt)
-    if (typeof updateTabStatus === 'function') {
-        updateTabStatus();
+    // Show supplier section if Restricted is preselected
+    if (restricted && restricted.checked) {
+      if (suppliersSection) suppliersSection.style.display = 'block';
+      if (itemCatSel && itemCatSel.value) {
+        populateSuppliers(itemCatSel.value);
+      }
     }
-    });
+
+    // Initialize tab status
+    updateTabStatus();
+    
+    if (DEBUG) console.log('Tender form initialized');
+  });
+
 })();
 </script>
-
 @endsection

@@ -282,45 +282,47 @@ class AppServiceProvider extends ServiceProvider
     public function register():void 
 
     {
-         $this->app->bind(ApprovalWorkflow::class, function ($app) {
-        return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
-    });
-
-       // Bind Tender Workflow
-    $this->app->when(TenderController::class)
-        ->needs(ApprovalWorkflow::class)
-        ->give(function () {
-            return new ApprovalWorkflow(
-                'TenderStatus',  // CodeID for tender approval workflow
-                'ApprovalStatus'    // Status column name
-            );
+       // Default binding for Department Needs
+        $this->app->bind(ApprovalWorkflow::class, function ($app) {
+            return new ApprovalWorkflow('DepartmentNeedsStatus', 'Status');
         });
 
-         $this->app->singleton(RequisitionWorkflowService::class, function ($app) {
-        return new RequisitionWorkflowService();
-    });
+        // 🔥 FIX: Bind Tender Workflow using contextual binding
+        $this->app->when(TenderController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'TenderStatus',      // CodeID for tender approval workflow
+                    'ApprovalStatus'     // Status column name - THIS WAS WRONG
+                );
+            });
 
-        //bind requistions workflow 
-         $this->app->when(RequisitionsController::class)
-        ->needs(ApprovalWorkflow::class)
-        ->give(function () {
-            return new ApprovalWorkflow(
-                'RequisitionStatus', // CodeID for requisition workflow
-                'DocStatus'          // Status column name for requisitions
-            );
+        // Bind Requisition Workflow Service
+        $this->app->singleton(RequisitionWorkflowService::class, function ($app) {
+            return new RequisitionWorkflowService();
         });
 
-        //bind awards workflow
+        // Bind Requisitions Workflow (generic)
+        $this->app->when(RequisitionsController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'RequisitionStatus', // CodeID for requisition workflow
+                    'DocStatus'          // Status column name for requisitions
+                );
+            });
+
+        // Bind Awards Workflow
         $this->app->when(AwardsController::class)
             ->needs(ApprovalWorkflow::class)
             ->give(function () {
                 return new ApprovalWorkflow(
                     'TenderAwardApprovalStatus',  // CodeID for tender award approval workflow
-                    'AwardStatus'             // Status column name
+                    'AwardStatus'                 // Status column name
                 );
             });
 
-            // Bind Purchase Order Workflow
+        // Bind Purchase Order Workflow
         $this->app->when(PurchaseOrderController::class)
             ->needs(ApprovalWorkflow::class)
             ->give(function () {
@@ -408,7 +410,7 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
-            'tender' => Tender::class,
+            Tender::getPrimaryKey() => Tender::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,

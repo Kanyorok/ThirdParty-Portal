@@ -2,10 +2,8 @@
 
 namespace App\Services\Workflow;  
 
-use App\Enums\Procurement\DepartmentNeedsEnum;  
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
-use App\Models\Procurement\DepartmentNeed;  
 use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Database\Eloquent\Collection;
 use BackedEnum;  
@@ -20,7 +18,7 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      * Constructor to configure the workflow for a specific module.
      * 
      * @param string $codeId The CodeID for the module 
-     * @param string  $statusColumn The dynamic status column to be passed
+     * @param string $statusColumn The dynamic status column to be passed
      */
     public function __construct(string $codeId, string $statusColumn = 'Status')
     {
@@ -30,13 +28,14 @@ class ApprovalWorkflow extends ApprovalWorkflowService
         Log::info("ApprovalWorkflow initialized", [
             'codeId' => $codeId,
             'statusColumn' => $statusColumn,
+            'class' => static::class
         ]);
     }
 
     /**
      * Submit a model for approval (generic version).
      * 
-     * @param mixed $model The model instance (e.g., DepartmentNeed).
+     * @param mixed $model The model instance (e.g., DepartmentNeed, Tender).
      * @param User $actor The user submitting.
      * @param BackedEnum $pendingStatus The pending status enum value.
      * @param string $remarks Optional remarks.
@@ -45,17 +44,45 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      */
     public function submit($model, User $actor, BackedEnum $pendingStatus, string $remarks = 'Submitted'): bool
     {
-        $status = self::codeDetail($pendingStatus, $this->codeId);
-        
-        // Use the model's morph alias
-        return $this->submittedAction(
-            $actor, 
-            $status, 
-            $model, //model instance 
-            $model::getPrimaryKey() ?? $model->getMorphClass(),  // Source alis
-            $model->getKey(), //sourceID
-            $remarks
-        );
+        try {
+            $status = self::codeDetail($pendingStatus, $this->codeId);
+            
+            Log::info("Submitting for approval", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'actor_id' => $actor->Id,
+                'pending_status' => $pendingStatus->value,
+                'status_detail' => $status,
+                'remarks' => $remarks
+            ]);
+            
+            // Use the model's morph alias
+            $result = $this->submittedAction(
+                $actor, 
+                $status, 
+                $model, // model instance 
+                $model::getPrimaryKey() ?? $model->getMorphClass(), // Source alias
+                $model->getKey(), // sourceID
+                $remarks
+            );
+            
+            Log::info("Submission result", [
+                'success' => $result,
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey()
+            ]);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            Log::error("Failed to submit for approval", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -65,36 +92,60 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      * @param User $actor The user approving.
      * @param BackedEnum $approvedStatus The approved status enum value.
      * @param string $remarks Optional remarks.
-     * @param string $statusColumn 
+     * @param string|null $statusColumn Optional status column override
      * @return bool
      * @throws ErroredException
      */
     public function approve($model, User $actor, BackedEnum $approvedStatus, string $remarks = 'Approved', ?string $statusColumn = null): bool
-{
-    $status = self::codeDetail($approvedStatus, $this->codeId);
-    // Use provided column or fall back to instance default
-        $columnToUse = $statusColumn ?? $this->statusColumn;
-        
-        Log::info("Approving with status column", [
-            'providedColumn' => $statusColumn,
-            'instanceColumn' => $this->statusColumn,
-            'columnToUse' => $columnToUse,
-        ]);
+    {
+        try {
+            $status = self::codeDetail($approvedStatus, $this->codeId);
+            
+            // Use provided column or fall back to instance default
+            $columnToUse = $statusColumn ?? $this->statusColumn;
+            
+            Log::info("Approving with status column", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'actor_id' => $actor->Id,
+                'approved_status' => $approvedStatus->value,
+                'status_detail' => $status,
+                'provided_column' => $statusColumn,
+                'instance_column' => $this->statusColumn,
+                'column_to_use' => $columnToUse,
+                'remarks' => $remarks
+            ]);
 
-    // Capture the result from approveAction
-    $result = $this->approveAction(
-        $actor,
-        $status,
-        $model::getPrimaryKey(),
-        $model->getKey(),
-        $remarks,
-        $statusColumn
-    );
+            // Capture the result from approveAction
+            $result = $this->approveAction(
+                $actor,
+                $status,
+                $model::getPrimaryKey(),
+                $model->getKey(),
+                $remarks,
+                $columnToUse // Use the determined column
+            );
 
-    // Return a boolean indicating success
-    return isset($result['success']) && $result['success'] === true;
-}
+            Log::info("Approval result", [
+                'success' => isset($result['success']) && $result['success'] === true,
+                'result' => $result,
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey()
+            ]);
 
+            // Return a boolean indicating success
+            return isset($result['success']) && $result['success'] === true;
+            
+        } catch (\Exception $e) {
+            Log::error("Failed to approve", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
 
     /**
      * Reject a model (generic version).
@@ -103,36 +154,62 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      * @param User $actor The user rejecting.
      * @param BackedEnum $rejectedStatus The rejected status enum value.
      * @param string $remarks Optional remarks.
-     * @param string $statusColumn The status column name (default: 'Status').
+     * @param string|null $statusColumn The status column name override
      * @return bool
      * @throws ErroredException
      */
     public function reject($model, User $actor, BackedEnum $rejectedStatus, string $remarks = 'Rejected', ?string $statusColumn = null): bool
     {
-        $status = self::codeDetail($rejectedStatus, $this->codeId);
+        try {
+            $status = self::codeDetail($rejectedStatus, $this->codeId);
+            
             // Use provided column or fall back to instance default
-        $columnToUse = $statusColumn ?? $this->statusColumn;
-        
-        Log::info("Rejecting  with status column", [
-            'providedColumn' => $statusColumn,
-            'instanceColumn' => $this->statusColumn,
-            'columnToUse' => $columnToUse,
-        ]);
-        
-        return $this->rejectAction(
-            $actor, 
-            $status, 
-            $model::getPrimaryKey(), 
-            $model->getKey(), 
-            $remarks, 
-            $statusColumn
-        );
+            $columnToUse = $statusColumn ?? $this->statusColumn;
+            
+            Log::info("Rejecting with status column", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'actor_id' => $actor->Id,
+                'rejected_status' => $rejectedStatus->value,
+                'status_detail' => $status,
+                'provided_column' => $statusColumn,
+                'instance_column' => $this->statusColumn,
+                'column_to_use' => $columnToUse,
+                'remarks' => $remarks
+            ]);
+            
+            $result = $this->rejectAction(
+                $actor, 
+                $status, 
+                $model::getPrimaryKey(), 
+                $model->getKey(), 
+                $remarks, 
+                $columnToUse // Use the determined column
+            );
+            
+            Log::info("Rejection result", [
+                'success' => $result,
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey()
+            ]);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            Log::error("Failed to reject", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**
      * Get workflow history for a module.
      * 
-     * @param string $morphAlias The morph alias for the model (e.g., from $model::getPrimaryKey()).
+     * @param string $morphAlias The morph alias for the model.
      * @param int $limit
      * @return Collection
      * @throws ErroredException
@@ -150,8 +227,14 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      */
     public function historyForModel($model): Collection
     {
+        Log::info("Fetching workflow history", [
+            'model_class' => get_class($model),
+            'model_id' => $model->getKey()
+        ]);
+        
         return $model->workflowHistory()
             ->with(['creator', 'status', 'stage'])
+            ->orderBy('CreatedOn', 'desc')
             ->get();
     }
 
@@ -164,19 +247,61 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      */
     public function canApproveModel($model, User $user): bool
     {
-        return parent::canApprove(
-            get_class($model),
-            $model->getKey(), 
-            $user
-        );
+        try {
+            $canApprove = parent::canApprove(
+                get_class($model),
+                $model->getKey(), 
+                $user
+            );
+            
+            Log::info("Permission check result", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'user_id' => $user->Id,
+                'can_approve' => $canApprove
+            ]);
+            
+            return $canApprove;
+            
+        } catch (\Exception $e) {
+            Log::error("Permission check failed", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'user_id' => $user->Id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
-    //other generic methods
+    /**
+     * Cancel a workflow
+     */
     public function cancel($model, User $actor, string $reason = 'Cancelled'): bool
     {
-        return $this->cancelWorkflow($actor, $model::getPrimaryKey(), $model->getKey(), $reason);
+        try {
+            Log::info("Cancelling workflow", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'actor_id' => $actor->Id,
+                'reason' => $reason
+            ]);
+            
+            return $this->cancelWorkflow($actor, $model::getPrimaryKey(), $model->getKey(), $reason);
+            
+        } catch (\Exception $e) {
+            Log::error("Failed to cancel workflow", [
+                'model_class' => get_class($model),
+                'model_id' => $model->getKey(),
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
+    /**
+     * Get workflow status
+     */
     public function getStatus($model): array
     {
         return $this->getWorkflowStatus($model::getPrimaryKey(), $model->getKey());
