@@ -111,6 +111,7 @@ class TicketController extends Controller
      */
     public function store(NewTicketRequest $request): JsonResponse
     {
+        $this->authorize('create', Ticket::class);
         $owner = $request->user();
         $category = $request->getCategory();
         $source = $request->getSource();
