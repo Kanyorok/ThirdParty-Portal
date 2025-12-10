@@ -61,7 +61,7 @@ async function validateTokenWithBackend(accessToken: string): Promise<boolean> {
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   // Skip for static files and Next internals
