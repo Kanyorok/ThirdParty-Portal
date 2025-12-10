@@ -462,7 +462,7 @@ class TransactionApprovalController extends Controller
 
                 try {
                     // Use the service's reject method
-                    $this->transferService->reject($record->Id, 'Rejected via UI');
+                    $this->transferService->reject($record->Id, 'Transfer Rejected');
                     
                     Log::info('Stock Transfer rejected successfully', [
                         'transfer_id' => $record->Id,
@@ -557,7 +557,7 @@ class TransactionApprovalController extends Controller
 
                 try {
                     // Use the service's reject method
-                    $this->adjustmentService->reject($record->Id, 'Rejected via UI');
+                    $this->adjustmentService->reject($record->Id, 'Transfer Rejected');
                     
                     Log::info('Stock Adjustment rejected successfully', [
                         'adjustment_id' => $record->Id,

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Inventory;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Core\Approval\CodeDetail;
 
 class StockConsumptionRequest extends FormRequest
 {
@@ -25,7 +26,7 @@ class StockConsumptionRequest extends FormRequest
 public function rules(): array
 {
     $issuedToType = $this->input('IssuedToType');
-    $codeDetail = \App\Models\Core\CodeDetail::find($issuedToType);
+    $codeDetail = CodeDetail::find($issuedToType);
     $typeDescription = strtoupper($codeDetail?->Description ?? '');
     $issuedToIDRules = ['required', 'integer'];
 
