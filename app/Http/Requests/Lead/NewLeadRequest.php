@@ -40,6 +40,7 @@ class NewLeadRequest extends FormRequest
             'Type' => ['required', Rule::in(LeadTypeEnum::values()),],
             'Country' => ['required', Rule::exists('t_Countries', 'CountryCode')],
             'Location' => ['required',],
+            'Website' => ['nullable', 'url:http,https', 'active_url'],
             'Gender' => [
                 'required_if:Type,' . LeadTypeEnum::Individual->value,
                 Rule::in(GenderEnum::values()),
