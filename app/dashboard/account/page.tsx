@@ -44,7 +44,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/c
 import { Checkbox } from '@/components/common/checkbox';
 import { Separator } from '@/components/common/separator';
 import { Badge } from '@/components/common/badge';
-import { UserProfile } from '@/types/next-auth';
+import { UserProfile } from '@/types/next-auth.1';
 import { useSession } from 'next-auth/react';
 import { getInitials } from '@/lib/utils';
 import { apiService } from '@/lib/api/profile';
@@ -181,8 +181,8 @@ const ProfileDetailsCard: React.FC<{
                             <div className="p-3 bg-muted rounded-lg">
                                 <p className="font-semibold text-foreground">{
                                     profile.gender === 'm' ? 'Male' :
-                                    profile.gender === 'f' ? 'Female' :
-                                    profile.gender === 'o' ? 'Prefer not to say' : profile.gender
+                                        profile.gender === 'f' ? 'Female' :
+                                            profile.gender === 'o' ? 'Prefer not to say' : profile.gender
                                 }</p>
                             </div>
                         </div>
@@ -384,7 +384,7 @@ const EditProfileModal: React.FC<{
     }, [isOpen, profile]);
 
     const handleSave = useCallback(async () => {
-        startTransition(() => {});
+        startTransition(() => { });
         setSaving(true);
         try {
             const updatedProfile = await apiService.updateProfile(formData, accessToken);
@@ -447,13 +447,13 @@ const EditProfileModal: React.FC<{
                     <div className="space-y-2">
                         <Label htmlFor="phone">Phone Number</Label>
                         <div className="p-2 bg-muted rounded-lg border border-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                                <PhoneInput
+                            <PhoneInput
                                 country={'us'}
                                 preferredCountries={['us', 'gb', 'ke', 'ng']}
                                 enableSearch
                                 value={formData.phone}
-                                    onChange={phone => setFormData(prev => ({ ...prev, phone }))}
-                                    disabled={saving || isPending}
+                                onChange={phone => setFormData(prev => ({ ...prev, phone }))}
+                                disabled={saving || isPending}
                                 inputClass="!w-full !bg-transparent !border-none !text-foreground !font-semibold focus:outline-none"
                                 buttonClass="!bg-transparent !border-none"
                                 containerClass="!w-full"
