@@ -116,7 +116,7 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><b>Location</b><span class="float-end">{{ $location }} </span></li>
                     <li class="list-group-item"><b>Industry</b><span
-                            class="float-end">{{ $lead->industry?->Description }} </span></li>
+                            class="float-end">{{ $lead->indu?->Description }} </span></li>
                     <li class="list-group-item"><b>Source</b><span
                             class="float-end">{{ $lead->source?->Description }} </span></li>
                     <li class="list-group-item"><b>Customer Type</b><span
@@ -994,7 +994,8 @@
                                                     class="text-danger">*</span></label>
                                             <select class="form-control" name="Gender" id="Gender" required>
                                                 @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
-                                                    <option value="{{ $gender->value }}">{{ $gender->name }}</option>
+                                                    <option
+                                                        {{ ($lead->Gender->value === $gender->value)?'selected':'' }} value="{{ $gender->value }}">{{ $gender->name }}</option>
                                                 @endforeach
                                             </select>
                                             <p id="Gender_error" class="invalid-feedback d-none error col-12"

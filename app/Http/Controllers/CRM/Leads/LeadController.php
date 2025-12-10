@@ -76,17 +76,36 @@ class LeadController extends Controller
             if ($request->q === 'won') {
                 $query->where('t_Leads.Status', LeadStatusEnum::Won->value)->whereNull(['ArchivedBy', 'ArchivedOn'])->withTrashed();
             } else {
-                $query->where('t_Leads.Status', '!=', LeadStatusEnum::Won->value);
+                $status = $request->get('_status', 'all');
+                $type = $request->get('_type', 'all');
+                if ($status !== 'all') {
+                    try {
+                        $status = LeadStatusEnum::fromValue($status);
+                        if ($status->value === LeadStatusEnum::Won->value || $status->value === LeadStatusEnum::Cold->value) {
+                            throw new Exception('won leads are not included in this list');
+                        }
+                        $query->where('t_Leads.Status', $status->value);
+                    } catch (Exception) {
+                        $query->where('t_Leads.Status', '!=', LeadStatusEnum::Won->value);
+                    }
+                } else {
+                    $query->where('t_Leads.Status', '!=', LeadStatusEnum::Won->value);
+                }
+                if ($type !== 'all') {
+                    try {
+                        $type = LeadTypeEnum::fromValue($type);
+                        $query->where('t_Leads.Type', $type->value);
+                    } catch (Exception) {
+                    }
+                }
             }
-            return LeadService::dt($query, ['location', 'photo', 'industry']);
+            return LeadService::dt($query, ['location', 'photo', 'ind']);
         }
 
-        $StaticLists = StaticListsService::getList([StaticListsService::Industries, StaticListsService::MarketingModes, StaticListsService::CustomerType]);
 
-        return view('crm.leads.index')
-            ->with('Industries', $StaticLists->where('CodeID', StaticListsService::Industries))
-            ->with('CustomerTypes', $StaticLists->where('CodeID', StaticListsService::CustomerType))
-            ->with('MarketingModes', $StaticLists->where('CodeID', StaticListsService::MarketingModes));
+        return view('crm.leads.index', [
+
+        ]);
     }
 
     public function create(Request $request): JsonResponse|View
