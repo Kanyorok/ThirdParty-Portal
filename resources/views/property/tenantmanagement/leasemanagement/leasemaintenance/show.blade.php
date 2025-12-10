@@ -73,34 +73,33 @@
                 </div>
             </div><br>
 
-
             {{-- Financial Information --}}
             <h6 class="mb-3 text-dark">Financial Information</h6>
             <hr>
             <div class="row g-3 text-dark">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Rent Amount</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->MonthlyRent, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->MonthlyRent, 2) }} {{ $newlease->currency->Symbol}}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Deposit</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->Deposit, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->Deposit, 2) }} {{ $newlease->currency->Symbol}}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Service Charge</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ServiceCharge, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ServiceCharge, 2) }} {{ $newlease->currency->Symbol}}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Parking Fee</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ParkingFee, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ParkingFee, 2) }} {{ $newlease->currency->Symbol}}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Other Charges</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->OtherCharges, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->OtherCharges, 2) }} {{ $newlease->currency->Symbol}}" readonly>
                 </div>
             </div>
 

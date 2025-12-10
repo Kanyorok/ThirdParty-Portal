@@ -7,6 +7,8 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
@@ -50,6 +52,8 @@ class PropertyNewLeaseService
         int $DueDay,
         string $SpecialTerms = null,
         User $user,
+        Currency $CurrencyId,
+        FinanceTaxRuleConfiguration $TaxId,
         UploadedFile $document = null
     ): self {
 
@@ -89,6 +93,8 @@ class PropertyNewLeaseService
             'Status' => $Status,
             'ApprovalStatus' => $ApprovalStatus,
             'IsOfferGenerated' => $IsOfferGenerated,
+            'CurrencyId' => $CurrencyId->Id,
+            'TaxId' => $TaxId->Id,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

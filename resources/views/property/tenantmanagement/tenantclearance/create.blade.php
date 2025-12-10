@@ -106,7 +106,7 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
     flatpickr("#exit-date", {
-      dateFormat: "d M Y",
+      dateFormat: "d/m/Y",
       allowInput: true
     });
   </script>
