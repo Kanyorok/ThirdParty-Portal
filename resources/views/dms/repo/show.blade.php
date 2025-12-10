@@ -878,7 +878,7 @@
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
     <script>const $Modal = $('#dmsActionsModal');
         Dropzone.options.uploadForm = {
-            maxFilesize: 9,//Mb//todo filesize
+            maxFilesize: parseInt('{{ config('app.dms.file_size') }}'),//Mb
             acceptedFiles: "{{ implode(", ",ExtensionsEnum::getAllMimeTypes()) }}",
             success: function (file, response) {
                 file.previewElement.remove();
