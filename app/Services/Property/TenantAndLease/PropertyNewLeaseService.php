@@ -158,6 +158,8 @@ class PropertyNewLeaseService
         int $DueDay,
         string $SpecialTerms,
         User $user,
+        Currency $CurrencyId,
+        FinanceTaxRuleConfiguration $TaxId,
         UploadedFile $document = null
     ): self {
         $lease->update([
@@ -175,6 +177,8 @@ class PropertyNewLeaseService
             'ParkingFee' => $ParkingFee,
             'OtherCharges' => $OtherCharges,
             'SpecialTerms' => $SpecialTerms,
+            'CurrencyId' => $CurrencyId->Id,
+            'TaxId' => $TaxId->Id,
             'ModifiedBy' => $user->Id,
         ]);
 

@@ -212,6 +212,8 @@ class PropertyNewLeaseController extends Controller
         $floor = PropertyFloor::findOrFail($data['FloorID']);
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $frequency = CodeDetail::findOrFail($data['PaymentFrequency']);
+        $CurrencyId = Currency::findOrFail($data['CurrencyId']);
+        $TaxId = FinanceTaxRuleConfiguration::findOrFail($data['TaxId']);
         $user = auth()->user();
 
         $this->service->update(
@@ -230,7 +232,9 @@ class PropertyNewLeaseController extends Controller
             OtherCharges: (float)$data['OtherCharges'],
             DueDay: (int)$data['DueDay'],
             SpecialTerms: $data['SpecialTerms'] ?? '',
-            user: $user
+            user: $user,
+            CurrencyId: $CurrencyId,
+            TaxId: $TaxId,
         );
 
     foreach ($request->file('Document', []) as $uploadedFile) {
@@ -251,6 +255,8 @@ class PropertyNewLeaseController extends Controller
             DueDay: (int)$data['DueDay'],
             SpecialTerms: $data['SpecialTerms'] ?? '',
             user: $user,
+            CurrencyId: $CurrencyId,
+            TaxId: $TaxId,
             document: $uploadedFile
         );
     }
