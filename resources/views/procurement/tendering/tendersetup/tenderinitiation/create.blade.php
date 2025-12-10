@@ -200,22 +200,26 @@
                     </div>
 
         <!-- Dates -->
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline: <span class="text-danger">*</span></label>
-                <input type="date" min="{{ date('Y-m-d') }}" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
-                @error('submission_deadline')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
-                <label for="openingDate" class="form-label fw-bold">Opening Date: <span class="text-danger">*</span></label>
-                <input type="date" min="{{ date('Y-m-d') }}" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
-                @error('opening_date')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-                        </div>
-                    </div>
+              <div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="submissionDeadlineInput" class="form-label fw-bold">Submission Deadline: <span class="text-danger">*</span></label>
+        <input type="date" name="submission_deadline" id="submissionDeadlineInput" value="{{ old('submission_deadline') }}"
+            min="{{ now()->toDateString() }}"
+            class="form-control @error('submission_deadline') is-invalid @enderror" required>
+        @error('submission_deadline')
+        <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="openingDateInput" class="form-label fw-bold">Opening Date: <span class="text-danger">*</span></label>
+        <input type="date" name="opening_date" id="openingDateInput" value="{{ old('opening_date') }}"
+            min="{{ now()->toDateString() }}"
+            class="form-control @error('opening_date') is-invalid @enderror" required>
+        @error('opening_date')
+        <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+</div>
 
         <!-- Upload -->
                     <div class="mb-3">
@@ -243,7 +247,7 @@
 <script>
 (function () {
   'use strict';
-  
+
   // ============================================================================
   // DOM REFERENCES
   // ============================================================================
@@ -272,7 +276,7 @@
     })->values()
   );
 
-  // 🔥 DEBUG: Log data on page load
+  // : Log data on page load
   if (DEBUG) {
     console.log('=== TENDER FORM DEBUG ===');
     console.log('Available Plans:', availablePlans);
@@ -301,7 +305,7 @@
       return;
     }
 
-    // 🔥 FIX: Ensure planId is treated as string for object key lookup
+    //  Ensure planId is treated as string for object key lookup
     const items = planItemsByPlan[String(planId)] || [];
     
     if (DEBUG) {
@@ -322,7 +326,7 @@
       const opt = document.createElement('option');
       opt.value = String(it.planLineItemId);
       
-      // 🔥 FIX: Show remaining quantity instead of planned quantity
+      //  Show remaining quantity instead of planned quantity
       const qtyDisplay = it.remainingQty !== undefined ? it.remainingQty : it.plannedQty;
       opt.textContent = `${it.name}${it.needId ? ' - ' + it.needId : ''} (Available: ${qtyDisplay})`;
       
@@ -373,7 +377,7 @@
       return;
     }
 
-    // 🔥 FIX: Default qty to remainingQty, not plannedQty
+    //  Default qty to remainingQty, not plannedQty
     const defaultQty = Math.max(1, Math.floor(remainingQty));
 
     const row = document.createElement('tr');
@@ -433,7 +437,7 @@
     const key = `m${Date.now()}_${manualRowSeq}`;
     const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
 
-    // 🔥 FIX: Build options based on selected category
+    //  Build options based on selected category
     let optionsHtml = '<option selected disabled>-- Select Item --</option>';
     
     if (selectedItemCategory) {
@@ -752,13 +756,31 @@
   window.loadPlanItemsForPlan = loadPlanItemsForPlan;
   window.addPlanItemToGrid = addPlanItemToGrid;
   window.addManualItemRow = addManualItemRow;
-
+ 
   // ============================================================================
   // INITIALIZATION
   // ============================================================================
   
   // Initialize on DOM ready
   document.addEventListener('DOMContentLoaded', function() {
+   // 1. Initialize Flatpickr for Submission Deadline
+    flatpickr("#submissionDeadlineInput", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        allowInput: false, // Set to false so they cannot type past dates manually
+        minDate: "today"   // This prevents clicking past dates
+    });
+
+    // 2. Initialize Flatpickr for Opening Date
+    flatpickr("#openingDateInput", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        allowInput: false, // Set to false so they cannot type past dates manually
+        minDate: "today"
+    });
+
     // Refresh categories if tender category is preselected
     if (tenderCatSel && tenderCatSel.value) {
       refreshItemCategories();

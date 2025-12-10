@@ -96,56 +96,83 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      * @return bool
      * @throws ErroredException
      */
-    public function approve($model, User $actor, BackedEnum $approvedStatus, string $remarks = 'Approved', ?string $statusColumn = null): bool
-    {
-        try {
-            $status = self::codeDetail($approvedStatus, $this->codeId);
-            
-            // Use provided column or fall back to instance default
-            $columnToUse = $statusColumn ?? $this->statusColumn;
-            
-            Log::info("Approving with status column", [
-                'model_class' => get_class($model),
-                'model_id' => $model->getKey(),
-                'actor_id' => $actor->Id,
-                'approved_status' => $approvedStatus->value,
-                'status_detail' => $status,
-                'provided_column' => $statusColumn,
-                'instance_column' => $this->statusColumn,
-                'column_to_use' => $columnToUse,
-                'remarks' => $remarks
-            ]);
+public function approve($model, User $actor, BackedEnum $approvedStatus, string $remarks = 'Approved', ?string $statusColumn = null): bool
+{
+    try {
+        $status = self::codeDetail($approvedStatus, $this->codeId);
+        
+        // Use provided column or fall back to instance default
+        $columnToUse = $statusColumn ?? $this->statusColumn;
+        
+        Log::info("Approving with status column", [
+            'model_class' => get_class($model),
+            'model_id' => $model->getKey(),
+            'actor_id' => $actor->Id,
+            'approved_status' => $approvedStatus->value,
+            'status_detail' => $status,
+            'provided_column' => $statusColumn,
+            'instance_column' => $this->statusColumn,
+            'column_to_use' => $columnToUse,
+            'remarks' => $remarks
+        ]);
 
-            // Capture the result from approveAction
-            $result = $this->approveAction(
-                $actor,
-                $status,
-                $model::getPrimaryKey(),
-                $model->getKey(),
-                $remarks,
-                $columnToUse // Use the determined column
-            );
+        // Call approveAction - can return boolean OR array
+        $result = $this->approveAction(
+            $actor,
+            $status,
+            $model::getPrimaryKey(),
+            $model->getKey(),
+            $remarks,
+            $columnToUse
+        );
 
-            Log::info("Approval result", [
-                'success' => isset($result['success']) && $result['success'] === true,
-                'result' => $result,
-                'model_class' => get_class($model),
-                'model_id' => $model->getKey()
-            ]);
+        //  Handle both boolean and array returns
+        $success = $this->extractSuccessValue($result);
 
-            // Return a boolean indicating success
-            return isset($result['success']) && $result['success'] === true;
-            
-        } catch (\Exception $e) {
-            Log::error("Failed to approve", [
-                'model_class' => get_class($model),
-                'model_id' => $model->getKey(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
+        Log::info("Approval result", [
+            'success' => $success,
+            'result_type' => gettype($result),
+            'result' => is_array($result) ? $result : ['boolean' => $result],
+            'model_class' => get_class($model),
+            'model_id' => $model->getKey()
+        ]);
+
+        // Return the boolean
+        return $success;
+        
+    } catch (\Exception $e) {
+        Log::error("Failed to approve", [
+            'model_class' => get_class($model),
+            'model_id' => $model->getKey(),
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        throw $e;
     }
+}
+
+    /**
+ * Extract success value from either boolean or array result
+ * 
+ * @param bool|array $result The result from approveAction/rejectAction
+ * @return bool
+ */
+    private function extractSuccessValue($result): bool
+{
+    if (is_bool($result)) {
+        return $result;
+    }
+    
+    if (is_array($result)) {
+        return isset($result['success']) && $result['success'] === true;
+    }
+    
+    Log::warning("Unexpected result type in extractSuccessValue", [
+        'type' => gettype($result),
+        'value' => $result
+    ]);
+    return false;
+}
 
     /**
      * Reject a model (generic version).
@@ -158,53 +185,57 @@ class ApprovalWorkflow extends ApprovalWorkflowService
      * @return bool
      * @throws ErroredException
      */
-    public function reject($model, User $actor, BackedEnum $rejectedStatus, string $remarks = 'Rejected', ?string $statusColumn = null): bool
-    {
-        try {
-            $status = self::codeDetail($rejectedStatus, $this->codeId);
-            
-            // Use provided column or fall back to instance default
-            $columnToUse = $statusColumn ?? $this->statusColumn;
-            
-            Log::info("Rejecting with status column", [
-                'model_class' => get_class($model),
-                'model_id' => $model->getKey(),
-                'actor_id' => $actor->Id,
-                'rejected_status' => $rejectedStatus->value,
-                'status_detail' => $status,
-                'provided_column' => $statusColumn,
-                'instance_column' => $this->statusColumn,
-                'column_to_use' => $columnToUse,
-                'remarks' => $remarks
-            ]);
-            
-            $result = $this->rejectAction(
-                $actor, 
-                $status, 
-                $model::getPrimaryKey(), 
-                $model->getKey(), 
-                $remarks, 
-                $columnToUse // Use the determined column
-            );
-            
-            Log::info("Rejection result", [
-                'success' => $result,
-                'model_class' => get_class($model),
-                'model_id' => $model->getKey()
-            ]);
-            
-            return $result;
-            
-        } catch (\Exception $e) {
-            Log::error("Failed to reject", [
-                'model_class' => get_class($model),
-                'model_id' => $model->getKey(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
+ public function reject($model, User $actor, BackedEnum $rejectedStatus, string $remarks = 'Rejected', ?string $statusColumn = null): bool
+{
+    try {
+        $status = self::codeDetail($rejectedStatus, $this->codeId);
+        
+        // Use provided column or fall back to instance default
+        $columnToUse = $statusColumn ?? $this->statusColumn;
+        
+        Log::info("Rejecting with status column", [
+            'model_class' => get_class($model),
+            'model_id' => $model->getKey(),
+            'actor_id' => $actor->Id,
+            'rejected_status' => $rejectedStatus->value,
+            'status_detail' => $status,
+            'provided_column' => $statusColumn,
+            'instance_column' => $this->statusColumn,
+            'column_to_use' => $columnToUse,
+            'remarks' => $remarks
+        ]);
+        
+        $result = $this->rejectAction(
+            $actor, 
+            $status, 
+            $model::getPrimaryKey(), 
+            $model->getKey(), 
+            $remarks, 
+            $columnToUse
+        );
+
+        //  Handle both boolean and array returns
+        $success = $this->extractSuccessValue($result);
+        
+        Log::info("Rejection result", [
+            'success' => $success,
+            'result_type' => gettype($result),
+            'model_class' => get_class($model),
+            'model_id' => $model->getKey()
+        ]);
+        
+        return $success;
+        
+    } catch (\Exception $e) {
+        Log::error("Failed to reject", [
+            'model_class' => get_class($model),
+            'model_id' => $model->getKey(),
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        throw $e;
     }
+}
 
     /**
      * Get workflow history for a module.

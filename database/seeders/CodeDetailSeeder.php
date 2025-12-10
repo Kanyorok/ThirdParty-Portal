@@ -10,6 +10,7 @@ use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
+use App\Enums\TenderApprovalStatusEnum;
 use App\Enums\TicketStatusEnum;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;
@@ -125,6 +126,14 @@ class CodeDetailSeeder extends Seeder
                 'CodeID' => 'PrequalificationStatus',
                 'Value' => $PrequalificationStatusEnum->value,
                 'Description' => $PrequalificationStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+        foreach (TenderApprovalStatusEnum::cases() as $index => $TenderApprovalStatusEnum){
+            $entries->push([
+                'CodeID' => 'TenderStatus',
+                'Value' => $TenderApprovalStatusEnum->value,
+                'Description' => $TenderApprovalStatusEnum->name,
                 'DisplayOrder' => $index + 1,
             ]);
         }

@@ -298,8 +298,8 @@ class Tender extends Model
     {
         return $this->hasMany(WorkflowHistory::class, 'SourceID', 'PlanID')
             ->where('Source', $this->getTable())
-            ->whereNull('DeletedOn')
-            ->orderBy('CreatedOn', 'desc');
+            ->whereNull('DeletedOn');
+            
     }
 
     
