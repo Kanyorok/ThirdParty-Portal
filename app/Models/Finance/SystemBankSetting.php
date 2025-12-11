@@ -3,17 +3,13 @@
 namespace App\Models\Finance;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SystemBankSetting extends Model
 {
-    use SoftDeletes;
-
     protected $table = 't_SystemBankSetting';
     protected $primaryKey = 'Id';
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'BankName','ShortName','BankCode','SwiftCode','ClearingCode','Address1','Address2',
@@ -35,4 +31,3 @@ class SystemBankSetting extends Model
         return $this->belongsTo(\App\Models\Core\Country::class, 'CountryID', 'Id');
     }
 }
-

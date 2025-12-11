@@ -34,7 +34,7 @@ class DepartmentController extends Controller
             try {
                 return Datatables::of(Department::query()->select('*'))->addIndexColumn()
                     ->addColumn('action', function (Department $department) {
-                        return '<button type="button" data-click_url="' . route('departments.show', [$department->DepartmentID]) . '" data-summary_title="department details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
+                        return '<button type="button" data-click_url="' . route('hr.departments.show', [$department->DepartmentID]) . '" data-summary_title="department details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
                     })->addColumn('employees_count', function (Department $department) {
                         return number_format(0);
                     })->addColumn('hod', function (Department $department) {
@@ -47,7 +47,7 @@ class DepartmentController extends Controller
             return $this->errored('cannot retrieve department list.');
         }
 
-        return view('hrms.department.index');
+        return view('hr.department.index');
     }
 
     /**
@@ -76,7 +76,7 @@ class DepartmentController extends Controller
      */
     public function create(): View
     {
-        return view('hrms.department.create');
+        return view('hr.department.create');
     }
 
     /**
@@ -84,7 +84,7 @@ class DepartmentController extends Controller
      */
     public function show(Department $department)
     {
-        return view('hrms.department.show', ['department' => $department]);
+        return view('hr.department.show', ['department' => $department]);
     }
 
     /**

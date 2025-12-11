@@ -1,0 +1,25 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::create('t_HRLeaveAccruals', function (Blueprint $table) {
+            $table->id('Id');
+            $table->unsignedBigInteger('EmployeeID');
+            $table->unsignedBigInteger('LeaveTypeID');
+            $table->decimal('AccruedDays', 8, 2)->default(0);
+            $table->string('Period', 20)->nullable(); // e.g. 2025-01
+            $table->unsignedBigInteger('CreatedBy')->nullable();
+            $table->dateTime('CreatedOn')->nullable();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('t_HRLeaveAccruals');
+    }
+};

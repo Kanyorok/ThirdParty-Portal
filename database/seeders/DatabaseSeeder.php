@@ -107,5 +107,8 @@ class DatabaseSeeder extends Seeder
         $this->call(ThirdPartyTypesSeeder::class);
         $this->call(MedicalFundsCatalogSeeder::class);
         // $this->call(GRNPOSeeder::class);
+        $this->call(KpiSeeder::class);
+        $this->call(StatutorySeeder::class);
+        $this->call(LeaveTypeSeeder::class);
     }
 }
