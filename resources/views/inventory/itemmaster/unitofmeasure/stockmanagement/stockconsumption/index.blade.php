@@ -46,47 +46,15 @@
             </thead>
             <tbody>
             @foreach($consumptions as $consumption)
-                @php
-                    // Calculate issued to name (without ID)
-                    $issuedToName = 'N/A';
-                    if ($consumption->IssuedToType && $consumption->IssuedToID) {
-                        $type = \App\Models\Core\Approval\CodeDetail::find($consumption->IssuedToType);
-                        if ($type) {
-                            $typeName = strtoupper($type->Description);
-                            if ($typeName === 'EMPLOYEE') {
-                                $user = \App\Models\Auth\User::with('employee')->find($consumption->IssuedToID);
-                                if ($user && $user->employee) {
-                                    $issuedToName = $user->employee->FirstName . ' ' . $user->employee->LastName;
-                                } elseif ($user) {
-                                    $issuedToName = $user->UserName;
-                                }
-                            } elseif ($typeName === 'DEPARTMENT') {
-                                $department = \App\Models\HRM\Department::find($consumption->IssuedToID);
-                                $issuedToName = optional($department)->Name ?? 'N/A';
-                            }
-                        }
-                    }
-                    
-                    // Calculate issued by name (without ID)
-                    $issuedByName = 'N/A';
-                    if ($consumption->issuedBy) {
-                        $employee = $consumption->issuedBy->employee;
-                        if ($employee) {
-                            $issuedByName = $employee->FirstName . ' ' . $employee->LastName;
-                        } else {
-                            $issuedByName = $consumption->issuedBy->UserName;
-                        }
-                    }
-                @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $consumption->ConsumptionNo }}</td>
-                    <td>{{ optional($consumption->item)->ItemName ?? 'N/A' }}</td>
+                    <td>{{ $consumption->item_name ?? 'N/A' }}</td>
                     <td>{{ $consumption->Quantity }}</td>
-                    <td>{{ optional($consumption->uom)->Code ?? 'N/A' }}</td>
-                    <td>{{ optional($consumption->branch)->Name ?? 'N/A' }}</td>
-                    <td>{{ $issuedToName }}</td>
-                    <td>{{ $issuedByName }}</td>
+                    <td>{{ optional($consumption->uom)->Name }}</td>
+                    <td>{{ optional($consumption->branch)->Name }}</td>
+                    <td>{{ $consumption->issued_to_name }}</td>
+                    <td>{{ optional($consumption->issuedBy)->Name }}</td>
                     <td>{{ \Carbon\Carbon::parse($consumption->IssuedOn)->format('m/d/Y') }}</td>
                     <td>
                         <div class="d-flex gap-1">

@@ -35,7 +35,7 @@
             <div class="col-md-4">
                 <label for="ItemType" class="form-label">Item Type</label>
                 <select name="ItemType" class="form-select" required>
-                    <option disabled>Select Type</option>
+                    <option disabled>-- Select Type --</option>
                     @foreach($itemTypes as $itemType)
                         <option value="{{ $itemType->ID }}"
                             {{ (old('ItemType', $item->ItemType) == $itemType->ID) ? 'selected' : '' }}>
@@ -49,9 +49,9 @@
         {{-- Row 2 --}}
         <div class="row mb-3">
             <div class="col-md-4">
-                <label for="Category" class="form-label">Category</label>
+                <label for="Category" class="form-label">Parent Category</label>
                 <select name="Category" id="category" class="form-select" required>
-                    <option value="">-- Select Category --</option>
+                    <option value="">-- Select Parent Category --</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->Id }}" {{ optional($item->category->parent)->Id == $category->Id ? 'selected' : '' }}>
                             {{ $category->Name }}
@@ -60,9 +60,9 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label for="SubCategory" class="form-label">Subcategory</label>
+                <label for="SubCategory" class="form-label">Category</label>
                 <select name="SubCategory" id="subcategory" class="form-select">
-                    <option value="">-- Select SubCategory --</option>
+                    <option value="">-- Select Category --</option>
                     @foreach($subcategories as $subcategory)
                         <option value="{{ $subcategory->Id }}" {{ $item->Category == $subcategory->Id ? 'selected' : '' }}>
                             {{ $subcategory->Name }}
@@ -73,7 +73,7 @@
             <div class="col-md-4">
                 <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
                 <select name="UOM" class="form-select" required>
-                    <option disabled>Select UOM</option>
+                    <option disabled>-- Select UOM --</option>
                     @foreach($uoms as $uom)
                         <option value="{{ $uom->Id }}"
                             {{ (old('UOM', $item->UOM) == $uom->Id) ? 'selected' : '' }}>
@@ -89,7 +89,7 @@
             <div class="col-md-4">
                 <label for="InventoryType" class="form-label">Inventory Type</label>
                 <select name="InventoryType" class="form-select" required>
-                    <option disabled>Select Inventory Type</option>
+                    <option disabled>-- Select Inventory Type --</option>
                     @foreach($inventoryTypes as $inventoryType)
                         <option value="{{ $inventoryType->ID }}"
                             {{ (old('InventoryType', $item->InventoryType) == $inventoryType->ID) ? 'selected' : '' }}>
@@ -101,7 +101,7 @@
             <div class="col-md-4">
                 <label for="Status" class="form-label">Item Status</label>
                 <select class="form-select" name="Status">
-                    <option value="">Select Status</option>
+                    <option value="">-- Select Status --</option>
                     @foreach($status as $stat)
                         <option value="{{ $stat->ID }}"
                             {{ old('Status', $item->Status) == $stat->ID ? 'selected' : '' }}>

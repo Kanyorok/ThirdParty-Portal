@@ -119,6 +119,9 @@
                     </thead>
                     <tbody>
                         @foreach($items as $index => $item)
+                            @php
+                                $isInUse = $item->inUse();
+                            @endphp
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $item->ItemCode }}</td>
@@ -144,6 +147,7 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
+                                        {{-- View Button (Always Available) --}}
                                         <a href="{{ route('itemmasterlist.show', $item->Id) }}" 
                                            class="btn btn-view btn-sm" 
                                            data-bs-toggle="tooltip" 
@@ -151,15 +155,28 @@
                                             <i class="bi bi-eye"></i>
                                         </a>
 
-                                        <a href="{{ route('itemmasterlist.edit', $item->Id) }}" 
-                                           class="btn btn-edit btn-sm" 
-                                           data-bs-toggle="tooltip" 
-                                           title="Edit Item">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
+                                        {{-- Edit Button (Disabled if in use) --}}
+                                        @if($isInUse)
+                                            <button class="btn btn-secondary btn-sm" 
+                                                    disabled
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Cannot edit - Item is in use">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                        @else
+                                            <a href="{{ route('itemmasterlist.edit', $item->Id) }}" 
+                                               class="btn btn-edit btn-sm" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Edit Item">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                        @endif
 
-                                        @if ($item->inUse())
-                                            <span class="badge in-use-badge" title="Item is in use and cannot be deleted">
+                                        {{-- Delete Button (Disabled if in use) --}}
+                                        @if($isInUse)
+                                            <span class="badge in-use-badge" 
+                                                  data-bs-toggle="tooltip" 
+                                                  title="Item is in use and cannot be edited or deleted">
                                                 In Use
                                             </span>
                                         @else
@@ -167,6 +184,7 @@
                                                     class="btn btn-delete btn-sm delete-btn"
                                                     data-id="{{ $item->Id }}"
                                                     data-name="{{ $item->ItemName }}"
+                                                    data-bs-toggle="tooltip" 
                                                     title="Delete Item">
                                                 <i class="bi bi-trash text-white"></i>
                                             </button>
@@ -244,6 +262,7 @@
 .btn-view { background-color: #5b6b79 !important; color: white !important; }
 .btn-edit { background-color: #e58a00 !important; color: white !important; }
 .btn-delete { background-color: #dc3545 !important; color: white !important; }
+.btn-secondary { opacity: 0.6; cursor: not-allowed !important; }
 .btn-view:hover, .btn-edit:hover, .btn-delete:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -254,7 +273,7 @@
 .bi { font-size: 0.875rem; color: white; }
 .badge { font-size: 0.75em; padding: 0.35em 0.65em; }
 
-/* NEW In Use Style */
+/* In Use Badge Style */
 .in-use-badge {
     background-color: #4680ff !important;
     color: #ffffff !important;
@@ -265,6 +284,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 0.375rem;
+    cursor: default !important;
 }
 
 .table-responsive { border-radius: 0.375rem; }
