@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
+use App\Models\ThirdParty\SupplierMaster;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceAssignRequest;
@@ -27,10 +28,8 @@ class PropertyMaintananceAssignController extends Controller
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
         $maintenancerequests = PropertyMaintenanceRequest::all();
         $employees = Employee::all();
-        $suppliers = Supplier::where('Active_Status', true)
-            ->select('ThirdPartyID')
-            ->distinct()
-            ->get();
+        $suppliers = SupplierMaster::where('IsPrequalified', true)
+            ->select('ThirdPartyId')->get();
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
         $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
         return view('property.maintenanceandissues.assignrequests.create', compact('maintenancerequests', 'employees', 'suppliers', 'priorityLevels','assignmentTypes'));
