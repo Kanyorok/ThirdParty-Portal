@@ -32,7 +32,7 @@
                             <select class="form-select @error('tender_ref') is-invalid @enderror" id="tenderSelect" name="tender_ref" required>
                                 <option selected disabled>-- Select Tender --</option>
                                 @foreach ($tenders as $tender)
-                                    <option value="{{ $tender->TenderNo }}">{{ $tender->TenderNo }}</option>
+                                    <option value="{{ $tender->TenderNo }}">{{ $tender->Title }}--{{ $tender->TenderNo }}</option>
                                 @endforeach
                             </select>
                             @error('tender_ref')

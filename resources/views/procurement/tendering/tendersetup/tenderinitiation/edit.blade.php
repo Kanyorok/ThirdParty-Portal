@@ -4,14 +4,14 @@
     <div class="container mt-4">
         <h4 class="mb-4">📄 Tender Item Details – {{$tender->TenderNo}}</h4>
 
-
         <!-- Tender Summary Info -->
         <div class="card shadow-sm mb-3">
             <div class="card-body">
-                <form method="POST" action="{{ route('initiatetender.update', $tender->Id) }}">
-            @csrf
-            @method('PUT')
+                <form method="POST" action="{{ route('initiatetender.update', $tender->Id) }}" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
                     <input type="hidden" name="type" value='editTenderInfo'>
+                    
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Tender Title</label>
@@ -25,8 +25,8 @@
                             <label class="form-label fw-bold">Tender Type</label>
                             <select class="form-select" id="tenderType" name="TenderType" required>
                                 <option value="">-- Select Tender Type --</option>
-                                <option value="op" id="openTender" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender</option>
-                                <option value="rs" id="restrictedTender" {{$tender->TenderType->value=='rs'?'selected':''}}>Restricted Tender</option>
+                                <option value="op" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender</option>
+                                <option value="rs" {{$tender->TenderType->value=='rs'?'selected':''}}>Restricted Tender</option>
                             </select>
                             @error('TenderType')
                             <div class="text-danger">{{ $message }}</div>
@@ -44,25 +44,25 @@
                             <select class="form-select" id="tenderCategory" name="tender_category_id" required>
                                 <option>-- Select Category --</option>
                                 @foreach ($tenderCategories as $item)
-                                    <option
-                                        value="{{$item->Id}}" {{$item->Id==$tenderCategory?'selected':''}}>{{$item->TenderCategory}}</option>
+                                    <option value="{{$item->Id}}" {{$item->Id==$tenderCategory?'selected':''}}>
+                                        {{$item->TenderCategory}}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Item Category</label>
-                            <select class="form-select" id="itemCategory" value="{{$itemCategory }}" required
-                                    name="item_category_id">
-                                <option selected disabled>{{$itemCategory }}</option>
-                            </select>
-                </div>
+                            <input type="text" class="form-control" value="{{$itemCategory}}" readonly>
+                            <input type="hidden" name="item_category_id" value="{{$itemCategoryID}}">
+                            <small class="text-muted">Item category is determined by tender category</small>
+                        </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Currency</label>
                             <select class="form-select" id="currencyType" name="currency_id" required>
                                 <option selected disabled>-- Select Your Currency --</option>
                                 @foreach ($allCurrency as $item)
-                                    <option value="{{$item->Id}}" {{$item->Id==$currency?'selected':''}}>{{$item->Name}}
-                                        ({{$item->Code}})
+                                    <option value="{{$item->Id}}" {{$item->Id==$currency?'selected':''}}>
+                                        {{$item->Name}} ({{$item->Code}})
                                     </option>
                                 @endforeach
                             </select>
@@ -91,134 +91,173 @@
                         <div class="col-md-4">
                             <label for="tenderDocuments" class="form-label fw-bold">Attach Tender Document:</label>
                             <input class="form-control" type="file" id="tenderDocuments" name="documents[]" multiple>
+                            <small class="text-muted">Upload additional documents (max 10MB each)</small>
                         </div>
                     </div>
+                    
                     <div class="d-flex gap-2 mt-4">
                         @canUpdate('tender')
                         <button type="submit" class="btn btn-primary"
-                                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Edit
-                            Tender Info
+                                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                            <i class="fas fa-save"></i> Update Tender Info
                         </button>
                         @endcanUpdate
                     </div>
-            </div>
-            </form>
-        </div>
-    </div>
-
-
-    <!-- Items Table -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="card-title mb-3">📦 Items in this Tender</h5>
-                <h4></h4>
-                @canUpdate('tender')
-                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
-                        data-bs-target="#addItemModal">
-                    + Add Item
-                </button>
-                @endcanUpdate
-            </div>
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
-                    <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Item Description</th>
-                        <th>Category</th>
-                        <th>Quantity</th>
-                        <th>Document</th>
-                        <th>PR Ref</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach ($items as $item)
-                        <tr>
-                            <td>{{$loop->index+1}}</td>
-                            <td>{{ $item->item?->ItemName }}</td>
-                            <td>{{ $item->category?->Name }}</td>
-                            <td>{{$item->QtyToTender}}</td>
-                            <td>document.pdf
-                                {{-- <a href=""><i class="fa fa-download"></i></a> --}}
-                            </td>
-                            <td>PR/2025/211</td>
-                            <td>
-                                @canUpdate('tender')
-                                <a href="#" class="btn btn-sm btn-outline-primary" title="Edit"
-                                   data-bs-toggle="modal" data-bs-target="#editItemModal-{{$item->id}}">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                @endcanUpdate
-                                @canDelete('tender')
-                                <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
-                                      style="display: inline;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <input type="hidden" name="type" value='crudItem'>
-                                    <input type="hidden" name="crudType" value='deleteItem'>
-                                    <input type="hidden" name="item_id" value="{{$item->id}}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            onclick="return confirm('Are you sure you want to delete Item \'{{ $item->item?->ItemName }}\'? This action cannot be undone.')">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                                @endcanDelete
-                            </td>
-                        </tr>
-                    @endforeach
-
-                    </tbody>
-                    <tfoot class="table-light fw-bold text-end">
-                    </tfoot>
-                </table>
+                </form>
             </div>
         </div>
-    </div>
 
+        <!-- Attached Documents Section -->
+        @if(isset($documents) && $documents->isNotEmpty())
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">📎 Attached Documents</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 5%">#</th>
+                                <th style="width: 40%">File Name</th>
+                                <th style="width: 15%">File Type</th>
+                                <th style="width: 15%">Size</th>
+                                <th style="width: 15%">Uploaded</th>
+                                <th style="width: 10%" class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($documents as $doc)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    <i class="fas fa-file-{{ $doc->getFileIcon() }} text-primary me-2"></i>
+                                    {{ $doc->FileName ?? 'Document' }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ strtoupper($doc->FileExtension ?? 'N/A') }}
+                                    </span>
+                                </td>
+                                <td>{{ $doc->getFormattedSize() }}</td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ $doc->CreatedOn ? \Carbon\Carbon::parse($doc->CreatedOn)->format('M d, Y H:i') : 'N/A' }}
+                                    </small>
+                                </td>
+                                <td class="text-center">
+                                    @if($doc->canView())
+                                        <a href="{{ $doc->getViewUrl() }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="View Document"
+                                           target="_blank">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ $doc->getDownloadUrl() }}" 
+                                           class="btn btn-sm btn-outline-success" 
+                                           title="Download"
+                                           download>
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    @else
+                                        <span class="text-muted small">No access</span>
+                                    @endif
+                                    
+                                    @canDelete('tender')
+                                        @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger" 
+                                                    title="Delete Document"
+                                                    onclick="deleteDocument({{ $doc->Id }}, '{{ $doc->FileName }}')">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        @endif
+                                    @endcanDelete
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @else
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">📎 Attached Documents</h5>
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle"></i> No documents attached yet. Use the form above to upload documents.
+                </div>
+            </div>
+        </div>
+        @endif
 
-    @if ($tender->TenderType?->name == 'Restricted')
-        <!-- Selected Suppliers Section -->
-        <div class="card shadow-sm mb-5">
+        <!-- Items Table -->
+        <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-3">🏷️ Selected Suppliers (Restricted Tender)</h5>
-                    <h4></h4>
+                    <h5 class="card-title mb-3">📦 Items in this Tender</h5>
                     @canUpdate('tender')
-                    <a href="#" class="btn btn-sm btn-success"
-                       data-bs-toggle="modal" data-bs-target="#addSupplierModal">+ Add Supplier</a>
+                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
+                            data-bs-target="#addItemModal">
+                        + Add Item
+                    </button>
                     @endcanUpdate
                 </div>
+                
+                @if($items->isEmpty())
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No items added yet. Click "Add Item" to get started.
+                    </div>
+                @else
                 <div class="table-responsive">
-                    <table class="table table-bordered align-middle">
+                    <table class="table table-bordered table-striped align-middle">
                         <thead class="table-light">
                         <tr>
                             <th>#</th>
-                            <th>Supplier Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th class="text-center">Action</th>
+                            <th>Item Description</th>
+                            <th>Category</th>
+                            <th>Source</th>
+                            <th>Quantity</th>
+                            <th>PR Ref</th>
+                            <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
-            @foreach ($suppliers as $item)
+                        @foreach ($items as $item)
                             <tr>
-                                <td>{{$loop->index+1}}</td>
-                <td>{{ $item->supplier->thirdParty->TradingName ?? $item->supplier->thirdParty->ThirdPartyName ?? '—' }}</td>
-                <td>{{ $item->supplier->thirdParty->Email ?? '—' }}</td>
-                <td>{{ $item->supplier->thirdParty->Phone ?? '—' }}</td>
-                                <td class="text-center">
+                                <td>{{$loop->iteration}}</td>
+                                <td>{{ $item->item?->ItemName ?? 'N/A' }}</td>
+                                <td>{{ $item->category?->Name ?? 'N/A' }}</td>
+                                <td>
+                                    <span class="badge bg-{{ $item->SourceType === 'PLAN' ? 'primary' : 'secondary' }}">
+                                        {{ $item->SourceType ?? 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>{{ number_format($item->QtyToTender, 2) }}</td>
+                                <td>{{ $item->RelatedPRID ?? '—' }}</td>
+                                <td>
+                                    @if(strtoupper($item->SourceType) === 'MANUAL')
+                                        @canUpdate('tender')
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editItemModal-{{$item->Id}}"
+                                                title="Edit Quantity">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        @endcanUpdate
+                                    @else
+                                        <span class="text-muted small">Plan items cannot be edited</span>
+                                    @endif
+                                    
                                     @canDelete('tender')
                                     <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
                                           style="display: inline;">
                                         @csrf
                                         @method('PATCH')
-                    <input type="hidden" name="type" value='crudSupplier'>
-                                        <input type="hidden" name="crudType" value='deleteSupplier'>
-                    <input type="hidden" name="supplier_id" value="{{$item->Id}}">
+                                        <input type="hidden" name="type" value='crudItem'>
+                                        <input type="hidden" name="crudType" value='deleteItem'>
+                                        <input type="hidden" name="item_id" value="{{$item->Id}}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                        onclick="return confirm('Are you sure you want to delete Supplier name: \'{{ $item->supplier->thirdParty->TradingName ?? $item->supplier->thirdParty->ThirdPartyName ?? 'Supplier' }}\'? This action cannot be undone.')">
+                                                onclick="return confirm('Are you sure you want to delete item \'{{ $item->item?->ItemName }}\'? This action cannot be undone.')">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
@@ -226,224 +265,377 @@
                                 </td>
                             </tr>
                         @endforeach
-                        <!-- More suppliers -->
                         </tbody>
                     </table>
                 </div>
+                @endif
             </div>
         </div>
 
+        @if ($tender->TenderType?->name == 'Restricted')
+            <!-- Selected Suppliers Section -->
+            <div class="card shadow-sm mb-5">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-3">🏷️ Selected Suppliers (Restricted Tender)</h5>
+                        @canUpdate('tender')
+                        <button type="button" class="btn btn-sm btn-success"
+                                data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                            + Add Supplier
+                        </button>
+                        @endcanUpdate
+                    </div>
+                    
+                    @if($suppliers->isEmpty())
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> No suppliers selected. Restricted tenders require at least one supplier.
+                        </div>
+                    @else
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Supplier Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach ($suppliers as $item)
+                                <tr>
+                                    <td>{{$loop->iteration}}</td>
+                                    <td>{{ $item->supplier->thirdParty->TradingName ?? $item->supplier->thirdParty->ThirdPartyName ?? '—' }}</td>
+                                    <td>{{ $item->supplier->thirdParty->Email ?? '—' }}</td>
+                                    <td>{{ $item->supplier->thirdParty->Phone ?? '—' }}</td>
+                                    <td class="text-center">
+                                        @canDelete('tender')
+                                        <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
+                                              style="display: inline;">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="type" value='crudSupplier'>
+                                            <input type="hidden" name="crudType" value='deleteSupplier'>
+                                            <input type="hidden" name="supplier_id" value="{{$item->Id}}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                    onclick="return confirm('Remove supplier \'{{ $item->supplier->thirdParty->TradingName ?? $item->supplier->thirdParty->ThirdPartyName }}\'?')">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                        @endcanDelete
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+                </div>
+            </div>
         @endif
+    </div>
 
-        </div>
+    <!-- Add Item Modal -->
 
-
-        <!-- Add Item Modal -->
-        <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content rounded-3 shadow">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addItemModalLabel">Add New Item</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
-                          enctype="multipart/form-data">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="type" value='crudItem'>
-                        <input type="hidden" name="crudType" value='addItem'>
-                        <input type="hidden" name="itemCategoryID" value="{{$itemCategoryID}}">
-
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="item_id" class="form-label fw-bold">Item</label>
-                                <select name="item_id" id="item_id" class="form-select" required>
-                                    <option selected>-- Select Item --</option>
-                                    @foreach($otherItemsForThatTender as $item)
-                                        <option value="{{ $item->Id }}">{{ $item->ItemName }}</option>
-                            @endforeach
-                        </select>
-                                @error('item_id')
-                                <div class="text-danger">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                            <div class="mb-3">
-                                <label for="QtyToTender" class="form-label fw-bold">Quantity to Tender</label>
-                                <input type="number" name="QtyToTender" id="QtyToTender" class="form-control" required>
-                                @error('QtyToTender')
-                                <div class="text-danger">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                            <div class="mb-3">
-                                <label for="Document" class="form-label fw-bold">Upload Specs Document</label>
-                                <input type="file" name="Document" id="Document" class="form-control">
-                                @error('Document')
-                                <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="PRNumber" class="form-label fw-bold">PR Number
-                                    <small>(Optional)</small></label>
-                                <input type="text" name="pr_ref" id="PRNumber" class="form-control"
-                                       placeholder="PR/2025/xxx">
-                                @error('PRNumber')
-                                <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                    </div>
-                </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                class="btn btn-success"
-                                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"
-                            >
-                                Add Item
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="addItemModalLabel">
+                    <i class="fas fa-plus-circle"></i> Add New Item
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </div>
 
+            <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="type" value='crudItem'>
+                <input type="hidden" name="crudType" value='addItem'>
+                <input type="hidden" name="itemCategoryID" value="{{$itemCategoryID}}">
 
-        <!-- Edit Item Modal -->
-        @foreach ($items as $item)
-            <div class="modal fade" id="editItemModal-{{$item->id}}" tabindex="-1" aria-labelledby="addItemModalLabel"
-                 aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content rounded-3 shadow">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="addItemModalLabel">Edit Item</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-body">
+                    @if(!empty($otherItemsForThatTender) && count($otherItemsForThatTender) > 0)
+                        <div class="mb-3">
+                            <label for="item_id" class="form-label fw-bold">
+                                Item <span class="text-danger">*</span>
+                            </label>
+                            <select name="item_id" id="item_id" class="form-select" required>
+                                <option value="" selected disabled>-- Select Item --</option>
+                                @foreach($otherItemsForThatTender as $availableItem)
+                                    <option value="{{ $availableItem['Id'] }}">
+                                        {{ $availableItem['ItemName'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">
+                                Only items matching tender category "{{ $itemCategory }}" are shown
+                            </small>
+                            @error('item_id')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="type" value="crudItem">
-                            <input type="hidden" name="crudType" value="updateQty">
-                            <input type="hidden" name="item_id" value="{{ $item->Id ?? $item->id }}">
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label for="item_id" class="form-label">Item</label>
-                                    <select name="item_id" id="item_id" class="form-select" required>
-                                        <option>-- Select Item --</option>
-                                        @foreach($otherItemsForThatTender as $item1)
-                                            <option
-                                                value="{{ $item1->Id }}" {{$item1->ID==$item->itemID?'selected':''}}>{{ $item1->ItemName }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                        <div class="mb-3">
+                            <label for="QtyToTender" class="form-label fw-bold">
+                                Quantity to Tender <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" step="0.01" min="0.01" name="QtyToTender" 
+                                   id="QtyToTender" class="form-control" 
+                                   placeholder="Enter quantity" required>
+                            @error('QtyToTender')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                                <div class="mb-3">
-                                     <label for="QtyToTender" class="form-label">Quantity to Tender (Manual items only)</label>
-                                     <input type="number" step="any" name="QtyToTender" value="{{$item->QtyToTender}}"
-                                           id="QtyToTender" class="form-control" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="Document" class="form-label">Upload Specs Document</label>
-                                    <input type="file" name="Document" id="Document" class="form-control">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="PRNumber" class="form-label">PR Number</label>
-                                    <input type="text" name="PRNumber" value="{{$item->RelatedPRID}}" id="PRNumber"
-                                           class="form-control" placeholder="PR/2025/xxx" required>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
-                                </button>
-                                <button type="submit" class="btn btn-success">Update Quantity</button>
-                            </div>
-                        </form>
-                    </div>
+                        <!-- REMOVED PR REFERENCE INPUT - IT'S AUTO-GENERATED -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>PR Reference will be auto-generated</strong><br>
+                            Format: <code>PR/{{ $tender->TenderNo }}/MAN-###</code>
+                        </div>
+                    @else
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>No items available</strong><br>
+                            No items match the selected tender category "{{ $itemCategory }}". 
+                            Items must:
+                            <ul class="mb-0 mt-2">
+                                <li>Belong to the correct item category</li>
+                                <li>Have the correct item type for this tender category</li>
+                                <li>Have a valid price set</li>
+                                <li>Not be deleted</li>
+                            </ul>
+                        </div>
+                    @endif
                 </div>
-            </div>
-        @endforeach
 
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    @if(!empty($otherItemsForThatTender) && count($otherItemsForThatTender) > 0)
+                        <button type="submit" class="btn btn-success"
+                                onclick="this.disabled=true; this.innerText='Adding...'; this.form.submit();">
+                            <i class="fas fa-check"></i> Add Item
+                        </button>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
+  
+<!-- Edit Item Modal (Only for MANUAL items) -->
+@foreach ($items as $item)
+    @if(strtoupper(string: $item->SourceType) === 'MANUAL')
+    <div class="modal fade" id="editItemModal-{{$item->Id}}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit"></i> Edit Item Quantity
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
 
-        <!-- Add Supplier based on categoryfilter Modal -->
-        <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addItemModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content rounded-3 shadow">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addItemModalLabel">Add Supplier</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="type" value="crudItem">
+                    <input type="hidden" name="crudType" value="updateQty">
+                    <input type="hidden" name="item_id" value="{{ $item->Id }}">
+                    
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <div class="mb-2">
+                                <strong>Item:</strong> {{ $item->item?->ItemName ?? 'N/A' }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Current Quantity:</strong> {{ number_format($item->QtyToTender, 2) }}
+                            </div>
+                            @if($item->RelatedPRID)
+                                <div class="mb-0">
+                                    <strong>PR Reference:</strong> 
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-lock"></i> {{ $item->RelatedPRID }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i> Auto-generated and locked
+                                    </small>
+                                </div>
+                            @else
+                                <div class="mb-0">
+                                    <span class="text-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> No PR reference assigned
+                                    </span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="QtyToTender-{{$item->Id}}" class="form-label fw-bold">
+                                New Quantity <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" step="0.01" min="0.01" 
+                                   name="QtyToTender" 
+                                   value="{{$item->QtyToTender}}"
+                                   id="QtyToTender-{{$item->Id}}" 
+                                   class="form-control" 
+                                   required>
+                            <small class="text-muted">Only quantity can be edited. PR reference is locked after creation.</small>
+                        </div>
                     </div>
 
-                    <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="type" value='crudSupplier'>
-                        <input type="hidden" name="crudType" value='addSupplier'>
-                        <div class="modal-body">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Quantity
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+@endforeach
+    <!-- Add Supplier Modal -->
+    <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-plus"></i> Add Supplier
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="type" value='crudSupplier'>
+                    <input type="hidden" name="crudType" value='addSupplier'>
+                    
+                    <div class="modal-body">
+                        @if(!empty($otherSuppliers) && count($otherSuppliers) > 0)
                             <div class="mb-3">
-                                <label for="item_id" class="form-label">Select Supplier</label>
+                                <label for="supplier_id" class="form-label fw-bold">
+                                    Select Supplier <span class="text-danger">*</span>
+                                </label>
                                 <select name="supplier_id" id="supplier_id" class="form-select" required>
-                                    <option selected disabled>-- Select Supplier --</option>
-                                    @foreach($otherSuppliers as $item)
-                                        <option value="{{ $item->Id }}">{{ $item->SupplierName }}
-                                            | {{ $item->ContactPhone }}</option>
+                                    <option value="" selected disabled>-- Select Supplier --</option>
+                                    @foreach($otherSuppliers as $supplier)
+                                        <option value="{{ $supplier->Id }}">
+                                            {{ $supplier->SupplierName }}
+                                            @if($supplier->ContactPhone)
+                                                | {{ $supplier->ContactPhone }}
+                                            @endif
+                                        </option>
                                     @endforeach
                                 </select>
+                                <small class="text-muted">
+                                    Only prequalified suppliers for "{{ $itemCategory }}" category
+                                </small>
                             </div>
-                        </div>
+                        @else
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                No additional suppliers available for the "{{ $itemCategory }}" category.
+                            </div>
+                        @endif
+                    </div>
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
-                            </button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        @if(!empty($otherSuppliers) && count($otherSuppliers) > 0)
                             @canUpdate('tender')
-                            <button type="submit" class="btn btn-success">Add Supplier</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Add Supplier
+                            </button>
                             @endcanUpdate
-                        </div>
-                    </form>
-                </div>
+                        @endif
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
+    <!-- Delete Document Confirmation Modal -->
+    <div class="modal fade" id="deleteDocumentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle"></i> Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="deleteDocumentForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete the document "<strong id="documentFileName"></strong>"?</p>
+                        <p class="text-danger mb-0">This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Delete Document
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 @endsection
+
 @push('scripts')
 <script>
 (function(){
-  const tenderCatSel = document.getElementById('tenderCategory');
-  const itemCatSel   = document.getElementById('itemCategory');
-
-  async function refreshItemCategories(){
-    const catId = tenderCatSel && tenderCatSel.value ? tenderCatSel.value : '';
-    if (!catId) { return; }
-    const url = `{{ route('initiatetender.allowedCategories') }}` + `?tender_category_id=${encodeURIComponent(catId)}`;
-    try{
-      const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const data = await res.json();
-      if(!data.ok) return;
-      const current = itemCatSel.value;
-      itemCatSel.innerHTML = '<option value="" disabled selected>-- Select Category --</option>';
-      (data.categories || []).forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.Id; opt.textContent = c.Name;
-        if (String(c.Id) === String(current)) opt.selected = true;
-        itemCatSel.appendChild(opt);
-      });
-    }catch(e){ /* ignore */ }
-  }
-
-  if (tenderCatSel) {
-    tenderCatSel.addEventListener('change', refreshItemCategories);
-    if (tenderCatSel.value) { refreshItemCategories(); }
-  }
+    const tenderCatSel = document.getElementById('tenderCategory');
+    
+    if (tenderCatSel) {
+        tenderCatSel.addEventListener('change', function() {
+            if (this.value) {
+                alert('Warning: Changing the tender category will require you to re-select items that match the new category.');
+            }
+        });
+    }
 })();
+
+// Delete document function
+function deleteDocument(documentId, fileName) {
+    if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/documents/${documentId}`;
+        
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+        form.appendChild(csrfInput);
+        
+        // Add DELETE method
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 @endpush

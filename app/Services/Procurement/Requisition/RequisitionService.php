@@ -8,13 +8,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use App\Models\Procurement\Requisitions;
-use App\Services\Procurement\Requisition\RequisitionWorkflowService;
+use App\Services\Workflow\ApprovalWorkflow;
+use App\Enums\WorfklowStatus; // You'll need this enum
+use App\Enums\WorkflowStatus;
 
 class RequisitionService
 {
-    /**
-     * Create a new class instance.
-     */
     public function __construct()
     {
         //
@@ -23,61 +22,70 @@ class RequisitionService
     public static function addRequisition($branch, $department, $remarks, $category, User $actor)
     {
         try {
-            // Start transaction and execute the stored procedure
-            DB::transaction(function () use ($branch, $department, $remarks, $category, $actor) {
+            $requisitionId = null;
 
+            DB::transaction(function () use ($branch, $department, $remarks, $category, $actor, &$requisitionId) {
+                // Execute stored procedure
                 DB::statement('EXEC p_AddRequisition ?, ?, ?, ?, ?', [
                     $branch,
                     $department,
                     $remarks,
                     $category,
-                    $actor->Id // Pass the User ID, not the entire User model
+                    $actor->Id
                 ]);
 
-                // Manually trigger workflow since DB::statement doesn't fire Eloquent events
+                // Get the newly created requisition
                 $requisition = Requisitions::where('CreatedBy', $actor->Id)
                     ->orderBy('CreatedOn', 'desc')
                     ->first();
 
                 if ($requisition) {
-                    // Reload to ensure relationships (like statusDetail) are available
+                    $requisitionId = $requisition->Id;
+                    
+                    // Load relationships
                     $requisition->load('statusDetail');
 
+                    // Submit for approval if in pending status
                     if ($requisition->isPendingApproval()) {
-                        $workflowService = app(RequisitionWorkflowService::class);
-                        $workflowService->submit($requisition, $actor, 'Initial submission');
+                        // Create workflow instance for requisitions
+                        $workflow = new ApprovalWorkflow('RequisitionStatus', 'DocStatus');
+                        
+                        // Submit using the workflow
+                        $workflow->submit(
+                            $requisition, 
+                            $actor, 
+                            WorkflowStatus::Pending, // Your enum value
+                            'Initial requisition approval submission'
+                        );
                     }
                 }
             });
 
             return [
                 'status' => 'success',
-                'message' => 'Requisition successfully created.'
+                'message' => 'Requisition successfully created and submitted for approval.',
+                'requisition_id' => $requisitionId
             ];
         } catch (QueryException $e) {
-            // Log the SQL error
             Log::error('SQL Error executing p_AddRequisition', [
                 'message' => $e->getMessage(),
                 'exception' => $e
             ]);
 
-            // Return the error message back to the controller
             return [
                 'status' => 'error',
-                'message' => 'SQL error executing requisition creation',
+                'message' => 'Database error creating requisition',
                 'error' => $e->getMessage()
             ];
         } catch (Throwable $e) {
-            // Log the exception for debugging
             Log::error('Error executing p_AddRequisition', [
                 'message' => $e->getMessage(),
                 'exception' => $e
             ]);
 
-            // Return a custom error message or handle as needed
             return [
                 'status' => 'error',
-                'message' => 'Error executing requisition creation',
+                'message' => 'Error creating requisition',
                 'error' => $e->getMessage()
             ];
         }
@@ -95,65 +103,61 @@ class RequisitionService
                 ->get();
         } catch (QueryException $e) {
             Log::error('Error fetching item types: ' . $e->getMessage());
-            return collect(); // Return an empty collection on error
+            return collect();
         }
     }
-    //
-  public static function fetchRequisition()
-{
-    return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
-        ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.Id', '=', 't_RequisitionLines.RequisitionId')
-        ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
-        ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Requisitions.BranchID', '=', 't_Branches.Id')
-        ->leftJoin(DB::raw('t_Departments WITH (NOLOCK)'), 't_Requisitions.DepartmentID', '=', 't_Departments.Id')
-        ->leftJoin(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'), 't_Requisitions.PlanRef', '=', 't_ConsolidatedProcurementPlan.PlanID')
-        ->select(DB::raw('
-            t_Requisitions.Id,
-            t_Requisitions.RequisitionNo,
-            COALESCE(t_Branches.Name, t_Requisitions.BranchID) as BranchID,
-            COALESCE(t_Departments.Name, t_Requisitions.DepartmentID) as DepartmentID,
-            t_Requisitions.Remarks,
-            CASE 
-                WHEN t_Requisitions.DocStatus = \'Ap\' THEN \'Approved\'
-                WHEN t_Requisitions.DocStatus = \'AP\' THEN \'Approved\'
-                WHEN t_Requisitions.DocStatus = \'pe\' THEN \'Pending\'
-                WHEN t_Requisitions.DocStatus = \'PE\' THEN \'Pending\'
-                WHEN t_Requisitions.DocStatus = \'Re\' THEN \'Rejected\'
-                WHEN t_Requisitions.DocStatus = \'RE\' THEN \'Rejected\'
-                WHEN t_CodeDetails.Description IS NOT NULL THEN t_CodeDetails.Description
-                ELSE \'Draft\'
-            END as Status,
-            t_Requisitions.CreatedOn,
-            -- Calculate total cost: SUM(Quantity * ExpectedPrice) for all items in this requisition
-            SUM(ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)) as ExpectedPrice,
-            -- Count total items for this requisition
-            COUNT(CASE WHEN t_RequisitionLines.Id IS NOT NULL THEN 1 END) as itemcount,
-            -- Procurement plan details
-            CASE 
-                WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
-                THEN t_ConsolidatedProcurementPlan.Title + \' - \' + t_ConsolidatedProcurementPlan.ReferenceNumber
-                ELSE NULL
-            END as PlanTitle
-        '))
-        ->groupBy(
-            't_Requisitions.Id',
-            't_Requisitions.RequisitionNo',
-            't_Requisitions.BranchID',
-            't_Requisitions.DepartmentID',
-            't_Requisitions.Remarks',
-            't_CodeDetails.Description',
-            't_Requisitions.CreatedOn',
-            't_Departments.Name',
-            't_Branches.Name',
-            't_ConsolidatedProcurementPlan.PlanID',
-            't_ConsolidatedProcurementPlan.Title',
-            't_ConsolidatedProcurementPlan.ReferenceNumber',
-            't_Requisitions.DocStatus'
-        )
-        ->orderBy('t_Requisitions.CreatedOn', 'DESC')
-        ->get();
-}
 
+    public static function fetchRequisition()
+    {
+        return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.Id', '=', 't_RequisitionLines.RequisitionId')
+            ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
+            ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Requisitions.BranchID', '=', 't_Branches.Id')
+            ->leftJoin(DB::raw('t_Departments WITH (NOLOCK)'), 't_Requisitions.DepartmentID', '=', 't_Departments.Id')
+            ->leftJoin(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'), 't_Requisitions.PlanRef', '=', 't_ConsolidatedProcurementPlan.PlanID')
+            ->select(DB::raw('
+                t_Requisitions.Id,
+                t_Requisitions.RequisitionNo,
+                COALESCE(t_Branches.Name, t_Requisitions.BranchID) as BranchID,
+                COALESCE(t_Departments.Name, t_Requisitions.DepartmentID) as DepartmentID,
+                t_Requisitions.Remarks,
+                CASE 
+                    WHEN t_Requisitions.DocStatus = \'Ap\' THEN \'Approved\'
+                    WHEN t_Requisitions.DocStatus = \'AP\' THEN \'Approved\'
+                    WHEN t_Requisitions.DocStatus = \'pe\' THEN \'Pending\'
+                    WHEN t_Requisitions.DocStatus = \'PE\' THEN \'Pending\'
+                    WHEN t_Requisitions.DocStatus = \'Re\' THEN \'Rejected\'
+                    WHEN t_Requisitions.DocStatus = \'RE\' THEN \'Rejected\'
+                    WHEN t_CodeDetails.Description IS NOT NULL THEN t_CodeDetails.Description
+                    ELSE \'Draft\'
+                END as Status,
+                t_Requisitions.CreatedOn,
+                SUM(ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)) as ExpectedPrice,
+                COUNT(CASE WHEN t_RequisitionLines.Id IS NOT NULL THEN 1 END) as itemcount,
+                CASE 
+                    WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
+                    THEN t_ConsolidatedProcurementPlan.Title + \' - \' + t_ConsolidatedProcurementPlan.ReferenceNumber
+                    ELSE NULL
+                END as PlanTitle
+            '))
+            ->groupBy(
+                't_Requisitions.Id',
+                't_Requisitions.RequisitionNo',
+                't_Requisitions.BranchID',
+                't_Requisitions.DepartmentID',
+                't_Requisitions.Remarks',
+                't_CodeDetails.Description',
+                't_Requisitions.CreatedOn',
+                't_Departments.Name',
+                't_Branches.Name',
+                't_ConsolidatedProcurementPlan.PlanID',
+                't_ConsolidatedProcurementPlan.Title',
+                't_ConsolidatedProcurementPlan.ReferenceNumber',
+                't_Requisitions.DocStatus'
+            )
+            ->orderBy('t_Requisitions.CreatedOn', 'DESC')
+            ->get();
+    }
 
     public static function getRelatedRequisition($RequisitionId)
     {
@@ -174,16 +178,21 @@ class RequisitionService
                     WHEN t_Requisitions.DocStatus = 'Ap' THEN 'Approved'
                     WHEN t_Requisitions.DocStatus = 'AP' THEN 'Approved'
                     WHEN t_Requisitions.DocStatus = 'pe' THEN 'Pending'
+                    WHEN t_Requisitions.DocStatus = 'PE' THEN 'Pending'
                     WHEN t_Requisitions.DocStatus = 'Re' THEN 'Rejected'
                     WHEN t_Requisitions.DocStatus = 'RE' THEN 'Rejected'
-                    ELSE t_CodeDetails.Description 
+                    ELSE COALESCE(t_CodeDetails.Description, 'Draft')
                 END AS Status"),
                 't_Requisitions.CreatedOn',
-                DB::raw('isnull(t_Users.Name, t_Requisitions.CreatedBy) AS CreatedBy'),
+                DB::raw('ISNULL(t_Users.Name, t_Requisitions.CreatedBy) AS CreatedBy'),
                 't_Requisitions.Id',
                 DB::raw('SUM(ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)) AS ExpectedPrice'),
                 DB::raw('COUNT(t_RequisitionLines.Id) AS itemcount'),
-                DB::raw("t_ConsolidatedProcurementPlan.Title + ' - ' + t_ConsolidatedProcurementPlan.ReferenceNumber AS PlanTitle")
+                DB::raw("CASE 
+                    WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
+                    THEN t_ConsolidatedProcurementPlan.Title + ' - ' + t_ConsolidatedProcurementPlan.ReferenceNumber
+                    ELSE NULL
+                END AS PlanTitle")
             ])
             ->groupBy(
                 't_Requisitions.Id',
@@ -195,6 +204,7 @@ class RequisitionService
                 't_Requisitions.CreatedOn',
                 't_Departments.Name',
                 't_Branches.Name',
+                't_ConsolidatedProcurementPlan.PlanID',
                 't_ConsolidatedProcurementPlan.Title',
                 't_ConsolidatedProcurementPlan.ReferenceNumber',
                 't_Requisitions.CreatedBy',
@@ -212,7 +222,6 @@ class RequisitionService
             ->whereNull('DeletedOn')
             ->get();
     }
-
 
     public static function fetchDepartments()
     {

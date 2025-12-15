@@ -110,4 +110,27 @@ class Document extends Model implements SpecialPermissionContract
     {
         return 'Notification: #permission permission to ' . $this->Name;
     }
+
+   public function getFileIcon(): string
+{
+    $extension = $this->ext();
+    
+    if (!$extension) {
+        return 'alt';
+    }
+    
+    return match($extension->value) {
+        'pdf' => 'pdf',
+        'doc', 'docx' => 'word',
+        'xls', 'xlsx' => 'excel',
+        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg' => 'image',
+        'zip', 'rar', '7z', 'tar', 'gz' => 'archive',
+        'mp4', 'avi', 'mov', 'wmv' => 'video',
+        'mp3', 'wav', 'ogg' => 'audio',
+        'txt' => 'alt',
+        'html', 'htm' => 'code',
+        'ppt', 'pptx' => 'powerpoint',
+        default => 'alt'
+    };
+}
 }
