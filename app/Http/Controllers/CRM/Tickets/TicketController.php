@@ -12,8 +12,8 @@ use App\Http\Requests\Ticket\NewTicketRequest;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\CRM\Ticket;
+use App\Services\CRM\TicketService;
 use App\Services\StaticListsService;
-use App\Services\TicketService;
 use App\Traits\Controller\TicketsTrait;
 use Carbon\Carbon;
 use Exception;
@@ -57,14 +57,7 @@ class TicketController extends Controller
                         // dd($actor->teams()->select('t_TeamUser.TeamId')->get('TeamId'));
                     })->orWhere('t_Tickets.CreatedBy', $actor->Id)->orWhere(function (Builder $query) use ($actor) {
                         $query->where('t_Tickets.Party', User::getPrimaryKey())->where('t_Tickets.PartyID', $actor->Id);
-                    })->orWhereHas('watchers', function (Builder $query) use ($actor) {
-// 'Party', 'PartyID'
-                        $query->where(function (Builder $query) use ($actor) {
-                            $query->where('t_TicketUsers.PartyID', $actor->Id)->where('t_TicketUsers.Party', User::getPrimaryKey());
-                        })->orWhere(function (Builder $query) use ($actor) {
-                            $query->where('t_TicketUsers.Party', Team::getPrimaryKey())->whereIn('t_TicketUsers.PartyID', $actor->teams()->select('t_Teams.TeamID'));
-                        });
-                    });
+                    })->user($actor);
                 });
             } elseif ($request->get('_user') === 'none') {
                 $query->where(function (Builder $query) {
@@ -73,19 +66,6 @@ class TicketController extends Controller
             } elseif ($request->get('_user') !== 'all') {
                 return $this->errored('Invalid Ownership filter given');
             }
-
-
-            /*todo fix with code details
-             *   if ($request->get('_status') === 'all') {
-                  $query->whereIn('t_Tickets.Status', TicketStatusEnum::values());
-              } else {
-                  try {
-                      $status = TicketStatusEnum::fromValue($request->get('_status'));
-                      $query->where('t_Tickets.Status', $status->value);
-                  } catch (Exception) {
-                      throw new ErroredException('Invalid Status filter given');
-                  }
-              }*/
 
             if ($request->get('_priority') === 'all') {
                 $query->whereIn('t_Tickets.Priority', TicketPriorityEnum::values());
@@ -107,7 +87,6 @@ class TicketController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     * @throws ValidationException
      */
     public function store(NewTicketRequest $request): JsonResponse
     {
@@ -146,7 +125,7 @@ class TicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Exception|\Throwable $e) {
             Log::error('Error creating User ticket ' . $e->getMessage());
             return $this->errored('unexpected error creating ticket, try again later');
         }
@@ -176,7 +155,7 @@ class TicketController extends Controller
 
         return view('crm.tickets.show', compact('ticket'))
             ->with('TicketCategories', StaticListsService::getList(StaticListsService::TicketCategories))
-            ->with('canApprove', true) //todo fix code details workflow (($ticket->Status->value === TicketStatusEnum::Approval->value) && ((new TicketService($ticket))->canApprove($request->user())))
+            ->with('canApprove', (new TicketService($ticket))->canApproveTicket($request->user()))
             ->with('party', $ticket->party);
     }
 
@@ -198,7 +177,7 @@ class TicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (\Throwable|Exception $e) {
             Log::error('Error update ticket ticket ' . $e->getMessage());
             return $this->errored('unexpected error creating ticket, try again later');
         }
@@ -219,7 +198,7 @@ class TicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error update ticket ticket ' . $e->getMessage());
             return $this->errored('unexpected error creating ticket, try again later');
         }

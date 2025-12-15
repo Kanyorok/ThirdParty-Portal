@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\CRM;
 
 use App\Enums\Core\RoleEnum;
 use App\Enums\TicketPriorityEnum;
@@ -12,14 +12,20 @@ use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\SpecialPermission;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Ticket;
-use App\Models\CRM\TicketUsers;
 use App\Models\DMS\Image;
+use App\Services\BR\ClientService;
+use App\Services\CommentService;
 use App\Services\Core\ApprovalWorkflowService;
+use App\Services\CRMEmailService;
 use App\Services\DMS\ImageService;
 use App\Services\HRM\UserService;
+use App\Services\LeadService;
+use App\Services\PartyService;
+use App\Traits\Services\SpecialPermissionsTrait;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -30,12 +36,17 @@ use Yajra\DataTables\DataTables;
 
 class TicketService extends ApprovalWorkflowService
 {
+    use SpecialPermissionsTrait;
+
     public const string ALL = 'all';
 
     public function __construct(public Ticket $ticket)
     {
     }
 
+    /**
+     * @throws ErroredException
+     */
     public static function client(Client $client, CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', $start = null, $end = null, $SourceTicketID = null): TicketService
     {
         $service = self::_create($client->ClientID, Client::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end, $SourceTicketID);
@@ -76,7 +87,7 @@ class TicketService extends ApprovalWorkflowService
 
     protected static function _ID(): string
     {
-        $number = Ticket::query()->withTrashed()->count();
+        $number = Ticket::withTrashed()->count();
         do {
             $number++;
             $slug = Str::slug('T' . Str::padLeft(($number), 4, '0'));
@@ -85,84 +96,21 @@ class TicketService extends ApprovalWorkflowService
         return $slug;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public static function user(CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', $start = null, $end = null): TicketService
     {
         //  $service->sendMessage('New ticket (Ticket ID: #' . $service->ticket->TicketID . ') has been created for your issue, you will receive updates', $actor, $lead);
         return self::_create($actor->Id, User::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end);
     }
 
-    public function addWatcher(User|Team $watcher, RoleEnum $role, User $actor, bool $notify = true): static
+    /**
+     * @throws ErroredException
+     */
+    public function addWatcher(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
     {
-        if ($watcher instanceof Team) {
-            $ticketUser = $this->ticket->watchers()->lock('WITH(NOLOCK)')
-                ->where('Party', Team::getPrimaryKey())->where('PartyID', $watcher->TeamID)->first();
-            if (!$ticketUser instanceof TicketUsers) {
-                $ticketUser = new TicketUsers();
-                $ticketUser->fill([
-                    'Party' => Team::getPrimaryKey(),
-                    'CreatedBy' => $actor->Id,
-                    'TicketID' => $this->ticket->Id,
-                    'PartyID' => $watcher->TeamID,
-                    'CreatedOn' => now(),
-                ]);
-            }
-            $ticketUser->fill([
-                'Role' => $role->value,
-                'ModifiedBy' => $actor->Id,
-                'ModifiedOn' => now(),
-            ])->save();
-
-            if ($notify) {
-                $users = $watcher->users()->lock('WITH(NOLOCK)')->select(['Email', 'Name'])->lock('WITH(NOLOCK)')->inRandomOrder()->limit(15)->get(['Email', 'Name']);
-                $cc = $users->map(function ($user) {
-                    return [$user->Name => $user->Email];
-                });
-
-                CRMEmailService::createTeam(
-                    $watcher,
-                    'Notification: Added as Watchers to Ticket ' . $this->ticket->TicketID,
-                    '<p>You have been added as watchers to <a  href="' . route('tickets.show', $this->ticket->TicketID) . '">Ticket ID: #' . $this->ticket->TicketID . '</a>.</p>
-                       <p>As watchers, you will receive updates and notifications about any changes, comments, or progress related to this ticket. </p>
-                        <p>Please feel free to review the details and provide any necessary input to ensure a smooth resolution.</p>',
-                    SystemHelper::user(),
-                    $cc->toArray()
-                );
-            }
-
-            return $this;
-        }
-
-
-        $ticketUser = $this->ticket->watchers()->lock('WITH(NOLOCK)')
-            ->where('Party', User::getPrimaryKey())->where('PartyID', $watcher->Id)->first();
-
-        if (!$ticketUser instanceof TicketUsers) {
-            $ticketUser = new TicketUsers();
-            $ticketUser->fill([
-                'TicketID' => $this->ticket->Id,
-                'Party' => User::getPrimaryKey(),
-                'PartyID' => $watcher->Id,
-                'CreatedBy' => $actor->Id,
-                'CreatedOn' => now(),
-            ]);
-        }
-        $ticketUser->fill([
-            'Role' => $role->value,
-            'ModifiedBy' => $actor->Id,
-            'ModifiedOn' => now(),
-        ])->save();
-
-
-        if ($notify) {
-            CRMEmailService::createUser(
-                user: $watcher,
-                subject: 'Notification: Added as a Watcher to Ticket ' . $this->ticket->TicketID,
-                body: '<p>You have been added as watcher to <a  href="' . route('tickets.show', $this->ticket->TicketID) . '">Ticket ID: #' . $this->ticket->TicketID . '</a>.</p>
-                       <p>As watchers, you will receive updates and notifications about any changes, comments, or progress related to this ticket. </p>
-                        <p>Please feel free to review the details and provide any necessary input to ensure a smooth resolution.</p>',
-                actor: SystemHelper::user()
-            );
-        }
+        $this->_addPermissions($this->ticket, $assignee, $role, $actor, $notify);
         return $this;
     }
 
@@ -199,6 +147,9 @@ class TicketService extends ApprovalWorkflowService
         return TicketStatusEnum::fromValue($status->Value);
     }
 
+    /**
+     * @throws ErroredException
+     */
     public static function lead(Lead $lead, CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', $start = null, $end = null): TicketService
     {
         $service = self::_create($lead->LeadID, Lead::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end);
@@ -252,31 +203,28 @@ class TicketService extends ApprovalWorkflowService
     /**
      * @throws ErroredException
      */
-    public function assign(User|Team $owner): static
+    public function assign(User|Team $assignee): static
     {
         //check a previous owner as read.
-        $this->ticket->watchers()->lock('WITH(NOLOCK)')->where('t_TicketUsers.Party', $this->ticket->Owner)
-            ->where('t_TicketUsers.PartyID', $this->ticket->OwnerID)->update([
-                'Role' => RoleEnum::Read->value,
-            ]);
+        $this->addWatcher($this->ticket->assignee, RoleEnum::Read, SystemHelper::user(), false);
 
-        $this->addWatcher($owner, RoleEnum::Admin, SystemHelper::user(), false);
+        $this->addWatcher($assignee, RoleEnum::Admin, SystemHelper::user(), false);
 
-        if ($owner instanceof Team) {
+        if ($assignee instanceof Team) {
             $this->ticket->lock('WITH(NOLOCK)')->update([
                 'Owner' => Team::getPrimaryKey(),
-                'OwnerID' => $owner->TeamID,
+                'OwnerID' => $assignee->TeamID,
             ]);
 
-            $users = $owner->users()->lock('WITH(NOLOCK)')->select(['Email', 'Name'])->lock('WITH(NOLOCK)')->inRandomOrder()->limit(15)->get(['Email', 'Name']);
+            $users = $assignee->users()->lock('WITH(NOLOCK)')->select(['Email', 'Name'])->lock('WITH(NOLOCK)')->inRandomOrder()->limit(15)->get(['Email', 'Name']);
             $cc = $users->map(function ($user) {
                 return [$user->Name => $user->Email];
             });
 
             CRMEmailService::createTeam(
-                $owner,
+                $assignee,
                 'Ticket Assignment Notification ' . $this->ticket->TicketID,
-                '<p>This is to inform that a new ticket (<a  href="' . route('tickets.show', $this->ticket->TicketID) . '">[Ticket ID: #' . $this->ticket->TicketID . ']</a>) has been assigned to team ' . $owner->Name . '. </p>
+                '<p>This is to inform that a new ticket (<a  href="' . route('tickets.show', $this->ticket->TicketID) . '">[Ticket ID: #' . $this->ticket->TicketID . ']</a>) has been assigned to team ' . $assignee->Name . '. </p>
                        <p>You can access the ticket using the following link: <a  href="' . route('tickets.show', $this->ticket->TicketID) . '"> ticket details</a></p>
                         <p>Thank you for your prompt attention to this matter.</p>',
                 SystemHelper::user(),
@@ -286,16 +234,16 @@ class TicketService extends ApprovalWorkflowService
             return $this;
         }
 
-        if ($this->ticket->Party === User::getPrimaryKey() && $this->ticket->PartyID === $owner->Id) {
-            throw new ErroredException('Cannot assign ticket to ' . $owner->Name);
+        if ($this->ticket->PartyID === $assignee->Id && $this->ticket->Party === User::getPrimaryKey()) {
+            throw new ErroredException('Cannot assign ticket to ' . $assignee->Name);
         }
 
         $this->ticket->lock('WITH(NOLOCK)')->update([
             'Owner' => User::getPrimaryKey(),
-            'OwnerID' => $owner->Id,
+            'OwnerID' => $assignee->Id,
         ]);
 
-        $service = new UserService($owner);
+        $service = new UserService($assignee);
         if ($this->ticket->Priority->value === TicketPriorityEnum::Urgent->value) {
             $service->sendMessage('You have been assigned ticket (Ticket ID: #' . $this->ticket->TicketID . ') that has high priority kindly check on it.', SystemHelper::user());
         }
@@ -326,33 +274,9 @@ class TicketService extends ApprovalWorkflowService
     /**
      * @throws ErroredException
      */
-    public function deleteWatcher(TicketUsers $ticketUser, User $actor): static
+    public function deleteWatcher(SpecialPermission $permission, User $actor): static
     {
-        if ($this->ticket->Id !== $ticketUser->TicketID) {
-            throw new ErroredException('This ticket does not belong to you.');
-        }
-
-        if (($ticketUser->PartyID === $this->ticket->CreatedBy) && ($ticketUser->Party === User::getPrimaryKey())) {//check creator
-            throw new ErroredException('cannot remove creator.');
-        }
-
-        if (($ticketUser->PartyID === $this->ticket->OwnerID) && ($ticketUser->Party === $this->ticket->Owner)) {//check assigned
-            throw new ErroredException('cannot remove assigned.');
-        }
-
-        $service = new PartyService($ticketUser->party);
-        activity()->causedBy($actor)->performedOn($this->ticket)->event('delete')->log('Removed ' . $service->getName() . ' as a ticket (' . $this->ticket->TicketID . ') watcher.');
-
-        $ticketUser->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id,
-        ])->save();
-
-        $service->sendEmail(
-            'Notification: Removed as Watchers from Ticket ' . $this->ticket->TicketID,
-            '<p>You have been removed as watchers from Ticket ' . $this->ticket->TicketID . '. As a result, you will no longer receive updates or notifications related to this ticket.</p>
-                <p>Thank you for your continued support and collaboration.</p>'
-        );
+        $this->ticket = $this->_trashPermissions($this->ticket, $permission, $actor);
         return $this;
     }
 
@@ -381,6 +305,9 @@ class TicketService extends ApprovalWorkflowService
         return $this->ticket->Source;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function cancel(User $actor): static
     {
         $this->ticket->update([
@@ -403,6 +330,9 @@ class TicketService extends ApprovalWorkflowService
         return $this;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function resolve(User $actor): static
     {
         $this->ticket->update([
@@ -423,7 +353,7 @@ class TicketService extends ApprovalWorkflowService
     public function reopen(User $actor, string $reason): static
     {
         $status = self::codeDetail(TicketStatusEnum::Approval, 'TicketStatus');
-        if ($this->submittedAction($actor, $status, Ticket::getPrimaryKey(), $this->ticket->Id, $reason)) {
+        if ($this->submittedAction($actor, $status, $this->ticket, Ticket::getPrimaryKey(), $this->ticket->Id, $reason)) {
             $this->ticket->update([
                 //'Status' => TicketStatusEnum::Approval->value,
                 'StatusId' => $status->ID,
@@ -436,9 +366,19 @@ class TicketService extends ApprovalWorkflowService
         throw new  ErroredException('unexpected error occurred.');
     }
 
-    public function canApprove(User $actor): bool
+    public function canApproveTicket(User $actor): bool
     {
-        return in_array($actor->Id, $this->ticket->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true);
+        try {
+            $status = self::codeDetail(TicketStatusEnum::Approval, 'TicketStatus');
+        } catch (ErroredException $e) {
+            return false;
+        }
+
+        if ($this->ticket->StatusId !== $status->ID) {
+            return false;
+        }
+
+        return $this->canApprove($actor, Ticket::getPrimaryKey(), $this->ticket->Id);
     }
 
     public function comment(string $description, User $actor): Comment
@@ -470,7 +410,7 @@ class TicketService extends ApprovalWorkflowService
             }
             return $this;
         }
-        throw new  ErroredException('unexpected error occured.');
+        throw new  ErroredException('unexpected error occurred.');
     }
 
     /**
@@ -500,7 +440,7 @@ class TicketService extends ApprovalWorkflowService
             activity()->causedBy($actor)->performedOn($this->ticket)->event('approve')->log('Approved ticket re-open ' . $this->ticket->TicketID);
             return $this;
         }
-        throw new  ErroredException('unexpected error occured.');
+        throw new  ErroredException('unexpected error occurred.');
     }
 
     public function checkOwnership(User $user): bool
