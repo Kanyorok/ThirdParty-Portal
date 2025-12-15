@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use App\Http\Controllers\ThirdParty\ThirdPartyTypeEnum;
 
 class ThirdPartyWebController extends Controller
 {

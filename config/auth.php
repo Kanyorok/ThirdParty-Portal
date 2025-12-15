@@ -44,7 +44,8 @@ return [
         ],
         'thirdparty' => [
             'driver' => 'sanctum',
-            'provider' => 'thirdparties',
+            // 'provider' => 'thirdparties',
+            'provider' => 'third_party_users',
         ]
     ],
 
@@ -107,6 +108,16 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+        'third_party_users' => [
+            'provider' => 'third_party_users',
+            'table' => 't_ThirdPartyPasswordResets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+    ],
+
+    'verification' => [
+        'expire' => 60,
     ],
 
     /*

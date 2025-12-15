@@ -304,9 +304,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 /***
  *  This Are the API Routes for Central Report Unit C.R.U
  */
+
 use App\Http\Controllers\API\CRDB\CRDBAuthController;
 use App\Http\Controllers\API\CRDB\CRDBGeneralLedgerController;
-use App\Http\Controllers\API\CRDB\CRDBCustomerController;   
+use App\Http\Controllers\API\CRDB\CRDBCustomerController;
 // CRDB Authentication Routes (Public)
 Route::prefix('crdb')->group(function () {
     Route::post('login', [CRDBAuthController::class, 'login'])->name('crdb.login');
@@ -322,7 +323,7 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
     Route::get('syncCustomers', [CRDBCustomerController::class, 'syncCustomers'])->name('syncCustomers');
     Route::get('getClientSummaryStatement', [CRDBCustomerController::class, 'getClientSummaryStatement'])->name('getClientSummaryStatement');
     // Route::get('data', [CRDBDataController::class, 'fetch']);
-    
+
     // Health check for authenticated requests
     Route::get('health', function () {
         return response()->json([
@@ -334,6 +335,8 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
     })->name('crdb.health');
 });
 
+// Third paties Portal
+require __DIR__ . '/thirdparty.php';
+
 //api routes for workflow stages
 Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');
-

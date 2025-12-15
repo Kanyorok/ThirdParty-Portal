@@ -163,6 +163,14 @@ return [
     'url' => 'The :attribute field must be a valid URL.',
     'ulid' => 'The :attribute field must be a valid ULID.',
     'uuid' => 'The :attribute field must be a valid UUID.',
+
+
+    'first_name_required' => 'First name is required.',
+    'first_name_min' => 'First name must be at least 2 characters.',
+    'last_name_required' => 'Last name is required.',
+    'last_name_min' => 'Last name must be at least 2 characters.',
+    'phone_required' => 'Phone number is required.',
+    'phone_exists' => 'This phone number is already registered.',
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines

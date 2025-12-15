@@ -33,8 +33,23 @@ class ThirdParties extends Model
     }
 
     protected $fillable = [
-        'ThirdPartyName', 'TradingName', 'BusinessType', 'RegistrationNumber', 'TaxPIN', 'VATNumber', 'CountryId', 'LocationId', 'PhysicalAddress', 'Email', 'Phone',
-        'ImageId', 'Website', 'Status', 'Extra', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'ThirdPartyName',
+        'TradingName',
+        'BusinessType',
+        'RegistrationNumber',
+        'TaxPIN',
+        'CountryId',
+        'LocationId',
+        'PhysicalAddress',
+        'Email',
+        'Phone',
+        'ImageId',
+        'Website',
+        'Status',
+        'Extra',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -163,6 +178,4 @@ class ThirdParties extends Model
             ->whereNull('DeletedOn')
             ->with('category');
     }
-
-
 }

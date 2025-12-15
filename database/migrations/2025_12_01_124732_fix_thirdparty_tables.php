@@ -70,8 +70,7 @@ return new class extends Migration {
             $table->softDeletes('DeletedOn');
         });
 
-        Schema::table('t_ThirdParties', function (Blueprint $table) {
-        });
+        Schema::table('t_ThirdParties', function (Blueprint $table) {});
 
         $this->dropFkIfExists('t_ThirdParties', 'CountryId');
         Schema::table('t_ThirdParties', function (Blueprint $table) {
@@ -89,14 +88,22 @@ return new class extends Migration {
             $table->foreignId('LocationId')->constrained('t_Localities', 'ID');
 
             $table->dropColumn([
-                'BusinessType', 'IDNumber', 'Country', 'ApprovalStatus',
-                'Status', 'ThirdPartyType', 'PassportNo',
-                'IsPrequalified', 'CategoryId', 'CreatedOn',
-                'DeletedOn', 'ModifiedOn'
+                'BusinessType',
+                'IDNumber',
+                'Country',
+                'ApprovalStatus',
+                'Status',
+                'ThirdPartyType',
+                'PassportNo',
+                'IsPrequalified',
+                'CategoryId',
+                'CreatedOn',
+                'DeletedOn',
+                'ModifiedOn'
             ]);
         });
 
-        foreach (['CreatedBy','ModifiedBy','DeletedBy'] as $col) {
+        foreach (['CreatedBy', 'ModifiedBy', 'DeletedBy'] as $col) {
             $this->dropFkIfExists('t_ThirdParties', $col);
             if (Schema::hasColumn('t_ThirdParties', $col)) {
                 Schema::table('t_ThirdParties', fn(Blueprint $t) => $t->dropColumn($col));
@@ -129,8 +136,7 @@ return new class extends Migration {
             Schema::table('t_Suppliers', fn(Blueprint $t) => $t->dropColumn('ThirdPartyId'));
         }
 
-        Schema::table('t_Suppliers', function (Blueprint $table) {
-        });
+        Schema::table('t_Suppliers', function (Blueprint $table) {});
 
         Schema::table('t_Suppliers', function (Blueprint $table) {
             $table->foreignId('SupplierMasterId')->constrained('t_SupplierMaster', 'Id');
@@ -139,8 +145,7 @@ return new class extends Migration {
 
         $this->dropIndexIfExists('t_ThirdPartyTypes', 't_ThirdPartyTypes_Type_index');
 
-        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
-        });
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {});
 
         Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
             $table->dropUnique(['Code']);
@@ -151,8 +156,7 @@ return new class extends Migration {
             Schema::table('t_ThirdPartyTypes', fn(Blueprint $t) => $t->dropColumn('Type'));
         }
 
-        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {
-        });
+        Schema::table('t_ThirdPartyTypes', function (Blueprint $table) {});
 
         $this->dropFkIfExists('t_ThirdPartyTypes', 'Type');
         if (Schema::hasColumn('t_ThirdPartyTypes', 'Type')) {
@@ -164,13 +168,13 @@ return new class extends Migration {
             $table->string('Code')->unique()->nullable(false)->change();
         });
 
-        foreach (['CreatedBy','ModifiedBy','DeletedBy'] as $col) {
+        foreach (['CreatedBy', 'ModifiedBy', 'DeletedBy'] as $col) {
             $this->dropFkIfExists('t_ThirdPartyUsers', $col);
         }
 
         Schema::table('t_ThirdPartyUsers', function (Blueprint $table) {
             $table->jsonb('Extra')->nullable();
-            $table->dropColumn(['Gender','CreatedBy','ModifiedBy','DeletedBy']);
+            $table->dropColumn(['Gender', 'CreatedBy', 'ModifiedBy', 'DeletedBy']);
         });
 
         Schema::table('t_ThirdPartyUsers', function (Blueprint $table) {
@@ -209,8 +213,5 @@ return new class extends Migration {
         }
     }
 
-    public function down(): void
-    {
-    }
+    public function down(): void {}
 };
-
