@@ -70,21 +70,6 @@
             </div>
         </div>
 
-        {{-- <div class="col-sm-4 col-12">
-             <div class="card">
-                 <div class="card-body d-flex align-items-start row p-3">
-                     <div class="col-6">
-                         <button class="btn btn-outline-primary text-center w-100 modal-create-individual-lead"
-                                 type="button"><i class="fas fa-user"></i>&nbsp;<i class="fas fa-plus"></i> <br>
-                             Individual Lead
-                         </button>
-                     </div>
-                     <div class="col-6">
-
-                     </div>
-                 </div>
-             </div>
-         </div>--}}
         <div class="card">
             <div class="card-header p-0">
                 <div class="nav nav-pills card-header py-2">
@@ -107,7 +92,26 @@
                             <div class="col-sm-12 col-md-4">
                                 <span class="h3">Active Leads</span>
                             </div>
-                            <div class="col-sm-12 col-md-4">
+                            <div class="col-sm-6 col-md-2">
+                                <select class="form-control w-100" id="LeadStatus">
+                                    <option value="all" selected>All Status</option>
+                                    @foreach(LeadStatusEnum::cases() as $status)
+                                        @if($status === LeadStatusEnum::Cold || $status === LeadStatusEnum::Won)
+                                            @continue
+                                        @endif
+                                        <option value="{{ $status->value }}">{{ $status->name }}</option>)
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-sm-6 col-md-2">
+                                <select class="form-control w-100" id="LeadType">
+                                    <option value="all" selected>All Types</option>
+                                    @foreach(LeadTypeEnum::cases() as $type)
+                                        <option value="{{ $type->value }}">{{ $type->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-sm-12 col-md-2">
                                 <button class="btn btn-outline-primary text-center w-100 mx-1 click-summary-data"
                                         type="button"
                                         data-click_url="{{ route('leads.create',['type'=>LeadTypeEnum::Individual->name]) }}"
@@ -116,7 +120,7 @@
                                     Individual Lead
                                 </button>
                             </div>
-                            <div class="col-sm-12 col-md-4">
+                            <div class="col-sm-6 col-md-2">
                                 <button class="btn btn-outline-primary text-center w-100 mx-1 click-summary-data"
                                         type="button"
                                         data-click_url="{{ route('leads.create',['type'=>LeadTypeEnum::Company->name]) }}"
@@ -171,7 +175,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -194,6 +197,12 @@
                 if ($(".lead-counter").html() !== '<i class="fas fa-spinner fa-spin"></i>') {
                     fetchLeadCounters();
                 }
+            });
+            $("#LeadStatus").on('change', function () {
+                fetchActiveLeadsTable();
+            });
+            $("#LeadType").on('change', function () {
+                fetchActiveLeadsTable();
             });
 
 
@@ -246,8 +255,8 @@
                         {data: 'Name', name: 'Name'},
                         {data: 'OtherNames', name: 'OtherNames'},
                         {data: 'Type', name: 'Type'},
-                        {data: 'location', name: 'location.Name', searchable: false},
-                        {data: 'industry', name: 'industry.Description', searchable: false},
+                        {data: 'location', name: 'location.Name'},
+                        {data: 'ind', name: 'ind.Description'},
                         {data: 'ModifiedOn', name: 'ModifiedOn'},
                     ], "oLanguage": {
                         "sEmptyTable": "no leads found here"
@@ -285,6 +294,10 @@
                     ],
                     ajax: {
                         url: getDocumentUrl(),
+                        data: function (d) {
+                            d._status = $('#LeadStatus').val() || 'all';
+                            d._type = $('#LeadType').val() || 'all';
+                        },
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -300,7 +313,7 @@
                         {data: 'OtherNames', name: 'OtherNames'},
                         {data: 'Type', name: 'Type'},
                         {data: 'location', name: 'location.Name'},
-                        {data: 'industry', name: 'industry.Description'},
+                        {data: 'ind', name: 'ind.Description'},
                         {data: 'Status', name: 'Status'},
                         {data: 'LastContacted', name: 'LastContacted'},
                     ], "oLanguage": {
