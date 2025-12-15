@@ -558,8 +558,9 @@
                     <div class="card">
                         <div class="card-header"><h5>Private Notes</h5></div>
                         <div class="card-body">
+                            <div class="table-responsive">
                             <table id="notesTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -570,6 +571,7 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
 
@@ -640,8 +642,9 @@
                     <div class="card">
                         <div class="card-header"><h5>Task associated</h5></div>
                         <div class="card-body">
+                            <div class="table-responsive">
                             <table id="tasksTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -652,6 +655,7 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -939,7 +943,7 @@
                                         <label for="Location" class="form-label">Location <span
                                                 class="text-danger">*</span></label>
                                         <select class="form-control locations" name="Location" id="Location"
-                                                required disabled>
+                                                required>
                                             <option selected
                                                     value="{{ $lead->LocationID }}">{{ $location }}</option>
                                         </select>
@@ -1183,21 +1187,32 @@
                                 <div class="mb-3">
                                     <label class="form-label" for="meeting_initiated_title">Title <span
                                             class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="`meeting_initiated_title`"
+                                    <input type="text" class="form-control" id="meeting_initiated_title"
                                            name="meeting_initiated_title"
                                            placeholder="Title"
                                            value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->Title:'' }}">
-                                    <p id="meeting_initiated_title" class="invalid-feedback d-none error col-12"
+                                    <p id="meeting_initiated_title_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label" for="meeting_initiated_location">Location <span
                                             class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="meeting_initiated_location"
-                                           name="meeting_initiated_location"
-                                           placeholder="Location"
-                                           value="{{ ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof Meeting)?$schedule->scheduled->Location:'' }}">
-                                    <p id="meeting_location_error" class="invalid-feedback d-none error col-12"
+                                    <select class="form-control" name="meeting_initiated_location" required
+                                            id="meeting_initiated_location">
+                                        <option selected disabled>Select or Type Location/Link</option>
+                                        @foreach(\App\Services\MeetingService::rooms() as $room)
+                                            <option value="{{ $room->RoomID }}">{{ $room->Name }} - {{ $room->RoomID }}
+                                                ({{ $room->Capacity }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+
+                                    {{--  <input type="text" class="form-control" id="meeting_initiated_location"
+                                             name="meeting_initiated_location"
+                                             placeholder="Location"
+                                             value="{ { ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof Meeting)?$schedule->scheduled->Location:'' } }">--}}
+                                    <p id="meeting_initiated_location_error"
+                                       class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
 
@@ -1305,7 +1320,6 @@
                                 </div>
                             </form>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -1376,6 +1390,13 @@
                     },
                     cache: true
                 }
+            });
+
+            $('#meeting_initiated_location').select2({
+                allowClear: true,
+                tags: true,
+                placeholder: "Select Location or Type it In",
+                dropdownParent: $Modal,
             });
 
             $(document).on('click', '.add-watcher-btn', function () {
@@ -1478,7 +1499,27 @@
                     }
                 });
             });
-            $('#Location').select2();
+            $('#Location').val('{{ $lead->LocationID }}').change().prop('disabled', false).select2({
+                placeholder: "Search for the Location",
+                minimumInputLength: 2,
+                dropdownParent: $Modal,
+                ajax: {
+                    url: "{{ route('locality.select2',['country'=>$lead->country->CountryCode]) }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {q: $.trim(params.term)};
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return {text: item.Name, id: item.ID}
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
 
             {{--   $('#Location').select2({
                 placeholder: "Select a Town/City", minimumInputLength: 2,

@@ -42,6 +42,7 @@ class LeadMeetingController extends Controller
     {
         $schedule = $request->getSchedule();
         $current_start = $request->getStart();
+        $location = $request->getLocation();
         $actor = $request->user();
         $meeting = null;
         if ($schedule instanceof Schedule) {
@@ -51,7 +52,7 @@ class LeadMeetingController extends Controller
             }
         }
         try {
-            $meeting = $this->startLeadMeeting($lead, $request->validated('meeting_initiated_title'), $request->validated('meeting_initiated_location'), $current_start, $actor, $meeting, $schedule);
+            $meeting = $this->startLeadMeeting($lead, $request->validated('meeting_initiated_title'), $location, $current_start, $actor, $meeting, $schedule);
         } catch (Exception $e) {
             Log::error('Error starting meeting  ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
@@ -67,32 +68,12 @@ class LeadMeetingController extends Controller
     public function update(Request $request, Lead $lead, $meeting_id): JsonResponse
     {
         $request->validate([
-                            'ongoing_meeting_title'      => [
-                                                             'required',
-                                                             'min:5',
-                                                             'max:200',
-                                                            ],
-                            'ongoing_meeting_location'   => [
-                                                             'required',
-                                                             'min:5',
-                                                             'max:200',
-                                                            ],
-                            'ongoing_meeting_discussion' => [
-                                                             'required',
-                                                             'min:5',
-                                                             'max:5000',
-                                                            ],
-                            'meeting_notes'              => [
-                                                             'nullable',
-                                                             'max:5000',
-                                                            ],
-                            'ongoing_meeting_users'      => [
-                                                             'required',
-                                                             'array',
-                                                             'min:1',
-                                                             'max:200',
-                                                            ],
-                           ]);
+            'ongoing_meeting_title' => ['required', 'min:5', 'max:200'],
+            'ongoing_meeting_location' => ['required', 'min:5', 'max:200'],
+            'ongoing_meeting_discussion' => ['required', 'min:5', 'max:5000'],
+            'meeting_notes' => ['nullable', 'max:5000'],
+            'ongoing_meeting_users' => ['required', 'array', 'min:1', 'max:200'],
+        ]);
 
         $meeting = $lead->meetings()->where('t_Meetings.MeetingID', $meeting_id)->first();
         if (!$meeting instanceof Meeting) {

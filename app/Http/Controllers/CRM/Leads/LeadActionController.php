@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class LeadActionController extends Controller
 {
@@ -108,7 +109,7 @@ class LeadActionController extends Controller
             DB::transaction(static function () use ($lead, $actor) {
                 (new LeadService($lead))->won($actor);
             });
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Lead (' . $lead->LeadID . ') mark as won.');
             Log::error($e);
         }
@@ -121,25 +122,25 @@ class LeadActionController extends Controller
         $this->authorize('update', $lead);
 
         $request->validate([
-                            'Status'     => [
-                                             'required',
-                                             'string',
-                                             Rule::in(LeadStatusEnum::values()),
-                                            ],
-                            'LossReason' => [
-                                             'required_if:Status,' . LeadStatusEnum::Cold->value,
-                                Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
-                                                                            return $query->where('CodeID', StaticListsService::LeadLossReason);
-                                             }),
-                                            ],
-                           ]);
+            'Status' => [
+                'required',
+                'string',
+                Rule::in(LeadStatusEnum::values()),
+            ],
+            'LossReason' => [
+                'required_if:Status,' . LeadStatusEnum::Cold->value,
+                Rule::exists('t_CodeDetails', 'ID')->where(function (Builder $query) {
+                    return $query->where('CodeID', StaticListsService::LeadLossReason);
+                }),
+            ],
+        ]);
         if ($request->get('Status') === LeadStatusEnum::Cold->value) {
             $lead->forceFill([
-                              'Status'         => LeadStatusEnum::Cold->value,
-                              'LeadLossReason' => $request->get('LossReason'),
-                              'DeletedOn'      => now(),
-                              'DeletedBy'      => $request->user()->Id,
-                             ])->save();
+                'Status' => LeadStatusEnum::Cold->value,
+                'LeadLossReason' => $request->get('LossReason'),
+                'DeletedOn' => now(),
+                'DeletedBy' => $request->user()->Id,
+            ])->save();
 
             return $this->succeeded('closed successfully', route('leads.index'));
         }
@@ -149,9 +150,9 @@ class LeadActionController extends Controller
         }
 
         $lead->update([
-                       'Status'     => $request->get('Status'),
-                       'ModifiedBy' => $request->user()->Id,
-                      ]);
+            'Status' => $request->get('Status'),
+            'ModifiedBy' => $request->user()->Id,
+        ]);
 
         return $this->succeeded('updated successfully', route('leads.show', $lead->LeadID));
     }
@@ -163,11 +164,11 @@ class LeadActionController extends Controller
     {
         $this->authorize('viewAny', Lead::class);
         $data = [
-                 'hot'    => 0,
-                 'warm'   => 0,
-                 'recent' => 0,
-                 'won'    => 0,
-                ];
+            'hot' => 0,
+            'warm' => 0,
+            'recent' => 0,
+            'won' => 0,
+        ];
 
         $hot = Lead::query()->lock('WITH(NOLOCK)')->where('Status', LeadStatusEnum::Hot->value)->count();
         $warm = Lead::query()->lock('WITH(NOLOCK)')->where('Status', LeadStatusEnum::Warm->value)->count();
