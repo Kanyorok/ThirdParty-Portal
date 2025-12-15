@@ -62,6 +62,14 @@
                         </select>
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label">Reference Salary (acting position/person)</label>
+                        <input type="number" step="0.01" name="ActingReferenceSalary" class="form-control" value="{{ old('ActingReferenceSalary', $assignment->ActingReferenceSalary) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Acting Allowance Rate (%)</label>
+                        <input type="number" step="0.01" name="ActingAllowanceRate" class="form-control" value="{{ old('ActingAllowanceRate', $assignment->ActingAllowanceRate ?? 20) }}">
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Start Date *</label>
                         <input type="date" name="StartDate" class="form-control" value="{{ old('StartDate', optional($assignment->StartDate)->format('Y-m-d')) }}" required>
                     </div>

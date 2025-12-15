@@ -115,6 +115,8 @@ class EmployeeActingAssignmentController extends Controller
             'EndDate'            => 'nullable|date|after_or_equal:StartDate',
             'Reason'             => 'nullable|string|max:255',
             'Status'             => ['nullable', Rule::in(['Pending','Approved','Rejected'])],
+            'ActingReferenceSalary' => ['nullable','numeric'],
+            'ActingAllowanceRate'   => ['nullable','numeric'],
         ]);
     }
 }

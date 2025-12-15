@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class PayrollAllowanceRuleController extends Controller
 {
-    private const ALLOWED_METHODS = ['PercentageOnBasic', 'PercentageOnGross', 'Flat', 'PercentageOnBand', 'FlatOnBand'];
+    private const ALLOWED_METHODS = ['PercentageOnBasic', 'PercentageOnGross', 'Flat', 'PercentageOnBand', 'FlatOnBand', 'PercentageOfActingReference'];
 
     public function index($allowanceId)
     {

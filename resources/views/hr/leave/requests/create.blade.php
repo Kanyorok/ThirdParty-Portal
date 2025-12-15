@@ -29,10 +29,12 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Employee *</label>
-                        <select name="EmployeeID" class="form-select" required>
+                        <select name="EmployeeID" id="EmployeeID" class="form-select" required>
                             <option value="">Select</option>
                             @foreach($employees as $emp)
-                                <option value="{{ $emp->Id }}" @selected(old('EmployeeID') == $emp->Id)>{{ $emp->FirstName }} {{ $emp->LastName }}</option>
+                                <option value="{{ $emp->Id }}"
+                                        data-department="{{ $emp->DepartmentID }}"
+                                        @selected(old('EmployeeID') == $emp->Id)>{{ $emp->FirstName }} {{ $emp->LastName }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -44,6 +46,7 @@
                                 <option value="{{ $type->Id }}" @selected(old('LeaveTypeID') == $type->Id)>{{ $type->Name }}</option>
                             @endforeach
                         </select>
+                        <div class="form-text">Only types allowed for your grade/gender are shown.</div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Start Date *</label>
@@ -56,6 +59,18 @@
                     <div class="col-md-3">
                         <label class="form-label">Total Days *</label>
                         <input type="number" step="0.25" name="TotalDays" id="TotalDays" class="form-control" value="{{ old('TotalDays') }}" required>
+                        <div class="form-text" id="DaysHelp">Auto-calculated from working days, holidays, and half-day rules.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Reliever</label>
+                        <select name="RelieverID" id="RelieverID" class="form-select">
+                            <option value="">Select</option>
+                            @foreach($employees as $emp)
+                                <option value="{{ $emp->Id }}"
+                                        data-department="{{ $emp->DepartmentID }}"
+                                    @selected(old('RelieverID') == $emp->Id)>{{ $emp->FirstName }} {{ $emp->LastName }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Reason</label>
@@ -75,16 +90,70 @@ document.addEventListener('DOMContentLoaded', function () {
     const start = document.getElementById('StartDate');
     const end = document.getElementById('EndDate');
     const total = document.getElementById('TotalDays');
-    const calc = () => {
+    const empSelect = document.getElementById('EmployeeID');
+    const relSelect = document.getElementById('RelieverID');
+    const daysHelp = document.getElementById('DaysHelp');
+    const calcUrl = @json(route('hr.leave.requests.calc'));
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    const calc = async () => {
         if (!start.value || !end.value) return;
-        const s = new Date(start.value);
-        const e = new Date(end.value);
-        if (isNaN(s) || isNaN(e)) return;
-        const diff = (e - s) / (1000*60*60*24);
-        if (diff >= 0) total.value = (diff + 1).toFixed(2);
+        daysHelp.textContent = 'Calculating...';
+        try {
+            const res = await fetch(calcUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf
+                },
+                body: JSON.stringify({
+                    StartDate: start.value,
+                    EndDate: end.value,
+                    TotalDays: total.value
+                })
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                const msg = err?.errors ? Object.values(err.errors).flat().join(' ') : 'Unable to calculate days.';
+                daysHelp.textContent = msg;
+                return;
+            }
+            const data = await res.json();
+            if (data?.days !== undefined) {
+                total.value = Number(data.days).toFixed(2);
+                daysHelp.textContent = 'Auto-calculated from working days, holidays, and half-day rules.';
+            }
+        } catch (e) {
+            daysHelp.textContent = 'Unable to calculate days.';
+        }
     };
     start.addEventListener('change', calc);
     end.addEventListener('change', calc);
+
+    const filterRelievers = () => {
+        if (!empSelect || !relSelect) return;
+        const selEmp = empSelect.options[empSelect.selectedIndex];
+        const dept = selEmp ? selEmp.getAttribute('data-department') : null;
+        let cleared = false;
+        Array.from(relSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            const relDept = opt.getAttribute('data-department');
+            const match = !dept || !relDept || dept === relDept;
+            opt.disabled = !match;
+            if (!match && opt.selected) {
+                opt.selected = false;
+                cleared = true;
+            }
+        });
+        if (cleared) {
+            relSelect.value = '';
+        }
+    };
+    if (empSelect) {
+        empSelect.addEventListener('change', filterRelievers);
+        filterRelievers();
+    }
+    calc();
 });
 </script>
 @endpush

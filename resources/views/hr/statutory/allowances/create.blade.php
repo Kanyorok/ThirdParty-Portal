@@ -28,19 +28,37 @@
                         <label class="form-label">Code *</label>
                         <input type="text" name="Code" class="form-control" value="{{ old('Code') }}" required>
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-5">
                         <label class="form-label">Name *</label>
                         <input type="text" name="Name" class="form-control" value="{{ old('Name') }}" required>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="IsTaxable" value="1" id="IsTaxable" @checked(old('IsTaxable', true))>
+                            <label for="IsTaxable" class="form-check-label">Taxable</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="IsMandatory" value="1" id="IsMandatory" @checked(old('IsMandatory', false))>
+                            <label for="IsMandatory" class="form-check-label">Mandatory (auto-load)</label>
+                        </div>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Description</label>
                         <input type="text" name="Description" class="form-control" value="{{ old('Description') }}">
                     </div>
-                    <div class="col-md-4 d-flex align-items-center">
-                        <div class="form-check mt-4">
-                            <input type="checkbox" class="form-check-input" name="IsTaxable" value="1" id="IsTaxable" @checked(old('IsTaxable', true))>
-                            <label for="IsTaxable" class="form-check-label">Taxable</label>
+                    <div class="col-md-12">
+                        <label class="form-label">Applicable Job Grades</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach($grades as $grade)
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="Grades[]" value="{{ $grade->Id }}" id="grade_{{ $grade->Id }}" @checked(collect(old('Grades', []))->contains($grade->Id))>
+                                    <label class="form-check-label" for="grade_{{ $grade->Id }}">{{ $grade->Name }}</label>
+                                </div>
+                            @endforeach
                         </div>
+                        <div class="form-text">If none selected, allowance is available to all grades.</div>
                     </div>
                 </div>
                 <div class="mt-4 d-flex justify-content-end gap-2">

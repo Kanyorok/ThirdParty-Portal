@@ -168,6 +168,7 @@ class StatutorySeeder extends Seeder
                 'Name' => 'Acting Allowance',
                 'Description' => 'Allowance for acting assignments',
                 'IsTaxable' => 1,
+                'IsMandatory' => 1,
                 'IsActive' => 1,
                 'CreatedBy' => $actor,
                 'CreatedOn' => $now,
@@ -180,8 +181,8 @@ class StatutorySeeder extends Seeder
             DB::table('t_HRPayrollAllowanceRules')->updateOrInsert(
                 ['AllowanceID' => $actingId, 'EffectiveFrom' => '2025-01-01'],
                 [
-                    'CalcMethod' => 'PercentageOnBasic',
-                    'Rate' => 15,
+                    'CalcMethod' => 'PercentageOfActingReference',
+                    'Rate' => 20,
                     'Amount' => null,
                     'IncomeFrom' => 0,
                     'IncomeTo' => null,
@@ -214,4 +215,3 @@ class StatutorySeeder extends Seeder
 
     }
 }
-

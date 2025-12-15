@@ -31,11 +31,11 @@
                     <div class="col-md-4">
                         <label class="form-label">Calculation Method *</label>
                         <select name="CalcMethod" class="form-select" required>
-                            @foreach(['PercentageOnBasic','PercentageOnGross','Flat','PercentageOnBand','FlatOnBand'] as $method)
+                            @foreach(['PercentageOnBasic','PercentageOnGross','Flat','PercentageOnBand','FlatOnBand','PercentageOfActingReference'] as $method)
                                 <option value="{{ $method }}" @selected(old('CalcMethod', $rule->CalcMethod)==$method)>{{ $method }}</option>
                             @endforeach
                         </select>
-                        <div class="form-text">Most allowances are a percentage of basic pay; choose PercentageOnBasic for that.</div>
+                        <div class="form-text">Most allowances are a percentage of basic pay; Acting can use PercentageOfActingReference.</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Rate (%)</label>

@@ -13,6 +13,8 @@ class EmployeeActingAssignment extends Model
     protected $fillable = [
         'EmployeeID',
         'ActingRoleID',
+        'ActingReferenceSalary',
+        'ActingAllowanceRate',
         'ActingDepartmentID',
         'ActingBranchID',
         'StartDate',
@@ -37,6 +39,8 @@ class EmployeeActingAssignment extends Model
         'ApprovedOn' => 'datetime',
         'CreatedOn' => 'datetime',
         'DeletedOn' => 'datetime',
+        'ActingReferenceSalary' => 'decimal:2',
+        'ActingAllowanceRate' => 'decimal:4',
     ];
 
     public function employee()

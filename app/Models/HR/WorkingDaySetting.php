@@ -13,6 +13,7 @@ class WorkingDaySetting extends Model
     protected $fillable = [
         'DayOfWeek',
         'IsWorking',
+        'DayFraction',
         'StartTime',
         'EndTime',
         'CreatedBy',
@@ -25,6 +26,7 @@ class WorkingDaySetting extends Model
 
     protected $casts = [
         'IsWorking' => 'boolean',
+        'DayFraction' => 'decimal:2',
         'CreatedOn' => 'datetime',
         'ModifiedOn'=> 'datetime',
         'DeletedOn' => 'datetime',

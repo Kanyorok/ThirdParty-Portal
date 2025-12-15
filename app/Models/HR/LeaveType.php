@@ -14,6 +14,7 @@ class LeaveType extends Model
         'Code',
         'Name',
         'AnnualEntitlementDays',
+        'AllowedGender',
         'AllowCarryForward',
         'MaxCarryForwardDays',
         'RequiresAttachment',
@@ -40,4 +41,9 @@ class LeaveType extends Model
         'ApprovedOn'         => 'datetime',
         'DeletedOn'          => 'datetime',
     ];
+
+    public function grades()
+    {
+        return $this->belongsToMany(JobGrade::class, 't_HRLeaveTypeGrades', 'LeaveTypeID', 'GradeID');
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
 use App\Models\HR\LeaveType;
+use App\Models\HR\JobGrade;
 use Illuminate\Http\Request;
 
 class LeaveTypeController extends Controller
@@ -23,7 +24,8 @@ class LeaveTypeController extends Controller
 
     public function create()
     {
-        return view('hr.config.leavetypes.create');
+        $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
+        return view('hr.config.leavetypes.create', compact('grades'));
     }
 
     public function store(Request $request)
@@ -32,10 +34,13 @@ class LeaveTypeController extends Controller
             'Code'                 => 'required|string|max:50|unique:t_HRLeaveTypes,Code',
             'Name'                 => 'required|string|max:150',
             'AnnualEntitlementDays'=> 'required|integer|min:0',
+            'AllowedGender'        => 'nullable|string|in:Male,Female',
             'AllowCarryForward'    => 'nullable|boolean',
             'MaxCarryForwardDays'  => 'nullable|integer|min:0',
             'RequiresAttachment'   => 'nullable|boolean',
             'IsPaid'               => 'nullable|boolean',
+            'GradeIDs'             => 'nullable|array',
+            'GradeIDs.*'           => 'integer',
         ]);
 
         $data['AllowCarryForward']  = $request->boolean('AllowCarryForward');
@@ -46,7 +51,13 @@ class LeaveTypeController extends Controller
         $data['CreatedBy']          = auth()->id();
         $data['CreatedOn']          = now();
 
-        LeaveType::create($data);
+        $gradeIds = $data['GradeIDs'] ?? [];
+        unset($data['GradeIDs']);
+
+        $type = LeaveType::create($data);
+        if ($gradeIds) {
+            $type->grades()->sync($gradeIds);
+        }
 
         return redirect()
             ->route('hr.config.leavetypes.index')
@@ -57,7 +68,9 @@ class LeaveTypeController extends Controller
     {
         $type = LeaveType::findOrFail($id);
 
-        return view('hr.config.leavetypes.edit', compact('type'));
+        $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
+
+        return view('hr.config.leavetypes.edit', compact('type', 'grades'));
     }
 
     public function update(Request $request, $id)
@@ -67,11 +80,14 @@ class LeaveTypeController extends Controller
         $data = $request->validate([
             'Name'                 => 'required|string|max:150',
             'AnnualEntitlementDays'=> 'required|integer|min:0',
+            'AllowedGender'        => 'nullable|string|in:Male,Female',
             'AllowCarryForward'    => 'nullable|boolean',
             'MaxCarryForwardDays'  => 'nullable|integer|min:0',
             'RequiresAttachment'   => 'nullable|boolean',
             'IsPaid'               => 'nullable|boolean',
             'IsActive'             => 'nullable|boolean',
+            'GradeIDs'             => 'nullable|array',
+            'GradeIDs.*'           => 'integer',
         ]);
 
         $data['AllowCarryForward']  = $request->boolean('AllowCarryForward');
@@ -81,7 +97,11 @@ class LeaveTypeController extends Controller
         $data['ModifiedBy']         = auth()->id();
         $data['ModifiedOn']         = now();
 
+        $gradeIds = $data['GradeIDs'] ?? [];
+        unset($data['GradeIDs']);
+
         $type->update($data);
+        $type->grades()->sync($gradeIds);
 
         return redirect()
             ->route('hr.config.leavetypes.index')

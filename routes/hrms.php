@@ -123,10 +123,27 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::post('attendance/exceptions/{id}/resolve', [\App\Http\Controllers\HR\AttendanceExceptionController::class, 'resolve'])->name('attendance.exceptions.resolve');
 
     // Leave Management
+    Route::post('leave/requests/calc-days', [\App\Http\Controllers\HR\LeaveRequestController::class, 'previewDays'])->name('leave.requests.calc');
     Route::resource('leave/requests', \App\Http\Controllers\HR\LeaveRequestController::class)->names('leave.requests')->only(['index','create','store']);
     Route::post('leave/requests/{id}/approve', [\App\Http\Controllers\HR\LeaveRequestController::class, 'approve'])->name('leave.requests.approve');
     Route::post('leave/requests/{id}/reject', [\App\Http\Controllers\HR\LeaveRequestController::class, 'reject'])->name('leave.requests.reject');
     Route::post('leave/requests/{id}/cancel', [\App\Http\Controllers\HR\LeaveRequestController::class, 'cancel'])->name('leave.requests.cancel');
     Route::get('leave/balances', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'index'])->name('leave.balances.index');
     Route::post('leave/balances/accrue', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'accrueMonthly'])->name('leave.balances.accrue');
+    Route::get('leave/calendar', [\App\Http\Controllers\HR\LeaveRequestController::class, 'calendar'])->name('leave.calendar.index');
+
+    // Payroll Management
+    Route::get('payroll', [\App\Http\Controllers\HR\PayrollDashboardController::class, 'index'])->name('payroll.dashboard');
+    Route::resource('payroll/cycles', \App\Http\Controllers\HR\PayrollCycleController::class)->names('payroll.cycles')->only(['index','create','store','show']);
+    Route::post('payroll/cycles/{id}/close', [\App\Http\Controllers\HR\PayrollCycleController::class, 'close'])->name('payroll.cycles.close');
+    Route::post('payroll/cycles/{id}/reopen', [\App\Http\Controllers\HR\PayrollCycleController::class, 'reopen'])->name('payroll.cycles.reopen');
+
+    Route::resource('payroll/runs', \App\Http\Controllers\HR\PayrollRunController::class)->names('payroll.runs')->only(['index','create','store','show']);
+
+    Route::post('payroll/adjustments/{id}/approve', [\App\Http\Controllers\HR\SalaryAdjustmentController::class, 'approve'])->name('payroll.adjustments.approve');
+    Route::post('payroll/adjustments/{id}/reject', [\App\Http\Controllers\HR\SalaryAdjustmentController::class, 'reject'])->name('payroll.adjustments.reject');
+    Route::resource('payroll/adjustments', \App\Http\Controllers\HR\SalaryAdjustmentController::class)->names('payroll.adjustments')->only(['index','create','store']);
+    Route::resource('payroll/allowances', \App\Http\Controllers\HR\MonthlyAllowanceController::class)->names('payroll.allowances')->only(['index','create','store']);
+    Route::resource('payroll/deductions', \App\Http\Controllers\HR\MonthlyDeductionController::class)->names('payroll.deductions')->only(['index','create','store']);
+    Route::resource('payroll/loans', \App\Http\Controllers\HR\StaffLoanController::class)->names('payroll.loans')->only(['index','create','store']);
 });

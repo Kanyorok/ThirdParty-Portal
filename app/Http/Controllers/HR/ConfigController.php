@@ -77,17 +77,29 @@ class ConfigController extends Controller
         $checked = $request->input('day', []);
         $startTimes = $request->input('start_time', []);
         $endTimes = $request->input('end_time', []);
+        $fractions = $request->input('day_fraction', []);
 
         foreach (range(0, 6) as $day) {
             $isWorking = in_array($day, $checked);
             $start = $startTimes[$day] ?? null;
             $end = $endTimes[$day] ?? null;
+            $fractionInput = $fractions[$day] ?? 1;
+            $fraction = (float)$fractionInput;
 
             if ($isWorking) {
                 $request->validate([
                     "start_time.$day" => ['required', 'date_format:H:i'],
                     "end_time.$day"   => ['required', 'date_format:H:i', "after:start_time.$day"],
                 ], [], ['start_time.' . $day => "{$weekdays[$day]} start time", 'end_time.' . $day => "{$weekdays[$day]} end time"]);
+                $request->validate([
+                    "day_fraction.$day" => ['required', 'in:1,0.5'],
+                ]);
+                // Guard against legacy value "0" from the old UI where half-day posted as 0
+                if ($fraction <= 0) {
+                    $fraction = 0.5;
+                }
+            } else {
+                $fraction = 0.0;
             }
 
             $record = WorkingDaySetting::firstOrNew(['DayOfWeek' => $day]);
@@ -96,6 +108,7 @@ class ConfigController extends Controller
                 $record->CreatedOn = now();
             }
             $record->IsWorking = $isWorking;
+            $record->DayFraction = $fraction;
             $record->StartTime = $isWorking ? $start : null;
             $record->EndTime = $isWorking ? $end : null;
             $record->ModifiedBy = $request->user()->Id ?? $request->user()->id ?? null;

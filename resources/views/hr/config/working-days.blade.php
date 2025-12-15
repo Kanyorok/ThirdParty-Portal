@@ -36,6 +36,7 @@
                             <tr>
                                 <th style="width: 20%;">Day</th>
                                 <th style="width: 15%;">Is Working</th>
+                                <th style="width: 20%;">Day Length</th>
                                 <th style="width: 25%;">Start Time</th>
                                 <th style="width: 25%;">End Time</th>
                             </tr>
@@ -51,6 +52,13 @@
                                                 @checked($activeDays->contains($idx))>
                                             <label class="form-check-label" for="day_{{ $idx }}">Working</label>
                                         </div>
+                                    </td>
+                                    <td>
+                                        <select name="day_fraction[{{ $idx }}]" class="form-select">
+                                            @foreach(['1' => 'Full Day', '0.5' => 'Half Day'] as $val => $label)
+                                                <option value="{{ $val }}" @selected(old("day_fraction.$idx", $row->DayFraction ?? 1) == $val)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
                                     </td>
                                     <td>
                                         <input type="time" name="start_time[{{ $idx }}]" class="form-control"

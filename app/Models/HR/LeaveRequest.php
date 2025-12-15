@@ -16,6 +16,7 @@ class LeaveRequest extends Model
         'StartDate',
         'EndDate',
         'TotalDays',
+        'RelieverID',
         'Reason',
         'Status',
         'RequestedBy',
@@ -50,5 +51,10 @@ class LeaveRequest extends Model
     public function type()
     {
         return $this->belongsTo(\App\Models\HR\LeaveType::class, 'LeaveTypeID');
+    }
+
+    public function reliever()
+    {
+        return $this->belongsTo(Employee::class, 'RelieverID');
     }
 }

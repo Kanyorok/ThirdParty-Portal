@@ -3,6 +3,7 @@
 namespace App\Models\HR;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\HR\JobGrade;
 
 class PayrollAllowance extends Model
 {
@@ -15,6 +16,7 @@ class PayrollAllowance extends Model
         'Name',
         'Description',
         'IsTaxable',
+        'IsMandatory',
         'IsActive',
         'CreatedBy',
         'CreatedOn',
@@ -26,6 +28,7 @@ class PayrollAllowance extends Model
 
     protected $casts = [
         'IsTaxable' => 'boolean',
+        'IsMandatory' => 'boolean',
         'IsActive' => 'boolean',
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
@@ -35,5 +38,10 @@ class PayrollAllowance extends Model
     public function rules()
     {
         return $this->hasMany(PayrollAllowanceRule::class, 'AllowanceID');
+    }
+
+    public function grades()
+    {
+        return $this->belongsToMany(JobGrade::class, 't_HRPayrollAllowanceGrades', 'AllowanceID', 'GradeID');
     }
 }

@@ -51,6 +51,7 @@
                             <th>Start</th>
                             <th>End</th>
                             <th>Days</th>
+                            <th>Reliever</th>
                             <th>Status</th>
                             <th></th>
                         </tr>
@@ -63,6 +64,7 @@
                                 <td>{{ $req->StartDate }}</td>
                                 <td>{{ $req->EndDate }}</td>
                                 <td>{{ $req->TotalDays }}</td>
+                                <td>{{ $req->reliever->FirstName ?? '-' }} {{ $req->reliever->LastName ?? '' }}</td>
                                 <td>{{ $req->Status }}</td>
                                 <td class="text-end">
                                     @if($req->Status === 'Pending')

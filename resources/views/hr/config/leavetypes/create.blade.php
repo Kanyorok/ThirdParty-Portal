@@ -36,6 +36,15 @@
                         <label class="form-label">Annual Entitlement Days *</label>
                         <input type="number" name="AnnualEntitlementDays" class="form-control" value="{{ old('AnnualEntitlementDays', 0) }}" required>
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Allowed Gender</label>
+                        <select name="AllowedGender" class="form-select">
+                            <option value="">Any</option>
+                            @foreach(['Male','Female'] as $g)
+                                <option value="{{ $g }}" @selected(old('AllowedGender') == $g)>{{ $g }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-4 d-flex align-items-center">
                         <div class="form-check mt-4">
                             <input type="checkbox" class="form-check-input" name="AllowCarryForward" value="1" id="AllowCarryForward" @checked(old('AllowCarryForward'))>
@@ -57,6 +66,19 @@
                             <input type="checkbox" class="form-check-input" name="IsPaid" value="1" id="IsPaid" @checked(old('IsPaid', true))>
                             <label for="IsPaid" class="form-check-label">Is Paid</label>
                         </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label">Eligible Job Grades</label>
+                    <div class="row row-cols-2 row-cols-md-3 g-2">
+                        @foreach($grades as $grade)
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="GradeIDs[]" value="{{ $grade->Id }}" id="grade_{{ $grade->Id }}" @checked(collect(old('GradeIDs', []))->contains($grade->Id))>
+                                    <label class="form-check-label" for="grade_{{ $grade->Id }}">{{ $grade->Name }}</label>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
                 <div class="mt-4 d-flex justify-content-end gap-2">
