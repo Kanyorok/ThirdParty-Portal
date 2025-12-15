@@ -21,15 +21,14 @@
             <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-3">
-            <label class="form-label" for="Surname">Surname <span
-                    class="text-danger">*</span></label>
+            <label class="form-label" for="Surname">Surname <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Surname" name="Surname" required
                    placeholder="Surname">
             <p id="Surname_error" class="invalid-feedback d-none error col-12"
                role="alert"></p>
         </div>
         <div class="mb-3">
-            <label class="form-label" for="JobTitle">Job Title </label>
+            <label class="form-label" for="JobTitle">Job Title <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="JobTitle" name="JobTitle" required
                    placeholder="Job Title eg Sole Proprietor">
             <p id="JobTitle_error" class="invalid-feedback d-none error col-12"

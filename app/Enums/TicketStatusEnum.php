@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 use App\Exceptions\ErroredException;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\UsefulEnumTrait;
 
 enum TicketStatusEnum: string

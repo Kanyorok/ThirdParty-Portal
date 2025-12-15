@@ -130,11 +130,12 @@
                                 </button>
                             </div>
                             <div class="col-12 mt-2">
+                                <div class="table-responsive">
                                 <table id="activeLeadsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                     <thead>
                                     <tr>
-                                        <th>No.</th>
+                                        <th>Image / Logo</th>
                                         <th>Name</th>
                                         <th class="d-none">otherNames</th>
                                         <th>Type</th>
@@ -146,6 +147,7 @@
                                     </thead>
                                     <tbody></tbody>
                                 </table>
+                                </div>
                             </div>
                         </div>
                     </div>

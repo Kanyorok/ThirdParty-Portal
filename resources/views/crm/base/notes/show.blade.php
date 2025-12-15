@@ -6,7 +6,7 @@
     @endif
     <hr class="mx-0 my-2">
     <p class="mb-1 h4">Note</p>
-    <p class="justify-content-around">
+        <p class="justify-content-around" style="max-height: 70%; overflow-y: auto">
         {{ $note->Notes }}
     </p>
 </div>

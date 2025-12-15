@@ -58,13 +58,11 @@ class LeadController extends Controller
             $query = Lead::query();
 
             //check roles.
-
             if (!$actor->can([PermissionEnum::LeadUpdate->value, PermissionEnum::LeadDelete->value])) {
                 $query->where(function (Builder $query) use ($actor) {
                     //check users.
                     $query->where('t_Leads.RelationshipManagerID', $actor->Id)
                         ->orWhereHas('watchers', function (Builder $query) use ($actor) {
-// 'Party', 'PartyID'
                             $query->where(function (Builder $query) use ($actor) {
                                 $query->where('t_LeadUsers.PartyID', $actor->Id)->where('t_LeadUsers.Party', User::getPrimaryKey());
                             })->orWhere(function (Builder $query) use ($actor) {
