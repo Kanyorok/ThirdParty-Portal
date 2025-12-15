@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Http\Requests\Ticket\NewTicketRequest;
 use App\Models\CRM\Ticket;
-use App\Services\DMS\DocumentService;
+use App\Services\DMS\ImageService;
 use App\Traits\Controller\ActivitiesTrait;
 use App\Traits\Controller\TicketsTrait;
 use App\Traits\Controller\WorkflowTrait;
@@ -97,7 +97,7 @@ class TicketActionsController extends Controller
         ]);
     }
 
-    if ($ticket->Status !== TicketStatusEnum::Active) {
+    if ($ticket->status->ID !== TicketStatusEnum::Active->codeDetail()->ID) {
         return $this->errored('Ticket is not active');
     }
 
@@ -167,7 +167,7 @@ class TicketActionsController extends Controller
         }
 
         return $this->succeeded('document uploaded successfully', data: [
-            'html' => (new DocumentService($document))->summaryList(),
+            'html' => (new ImageService($document))->summaryList(),
         ]);
     }
 }
