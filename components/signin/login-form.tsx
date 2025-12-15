@@ -9,41 +9,18 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import React, { useEffect, useState, Suspense } from "react"
-import { Check, AlertCircle, Loader2, Sun, Moon } from "lucide-react"
+import { Check, AlertCircle, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { signIn } from "next-auth/react"
 import { FormField } from "@/components/signin/form-fields/login-fields"
 import { PasswordField } from "@/components/signin/form-fields/pwd"
-import { useTheme } from "next-themes"
 
-// Zod schema for form validation
 const signInSchema = z.object({
     email: z.string().email("Please enter a valid email address."),
     password: z.string().min(1, "Password is required."),
 })
 
 type SignInFormInputs = z.infer<typeof signInSchema>
-
-// Theme Toggle Component
-function ThemeToggle() {
-    const { theme, setTheme } = useTheme()
-    const isDark = theme === "dark"
-
-    const toggleTheme = () => {
-        setTheme(isDark ? "light" : "dark")
-    }
-
-    return (
-        <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-        >
-            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
-    )
-}
 
 function SignInFormComponent() {
     const router = useRouter()
@@ -55,15 +32,12 @@ function SignInFormComponent() {
     const [showSuccessMessage, setShowSuccessMessage] = useState(false)
     const [authError, setAuthError] = useState<string | null>(null)
 
-    // Handle authentication errors from URL params
     useEffect(() => {
         if (error) {
             switch (error) {
                 case 'SessionExpired':
-                    setAuthError('Your session has expired. Please sign in again.')
-                    break
                 case 'SessionRequired':
-                    setAuthError('Please sign in to access this page.')
+                    setAuthError('Your session has expired or is required. Please sign in again.')
                     break
                 case 'AccountNotApproved':
                     setAuthError('Your account is not approved or active. Please contact support.')
@@ -94,7 +68,6 @@ function SignInFormComponent() {
         mode: "onTouched",
     })
 
-    // Clear auth error when user starts typing
     const watchedFields = watch(['email', 'password'])
     useEffect(() => {
         if (authError && (watchedFields[0] || watchedFields[1])) {
@@ -113,7 +86,7 @@ function SignInFormComponent() {
     }, [searchParams])
 
     const onSubmit = async (data: SignInFormInputs) => {
-        setAuthError(null) // Clear any previous auth errors
+        setAuthError(null)
         try {
             const result = await signIn("credentials", {
                 redirect: false,
@@ -123,7 +96,6 @@ function SignInFormComponent() {
             })
 
             if (result?.error) {
-                // Expect tagged format CODE: message
                 const raw = result.error
                 let code = "UNKNOWN"
                 let message = raw
@@ -155,11 +127,9 @@ function SignInFormComponent() {
                 })()
                 setError("root", { type: code, message: friendly })
             } else if (result?.ok) {
-                // Show toast then navigate
                 toast.success("Successfully Signed In", {
                     description: "Redirecting to dashboard...",
                 })
-                // Allow toast to paint before navigation
                 setTimeout(() => router.push(result.url || callbackUrl), 300)
             }
         } catch (error) {
@@ -177,21 +147,28 @@ function SignInFormComponent() {
 
     return (
         <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="relative w-full max-w-xl bg-gray-50 dark:bg-zinc-900 rounded-xl p-8 sm:p-10 border border-gray-100 dark:border-zinc-800">
+            <div className="relative w-full max-w-md bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-8 sm:p-12 transition-all duration-300">
                 <AuthHeader isRegistration={false} />
+                <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mt-6 mb-2">
+                    Welcome Back
+                </h1>
+                <p className="text-center text-gray-500 dark:text-gray-400 mb-8">
+                    Sign in to your account to continue.
+                </p>
+
                 {showSuccessMessage && (
-                    <div role="alert" aria-live="polite" className="p-4 mb-6 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-200 rounded-lg flex items-center justify-center">
-                        <Check className="h-5 w-5 mr-2" />
+                    <div role="alert" aria-live="polite" className="p-4 mb-6 bg-green-50 dark:bg-green-700/30 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-300 rounded-lg flex items-center shadow-md">
+                        <Check className="h-5 w-5 mr-3 flex-shrink-0 text-green-600 dark:text-green-400" />
                         Registration successful! Please log in.
                     </div>
                 )}
                 {authError && (
-                    <div role="alert" aria-live="polite" className="p-4 mb-6 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 rounded-lg flex items-center">
-                        <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                    <div role="alert" aria-live="polite" className="p-4 mb-6 bg-red-50 dark:bg-red-700/30 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 rounded-lg flex items-center shadow-md">
+                        <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0 text-red-600 dark:text-red-400" />
                         <span>{authError}</span>
                     </div>
                 )}
-                <form className="space-y-6 mt-8" onSubmit={handleSubmit(onSubmit)}>
+                <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     <FormField
                         status={fieldStatuses.email}
                         label="Email Address"
@@ -202,12 +179,12 @@ function SignInFormComponent() {
                         <Input
                             id="email"
                             type="email"
-                            placeholder="john.doe@example.com"
-                            className={`w-full py-4 px-4 text-base border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 ${errors.email
-                                ? "border-red-300 bg-red-50 dark:bg-red-900 dark:border-red-700"
+                            placeholder="you@company.com"
+                            className={`w-full h-12 px-4 text-base border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-indigo-500 ${errors.email
+                                ? "border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-600"
                                 : fieldStatuses.email === "success"
-                                    ? "border-green-300 bg-green-50 dark:bg-green-900 dark:border-green-700"
-                                    : "border-gray-200 hover:border-gray-300 dark:border-zinc-700 dark:hover:border-zinc-600"
+                                    ? "border-green-500 dark:border-green-600"
+                                    : "border-gray-300 dark:border-gray-600 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                                 }`}
                             {...register("email")}
                             aria-invalid={!!errors.email}
@@ -218,42 +195,52 @@ function SignInFormComponent() {
                     <PasswordField
                         id="password"
                         label="Password"
-                        placeholder="Enter your password"
+                        placeholder="••••••••"
                         value={watchedPassword || ""}
                         error={errors.password?.message}
                         status={fieldStatuses.password}
                         showPassword={showPassword}
                         onTogglePassword={() => setShowPassword(!showPassword)}
                         register={register("password")}
+                        inputClassName={`h-12 px-4 text-base border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-indigo-500 ${errors.password
+                            ? "border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-600"
+                            : fieldStatuses.password === "success"
+                                ? "border-green-500 dark:border-green-600"
+                                : "border-gray-300 dark:border-gray-600 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                            }`}
                     />
 
-                    <div className="flex items-center justify-end">
-                        <Link href="/forgot-password" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-600">
+                    <div className="flex items-center justify-between pt-1">
+                        <span className="sr-only">Remember me (optional feature)</span>
+                        <Link href="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors">
                             Forgot password?
                         </Link>
                     </div>
+
                     {errors.root && (
-                        <div role="alert" aria-live="polite" className="p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg">
-                            <p className="text-red-800 dark:text-red-200 text-sm font-medium flex items-center">
-                                <AlertCircle className="h-4 w-4 mr-2" /> {errors.root.message}
+                        <div role="alert" aria-live="polite" className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg shadow-sm">
+                            <p className="text-red-800 dark:text-red-300 text-sm font-medium flex items-center">
+                                <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" /> {errors.root.message}
                             </p>
                         </div>
                     )}
-                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+
+                    <Button type="submit" className="w-full h-12 text-lg font-semibold bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-500/50 transition-colors" disabled={isSubmitting}>
                         {isSubmitting ? (
                             <div className="flex items-center justify-center">
-                                <Loader2 className="animate-spin h-5 w-5 text-white mr-3" />
+                                <Loader2 className="animate-spin h-5 w-5 mr-3" />
                                 Signing In...
                             </div>
                         ) : (
                             "Sign In"
                         )}
                     </Button>
-                    <div className="text-center pt-4 text-base text-gray-600 dark:text-gray-400">
+
+                    <div className="text-center pt-4 text-sm text-gray-500 dark:text-gray-400">
                         Don't have an account?{" "}
                         <Link
                             href="/signup"
-                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
                         >
                             Create Account
                         </Link>

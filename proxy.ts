@@ -1,181 +1,115 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-// const AUTH_PAGES = new Set(["/signin", "/signup", "/forgot-password", "/reset-password"]) 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
+const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL;
+const API_PROXY_PREFIX = "/api/v1";
 
-// Cache for token validation to avoid excessive backend calls
-const tokenValidationCache = new Map<string, { valid: boolean; timestamp: number }>()
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function validateTokenWithBackend(accessToken: string): Promise<boolean> {
-  // Check cache first
-  const cached = tokenValidationCache.get(accessToken)
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.valid
-  }
-
-  try {
-    if (!EXTERNAL_API_BASE) return true
-    const response = await fetch(`${EXTERNAL_API_BASE}/api/auth/validate-token`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      cache: 'no-store'
-    })
-
-    const isValid = response.ok
-    
-    // Cache the result
-    tokenValidationCache.set(accessToken, {
-      valid: isValid,
-      timestamp: Date.now()
-    })
-
-    // Clean old cache entries periodically
-    if (tokenValidationCache.size > 100) {
-      const cutoff = Date.now() - CACHE_DURATION
-      for (const [key, value] of tokenValidationCache.entries()) {
-        if (value.timestamp < cutoff) {
-          tokenValidationCache.delete(key)
-        }
-      }
-    }
-
-    return isValid
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error)
-    console.warn('Backend token validation unavailable, skipping validation:', msg)
-    // If backend is unavailable, assume token is valid to avoid blocking users
-    // This allows the application to work even when backend validation endpoint doesn't exist
-    tokenValidationCache.set(accessToken, {
-      valid: true,
-      timestamp: Date.now()
-    })
-    return true
-  }
-}
+const PUBLIC_API_ROUTES = new Set([
+  "/api/v1/countries",
+  "/api/v1/third-party-details",
+  "/api/v1/currencies",
+]);
 
 export async function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl
+  const { pathname } = req.nextUrl;
 
-  // Skip for static files and Next internals
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname.startsWith("/images") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/robots.txt") ||
-    pathname.startsWith("/sitemap.xml")
+    pathname.startsWith("/sitemap.xml") ||
+    pathname.startsWith("/api/auth")
   ) {
-    return NextResponse.next()
+    return NextResponse.next();
   }
 
-  // Skip for auth API routes and public API routes
-  if (pathname.startsWith("/api/auth")) {
-    return NextResponse.next()
-  }
+  if (pathname.startsWith(API_PROXY_PREFIX)) {
 
-  // Allow certain API endpoints without authentication (for registration process)
-  const publicApiRoutes = [
-    "/api/v1/countries",           // Countries dropdown for registration form
-    "/api/third-party-details",   // Third party registration endpoint
-    "/api/currencies",            // Currencies for forms
-    "/api/third-party-auth",      // Authentication endpoints for third parties
-  ]
-  
-  if (publicApiRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.next()
-  }
-
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  const isAuth = !!token
-  // const isAuthPage = AUTH_PAGES.has(pathname)
-  const isDashboard = pathname.startsWith("/dashboard")
-  const isApiRoute = pathname.startsWith("/api")
-
-  // Enhanced authentication check for dashboard and API routes
-  // Temporarily disabled backend validation until backend endpoint is implemented
-  /*
-  if (isAuth && token?.accessToken && (isDashboard || isApiRoute)) {
-    const isValidToken = await validateTokenWithBackend(token.accessToken as string)
-    
-    if (!isValidToken) {
-      console.log('Invalid token detected, clearing session')
-      isAuth = false
-      
-      // For dashboard routes, redirect to signin
-      if (isDashboard) {
-        const url = req.nextUrl.clone()
-        url.pathname = "/signin"
-        url.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search)
-        url.searchParams.set("error", "SessionExpired")
-        return NextResponse.redirect(url)
-      }
-      
-      // For API routes, return 401
-      if (isApiRoute) {
-        return new NextResponse(
-          JSON.stringify({ 
-            error: 'Unauthorized', 
-            message: 'Invalid or expired token' 
-          }),
-          { 
-            status: 401,
-            headers: { 'Content-Type': 'application/json' }
-          }
-        )
-      }
+    if (PUBLIC_API_ROUTES.has(pathname)) {
+      return NextResponse.next();
     }
-  }
-  */
 
-  // Allow signup/forgot/reset even if authenticated; only redirect authenticated users away from /signin
-  if (isAuth && pathname === "/signin") {
-    const url = req.nextUrl.clone()
-    url.pathname = "/dashboard"
-    return NextResponse.redirect(url)
-  }
-
-  // If not authenticated and trying to access protected routes
-  if (!isAuth && (isDashboard || isApiRoute)) {
-    if (isDashboard) {
-      const url = req.nextUrl.clone()
-      url.pathname = "/signin"
-      url.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search)
-      return NextResponse.redirect(url)
+    if (!EXTERNAL_API_BASE) {
+      return NextResponse.json({ error: "Configuration Error" }, { status: 500 });
     }
-    
-    if (isApiRoute) {
-      return new NextResponse(
-        JSON.stringify({ 
-          error: 'Unauthorized', 
-          message: 'Authentication required' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
+
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const accessToken = token?.accessToken as string | undefined;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+          message: "Authentication token missing or invalid."
+        },
+        { status: 401 }
+      );
+    }
+
+    const apiPath = pathname.replace(API_PROXY_PREFIX, "");
+    const targetUrl = new URL(`${EXTERNAL_API_BASE}${API_PROXY_PREFIX}${apiPath}${req.nextUrl.search}`);
+
+    const headers = new Headers(req.headers);
+    headers.set("Authorization", `Bearer ${accessToken}`);
+
+    const forwardedRequest = new Request(targetUrl.toString(), {
+      headers: headers,
+      method: req.method,
+      body: req.body,
+      // @ts-ignore
+      duplex: 'half',
+    });
+
+    try {
+      const response = await fetch(forwardedRequest);
+
+      const responseHeaders = new Headers(response.headers);
+
+      return new NextResponse(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: responseHeaders,
+      });
+
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Proxy Error", message: "Failed to connect to the external API." },
+        { status: 500 }
+      );
     }
   }
 
-  return NextResponse.next()
+  if (pathname.startsWith("/dashboard")) {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+    if (!token) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/signin";
+      url.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
+      return NextResponse.redirect(url);
+    }
+  }
+
+  if (pathname === "/signin") {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (token) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    "/api/v1/:path*",
     "/dashboard/:path*",
-    "/api/((?!auth).*)", // Protect all API routes except auth (public routes handled in middleware)
     "/signin",
-    "/signup",
-    "/forgot-password",
-    "/reset-password",
-    "/"
+    "/",
   ],
-}
+};
