@@ -24,6 +24,7 @@ class SocialController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'create', 'show']);
+        $this->authorizeResource(Social::class);
     }
 
     /**
