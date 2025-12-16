@@ -15,6 +15,11 @@ use App\Enums\EmailPriorityEnum;
 
 class RFQController extends Controller
 {
+    public function __construct(protected \App\Services\Procurement\RFQ\RFQWorkflowService $workflowService)
+    {
+        //
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -142,23 +147,40 @@ class RFQController extends Controller
     /**
      * Approve the RFQ and notify suppliers.
      */
+    /**
+     * Approve the RFQ (Workflow).
+     */
     public function approve(Request $request, $id)
     {
         $rfq = RFQ::findOrFail($id);
-        $this->authorize('approve', $rfq);
-        $request->validate([
-            'suppliers' => 'required|array',
-            'suppliers.*' => 'exists:t_Suppliers,Id',
-        ]);
-
 
         // Check if RFQ has at least one line item
         if ($rfq->rfqLines()->count() < 1) {
             return redirect()->back()->with('error', 'Cannot approve an RFQ without any items.');
         }
 
-        // Update RFQ status to Approved
-        $rfq->update(['Status' => 'Approved']);
+        // Use Workflow Service to approve
+        $this->workflowService->approve($rfq, Auth::user(), 'Approved via UI');
+
+        return redirect()->back()->with('success', 'RFQ has been approved.');
+    }
+
+    /**
+     * Publish the RFQ to suppliers (Send Emails).
+     */
+    public function publish(Request $request, $id)
+    {
+        $rfq = RFQ::findOrFail($id);
+        // Ensure RFQ is approved before publishing
+        // We check for 'Approved' or 'Ap' or 'AP'
+        if (!in_array($rfq->Status, ['Approved', 'Ap', 'AP'])) {
+            return redirect()->back()->with('error', 'RFQ must be approved before publishing to suppliers.');
+        }
+
+        $request->validate([
+            'suppliers' => 'required|array',
+            'suppliers.*' => 'exists:t_Suppliers,Id',
+        ]);
 
         // Ensure unique supplier IDs to avoid duplicate pivot entries
         $supplierIds = collect($request->suppliers)->map(fn($v) => (int)$v)->unique()->values()->all();
@@ -196,7 +218,7 @@ class RFQController extends Controller
         // Send email via UserService (actor as sender), including suppliers in CC
         $actor = Auth::user();
         if ($actor) {
-            $subject = 'RFQ Approved: ' . $rfq->RFQNumber;
+            $subject = 'RFQ Invitation: ' . $rfq->RFQNumber;
             // Read SubmissionDeadline explicitly from the t_RFQ table to ensure we use the stored DB value
             $rawSubmissionDeadline = DB::table('t_RFQ')->where('Id', $rfq->Id)->value('SubmissionDeadline');
             $submissionDeadlineFormatted = 'N/A';
@@ -210,9 +232,9 @@ class RFQController extends Controller
             }
 
             // We'll build a personalized body for each recipient inside the loop below
-            $bodyTemplate = '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
+            $bodyTemplate = '<p>You are invited to submit a quotation for RFQ <b>' . e($rfq->RFQNumber) . '</b>.</p>' .
                 '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
-                '<p>Selected suppliers have been notified.</p>';
+                '<p>Please log in to the supplier portal to view details and submit your response.</p>';
 
             // Prepare list of unique supplier email addresses and mapping to names
             $supplierList = [];
@@ -262,7 +284,7 @@ class RFQController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');
+        return redirect()->back()->with('success', 'RFQ published and emails sent to selected suppliers.');
     }
 
     /**
@@ -281,10 +303,8 @@ class RFQController extends Controller
         if ($rfq->rfqLines()->count() < 1) {
             return redirect()->back()->with('error', 'Cannot reject an RFQ without any items.');
         }
-        $rfq->update([
-            'Status' => 'Rejected',
-            'Remarks' => $request->RejectionReason,
-        ]);
+
+        $this->workflowService->reject($rfq, Auth::user(), $request->RejectionReason);
 
         return redirect()->back()->with('success', 'RFQ has been rejected successfully.');
     }
@@ -370,7 +390,11 @@ class RFQController extends Controller
             ->where('RFQId', $rfq->Id)
             ->get();
 
-        return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses'));
+        $canApprove = $this->workflowService->canUserApprove($rfq, Auth::user());
+        $history = $this->workflowService->getHistory($rfq);
+        $pendingApprovals = $this->workflowService->getPendingApprovals($rfq);
+
+        return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses', 'canApprove', 'history', 'pendingApprovals'));
     }
 
     /**

@@ -3,10 +3,12 @@
 namespace App\Models\CRM;
 
 use App\Enums\TicketPriorityEnum;
+use App\Interfaces\SpecialPermissionContract;
 use App\Models\Communication\Comment;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
-use App\Models\Core\Approval\CodeDetail;
+use App\Models\DMS\Image;
 use App\Services\StaticListsService;
 use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
@@ -16,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Ticket extends Model
+class Ticket extends Model implements SpecialPermissionContract
 {
     use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
@@ -101,5 +103,10 @@ class Ticket extends Model
     public function pendingWorkflows(): MorphMany
     {
         return $this->morphMany(PendingWorkflow::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
+    }
+
+    public function getShareEmailSubject(): string
+    {
+        return 'Notification: Added as Watchers to Ticket ' . $this->ticket->TicketID;
     }
 }

@@ -3,7 +3,7 @@
     <form action="{{ route('legal-hold.store') }}" method="post" id="createLegalHoldForm">
         @csrf
         <div class="mb-3">
-            <label class="form-label" for="Ref">Ref </label>
+            <label class="form-label" for="Ref">Ref <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Ref" name="Ref" required
                    placeholder="Reference No. ">
             <p id="Ref_error" class="invalid-feedback d-none error col-12" role="alert"></p>
@@ -34,7 +34,7 @@
         <hr>
         <div class="mt-4">
             <button type="button" class="btn btn-secondary float-start"
-                    data-bs-dismiss="modal">
+                    onclick="window.bsOffcanvas.hide()">
                 cancel
             </button>
             <button class="btn btn-primary float-end" id="createLegalHoldBtn" type="submit"><i

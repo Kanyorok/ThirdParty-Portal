@@ -68,10 +68,13 @@ class CompetitorController extends Controller
     public function show(Competitor $competitor): View
     {
         $competitor->load(['location', 'photo', 'country']);
-        $location = (new LocalityService($competitor->location))->getLocation();
-        return view('crm.marketing.competitors.show', compact('competitor', 'location'))
-            ->with('Countries', Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get())
-            ->with('hasProgress', (is_array($competitor->Processing)));
+
+        return view('crm.marketing.competitors.show', [
+            'competitor' => $competitor,
+            'location' => (new LocalityService($competitor->location))->getLocation(),
+            'Countries' => Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get(),
+            'hasProgress' => (is_array($competitor->Processing))
+        ]);
     }
 
     /**

@@ -28,7 +28,7 @@ class WorkFlowStageRequest extends FormRequest
             'WorkFlowId' => 'required|exists:t_WorkFlows,Id',
             'WorkFlowTypeId' => 'nullable|exists:t_WorkFlowTypes,Id',
             'WorkFlowLimitId' => 'nullable|exists:t_WorkFlowLimits,Id',
-            'PermissionId' => 'nullable|exists:t_Permissions,Id',
+            'PermissionId' => 'required|exists:t_Permissions,Id',
             'Count' => 'nullable|integer',
             'IsFinalStage' => ['nullable', 'boolean'],
         ];

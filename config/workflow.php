@@ -21,7 +21,7 @@ return [
     ],
 
     'PlanID' => [
-        'Draft'=> \App\Enums\ProcurementPlanStatusEnum::Draft->value,  // 'Dr'
+        'Draft' => \App\Enums\ProcurementPlanStatusEnum::Draft->value,  // 'Dr'
         'Approved' => \App\Enums\ProcurementPlanStatusEnum::Approved->value,  // 'Ap'
         'Rejected' => \App\Enums\ProcurementPlanStatusEnum::Rejected->value,  // 'Re'
         'Pending' => \App\Enums\ProcurementPlanStatusEnum::Pending->value,    // 'P'
@@ -50,4 +50,36 @@ return [
         'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'
         'Pending' => \App\Enums\Inventory\Transfers::Pending->value,  // 'P'
     ],
+
+    'LeaseId' => [
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'r'
+        'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,    // 'p'
+        'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
+    ],
+
+    'OrderID' => [
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'A'
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'R'
+        'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,    // 'P'
+        'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 'S'
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Status Column Mappings
+    |--------------------------------------------------------------------------
+    | Maps morph aliases to their status column names
+    | This allows different modules to use different column names
+    */
+
+    'status_columns' => [
+        'department_need' => 'Status',
+        'property_new_lease' => 'ApprovalStatus',
+        'lease_creation' => 'ApprovalStatus',
+        'procurement_plan' => 'Status',
+        'consolidated_procurement_plan' => 'Status',
+        // Add more as needed
+    ],
+
 ];

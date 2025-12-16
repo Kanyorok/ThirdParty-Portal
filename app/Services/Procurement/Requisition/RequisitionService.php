@@ -7,6 +7,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use App\Models\Procurement\Requisitions;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 
 class RequisitionService
 {
@@ -31,6 +33,21 @@ class RequisitionService
                     $category,
                     $actor->Id // Pass the User ID, not the entire User model
                 ]);
+
+                // Manually trigger workflow since DB::statement doesn't fire Eloquent events
+                $requisition = Requisitions::where('CreatedBy', $actor->Id)
+                    ->orderBy('CreatedOn', 'desc')
+                    ->first();
+
+                if ($requisition) {
+                    // Reload to ensure relationships (like statusDetail) are available
+                    $requisition->load('statusDetail');
+
+                    if ($requisition->isPendingApproval()) {
+                        $workflowService = app(RequisitionWorkflowService::class);
+                        $workflowService->submit($requisition, $actor, 'Initial submission');
+                    }
+                }
             });
 
             return [
@@ -95,7 +112,14 @@ class RequisitionService
             COALESCE(t_Branches.Name,t_Requisitions.BranchID) as BranchID ,
             COALESCE(t_Departments.Name,t_Requisitions.DepartmentID) as DepartmentID ,
             t_Requisitions.Remarks,
-            t_CodeDetails.Description as Status,
+            CASE 
+                WHEN t_Requisitions.DocStatus = \'Ap\' THEN \'Approved\'
+                WHEN t_Requisitions.DocStatus = \'AP\' THEN \'Approved\'
+                WHEN t_Requisitions.DocStatus = \'pe\' THEN \'Pending\'
+                WHEN t_Requisitions.DocStatus = \'Re\' THEN \'Rejected\'
+                WHEN t_Requisitions.DocStatus = \'RE\' THEN \'Rejected\'
+                ELSE t_CodeDetails.Description 
+            END as Status,
             t_Requisitions.CreatedOn,
             t_Requisitions.Id,
             -- Sum of (Quantity * ExpectedPrice) to get the total cost per requisition
@@ -114,7 +138,8 @@ class RequisitionService
                 't_Departments.Name',
                 't_Branches.Name',
                 't_ConsolidatedProcurementPlan.Title',
-                't_ConsolidatedProcurementPlan.ReferenceNumber'
+                't_ConsolidatedProcurementPlan.ReferenceNumber',
+                't_Requisitions.DocStatus'
             )
             ->get();
     }
@@ -135,7 +160,14 @@ class RequisitionService
                 DB::raw('COALESCE(t_Branches.Name, t_Requisitions.BranchID) AS BranchID'),
                 DB::raw('COALESCE(t_Departments.Name, t_Requisitions.DepartmentID) AS DepartmentID'),
                 't_Requisitions.Remarks',
-                DB::raw('t_CodeDetails.Description AS Status'),
+                DB::raw("CASE 
+                    WHEN t_Requisitions.DocStatus = 'Ap' THEN 'Approved'
+                    WHEN t_Requisitions.DocStatus = 'AP' THEN 'Approved'
+                    WHEN t_Requisitions.DocStatus = 'pe' THEN 'Pending'
+                    WHEN t_Requisitions.DocStatus = 'Re' THEN 'Rejected'
+                    WHEN t_Requisitions.DocStatus = 'RE' THEN 'Rejected'
+                    ELSE t_CodeDetails.Description 
+                END AS Status"),
                 't_Requisitions.CreatedOn',
                 DB::raw('isnull(t_Users.Name, t_Requisitions.CreatedBy) AS CreatedBy'),
                 't_Requisitions.Id',
@@ -156,7 +188,8 @@ class RequisitionService
                 't_ConsolidatedProcurementPlan.Title',
                 't_ConsolidatedProcurementPlan.ReferenceNumber',
                 't_Requisitions.CreatedBy',
-                't_Users.Name'
+                't_Users.Name',
+                't_Requisitions.DocStatus'
             )
             ->first();
     }

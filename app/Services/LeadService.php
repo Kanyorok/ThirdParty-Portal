@@ -47,9 +47,9 @@ class LeadService
                 return $lead->Status->name;
             })->editColumn('Type', function (Lead $lead) {
                 return $lead->Type->name;
-            })->editColumn('industry', function (Lead $lead) use ($with) {
-                if (in_array('industry', $with, true)) {
-                    return $lead->industry?->Description;
+            })->editColumn('ind', function (Lead $lead) use ($with) {
+                if (in_array('ind', $with, true)) {
+                    return $lead->ind?->Description;
                 }
                 return '';
             })->editColumn('location', function (Lead $lead) use ($with) {

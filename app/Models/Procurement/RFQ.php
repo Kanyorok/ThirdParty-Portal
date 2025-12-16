@@ -19,6 +19,19 @@ class RFQ extends Model
     public const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($rfq) {
+            $workflowService = app(\App\Services\Procurement\RFQ\RFQWorkflowService::class);
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if ($user) {
+                $workflowService->submit($rfq, $user, 'RFQ Created');
+            }
+        });
+    }
+
 
     public static function getPrimaryKey(): string
     {
