@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useForm, Controller } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { signIn } from "next-auth/react"
@@ -29,23 +29,9 @@ import {
     FieldError,
     FieldGroup
 } from "@/components/common/field"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "@/components/common/select"
 import { cn } from "@/lib/utils"
 
-// const USER_TYPES = [
-//     { value: "Customer", label: "Customer" },
-//     { value: "Tenant", label: "Tenant" },
-//     { value: "Supplier", label: "Supplier" }
-// ] as const
-
 const loginSchema = z.object({
-    // profile_type: z.enum(USER_TYPES.map((t) => t.value) as [string, ...string[]]),
     email: z.string().min(1, "Email is required").email("Please enter a valid email"),
     password: z.string().min(1, "Password is required")
 })
@@ -53,10 +39,9 @@ const loginSchema = z.object({
 const ERROR_MESSAGES: Record<string, string> = {
     SessionExpired: "Your session has expired. Please sign in again.",
     SessionRequired: "Please sign in to access this page.",
-    AccountNotApproved: "Your account is pending approval.",
+    StatusRejected: "Your account is either inactive or pending approval. Please contact support.",
     CredentialsSignin: "Invalid email or password.",
     INVALID_CREDENTIALS: "Invalid email or password.",
-    ACCOUNT_NOT_APPROVED: "Your account is pending approval.",
     SERVER_ERROR: "Something went wrong. Please try again."
 }
 
@@ -72,13 +57,11 @@ function SignInForm() {
     const {
         register,
         handleSubmit,
-        control,
         formState: { errors, isSubmitting },
         setError,
         clearErrors
     } = useForm({
         resolver: zodResolver(loginSchema),
-        // defaultValues: { email: "", password: "", profile_type: "" }
         defaultValues: { email: "", password: "" }
     })
 
@@ -107,7 +90,6 @@ function SignInForm() {
                 redirect: false,
                 email: data.email,
                 password: data.password,
-                profile_type: data.profile_type,
                 callbackUrl
             })
 
@@ -162,40 +144,6 @@ function SignInForm() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <FieldGroup className="gap-5">
-                    {/* <Field>
-                        <FieldLabel className="text-sm font-medium">Login Profile</FieldLabel>
-                        <Controller
-                            name="profile_type"
-                            control={control}
-                            render={({ field }) => (
-                                <Select
-                                    value={field.value}
-                                    onValueChange={(v) => {
-                                        field.onChange(v)
-                                        handleInputChange()
-                                    }}
-                                >
-                                    <SelectTrigger
-                                        className={cn(
-                                            "h-12 w-full border bg-gray-100 px-4 text-base rounded-sm focus:ring-0 focus:border-blue-700",
-                                            errors.profile_type && "border-red-600"
-                                        )}
-                                    >
-                                        <SelectValue placeholder="Select Profile to log in" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-sm border">
-                                        {USER_TYPES.map((t) => (
-                                            <SelectItem key={t.value} value={t.value}>
-                                                {t.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
-                        {errors.profile_type && <FieldError>Please select an account type</FieldError>}
-                    </Field> */}
-
                     <Field>
                         <FieldLabel className="text-sm font-medium">Email</FieldLabel>
                         <div className="relative">

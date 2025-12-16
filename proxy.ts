@@ -2,63 +2,26 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
 const AUTH_SIGN_IN_PATH = "/signin"
-
-const tokenValidationCache = new Map<string, { valid: boolean; timestamp: number }>()
-const CACHE_DURATION = 5 * 60 * 1000
 
 const PUBLIC_API_ROUTES_PREFIXES = [
   "/api/v1/countries",
   "/api/third-party-details",
   "/api/currencies",
-  "/api/third-party-auth",
+  "/api/portal/auth",
 ]
 
-async function validateTokenWithBackend(accessToken: string): Promise<boolean> {
-  const cached = tokenValidationCache.get(accessToken)
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.valid
+function createRedirect(req: NextRequest, path: string, params?: Record<string, string>): NextResponse {
+  const url = req.nextUrl.clone()
+  url.pathname = path
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.set(key, value)
+    })
   }
 
-  try {
-    if (!EXTERNAL_API_BASE) return true
-    const response = await fetch(`${EXTERNAL_API_BASE}/api/auth/validate-token`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    })
-
-    const isValid = response.ok
-
-    tokenValidationCache.set(accessToken, {
-      valid: isValid,
-      timestamp: Date.now(),
-    })
-
-    if (tokenValidationCache.size > 100) {
-      const cutoff = Date.now() - CACHE_DURATION
-      for (const [key, value] of tokenValidationCache.entries()) {
-        if (value.timestamp < cutoff) {
-          tokenValidationCache.delete(key)
-        }
-      }
-    }
-
-    return isValid
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error)
-    console.warn("Backend token validation unavailable, skipping validation:", msg)
-    tokenValidationCache.set(accessToken, {
-      valid: true,
-      timestamp: Date.now(),
-    })
-    return true
-  }
+  return NextResponse.redirect(url)
 }
 
 export async function proxy(req: NextRequest) {
@@ -73,52 +36,20 @@ export async function proxy(req: NextRequest) {
   }
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  let isAuth = !!token
+  const isAuth = !!token
   const isDashboard = pathname.startsWith("/dashboard")
   const isApiRoute = pathname.startsWith("/api")
+  const isSignInPage = pathname === AUTH_SIGN_IN_PATH
 
-  if (isAuth && token?.accessToken && (isDashboard || isApiRoute)) {
-    const isValidToken = await validateTokenWithBackend(token.accessToken as string)
-
-    if (!isValidToken) {
-      console.log("Invalid token detected, clearing session")
-      isAuth = false
-
-      if (isDashboard) {
-        const url = req.nextUrl.clone()
-        url.pathname = AUTH_SIGN_IN_PATH
-        url.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search)
-        url.searchParams.set("error", "SessionExpired")
-        return NextResponse.redirect(url)
-      }
-
-      if (isApiRoute) {
-        return new NextResponse(
-          JSON.stringify({
-            error: "Unauthorized",
-            message: "Invalid or expired token",
-          }),
-          {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          }
-        )
-      }
-    }
+  if (isAuth && isSignInPage) {
+    return createRedirect(req, "/dashboard")
   }
 
-  if (isAuth && pathname === AUTH_SIGN_IN_PATH) {
-    const url = req.nextUrl.clone()
-    url.pathname = "/dashboard"
-    return NextResponse.redirect(url)
-  }
-
-  if (!isAuth && (isDashboard || (isApiRoute && pathname !== "/api/health"))) {
+  if (!isAuth && !isSignInPage && (isDashboard || (isApiRoute && pathname !== "/api/health"))) {
     if (isDashboard) {
-      const url = req.nextUrl.clone()
-      url.pathname = AUTH_SIGN_IN_PATH
-      url.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search)
-      return NextResponse.redirect(url)
+      return createRedirect(req, AUTH_SIGN_IN_PATH, {
+        callbackUrl: req.nextUrl.pathname + req.nextUrl.search
+      })
     }
 
     if (isApiRoute) {

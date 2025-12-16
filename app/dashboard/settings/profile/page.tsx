@@ -1,7 +1,5 @@
-import ProfileMgt from "@/components/thirdParty/user-profile";
+import { ProfileManagementPage } from "@/components/profiles/profile-management-page"
 
-export default function Profiles() {
-    return (
-        <ProfileMgt />
-    )
+export default function ProfilePage() {
+  return <ProfileManagementPage />
 }

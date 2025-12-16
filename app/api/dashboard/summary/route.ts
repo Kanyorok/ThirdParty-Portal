@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
     ? { Accept: "application/json", Authorization: `Bearer ${accessToken}` }
     : { Accept: "application/json" };
 
-  // Defaults
   let activePreq = 0;
   let completedPreq = 0;
   let invitesTotal = 0;
@@ -60,22 +59,20 @@ export async function GET(request: NextRequest) {
     submitted: 0,
   };
 
-  // Helper to fetch with fallback to internal proxy
   async function fetchWithFallback(primaryUrl: string | null, fallbackPath: string) {
     try {
       if (primaryUrl) {
         const res = await fetch(primaryUrl, { headers, signal: AbortSignal.timeout(10000) });
         if (res.ok) return await safeJson(res);
       }
-    } catch {}
+    } catch { }
     try {
       const res2 = await fetch(`${origin}${fallbackPath}`, { headers, signal: AbortSignal.timeout(10000) });
       if (res2.ok) return await safeJson(res2);
-    } catch {}
+    } catch { }
     return null;
   }
 
-  // 1) Prequalification rounds and categories per supplier
   const preqUrl = externalBase ? `${externalBase}/api/prequalification/rounds` : null;
   const preqData = await fetchWithFallback(preqUrl, "/api/prequalification/rounds");
 
@@ -101,13 +98,11 @@ export async function GET(request: NextRequest) {
         preqBreakdown.submitted += 1;
         activePreq += 1;
       } else {
-        // Unknown statuses treated as active
         activePreq += 1;
       }
     }
   }
 
-  // 2) Tender invitations per supplier
   let invitesUrl: string | null = null;
   if (externalBase && thirdPartyId) {
     const qp = new URLSearchParams({ third_party_id: String(thirdPartyId) });
@@ -117,7 +112,6 @@ export async function GET(request: NextRequest) {
   const invites = Array.isArray(invitesData?.data) ? invitesData.data : [];
   invitesTotal = invites.length;
   for (const inv of invites) {
-    // Normalize shape (proxy returns { invitation, tender })
     const status = ((inv.invitation?.ResponseStatus ?? inv.ResponseStatus) || "").toLowerCase();
     if (status === "pending") inviteBreakdown.pending += 1;
     else if (status === "accepted") inviteBreakdown.accepted += 1;
@@ -125,7 +119,6 @@ export async function GET(request: NextRequest) {
     else if (status === "submitted") inviteBreakdown.submitted += 1;
   }
 
-  // 3) Tenders available (open + invited restricted)
   let tendersUrl: string | null = null;
   if (externalBase) {
     const api = new URL(`${externalBase}/api/tenders`);
@@ -152,6 +145,3 @@ export async function GET(request: NextRequest) {
     },
   });
 }
-
-
-

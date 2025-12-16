@@ -9,10 +9,9 @@ export interface ThirdParty {
     thirdPartyName: string | null;
     tradingName: string | null;
     label: string;
-    businessType: string;
+    businessType: string | null;
     registrationNumber: string | null;
     taxPin: string | null;
-    vatNumber: string | null;
     kraNo: string | null;
     idNumber: string | null;
     passportNo: string | null;
@@ -21,12 +20,12 @@ export interface ThirdParty {
     email: string;
     phone: string | null;
     website: string | null;
-    approvalStatus: string;
+    approvalStatus: string | null;
     status: string;
     thirdPartyType: string | null;
     isPrequalified: boolean | null;
-    createdOn: string;
-    modifiedOn: string;
+    createdOn: string | null;
+    modifiedOn: string | null;
     createdBy: number | null;
     deletedOn: string | null;
 }

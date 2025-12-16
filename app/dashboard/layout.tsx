@@ -31,10 +31,6 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
         redirect("/signin?error=SessionExpired")
     }
 
-    if (!session.user.isActive || !session.user.isApproved) {
-        redirect("/signin?error=AccountNotApproved")
-    }
-
     const cookieStore = await cookies()
     const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
 
