@@ -21,28 +21,41 @@
             @endif
         </div>
         <div>
-            <a href="{{ route('requisition.index') }}" class="btn btn-secondary">
+            <a href="{{ route('requisition.create') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to List
             </a>
-            <button class="btn btn-primary modal-create-item ms-2" type="button">
-                <i class="fas fa-plus-circle"></i> Add Items
-            </button>
             
-            {{-- Submit Button Logic --}}
             @if(isset($requisitionInfo))
                 @php
+                    // Normalize status for comparison
                     $currentStatus = strtolower(trim($requisitionInfo->Status ?? 'draft'));
                     $hasItems = $details->count() > 0;
+                    
+                    // Determine if we can add items and submit
+                    $canAddItems = in_array($currentStatus, ['draft']);
                     $canSubmit = in_array($currentStatus, ['draft']) && $hasItems;
-                    $isAlreadyPending = $currentStatus === 'pending';
+                    $isPending = $currentStatus === 'pending';
                     $isApproved = $currentStatus === 'approved';
+                    $isRejected = $currentStatus === 'rejected';
                 @endphp
                 
-                @if($canSubmit && !$isAlreadyPending && !$isApproved)
+                {{-- Add Items button - only for Draft --}}
+                @if($canAddItems)
+                    <button class="btn btn-primary modal-create-item ms-2" type="button">
+                        <i class="fas fa-plus-circle"></i> Add Items
+                    </button>
+                @endif
+                
+                {{-- Submit Button Logic --}}
+                @if($canSubmit)
                     <button class="btn btn-success ms-2" type="button" id="submitForApproval">
                         <i class="fas fa-paper-plane"></i> Submit for Approval
                     </button>
-                @elseif($isAlreadyPending)
+                @elseif(!$hasItems && $canAddItems)
+                    <button class="btn btn-success ms-2" type="button" disabled title="Add items first">
+                        <i class="fas fa-paper-plane"></i> Submit for Approval
+                    </button>
+                @elseif($isPending)
                     <span class="badge bg-warning text-dark ms-2 p-2">
                         <i class="fas fa-clock"></i> Pending Approval
                     </span>
@@ -50,17 +63,17 @@
                     <span class="badge bg-success ms-2 p-2">
                         <i class="fas fa-check-circle"></i> Approved
                     </span>
-                @elseif(!$hasItems)
-                    <button class="btn btn-success ms-2" type="button" disabled title="Add items first">
-                        <i class="fas fa-paper-plane"></i> Submit for Approval
-                    </button>
+                @elseif($isRejected)
+                    <span class="badge bg-danger ms-2 p-2">
+                        <i class="fas fa-times-circle"></i> Rejected
+                    </span>
                 @endif
             @endif
         </div>
     </div>
 
     <!-- Alert for no items -->
-    @if($details->isEmpty())
+    @if($details->isEmpty() && isset($requisitionInfo) && strtolower($requisitionInfo->Status) === 'draft')
         <div class="alert alert-warning" role="alert">
             <i class="fas fa-exclamation-triangle"></i> 
             No items added yet. Please add items before submitting for approval.
@@ -215,13 +228,13 @@
                     <div class="modal-body">
                         <p>Are you sure you want to submit this requisition for approval?</p>
                         <div class="mb-3">
-                            <label for="submitRemarks" class="form-label">Remarks (Optional)</label>
+                            <label for="submitRemarks" class="form-label">Remarks</label>
                             <textarea class="form-control" id="submitRemarks" name="remarks" rows="3" 
                                       placeholder="Add any additional comments..."></textarea>
                         </div>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> 
-                            Once submitted, this requisition will be sent to the approval workflow.
+                            Once submitted, this requisition will be sent to the approval workflow and you will not be able to add more items.
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -237,7 +250,7 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('assets/libs/select2/css/select2.min.css') }}"></script>
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 <script src="{{ asset('assets/js/datatables.js') }}"></script>
 <script>
     const $Modal = $('#RequisitionItemModal');
@@ -248,7 +261,9 @@
         return requisitionId || window.location.pathname.split('/').pop();
     }
 
-    $(function () {
+    $(document).ready(function () {
+        console.log('Page loaded, initializing components...');
+        
         // Initialize DataTable if there are items
         @if($details->count() > 0)
         $('#requsitionItemsTable').DataTable({
@@ -262,20 +277,42 @@
         @endif
 
         // Initialize Select2
-        $('#Type, #Item, #UOM, #Urgency').select2({
-            dropdownParent: $Modal,
-            width: '100%'
-        });
+        try {
+            $('#Type, #Item, #UOM, #Urgency').select2({
+                dropdownParent: $Modal,
+                width: '100%'
+            });
+            console.log('Select2 initialized successfully');
+        } catch (error) {
+            console.error('Select2 initialization error:', error);
+        }
 
-        // Show modal for adding item
-        $(document).on('click', '.modal-create-item', function () {
-            $('#RequisitionID').val(getRequisitionIdFromUrl());
+        // Show modal for adding item - FIXED
+        $('.modal-create-item').on('click', function (e) {
+            e.preventDefault();
+            console.log('Add Items button clicked');
+            
+            const reqId = getRequisitionIdFromUrl();
+            console.log('Setting requisition ID:', reqId);
+            
+            $('#RequisitionID').val(reqId);
+            
+            // Reset form
+            $('#createRequisitionItemForm')[0].reset();
+            $('#Item').empty().append('<option value="">Select Item</option>');
+            $('#UOM').empty().append('<option value="">Select UOM</option>');
+            
+            // Show modal
             $Modal.modal('show');
         });
 
         // Submit for approval button
-        $('#submitForApproval').on('click', function() {
+        $('#submitForApproval').on('click', function(e) {
+            e.preventDefault();
+            console.log('Submit for approval clicked');
+            
             const itemCount = $('#requsitionItemsTable tbody tr').not(':has(td[colspan])').length;
+            console.log('Item count:', itemCount);
             
             if (itemCount === 0) {
                 if (typeof Swal !== 'undefined') {
@@ -296,6 +333,7 @@
         // Handle submit form
         $('#submitForm').on('submit', function(e) {
             e.preventDefault();
+            console.log('Submitting requisition for approval...');
             
             const submitBtn = $('#confirmSubmitBtn');
             submitBtn.prop('disabled', true).html(
@@ -307,17 +345,31 @@
         });
 
         // Handle form submission for adding items
-        $('form#createRequisitionItemForm').submit(async function (e) {
+        $('#createRequisitionItemForm').on('submit', async function (e) {
             e.preventDefault();
+            console.log('Submitting item form...');
             
             const submitBtn = $('#createRequisitionItemBtn');
             submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
             
-            if (await saveForm($(this), submitBtn, true, true, true)) {
-                $Modal.modal('hide');
-                location.reload();
-            } else {
+            try {
+                // Check if saveForm function exists
+                if (typeof saveForm === 'function') {
+                    if (await saveForm($(this), submitBtn, true, true, true)) {
+                        $Modal.modal('hide');
+                        location.reload();
+                    } else {
+                        submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Add Item');
+                    }
+                } else {
+                    // Fallback: submit form directly
+                    console.log('saveForm not found, submitting directly');
+                    this.submit();
+                }
+            } catch (error) {
+                console.error('Error submitting form:', error);
                 submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Add Item');
+                alert('Error adding item. Please try again.');
             }
         });
 
@@ -411,6 +463,8 @@
             $('#QtyAvailable').html('');
             $('#LineItemID').val('');
         }
+        
+        console.log('All event handlers attached successfully');
     });
 </script>
 @endsection

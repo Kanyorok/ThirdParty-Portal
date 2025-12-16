@@ -8,9 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use App\Models\Procurement\Requisitions;
-use App\Services\Workflow\ApprovalWorkflow;
-use App\Enums\WorfklowStatus; // You'll need this enum
-use App\Enums\WorkflowStatus;
 
 class RequisitionService
 {
@@ -41,13 +38,26 @@ class RequisitionService
 
                 if ($requisition) {
                     $requisitionId = $requisition->Id;
-                
+                    
+                    // IMPORTANT: Ensure requisition starts in DRAFT status
+                    DB::table('t_Requisitions')
+                        ->where('Id', $requisitionId)
+                        ->update([
+                            'DocStatus' => 'DR', // Draft status
+                            'ModifiedBy' => $actor->Id,
+                            'ModifiedOn' => now()
+                        ]);
+                    
+                    Log::info("Requisition created with Draft status", [
+                        'requisition_id' => $requisitionId,
+                        'user_id' => $actor->Id
+                    ]);
                 }
             });
 
             return [
                 'status' => 'success',
-                'message' => 'Requisition successfully created and please add items to submit.',
+                'message' => 'Requisition successfully created. Please add items before submitting.',
                 'requisition_id' => $requisitionId
             ];
         } catch (QueryException $e) {
@@ -106,12 +116,10 @@ class RequisitionService
                 COALESCE(t_Departments.Name, t_Requisitions.DepartmentID) as DepartmentID,
                 t_Requisitions.Remarks,
                 CASE 
-                    WHEN t_Requisitions.DocStatus = \'Ap\' THEN \'Approved\'
-                    WHEN t_Requisitions.DocStatus = \'AP\' THEN \'Approved\'
-                    WHEN t_Requisitions.DocStatus = \'pe\' THEN \'Pending\'
-                    WHEN t_Requisitions.DocStatus = \'PE\' THEN \'Pending\'
-                    WHEN t_Requisitions.DocStatus = \'Re\' THEN \'Rejected\'
-                    WHEN t_Requisitions.DocStatus = \'RE\' THEN \'Rejected\'
+                    WHEN UPPER(t_Requisitions.DocStatus) = \'AP\' THEN \'Approved\'
+                    WHEN UPPER(t_Requisitions.DocStatus) = \'PE\' THEN \'Pending\'
+                    WHEN UPPER(t_Requisitions.DocStatus) = \'RE\' THEN \'Rejected\'
+                    WHEN UPPER(t_Requisitions.DocStatus) = \'DR\' THEN \'Draft\'
                     WHEN t_CodeDetails.Description IS NOT NULL THEN t_CodeDetails.Description
                     ELSE \'Draft\'
                 END as Status,
@@ -159,12 +167,10 @@ class RequisitionService
                 DB::raw('COALESCE(t_Departments.Name, t_Requisitions.DepartmentID) AS DepartmentID'),
                 't_Requisitions.Remarks',
                 DB::raw("CASE 
-                    WHEN t_Requisitions.DocStatus = 'Ap' THEN 'Approved'
-                    WHEN t_Requisitions.DocStatus = 'AP' THEN 'Approved'
-                    WHEN t_Requisitions.DocStatus = 'pe' THEN 'Pending'
-                    WHEN t_Requisitions.DocStatus = 'PE' THEN 'Pending'
-                    WHEN t_Requisitions.DocStatus = 'Re' THEN 'Rejected'
-                    WHEN t_Requisitions.DocStatus = 'RE' THEN 'Rejected'
+                    WHEN UPPER(t_Requisitions.DocStatus) = 'AP' THEN 'Approved'
+                    WHEN UPPER(t_Requisitions.DocStatus) = 'PE' THEN 'Pending'
+                    WHEN UPPER(t_Requisitions.DocStatus) = 'RE' THEN 'Rejected'
+                    WHEN UPPER(t_Requisitions.DocStatus) = 'DR' THEN 'Draft'
                     ELSE COALESCE(t_CodeDetails.Description, 'Draft')
                 END AS Status"),
                 't_Requisitions.CreatedOn',
