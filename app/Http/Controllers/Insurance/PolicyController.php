@@ -27,12 +27,11 @@ use Illuminate\Validation\Rule;
 
 class PolicyController extends Controller
 {
-    // Policy Proposal
+
 public function index(Request $request)
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $statuses = InsurancePolicyStatus::cases();
-    //dd($request->customer);
 
     $query = BancassurancePolicy::with(['customer.thirdParty', 'product', 'insurer'])
         ->when($request->status, fn($q) => $q->where('Status', $request->status))
@@ -58,6 +57,20 @@ public function create()
     return view('bancassurance.policies.create', compact(
         'customers', 'insurers', 'paymentfrequencys', 'referrals'));
 }
+
+public function getReferralsByCustomer($customerId)
+{
+    $referrals = BancAssuranceReferral::with([
+            'customerreferral.thirdParty',
+            'referredByEmployee'
+        ])
+        ->where('ClientId', $customerId)
+        ->orderByDesc('Id')
+        ->get();
+
+    return response()->json($referrals);
+}
+
 
 public function getProductsByInsurer($insurerId)
 {

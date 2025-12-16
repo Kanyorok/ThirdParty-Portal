@@ -82,6 +82,7 @@ Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance'
         Route::get('create', [PolicyController::class, 'create'])->name('create');
         Route::post('store', [PolicyController::class, 'store'])->name('store');
         Route::get('review', [PolicyController::class, 'reviewIndex'])->name('reviewIndex');
+        Route::get('customers/referrals/{customerId}',[PolicyController::class, 'getReferralsByCustomer'])->name('customers.referrals');
         Route::get('products/{insurerId}', [PolicyController::class, 'getProductsByInsurer'])->name('policy.products');
         Route::get('rideraddons/{productId}', [PolicyController::class, 'getRiderAddOnsByProduct'])->name('policy.rideraddons');
         Route::get('{id}/review', [PolicyController::class, 'review'])->name('review'); // ✅ Add this
