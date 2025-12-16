@@ -10,7 +10,7 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockItem;
 use App\Services\Inventory\StockAdjustmentService;
-use Illuminate\Http\Request;  // Add this import
+use Illuminate\Http\Request;  
 use Illuminate\Support\Facades\Log;
 
 class TransactionAdjustmentController extends Controller

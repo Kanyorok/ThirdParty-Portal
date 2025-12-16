@@ -131,6 +131,7 @@ use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\Store;
+use App\Models\Inventory\StockTake;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
@@ -220,6 +221,7 @@ use App\Policies\Inventory\ItemMasterListPolicy;
 use App\Policies\Inventory\ItemTypePolicy;
 use App\Policies\Inventory\PriceManagementPolicy;
 use App\Policies\Inventory\StockAdjustmentPolicy;
+use App\Policies\Inventory\StockTakePolicy;
 use App\Policies\Inventory\StockItemPolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\TransactionReceiptPolicy;
@@ -385,6 +387,7 @@ class AppServiceProvider extends ServiceProvider
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             UOMConversion::getPrimaryKey() => UOMConversion::class,
+            StockTake::getPrimaryKey() => StockTake::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -555,6 +558,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
         Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
         Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
+        Gate::policy(StockTake::class, StockTakePolicy::class);
         Gate::policy(ItemType::class, ItemTypePolicy::class);
         Gate::policy(StockItem::class, StockItemPolicy::class);
         Gate::policy(InventoryType::class, InventoryTypePolicy::class);

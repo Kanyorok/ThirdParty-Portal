@@ -43,7 +43,6 @@ public function index(Request $request)
     if ($isHeadOffice) {
         // For Head Office:
         
-        // Clone base query before applying status filter
         $allQuery = clone $baseQuery;
         $incomingQuery = clone $baseQuery;
         $otherQuery = clone $baseQuery;

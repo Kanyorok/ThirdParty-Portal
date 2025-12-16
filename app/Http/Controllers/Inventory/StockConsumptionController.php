@@ -119,86 +119,105 @@ class StockConsumptionController extends Controller
         }
     }
 
-    public function edit($id, Request $request)
-    {
-        $consumption = StockConsumption::with(['item', 'store', 'uom', 'issuedBy', 'branch'])->findOrFail($id);
+   public function edit($id, Request $request)
+{
+    $consumption = StockConsumption::with(['item', 'store', 'uom', 'issuedBy', 'branch', 'stockItem'])->findOrFail($id);
 
-        $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
-            return redirect()->back()->with('fail', 'Current user branch not found.');
-        }
-
-        $branchId = $currentBranch->Id;
-        $branch = Branch::findOrFail($branchId);
-
-        // Get current logged-in user's employee info
-        $currentUser = Auth::user();
-        $currentEmployee = $currentUser->employee;
-        $issuedByDisplay = $currentEmployee 
-            ? $currentEmployee->FirstName . ' ' . $currentEmployee->LastName . ' (' . ($currentEmployee->EmployeeID ?? $currentUser->UserName) . ')'
-            : $currentUser->UserName;
-
-        // Get employees from current branch (excluding current user)
-        $employees = Employee::with('user')
-            ->where('BranchId', $branchId)
-            ->whereHas('user', function ($q) use ($currentUser) {
-                $q->where('Id', '!=', $currentUser->Id);
-            })
-            ->select('Id', 'FirstName', 'LastName', 'EmployeeID')
-            ->orderBy('FirstName')
-            ->get()
-            ->map(function ($employee) {
-                return [
-                    'id' => $employee->user ? $employee->user->Id : null,
-                    'name' => $employee->FirstName . ' ' . $employee->LastName . 
-                             ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : '')
-                ];
-            })
-            ->filter(function ($item) {
-                return !is_null($item['id']);
-            });
-
-        // Get all departments
-        $departments = Department::select('Id', 'Name')
-            ->orderBy('Name')
-            ->get()
-            ->map(function ($department) {
-                return [
-                    'id' => $department->Id,
-                    'name' => $department->Name
-                ];
-            });
-
-        $stores = Store::where('BranchID', $branchId)->get();
-        $items = StockItem::where('Branch', $branchId)->get();
-        $uoms = UnitOfMeasure::all();
-        $types = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
-
-        // Determine pre-selected value based on consumption type
-        $preSelectedValue = '';
-        if ($consumption->IssuedToType) {
-            $type = CodeDetail::find($consumption->IssuedToType);
-            if ($type && strtoupper($type->Description) === 'EMPLOYEE') {
-                $preSelectedValue = $consumption->IssuedToID;
-            } elseif ($type && strtoupper($type->Description) === 'DEPARTMENT') {
-                $preSelectedValue = $consumption->IssuedToID;
-            }
-        }
-
-        return view('inventory.stockmanagement.stockconsumption.edit', compact(
-            'consumption',
-            'branch',
-            'stores',
-            'items',
-            'uoms',
-            'types',
-            'employees',
-            'departments',
-            'issuedByDisplay',
-            'currentUser',
-            'preSelectedValue'
-        ));
+    $currentBranch = $request->user()->branch;
+    if (!$currentBranch instanceof Branch) {
+        return redirect()->back()->with('fail', 'Current user branch not found.');
     }
+
+    $branchId = $currentBranch->Id;
+    $branch = Branch::findOrFail($branchId);
+
+    // Get current logged-in user's employee info
+    $currentUser = Auth::user();
+    $currentEmployee = $currentUser->employee;
+    $issuedByDisplay = $currentEmployee 
+        ? $currentEmployee->FirstName . ' ' . $currentEmployee->LastName . ' (' . ($currentEmployee->EmployeeID ?? $currentUser->UserName) . ')'
+        : $currentUser->UserName;
+
+    // Get all users for Issued By dropdown
+    // Include current user and other users who can issue stock
+    $users = User::whereHas('employee', function($q) use ($branchId) {
+            $q->where('BranchId', $branchId);
+        })
+        ->with('employee')
+        ->get()
+        ->map(function ($user) {
+            $employee = $user->employee;
+            return [
+                'Id' => $user->Id,
+                'Name' => $employee 
+                    ? $employee->FirstName . ' ' . $employee->LastName . 
+                      ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : '')
+                    : $user->UserName
+            ];
+        });
+
+    // Get employees from current branch (excluding current user) for Issued To dropdown
+    $employees = Employee::with('user')
+        ->where('BranchId', $branchId)
+        ->whereHas('user', function ($q) use ($currentUser) {
+            $q->where('Id', '!=', $currentUser->Id);
+        })
+        ->select('Id', 'FirstName', 'LastName', 'EmployeeID')
+        ->orderBy('FirstName')
+        ->get()
+        ->map(function ($employee) {
+            return [
+                'id' => $employee->user ? $employee->user->Id : null,
+                'name' => $employee->FirstName . ' ' . $employee->LastName . 
+                         ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : '')
+            ];
+        })
+        ->filter(function ($item) {
+            return !is_null($item['id']);
+        });
+
+    // Get all departments
+    $departments = Department::select('Id', 'Name')
+        ->orderBy('Name')
+        ->get()
+        ->map(function ($department) {
+            return [
+                'id' => $department->Id,
+                'name' => $department->Name
+            ];
+        });
+
+    $stores = Store::where('BranchID', $branchId)->get();
+    $items = StockItem::where('Branch', $branchId)->get();
+    $uoms = UnitOfMeasure::all();
+    $types = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
+
+    // Determine pre-selected value based on consumption type
+    $preSelectedValue = '';
+    if ($consumption->IssuedToType) {
+        $type = CodeDetail::find($consumption->IssuedToType);
+        if ($type && strtoupper($type->Description) === 'EMPLOYEE') {
+            $preSelectedValue = $consumption->IssuedToID;
+        } elseif ($type && strtoupper($type->Description) === 'DEPARTMENT') {
+            $preSelectedValue = $consumption->IssuedToID;
+        }
+    }
+
+    return view('inventory.stockmanagement.stockconsumption.edit', compact(
+        'consumption',
+        'branch',
+        'stores',
+        'items',
+        'uoms',
+        'types',
+        'users', 
+        'employees',
+        'departments',
+        'issuedByDisplay',
+        'currentUser',
+        'preSelectedValue'
+    ));
+}
 
     public function update(StockConsumptionRequest $request, $id)
     {
@@ -215,6 +234,7 @@ class StockConsumptionController extends Controller
 
     public function show($id)
     {
+        
         $consumption = StockConsumption::with([
             'item',
             'store',

@@ -8,6 +8,7 @@ use App\Http\Requests\Inventory\ItemTypeRequest;
 use App\Services\Inventory\ItemTypeService;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Core\Approval\CodeDetail;
+use App\Policies\Inventory\ItemTypePolicy;
 
 class ItemTypeController extends Controller
 {
@@ -21,6 +22,7 @@ class ItemTypeController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', ItemType::class);
         $itemTypes = ItemType::with('type')->get();
         $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->get();
         return view('inventory.itemmaster.itemtype.index', compact('itemTypes', 'itmTypes'));
