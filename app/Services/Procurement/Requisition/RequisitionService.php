@@ -41,29 +41,13 @@ class RequisitionService
 
                 if ($requisition) {
                     $requisitionId = $requisition->Id;
-                    
-                    // Load relationships
-                    $requisition->load('statusDetail');
-
-                    // Submit for approval if in pending status
-                    if ($requisition->isPendingApproval()) {
-                        // Create workflow instance for requisitions
-                        $workflow = new ApprovalWorkflow('RequisitionStatus', 'DocStatus');
-                        
-                        // Submit using the workflow
-                        $workflow->submit(
-                            $requisition, 
-                            $actor, 
-                            WorkflowStatus::Pending, // Your enum value
-                            'Initial requisition approval submission'
-                        );
-                    }
+                
                 }
             });
 
             return [
                 'status' => 'success',
-                'message' => 'Requisition successfully created and submitted for approval.',
+                'message' => 'Requisition successfully created and please add items to submit.',
                 'requisition_id' => $requisitionId
             ];
         } catch (QueryException $e) {
