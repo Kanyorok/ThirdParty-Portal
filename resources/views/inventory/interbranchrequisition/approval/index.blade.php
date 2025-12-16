@@ -90,10 +90,14 @@
                                 <td>
                                     <input type="number" min="0" max="{{ $requisitionItem->RequestedQty }}" 
                                            name="approved_qty[{{ $requisitionItem->Id }}]"
-                                           class="form-control"
+                                           class="form-control approved-qty-input"
+                                           data-item-id="{{ $requisitionItem->Id }}"
                                            value="{{ old('approved_qty.' . $requisitionItem->Id, $requisitionItem->RequestedQty) }}"
                                            form="approval-form" required>
                                     <small class="text-muted">Max: {{ $requisitionItem->RequestedQty }}</small>
+                                    <div class="invalid-feedback" id="error-{{ $requisitionItem->Id }}" style="display: none;">
+                                        <!-- Error message will appear here -->
+                                    </div>
                                 </td>
                                 <td>
                                     <input type="text" name="item_remarks[{{ $requisitionItem->Id }}]"
@@ -125,7 +129,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">Action <span class="text-danger">*</span></label>
-                        <select name="action" class="form-select" required>
+                        <select name="action" class="form-select" id="action-select" required>
                             <option value="">-- Choose Action --</option>
                             <option value="APPROVED" {{ old('action') == 'APPROVED' ? 'selected' : '' }}>Approve</option>
                             <option value="REJECTED" {{ old('action') == 'REJECTED' ? 'selected' : '' }}>Reject</option>
@@ -144,11 +148,141 @@
     </div>
 </div>
 
+@push('styles')
+<style>
+    /* Style for inline error display */
+    .quantity-error {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    .has-error {
+        border-color: #dc3545 !important;
+    }
+    .has-error:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
     // Client-side validation for the approval form
     document.addEventListener('DOMContentLoaded', function() {
         const approvalForm = document.getElementById('approval-form');
+        const actionSelect = document.getElementById('action-select');
+        const approvedQtyInputs = document.querySelectorAll('.approved-qty-input');
+        
+        // Function to show inline error
+        function showInlineError(input, message) {
+            const errorDiv = document.getElementById(`error-${input.dataset.itemId}`);
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                errorDiv.className = 'quantity-error';
+                input.classList.add('has-error');
+                input.classList.add('is-invalid');
+            }
+        }
+        
+        // Function to hide inline error
+        function hideInlineError(input) {
+            const errorDiv = document.getElementById(`error-${input.dataset.itemId}`);
+            if (errorDiv) {
+                errorDiv.textContent = '';
+                errorDiv.style.display = 'none';
+                input.classList.remove('has-error');
+                input.classList.remove('is-invalid');
+            }
+        }
+        
+        // Function to clear all errors
+        function clearAllErrors() {
+            approvedQtyInputs.forEach(input => {
+                hideInlineError(input);
+            });
+        }
+        
+        // Function to validate a single input
+        function validateInput(input) {
+            const action = actionSelect.value;
+            const requestedQty = parseFloat(input.max) || 0;
+            const approvedQty = parseFloat(input.value) || 0;
+            
+            // Clear previous error
+            hideInlineError(input);
+            
+            // Validation only applies when action is APPROVED
+            if (action === 'APPROVED') {
+                if (approvedQty < 0) {
+                    showInlineError(input, 'Approved quantity cannot be negative.');
+                    return false;
+                }
+                
+                if (approvedQty > requestedQty) {
+                    showInlineError(input, 'Approved quantity cannot exceed requested quantity.');
+                    return false;
+                }
+                
+                if (isNaN(approvedQty)) {
+                    showInlineError(input, 'Please enter a valid number for approved quantity.');
+                    return false;
+                }
+                
+                if (approvedQty === 0) {
+                    showInlineError(input, 'Approved quantity must be greater than zero.');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        // Function to validate all inputs
+        function validateAllInputs() {
+            let allValid = true;
+            
+            approvedQtyInputs.forEach(input => {
+                if (!validateInput(input)) {
+                    allValid = false;
+                }
+            });
+            
+            return allValid;
+        }
+        
+        // Real-time validation on blur (when user leaves the field)
+        approvedQtyInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (actionSelect.value === 'APPROVED') {
+                    validateInput(this);
+                }
+            });
+            
+            // Also validate on input change for immediate feedback
+            input.addEventListener('input', function() {
+                if (actionSelect.value === 'APPROVED') {
+                    const approvedQty = parseFloat(this.value) || 0;
+                    if (approvedQty > 0) {
+                        hideInlineError(this);
+                    }
+                }
+            });
+        });
+        
+        // Handle action change
+        actionSelect.addEventListener('change', function() {
+            if (this.value === 'REJECTED') {
+                // Clear all errors when switching to reject
+                clearAllErrors();
+            } else if (this.value === 'APPROVED') {
+                // Validate all inputs when switching to approve
+                validateAllInputs();
+            }
+        });
+        
         if (approvalForm) {
             approvalForm.addEventListener('submit', function(e) {
                 const actionSelect = this.querySelector('select[name="action"]');
@@ -172,39 +306,30 @@
                 
                 // Validate approved quantities if approving
                 if (actionSelect.value === 'APPROVED') {
-                    const qtyInputs = this.querySelectorAll('input[name^="approved_qty"]');
-                    let allValid = true;
+                    // Clear all errors first
+                    clearAllErrors();
                     
-                    qtyInputs.forEach(input => {
-                        const requestedQty = parseFloat(input.max) || 0;
-                        const approvedQty = parseFloat(input.value) || 0;
-                        
-                        if (approvedQty < 0) {
-                            e.preventDefault();
-                            alert('Approved quantity cannot be negative.');
-                            input.focus();
+                    // Validate all inputs
+                    let allValid = true;
+                    approvedQtyInputs.forEach(input => {
+                        if (!validateInput(input)) {
                             allValid = false;
-                            return;
-                        }
-                        
-                        if (approvedQty > requestedQty) {
-                            e.preventDefault();
-                            alert('Approved quantity cannot exceed requested quantity.');
-                            input.focus();
-                            allValid = false;
-                            return;
-                        }
-                        
-                        if (isNaN(approvedQty)) {
-                            e.preventDefault();
-                            alert('Please enter a valid number for approved quantity.');
-                            input.focus();
-                            allValid = false;
-                            return;
                         }
                     });
                     
                     if (!allValid) {
+                        e.preventDefault();
+                        
+                        // Scroll to first error
+                        const firstErrorInput = document.querySelector('.has-error');
+                        if (firstErrorInput) {
+                            firstErrorInput.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                            firstErrorInput.focus();
+                        }
+                        
                         return false;
                     }
                 }
@@ -218,6 +343,14 @@
                 
                 return true;
             });
+        }
+        
+        // Initial validation if action is already set to APPROVED (e.g., from form submission with errors)
+        if (actionSelect.value === 'APPROVED') {
+            // Small delay to ensure DOM is fully rendered
+            setTimeout(() => {
+                validateAllInputs();
+            }, 100);
         }
     });
 </script>
