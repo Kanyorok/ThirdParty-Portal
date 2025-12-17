@@ -231,7 +231,7 @@
     @stack('scripts')
 
     <script>
-        window.__DEFAULT_ACTIVE_ROUTE__ = @json(request() - > path() ? '/'.request() - > path() : '/');
+        window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() && request()->path() !== '/' ? '/'.request()->path() : '/');
     </script>
     <script>
         // Refresh Feather icons after partial content loads
