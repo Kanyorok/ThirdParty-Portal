@@ -202,16 +202,11 @@
             });
 
             // Handle form submission - FIXED VERSION
-            $('form#createRequisitionForm').on('submit', function (e) {
+           $('form#createRequisitionForm').on('submit', function (e) {
                 e.preventDefault();
                 
                 const form = $(this);
                 const submitBtn = $('#createRequisitionBtn');
-                
-                // Disable button
-                submitBtn.prop('disabled', true).html(
-                    '<span class="spinner-border spinner-border-sm me-2"></span>Creating...'
-                );
                 
                 // Create FormData
                 const formData = new FormData(this);
@@ -227,6 +222,17 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                         'Accept': 'application/json'
                     },
+                    // 1. CLEAR ERRORS BEFORE SENDING
+                    beforeSend: function() {
+                        // Disable button
+                        submitBtn.prop('disabled', true).html(
+                            '<span class="spinner-border spinner-border-sm me-2"></span>Creating...'
+                        );
+                        // Clear previous errors
+                        $('.invalid-feedback').addClass('d-none').text('');
+                        $('.form-control').removeClass('is-invalid');
+                    },
+                    // 2. HANDLE SUCCESS
                     success: function(response) {
                         if (response.success && response.requisition_id) {
                             $Modal.modal('hide');
@@ -247,24 +253,41 @@
                                 window.location.href = response.route;
                             }
                         } else {
-                            throw new Error(response.message || 'Failed to create requisition');
+                            // Manually trigger error if success is false
+                            // This goes to the error block below or handles it here
+                            submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Add Requisition');
+                            alert(response.message || 'Failed to create requisition');
                         }
                     },
+                    // 3. HANDLE ERRORS
                     error: function(xhr) {
                         console.error('Error:', xhr);
-                        let errorMessage = 'Failed to create requisition. Please try again.';
                         
+                        // Re-enable button
+                        submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Add Requisition');
+
+                        // HANDLE VALIDATION ERRORS (Status 422)
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(key, value) {
+                                // key = Field name (e.g., ProcurementPlan), value = Array of errors
+                                let errorId = '#' + key + '_error';
+                                let inputId = '#' + key;
+                                
+                                $(inputId).addClass('is-invalid'); // Highlight input red
+                                $(errorId).removeClass('d-none').text(value[0]); // Show error message
+                            });
+                            
+                            // Stop here so we don't show the generic popup
+                            return; 
+                        }
+
+                        // HANDLE GENERAL SERVER ERRORS
+                        let errorMessage = 'Failed to create requisition. Please try again.';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMessage = xhr.responseJSON.message;
-                        } else if (xhr.responseText) {
-                            try {
-                                const response = JSON.parse(xhr.responseText);
-                                errorMessage = response.message || errorMessage;
-                            } catch (e) {
-                                console.error('Could not parse error response');
-                            }
                         }
-                        
+
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
                                 icon: 'error',
@@ -274,13 +297,10 @@
                         } else {
                             alert(errorMessage);
                         }
-                        
-                        // Re-enable button
-                        submitBtn.prop('disabled', false).html(
-                            '<i class="fas fa-save"></i> Add Requisition'
-                        );
                     }
                 });
+
+                
             });
 
             // Fetch Branch and Department based on Procurement Plan

@@ -1823,10 +1823,6 @@ private function attachDocuments(Request $request, Tender $tender): void
 
     foreach ((array) $request->file('documents') as $uploadedFile) {
         if (!$uploadedFile || !$uploadedFile->isValid()) {
-            Log::warning('Invalid file upload detected', [
-                'tender_id' => $tender->Id,
-                'file' => $uploadedFile ? $uploadedFile->getClientOriginalName() : 'null'
-            ]);
             continue;
         }
 
@@ -1834,36 +1830,51 @@ private function attachDocuments(Request $request, Tender $tender): void
             Log::info('Attempting to attach document', [
                 'tender_id' => $tender->Id,
                 'filename' => $uploadedFile->getClientOriginalName(),
-                'size' => $uploadedFile->getSize(),
-                'mime' => $uploadedFile->getMimeType()
             ]);
 
-            $test = $tender->newDocument(
+            // Create the document
+            $document = $tender->newDocument(
                 ModulesEnum::Procurement,
                 $uploadedFile,
-                [PermissionEnum::TenderWrite->value],
+                [PermissionEnum::TenderRead->value],
                 Auth::user()
             );
 
-            $uploadedCount++;
-            Log::info('Document attached successfully', [
+            // Check what relation was created
+            $createdRelation = \DB::table('t_DocumentRelations')
+                ->where('DocumentID', $document->Id)
+                ->where('RelatedID', $tender->Id)
+                ->first();
+
+            Log::info('Document relation created', [
+                'document_id' => $document->Id,
                 'tender_id' => $tender->Id,
-                'filename' => $uploadedFile->getClientOriginalName(),
-                'full_log' => $test
+                'relation_exists' => $createdRelation ? 'yes' : 'no',
+                'related_value' => $createdRelation->Related ?? 'NULL'
             ]);
+
+            // If the Related value is not exactly "Tender", fix it
+            if ($createdRelation && $createdRelation->Related !== 'Tender') {
+                \DB::table('t_DocumentRelations')
+                    ->where('DocumentID', $document->Id)
+                    ->where('RelatedID', $tender->Id)
+                    ->update(['Related' => 'Tender']);
+                
+                Log::warning('Fixed incorrect Related value', [
+                    'was' => $createdRelation->Related,
+                    'now' => 'Tender'
+                ]);
+            }
+
+            $uploadedCount++;
 
         } catch (\Exception $e) {
             $failedCount++;
-            Log::error('Failed to attach document to tender', [
+            Log::error('Failed to attach document', [
                 'tender_id' => $tender->Id,
-                'filename' => $uploadedFile->getClientOriginalName(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-
-            // Don't throw - allow tender creation to continue
-            // You could throw here if documents are critical:
-            // throw new \Exception("Failed to attach document: " . $e->getMessage());
         }
     }
 

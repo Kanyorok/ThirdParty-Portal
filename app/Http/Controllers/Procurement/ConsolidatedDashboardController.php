@@ -91,28 +91,44 @@ class ConsolidatedDashboardController extends Controller
         ));
     }
 
-    public function show($needId)
-    {
-        $needs = DepartmentNeed::with('item')
-            ->where('NeedID', $needId)
-            ->get()
-            ->map(function ($need) {
-                $this->authorize('view', $need);
-                return [
-                    'NeedID' => $need->NeedID,
-                    'ItemName' => $need->item->ItemName ?? 'N/A',
-                    'BranchName' => $need->branch->Name ?? 'N/A',
-                    'DepartmentName' => $need->department->Name ?? 'N/A',
-                    'RequestedQty' => $need->RequestedQty,
-                    'EstimatedCost' => number_format($need->RequestedQty * $need->EstimatedUnitCost, 2),
-                    'RequestedDate' => \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y'),
-                    'CreatedOn' => \Carbon\Carbon::parse($need->CreatedOn)->format('Y-m-d'),
-                    'Status' => $need->Status->label(),
-                ];
-            });
+   public function show($needId)
+{
+    // 1. Load ALL relationships (added branch and department)
+    $needs = DepartmentNeed::with(['item', 'branch', 'department'])
+        ->where('NeedID', $needId)
+        ->get()
+        ->map(function ($need) {
+             $this->authorize('view', $need); 
 
-        return response()->json($needs);
-    }
+            // 2. SAFETY CHECK: Handle Status correctly
+            // This prevents the "Call to member function label() on string" crash
+            $statusLabel = $need->Status; 
+            if (is_object($need->Status) && method_exists($need->Status, 'label')) {
+                $statusLabel = $need->Status->label();
+            } elseif ($need->Status instanceof \UnitEnum) {
+                $statusLabel = $need->Status->value;
+            }
+
+            return [
+                'NeedID' => $need->NeedID,
+                'ItemName' => $need->item->ItemName ?? 'N/A',
+                
+                // 3. SAFETY CHECK: Use '?->' (safe navigation) so it doesn't crash if branch/dept is missing
+                'BranchName' => $need->branch?->Name ?? 'N/A',
+                'DepartmentName' => $need->department?->Name ?? 'N/A',
+                
+                'RequestedQty' => $need->RequestedQty,
+                'EstimatedCost' => number_format((float)$need->RequestedQty * (float)$need->EstimatedUnitCost, 2),
+                
+                // Format date safely
+                'RequestedDate' => $need->RequestedDate ? \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y') : 'N/A',
+                'CreatedOn' => $need->CreatedOn ? \Carbon\Carbon::parse($need->CreatedOn)->format('Y-m-d') : 'N/A',
+                'Status' => (string)$statusLabel,
+            ];
+        });
+
+    return response()->json($needs);
+}
 
     public function exportExcel(Request $request)
     {

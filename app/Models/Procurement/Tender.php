@@ -130,10 +130,10 @@ class Tender extends Model
 {
     return $this->belongsTo(ConsolidatedProcurementPlan::class, 'ProcurementModeId', 'PlanID');
 }
-    // public function documents(): HasMany
-    // {
-    //     return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
-    // }
+    public function documents(): HasMany
+    {
+        return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
+    }
 
     public function submissions(): HasMany
     {

@@ -178,35 +178,39 @@
                 const modal = document.getElementById("needModal");
                 const needDetails = document.getElementById("needDetails");
 
-                // ✅ Function to format ISO date string to MM/DD/YYYY
-                function formatToMMDDYYYY(dateString) {
-                    if (!dateString) return 'N/A';
+                //  Function to format ISO date string to MM/DD/YYYY
+       function formatToDDMonYYYY(dateString) {
+    if (!dateString) return 'N/A';
 
-                    // If input is YYYY-MM-DD or ISO format
-                    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-                        const [year, month, day] = dateString.split("-");
-                        return `${month}/${day}/${year}`;
-                    }
+    // Array of Short Month Names
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-                    // If input is DD/MM/YYYY format (possibly from old('RequestedDate') or Carbon formatting)
-                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
-                        const [day, month, year] = dateString.split("/");
-                        return `${day}/${month}/${year}`;
-                    }
+    // 1. Handle YYYY-MM-DD (ISO Format)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        const [year, month, day] = dateString.split("-");
+        // parseInt removes leading zeros (e.g., "05" becomes "5")
+        // month - 1 because array indexes start at 0
+        return `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
+    }
 
-                    // Try native parsing as fallback (not recommended)
-                    const date = new Date(dateString);
-                    if (!isNaN(date)) {
-                        const mm = String(date.getMonth() + 1).padStart(2, '0');
-                        const dd = String(date.getDate()).padStart(2, '0');
-                        const yyyy = date.getFullYear();
-                        return `${dd}/${mm}/${yyyy}`;
-                    }
+    // 2. Handle DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+        const [day, month, year] = dateString.split("/");
+        return `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
+    }
 
-                    // Return as-is if unable to parse
-                    return dateString;
-                }
+    // 3. Fallback: Try native parsing
+    const date = new Date(dateString);
+    if (!isNaN(date)) {
+        const d = date.getDate();
+        const m = monthNames[date.getMonth()]; // .getMonth() is 0-indexed already
+        const y = date.getFullYear();
+        return `${d} ${m} ${y}`;
+    }
 
+    // Return as-is if unable to parse
+    return dateString;
+}
 
                 // NEW CODE (Fixes the issue using Event Delegation)
 document.addEventListener('click', function (e) {
@@ -234,7 +238,7 @@ document.addEventListener('click', function (e) {
                      return;
                 }
 
-                const formattedDate = formatToMMDDYYYY(need.RequestedDate);
+                 const formattedDate = formatToDDMonYYYY(need.RequestedDate);
 
                 needDetails.innerHTML = `
                 <ul class="list-group list-group-flush">
