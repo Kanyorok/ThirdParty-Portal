@@ -36,7 +36,9 @@ class NewThirdPartyRequest extends FormRequest
             'VATNumber' => ['nullable', 'string', 'max:200'],
 
             'Email' => [
-                'nullable', Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(), 'max:250',
+                'nullable',
+                Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(),
+                'max:250',
             ],
             'Phone' => ['required', (new Phone)->countryField('Country')],
             'PhysicalAddress' => ['nullable', 'string', 'max:200'],
@@ -49,12 +51,12 @@ class NewThirdPartyRequest extends FormRequest
             'user_Phone' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
             'user_Gender' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
 
-            'customer_DateOfBirth' => [Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'date'],
-            'customer_Gender' => [Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
-            'customer_MaritalStatus' => [Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
-            'customer_Occupation' => [Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
+            'customer_DateOfBirth' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'date'],
+            'customer_Gender' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
+            'customer_MaritalStatus' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
+            'customer_Occupation' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
 
-            'tenant_Remarks' => [Rule::requiredIf(in_array(ThirdPartyService::TypeTenant, $this->array('types'), true)), 'string', 'max:200'],
+            'tenant_Remarks' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeTenant, $this->array('types'), true)), 'string', 'max:200'],
         ];
     }
 
@@ -83,7 +85,6 @@ class NewThirdPartyRequest extends FormRequest
             return $gender;
         }
         throw ValidationException::withMessages(['Gender' => 'Gender is not a valid Gender.']);
-
     }
 
     public function getLogo(): UploadedFile|null
