@@ -19,9 +19,8 @@
     <form action="{{ route('document-tags.store',[$file->DocumentId]) }}" method="post"
           id="updateFileTagsForm"> @csrf
         <div class="mb-3">
-            <label class="form-label" for="DocumentTags">Tags <span
-                    class="text-danger">*</span></label>
-            <select class="form-control" name="DocumentTags[]" id="DocumentTags" required multiple>
+            <label class="form-label" for="DocumentTags">Tags </label>
+            <select class="form-control" name="DocumentTags[]" id="DocumentTags" multiple>
                 @foreach($tags as $tag)
                     <option
                         value="{{ $tag->TagID }}" {{ (in_array($tag->Id, $file_tags, true))?'selected':'' }}> {{ $tag->Name }}</option>

@@ -241,8 +241,47 @@ enum ExtensionsEnum: string
         };
     }
 
+
     public function isAudio(): bool
     {
         return in_array($this->value, [self::Mp3->value, self::Wav->value, self::Ogg->value, self::M4a->value], true);
+    }
+
+    public static function getAllowedExtensionsForUpload(): array
+    {
+        return [
+            'Images' => [
+                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Jpeg, self::Png, self::Gif, self::Bmp, self::Svg])),
+                'description' => 'Image files'
+            ],
+            'Videos' => [
+                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Mp4, self::Webm, self::AVI, self::Mpeg])),
+                'description' => 'Video files'
+            ],
+            'Documents' => [
+                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Doc, self::Docx, self::RTF, self::Odt, self::Pdf])),
+                'description' => 'Document files'
+            ],
+            'Spreadsheets' => [
+                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Xls, self::Xlsx, self::Ods, self::Csv])),
+                'description' => 'Spreadsheet files'
+            ],
+            'Presentations' => [
+                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::PPt, self::Pptx, self::Odp])),
+                'description' => 'Presentation files'
+            ],
+            'Audio' => [
+                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Mp3, self::Wav, self::Ogg, self::M4a])),
+                'description' => 'Audio files'
+            ],
+            'Archives' => [
+                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Rar, self::Zip, self::SevenZ])),
+                'description' => 'Archive files'
+            ],
+            'Other' => [
+                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Txt, self::ICS, self::Json])),
+                'description' => 'Other files'
+            ]
+        ];
     }
 }

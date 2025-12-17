@@ -4,8 +4,10 @@ namespace App\Models\Procurement;
 
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
+
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Inventory\PriceManagement;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 
 class TenderItems extends Model
 {
@@ -44,5 +46,10 @@ class TenderItems extends Model
     public function category()
     {
         return $this->belongsTo(ItemCategories::class, 'ItemCategory', 'Id');
+    }
+
+    public function planLineItem(): BelongsTo
+    {
+        return $this->belongsTo(PlanLineItem::class, 'PlanItemID', 'LineItemID');
     }
 }

@@ -115,15 +115,10 @@
             <div class="tab-pane fade show active" id="fromPlan" role="tabpanel">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Select Procurement Plan:</label>
-                    <select class="form-select" id="selectedProcurementPlan" name="procurement_plan_id"
-                        onchange="loadPlanItemsForPlan()">
-                        <option selected disabled>-- Choose Procurement Plan --</option>
-                        @foreach ($procurementPlan as $item)
-                            @if (!$item->isUsed())
-                                <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
-                            @endif
-                        @endforeach
-                    </select>
+                <select class="form-select" id="selectedProcurementPlan" name="procurement_plan_id" disabled
+                  onchange="loadPlanItemsForPlan()">
+                  <option selected disabled>-- Choose Procurement Plan (select Item Category first) --</option>
+                </select>
         </div>
 
                 <div class="row mb-3">
@@ -203,14 +198,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                 <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline: <span class="text-danger">*</span></label>
-                <input type="date" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
+                <input type="date" min="{{ date('Y-m-d') }}" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
                 @error('submission_deadline')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                 <label for="openingDate" class="form-label fw-bold">Opening Date: <span class="text-danger">*</span></label>
-                <input type="date" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
+                <input type="date" min="{{ date('Y-m-d') }}" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
                 @error('opening_date')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
@@ -257,6 +252,12 @@
   const suppliers = @json($suppliers ?? []);
   const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
   const planItemsByPlan = @json($procurementPlansOutput ?? []);
+  // Pre-filtered list of available plans (excluding already used), populated only after category selection
+  const availablePlans = @json(
+    ($procurementPlan ?? collect())->filter(function($p){ return !$p->isUsed(); })
+      ->map(function($p){ return ['PlanID'=>$p->PlanID, 'Title'=>$p->Title, 'ReferenceNumber'=>$p->ReferenceNumber]; })
+      ->values()
+  );
 
   // ---- Plan -> Plan Item population
   function loadPlanItemsForPlan() {
@@ -560,6 +561,23 @@
         suppliersSection.style.display = 'block';
         populateSuppliers(itemCatSel.value);
       }
+
+      // Enable and populate Procurement Plan select only after Item Category selection
+      const planSel = document.getElementById('selectedProcurementPlan');
+      if (planSel) {
+        const hasCategory = Boolean(itemCatSel.value);
+        planSel.disabled = !hasCategory;
+        planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan --</option>';
+        if (hasCategory) {
+          // Populate with prefiltered available plans; further filtering by category can be added if needed
+          (availablePlans || []).forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.PlanID;
+            opt.textContent = `${p.Title} - ${p.ReferenceNumber}`;
+            planSel.appendChild(opt);
+          });
+        }
+      }
     });
   }
   if (openTender) {
@@ -580,11 +598,126 @@
   if (tenderCatSel && tenderCatSel.value) {
     refreshItemCategories(); // call immediately (don’t rely on DOMContentLoaded timing)
   }
+  // Ensure plan select starts disabled until Item Category is chosen
+  (function initPlanSelectGate(){
+    const planSel = document.getElementById('selectedProcurementPlan');
+    if (planSel) {
+      const hasCategory = itemCatSel && itemCatSel.value;
+      planSel.disabled = !hasCategory;
+      if (!hasCategory) {
+        planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan (select Item Category first) --</option>';
+      }
+    }
+  })();
   // Show supplier section if Restricted was preselected
   if (restricted && restricted.checked) {
     suppliersSection.style.display = 'block';
     if (itemCatSel && itemCatSel.value) populateSuppliers(itemCatSel.value);
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+        const submissionDeadline = document.getElementById('submissionDeadline');
+        const openingDate = document.getElementById('openingDate');
+        const today = new Date().toISOString().split('T')[0];
+
+        // Set minimum dates to today
+        submissionDeadline.setAttribute('min', today);
+        openingDate.setAttribute('min', today);
+
+        // Update opening date minimum when submission deadline changes
+        submissionDeadline.addEventListener('change', function() {
+            const selectedDate = this.value;
+
+            // Validate submission deadline is not in the past
+            if (selectedDate < today) {
+                this.value = '';
+                alert('Submission deadline cannot be in the past. Please select today or a future date.');
+                this.classList.add('is-invalid');
+                return;
+            }
+
+            this.classList.remove('is-invalid');
+
+            // Update opening date minimum to match submission deadline
+            if (selectedDate) {
+                openingDate.setAttribute('min', selectedDate);
+
+                // If opening date is already set and is before the new submission deadline, clear it
+                if (openingDate.value && openingDate.value < selectedDate) {
+                    openingDate.value = '';
+                    alert('Opening date must be on or after the submission deadline. Please select a new opening date.');
+                }
+            }
+        });
+
+        // Validate opening date
+        openingDate.addEventListener('change', function() {
+            const selectedOpeningDate = this.value;
+            const selectedSubmissionDate = submissionDeadline.value;
+
+            // Validate opening date is not in the past
+            if (selectedOpeningDate < today) {
+                this.value = '';
+                alert('Opening date cannot be in the past. Please select today or a future date.');
+                this.classList.add('is-invalid');
+                return;
+            }
+
+            // Validate opening date is not before submission deadline
+            if (selectedSubmissionDate && selectedOpeningDate < selectedSubmissionDate) {
+                this.value = '';
+                alert('Opening date must be on or after the submission deadline (' + selectedSubmissionDate + ').');
+                this.classList.add('is-invalid');
+                return;
+            }
+
+            this.classList.remove('is-invalid');
+        });
+
+        // Form submission validation
+        const form = submissionDeadline.closest('form');
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                let isValid = true;
+                const submissionValue = submissionDeadline.value;
+                const openingValue = openingDate.value;
+
+                // Check submission deadline
+                if (!submissionValue) {
+                    submissionDeadline.classList.add('is-invalid');
+                    isValid = false;
+                } else if (submissionValue < today) {
+                    alert('Submission deadline cannot be in the past.');
+                    submissionDeadline.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                // Check opening date
+                if (!openingValue) {
+                    openingDate.classList.add('is-invalid');
+                    isValid = false;
+                } else if (openingValue < today) {
+                    alert('Opening date cannot be in the past.');
+                    openingDate.classList.add('is-invalid');
+                    isValid = false;
+                } else if (submissionValue && openingValue < submissionValue) {
+                    alert('Opening date must be on or after the submission deadline.');
+                    openingDate.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        }
+
+        // Trigger validation on page load if there are old values
+        if (submissionDeadline.value) {
+            submissionDeadline.dispatchEvent(new Event('change'));
+        }
+    });
 })();
 </script>
 

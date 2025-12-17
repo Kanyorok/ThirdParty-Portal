@@ -99,12 +99,12 @@ class BudgetPeriodController extends Controller
             'selected_gls' => [
                 'nullable',
                 'string',
-//                function ($attribute, $value, $fail) {
-//                    $gls = json_decode($value, true);
-//                    if (!is_array($gls) || empty($gls)) {
-//                        $fail('At least one GL account must be selected.');
-//                    }
-//                },
+                //                function ($attribute, $value, $fail) {
+                //                    $gls = json_decode($value, true);
+                //                    if (!is_array($gls) || empty($gls)) {
+                //                        $fail('At least one GL account must be selected.');
+                //                    }
+                //                },
             ],
         ]);
         DB::beginTransaction();
@@ -216,9 +216,9 @@ class BudgetPeriodController extends Controller
 
         //return$budgetGLAttachments=BudgetGLsAttachments::select('Id','BudgetID','AccountID','GLID','GLAccountTypeID','Description')->where('BudgetID',$id)->get();
 
-//        $periods = BudgetPeriods::findOrFail($id);
-//        $types = BudgetPeriodTypes::all();
-//        return view('budgetandanalytics.budgetperiod.edit', compact('periods', 'types'));
+        //        $periods = BudgetPeriods::findOrFail($id);
+        //        $types = BudgetPeriodTypes::all();
+        //        return view('budgetandanalytics.budgetperiod.edit', compact('periods', 'types'));
     }
 
 
@@ -364,11 +364,7 @@ class BudgetPeriodController extends Controller
                 $check = BudgetGLMasterAllocations::where('BudgetID', $budgetID)->first();
 
                 $now = Carbon::now();
-<<<<<<< HEAD
-                if ($check) {// Do some insert in the BudgetMasterAllocation
-=======
-                if  ($check)  { // Do some insert in the BudgetMasterAllocation
->>>>>>> origin
+                if ($check) { // Do some insert in the BudgetMasterAllocation
                     //Get distinct values of all the branches id
                     $branchIDS = BudgetGLMasterAllocations::where('BudgetID', $budgetID)->distinct()->pluck('BranchID')->toArray();
                     //Insert the data based on the branches

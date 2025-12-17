@@ -65,7 +65,7 @@ class Lead extends Model
         return $this->belongsTo(CodeDetail::class, 'LeadLossReason', 'ID')->where('CodeID', 'LeadLossReason');
     }
 
-    public function industry(): BelongsTo
+    public function ind(): BelongsTo
     {
         return $this->belongsTo(CodeDetail::class, 'Industry', 'ID')->where('CodeID', 'Industries');
     }
