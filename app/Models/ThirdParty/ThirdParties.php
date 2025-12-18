@@ -33,8 +33,24 @@ class ThirdParties extends Model
     }
 
     protected $fillable = [
-        'ThirdPartyName', 'TradingName', 'BusinessType', 'RegistrationNumber', 'TaxPIN', 'VATNumber', 'CountryId', 'LocationId', 'PhysicalAddress', 'Email', 'Phone',
-        'ImageId', 'Website', 'Status', 'Extra', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'ThirdPartyName',
+        'TradingName',
+        'BusinessType',
+        'RegistrationNumber',
+        'TaxPIN',
+        'VATNumber',
+        'CountryId',
+        'LocationId',
+        'PhysicalAddress',
+        'Email',
+        'Phone',
+        'ImageId',
+        'Website',
+        'Status',
+        'Extra',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -100,9 +116,11 @@ class ThirdParties extends Model
             ->withPivot('Id', 'PartyType', 'PartyID', 'CreatedBy', 'ModifiedBy', 'DeletedBy')->wherePivotNull('DeletedOn');
     }
 
-    public function scopeSuppliers(): BelongsToMany
+    public function scopeSuppliers($query)
     {
-        return $this->types()->wherePivot('PartyType', SupplierMaster::getPrimaryKey());
+        return $query->whereHas('types', function ($q) {
+            $q->where('t_ThirdPartyType_ThirdParties.PartyType', SupplierMaster::getPrimaryKey());
+        });
     }
 
     public function scopeCustomers(): BelongsToMany
@@ -163,6 +181,4 @@ class ThirdParties extends Model
             ->whereNull('DeletedOn')
             ->with('category');
     }
-
-
 }

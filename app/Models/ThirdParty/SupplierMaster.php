@@ -22,8 +22,14 @@ class SupplierMaster extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'ThirdPartyId', 'SupplierID', 'ApprovalStatus', 'IsPrequalified', 'Extra',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'ThirdPartyId',
+        'SupplierID',
+        'ApprovalStatus',
+        'IsPrequalified',
+        'Extra',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -76,7 +82,7 @@ class SupplierMaster extends Model
             'supplier_category_id',
             'ThirdPartyId',
             'SupplierCategoryID'
-        )->whereNull('t_ThirdParty_SupplierCategory.DeletedOn');
+        );
     }
 
     /**

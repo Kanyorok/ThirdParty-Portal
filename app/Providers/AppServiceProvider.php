@@ -229,6 +229,7 @@ use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
+use App\Policies\Procurement\SupplierPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
@@ -586,6 +587,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
         Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
+        Gate::policy(SupplierMaster::class, SupplierPolicy::class);
         Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
         // Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);

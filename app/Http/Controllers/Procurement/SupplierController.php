@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\ThirdParty\SupplierCategory;
+use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -17,43 +18,30 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = ThirdParties::suppliers()
-                ->with([
-                    'categories.itemCategories',
-                    'types',
-                    'legacyCategories.category',
-                    'prequalificationApplications.category.itemCategories'
-                ])
-                ->select([
-                    'Id',
-                    'ThirdPartyName',
-                    'TradingName',
-                    'ApprovalStatus',
-                    'IsPrequalified',
-                    'Email',
-                ])
+            $query = SupplierMaster::query()
+                ->with(['party', 'categories.itemCategories'])
+                ->select('t_SupplierMaster.*')
                 ->addSelect([
-                    // Primary contact derived from latest ThirdPartyUser by CreatedOn
                     'PrimaryFirstName' => DB::table('t_ThirdPartyUsers')
                         ->select('FirstName')
-                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_SupplierMaster.ThirdPartyId')
                         ->orderByDesc('CreatedOn')
                         ->limit(1),
                     'PrimaryLastName' => DB::table('t_ThirdPartyUsers')
                         ->select('LastName')
-                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_SupplierMaster.ThirdPartyId')
                         ->orderByDesc('CreatedOn')
                         ->limit(1),
                     'PrimaryEmail' => DB::table('t_ThirdPartyUsers')
                         ->select('Email')
-                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_SupplierMaster.ThirdPartyId')
                         ->orderByDesc('CreatedOn')
                         ->limit(1),
                 ]);
 
             if ($request->filled('search.value')) {
                 $searchValue = $request->input('search.value');
-                $query->where(function ($q) use ($searchValue) {
+                $query->whereHas('party', function ($q) use ($searchValue) {
                     $q->where('ThirdPartyName', 'like', "%{$searchValue}%")
                         ->orWhere('TradingName', 'like', "%{$searchValue}%")
                         ->orWhere('Email', 'like', "%{$searchValue}%")
@@ -69,61 +57,32 @@ class SupplierController extends Controller
             }
 
             return DataTables::of($query)
-                ->addColumn('ThirdPartyType', function ($supplier) {
-                    $codes = $supplier->types->pluck('Code')->filter()->unique();
-                    return $codes->isNotEmpty() ? $codes->join(', ') : 'Supplier';
+                ->addColumn('ThirdPartyName', function (SupplierMaster $supplier) {
+                    return $supplier->party->ThirdPartyName ?? 'N/A';
                 })
-                ->addColumn('ApprovalStatus', function ($supplier) {
-                    return $supplier->ApprovalStatus->label();
+                ->addColumn('TradingName', function (SupplierMaster $supplier) {
+                    return $supplier->party->TradingName ?? 'N/A';
                 })
-                ->addColumn('Prequalified', function ($supplier) {
+                ->addColumn('ApprovalStatus', function (SupplierMaster $supplier) {
+                    return $supplier->ApprovalStatus ? $supplier->ApprovalStatus->label() : 'Pending';
+                })
+                ->addColumn('Prequalified', function (SupplierMaster $supplier) {
                     return $supplier->IsPrequalified ? 'Yes' : 'No';
                 })
-                ->addColumn('category_names', function ($supplier) {
+                ->addColumn('category_names', function (SupplierMaster $supplier) {
                     if (!$supplier->IsPrequalified) {
                         return '<span class="text-muted">Not prequalified</span>';
                     }
+                    // Categories via SupplierMaster relationship
+                    $categories = $supplier->categories ?? collect();
 
-                    // Collect new pivot categories first
-                    $newCats = $supplier->categories ?? collect();
-
-                    // Categories from prequalification applications (each application has a single category)
-                    $appCats = ($supplier->prequalificationApplications ?? collect())
-                        ->pluck('category')
-                        ->filter()
-                        ->unique('SupplierCategoryID');
-
-                    // Map legacy categories to synthetic objects (only if legacy exists and not already represented)
-                    $legacyCats = ($supplier->legacyCategories ?? collect())->map(function ($map) {
-                        $label = $map->category->Name ?? $map->category->Description ?? 'Category';
-                        return (object) [
-                            'CategoryName' => $label,
-                            'itemCategories' => collect(),
-                        ];
-                    });
-
-                    // Merge ensuring uniqueness by CategoryName
-                    $merged = $newCats
-                        ->concat($appCats)
-                        ->concat($legacyCats)
-                        ->map(function ($cat) {
-                            $cat->CategoryName = $cat->CategoryName ?? 'Category';
-                            return $cat;
-                        })
-                        ->unique(function ($c) {
-                            if (isset($c->SupplierCategoryID)) {
-                                return 'id-'.$c->SupplierCategoryID;
-                            }
-                            return 'name-'.strtolower($c->CategoryName);
-                        });
-
-                    if ($merged->isEmpty()) {
+                    if ($categories->isEmpty()) {
                         return '<span class="text-warning">No categories assigned</span>';
                     }
 
                     $html = '<dl class="mb-0">';
-                    foreach ($merged as $cat) {
-                        $catName = e($cat->CategoryName ?? 'Category');
+                    foreach ($categories as $cat) {
+                        $catName = e($cat->Name ?? $cat->Description ?? 'Category');
                         $itemCats = $cat->itemCategories ?? collect();
                         $count = $itemCats->count();
                         $badge = $count > 0 ? " <span class=\"badge bg-secondary ms-1\">{$count}</span>" : '';
@@ -135,45 +94,30 @@ class SupplierController extends Controller
                     $html .= '</dl>';
                     return $html;
                 })
-                ->addColumn('TradingName', function ($supplier) {
-                    return $supplier->TradingName ?? 'N/A';
-                })
-                ->addColumn('PrimaryContact', function ($supplier) {
+                ->addColumn('PrimaryContact', function (SupplierMaster $supplier) {
                     $full = trim(($supplier->PrimaryFirstName ?? '') . ' ' . ($supplier->PrimaryLastName ?? ''));
                     return $full !== '' ? $full : 'N/A';
                 })
-                ->addColumn('PrimaryEmail', function ($supplier) {
-                    return $supplier->PrimaryEmail ?? $supplier->Email ?? 'N/A';
+                ->addColumn('PrimaryEmail', function (SupplierMaster $supplier) {
+                    return $supplier->PrimaryEmail ?? $supplier->party->Email ?? 'N/A';
                 })
-                ->addColumn('actions', function ($supplier) {
-                    $viewUrl = route('suppliers.show', $supplier->Id);
-                    $editUrl = route('suppliers.edit', $supplier->Id);
-                    $deleteUrl = route('suppliers.destroy', $supplier->Id);
-
+                ->addColumn('actions', function (SupplierMaster $supplier) {
                     return '
                     <div class="d-flex gap-1">
-                        <a href="' . $viewUrl . '" class="btn btn-sm btn-info">View</a>
-                        <a href="' . $editUrl . '" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="' . $deleteUrl . '" method="POST" class="inline-block">
-                            ' . csrf_field() . '
-                            ' . method_field('DELETE') . '
-                            <button type="submit" class="btn btn-sm btn-danger delete-btn">Delete</button>
-                        </form>
+                        ' . $this->getActionsButtons($supplier) . '
                     </div>
                 ';
                 })
-                ->rawColumns(['actions','category_names'])
+                ->rawColumns(['actions', 'category_names'])
                 ->make(true);
         }
 
-        $categories = SupplierCategory::all();
-        return view('procurement.suppliers.index', compact('categories'));
+        return view('procurement.suppliers.index');
     }
 
     public function create()
     {
-        $categories = SupplierCategory::all();
-        return view('procurement.suppliers.create', compact('categories'));
+        return view('procurement.suppliers.create');
     }
 
     public function store(StoreSupplierRequest $request)
@@ -183,7 +127,7 @@ class SupplierController extends Controller
 
         $supplier = ThirdParties::create($validatedData);
         // Attach supplier type via pivot (Code like SU-%). Pick first matching type.
-        $supplierTypeId = DB::table('t_ThirdPartyTypes')->where('Code','like','SU-%')->value('TypeId');
+        $supplierTypeId = DB::table('t_ThirdPartyTypes')->where('Code', 'like', 'SU-%')->value('TypeId');
         if ($supplierTypeId) {
             DB::table('t_ThirdPartyType_ThirdParties')->insert([
                 'TypeId' => $supplierTypeId,
@@ -199,15 +143,14 @@ class SupplierController extends Controller
 
     public function show(ThirdParties $supplier)
     {
-    $supplier->load('categories','types');
+        $supplier->load('categories', 'types');
         return view('procurement.suppliers.show', compact('supplier'));
     }
 
     public function edit(ThirdParties $supplier)
     {
-        $categories = SupplierCategory::all();
-    $supplier->load('categories','types');
-        return view('procurement.suppliers.edit', compact('supplier', 'categories'));
+        $supplier->load('categories', 'types');
+        return view('procurement.suppliers.edit', compact('supplier'));
     }
 
     public function update(UpdateSupplierRequest $request, ThirdParties $supplier)
@@ -225,5 +168,74 @@ class SupplierController extends Controller
     {
         $supplier->delete();
         return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
+    }
+
+    public function activate($id)
+    {
+        $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
+
+        $this->authorize('approve', $supplier);
+
+        // Update status to Approved
+        $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
+        $supplier->save();
+
+        // Update the main ThirdParty status as well if needed? 
+        // For now, focusing on SupplierMaster logic as requested.
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($supplier)
+            ->event('activate')
+            ->log("Activated supplier {$supplier->SupplierID} linked to ThirdParty {$id}");
+
+        return redirect()->back()->with('success', 'Supplier activated successfully.');
+    }
+
+    private function getActionsButtons(SupplierMaster $supplier): string
+    {
+        // Use ThirdPartyId for the routes to match Resource controller expectations
+        $id = $supplier->ThirdPartyId;
+
+        $viewUrl = route('suppliers.show', $id);
+        $editUrl = route('suppliers.edit', $id);
+        $deleteUrl = route('suppliers.destroy', $id);
+        $activateUrl = route('suppliers.activate', $id);
+
+        $buttons = '';
+
+        if (auth()->user()->can('view', SupplierMaster::class)) {
+            $buttons .= '<a href="' . $viewUrl . '" class="btn btn-sm btn-info">View</a>';
+        }
+
+        if (auth()->user()->can('update', SupplierMaster::class)) {
+            $buttons .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning">Edit</a>';
+        }
+
+        if (auth()->user()->can('delete', SupplierMaster::class)) {
+            $buttons .= '
+                <form action="' . $deleteUrl . '" method="POST" class="inline-block">
+                    ' . csrf_field() . '
+                    ' . method_field('DELETE') . '
+                    <button type="submit" class="btn btn-sm btn-danger delete-btn">Delete</button>
+                </form>';
+        }
+
+        $isApproved = false;
+        if (is_object($supplier->ApprovalStatus) && property_exists($supplier->ApprovalStatus, 'value')) {
+            $isApproved = $supplier->ApprovalStatus->value === ThirdPartyApprovalStatusEnum::Approved->value;
+        } elseif (is_string($supplier->ApprovalStatus)) {
+            $isApproved = $supplier->ApprovalStatus === 'A';
+        }
+
+        if (!$isApproved && auth()->user()->can('approve', SupplierMaster::class)) {
+            $buttons .= '
+                <form action="' . $activateUrl . '" method="POST" class="inline-block ms-1">
+                    ' . csrf_field() . '
+                    <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                </form>';
+        }
+
+        return $buttons;
     }
 }
