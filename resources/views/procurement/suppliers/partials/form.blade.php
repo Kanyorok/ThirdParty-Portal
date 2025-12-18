@@ -21,8 +21,8 @@ $supplierMaster = isset($supplier) ? \App\Models\ThirdParty\SupplierMaster::wher
         <select name="BusinessType" id="BusinessType" class="form-select" required>
             <option value="">-- Select Business Type --</option>
             @foreach ($businessTypes ?? [] as $type)
-            <option value="{{ $type->Id }}"
-                {{ old('BusinessType', optional($supplier)->BusinessType) == $type->Id ? 'selected' : '' }}>
+            <option value="{{ $type->ID }}"
+                {{ (string)old('BusinessType', optional($supplier)->getAttribute('BusinessType')) === (string)$type->ID ? 'selected' : '' }}>
                 {{ $type->Description }}
             </option>
             @endforeach
@@ -57,7 +57,7 @@ $supplierMaster = isset($supplier) ? \App\Models\ThirdParty\SupplierMaster::wher
             <option value="">-- Select Country --</option>
             @foreach($countries ?? [] as $country)
             <option value="{{ $country->Id }}"
-                {{ old('Country', optional($supplier)->CountryId) == $country->Id ? 'selected' : '' }}>
+                {{ (string)old('Country', optional($supplier)->getAttribute('CountryId')) === (string)$country->Id ? 'selected' : '' }}>
                 {{ $country->Name }}
             </option>
             @endforeach
@@ -73,17 +73,16 @@ $supplierMaster = isset($supplier) ? \App\Models\ThirdParty\SupplierMaster::wher
 
     {{-- Email --}}
     <div class="col-md-6">
-        <label for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+        <label for="Email" class="form-label">Email Address <span class="text-danger">*</span></label>
         <input type="email" name="Email" id="Email" class="form-control" required
             value="{{ old('Email', optional($supplier)->Email) }}">
     </div>
 
     {{-- Phone --}}
     <div class="col-md-6">
-        <label for="Phone" class="form-label">Phone</label>
-        <input type="tel" name="Phone" id="Phone" class="form-control" pattern="^\+[1-9]\d{7,14}$" inputmode="tel"
-            placeholder="e.g., +12025550123" value="{{ old('Phone', optional($supplier)->Phone) }}">
-        <div class="form-text">Use international format (E.164), starting with + and country code.</div>
+        <label for="Phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+        <input type="text" name="Phone" id="Phone" class="form-control" required
+            value="{{ old('Phone', optional($supplier)->Phone) }}">
     </div>
 
     {{-- Website --}}
@@ -98,17 +97,23 @@ $supplierMaster = isset($supplier) ? \App\Models\ThirdParty\SupplierMaster::wher
         <label for="category_ids" class="form-label">Categories <span class="text-danger">*</span></label>
         <select id="category_ids_disabled" class="form-select" multiple disabled>
             @php
+            // Only show categories if prequalified
+            // Force boolean cast to ensure correct logic
+            $isPrequalified = (bool)optional($supplierMaster)->IsPrequalified;
+            $currentCats = optional($supplier)->supplierCategories ? $supplier->supplierCategories->pluck('SupplierCategoryID')->toArray() : [];
             $selectedCategories = old(
             'category_ids',
-            optional($supplier)->supplierCategories ? $supplier->supplierCategories->pluck('SupplierCategoryID')->toArray() : []
+            $isPrequalified ? $currentCats : []
             );
             @endphp
+            @if($isPrequalified)
             @foreach ($supplierCategories ?? [] as $category)
             <option value="{{ $category->SupplierCategoryID }}"
                 {{ in_array($category->SupplierCategoryID, $selectedCategories) ? 'selected' : '' }}>
                 {{ $category->CategoryName }}
             </option>
             @endforeach
+            @endif
         </select>
         {{-- Hidden inputs to maintain current categories on submit since editing is disabled --}}
         @foreach($selectedCategories as $catId)
