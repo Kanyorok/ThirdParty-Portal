@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Log;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 use Yajra\DataTables\DataTables;
 
@@ -129,7 +129,8 @@ class ThirdPartyController extends Controller
                     $service->setLogo($logo, $actor);
                 }
 
-                return $this->succeeded("{$service->party->ThirdPartyName} created successfully");
+                Log::info('Created ThirdParty:', ['party' => $service->party, 'id' => $service->party->Id]);
+                return $this->succeeded("{$service->party->ThirdPartyName} created successfully", route('thirdparty.parties.show', $service->party->Id));
             });
         } catch (ErroredException $e) {
             return $e->toJson();
