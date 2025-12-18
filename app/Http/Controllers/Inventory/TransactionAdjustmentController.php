@@ -38,31 +38,32 @@ class TransactionAdjustmentController extends Controller
         return view('inventory.transactions.adjustments.index', compact('adjustments'));
     }
 
-    public function create(Request $request)  // Add Request parameter here too
-    {
-        $this->authorize('create', StockAdjustment::class);
-        
-        $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
-            return redirect()->back()->with('fail', 'Current user branch not found.');
-        }
-
-        $branchId = $currentBranch->Id;
-        $branch = Branch::findOrFail($branchId);
-
-        $users = User::whereHas('employee', function ($q) use ($branchId) {
-                $q->where('BranchId', $branchId);
-            })
-            ->get();
-
-        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
-        $stockItems = StockItem::with(['item', 'uom'])
-            ->where('Branch', $branchId)
-            ->get();
-
-        return view('inventory.transactions.adjustments.create', compact('branch', 'users', 'reasons', 'stockItems'));
+   public function create(Request $request)
+{
+    $this->authorize('create', StockAdjustment::class);
+    
+    $currentBranch = $request->user()->branch;
+    if (!$currentBranch instanceof Branch) {
+        return redirect()->back()->with('fail', 'Current user branch not found.');
     }
 
+    $branchId = $currentBranch->Id;
+    $branch = Branch::findOrFail($branchId);
+
+    $users = User::whereHas('employee', function ($q) use ($branchId) {
+            $q->where('BranchId', $branchId);
+        })
+        ->get();
+
+    $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+    $stockItems = StockItem::with(['item', 'uom'])
+        ->where('Branch', $branchId)
+        ->get();
+
+    $currentUser = $request->user();
+    
+    return view('inventory.transactions.adjustments.create', compact('branch', 'users', 'reasons', 'stockItems', 'currentUser'));
+}
     public function store(StockAdjustmentRequest $request)
     {
         $this->authorize('create', StockAdjustment::class);

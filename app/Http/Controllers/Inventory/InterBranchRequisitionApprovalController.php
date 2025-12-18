@@ -137,7 +137,7 @@ class InterBranchRequisitionApprovalController extends Controller
 
     try {
         DB::transaction(function () use ($requisition, $user) {
-            $this->workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, 'Approved via UI');
+            $this->workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, 'Approved via UI', 'Status');
         });
         
         Log::info('Requisition approved successfully', [

@@ -1,263 +1,214 @@
 @extends('layouts.app')
-@section('title', 'Create New Stock Item')
+ 
+@section('title', 'Create New Item')
+ 
 @section('content')
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+ 
+<div class="container mt-4">
+    <div class="card shadow rounded-4">
+        <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
+            <h4 class="mb-0">📦 Item Master Form</h4>
         </div>
-    @endif
-
-    <div class="container mt-5">
-        <div class="card shadow rounded-4">
-            <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
-                <h4 class="mb-0">➕ Add SKU</h4>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('sku.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="Category" class="form-label">Category <span class="text-danger">*</span></label>
-                            <select name="Category" id="Category" class="form-select" required>
-                                <option value="">-- Select Category --</option>
-                                @foreach($categories as $category)
-                                    <option
-                                        value="{{ $category->Id }}" {{ old('Category') == $category->Id ? 'selected' : '' }}>
-                                        {{ $category->Name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label for="Subcategory" class="form-label">Subcategory</label>
-                            <select name="Subcategory" id="Subcategory" class="form-select">
-                                <option value="">-- Select Subcategory --</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label for="ItemID" class="form-label">Item <span class="text-danger">*</span></label>
-                            <select name="ItemID" id="Item" class="form-select" required>
-                                <option value="">-- Select Item --</option>
-                            </select>
-                        </div>
+        <div class="card-body">
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <strong>Please fix the following errors:</strong>
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+ 
+            <form action="{{ route('itemmasterlist.store') }}" method="POST" enctype="multipart/form-data" id="itemMasterListForm">
+                @csrf
+ 
+                {{-- Row 1 --}}
+                <div class="row mb-3">
+                   
+                    <div class="col-md-4">
+                        <label for="ItemName" class="form-label">Item Name <span class="text-danger">*</span></label>
+                        <input type="text" name="ItemName" id="ItemName" class="form-control @error('ItemName') is-invalid @enderror"
+                               value="{{ old('ItemName') }}" required>
+                        @error('ItemName')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="UOM" class="form-label">Unit of Measure <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="UOMName" value="{{ old('UOMName') }}" readonly>
-                            <input type="hidden" name="UOM" id="UOM" value="{{ old('UOM') }}">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label for="UnitCost" class="form-label">Unit Cost <span
-                                    class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="UnitCost" id="UnitCost"
-                                   value="{{ old('UnitCost') }}" step="0.01" readonly>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Branch <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control"
-                                   value="{{ $branch->Name ?? 'N/A' }}" readonly>
-                            <input type="hidden" name="Branch" value="{{ $branch->Id ?? '' }}">
-                        </div>
+                    <div class="col-md-4">
+                        <label for="BarCode" class="form-label">Bar Code <span class="text-danger">*</span></label>
+                        <input type="text" name="BarCode" id="BarCode" class="form-control @error('BarCode') is-invalid @enderror"
+                               value="{{ old('BarCode') }}" required>
+                        @error('BarCode')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="Store" class="form-label">Store <span class="text-danger">*</span></label>
-                            <select name="Store" id="Store" class="form-select" required>
-                                <option value="">-- Select Store --</option>
-                                @if($stores && $stores->count() > 0)
-                                    @foreach($stores as $store)
-                                        <option
-                                            value="{{ $store->Id }}" {{ old('Store') == $store->Id ? 'selected' : '' }}>
-                                            {{ $store->StoreName }}
-                                        </option>
-                                    @endforeach
-                                @else
-                                    <option value="">No stores available for your branch</option>
-                                @endif
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="currentQty" class="form-label">Current Qty <span
-                                    class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="CurrentQty" id="currentQty"
-                                   value="{{ old('CurrentQty', 0) }}" min="0" step="0.01" required>
-                        </div>
+                   
+                    <div class="col-md-4">
+                        <label for="ItemType" class="form-label">Item Type <span class="text-danger">*</span></label>
+                        <select name="ItemType" id="ItemType" class="form-select @error('ItemType') is-invalid @enderror" required>
+                            <option value="" selected disabled>Select Type</option>
+                            @foreach($itemTypes as $itemType)
+                                <option value="{{ $itemType->ID }}" {{ old('ItemType') == $itemType->ID ? 'selected' : '' }}>
+                                    {{ $itemType->Description }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('ItemType')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="Min" class="form-label">Min Stock Level</label>
-                            <input type="number" class="form-control" name="Min" id="Min"
-                                   value="{{ old('Min', 0) }}" min="0" step="0.01">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="Reorder" class="form-label">Reorder Qty</label>
-                            <input type="number" class="form-control" name="Reorder" id="Reorder"
-                                   value="{{ old('Reorder', 0) }}" min="0" step="0.01">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="LastReceived" class="form-label">Last Received Date <span
-                                    class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="LastReceived" id="LastReceived"
-                                   value="{{ old('LastReceived', now()->format('Y-m-d')) }}" required>
-                        </div>
+                </div>
+ 
+                {{-- Row 2 --}}
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="Category" class="form-label">Parent Category <span class="text-danger">*</span></label>
+                        <select name="Category" id="category" class="form-select @error('Category') is-invalid @enderror" required>
+                            <option value="">-- Select Category --</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->Id }}" {{ old('Category') == $category->Id ? 'selected' : '' }}>
+                                    {{ $category->Name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('Category')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-success"
-                                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save
-                            Item
-                        </button>
-                        <a href="{{ url()->previous() }}" class="btn btn-secondary px-4 ms-2">Cancel</a>
+                    <div class="col-md-4">
+                        <label for="SubCategory" class="form-label">Category</label>
+                        <select name="SubCategory" id="subcategory" class="form-select @error('SubCategory') is-invalid @enderror">
+                            <option value="">-- Select SubCategory --</option>
+                        </select>
+                        @error('SubCategory')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-                </form>
-            </div>
+                    <div class="col-md-4">
+                        <label for="UOM" class="form-label">Unit of Measure (UOM) <span class="text-danger">*</span></label>
+                        <select name="UOM" id="UOM" class="form-select @error('UOM') is-invalid @enderror" required>
+                            <option value="" selected disabled>Select UOM</option>
+                            @foreach($uoms as $uom)
+                                <option value="{{ $uom->Id }}" {{ old('UOM') == $uom->Id ? 'selected' : '' }}>
+                                    {{ $uom->Code }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('UOM')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+                </div>
+ 
+                {{-- Row 3 --}}
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="InventoryType" class="form-label">Inventory Type <span class="text-danger">*</span></label>
+                        <select name="InventoryType" id="InventoryType" class="form-select @error('InventoryType') is-invalid @enderror" required>
+                            <option value="" selected disabled>Select Inventory Type</option>
+                            @foreach($inventoryTypes as $inventoryType)
+                                <option value="{{ $inventoryType->ID }}" {{ old('InventoryType') == $inventoryType->ID ? 'selected' : '' }}>
+                                    {{ $inventoryType->Description }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('InventoryType')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label for="ImageUpload" class="form-label">Item Image</label>
+                        <input type="file" name="ImageUpload" id="ImageUpload" class="form-control @error('ImageUpload') is-invalid @enderror">
+                        @error('ImageUpload')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Upload Supporting Document</label>
+                        <input type="file" name="Document" class="form-control">
+                        <small class="text-muted">Attach inspection sheet, photos, or related files</small>
+                    </div>
+                </div>
+                {{-- Full-width Row --}}
+                <div class="mb-3">
+                    <label for="ItemDescription" class="form-label">Item Description <span class="text-danger">*</span></label>
+                    <textarea name="ItemDescription" id="ItemDescription" class="form-control @error('ItemDescription') is-invalid @enderror" rows="3" required>{{ old('ItemDescription') }}</textarea>
+                    @error('ItemDescription')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+ 
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                        ✅ Save Item
+                    </button>
+ 
+                </div>
+            </form>
         </div>
     </div>
-
-    {{-- Category -> Subcategory -> Item --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const categorySelect = document.getElementById('Category');
-            const subcategorySelect = document.getElementById('Subcategory');
-            const itemSelect = document.getElementById('Item');
-
-            const oldCategory = "{{ old('Category') }}";
-            const oldSubcategory = "{{ old('Subcategory') }}";
-            const oldItem = "{{ old('ItemID') }}";
-
-            // Load subcategories + items when category changes
-            categorySelect.addEventListener('change', function () {
-                const categoryId = this.value;
-                subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
-                itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-
-                if (categoryId) {
-                    fetch(`/inventory/get-subcategories?category_id=${categoryId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            data.forEach(subcat => {
-                                const option = document.createElement('option');
-                                option.value = subcat.Id;
-                                option.text = subcat.Name;
-                                if (subcat.Id == oldSubcategory) {
-                                    option.selected = true;
-                                }
-                                subcategorySelect.appendChild(option);
-                            });
-                        });
-
-                    fetch(`/inventory/get-items?category_id=${categoryId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            data.forEach(item => {
-                                const option = document.createElement('option');
-                                option.value = item.Id;
-                                option.text = item.ItemName;
-                                if (item.Id == oldItem) {
-                                    option.selected = true;
-                                }
-                                itemSelect.appendChild(option);
-                            });
-                        });
+</div>
+ 
+@endsection
+ 
+@section('scripts')
+<script>
+    $(document).ready(function () {
+        $('#category').change(function () {
+            let categoryId = $(this).val();
+            $('#subcategory').html('<option value="">Loading...</option>');
+ 
+            $.ajax({
+                url: "{{ route('get.subcategories') }}",
+                type: 'GET',
+                data: { category_id: categoryId },
+                success: function (data) {
+                    $('#subcategory').html('<option value="">-- Select SubCategory --</option>');
+                    $.each(data, function (key, value) {
+                        $('#subcategory').append(`<option value="${value.Id}">${value.Name}</option>`);
+                    });
+                },
+                error: function () {
+                    $('#subcategory').html('<option value="">No subcategories found</option>');
                 }
             });
-
-            // When subcategory changes, load items under it
-            subcategorySelect.addEventListener('change', function () {
-                const subcategoryId = this.value;
-                itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-
-                if (subcategoryId) {
-                    fetch(`/inventory/info/get-items?subcategory_id=${subcategoryId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            data.forEach(item => {
-                                const option = document.createElement('option');
-                                option.value = item.Id;
-                                option.text = item.ItemName;
-                                if (item.Id == oldItem) {
-                                    option.selected = true;
-                                }
-                                itemSelect.appendChild(option);
-                            });
-                        });
-                }
-            });
-
-            // Auto-load old selections on validation error
-            if (oldCategory) {
-                categorySelect.dispatchEvent(new Event('change'));
-                setTimeout(() => {
-                    if (oldSubcategory) {
-                        subcategorySelect.dispatchEvent(new Event('change'));
-                    }
-                }, 500);
-            }
-
-            // Populate UOM + UnitCost on item change
-            itemSelect.addEventListener('change', function () {
-                const itemId = this.value;
-
-                if (itemId) {
-                    fetch("{{ route('sku.item-details') }}?item_id=" + itemId)
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById('UnitCost').value = data.UnitCost ?? '';
-                            document.getElementById('UOM').value = data.UOM?.id ?? '';
-                            document.getElementById('UOMName').value = data.UOM?.name ?? '';
-                        });
-                } else {
-                    document.getElementById('UnitCost').value = '';
-                    document.getElementById('UOM').value = '';
-                    document.getElementById('UOMName').value = '';
-                }
-            });
-
-            // Trigger item details if old item exists
-            if (oldItem) {
-                itemSelect.dispatchEvent(new Event('change'));
-            }
         });
-    </script>
-
-    {{-- Restrict LastReceived to today --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('LastReceived').setAttribute('max', today);
-        });
-    </script>
-
-    <style>
-        .form-label {
-            font-weight: 500;
-        }
-
-        #UOMName {
-            background-color: #f8f9fa;
-        }
-
-        .card-header {
-            border-bottom: none;
-        }
-
-        .text-danger {
-            font-weight: bold;
-        }
-    </style>
+ 
+        // Set old subcategory value if exists
+        @if(old('SubCategory'))
+            setTimeout(function() {
+                $('#subcategory').val('{{ old('SubCategory') }}');
+            }, 500);
+        @endif
+    });
+</script>
+ 
+<style>
+.text-danger {
+    font-weight: bold;
+}
+.form-label {
+    font-weight: 500;
+}
+</style>
 @endsection

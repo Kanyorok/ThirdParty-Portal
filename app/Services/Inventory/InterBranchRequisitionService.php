@@ -74,6 +74,7 @@ class InterBranchRequisitionService
                 InterBranchRequisitionEnum::Pending,
                 'Interbranch Requisition Submitted for Approval'
             );
+
  
 
         activity()
@@ -184,9 +185,9 @@ class InterBranchRequisitionService
             $workflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
             
             if ($action === 'APPROVED') {
-                $workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, $comments);
+                $workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, $comments, 'Status');
             } elseif ($action === 'REJECTED') {
-                $workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $comments);
+                $workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $comments, 'Status');
             }
 
             // Log activity

@@ -201,7 +201,7 @@ class StockAdjustmentService
             ]);
 
             // Use workflow to approve
-            $this->workflow->approve($adjustment, $user, Transfers::Approved, $comments ?? 'Stock Adjustment Approved');
+            $this->workflow->approve($adjustment, $user, Transfers::Approved, $comments ?? 'Stock Adjustment Approved','Status');
 
             Log::info('Workflow approval completed successfully');
 
@@ -380,7 +380,7 @@ class StockAdjustmentService
             ]);
 
             // Use workflow to reject
-            $this->workflow->reject($adjustment, $user, Transfers::Rejected, $comments ?? 'Stock Adjustment Rejected');
+            $this->workflow->reject($adjustment, $user, Transfers::Rejected, $comments ?? 'Stock Adjustment Rejected','Status');
 
             Log::info('Workflow rejection completed successfully');
 

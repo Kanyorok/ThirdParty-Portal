@@ -223,7 +223,7 @@ class TransactionTransferService
             ]);
 
             // Use workflow to approve
-            $this->workflow->approve($transfer, $user, Transfers::InTransit, $comments ?? 'Transfer Approved');
+            $this->workflow->approve($transfer, $user, Transfers::InTransit, $comments ?? 'Transfer Approved', 'Status');
 
             Log::info('Workflow approval completed successfully');
 
@@ -391,7 +391,7 @@ class TransactionTransferService
             ]);
 
             // Use workflow to reject
-            $this->workflow->reject($transfer, $user, Transfers::Rejected, $comments ?? 'Rejected via UI');
+            $this->workflow->reject($transfer, $user, Transfers::Rejected, $comments ?? 'Transfer Rejected', 'Status');
 
             Log::info('Workflow rejection completed successfully');
 

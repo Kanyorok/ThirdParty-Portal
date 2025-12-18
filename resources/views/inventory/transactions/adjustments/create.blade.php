@@ -10,12 +10,9 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="adjustmentDate" class="form-label">Adjustment Date</label>
-                <input type="date"
-                       class="form-control @error('AdjustmentDate') is-invalid @enderror"
-                       id="adjustmentDate"
-                       name="AdjustmentDate"
-                       value="{{ old('AdjustmentDate', now()->format('Y-m-d')) }}"
-                       required>
+                <input type="hidden" id="adjustmentDate" name="AdjustmentDate" value="{{ now()->format('Y-m-d') }}">
+                <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
+                <small class="text-muted">Current date (non-editable)</small>
                 @error('AdjustmentDate')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -181,18 +178,13 @@
 
         <div class="mb-3">
             <label class="form-label">Adjusted By</label>
-            <select name="AdjustedBy" class="form-select select2 @error('AdjustedBy') is-invalid @enderror" required>
-                <option value="">-- Select User --</option>
-                @foreach ($users as $user)
-                    <option value="{{ $user->Id }}" {{ old('AdjustedBy') == $user->Id ? 'selected' : '' }}>
-                        {{ $user->Name }}
-                    </option>
-                @endforeach
-            </select>
+            <input type="hidden" name="AdjustedBy" value="{{ auth()->user()->Id }}">
+            <input type="text" class="form-control" value="{{ auth()->user()->Name }}" readonly>
             @error('AdjustedBy')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
+        
         <button type="submit" class="btn btn-success"
                 onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">✅ Submit Adjustment
         </button>
@@ -301,8 +293,6 @@
     });
 
     $(document).ready(function () {
-        $('.select2').select2({ placeholder: 'Select user', allowClear: true });
-
         const oldBranchId = "{{ old('Branch') }}";
         const oldItems = @json(old('items'));
 

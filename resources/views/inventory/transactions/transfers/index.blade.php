@@ -144,23 +144,29 @@
                                     <tbody>
                                     @foreach ($allTransfers as $i => $transfer)
                                         @php
+                                            // Use the same approach as show blade
+                                            $statusEnum = $transfer->Status instanceof Transfers
+                                                ? $transfer->Status
+                                                : (Transfers::tryFrom($transfer->Status) ?? null);
+                                            
                                             // For HQ All tab: Determine if transfer is incoming (to HQ) or outgoing (from HQ)
                                             $isIncomingToHQ = $transfer->ToBranch == $currentBranch->Id;
                                             $isOutgoingFromHQ = $transfer->FromBranch == $currentBranch->Id;
                                             
                                             // HQ can edit/delete only outgoing transfers that are pending
-                                            $canEdit = $isOutgoingFromHQ && $transfer->Status === 'P';
-                                            $canDelete = $isOutgoingFromHQ && $transfer->Status === 'P';
+                                            $isPending = $statusEnum && $statusEnum->value === Transfers::Pending->value;
+                                            $canEdit = $isOutgoingFromHQ && $isPending;
+                                            $canDelete = $isOutgoingFromHQ && $isPending;
                                             
                                             $editTooltip = $isIncomingToHQ ? 
                                                 'HQ cannot edit incoming transfers.' : 
                                                 (!$isOutgoingFromHQ ? 'HQ cannot edit transfers between other branches.' : 
-                                                ($transfer->Status !== 'P' ? 'Only pending transfers can be edited.' : 'Edit Transfer'));
+                                                (!$isPending ? 'Only pending transfers can be edited.' : 'Edit Transfer'));
                                             
                                             $deleteTooltip = $isIncomingToHQ ? 
                                                 'HQ cannot delete incoming transfers.' : 
                                                 (!$isOutgoingFromHQ ? 'HQ cannot delete transfers between other branches.' : 
-                                                ($transfer->Status !== 'P' ? 'Only pending transfers can be deleted.' : 'Delete Transfer'));
+                                                (!$isPending ? 'Only pending transfers can be deleted.' : 'Delete Transfer'));
                                         @endphp
                                         <tr>
                                             <td>{{ $i + 1 }}</td>
@@ -170,28 +176,13 @@
                                             <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                                             <td>{{ $transfer->transferredBy->Name ?? 'N/A' }}</td>
                                             <td>
-                                                @php
-                                                    $statusDescription = $transfer->transferStatus->Description ?? $transfer->Status ?? '-';
-                                                    $statusCode = $transfer->transferStatus->Code ?? $transfer->Status;
-                                                    
-                                                    $transferEnum = \App\Enums\Inventory\Transfers::tryFrom($statusCode);
-                                                    $badgeColor = $transferEnum ? $transferEnum->badgeColor() : 'secondary';
-                                                    
-                                                    if (!$transferEnum) {
-                                                        $badgeColor = match(strtolower($statusDescription)) {
-                                                            'pending', 'pending approval' => 'warning',
-                                                            'in transit', 'transit' => 'primary',
-                                                            'delivered', 'completed' => 'success',
-                                                            'rejected', 'cancelled' => 'danger',
-                                                            'under review', 'reviewing' => 'info',
-                                                            'returned' => 'secondary',
-                                                            default => 'secondary'
-                                                        };
-                                                    }
-                                                @endphp
-                                                <span class="badge bg-{{ $badgeColor }}">
-                                                    {{ $statusDescription }}
-                                                </span>
+                                                @if($statusEnum)
+                                                    <span class="badge bg-{{ $statusEnum->badgeColor() }}">
+                                                        {{ $statusEnum->label() }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $transfer->Status ?? 'N/A' }}</span>
+                                                @endif
                                             </td>
                                             <td class="d-flex gap-1">
                                                 {{-- View always allowed --}}
@@ -276,6 +267,11 @@
                                     </thead>
                                     <tbody>
                                     @foreach ($incomingTransfers as $i => $transfer)
+                                        @php
+                                            $statusEnum = $transfer->Status instanceof Transfers
+                                                ? $transfer->Status
+                                                : (Transfers::tryFrom($transfer->Status) ?? null);
+                                        @endphp
                                         <tr class="incoming-row">
                                             <td>{{ $i + 1 }}</td>
                                             <td>{{ $transfer->TransferID ?? '-' }}</td>
@@ -284,28 +280,13 @@
                                             <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                                             <td>{{ $transfer->transferredBy->Name ?? 'N/A' }}</td>
                                             <td>
-                                                @php
-                                                    $statusDescription = $transfer->transferStatus->Description ?? $transfer->Status ?? '-';
-                                                    $statusCode = $transfer->transferStatus->Code ?? $transfer->Status;
-                                                    
-                                                    $transferEnum = \App\Enums\Inventory\Transfers::tryFrom($statusCode);
-                                                    $badgeColor = $transferEnum ? $transferEnum->badgeColor() : 'secondary';
-                                                    
-                                                    if (!$transferEnum) {
-                                                        $badgeColor = match(strtolower($statusDescription)) {
-                                                            'pending', 'pending approval' => 'warning',
-                                                            'in transit', 'transit' => 'primary',
-                                                            'delivered', 'completed' => 'success',
-                                                            'rejected', 'cancelled' => 'danger',
-                                                            'under review', 'reviewing' => 'info',
-                                                            'returned' => 'secondary',
-                                                            default => 'secondary'
-                                                        };
-                                                    }
-                                                @endphp
-                                                <span class="badge bg-{{ $badgeColor }}">
-                                                    {{ $statusDescription }}
-                                                </span>
+                                                @if($statusEnum)
+                                                    <span class="badge bg-{{ $statusEnum->badgeColor() }}">
+                                                        {{ $statusEnum->label() }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $transfer->Status ?? 'N/A' }}</span>
+                                                @endif
                                             </td>
                                             <td class="d-flex gap-1">
                                                 {{-- View only for incoming transfers --}}
@@ -368,15 +349,16 @@
                                     <tbody>
                                     @foreach ($outgoingTransfers as $i => $transfer)
                                         @php
-                                            // HQ can edit/delete only pending outgoing transfers
-                                            $canEdit = $transfer->Status === 'P';
-                                            $canDelete = $transfer->Status === 'P';
+                                            $statusEnum = $transfer->Status instanceof Transfers
+                                                ? $transfer->Status
+                                                : (Transfers::tryFrom($transfer->Status) ?? null);
                                             
-                                            $editTooltip = $transfer->Status !== 'P' ? 
-                                                'Only pending transfers can be edited.' : 'Edit Transfer';
+                                            $isPending = $statusEnum && $statusEnum->value === Transfers::Pending->value;
+                                            $canEdit = $isPending;
+                                            $canDelete = $isPending;
                                             
-                                            $deleteTooltip = $transfer->Status !== 'P' ? 
-                                                'Only pending transfers can be deleted.' : 'Delete Transfer';
+                                            $editTooltip = !$isPending ? 'Only pending transfers can be edited.' : 'Edit Transfer';
+                                            $deleteTooltip = !$isPending ? 'Only pending transfers can be deleted.' : 'Delete Transfer';
                                         @endphp
                                         <tr class="outgoing-row">
                                             <td>{{ $i + 1 }}</td>
@@ -386,28 +368,13 @@
                                             <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                                             <td>{{ $transfer->transferredBy->Name ?? 'N/A' }}</td>
                                             <td>
-                                                @php
-                                                    $statusDescription = $transfer->transferStatus->Description ?? $transfer->Status ?? '-';
-                                                    $statusCode = $transfer->transferStatus->Code ?? $transfer->Status;
-                                                    
-                                                    $transferEnum = \App\Enums\Inventory\Transfers::tryFrom($statusCode);
-                                                    $badgeColor = $transferEnum ? $transferEnum->badgeColor() : 'secondary';
-                                                    
-                                                    if (!$transferEnum) {
-                                                        $badgeColor = match(strtolower($statusDescription)) {
-                                                            'pending', 'pending approval' => 'warning',
-                                                            'in transit', 'transit' => 'primary',
-                                                            'delivered', 'completed' => 'success',
-                                                            'rejected', 'cancelled' => 'danger',
-                                                            'under review', 'reviewing' => 'info',
-                                                            'returned' => 'secondary',
-                                                            default => 'secondary'
-                                                        };
-                                                    }
-                                                @endphp
-                                                <span class="badge bg-{{ $badgeColor }}">
-                                                    {{ $statusDescription }}
-                                                </span>
+                                                @if($statusEnum)
+                                                    <span class="badge bg-{{ $statusEnum->badgeColor() }}">
+                                                        {{ $statusEnum->label() }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $transfer->Status ?? 'N/A' }}</span>
+                                                @endif
                                             </td>
                                             <td class="d-flex gap-1">
                                                 {{-- View always allowed --}}
@@ -492,6 +459,11 @@
                                     </thead>
                                     <tbody>
                                     @foreach ($incomingTransfers as $i => $transfer)
+                                        @php
+                                            $statusEnum = $transfer->Status instanceof Transfers
+                                                ? $transfer->Status
+                                                : (Transfers::tryFrom($transfer->Status) ?? null);
+                                        @endphp
                                         <tr class="incoming-row">
                                             <td>{{ $i + 1 }}</td>
                                             <td>{{ $transfer->TransferID ?? '-' }}</td>
@@ -500,28 +472,13 @@
                                             <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                                             <td>{{ $transfer->transferredBy->Name ?? 'N/A' }}</td>
                                             <td>
-                                                @php
-                                                    $statusDescription = $transfer->transferStatus->Description ?? $transfer->Status ?? '-';
-                                                    $statusCode = $transfer->transferStatus->Code ?? $transfer->Status;
-                                                    
-                                                    $transferEnum = \App\Enums\Inventory\Transfers::tryFrom($statusCode);
-                                                    $badgeColor = $transferEnum ? $transferEnum->badgeColor() : 'secondary';
-                                                    
-                                                    if (!$transferEnum) {
-                                                        $badgeColor = match(strtolower($statusDescription)) {
-                                                            'pending', 'pending approval' => 'warning',
-                                                            'in transit', 'transit' => 'primary',
-                                                            'delivered', 'completed' => 'success',
-                                                            'rejected', 'cancelled' => 'danger',
-                                                            'under review', 'reviewing' => 'info',
-                                                            'returned' => 'secondary',
-                                                            default => 'secondary'
-                                                        };
-                                                    }
-                                                @endphp
-                                                <span class="badge bg-{{ $badgeColor }}">
-                                                    {{ $statusDescription }}
-                                                </span>
+                                                @if($statusEnum)
+                                                    <span class="badge bg-{{ $statusEnum->badgeColor() }}">
+                                                        {{ $statusEnum->label() }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $transfer->Status ?? 'N/A' }}</span>
+                                                @endif
                                             </td>
                                             <td class="d-flex gap-1">
                                                 {{-- View only for incoming transfers --}}
@@ -584,15 +541,16 @@
                                     <tbody>
                                     @foreach ($outgoingTransfers as $i => $transfer)
                                         @php
-                                            // Non-HQ can edit/delete only pending outgoing transfers
-                                            $canEdit = $transfer->Status === 'P';
-                                            $canDelete = $transfer->Status === 'P';
+                                            $statusEnum = $transfer->Status instanceof Transfers
+                                                ? $transfer->Status
+                                                : (Transfers::tryFrom($transfer->Status) ?? null);
                                             
-                                            $editTooltip = $transfer->Status !== 'P' ? 
-                                                'Only pending transfers can be edited.' : 'Edit Transfer';
+                                            $isPending = $statusEnum && $statusEnum->value === Transfers::Pending->value;
+                                            $canEdit = $isPending;
+                                            $canDelete = $isPending;
                                             
-                                            $deleteTooltip = $transfer->Status !== 'P' ? 
-                                                'Only pending transfers can be deleted.' : 'Delete Transfer';
+                                            $editTooltip = !$isPending ? 'Only pending transfers can be edited.' : 'Edit Transfer';
+                                            $deleteTooltip = !$isPending ? 'Only pending transfers can be deleted.' : 'Delete Transfer';
                                         @endphp
                                         <tr class="outgoing-row">
                                             <td>{{ $i + 1 }}</td>
@@ -602,28 +560,13 @@
                                             <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                                             <td>{{ $transfer->transferredBy->Name ?? 'N/A' }}</td>
                                             <td>
-                                                @php
-                                                    $statusDescription = $transfer->transferStatus->Description ?? $transfer->Status ?? '-';
-                                                    $statusCode = $transfer->transferStatus->Code ?? $transfer->Status;
-                                                    
-                                                    $transferEnum = \App\Enums\Inventory\Transfers::tryFrom($statusCode);
-                                                    $badgeColor = $transferEnum ? $transferEnum->badgeColor() : 'secondary';
-                                                    
-                                                    if (!$transferEnum) {
-                                                        $badgeColor = match(strtolower($statusDescription)) {
-                                                            'pending', 'pending approval' => 'warning',
-                                                            'in transit', 'transit' => 'primary',
-                                                            'delivered', 'completed' => 'success',
-                                                            'rejected', 'cancelled' => 'danger',
-                                                            'under review', 'reviewing' => 'info',
-                                                            'returned' => 'secondary',
-                                                            default => 'secondary'
-                                                        };
-                                                    }
-                                                @endphp
-                                                <span class="badge bg-{{ $badgeColor }}">
-                                                    {{ $statusDescription }}
-                                                </span>
+                                                @if($statusEnum)
+                                                    <span class="badge bg-{{ $statusEnum->badgeColor() }}">
+                                                        {{ $statusEnum->label() }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $transfer->Status ?? 'N/A' }}</span>
+                                                @endif
                                             </td>
                                             <td class="d-flex gap-1">
                                                 {{-- View always allowed --}}
@@ -709,23 +652,29 @@
                                     <tbody>
                                     @foreach ($allTransfers as $i => $transfer)
                                         @php
+                                            $statusEnum = $transfer->Status instanceof Transfers
+                                                ? $transfer->Status
+                                                : (Transfers::tryFrom($transfer->Status) ?? null);
+                                            
+                                            $isPending = $statusEnum && $statusEnum->value === Transfers::Pending->value;
+                                            
                                             // Determine if transfer is incoming or outgoing for non-HQ
                                             $isIncoming = $transfer->ToBranch == $currentBranch->Id;
                                             $isOutgoing = $transfer->FromBranch == $currentBranch->Id;
                                             
                                             // Non-HQ can edit/delete only outgoing transfers that are pending
-                                            $canEdit = $isOutgoing && $transfer->Status === 'P';
-                                            $canDelete = $isOutgoing && $transfer->Status === 'P';
+                                            $canEdit = $isOutgoing && $isPending;
+                                            $canDelete = $isOutgoing && $isPending;
                                             
                                             $editTooltip = $isIncoming ? 
                                                 'Cannot edit incoming transfers.' : 
                                                 (!$isOutgoing ? 'Cannot edit transfers where your branch is not involved.' : 
-                                                ($transfer->Status !== 'P' ? 'Only pending transfers can be edited.' : 'Edit Transfer'));
+                                                (!$isPending ? 'Only pending transfers can be edited.' : 'Edit Transfer'));
                                             
                                             $deleteTooltip = $isIncoming ? 
                                                 'Cannot delete incoming transfers.' : 
                                                 (!$isOutgoing ? 'Cannot delete transfers where your branch is not involved.' : 
-                                                ($transfer->Status !== 'P' ? 'Only pending transfers can be deleted.' : 'Delete Transfer'));
+                                                (!$isPending ? 'Only pending transfers can be deleted.' : 'Delete Transfer'));
                                         @endphp
                                         <tr>
                                             <td>{{ $i + 1 }}</td>
@@ -735,28 +684,13 @@
                                             <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                                             <td>{{ $transfer->transferredBy->Name ?? 'N/A' }}</td>
                                             <td>
-                                                @php
-                                                    $statusDescription = $transfer->transferStatus->Description ?? $transfer->Status ?? '-';
-                                                    $statusCode = $transfer->transferStatus->Code ?? $transfer->Status;
-                                                    
-                                                    $transferEnum = \App\Enums\Inventory\Transfers::tryFrom($statusCode);
-                                                    $badgeColor = $transferEnum ? $transferEnum->badgeColor() : 'secondary';
-                                                    
-                                                    if (!$transferEnum) {
-                                                        $badgeColor = match(strtolower($statusDescription)) {
-                                                            'pending', 'pending approval' => 'warning',
-                                                            'in transit', 'transit' => 'primary',
-                                                            'delivered', 'completed' => 'success',
-                                                            'rejected', 'cancelled' => 'danger',
-                                                            'under review', 'reviewing' => 'info',
-                                                            'returned' => 'secondary',
-                                                            default => 'secondary'
-                                                        };
-                                                    }
-                                                @endphp
-                                                <span class="badge bg-{{ $badgeColor }}">
-                                                    {{ $statusDescription }}
-                                                </span>
+                                                @if($statusEnum)
+                                                    <span class="badge bg-{{ $statusEnum->badgeColor() }}">
+                                                        {{ $statusEnum->label() }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $transfer->Status ?? 'N/A' }}</span>
+                                                @endif
                                             </td>
                                             <td class="d-flex gap-1">
                                                 {{-- View always allowed --}}

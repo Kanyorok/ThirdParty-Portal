@@ -151,12 +151,7 @@
                                         <i class="fas fa-times"></i> Reject
                                     </button>
                                 </form>
-                                
-                                <!-- View Details Button -->
-                                <a href="{{ route('transactionsapproval.show', ['Id' => $record->Id, 'transaction_type' => $transactionType]) }}"
-                                   class="btn btn-sm btn-primary ms-1" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+                            
                             </div>
                         </td>
                     </tr>
