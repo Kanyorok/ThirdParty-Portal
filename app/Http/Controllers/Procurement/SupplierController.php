@@ -117,7 +117,11 @@ class SupplierController extends Controller
 
     public function create()
     {
-        return view('procurement.suppliers.create');
+        $countries = \App\Models\Core\Country::all();
+        $businessTypes = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')->get();
+        $supplierCategories = \App\Models\ThirdParty\SupplierCategory::all();
+
+        return view('procurement.suppliers.create', compact('countries', 'businessTypes', 'supplierCategories'));
     }
 
     public function store(StoreSupplierRequest $request)
@@ -150,15 +154,77 @@ class SupplierController extends Controller
     public function edit(ThirdParties $supplier)
     {
         $supplier->load('categories', 'types');
-        return view('procurement.suppliers.edit', compact('supplier'));
+        $countries = \App\Models\Core\Country::all();
+        $businessTypes = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')->get();
+        $supplierCategories = \App\Models\ThirdParty\SupplierCategory::all();
+
+        return view('procurement.suppliers.edit', compact('supplier', 'countries', 'businessTypes', 'supplierCategories'));
     }
 
     public function update(UpdateSupplierRequest $request, ThirdParties $supplier)
     {
         $validatedData = $request->validated();
-        $validatedData['ModifiedBy'] = Auth::id();
+        $userId = Auth::id();
 
-        $supplier->update($validatedData);
+        // 1. Update ThirdParties (Company Details)
+        // explicitly filter fields to avoid errors and ensure safety
+        $partyData = collect($validatedData)->only([
+            'ThirdPartyName',
+            'TradingName',
+            'RegistrationNumber',
+            'TaxPIN',
+            'VATNumber',
+            'PhysicalAddress',
+            'Email',
+            'Phone',
+            'Website'
+        ])->toArray();
+
+        $partyData['ModifiedBy'] = $userId;
+
+        // Map Country input to CountryId
+        if ($request->has('Country')) {
+            $partyData['CountryId'] = $request->input('Country');
+        }
+
+        // Handle BusinessType mapping if necessary (assuming value passed matches expected storage, or key)
+        if ($request->has('BusinessType')) {
+            $partyData['BusinessType'] = $request->input('BusinessType');
+        }
+
+        $supplier->update($partyData);
+
+        // 2. Update SupplierMaster (Status, Prequalification)
+        $supplierMaster = SupplierMaster::where('ThirdPartyId', $supplier->Id)->first();
+        if ($supplierMaster) {
+            // We only update ApprovalStatus. IsPrequalified is read-only/managed otherwise.
+            $masterData = collect($validatedData)->only(['ApprovalStatus'])->toArray();
+
+            // Handle Suspended Toggle Logic
+            if ($request->boolean('Suspended')) {
+                $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Suspended;
+            } elseif ($request->input('ApprovalStatus') === ThirdPartyApprovalStatusEnum::Suspended->value) {
+                // If hidden input sent Suspended but toggle is OFF (user unchecked logic),
+                // we must revert to something? 
+                // If the user unchecked Suspended, we expect status to change.
+                // But hidden input holds the OLD status (Suspended).
+                // So if boolean('Suspended') is false, and old status was S, we should probably set to 'Approved' (A) or 'Pending' (P).
+                // Assuming 'Approved' is the state for active suppliers.
+                $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Approved;
+            }
+
+            $masterData['ModifiedBy'] = $userId;
+            $supplierMaster->update($masterData);
+        }
+
+        // 3. Sync Categories
+        // Categories are linked to ThirdParties (or SupplierMaster? Controller index used SupplierMaster->categories)
+        // Check relationships. SupplierMaster has categories(). ThirdParties has categories().
+        // Existing code syncs on $supplier (ThirdParties).
+        // Let's ensure consistency. If SupplierMaster is the main entity for procurement, maybe sync there?
+        // But ThirdParties::categories() maps to t_ThirdParty_SupplierCategory.
+        // SupplierMaster::categories() maps to the SAME table.
+        // So updating either should work. I'll stick to $supplier to minimize change impact unless directed.
         $supplier->categories()->sync($request->input('category_ids', []));
 
         return redirect()->route('suppliers.index')->with('success', 'Supplier updated successfully.');
