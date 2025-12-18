@@ -46,7 +46,7 @@ class RFQLinesController extends Controller
 
         // Step 3: Load ONLY requisition lines from THIS specific requisition
         $requisitionlines = RequisitionLine::with('item.category')
-            ->where('RequisitionID', $rfq->RequisitionId) // ✅ Filter by specific requisition
+            ->where('RequisitionID', $rfq->RequisitionId) //  Filter by specific requisition
             ->whereNull('DeletedOn') // Exclude deleted lines
             ->get();
 
@@ -214,34 +214,33 @@ class RFQLinesController extends Controller
                           ->whereIn("scic.$scicItemCol", $allCategoryIds)
                           ->whereColumn("scic.$scicSupCol", 's.CategoryId');
                     });
+                  if (Schema::hasTable('t_ThirdParty_SupplierCategory')
+    && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'ThirdPartyID')
+    && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'SupplierCategoryID')) {
+    $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
+        $q->select(DB::raw(1))
+          ->from('t_ThirdParty_SupplierCategory as tpsc')
+          ->join($scicTable . ' as scic', "scic.$scicSupCol", '=', 'tpsc.SupplierCategoryID')
+          ->whereNull('scic.DeletedOn')
+          ->whereIn("scic.$scicItemCol", $allCategoryIds)
+          ->whereColumn('tpsc.ThirdPartyID', 'tp.Id');
+    });
+}
 
-                    // Pivot: through t_ThirdParty_SupplierCategory (PascalCase columns)
-                    if (Schema::hasTable('t_ThirdParty_SupplierCategory')
-                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'ThirdPartyID')
-                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'SupplierCategoryID')) {
-                        $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
-                            $q->select(DB::raw(1))
-                              ->from('t_ThirdParty_SupplierCategory as tpsc')
-                              ->join($scicTable . ' as scic', "scic.$scicSupCol", '=', 'tpsc.SupplierCategoryID')
-                              ->whereNull('scic.DeletedOn')
-                              ->whereIn("scic.$scicItemCol", $allCategoryIds)
-                              ->whereColumn('tpsc.ThirdPartyID', 'tp.Id');
-                        });
-                    }
+// Pivot: snake_case columns
+if (Schema::hasTable('t_ThirdParty_SupplierCategory')
+    && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'third_party_id')
+    && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'supplier_category_id')) {
+    $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
+        $q->select(DB::raw(1))
+          ->from('t_ThirdParty_SupplierCategory as tpsc2')
+          ->join($scicTable . ' as scic2', "scic2.$scicSupCol", '=', 'tpsc2.supplier_category_id')
+          ->whereNull('scic2.DeletedOn')
+          ->whereIn("scic2.$scicItemCol", $allCategoryIds)
+          ->whereColumn('tpsc2.third_party_id', 'tp.Id');
+    });
+}
 
-                    // Pivot: snake_case columns
-                    if (Schema::hasTable('t_ThirdParty_SupplierCategory')
-                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'third_party_id')
-                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'supplier_category_id')) {
-                        $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
-                            $q->select(DB::raw(1))
-                              ->from('t_ThirdParty_SupplierCategory as tpsc2')
-                              ->join($scicTable . ' as scic2', "scic2.$scicSupCol", '=', 'tpsc2.supplier_category_id')
-                              ->whereNull('scic2.DeletedOn')
-                              ->whereIn("scic2.$scicItemCol", $allCategoryIds)
-                              ->whereColumn('tpsc2.third_party_id', 'tp.Id');
-                        });
-                    }
                 })
                 ->select(
                     's.Id as SupplierId',

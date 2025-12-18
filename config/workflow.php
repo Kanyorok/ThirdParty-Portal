@@ -1,4 +1,5 @@
 <?php
+use App\Enums\WorkflowStatus;   
 return [
     /*
     |--------------------------------------------------------------------------
@@ -47,6 +48,14 @@ return [
     'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED->value, // Will now be 'R'
     'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
 ],
+     'RFQId' => [
+        'Approved' => WorkflowStatus::Approved->value,  // 'A'
+        'Rejected' => WorkflowStatus::Rejected->value,  // 'R'
+        'Pending' => WorkflowStatus::Pending->value,    // 'P'
+        'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
+    ],
+
+
     /*
     |--------------------------------------------------------------------------
     | Status Column Mappings
