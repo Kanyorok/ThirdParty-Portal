@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Support\Str;
 use App\Enums\ThirdPartyTypeEnum;
+use Illuminate\Support\Facades\Password;
 
 // @Kimxons
 class ThirdPartyAuthController extends Controller
@@ -123,7 +124,7 @@ class ThirdPartyAuthController extends Controller
             */
 
             $user->tokens()->delete();
-            $tokenName = "api-generic-thirdparty"; 
+            $tokenName = "api-generic-thirdparty";
             $token = $user->createToken($tokenName)->plainTextToken;
 
             $thirdParty->load(['types', 'country', 'categories']);
@@ -229,6 +230,55 @@ class ThirdPartyAuthController extends Controller
         $thirdParty->sendEmailVerificationNotification();
 
         return response()->json(['message' => __('auth.verification_link_sent')], 200);
+    }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        // Check if user exists and is authorized to reset
+        $user = ThirdPartyUser::where('Email', $request->email)->first();
+
+        if (!$user) {
+            // Return success even if user not found to prevent enumeration
+            return response()->json(['message' => __('passwords.sent')]);
+        }
+
+        if (!$user->isApproved()) {
+            return response()->json(['message' => __('auth.account_unauthorized')], 403);
+        }
+
+        $status = Password::broker('thirdparties')->sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['message' => __($status)])
+            : response()->json(['message' => __($status)], 400);
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        $status = Password::broker('thirdparties')->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'Password' => Hash::make($password)
+                ])->save();
+
+                $user->setRememberToken(Str::random(60));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['message' => __($status)])
+            : response()->json(['message' => __($status)], 400);
     }
 
     private function resolveThirdPartyEntity(?string $id = null): ?ThirdParties
