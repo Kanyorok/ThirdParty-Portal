@@ -185,4 +185,35 @@ class ThirdParties extends Model
     {
         return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
     }
+
+    public function isSupplier(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return (isset($type->Code) && str_starts_with($type->Code, 'SU'))
+                    || (isset($type->pivot->PartyType) && $type->pivot->PartyType === SupplierMaster::getPrimaryKey());
+            });
+        }
+        return $this->ThirdPartyType === \App\Enums\ThirdParty\ThirdPartyTypeEnum::Supplier;
+    }
+
+    public function isTenant(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return isset($type->pivot->PartyType) && $type->pivot->PartyType === PropertyNewTenant::getPrimaryKey();
+            });
+        }
+        return false;
+    }
+
+    public function isCustomer(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return isset($type->pivot->PartyType) && $type->pivot->PartyType === BancassuranceCustomer::getPrimaryKey();
+            });
+        }
+        return false;
+    }
 }

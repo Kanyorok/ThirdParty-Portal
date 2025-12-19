@@ -126,13 +126,13 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
      * Checks if the user is associated with a Third Party that has a Supplier profile.
      * Delegates the check to the ThirdParties model.
      */
+    /**
+     * Checks if the user is associated with a Third Party that has a Supplier profile.
+     * Delegates the check to the ThirdParties model.
+     */
     public function isSupplier(): bool
     {
-        if ($this->thirdParty && $this->thirdParty->relationLoaded('types')) {
-            return $this->thirdParty->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'SU-'))
-                || $this->thirdParty->types->pluck('TypeId')->contains(fn($id) => $id === $this->thirdParty->ThirdPartyType);
-        }
-        return $this->thirdParty?->ThirdPartyType === ThirdPartyTypeEnum::Supplier;
+        return $this->thirdParty?->isSupplier() ?? false;
     }
 
     /**
