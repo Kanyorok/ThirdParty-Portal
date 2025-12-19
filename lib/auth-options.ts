@@ -89,7 +89,7 @@ export const authOptions: NextAuthOptions = {
           is_approved: u.is_approved,
           profile: u.profile,
           accessToken: data.token,
-        } as User;
+        } as unknown as User;
       },
     }),
   ],
@@ -120,19 +120,22 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }): Promise<Session> {
       const t = token as any;
       session.user = {
+        id: String(t.user_id),
+        name: t.full_name,
+        email: t.email,
+        image: null,
         user_id: t.user_id,
         third_party_id: t.third_party_id,
         first_name: t.first_name,
         last_name: t.last_name,
         full_name: t.full_name,
-        email: t.email,
         phone: t.phone,
         email_verified: t.email_verified,
         is_active: t.is_active,
         has_profile: t.has_profile,
         is_approved: t.is_approved,
         profile: t.profile,
-      } as BaseUser;
+      } as any;
 
       session.accessToken = t.accessToken;
       return session;

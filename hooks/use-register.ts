@@ -23,7 +23,7 @@ export function useRegisterForm() {
             businessType: "",
             countryId: "",
             thirdPartyType: "1",
-        } as RegisterFormInputs,
+        },
     })
 
     const [pwdShown, setPwdShown] = useState(false)
