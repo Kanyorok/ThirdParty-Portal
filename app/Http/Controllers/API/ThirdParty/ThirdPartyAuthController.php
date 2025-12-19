@@ -112,7 +112,7 @@ class ThirdPartyAuthController extends Controller
             $token = $user->createToken('api')->plainTextToken;
 
             $responseData = [
-                'user' => new ThirdPartyUserResource($user->load(['thirdParty.types'])),
+                'user' => (new ThirdPartyUserResource($user->load(['thirdParty.types'])))->resolve(),
                 'token' => $token,
                 'token_type' => 'Bearer',
             ];

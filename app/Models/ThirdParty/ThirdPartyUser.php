@@ -62,6 +62,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
+        'IsActive' => 'boolean',
         'Password' => 'hashed',
     ];
 

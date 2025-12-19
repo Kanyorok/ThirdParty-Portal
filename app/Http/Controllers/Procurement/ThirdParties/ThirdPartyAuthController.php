@@ -19,6 +19,11 @@ use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Support\Str;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use Illuminate\Support\Facades\Password;
+use App\Models\ThirdParty\SupplierMaster;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
 
 // @Kimxons
 class ThirdPartyAuthController extends Controller
@@ -62,10 +67,11 @@ class ThirdPartyAuthController extends Controller
 
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
-        $requestedProfileLabel = $request->profile_type;
+        Log::info('ThirdParty Login Request (Procurement Controller)', $request->all());
 
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
+            Log::info('Login User Found', ['user_id' => $user?->Id]);
 
             if (! $user || ! Hash::check($request->password, $user->Password)) {
                 throw ValidationException::withMessages([
@@ -73,73 +79,95 @@ class ThirdPartyAuthController extends Controller
                 ]);
             }
 
-            if (!$user->IsActive) {
+            // Enforce account status BEFORE creating token
+            if (!$user->isActive()) {
                 return response()->json(['message' => __('auth.account_inactive')], 403);
             }
+            if (! $user->isApproved()) {
+                return response()->json(['message' => __('auth.acc_not_approved')], 403);
+            }
 
-            $thirdParty = ThirdParties::find($user->ThirdPartyId);
+            // profile_type validation
+            $profileType = $request->input('profile_type');
+            $isAuthorized = false;
 
-            if (!$thirdParty) {
-                // Individual user scenario: unlinked to any Third Party
-                if (!$user->isApproved()) {
-                    return response()->json(['message' => __('auth.account_unauthorized')], 403);
-                }
+            if ($profileType === 'Supplier') {
+                $isAuthorized = SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value)
+                    ->exists();
+            } elseif ($profileType === 'Tenant') {
+                // Check if user is linked to an active Tenant record
+                // Assuming PropertyNewTenant maps to t_TenantMaintenance or similar active tenant table
+                $isAuthorized = PropertyNewTenant::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->where('IsActive', true)
+                    ->exists();
+            } elseif ($profileType === 'Customer') {
+                // Check if user is linked to a customer record
+                $isAuthorized = BancassuranceCustomer::where('ThirdPartyId', $user->ThirdPartyId)->exists();
             } else {
-                // Check ThirdParty approval status for linked users
-                if (!$thirdParty->isApproved()) {
-                    return response()->json(['message' => __('auth.third_party_not_approved')], 403);
-                }
+                // Fallback or strict check
+                return response()->json(['message' => 'Profile type is required and must be valid.'], 403);
             }
 
-            $thirdParty->setAttribute('FirstName', $user->FirstName);
-            $thirdParty->setAttribute('LastName', $user->LastName);
+            Log::info('Profile Authorization Result', ['authorized' => $isAuthorized, 'profile' => $profileType]);
 
-
-            $requiredInternalCode = null;
-            foreach (ThirdPartyTypeEnum::cases() as $type) {
-                if ($type->label() === $requestedProfileLabel) {
-                    $requiredInternalCode = $type->value;
-                    break;
-                }
+            if (!$isAuthorized) {
+                return response()->json(['message' => 'Your account is not authorized for the selected profile type.'], 403);
             }
-
-            if (!$requiredInternalCode) {
-                throw ValidationException::withMessages([
-                    'profile_type' => __('auth.invalid_profile_selection')
-                ]);
-            }
-
-            $thirdParty->load('types');
-
-            $hasRequestedType = $thirdParty->types->contains(function ($type) use ($requiredInternalCode) {
-                $codePrefix = Str::upper($requiredInternalCode);
-                return str_starts_with($type->Code, $codePrefix);
-            });
-
-            if (!$hasRequestedType) {
-                throw ValidationException::withMessages([
-                    'profile_type' => __("auth.account_not_a_{$requestedProfileLabel}")
-                ]);
-            }
-
 
             $user->tokens()->delete();
-            $tokenName = "api-generic-thirdparty"; // Could append profile type if needed
-            $token = $user->createToken($tokenName)->plainTextToken;
+            $token = $user->createToken('api-thirdparty')->plainTextToken;
 
-            $thirdParty->load(['types', 'country', 'categories']);
+            // Load relations for resource
+            $user->load(['thirdParty.types']);
 
-            $resource = (new ThirdPartyResource($thirdParty))->additional([
-                'meta' => [
-                    'selected_profile_type' => $requestedProfileLabel,
-                ]
-            ]);
+            $userData = [
+                'id' => $user->Id,
+                'userId' => $user->UserID,
+                'firstName' => $user->FirstName,
+                'lastName' => $user->LastName,
+                'fullName' => $user->FirstName . ' ' . $user->LastName,
+                'email' => $user->Email,
+                'phone' => $user->Phone,
+                'imageId' => $user->ImageId,
+                'gender' => $user->gender?->Name ?? $user->Gender,
+                'thirdPartyId' => $user->ThirdPartyId,
+                'isActive' => (bool)$user->IsActive,
+                'isApproved' => $user->isApproved(),
+                'isPrequalified' => $user->thirdParty ? (bool)$user->thirdParty->IsPrequalified : false,
+                'isSupplier' => $user->isSupplier(),
+                'emailVerifiedOn' => optional($user->EmailVerifiedOn)->format('Y-m-d H:i:s'),
+                'createdOn' => optional($user->CreatedOn)->format('Y-m-d H:i:s'),
+                'modifiedOn' => optional($user->ModifiedOn)->format('Y-m-d H:i:s'),
+                // 'thirdParty' => $user->thirdParty, // Avoid full object if not needed, or simpler extraction
+            ];
 
-            return response()->json([
-                'thirdParty' => $resource,
+            // Safely extract types
+            if ($user->thirdParty) {
+                $userTypeData = [];
+                if ($user->thirdParty->types) {
+                    foreach ($user->thirdParty->types as $t) {
+                        $userTypeData[] = [
+                            'id' => $t->Id,
+                            'code' => $t->Code,
+                            'typeCategoryId' => $t->Type,
+                            'label' => $t->Code,
+                        ];
+                    }
+                }
+                $userData['types'] = $userTypeData;
+                $userData['thirdParty'] = $user->thirdParty; // NextAuth might expect this structure based on types definition
+            }
+
+            $responseData = [
+                'user' => $userData,
                 'token' => $token,
                 'token_type' => 'Bearer',
-            ]);
+            ];
+
+            Log::info('Login Response Payload', ['keys' => array_keys($responseData)]);
+
+            return response()->json($responseData);
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
