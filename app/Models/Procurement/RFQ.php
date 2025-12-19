@@ -145,8 +145,8 @@ class RFQ extends Model
      */
    public function workflowHistory()
     {
-        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'PlanID')
-            ->where('Source', $this->getTable())
+        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'RFQId')
+            ->where('Source', 'RFQId')
             ->whereNull('DeletedOn');
             
     }
@@ -154,8 +154,8 @@ class RFQ extends Model
     
     public function workflowPending()
     {
-        return $this->hasMany(WorkflowPending::class, 'SourceID', 'PlanID')
-            ->where('Source', $this->getTable())
+        return $this->hasMany(WorkflowPending::class, 'SourceID', 'RFQId')
+            ->where('Source', 'RFQId')
             ->whereNull('DeletedOn');
     }
 

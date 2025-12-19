@@ -108,87 +108,119 @@
         </div>
 
         <!-- Attached Documents Section -->
-        @if(isset($documents) && $documents->isNotEmpty())
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="card-title mb-3">📎 Attached Documents</h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 5%">#</th>
-                                <th style="width: 40%">File Name</th>
-                                <th style="width: 15%">File Type</th>
-                                <th style="width: 15%">Size</th>
-                                <th style="width: 15%">Uploaded</th>
-                                <th style="width: 10%" class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($documents as $doc)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>
-                                    <i class="fas fa-file-{{ $doc->getFileIcon() }} text-primary me-2"></i>
-                                    {{ $doc->FileName ?? 'Document' }}
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary">
-                                        {{ strtoupper($doc->FileExtension ?? 'N/A') }}
+@if(isset($documents) && $documents->isNotEmpty())
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">📎 Attached Documents</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th style="width: 40%">File Name</th>
+                        <th style="width: 15%">File Type</th>
+                        <th style="width: 15%">Size</th>
+                        <th style="width: 15%">Uploaded</th>
+                        <th style="width: 10%" class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($documents as $doc)
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>
+                            <i class="fas fa-file-{{ $doc->getFileIcon() }} text-primary me-2"></i>
+                            {{ $doc->FileName ?? $doc->Name ?? 'Document' }}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ strtoupper($doc->FileExtension ?? 'N/A') }}
+                            </span>
+                        </td>
+                        <td>{{ $doc->getFormattedSize() }}</td>
+                        <td>
+                            <small class="text-muted">
+                                {{ $doc->CreatedOn ? \Carbon\Carbon::parse($doc->CreatedOn)->format('M d, Y H:i') : 'N/A' }}
+                            </small>
+                        </td>
+                        <td class="text-center">
+                            @if($doc->canView())
+                                {{-- View Document - Uses the DocumentActionsController preview --}}
+                                <a href="{{ route('file.preview', ['document' => $doc->Id]) }}" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   title="View Document"
+                                   target="_blank">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                {{-- Download Document - Need to find the repository first --}}
+                                @php
+                                    // Get the repository ID from document relation
+                                    $repositoryId = $doc->RepositoryId ?? $doc->repository?->Id ?? null;
+                                @endphp
+                                
+                                @if($repositoryId)
+                                    <a href="{{ route('file-download.store', ['repository' => $repositoryId, 'document' => $doc->Id]) }}" 
+                                       class="btn btn-sm btn-outline-success" 
+                                       title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                @else
+                                    <span class="text-muted small" title="Repository not found">
+                                        <i class="fas fa-download"></i>
                                     </span>
-                                </td>
-                                <td>{{ $doc->getFormattedSize() }}</td>
-                                <td>
-                                    <small class="text-muted">
-                                        {{ $doc->CreatedOn ? \Carbon\Carbon::parse($doc->CreatedOn)->format('M d, Y H:i') : 'N/A' }}
-                                    </small>
-                                </td>
-                                <td class="text-center">
-                                    @if($doc->canView())
-                                        <a href="{{ $doc->getViewUrl() }}" 
-                                           class="btn btn-sm btn-outline-primary" 
-                                           title="View Document"
-                                           target="_blank">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ $doc->getDownloadUrl() }}" 
-                                           class="btn btn-sm btn-outline-success" 
-                                           title="Download"
-                                           download>
-                                            <i class="fas fa-download"></i>
-                                        </a>
-                                    @else
-                                        <span class="text-muted small">No access</span>
-                                    @endif
+                                @endif
+                            @else
+                                <span class="text-muted small">No access</span>
+                            @endif
+                            
+                            @canDelete('tender')
+                                @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
+                                    {{-- Delete Document - Uses repository-based route --}}
+                                    @php
+                                        $repositoryId = $doc->RepositoryId ?? $doc->repository?->Id ?? null;
+                                    @endphp
                                     
-                                    @canDelete('tender')
-                                        @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
-                                            <button type="button" 
+                                    @if($repositoryId)
+                                        <form action="{{ route('files.destroy', ['repository' => $repositoryId, 'document' => $doc->Id]) }}" 
+                                              method="POST" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Are you sure you want to delete \'{{ addslashes($doc->FileName ?? $doc->Name ?? 'this document') }}\'? This action cannot be undone.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" 
                                                     class="btn btn-sm btn-outline-danger" 
-                                                    title="Delete Document"
-                                                    onclick="deleteDocument({{ $doc->Id }}, '{{ $doc->FileName }}')">
+                                                    title="Delete Document">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
-                                        @endif
-                                    @endcanDelete
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                        </form>
+                                    @else
+                                        <span class="text-muted small" title="Cannot delete - repository not found">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </span>
+                                    @endif
+                                @endif
+                            @endcanDelete
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
-        @else
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="card-title mb-3">📎 Attached Documents</h5>
-                <div class="alert alert-info mb-0">
-                    <i class="fas fa-info-circle"></i> No documents attached yet. Use the form above to upload documents.
-                </div>
-            </div>
+    </div>
+</div>
+@else
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">📎 Attached Documents</h5>
+        <div class="alert alert-info mb-0">
+            <i class="fas fa-info-circle"></i> No documents attached yet. Use the form above to upload documents.
         </div>
-        @endif
+    </div>
+</div>
+@endif
+       
+      
 
         <!-- Items Table -->
         <div class="card shadow-sm mb-4">
@@ -337,7 +369,6 @@
     </div>
 
     <!-- Add Item Modal -->
-
 <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content rounded-3 shadow">
@@ -389,7 +420,6 @@
                             @enderror
                         </div>
 
-                        <!-- REMOVED PR REFERENCE INPUT - IT'S AUTO-GENERATED -->
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i>
                             <strong>PR Reference will be auto-generated</strong><br>
@@ -504,6 +534,7 @@
     </div>
     @endif
 @endforeach
+
     <!-- Add Supplier Modal -->
     <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -567,34 +598,6 @@
         </div>
     </div>
 
-    <!-- Delete Document Confirmation Modal -->
-    <div class="modal fade" id="deleteDocumentModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-exclamation-triangle"></i> Confirm Delete
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="deleteDocumentForm" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <div class="modal-body">
-                        <p>Are you sure you want to delete the document "<strong id="documentFileName"></strong>"?</p>
-                        <p class="text-danger mb-0">This action cannot be undone.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i> Delete Document
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
 @endsection
 
 @push('scripts')
@@ -610,32 +613,5 @@
         });
     }
 })();
-
-// Delete document function
-function deleteDocument(documentId, fileName) {
-    if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/documents/${documentId}`;
-        
-        // Add CSRF token
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = '{{ csrf_token() }}';
-        form.appendChild(csrfInput);
-        
-        // Add DELETE method
-        const methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'DELETE';
-        form.appendChild(methodInput);
-        
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
 </script>
 @endpush

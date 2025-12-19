@@ -80,56 +80,111 @@
         </div>
     @endif
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="requsitionItemsTable" class="table table-striped table-bordered">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Type</th>
-                                <th>Item</th>
-                                <th>Description</th>
-                                <th>UOM</th>
-                                <th>Quantity</th>
-                                <th>Need ID</th>
-                                <th>Est. Unit Cost</th>
-                                <th>Estimated Cost</th>
-                                <th>Urgency</th>
-                                <th>Created By</th>
-                                <th>Created On</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @forelse($details as $item)
-                                <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $item->Type }}</td>
-                                    <td>{{ $item->ItemName }}</td>
-                                    <td>{{ $item->Description }}</td>
-                                    <td>{{ $item->UOM}}</td>
-                                    <td>{{ $item->Quantity }}</td>
-                                    <td>{{ $item->NeedRef ?? 'N/A' }}</td>
-                                    <td>{{ isset($item->UnitPrice) && is_numeric($item->UnitPrice) ? number_format($item->UnitPrice, 2) : 'N/A' }}</td>
-                                    <td>{{ isset($item->ExpectedPrice) && is_numeric($item->ExpectedPrice) ? number_format($item->ExpectedPrice, 2) : '0.00' }}</td>
-                                    <td>{{ $item->Urgency }}</td>
-                                    <td>{{ $item->UserName }}</td>
-                                    <td>{{ $item->CreatedOn }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="12" class="text-center">No requisition items found.</td>
-                                </tr>
-                            @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+   <!-- Replace the table in show.blade.php with this enhanced version -->
+<div class="table-responsive">
+    <table id="requsitionItemsTable" class="table table-striped table-bordered">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>Item</th>
+            <th>Description</th>
+            <th>UOM</th>
+            <th>Quantity</th>
+            <th>Est. Unit Cost</th>
+            <th>Estimated Cost</th>
+            <th>Urgency</th>
+            @if(isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft')
+            <th>Actions</th>
+            @endif
+        </tr>
+        </thead>
+        <tbody>
+        @forelse($details as $item)
+            <tr id="row-{{ $item->Id }}">
+                <td>{{ $loop->iteration }}</td>
+                <td>{{ $item->Type }}</td>
+                <td>
+                    {{ $item->ItemName }}
+ Plan
+                        </span>
+                  
+                </td>
+                <td>{{ $item->Description }}</td>
+                <td>{{ $item->UOM }}</td>
+                <td>
+                    @if(isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft')
+                        <!-- Editable quantity for draft status -->
+                        <input type="number" 
+                               class="form-control form-control-sm plan-item-quantity" 
+                               data-line-id="{{ $item->Id }}"
+                               data-unit-price="{{ $item->UnitPrice ?? 0 }}"
+                               value="{{ $item->Quantity }}"
+                               min="0.01"
+                               step="any"
+                               style="width: 100px;">
+                    @else
+                        {{ $item->Quantity }}
+                    @endif
+                </td>
+                <td>{{ isset($item->UnitPrice) && is_numeric($item->UnitPrice) ? number_format($item->UnitPrice, 2) : 'N/A' }}</td>
+                <td id="total-price-{{ $item->Id }}">
+                    {{ isset($item->ExpectedPrice) && is_numeric($item->ExpectedPrice) ? number_format($item->ExpectedPrice, 2) : '0.00' }}
+                </td>
+                <td>
+                    @php
+                        $urgencyMap = [1 => 'Very High', 2 => 'High', 3 => 'Medium', 4 => 'Low'];
+                        $urgencyClass = [1 => 'danger', 2 => 'warning', 3 => 'info', 4 => 'secondary'];
+                    @endphp
+                    <span class="badge bg-{{ $urgencyClass[$item->Urgency] ?? 'secondary' }}">
+                        {{ $urgencyMap[$item->Urgency] ?? $item->Urgency }}
+                    </span>
+                </td>
+                @if(isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft')
+                <td>
+                    <button type="button" 
+                            class="btn btn-sm btn-danger remove-plan-item" 
+                            data-line-id="{{ $item->Id }}"
+                            title="Remove item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+                @endif
+            </tr>
+        @empty
+            <tr>
+                <td colspan="{{ isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft' ? '10' : '9' }}" class="text-center">
+                    @if(isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef)
+                        No items available from the selected procurement plan.
+                    @else
+                        No requisition items found. Click "Add Items" to add manually.
+                    @endif
+                </td>
+            </tr>
+        @endforelse
+        </tbody>
+        @if($details->count() > 0)
+        <tfoot>
+            <tr class="table-active">
+                <th colspan="7" class="text-end">Total Estimated Cost:</th>
+                <th colspan="{{ isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft' ? '3' : '2' }}">
+                    {{ number_format($details->sum('ExpectedPrice'), 2) }}
+                </th>
+            </tr>
+        </tfoot>
+        @endif
+    </table>
+</div>
+
+<!-- Add alert if items were auto-populated -->
+@if(isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef && $details->count() > 0)
+<div class="alert alert-info mt-3">
+    <i class="fas fa-info-circle"></i>
+    <strong>Items Auto-populated from Plan:</strong> 
+    These items were automatically added from your selected procurement plan. 
+    You can adjust quantities or remove items before submitting.
+</div>
+@endif
 
     <!-- Add Item Modal -->
     <div class="modal fade" id="RequisitionItemModal" tabindex="-1" role="dialog" aria-hidden="true">

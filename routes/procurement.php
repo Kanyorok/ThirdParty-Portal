@@ -123,6 +123,16 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
        Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
        Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
 
+       Route::post('requisitionLine/{lineId}/updateQuantity', [
+    \App\Http\Controllers\Procurement\RequisitionItemsController::class, 
+    'updateQuantity'
+])->name('requisitionLine.updateQuantity');
+
+Route::delete('requisitionLine/{lineId}', [
+    \App\Http\Controllers\Procurement\RequisitionItemsController::class, 
+    'destroy'
+])->name('requisitionLine.destroy');
+
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
     Route::get('procurementplan/details/{id}', [RequisitionsController::class, 'getPlanDetails'])
@@ -451,6 +461,14 @@ Route::middleware(['auth', 'module:300000'])->prefix('procurement/tendering')->g
 
     //Procurement Plan, Plan Consolidation
     // Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
+   // Route::get('/procurement/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('procurement.show');
+
+   
+Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
+Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
+Route::get('/dashboard/export', [ConsolidatedDashboardController::class, 'exportExcel'])->name('dashboard.export');
+
+
 
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);

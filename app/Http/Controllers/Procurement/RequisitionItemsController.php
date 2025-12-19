@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class RequisitionItemsController extends Controller
@@ -281,16 +282,65 @@ class RequisitionItemsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
+   public function updateQuantity(Request $request, $lineId)
+{
+    try {
+        $result = RequisitionItemService::updateLineQuantity(
+            $lineId,
+            $request->input('quantity'),
+            Auth::user()
+        );
+        
+        if ($result['status'] === 'success') {
+            return response()->json([
+                'success' => true,
+                'message' => $result['message']
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 400);
+        }
+    } catch (\Exception $e) {
+        Log::error('Controller: Failed to update quantity: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update quantity'
+        ], 500);
     }
+}
 
     /**
      * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+     *//**
+ * Remove a requisition line
+ */
+public function destroy($lineId)
+{
+    try {
+        $result = RequisitionItemService::deleteRequisitionLine(
+            $lineId,
+            Auth::user()
+        );
+        
+        if ($result['status'] === 'success') {
+            return response()->json([
+                'success' => true,
+                'message' => $result['message']
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 400);
+        }
+    } catch (\Exception $e) {
+        Log::error('Controller: Failed to remove item: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to remove item'
+        ], 500);
     }
+}
 }

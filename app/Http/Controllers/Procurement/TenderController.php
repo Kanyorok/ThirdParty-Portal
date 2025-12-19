@@ -43,6 +43,8 @@ use Illuminate\Http\UploadedFile;
 use App\Models\Procurement\TenderDocument;
 use App\Enums\EmailPriorityEnum;
 use App\Enums\Core\ModulesEnum;
+use App\Models\DMS\Image;
+
 
 class TenderController extends Controller
 {
@@ -733,18 +735,9 @@ public function show(string $id)
    
        // Load documents - Get documents related to this tender
     try {
-        $documents = Document::whereHas('relations', function($query) use ($id) {
-            $query->where('Related', 'Tender') 
-                  ->where('RelatedID', $id);
-        })
-        ->with(['current', 'permissions'])
-        ->whereNull('DeletedOn')
-        ->orderBy('CreatedOn', 'desc')
-        ->get();
-        
-        Log::info("Documents loaded for tender {$id}", ['count' => $documents->count()]);
+        $documents = $tender->documents()->with('repository')->get();
     } catch (\Exception $e) {
-        Log::error("Failed to load documents for tender {$id}: " . $e->getMessage());
+        Log::error("Failed to load documents in edit: " . $e->getMessage());
         $documents = collect();
     }
     
@@ -808,7 +801,7 @@ public function show(string $id)
                 'submission_deadline' => 'required|date|after:today',
                 'opening_date' => 'required|date|after_or_equal:submission_deadline',
                 'TenderType' => ['nullable', new Enum(TenderTypeEnum::class)],
-                'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:2048',
+                'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
             ]);
 
             DB::beginTransaction();
@@ -828,13 +821,8 @@ public function show(string $id)
 
                 // Attach Tender Documents to DMS (from edit form)
                 if ($request->hasFile('documents')) {
-                    foreach ((array) $request->file('documents') as $uploadedFile) {
-                        if (!$uploadedFile) {
-                            continue;
-                        }
-                        $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
-                    }
-                }
+            $this->attachDocuments($request, $tender);
+        }
 
                 DB::commit();
 
@@ -1814,76 +1802,53 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
 
 private function attachDocuments(Request $request, Tender $tender): void
 {
-    if (!$request->hasFile('documents')) {
-        return;
-    }
-
-    $uploadedCount = 0;
-    $failedCount = 0;
-
-    foreach ((array) $request->file('documents') as $uploadedFile) {
-        if (!$uploadedFile || !$uploadedFile->isValid()) {
-            continue;
-        }
-
-        try {
-            Log::info('Attempting to attach document', [
-                'tender_id' => $tender->Id,
-                'filename' => $uploadedFile->getClientOriginalName(),
-            ]);
-
-            // Create the document
-            $document = $tender->newDocument(
-                ModulesEnum::Procurement,
-                $uploadedFile,
-                [PermissionEnum::TenderRead->value],
-                Auth::user()
-            );
-
-            // Check what relation was created
-            $createdRelation = \DB::table('t_DocumentRelations')
-                ->where('DocumentID', $document->Id)
-                ->where('RelatedID', $tender->Id)
-                ->first();
-
-            Log::info('Document relation created', [
-                'document_id' => $document->Id,
-                'tender_id' => $tender->Id,
-                'relation_exists' => $createdRelation ? 'yes' : 'no',
-                'related_value' => $createdRelation->Related ?? 'NULL'
-            ]);
-
-            // If the Related value is not exactly "Tender", fix it
-            if ($createdRelation && $createdRelation->Related !== 'Tender') {
-                \DB::table('t_DocumentRelations')
-                    ->where('DocumentID', $document->Id)
-                    ->where('RelatedID', $tender->Id)
-                    ->update(['Related' => 'Tender']);
+    // Handle multiple document uploads
+    if ($request->hasFile('documents')) {
+        foreach ($request->file('documents') as $document) {
+            try {
+                $tender->newDocument(
+                    ModulesEnum::Procurement,
+                    $document,
+                    [PermissionEnum::TenderRead->value],
+                    Auth::user()
+                );
                 
-                Log::warning('Fixed incorrect Related value', [
-                    'was' => $createdRelation->Related,
-                    'now' => 'Tender'
+                Log::info("Document uploaded successfully", [
+                    'tender_id' => $tender->Id,
+                    'filename' => $document->getClientOriginalName()
+                ]);
+            } catch (\Exception $e) {
+                Log::error("Failed to upload document", [
+                    'tender_id' => $tender->Id,
+                    'filename' => $document->getClientOriginalName(),
+                    'error' => $e->getMessage()
                 ]);
             }
-
-            $uploadedCount++;
-
-        } catch (\Exception $e) {
-            $failedCount++;
-            Log::error('Failed to attach document', [
-                'tender_id' => $tender->Id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
         }
     }
 
-    Log::info('Document attachment completed', [
-        'tender_id' => $tender->Id,
-        'uploaded' => $uploadedCount,
-        'failed' => $failedCount
-    ]);
+    // Handle image upload (if needed)
+    if ($request->hasFile('image')) {
+        $image = $this->storeImage($request->file('image'));
+        $tender->ImageId = $image->ImageID;
+        $tender->save();
+    }
 }
+
+protected function storeImage(UploadedFile $file): Image
+    {
+        $imageContent = base64_encode(file_get_contents($file->getRealPath()));
+
+        return Image::create([
+            'Name' => $file->getClientOriginalName(),
+            'Image' => $imageContent,
+            'MIMEType' => $file->getMimeType(),
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
+    }
 
     private function initiateWorkflow(Tender $tender): void
     {

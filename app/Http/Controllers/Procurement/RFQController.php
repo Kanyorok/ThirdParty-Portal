@@ -495,11 +495,19 @@ public function reject(Request $request, $id)
 
     /**
      * Display the specified resource.
-     */
+     */ 
   public function show($id)
 {
     // Get the RFQ and its associated RFQLines
-    $rfq = RFQ::with('rfqLines', 'rfqLines.uom', 'requisition')->findOrFail($id);
+    $rfq = RFQ::with([
+        'rfqlines',
+        'rfqLines.uom', 
+        'requisition', 
+        'workflowHistory.creator', // Loads the user who took action
+        'workflowHistory.status',  // Loads the status description
+        'workflowPending.user'     // Loads who the approval is waiting on
+    ])->findOrFail($id);
+
     $this->authorize('view', $rfq);
 
     // Debug: Check what's being passed to workflow service
@@ -583,28 +591,23 @@ public function reject(Request $request, $id)
         ->get();
 
     // Get workflow data
-    try {
+try {
         $canApprove = $this->workflowService->canUserApprove($rfq, Auth::user());
-        $history = $this->workflowService->getHistory($rfq);
-        $pendingApprovals = $this->workflowService->getPendingApprovals($rfq);
         
-        Log::info('Workflow data retrieved', [
+        // Use the relationships we just defined and eager-loaded
+        $history = $rfq->workflowHistory; 
+        $pendingApprovals = $rfq->workflowPending;
+
+        Log::info('Workflow data retrieved via Eloquent', [
             'rfq_id' => $rfq->Id,
-            'can_approve' => $canApprove,
             'history_count' => $history->count(),
-            'pending_count' => count($pendingApprovals)
+            'pending_count' => $pendingApprovals->count()
         ]);
     } catch (\Exception $e) {
-        Log::error('Failed to get workflow data', [
-            'rfq_id' => $rfq->Id,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        
-        // Fallback to empty collections
+        Log::error('Workflow service error: ' . $e->getMessage());
         $canApprove = false;
         $history = collect();
-        $pendingApprovals = [];
+        $pendingApprovals = collect();
     }
 
     return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses', 'canApprove', 'history', 'pendingApprovals'));
