@@ -16,10 +16,11 @@ class UploadDocumentRequest extends FormRequest
      */
     public function rules(): array
     {
+        $size = (int)bcmul(config('app.dms.file_size'), 1024, 0);
         return [
             'file' => [
-                'required',
-                Rule::file()->types(ExtensionsEnum::getAllMimeTypes())->max(9000),//todo filesize
+                'required', 'bail',
+                Rule::file()->types(ExtensionsEnum::getAllMimeTypes())->max($size),
             ],
         ];
     }
@@ -28,8 +29,9 @@ class UploadDocumentRequest extends FormRequest
     {
         return [
             'file.required' => 'A file must be uploaded.',
+            'file.mimetypes' => 'The type of file you uploaded is not permitted.',
             'file.types' => 'The uploaded file is not allowed .',
-            'file.max' => 'The uploaded file must not exceed the maximum size of 9MB.',//todo filesize
+            'file.max' => 'The uploaded file must not exceed the maximum size of ' . config('app.dms.file_size') . 'MB.',
         ];
 
     }

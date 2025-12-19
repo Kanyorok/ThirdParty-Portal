@@ -2,15 +2,15 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\ThirdParty\ThirdPartyUser;
-use App\Models\ThirdParty\ThirdParties;
-use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\BusinessTypeEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Enums\Employee\GenderEnum;
-use Illuminate\Support\Facades\Hash;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
+use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyUser;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 
 class ThirdPartyUserSeeder extends Seeder
 {
@@ -34,7 +34,7 @@ class ThirdPartyUserSeeder extends Seeder
                 'Email' => 'company@seeder.com',
                 'Phone' => '+15551234567',
                 'Website' => 'https://www.seedercompany.com',
-                'Status' => \App\Enums\ThirdPartyStatusEnum::Active,
+                'Status' => \App\Enums\ThirdParty\ThirdPartyStatusEnum::Active,
                 'ThirdPartyType' => ThirdPartyTypeEnum::Supplier,
                 'IsPrequalified' => false,
                 'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Approved,

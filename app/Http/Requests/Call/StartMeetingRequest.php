@@ -4,15 +4,17 @@ namespace App\Http\Requests\Call;
 
 use App\Enums\ScheduleStatusEnum;
 use App\Models\CRM\Meeting;
+use App\Models\CRM\MeetingRoom;
 use App\Models\CRM\Schedule;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class StartMeetingRequest extends FormRequest
 {
-    public const NoSchedule = 'NONE';
+    public const string NoSchedule = 'NONE';
 
     /**
      * Get the validation rules that apply to the request.
@@ -22,24 +24,20 @@ class StartMeetingRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'meeting_initiated'          => [
-                                                 'required',
-                                                 'date_format:"H:i"',
-                                                ],
-                'meeting_initiated_title'    => [
-                                                 'required',
-                                                 'min:5',
-                                                 'max:200',
-                                                ],
-                'meeting_initiated_location' => [
-                                                 'required',
-                                                 'min:5',
-                                                 'max:200',
-                                                ],
-                'meeting_schedule'           => ['required'],
-               ];
+            'meeting_initiated' => ['required', 'date_format:"H:i"'],
+            'meeting_initiated_title' => ['required', 'min:5', 'max:200'],
+            'meeting_initiated_location' => ['required', 'min:5', 'max:200'],
+            'meeting_schedule' => ['required'],
+        ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'meeting_initiated_title.required' => 'Meeting title is required.',
+            'meeting_initiated_location.required' => 'Meeting location is required.',
+        ];
+    }
     /**
      * @throws ValidationException
      */
@@ -57,6 +55,18 @@ class StartMeetingRequest extends FormRequest
         }
 
         throw ValidationException::withMessages(['meeting_initiated' => 'invalid schedule provide']);
+    }
+
+    public function getLocation(): string|MeetingRoom
+    {
+        $location = $this->validated('meeting_initiated_location');
+        if (Str::startsWith($location, 'ROOM')) {
+            $room = MeetingRoom::where('RoomID', $location)->first();
+            if ($room instanceof MeetingRoom) {
+                return $room;
+            }
+        }
+        return $location;
     }
 
     /**

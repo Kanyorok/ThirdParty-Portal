@@ -34,7 +34,7 @@ class NewTicketRequest extends FormRequest
             'ticket_user' => ['nullable'],
             'ticket_watchers' => ['nullable', 'array', 'max:10'],
             'ticket_source' => ['required', Rule::enum(TicketSourceEnum::class)],
-            'ticket_priority' => ['nullable', Rule::enum(TicketPriorityEnum::class)],
+            'ticket_priority' => [Rule::requiredIf($this->method() === 'POST'), Rule::enum(TicketPriorityEnum::class)],
             'ticket_start' => ['nullable', 'required_with:ticket_end', 'date_format:"Y-m-d"'],
             'ticket_end' => ['nullable', 'required_with:ticket_start', 'date_format:"Y-m-d"'],
         ];

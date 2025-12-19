@@ -21,7 +21,6 @@ class PropertyRegistryController extends Controller
 {
     public function index()
     {
-        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
 
         $properties = PropertyRegistry::with('type')->orderBy('Id', 'desc')->get();
 
@@ -72,7 +71,6 @@ class PropertyRegistryController extends Controller
             $firstFile
         );
 
-        // Add additional documents
         if ($request->hasFile('file')) {
             foreach (array_slice($request->file('file'), 1) as $uploadedFile) {
                 $service->propertyRegistry->newDocument(

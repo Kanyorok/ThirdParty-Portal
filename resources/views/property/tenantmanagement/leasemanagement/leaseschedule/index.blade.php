@@ -5,6 +5,7 @@
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
     <style>
         .action-buttons {
             display: flex;
@@ -14,6 +15,18 @@
         }
         .action-buttons form {
             margin: 0;
+        }
+
+        /* Word wrap inside table cells */
+        table td, table th {
+            white-space: normal !important;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        /* For scrollable table */
+        .table-responsive {
+            overflow-x: auto;
         }
     </style>
 @endsection
@@ -35,58 +48,67 @@
     @if($leaseschedules->count())
         <div class="card shadow-sm">
             <div class="card-body">
-                <table id="LeaseSchedule" class="table table-bordered table-striped table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th>Lease Number</th>
-                            <th>Tenant Name</th>
-                            <th>Property Leased</th>
-                            <th>Payment Frequency</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th style="width: 25%">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($leaseschedules as $leaseschedule)
+
+                <!-- Scrollable Table -->
+                <div class="table-responsive">
+                    <table id="LeaseSchedule" class="table table-bordered table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <td>{{ $loop->iteration ?? '-' }}</td>
-                                <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>
-                                <td>{{ $leaseschedule->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
-                                <td>{{ $leaseschedule->lease->property->PropertyName ?? '-' }}</td>
-                                <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
-                                <td>{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d M Y') : '-' }}</td>
-                                <td>{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d M Y') : '-' }}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}"
-                                           class="btn btn-sm btn-info text-white" title="View Schedule">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{{ route('schedulelease.print', $leaseschedule->Id) }}"
-                                           target="_blank" class="btn btn-sm btn-secondary" title="Print Schedule">
-                                            <i class="bi bi-printer"></i>
-                                        </a>
-                                        <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}"
-                                           class="btn btn-sm btn-warning" title="Edit Schedule">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}"
-                                              method="POST"
-                                              onsubmit="return confirm('Are you sure you want to delete this lease schedule?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete Schedule">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
+                                <th style="width: 5%">#</th>
+                                <th>Lease Number</th>
+                                <th>Tenant Name</th>
+                                <th>Property Leased</th>
+                                <th>Payment Frequency</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th style="width: 10%">Actions</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($leaseschedules as $leaseschedule)
+                                <tr>
+                                    <td>{{ $loop->iteration ?? '-' }}</td>
+                                    <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>
+                                    <td>{{ $leaseschedule->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
+                                    <td>{{ $leaseschedule->lease->property->PropertyName ?? '-' }}</td>
+                                    <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
+                                    <td>{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}</td>
+                                    <td>{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') : '-' }}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}"
+                                               class="btn btn-sm btn-info text-white" title="View Schedule">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+
+                                            <a href="{{ route('schedulelease.print', $leaseschedule->Id) }}"
+                                               target="_blank" class="btn btn-sm btn-secondary" title="Print Schedule">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+
+                                            <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}"
+                                               class="btn btn-sm btn-warning" title="Edit Schedule">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+
+                                            <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}"
+                                                  method="POST"
+                                                  onsubmit="return confirm('Are you sure you want to delete this lease schedule?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Delete Schedule">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <!-- End Scrollable Table -->
+
             </div>
         </div>
     @else
@@ -108,7 +130,8 @@
             pageLength: 10,
             ordering: true,
             searching: true,
-            lengthChange: true
+            lengthChange: true,
+            scrollX: true   // Enable horizontal scrolling
         });
     });
 </script>

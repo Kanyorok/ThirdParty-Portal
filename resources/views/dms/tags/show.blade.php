@@ -18,7 +18,7 @@
                 <div class="card-body">
                     <h2 class="text-center">{!! $tag->Visibility->icon() !!} {{ $tag->Name }} </h2>
                     <p class="text-center">{{ $tag->TagID }}</p>
-                    <p class="text-center">Documents : <b>{{ number_format($tag->documents_count) }}</b></p>
+                    <p class="text-center">Documents : <b>{{ number_format($documents_count) }}</b></p>
                     <p class="text-center">{{ $tag->Description }}</p>
 
                     <div class="row">
