@@ -17,7 +17,7 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Log;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Support\Str;
-use App\Enums\ThirdPartyTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use Illuminate\Support\Facades\Password;
 
 // @Kimxons
@@ -62,7 +62,7 @@ class ThirdPartyAuthController extends Controller
 
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
-        // $requestedProfileLabel = $request->profile_type;
+        $requestedProfileLabel = $request->profile_type;
 
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
@@ -94,7 +94,7 @@ class ThirdPartyAuthController extends Controller
             $thirdParty->setAttribute('FirstName', $user->FirstName);
             $thirdParty->setAttribute('LastName', $user->LastName);
 
-            /*
+
             $requiredInternalCode = null;
             foreach (ThirdPartyTypeEnum::cases() as $type) {
                 if ($type->label() === $requestedProfileLabel) {
@@ -121,18 +121,17 @@ class ThirdPartyAuthController extends Controller
                     'profile_type' => __("auth.account_not_a_{$requestedProfileLabel}")
                 ]);
             }
-            */
+
 
             $user->tokens()->delete();
-            $tokenName = "api-generic-thirdparty";
+            $tokenName = "api-generic-thirdparty"; // Could append profile type if needed
             $token = $user->createToken($tokenName)->plainTextToken;
 
             $thirdParty->load(['types', 'country', 'categories']);
 
             $resource = (new ThirdPartyResource($thirdParty))->additional([
                 'meta' => [
-                    // 'selected_profile_type' => $requestedProfileLabel, // Commented out
-                    // Frontend will determine the selected profile type based on user interaction after login
+                    'selected_profile_type' => $requestedProfileLabel,
                 ]
             ]);
 

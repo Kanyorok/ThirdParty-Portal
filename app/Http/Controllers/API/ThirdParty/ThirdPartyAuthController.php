@@ -15,6 +15,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Log;
+use App\Models\ThirdParty\SupplierMaster;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 
 class ThirdPartyAuthController extends Controller
 {
@@ -56,8 +60,10 @@ class ThirdPartyAuthController extends Controller
 
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
+        Log::info('ThirdParty Login Request', $request->all());
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
+            Log::info('Login User Found', ['user_id' => $user?->Id]);
 
             if (! $user || ! Hash::check($request->password, $user->Password)) {
                 throw ValidationException::withMessages([
@@ -73,19 +79,51 @@ class ThirdPartyAuthController extends Controller
                 return response()->json(['message' => __('auth.acc_not_approved')], 403);
             }
 
+            // profile_type validation
+            $profileType = $request->input('profile_type');
+            $isAuthorized = false;
+
+            if ($profileType === 'Supplier') {
+                $isAuthorized = SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value) // Use value explicit
+                    ->exists();
+            } elseif ($profileType === 'Tenant') {
+                $isAuthorized = PropertyNewTenant::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->where('IsActive', true)
+                    ->exists();
+            } elseif ($profileType === 'Customer') {
+                $isAuthorized = BancassuranceCustomer::where('ThirdPartyId', $user->ThirdPartyId)->exists();
+            } else {
+                // If no profile type provided or unknown, fail safe or allow if strict check not required?
+                // Request says: "we now need to specify when authenticating what type is logging in"
+                // So strict check seems appropriate.
+                return response()->json(['message' => 'Profile type is required and must be valid.'], 403);
+            }
+
+            Log::info('Profile Authorization Result', ['authorized' => $isAuthorized, 'profile' => $profileType]);
+
+            if (!$isAuthorized) {
+                return response()->json(['message' => 'Your account is not authorized for the selected profile type.'], 403);
+            }
+
             // Optional: single-session behavior
             $user->tokens()->delete();
 
             $token = $user->createToken('api')->plainTextToken;
 
-            return response()->json([
+            $responseData = [
                 'user' => new ThirdPartyUserResource($user->load(['thirdParty.types'])),
                 'token' => $token,
                 'token_type' => 'Bearer',
-            ]);
+            ];
+
+            Log::info('Login Response Payload', ['keys' => array_keys($responseData)]);
+
+            return response()->json($responseData);
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
+            Log::error('Login Exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json([
                 'message' => __('auth.login_failed'),
                 'error' => config('app.debug') ? $e->getMessage() : null,

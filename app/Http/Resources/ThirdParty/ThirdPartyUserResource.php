@@ -22,7 +22,7 @@ class ThirdPartyUserResource extends JsonResource
             'thirdPartyId' => $this->ThirdPartyId,
             'isActive' => (bool)$this->IsActive,
             'isApproved' => $this->isApproved(),
-            'isPrequalified' => $this->whenLoaded('thirdParty', fn() => (bool)$this->thirdParty->IsPrequalified),
+            'isPrequalified' => $this->whenLoaded('thirdParty', fn() => (bool)($this->thirdParty ? $this->thirdParty->IsPrequalified : false)),
             'isSupplier' => $this->isSupplier(),
             'emailVerifiedOn' => optional($this->EmailVerifiedOn)->format('Y-m-d H:i:s'),
             'createdOn' => optional($this->CreatedOn)->format('Y-m-d H:i:s'),

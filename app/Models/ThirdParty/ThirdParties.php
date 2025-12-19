@@ -181,4 +181,8 @@ class ThirdParties extends Model
             ->whereNull('DeletedOn')
             ->with('category');
     }
+    public function isApproved(): bool
+    {
+        return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
+    }
 }
