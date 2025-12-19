@@ -12,8 +12,8 @@ class ThirdPartyResource extends JsonResource
     public function toArray(Request $request): array
     {
         $userInfo = [
-            'firstName' => null, // Not available on ThirdParties model
-            'lastName' => null,
+            'firstName' => $this->FirstName,
+            'lastName' => $this->LastName,
             'fullName' => $this->ThirdPartyName,
             'email' => $this->Email,
             'phone' => $this->Phone,
