@@ -20,6 +20,9 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Yajra\DataTables\DataTables;
+use App\Models\Procurement\Order;
+use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\ThirdParty\SupplierMaster;
 
 class ThirdPartyController extends Controller
 {
@@ -174,11 +177,88 @@ class ThirdPartyController extends Controller
             return redirect()->back()->with('error', 'Third party not found');
         }
 
+        // --- Supplier Stats ---
+        $supplierStats = null;
+        if ($thirdParty->isSupplier()) {
+            $supplierStats = [
+                'active_orders' => Order::where('AccountID', $thirdPartyId)->whereNull('DeletedOn')->count(),
+                'total_order_value' => Order::where('AccountID', $thirdPartyId)->whereNull('DeletedOn')->sum('TotalAmount'),
+                'pending_tenders' => SupplierMaster::where('ThirdPartyId', $thirdPartyId)->first()?->prequalificationApplications()->count() ?? 0,
+            ];
+        }
+
+        // --- Tenant Stats ---
+        $tenantStats = null;
+        if ($thirdParty->isTenant()) {
+            $tenantQuery = PropertyNewLease::whereHas('tenant', fn($q) => $q->where('ThirdPartyId', $thirdPartyId));
+            $tenantStats = [
+                'active_leases' => (clone $tenantQuery)->where('Status', 'Active')->count(),
+                'monthly_rent_roll' => (clone $tenantQuery)->where('Status', 'Active')->sum('MonthlyRent'),
+                // Placeholder for pending rent until PropertyInvoice is confirmed
+                'pending_rent' => 0,
+            ];
+        }
+
+        // --- Customer Stats ---
+        $customerStats = null;
+        if ($thirdParty->isCustomer()) {
+            // Placeholder: Just verify existence for now
+            $customerStats = [
+                'active' => true
+            ];
+        }
+
         return view('thirdparty.show', [
             'party' => $thirdParty,
-            'location' => ($thirdParty->location instanceof Locality) ? (new LocalityService($thirdParty->location))->getLocation() : ''
+            'location' => ($thirdParty->location instanceof Locality) ? (new LocalityService($thirdParty->location))->getLocation() : '',
+            'supplierStats' => $supplierStats,
+            'tenantStats' => $tenantStats,
+            'customerStats' => $customerStats,
         ])
             ->with('party', $thirdParty);
+    }
+
+    /**
+     * Handle Attrition / Deactivation
+     */
+    public function deactivate(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|min:5|max:1000'
+        ]);
+
+        try {
+            $party = ThirdParties::findOrFail($id);
+
+            DB::transaction(function () use ($party, $request) {
+                // 1. Update status to Inactive (Assuming ID 2 is Inactive, or just rely on soft delete)
+                // We'll verify status codes later, for now we rely on SoftDeletes as the primary "Deactivation"
+
+                // 2. Log the reason in Extra field
+                $extra = $party->Extra ?? [];
+                $extra['deactivation_reason'] = $request->reason;
+                $extra['deactivated_by'] = auth()->id();
+                $extra['deactivated_at'] = now()->toDateTimeString();
+                $party->update(['Extra' => $extra]);
+
+                // 3. Soft Delete the main record
+                $party->delete();
+
+                // 4. Update Pivot tables (Soft delete connections)
+                $party->types()->newPivotStatement()
+                    ->where('ThirdPartyId', $party->Id)
+                    ->update([
+                        'DeletedOn' => now(),
+                        'DeletedBy' => auth()->id()
+                    ]);
+            });
+
+            return redirect()->route('thirdparty.parties.index')
+                ->with('success', 'Third Party has been successfully deactivated (Attrited).');
+        } catch (\Exception $e) {
+            Log::error("Attrition failed for ID $id: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to process attrition. Please try again.');
+        }
     }
 
     /**
