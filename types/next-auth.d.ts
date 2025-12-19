@@ -98,6 +98,8 @@ export interface ThirdPartyTypeEntry {
     id: number;
     code: string;
     categoryId: number | null;
+    isActive: boolean;
+    pivotId: number;
 }
 
 declare module "next-auth" {
