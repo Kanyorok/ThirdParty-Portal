@@ -36,6 +36,9 @@ function DashboardContent() {
 
     if (status === "authenticated" && session?.user) {
         const firstName =
+            session.user.thirdParty?.thirdPartyName ||
+            session.user.thirdParty?.tradingName ||
+            session.user.thirdParty?.label ||
             session.user.firstName ||
             session.user.name?.split(" ")[0] ||
             "User"
