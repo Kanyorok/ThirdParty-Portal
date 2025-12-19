@@ -40,6 +40,8 @@ return [
         'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'r'
         'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,    // 'p'
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
+    ],
+
     'OrderID' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'A'
         'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'R'
