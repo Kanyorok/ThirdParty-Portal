@@ -228,6 +228,7 @@ class ThirdPartyController extends Controller
     {
         $search = $request->get('q');
         $excludeType = $request->get('type');
+        // Log::info("Search Existing Params: q={$search}, type={$excludeType}");
 
         $query = ThirdParties::query()
             ->select('Id', 'ThirdPartyName', 'TradingName', 'Email')

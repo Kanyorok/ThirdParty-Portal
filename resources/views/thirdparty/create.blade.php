@@ -418,7 +418,7 @@
     </div>
 </div>
 @endsection
-@section('scripts')
+@push('scripts')
 <script src="{{ asset('assets/libs/select2/js/select2.min.js') }}"></script>
 <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
 <script>
@@ -693,6 +693,7 @@
                     };
                 },
                 processResults: function(data) {
+                    console.log('Select2 Data:', data);
                     return {
                         results: data.results
                     };
@@ -700,7 +701,8 @@
                 cache: true
             },
             placeholder: 'Type to search...',
-            minimumInputLength: 1
+            minimumInputLength: 0,
+            width: '100%'
         });
 
         // Show/Hide fields based on role selection
@@ -754,3 +756,4 @@
         });
     });
 </script>
+@endpush
