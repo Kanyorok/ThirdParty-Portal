@@ -15,6 +15,8 @@ interface UserProfile {
     isActive: boolean;
     isApproved: boolean;
     isSupplier: boolean;
+    isTenant: boolean;
+    isCustomer: boolean;
     emailVerifiedOn?: string | null;
     createdOn: string;
     modifiedOn: string;
@@ -82,6 +84,8 @@ export interface BaseUser {
     isActive: boolean;
     isApproved: boolean;
     isSupplier: boolean;
+    isTenant: boolean;
+    isCustomer: boolean;
     types?: ThirdPartyTypeEntry[];
     emailVerifiedOn?: string | null;
     createdOn: string;
