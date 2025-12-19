@@ -320,10 +320,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 502330, 'Name' => 'Lease Renewal', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'renewlease.index'],
             ['ModuleID' => 502340, 'Name' => 'Lease Termination', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'terminatelease.index'],
             ['ModuleID' => 502390, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => null],
-            ['ModuleID' => 502391, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index'],
-            //['ModuleID' => 502392, 'Name' => 'Renewal Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'renewalapproval.index'],
-            //['ModuleID' => 502393, 'Name' => 'Termination Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'terminationapproval.index'],
-            //['ModuleID' => 502350, 'Name' => 'Payment Frequency', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'paymentfrequency.index'],
+            ['ModuleID' => 502391, 'Name' => 'Property Approvals', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index'],
 
             // First level - Billing & Receipting
             ['ModuleID' => 503000, 'Name' => 'Billing & Receipting', 'Icon' => '<i class="fas fa-file-invoice-dollar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],

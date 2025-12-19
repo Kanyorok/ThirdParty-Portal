@@ -125,23 +125,23 @@
             </tr>
             <tr>
                 <td>Monthly Rent</td>
-                <td>{{ number_format($lease->MonthlyRent, 2) }}</td>
+                <td>{{ number_format($lease->MonthlyRent, 2) }} {{ $lease->currency->Symbol}} </td>
             </tr>
             <tr>
                 <td>Security Deposit</td>
-                <td>{{ number_format($lease->Deposit, 2) }}</td>
+                <td>{{ number_format($lease->Deposit, 2) }} {{ $lease->currency->Symbol}}</td>
             </tr>
             <tr>
                 <td>Service Charge</td>
-                <td>{{ number_format($lease->ServiceCharge, 2) }}</td>
+                <td>{{ number_format($lease->ServiceCharge, 2) }} {{ $lease->currency->Symbol}}</td>
             </tr>
             <tr>
                 <td>Parking Fee</td>
-                <td>{{ number_format($lease->ParkingFee, 2) }}</td>
+                <td>{{ number_format($lease->ParkingFee, 2) }} {{ $lease->currency->Symbol}}</td>
             </tr>
             <tr>
                 <td>Other Charges</td>
-                <td>{{ number_format($lease->OtherCharges, 2) }}</td>
+                <td>{{ number_format($lease->OtherCharges, 2) }} {{ $lease->currency->Symbol}}</td>
             </tr>
             <tr>
                 <td>Payment Frequency</td>

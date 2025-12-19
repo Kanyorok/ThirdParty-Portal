@@ -3,6 +3,7 @@
 namespace App\Models\Procurement;
 
 use App\Enums\WorkflowStatus;
+use App\Models\Core\Approval\WorkflowHistory;
 use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -116,4 +117,20 @@ class Requisitions extends Model
             }
         });
     }
+
+     /**
+     * Workflow history relationship
+     */
+    public function workflowHistory()
+    {
+        return $this->morphMany(
+            WorkflowHistory::class,
+            'source',
+            'Source',  // The morph type column in t_WorkFlowHistory
+            'SourceID', // The morph id column
+            'Id'        // Local key
+        );
+    }
+
+
 }

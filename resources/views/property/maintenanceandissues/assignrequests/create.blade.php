@@ -1,6 +1,18 @@
 @extends('layouts.app')
 @section('title', 'Assign Maintenance Task')
 @section('content')
+
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <strong>Please fix the errors below:</strong>
+        <ul class="mb-0 mt-2">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <div class="container mt-4">
     <h4 class="fw-bold mb-3">Assign Technician / Vendor</h4>
 
@@ -10,177 +22,169 @@
         <div class="card shadow">
             <div class="card-header bg-light fw-bold">Assignment Details</div>
             <div class="card-body">
-
-                <!-- Maintenance Request Dropdown -->
+                {{-- Maintenance Request --}}
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Select Maintenance Request<span class="text-danger">*</span></label>
-                        <select id="request-select" name="RequestNumber" class="form-select" required>
+                        <select id="request-select" name="RequestNumber" class="form-select">
                             <option value="">-- Select Request --</option>
-                            @foreach ($maintenancerequests as $maintenancerequest)
-                                <option
-                                    value="{{ $maintenancerequest->Id }}"
-                                    data-property="{{ $maintenancerequest->property->PropertyName ??'_' }}"
-                                    data-block="{{ $maintenancerequest->block->BlockName ?? '-' }}"
-                                    data-floor="{{ $maintenancerequest->floor->FloorLabel ?? '-' }}"
-                                    data-unit="{{ $maintenancerequest->unit->UnitCode ?? '-'}}"
-                                    data-description="{{ $maintenancerequest->IssueDescription ?? '-'}}">
-                                    {{ $maintenancerequest->RequestNumber ?? '-'}}
+                            @foreach ($maintenancerequests as $req)
+                                <option value="{{ $req->Id }}"
+                                        data-property="{{ $req->property->PropertyName ?? '' }}"
+                                        data-block="{{ $req->block->BlockName ?? '' }}"
+                                        data-floor="{{ $req->floor->FloorLabel ?? '' }}"
+                                        data-unit="{{ $req->unit->UnitCode ?? '' }}">
+                                    {{ $req->RequestNumber }}
                                 </option>
                             @endforeach
                         </select>
+                        @error('RequestNumber') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
+
                     <div class="col-md-6">
                         <label class="form-label">Assignment Date<span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="AssignmentDate" value="{{ date('Y-m-d') }}" required>
+                        <input type="date" class="form-control" name="AssignmentDate"
+                               value="{{ old('AssignmentDate', date('Y-m-d')) }}">
+                        @error('AssignmentDate') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
                 </div>
 
-                <!-- Auto-filled Info -->
+                {{-- Auto-filled section --}}
                 <div class="row g-3 mb-3">
                     <div class="col-md-3">
                         <label class="form-label">Property</label>
-                        <input type="text" id="property-display" class="form-control" readonly>
-                        <input type="hidden" name="Property" id="property-id"
-                               value="{{ old('Property', $property->Id ?? '-') }}">
+                        <input type="text" class="form-control" id="property-display" readonly>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label">Block</label>
-                        <input type="text" id="block-display" class="form-control" readonly>
-                        <input type="hidden" name="Block" id="block-id" value="{{ old('Block', $block->Id ?? '-') }}">
+                        <input type="text" class="form-control" id="block-display" readonly>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label">Floor</label>
-                        <input type="text" id="floor-display" class="form-control" readonly>
-                        <input type="hidden" name="Floor" id="floor-id" value="{{ old('Floor', $floor->Id ?? '-') }}">
+                        <input type="text" class="form-control" id="floor-display" readonly>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label">Unit</label>
-                        <input type="text" id="unit-display" class="form-control" readonly>
-                        <input type="hidden" name="Unit" id="unit-id" value="{{ old('Unit', $unit->Id ?? '-') }}">
+                        <input type="text" class="form-control" id="unit-display" readonly>
                     </div>
                 </div>
 
-                <!-- Assignment Type -->
+                {{-- Assignment Type --}}
                 <div class="row g-3 mb-3">
-                  <div class="col-md-4">
-                      <label class="form-label">Assign To<span class="text-danger">*</span></label>
-                      <select class="form-select" name="AssignmentType" id="assignmentTypeSelect" required>
-                          <option value="">--Select a technician--</option>
-                          @foreach ($assignmentTypes as $assignmentType)
-                              <option value="{{ $assignmentType->ID}}">{{ $assignmentType->Description }}</option>
-                          @endforeach
-                      </select>
-                  </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Assign To<span class="text-danger">*</span></label>
+                        <select class="form-select" name="AssignmentType" id="assignmentTypeSelect">
+                            <option value="">--Select--</option>
+                            @foreach ($assignmentTypes as $type)
+                                <option value="{{ $type->ID }}">{{ $type->Description }}</option>
+                            @endforeach
+                        </select>
+                        @error('AssignmentType') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
 
-                  <div class="col-md-4">
-                      <label class="form-label">Internal Technician</label>
-                      <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
-                          <option value="">--Select a technician--</option>
-                          @foreach ($employees as $employee)
-                              <option value="{{ $employee->Id }}">{{ $employee->EmployeeID }}
-                                  -- {{ $employee->FirstName }},{{ $employee->LastName }}</option>
-                          @endforeach
-                      </select>
-                  </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Internal Technician</label>
+                        <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect" disabled>
+                            <option value="">--Select--</option>
+                            @foreach ($employees as $emp)
+                                <option value="{{ $emp->Id }}">{{ $emp->EmployeeID }} - {{ $emp->FirstName }}</option>
+                            @endforeach
+                        </select>
+                        @error('InternalTechnician') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
 
-                  <div class="col-md-4">
-                      <label class="form-label">Prequalified Vendor</label>
-                      <select class="form-select" name="PrequalifiedVendor" id="vendorSelect">
-                          <option value="">--Select a vendor--</option>
-                          @foreach ($suppliers as $supplier)
-                              <option value="{{ $supplier->Id }}">{{ $supplier->thirdParty->ThirdPartyName }}</option>
-                          @endforeach
-                      </select>
-                  </div>
-              </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Prequalified Vendor</label>
+                        <select class="form-select" name="PrequalifiedVendor" id="vendorSelect" disabled>
+                            <option value="">--Select--</option>
+                            @foreach ($suppliers as $sup)
+                                <option value="{{ $sup->Id }}">{{ $sup->thirdParty->ThirdPartyName }}</option>
+                            @endforeach
+                        </select>
+                        @error('PrequalifiedVendor') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+                </div>
 
-                <!-- Scheduling -->
+                {{-- Schedule --}}
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Expected Start Date<span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="ExpectedStartDate" required>
+                        <input type="date" class="form-control" name="ExpectedStartDate">
+                        @error('ExpectedStartDate') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
+
                     <div class="col-md-4">
                         <label class="form-label">Expected Completion<span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="ExpectedCompletion" required>
+                        <input type="date" class="form-control" name="ExpectedCompletion">
+                        @error('ExpectedCompletion') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
+
                     <div class="col-md-4">
                         <label class="form-label">Priority Level<span class="text-danger">*</span></label>
-                        <select class="form-select" name="PriorityLevel" id="priorityLevelSelect" required>
-                            <option value="">--Select Priority Level--</option>
-                            @foreach ($priorityLevels as $priorityLevel)
-                                <option value="{{ $priorityLevel->ID }}">{{ $priorityLevel->Description }}</option>
+                        <select class="form-select" name="PriorityLevel">
+                            <option value="">--Select--</option>
+                            @foreach ($priorityLevels as $priority)
+                                <option value="{{ $priority->ID }}">{{ $priority->Description }}</option>
                             @endforeach
                         </select>
+                        @error('PriorityLevel') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
                 </div>
 
-                <!-- Instructions -->
+                {{-- Notes --}}
                 <div class="mb-3">
                     <label class="form-label">Instructions / Notes<span class="text-danger">*</span></label>
-                    <textarea class="form-control" rows="2" name="InstructionNotes"
-                              placeholder="Describe what needs to be done..." required></textarea>
+                    <textarea class="form-control" name="InstructionNotes" rows="3">{{ old('InstructionNotes') }}</textarea>
+                    @error('InstructionNotes') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
-                <!-- Submit -->
                 <div class="text-end">
-                    <button type="submit" class="btn btn-success"
-                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Assign
-                        Task
+                    <button type="submit" class="btn btn-success">
+                        Assign Task
                     </button>
                 </div>
+
             </div>
         </div>
     </form>
 </div>
 
-<!-- Auto-fill script -->
-
 <script>
-    const assignmentType = document.getElementById('assignmentTypeSelect');
-    const internalTechnician = document.getElementById('internalTechnicianSelect');
-    const vendor = document.getElementById('vendorSelect');
+    // Autofill building info
+    document.getElementById('request-select').addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        document.getElementById('property-display').value = selected.dataset.property || '';
+        document.getElementById('block-display').value    = selected.dataset.block || '';
+        document.getElementById('floor-display').value    = selected.dataset.floor || '';
+        document.getElementById('unit-display').value     = selected.dataset.unit || '';
+    });
 
-    function toggleAssignmentFields() {
-        const selectedText = assignmentType.options[assignmentType.selectedIndex].text.trim();
+    const typeSelect = document.getElementById('assignmentTypeSelect');
+    const techSelect = document.getElementById('internalTechnicianSelect');
+    const vendorSelect = document.getElementById('vendorSelect');
 
-        if (selectedText === 'Internal Technician') {
-            internalTechnician.disabled = false;
-            vendor.disabled = true;
-            vendor.selectedIndex = 0;
-        } else if (selectedText === 'Prequalified Vendor') {
-            internalTechnician.disabled = true;
-            vendor.disabled = false;
-            internalTechnician.selectedIndex = 0;
+    function toggleFields() {
+        let selected = typeSelect.options[typeSelect.selectedIndex].text;
+
+        if (selected === "Internal Technician") {
+            techSelect.disabled = false;
+            vendorSelect.disabled = true;
+            vendorSelect.value = "";
+        } else if (selected === "Prequalified Vendor") {
+            vendorSelect.disabled = false;
+            techSelect.disabled = true;
+            techSelect.value = "";
         } else {
-            // Default case if nothing selected or unknown value
-            internalTechnician.disabled = true;
-            vendor.disabled = true;
+            techSelect.disabled = true;
+            vendorSelect.disabled = true;
         }
     }
 
-    // Run on load
-    document.addEventListener('DOMContentLoaded', toggleAssignmentFields);
-
-    // Listen for changes
-    assignmentType.addEventListener('change', toggleAssignmentFields);
+    typeSelect.addEventListener('change', toggleFields);
+    document.addEventListener('DOMContentLoaded', toggleFields);
 </script>
-<script>
-    document.getElementById('request-select').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
 
-        document.getElementById('property-display').value = selected.getAttribute('data-property') || '';
-        document.getElementById('property-id').value = selected.getAttribute('data-property') || '';
-
-        document.getElementById('block-display').value = selected.getAttribute('data-block') || '';
-        document.getElementById('block-id').value = selected.getAttribute('data-block') || '';
-
-        document.getElementById('floor-display').value = selected.getAttribute('data-floor') || '';
-        document.getElementById('floor-id').value = selected.getAttribute('data-floor') || '';
-
-        document.getElementById('unit-display').value = selected.getAttribute('data-unit') || '';
-        document.getElementById('unit-id').value = selected.getAttribute('data-unit') || '';
-    });
-</script>
 @endsection
-

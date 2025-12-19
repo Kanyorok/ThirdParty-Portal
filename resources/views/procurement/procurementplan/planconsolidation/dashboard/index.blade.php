@@ -208,40 +208,53 @@
                 }
 
 
-                document.querySelectorAll('.view-need-btn').forEach(button => {
-                    button.addEventListener('click', function () {
-                        const needId = this.getAttribute('data-id');
-                        needDetails.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm"></i> Loading details...</p>';
+                // NEW CODE (Fixes the issue using Event Delegation)
+document.addEventListener('click', function (e) {
+    // Check if the clicked element (or its parent) has the class 'view-need-btn'
+    const button = e.target.closest('.view-need-btn');
 
-                        fetch(`/procurement/dashboard/show/${needId}`)
-                            .then(res => {
-                                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-                                return res.json();
-                            })
-                            .then(data => {
-                                const need = data[0];
-                                const formattedDate = formatToMMDDYYYY(need.RequestedDate);
+    if (button) {
+        const needId = button.getAttribute('data-id');
+        
+        // Reset modal content
+        needDetails.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm"></i> Loading details...</p>';
 
-                                needDetails.innerHTML = `
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item"><strong>Need ID:</strong> ${need.NeedID}</li>
-                                <li class="list-group-item"><strong>Item Name:</strong> ${need.ItemName}</li>
-                                <li class="list-group-item"><strong>Branch:</strong> ${need.BranchName}</li>
-                                <li class="list-group-item"><strong>Department:</strong> ${need.DepartmentName}</li>
-                                <li class="list-group-item"><strong>Quantity:</strong> ${need.RequestedQty}</li>
-                                <li class="list-group-item"><strong>Est. Cost:</strong> ${need.EstimatedCost}</li>
-                                <li class="list-group-item"><strong>Expected Delivery Date:</strong> ${formattedDate}</li>
-                                <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-info">${need.Status}</span></li>
-                            </ul>
-                        `;
-                            })
-                            .catch(error => {
-                                console.error('Error fetching data:', error);
-                                needDetails.innerHTML = '<p class="text-danger">Failed to load data. Please try again.</p>';
-                            });
-                    });
-                });
+        fetch(`/procurement/dashboard/show/${needId}`)
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                // Ensure we handle the array response correctly (based on your controller)
+                const need = Array.isArray(data) ? data[0] : data;
+                
+                // If no data found
+                if (!need) {
+                     needDetails.innerHTML = '<p class="text-warning">No details found for this item.</p>';
+                     return;
+                }
+
+                const formattedDate = formatToMMDDYYYY(need.RequestedDate);
+
+                needDetails.innerHTML = `
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Need ID:</strong> ${need.NeedID}</li>
+                    <li class="list-group-item"><strong>Item Name:</strong> ${need.ItemName}</li>
+                    <li class="list-group-item"><strong>Branch:</strong> ${need.BranchName}</li>
+                    <li class="list-group-item"><strong>Department:</strong> ${need.DepartmentName}</li>
+                    <li class="list-group-item"><strong>Quantity:</strong> ${need.RequestedQty}</li>
+                    <li class="list-group-item"><strong>Est. Cost:</strong> ${need.EstimatedCost}</li>
+                    <li class="list-group-item"><strong>Expected Delivery Date:</strong> ${formattedDate}</li>
+                    <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-info">${need.Status}</span></li>
+                </ul>
+                `;
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                needDetails.innerHTML = '<p class="text-danger">Failed to load data. Please try again.</p>';
             });
+    }
+});
         </script>
     @endpush
 

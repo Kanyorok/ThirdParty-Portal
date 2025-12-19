@@ -99,50 +99,60 @@ class RequisitionService
         }
     }
     //
-    public static function fetchRequisition()
-    {
-        return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
-            ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.id', '=', 't_RequisitionLines.RequisitionId')
-            ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
-            ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Requisitions.BranchID', '=', 't_Branches.Id')
-            ->leftJoin(DB::raw('t_Departments WITH (NOLOCK)'), 't_Requisitions.DepartmentID', '=', 't_Departments.Id')
-            ->leftJoin(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'), 't_Requisitions.PlanRef', '=', 't_ConsolidatedProcurementPlan.PlanID')
-            ->select(DB::raw('
+  public static function fetchRequisition()
+{
+    return DB::table(DB::raw('t_Requisitions WITH (NOLOCK)'))
+        ->leftJoin(DB::raw('t_RequisitionLines WITH (NOLOCK)'), 't_Requisitions.Id', '=', 't_RequisitionLines.RequisitionId')
+        ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_Requisitions.StatusID', '=', 't_CodeDetails.ID')
+        ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Requisitions.BranchID', '=', 't_Branches.Id')
+        ->leftJoin(DB::raw('t_Departments WITH (NOLOCK)'), 't_Requisitions.DepartmentID', '=', 't_Departments.Id')
+        ->leftJoin(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'), 't_Requisitions.PlanRef', '=', 't_ConsolidatedProcurementPlan.PlanID')
+        ->select(DB::raw('
+            t_Requisitions.Id,
             t_Requisitions.RequisitionNo,
-            COALESCE(t_Branches.Name,t_Requisitions.BranchID) as BranchID ,
-            COALESCE(t_Departments.Name,t_Requisitions.DepartmentID) as DepartmentID ,
+            COALESCE(t_Branches.Name, t_Requisitions.BranchID) as BranchID,
+            COALESCE(t_Departments.Name, t_Requisitions.DepartmentID) as DepartmentID,
             t_Requisitions.Remarks,
             CASE 
                 WHEN t_Requisitions.DocStatus = \'Ap\' THEN \'Approved\'
                 WHEN t_Requisitions.DocStatus = \'AP\' THEN \'Approved\'
                 WHEN t_Requisitions.DocStatus = \'pe\' THEN \'Pending\'
+                WHEN t_Requisitions.DocStatus = \'PE\' THEN \'Pending\'
                 WHEN t_Requisitions.DocStatus = \'Re\' THEN \'Rejected\'
                 WHEN t_Requisitions.DocStatus = \'RE\' THEN \'Rejected\'
-                ELSE t_CodeDetails.Description 
+                WHEN t_CodeDetails.Description IS NOT NULL THEN t_CodeDetails.Description
+                ELSE \'Draft\'
             END as Status,
             t_Requisitions.CreatedOn,
-            t_Requisitions.Id,
-            -- Sum of (Quantity * ExpectedPrice) to get the total cost per requisition
+            -- Calculate total cost: SUM(Quantity * ExpectedPrice) for all items in this requisition
             SUM(ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)) as ExpectedPrice,
-            COUNT(t_RequisitionLines.Id) as itemcount,
-            t_ConsolidatedProcurementPlan.Title + \' - \' + t_ConsolidatedProcurementPlan.ReferenceNumber as PlanTitle
+            -- Count total items for this requisition
+            COUNT(CASE WHEN t_RequisitionLines.Id IS NOT NULL THEN 1 END) as itemcount,
+            -- Procurement plan details
+            CASE 
+                WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
+                THEN t_ConsolidatedProcurementPlan.Title + \' - \' + t_ConsolidatedProcurementPlan.ReferenceNumber
+                ELSE NULL
+            END as PlanTitle
         '))
-            ->groupBy(
-                't_Requisitions.Id',
-                't_Requisitions.RequisitionNo',
-                't_Requisitions.BranchID',
-                't_Requisitions.DepartmentID',
-                't_Requisitions.Remarks',
-                't_CodeDetails.Description',
-                't_Requisitions.CreatedOn',
-                't_Departments.Name',
-                't_Branches.Name',
-                't_ConsolidatedProcurementPlan.Title',
-                't_ConsolidatedProcurementPlan.ReferenceNumber',
-                't_Requisitions.DocStatus'
-            )
-            ->get();
-    }
+        ->groupBy(
+            't_Requisitions.Id',
+            't_Requisitions.RequisitionNo',
+            't_Requisitions.BranchID',
+            't_Requisitions.DepartmentID',
+            't_Requisitions.Remarks',
+            't_CodeDetails.Description',
+            't_Requisitions.CreatedOn',
+            't_Departments.Name',
+            't_Branches.Name',
+            't_ConsolidatedProcurementPlan.PlanID',
+            't_ConsolidatedProcurementPlan.Title',
+            't_ConsolidatedProcurementPlan.ReferenceNumber',
+            't_Requisitions.DocStatus'
+        )
+        ->orderBy('t_Requisitions.CreatedOn', 'DESC')
+        ->get();
+}
 
 
     public static function getRelatedRequisition($RequisitionId)

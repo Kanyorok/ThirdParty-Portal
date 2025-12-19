@@ -217,20 +217,30 @@
 
 @endsection
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const tableEl = document.getElementById('awardsTable');
-            if (tableEl) {
+        $(document).ready(function() {
+            // Check if table has data rows (excluding the empty state row)
+            const hasData = $('#awardsTable tbody tr').length > 0 && 
+                           !$('#awardsTable tbody tr td[colspan]').length;
+            
+            if (hasData) {
                 $('#awardsTable').DataTable({
                     pageLength: 10,
                     lengthChange: true,
                     ordering: true,
-                    searching: false, // use the existing server-side filter form
-                    language: { emptyTable: "No awards found" }
+                    searching: false,
+                    info: true,
+                    autoWidth: false,
+                    language: { 
+                        emptyTable: "No awards found" 
+                    },
+                    columnDefs: [
+                        { orderable: false, targets: [7] } // Disable sorting on Actions column
+                    ]
                 });
             }
         });
     </script>
 @endpush
+

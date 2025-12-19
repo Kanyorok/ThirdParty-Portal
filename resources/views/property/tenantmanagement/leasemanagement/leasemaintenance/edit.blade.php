@@ -5,247 +5,364 @@
 
 @section('content')
 
-    {{-- Validation Errors --}}
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+{{-- ERROR DISPLAY --}}
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <strong>Please fix the following:</strong>
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
-    <div class="container mt-4">
+<div class="container mt-4">
 
-        <form method="POST" action="{{ route('addlease.update', $newlease->Id) }}" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
+<form method="POST" action="{{ route('addlease.update', $newlease->Id) }}" enctype="multipart/form-data" id="leaseForm">
+    @csrf
+    @method('PUT')
 
-            <div class="card shadow">
-                <div class="card-header bg-light fw-bold">Lease Details</div>
-                <div class="card-body">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light fw-bold py-3">Edit Lease Agreement</div>
 
-                    <!-- Lease Number -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Lease Number</label>
-                            <input type="text" class="form-control" value="{{ $newlease->LeaseNumber }}" disabled>
-                        </div>
+        <div class="card-body">
 
-                        <!-- Tenant -->
-                        <div class="col-md-4">
-                            <label class="form-label">Tenant</label>
-                            <input type="text" class="form-control"
-                                   value="{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '' }}" disabled>
-                            <input type="hidden" name="Tenant" value="{{ $newlease->Tenant }}">
-                        </div>
+            {{-- ================= TENANT + PROPERTY ================ --}}
+            <h5 class="fw-bold border-bottom pb-2 mb-3">Tenant & Property Information</h5>
 
-                        <!-- Property Hierarchy -->
-                        <div class="col-md-4">
-                            <label class="form-label">Property</label>
-                            <select name="PropertyID" id="property-select" class="form-select">
-                                <option value="">-- Select Property --</option>
-                                @foreach($properties as $property)
-                                    <option
-                                        value="{{ $property->Id }}" {{ $property->Id == old('PropertyID', $newlease->PropertyID) ? 'selected' : '' }}>
-                                        {{ $property->PropertyName }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Block</label>
-                                <select name="BlockID" id="block-select" class="form-select">
-                                    <option value="{{ $newlease->BlockID }}"
-                                            selected>{{ $newlease->block->BlockName ?? 'Current Block' }}</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Floor</label>
-                                <select name="FloorID" id="floor-select" class="form-select">
-                                    <option value="{{ $newlease->FloorID }}"
-                                            selected>{{ $newlease->floor->FloorLabel ?? 'Current Floor' }}</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Unit</label>
-                                <select name="Unit" id="unit-select" class="form-select">
-                                    <option value="{{ $newlease->Unit }}"
-                                            selected>{{ $newlease->unit->UnitCode ?? 'Current Unit' }}</option>
-                                </select>
-                            </div>
-                        </div>
+            <div class="row g-3 mb-4">
 
-                        <!-- Dates -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Start Date</label>
-                                <input type="date" class="form-control" name="StartDate"
-                                       value="{{ old('StartDate', Carbon::parse($newlease->StartDate)->format('Y-m-d')) }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">End Date</label>
-                                <input type="date" class="form-control" name="EndDate"
-                                       value="{{ old('EndDate', Carbon::parse($newlease->EndDate)->format('Y-m-d')) }}">
-                            </div>
-                        </div>
-
-                        <!-- Payment Frequency -->
-                        <div class="mb-3">
-                            <label class="form-label">Payment Frequency</label>
-                            <select name="PaymentFrequency" class="form-select">
-                                @foreach($codes as $code)
-                                    <option
-                                        value="{{ $code->ID }}" {{ $code->ID == old('PaymentFrequency', $newlease->PaymentFrequency) ? 'selected' : '' }}>
-                                        {{ $code->Description }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Financials -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Monthly Rent</label>
-                                <input type="number" name="MonthlyRent" class="form-control"
-                                       value="{{ old('MonthlyRent', $newlease->MonthlyRent) }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Deposit</label>
-                                <input type="number" name="Deposit" class="form-control"
-                                       value="{{ old('Deposit', $newlease->Deposit) }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Service Charge</label>
-                                <input type="number" name="ServiceCharge" class="form-control"
-                                       value="{{ old('ServiceCharge', $newlease->ServiceCharge) }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Parking Fee</label>
-                                <input type="number" name="ParkingFee" class="form-control"
-                                       value="{{ old('ParkingFee', $newlease->ParkingFee) }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Other Charges</label>
-                                <input type="number" name="OtherCharges" class="form-control"
-                                       value="{{ old('OtherCharges', $newlease->OtherCharges) }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Due Date<span class="text-danger">*</span></label>
-                                <input type="number" name="DueDay" class="form-control"
-                                       min="1" max="28"
-                                       value="{{ old('DueDay', $newlease->DueDay) }}">
-                                <small class="text-muted">Must be between 1 and 28</small>
-                            </div>
-                        </div>
-
-                        <!-- Terms -->
-                        <div class="mb-3">
-                            <label class="form-label">Special Terms</label>
-                            <textarea name="SpecialTerms" class="form-control"
-                                      rows="3">{{ old('SpecialTerms', $newlease->SpecialTerms) }}</textarea>
-                        </div>
-
-                        <!-- Documents -->
-                        <div class="mb-3">
-                            <label class="form-label">Upload Lease Document</label>
-                            <div class="p-3 border rounded bg-light text-dark">
-                                @forelse($newlease->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
-                                    {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
-                                @empty
-                                    <span>No documents attached.</span>
-                                @endforelse
-                            </div>
-                            <input type="file" name="Document[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
-                            <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
-                        </div>
-
-                        <!-- Buttons -->
-                        <div class="d-flex gap-2">
-                        <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-success"
-                                onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update
-                            Lease
-                        </button>
-                        </div>
-                    </div>
+                {{-- Lease Number --}}
+                <div class="col-md-4">
+                    <label class="form-label">Lease Number</label>
+                    <input type="text" class="form-control" value="{{ $newlease->LeaseNumber }}" disabled>
                 </div>
-        </form>
+
+                {{-- Tenant --}}
+                <div class="col-md-4">
+                    <label class="form-label">Tenant</label>
+                    <input type="text" class="form-control" 
+                        value="{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '' }}" disabled>
+                    <input type="hidden" name="Tenant" value="{{ $newlease->Tenant }}">
+                </div>
+
+                {{-- Property --}}
+                <div class="col-md-4">
+                    <label class="form-label">Property <span class="text-danger">*</span></label>
+                    <select name="PropertyID" id="property-select" class="form-select shadow-sm" required>
+                        <option value="">-- Select Property --</option>
+                        @foreach ($properties as $property)
+                            <option value="{{ $property->Id }}"
+                                {{ $property->Id == $newlease->PropertyID ? 'selected' : '' }}>
+                                {{ $property->PropertyName }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            {{-- ================= BLOCK / FLOOR / UNIT ================ --}}
+            <h5 class="fw-bold border-bottom pb-2 mb-3">Block / Floor / Unit</h5>
+
+            <div class="row g-3 mb-4">
+                
+                {{-- Block --}}
+                <div class="col-md-4">
+                    <label class="form-label">Block <span class="text-danger">*</span></label>
+                    <select name="BlockID" id="block-select" class="form-select shadow-sm" required>
+                        <option value="{{ $newlease->BlockID }}" selected>
+                            {{ $newlease->block->BlockName ?? 'Current Block' }}
+                        </option>
+                    </select>
+                </div>
+
+                {{-- Floor --}}
+                <div class="col-md-4">
+                    <label class="form-label">Floor <span class="text-danger">*</span></label>
+                    <select name="FloorID" id="floor-select" class="form-select shadow-sm" required>
+                        <option value="{{ $newlease->FloorID }}" selected>
+                            {{ $newlease->floor->FloorLabel ?? 'Current Floor' }}
+                        </option>
+                    </select>
+                </div>
+
+                {{-- Unit --}}
+                <div class="col-md-4">
+                    <label class="form-label">Unit <span class="text-danger">*</span></label>
+                    <select name="Unit" id="unit-select" class="form-select shadow-sm" required>
+                        <option value="{{ $newlease->Unit }}" selected>
+                            {{ $newlease->unit->UnitCode ?? 'Current Unit' }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            {{-- ================= LEASE DATES ================ --}}
+            <h5 class="fw-bold border-bottom pb-2 mb-3">Lease Duration</h5>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control shadow-sm" name="StartDate"
+                        value="{{ Carbon::parse($newlease->StartDate)->format('Y-m-d') }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">End Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control shadow-sm" name="EndDate"
+                        value="{{ Carbon::parse($newlease->EndDate)->format('Y-m-d') }}">
+                </div>
+            </div>
+
+            {{-- ================= PAYMENT FREQUENCY ================ --}}
+            <div class="mb-4">
+                <label class="form-label">Payment Frequency <span class="text-danger">*</span></label>
+                <select name="PaymentFrequency" class="form-select shadow-sm" required>
+                    @foreach ($codes as $code)
+                        <option value="{{ $code->ID }}"
+                            {{ $code->ID == $newlease->PaymentFrequency ? 'selected' : '' }}>
+                            {{ $code->Description }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- ================= CURRENCY & TAX ================ --}}
+            <h5 class="fw-bold border-bottom pb-2 mb-3">Financial Details</h5>
+
+            <div class="row g-3 mb-4">
+
+                {{-- Currency --}}
+                <div class="col-md-6">
+                    <label class="form-label">Currency <span class="text-danger">*</span></label>
+                    <select name="CurrencyId" class="form-select shadow-sm" required>
+                        <option value="">-- Select Currency --</option>
+                        @foreach ($Currencies as $currency)
+                            <option value="{{ $currency->Id }}"
+                                {{ $currency->Id == $newlease->CurrencyId ? 'selected' : '' }}>
+                                {{ $currency->Code }} - {{ $currency->Symbol }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Tax --}}
+                <div class="col-md-6">
+                    <label class="form-label">Tax Rule <span class="text-danger">*</span></label>
+                    <select name="TaxId" class="form-select shadow-sm" required>
+                        <option value="">-- Select Tax Rule --</option>
+                        @foreach ($taxtypes as $tax)
+                            <option value="{{ $tax->Id }}"
+                                {{ $tax->Id == $newlease->TaxId ? 'selected' : '' }}>
+                                {{ $tax->taxType->TaxTypeName }} ({{ $tax->Rate }}%)
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            {{-- ================= CHARGES ================ --}}
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-4">
+                    <label class="form-label">Rent <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control shadow-sm charge-field"
+                        name="MonthlyRent" value="{{ $newlease->MonthlyRent }}" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Deposit <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control shadow-sm"
+                        name="Deposit" value="{{ $newlease->Deposit }}" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Service Charge <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control shadow-sm charge-field"
+                        name="ServiceCharge" value="{{ $newlease->ServiceCharge }}" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Parking Fee <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control shadow-sm charge-field"
+                        name="ParkingFee" value="{{ $newlease->ParkingFee }}" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Other Charges <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control shadow-sm charge-field"
+                        name="OtherCharges" value="{{ $newlease->OtherCharges }}" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Total Payable <span class="text-danger">*</span></label>
+                    <input type="number" id="TotalPayable" class="form-control shadow-sm" readonly>
+                </div>
+            </div>
+
+            {{-- DUE DATE --}}
+            <div class="mb-4">
+                <label class="form-label">Due Day (1–28) <span class="text-danger">*</span></label>
+                <input type="number" name="DueDay" class="form-control shadow-sm"
+                    min="1" max="28" value="{{ $newlease->DueDay }}" required>
+            </div>
+
+            {{-- SPECIAL TERMS --}}
+            <div class="mb-4">
+                <label class="form-label">Special Terms</label>
+                <textarea class="form-control shadow-sm" rows="3"
+                    name="SpecialTerms">{{ $newlease->SpecialTerms }}</textarea>
+            </div>
+
+            {{-- DOCUMENTS --}}
+            <div class="mb-4">
+                <label class="form-label">Existing Documents</label>
+                <div class="p-3 bg-light border rounded">
+                    @forelse($newlease->documents()->get() as $document)
+                        {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                    @empty
+                        <span>No documents available.</span>
+                    @endforelse
+                </div>
+
+                <label class="form-label mt-2">Upload New Documents</label>
+                <input type="file" name="Document[]" class="form-control shadow-sm"
+                    accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+            </div>
+
+            {{-- BUTTONS --}}
+            <div class="d-flex gap-3 justify-content-end">
+                <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+
+                <button type="submit" class="btn btn-success px-4"
+                    onclick="this.disabled=true;this.innerText='Updating...';this.form.submit();">
+                    Update Lease
+                </button>
+            </div>
+
+        </div>
     </div>
 
-    <script>
-        const routes = {
-            getBlocks: "{{ route('getblockbyproperty.lease', ['PropertyId' => '__ID__']) }}",
-            getFloors: "{{ route('getfloorbyblock.lease', ['BlockId' => '__ID__']) }}",
-            getUnits: "{{ route('getunitbyfloor.lease', ['FloorId' => '__ID__']) }}"
-        };
+</form>
+</div>
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const propertySelect = document.getElementById('property-select');
-            const blockSelect = document.getElementById('block-select');
-            const floorSelect = document.getElementById('floor-select');
-            const unitSelect = document.getElementById('unit-select');
+{{-- ================= JS (MATCHES CREATE PAGE) ================= --}}
+<script>
+const routes = {
+    getBlocks: "{{ route('getblockbyproperty.lease', ['PropertyId' => '__ID__']) }}",
+    getFloors: "{{ route('getfloorbyblock.lease', ['BlockId' => '__ID__']) }}",
+    getUnits: "{{ route('getunitbyfloor.lease', ['FloorId' => '__ID__']) }}",
+    getPricing: "{{ route('getpricingunit.lease', ['UnitId' => '__ID__']) }}"
+};
 
-            propertySelect.addEventListener('change', function () {
-                const propertyId = this.value;
-                blockSelect.innerHTML = '<option value="">-- Select Block --</option>';
-                floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
-                unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
+document.addEventListener('DOMContentLoaded', () => {
 
-                if (propertyId) {
-                    fetch(routes.getBlocks.replace('__ID__', propertyId))
-                        .then(res => res.json())
-                        .then(data => {
-                            data.forEach(block => {
-                                const option = document.createElement('option');
-                                option.value = block.Id;
-                                option.textContent = block.BlockName;
-                                blockSelect.appendChild(option);
-                            });
-                        });
-                }
+    const propertySelect = document.getElementById('property-select');
+    const blockSelect = document.getElementById('block-select');
+    const floorSelect = document.getElementById('floor-select');
+    const unitSelect = document.getElementById('unit-select');
+
+    const chargeFields = document.querySelectorAll('.charge-field');
+    const totalField = document.getElementById('TotalPayable');
+
+    const rentInput = document.querySelector('input[name="MonthlyRent"]');
+    const depositInput = document.querySelector('input[name="Deposit"]');
+    const serviceInput = document.querySelector('input[name="ServiceCharge"]');
+    const parkingInput = document.querySelector('input[name="ParkingFee"]');
+    const otherInput = document.querySelector('input[name="OtherCharges"]');
+
+    const taxInput = document.querySelector('select[name="TaxId"]');
+    const currencyInput = document.querySelector('select[name="CurrencyId"]');
+
+    // calculate total now that values preloaded
+    const calculateTotal = () => {
+        let total = 0;
+        chargeFields.forEach(i => total += parseFloat(i.value) || 0);
+        totalField.value = total;
+    };
+    calculateTotal();
+
+    const resetOptions = (select, lbl) => {
+        select.innerHTML = `<option value="">-- ${lbl} --</option>`;
+    };
+
+    // PROPERTY → BLOCKS
+    propertySelect.addEventListener('change', function () {
+        resetOptions(blockSelect, 'Select Block');
+        resetOptions(floorSelect, 'Select Floor');
+        resetOptions(unitSelect, 'Select Unit');
+
+        if (this.value) {
+            fetch(routes.getBlocks.replace('__ID__', this.value))
+                .then(r => r.json())
+                .then(blocks => {
+                    blocks.forEach(b => {
+                        blockSelect.insertAdjacentHTML('beforeend',
+                            `<option value="${b.Id}">${b.BlockName}</option>`);
+                    });
+                });
+        }
+    });
+
+    // BLOCK → FLOORS
+    blockSelect.addEventListener('change', function () {
+        resetOptions(floorSelect, 'Select Floor');
+        resetOptions(unitSelect, 'Select Unit');
+
+        if (this.value) {
+            fetch(routes.getFloors.replace('__ID__', this.value))
+                .then(r => r.json())
+                .then(floors => {
+                    floors.forEach(f =>
+                        floorSelect.insertAdjacentHTML('beforeend',
+                            `<option value="${f.Id}">${f.FloorLabel}</option>`));
+                });
+        }
+    });
+
+    // FLOOR → UNITS
+    floorSelect.addEventListener('change', function () {
+        resetOptions(unitSelect, 'Select Unit');
+
+        if (this.value) {
+            fetch(routes.getUnits.replace('__ID__', this.value))
+                .then(r => r.json())
+                .then(units => {
+                    units.forEach(u =>
+                        unitSelect.insertAdjacentHTML('beforeend',
+                            `<option value="${u.Id}">${u.UnitCode}</option>`));
+                });
+        }
+    });
+
+    // UNIT → LOAD PRICING LIKE CREATE
+    unitSelect.addEventListener('change', function () {
+        if (!this.value) return;
+
+        fetch(routes.getPricing.replace('__ID__', this.value))
+            .then(r => r.json())
+            .then(p => {
+                if (!p) return;
+
+                rentInput.value = p.Rent ?? '';
+                depositInput.value = p.DepositAmount ?? '';
+                serviceInput.value = p.ServiceCharge ?? '';
+                parkingInput.value = p.ParkingFee ?? '';
+                otherInput.value = p.OtherCharges ?? '';
+
+                taxInput.value = p.TaxId ?? '';
+                currencyInput.value = p.CurrencyId ?? '';
+
+                calculateTotal();
             });
+    });
 
-            blockSelect.addEventListener('change', function () {
-                const blockId = this.value;
-                floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
-                unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
+    chargeFields.forEach(input =>
+        input.addEventListener('input', calculateTotal)
+    );
+});
+</script>
 
-                if (blockId) {
-                    fetch(routes.getFloors.replace('__ID__', blockId))
-                        .then(res => res.json())
-                        .then(data => {
-                            data.forEach(floor => {
-                                const option = document.createElement('option');
-                                option.value = floor.Id;
-                                option.textContent = floor.FloorLabel;
-                                floorSelect.appendChild(option);
-                            });
-                        });
-                }
-            });
-
-            floorSelect.addEventListener('change', function () {
-                const floorId = this.value;
-                unitSelect.innerHTML = '<option value="">-- Select Unit --</option>';
-
-                if (floorId) {
-                    fetch(routes.getUnits.replace('__ID__', floorId))
-                        .then(res => res.json())
-                        .then(data => {
-                            data.forEach(unit => {
-                                const option = document.createElement('option');
-                                option.value = unit.Id;
-                                option.textContent = unit.UnitCode;
-                                unitSelect.appendChild(option);
-                            });
-                        });
-                }
-            });
-        });
-    </script>
 @endsection
 
 @section('scripts')

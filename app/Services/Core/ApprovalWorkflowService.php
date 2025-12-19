@@ -26,7 +26,7 @@ abstract class ApprovalWorkflowService
     {
         $code = CodeDetail::query()
             ->where('CodeID', $CodeID)
-            ->where('Value', $status->value)
+            ->where('Value', (string) $status->value)
             ->first();
 
         if ($code instanceof CodeDetail) {
@@ -1138,53 +1138,5 @@ abstract class ApprovalWorkflowService
 
         // Ultimate fallback if config is missing
         return 'a';
-    }
-
-    /**
-     * Get detailed approval status message for error/info feedback
-     */
-    public function getApprovalDetailsMessage(string $source, string|int $sourceId): string
-    {
-        $class = Relation::getMorphedModel($source) ?? $source;
-        if (!($class && class_exists($class))) {
-            return 'Invalid entity provided.';
-        }
-        $table = (new $class)->getTable();
-
-        $currentStageId = $this->getCurrentStageId($table, $sourceId);
-        if (!$currentStageId) {
-            return 'Workflow has not started or is invalid.';
-        }
-
-        $stage = WorkflowStage::with('type_name')->find($currentStageId);
-        if (!$stage) {
-            return 'Current stage information could not be retrieved.';
-        }
-
-        // Remaining stages
-        $remainingStages = DB::table('t_WorkFlowStages')
-            ->where('WorkFlowId', $stage->WorkFlowId)
-            ->where('Order', '>', $stage->Order)
-            ->whereNull('DeletedOn')
-            ->count();
-
-        // Pending count (already approved vs required)
-        $required = $stage->Count ?? 1;
-        $type = $stage->type_name->Name ?? 'Any';
-
-        // Approvals so far for this stage
-        $approvedStatusId = DB::table('t_CodeDetails')->where('Description', 'Approved')->value('ID');
-        $approvedCount = DB::table('t_WorkFlowHistory')
-            ->where('Source', $table)
-            ->where('SourceID', (string)$sourceId)
-            ->where('Stage', (string)$currentStageId)
-            ->where('StatusId', $approvedStatusId)
-            ->whereNull('DeletedOn')
-            ->distinct('CreatedBy')
-            ->count('CreatedBy');
-
-        $remainingApprovers = max(0, $required - $approvedCount);
-
-        return "Approvers required: {$required} (Pending: {$remainingApprovers}). Approval Type: {$type}. Remaining Stages: {$remainingStages}.";
     }
 }

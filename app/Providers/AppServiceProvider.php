@@ -260,6 +260,11 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Http\Controllers\Procurement\TenderController;
+use App\Http\Controllers\Procurement\RequisitionsController;
+use App\Http\Controllers\Procurement\AwardsController;
+use App\Http\Controllers\Procurement\PurchaseOrderController;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
 
@@ -276,9 +281,55 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
 
     {
+        // Default binding for Department Needs
         $this->app->bind(ApprovalWorkflow::class, function ($app) {
-            return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
+            return new ApprovalWorkflow('DepartmentNeedsStatus', 'Status');
         });
+
+        // 🔥 FIX: Bind Tender Workflow using contextual binding
+        $this->app->when(TenderController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'TenderStatus',      // CodeID for tender approval workflow
+                    'ApprovalStatus'     // Status column name - THIS WAS WRONG
+                );
+            });
+
+        // Bind Requisition Workflow Service
+        $this->app->singleton(RequisitionWorkflowService::class, function ($app) {
+            return new RequisitionWorkflowService();
+        });
+
+        // Bind Requisitions Workflow (generic)
+        $this->app->when(RequisitionsController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'RequisitionStatus', // CodeID for requisition workflow
+                    'DocStatus'          // Status column name for requisitions
+                );
+            });
+
+        // Bind Awards Workflow
+        $this->app->when(AwardsController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'TenderAwardApprovalStatus',  // CodeID for tender award approval workflow
+                    'AwardStatus'                 // Status column name
+                );
+            });
+
+        // Bind Purchase Order Workflow
+        $this->app->when(PurchaseOrderController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'ApprovalStatus',  // CodeID for purchase order approval workflow
+                    'DocStatus'        // Status column name for orders
+                );
+            });
     }
 
     /**
@@ -362,7 +413,7 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
-            'tender' => Tender::class,
+            Tender::getPrimaryKey() => Tender::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
