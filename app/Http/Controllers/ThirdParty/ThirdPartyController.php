@@ -224,4 +224,75 @@ class ThirdPartyController extends Controller
             ], 500);
         }
     }
+    public function searchExisting(Request $request): JsonResponse
+    {
+        $search = $request->get('q');
+        $excludeType = $request->get('type');
+
+        $query = ThirdParties::query()
+            ->select('Id', 'ThirdPartyName', 'TradingName', 'Email')
+            ->where(function ($q) use ($search) {
+                $q->where('ThirdPartyName', 'like', "%{$search}%")
+                    ->orWhere('TradingName', 'like', "%{$search}%")
+                    ->orWhere('Email', 'like', "%{$search}%");
+            });
+
+        if ($excludeType) {
+            $query->whereDoesntHave('types', function ($q) use ($excludeType) {
+                $q->where('Code', $excludeType);
+            });
+        }
+
+        $results = $query->limit(20)->get()->map(function ($party) {
+            return [
+                'id' => $party->Id,
+                'text' => $party->ThirdPartyName . ($party->TradingName ? " ({$party->TradingName})" : "") . " - {$party->Email}"
+            ];
+        });
+
+        return response()->json(['results' => $results]);
+    }
+
+    public function addRole(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'third_party_id' => 'required|exists:t_ThirdParties,Id',
+            'type' => 'required|in:SU,TN,CU',
+            'tenant_Remarks' => 'required_if:type,TN|nullable|string',
+            'customer_DateOfBirth' => 'required_if:type,CU|nullable|date',
+            'customer_Gender' => 'required_if:type,CU|nullable|exists:t_Core_Approval_CodeDetails,Value',
+            'customer_MaritalStatus' => 'required_if:type,CU|nullable|exists:t_Core_Approval_CodeDetails,Value',
+            'customer_Occupation' => 'required_if:type,CU|nullable|exists:t_Core_Approval_CodeDetails,Value',
+        ]);
+
+        $thirdParty = ThirdParties::findOrFail($validated['third_party_id']);
+        $service = new ThirdPartyService($thirdParty);
+        $actor = $request->user();
+
+        try {
+            DB::transaction(function () use ($service, $actor, $validated) {
+                match ($validated['type']) {
+                    'SU' => $service->addSupplier($actor),
+                    'TN' => $service->addTenant($actor, $validated['tenant_Remarks']),
+                    'CU' => $service->addCustomer(
+                        Referral: null,
+                        DateOfBirth: new \DateTime($validated['customer_DateOfBirth']),
+                        Gender: CodeDetail::where('Value', $validated['customer_Gender'])->firstOrFail(),
+                        MaritalStatus: CodeDetail::where('Value', $validated['customer_MaritalStatus'])->firstOrFail(),
+                        Occupation: CodeDetail::where('Value', $validated['customer_Occupation'])->firstOrFail(),
+                        actor: $actor
+                    ),
+                };
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Role added successfully',
+                'redirect' => route('thirdparty.parties.show', $thirdParty->Id)
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to add role: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
 }
