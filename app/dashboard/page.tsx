@@ -11,7 +11,7 @@ import { containerVariants, itemVariants } from '@/lib/dashboard-animations'
 import SummaryCharts from '@/components/dashboard/summary-charts'
 import { usePageTitle } from '@/hooks/use-page-title'
 import { TenantDashboard } from "@/components/dashboard/tenant-dashboard"
-import { DebugSession } from "@/components/dashboard/debug-session"
+
 
 function DashboardContent() {
     const { data: session, status } = useSession()
@@ -57,7 +57,7 @@ function DashboardContent() {
                             className="space-y-12"
                         >
                             <WelcomeHeader firstName={firstName} />
-                            <DebugSession />
+
                             <TenantDashboard />
                         </motion.div>
                     </div>
@@ -75,7 +75,7 @@ function DashboardContent() {
                         className="space-y-12"
                     >
                         <WelcomeHeader firstName={firstName} />
-                        <DebugSession />
+
 
                         <motion.section
                             variants={itemVariants}
