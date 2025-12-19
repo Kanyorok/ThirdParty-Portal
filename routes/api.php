@@ -179,6 +179,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::put('/', [ThirdPartyProfileController::class, 'update']);
         Route::patch('/', [ThirdPartyProfileController::class, 'partialUpdate']);
         Route::delete('/', [ThirdPartyProfileController::class, 'destroy']);
+        Route::put('/roles/toggle', [ThirdPartyProfileController::class, 'toggleRole']);
         Route::put('/password', [ThirdPartyProfileController::class, 'changePassword']);
     });
 

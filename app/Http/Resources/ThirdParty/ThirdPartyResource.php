@@ -59,6 +59,8 @@ class ThirdPartyResource extends JsonResource
                     'code' => $t->Code,
                     'typeCategoryId' => $t->Type,
                     'label' => $t->Code,
+                    'isActive' => isset($t->pivot) && is_null($t->pivot->DeletedOn),
+                    'pivotId' => $t->pivot->Id ?? 0,
                 ]);
             }),
             'categories' => SupplierCategoryResource::collection($this->whenLoaded('categories')),
