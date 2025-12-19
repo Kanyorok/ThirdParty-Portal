@@ -22,10 +22,11 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        profile_type: { label: "Profile Type", type: "text" },
       },
       async authorize(credentials): Promise<User | null> {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("MISSING_FIELDS: Email and password are required")
+        if (!credentials?.email || !credentials?.password || !credentials?.profile_type) {
+          throw new Error("MISSING_FIELDS: Email, password, and profile type are required")
         }
 
         const allowDevFallback = process.env.NEXT_PUBLIC_DEV_AUTH_FALLBACK === "1"
@@ -39,7 +40,11 @@ export const authOptions: NextAuthOptions = {
               "Content-Type": "application/json",
               Accept: "application/json",
             },
-            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+              profile_type: credentials.profile_type,
+            }),
           })
           text = await res.text()
         } catch (_err) {
@@ -135,7 +140,7 @@ export const authOptions: NextAuthOptions = {
         modifiedOn: t.modifiedOn,
         thirdParty: t.thirdParty,
       }
-      ;(session as unknown as { accessToken?: string }).accessToken = t.accessToken
+        ; (session as unknown as { accessToken?: string }).accessToken = t.accessToken
       return session
     },
   },
