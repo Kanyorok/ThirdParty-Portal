@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StoreSupplierRequest;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\UpdateSupplierRequest;
+use App\Services\ThirdParties\SupplierWorkflowService;
 
 class SupplierController extends Controller
 {
+    public function __construct(protected SupplierWorkflowService $workflowService) {}
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -142,6 +145,17 @@ class SupplierController extends Controller
         }
         $supplier->categories()->sync($request->input('category_ids', []));
 
+        // Auto-submit to workflow
+        $supplierMaster = SupplierMaster::where('ThirdPartyId', $supplier->Id)->first();
+        if ($supplierMaster) {
+            try {
+                $this->workflowService->submit($supplierMaster, Auth::user());
+            } catch (\Exception $e) {
+                // Log error but allow creation to succeed, specific error handling dependent on requirements
+                \Illuminate\Support\Facades\Log::error("Failed to auto-submit supplier workflow: " . $e->getMessage());
+            }
+        }
+
         return redirect()->route('suppliers.index')->with('success', 'Supplier created successfully.');
     }
 
@@ -204,12 +218,7 @@ class SupplierController extends Controller
             if ($request->boolean('Suspended')) {
                 $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Suspended;
             } elseif ($request->input('ApprovalStatus') === ThirdPartyApprovalStatusEnum::Suspended->value) {
-                // If hidden input sent Suspended but toggle is OFF (user unchecked logic),
-                // we must revert to something? 
-                // If the user unchecked Suspended, we expect status to change.
-                // But hidden input holds the OLD status (Suspended).
-                // So if boolean('Suspended') is false, and old status was S, we should probably set to 'Approved' (A) or 'Pending' (P).
-                // Assuming 'Approved' is the state for active suppliers.
+                // If switch was turned off, default back to Approved or Pending (A or P)
                 $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Approved;
             }
 
@@ -236,26 +245,56 @@ class SupplierController extends Controller
         return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
     }
 
+    public function submit($id)
+    {
+        $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
+        try {
+            $this->workflowService->submit($supplier, Auth::user());
+            return redirect()->back()->with('success', 'Supplier submitted for approval.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Submission failed: ' . $e->getMessage());
+        }
+    }
+
     public function activate($id)
     {
         $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
 
-        $this->authorize('approve', $supplier);
+        // Use Workflow Service to approve
+        try {
+            if ($this->workflowService->canApproveSupplier($supplier, Auth::user())) {
+                $this->workflowService->approve($supplier, Auth::user());
 
-        // Update status to Approved
-        $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
-        $supplier->save();
+                activity()
+                    ->causedBy(Auth::user())
+                    ->performedOn($supplier)
+                    ->event('approve')
+                    ->log("Approved supplier {$supplier->SupplierID} linked to ThirdParty {$id}");
 
-        // Update the main ThirdParty status as well if needed? 
-        // For now, focusing on SupplierMaster logic as requested.
+                return redirect()->back()->with('success', 'Supplier approved successfully.');
+            } else {
+                $msg = $this->workflowService->getApprovalDetailsMessage(SupplierMaster::getPrimaryKey(), $supplier->SupplierID);
+                return redirect()->back()->with('error', "You are not authorized to approve. " . $msg);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Approval failed: ' . $e->getMessage());
+        }
+    }
 
-        activity()
-            ->causedBy(Auth::user())
-            ->performedOn($supplier)
-            ->event('activate')
-            ->log("Activated supplier {$supplier->SupplierID} linked to ThirdParty {$id}");
-
-        return redirect()->back()->with('success', 'Supplier activated successfully.');
+    public function reject($id)
+    {
+        $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
+        try {
+            if ($this->workflowService->canApproveSupplier($supplier, Auth::user())) {
+                // Logic to capture reject reason? For now, generic.
+                $this->workflowService->reject($supplier, Auth::user(), 'Rejected from List');
+                return redirect()->back()->with('success', 'Supplier rejected.');
+            } else {
+                return redirect()->back()->with('error', 'Authentication failed');
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Rejection failed: ' . $e->getMessage());
+        }
     }
 
     private function getActionsButtons(SupplierMaster $supplier): string
@@ -267,6 +306,9 @@ class SupplierController extends Controller
         $editUrl = route('suppliers.edit', $id);
         $deleteUrl = route('suppliers.destroy', $id);
         $activateUrl = route('suppliers.activate', $id);
+        $submitUrl = route('suppliers.submit', $id);
+        $rejectUrl = route('suppliers.reject', $id);
+
 
         $buttons = '';
 
@@ -287,6 +329,9 @@ class SupplierController extends Controller
                 </form>';
         }
 
+        // Check workflow permission instead of generic policy
+        $canApprove = $this->workflowService->canApproveSupplier($supplier, auth()->user());
+        // Also check if status is not already Approved (Status A)
         $isApproved = false;
         if (is_object($supplier->ApprovalStatus) && property_exists($supplier->ApprovalStatus, 'value')) {
             $isApproved = $supplier->ApprovalStatus->value === ThirdPartyApprovalStatusEnum::Approved->value;
@@ -294,11 +339,36 @@ class SupplierController extends Controller
             $isApproved = $supplier->ApprovalStatus === 'A';
         }
 
-        if (!$isApproved && auth()->user()->can('approve', SupplierMaster::class)) {
+        // Check if workflow has started
+        $hasWorkflow = $supplier->workflowHistory()->exists();
+
+        // Check if status is Submitted
+        $isSubmitted = false;
+        if (is_object($supplier->ApprovalStatus) && property_exists($supplier->ApprovalStatus, 'value')) {
+            $isSubmitted = $supplier->ApprovalStatus->value === ThirdPartyApprovalStatusEnum::Submitted->value;
+        } elseif (is_string($supplier->ApprovalStatus)) {
+            $isSubmitted = $supplier->ApprovalStatus === ThirdPartyApprovalStatusEnum::Submitted->value; // 'U'
+        }
+
+        // Submit Button: If not approved, not submitted, and no active workflow (redundant if checking submitted)
+        if (!$isApproved && !$isSubmitted && !$hasWorkflow) {
+            $buttons .= '
+                <form action="' . $submitUrl . '" method="POST" class="inline-block ms-1">
+                    ' . csrf_field() . '
+                    <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+                </form>';
+        }
+
+        if (!$isApproved && $canApprove) {
             $buttons .= '
                 <form action="' . $activateUrl . '" method="POST" class="inline-block ms-1">
                     ' . csrf_field() . '
-                    <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                </form>';
+            $buttons .= '
+                <form action="' . $rejectUrl . '" method="POST" class="inline-block ms-1">
+                    ' . csrf_field() . '
+                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
                 </form>';
         }
 

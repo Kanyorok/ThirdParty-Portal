@@ -212,7 +212,15 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::put('/engaged-auditors/{id}', [EngagedAuditorController::class, 'update'])->name('engaged-auditors.update');
     Route::delete('/engaged-auditors/{id}', [EngagedAuditorController::class, 'destroy'])->name('engaged-auditors.destroy');
 
+    // Supplier Approval Screen
+    Route::get('suppliers-approval', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'index'])->name('suppliers-approval.index');
+    Route::get('suppliers-approval/{id}', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'show'])->name('suppliers-approval.show');
+    Route::post('suppliers-approval/{id}/approve', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'approve'])->name('suppliers-approval.approve');
+    Route::post('suppliers-approval/{id}/reject', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'reject'])->name('suppliers-approval.reject');
+
     // Suppliers
+    Route::post('suppliers/{id}/submit', [SupplierController::class, 'submit'])->name('suppliers.submit');
+    Route::post('suppliers/{id}/reject', [SupplierController::class, 'reject'])->name('suppliers.reject');
     Route::post('suppliers/{id}/activate', [SupplierController::class, 'activate'])->name('suppliers.activate');
     Route::resource('suppliers', SupplierController::class);
 

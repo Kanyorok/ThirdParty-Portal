@@ -158,34 +158,34 @@ abstract class ApprovalWorkflowService
     }
 
     /**
- * Get the status column name for a given morph alias/table
- */
-private function getStatusColumnForTable(string $morphAlias, string $table): string
-{
-    // Check configuration first
-    $columnMappings = config('workflow.status_columns', []);
-    
-    if (isset($columnMappings[$morphAlias])) {
-        Log::info("Found status column from config", [
-            'morphAlias' => $morphAlias,
-            'column' => $columnMappings[$morphAlias],
-        ]);
-        return $columnMappings[$morphAlias];
+     * Get the status column name for a given morph alias/table
+     */
+    private function getStatusColumnForTable(string $morphAlias, string $table): string
+    {
+        // Check configuration first
+        $columnMappings = config('workflow.status_columns', []);
+
+        if (isset($columnMappings[$morphAlias])) {
+            Log::info("Found status column from config", [
+                'morphAlias' => $morphAlias,
+                'column' => $columnMappings[$morphAlias],
+            ]);
+            return $columnMappings[$morphAlias];
+        }
+
+        // Check if table has ApprovalStatus column
+        $hasApprovalStatus = DB::getSchemaBuilder()
+            ->hasColumn($table, 'ApprovalStatus');
+
+        if ($hasApprovalStatus) {
+            Log::info("Table has ApprovalStatus column", ['table' => $table]);
+            return 'ApprovalStatus';
+        }
+
+        // Default to Status
+        Log::info("Using default Status column", ['table' => $table]);
+        return 'Status';
     }
-    
-    // Check if table has ApprovalStatus column
-    $hasApprovalStatus = DB::getSchemaBuilder()
-        ->hasColumn($table, 'ApprovalStatus');
-    
-    if ($hasApprovalStatus) {
-        Log::info("Table has ApprovalStatus column", ['table' => $table]);
-        return 'ApprovalStatus';
-    }
-    
-    // Default to Status
-    Log::info("Using default Status column", ['table' => $table]);
-    return 'Status';
-}
 
     /**
      * Create a workflow history entry
@@ -1250,5 +1250,53 @@ private function getStatusColumnForTable(string $morphAlias, string $table): str
 
         // Ultimate fallback if config is missing
         return 'a';
+    }
+
+    /**
+     * Get detailed approval status message for error/info feedback
+     */
+    public function getApprovalDetailsMessage(string $source, string|int $sourceId): string
+    {
+        $class = Relation::getMorphedModel($source) ?? $source;
+        if (!($class && class_exists($class))) {
+            return 'Invalid entity provided.';
+        }
+        $table = (new $class)->getTable();
+
+        $currentStageId = $this->getCurrentStageId($table, $sourceId);
+        if (!$currentStageId) {
+            return 'Workflow has not started or is invalid.';
+        }
+
+        $stage = WorkflowStage::with('type_name')->find($currentStageId);
+        if (!$stage) {
+            return 'Current stage information could not be retrieved.';
+        }
+
+        // Remaining stages
+        $remainingStages = DB::table('t_WorkFlowStages')
+            ->where('WorkFlowId', $stage->WorkFlowId)
+            ->where('Order', '>', $stage->Order)
+            ->whereNull('DeletedOn')
+            ->count();
+
+        // Pending count (already approved vs required)
+        $required = $stage->Count ?? 1;
+        $type = $stage->type_name->Name ?? 'Any';
+
+        // Approvals so far for this stage
+        $approvedStatusId = DB::table('t_CodeDetails')->where('Description', 'Approved')->value('ID');
+        $approvedCount = DB::table('t_WorkFlowHistory')
+            ->where('Source', $table)
+            ->where('SourceID', (string)$sourceId)
+            ->where('Stage', (string)$currentStageId)
+            ->where('StatusId', $approvedStatusId)
+            ->whereNull('DeletedOn')
+            ->distinct('CreatedBy')
+            ->count('CreatedBy');
+
+        $remainingApprovers = max(0, $required - $approvedCount);
+
+        return "Approvers required: {$required} (Pending: {$remainingApprovers}). Approval Type: {$type}. Remaining Stages: {$remainingStages}.";
     }
 }
