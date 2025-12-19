@@ -128,6 +128,7 @@ class TransactionAdjustmentController extends Controller
         $adjustment = $stockAdjustment->load(['branch', 'items.item', 'adjustedBy']);
 
         $itemIdsInAdjustment = $adjustment->items->pluck('Item')->toArray();
+        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
 
         $currentStocksInBranch = StockItem::where('Branch', $adjustment->Branch)
             ->whereIn('ItemID', $itemIdsInAdjustment)
@@ -137,7 +138,7 @@ class TransactionAdjustmentController extends Controller
             $adjItem->current_stock_qty = $currentStocksInBranch->get($adjItem->Item, 0);
         });
 
-        return view('inventory.transactions.adjustments.show', compact('adjustment'));
+        return view('inventory.transactions.adjustments.show', compact('adjustment','reasons'));
     }
 
     public function destroy(StockAdjustment $stockAdjustment)
