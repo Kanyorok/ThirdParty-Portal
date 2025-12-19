@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
-
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
+import { getApiUrl } from "@/lib/config"
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -20,7 +19,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const response = await fetch(`${EXTERNAL_API_BASE}/api/v1/portal/profiles/supplier`, {
+    const apiUrl = getApiUrl()
+    const requestUrl = `${apiUrl}/api/v1/portal/profiles/supplier`
+
+    console.log("[Create Supplier] Request body:", JSON.stringify(body).substring(0, 200))
+    console.log("[Create Supplier] Token (first 20):", accessToken?.substring(0, 20) + "...")
+    console.log("[Create Supplier] Request URL:", requestUrl)
+
+    const response = await fetch(requestUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -28,11 +34,13 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+      credentials: "include",
       cache: "no-store",
     })
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
+      console.error("[Create Supplier] Backend error:", response.status, errorData)
       return NextResponse.json(
         { error: errorData.message || "Failed to create supplier profile" },
         { status: response.status }
@@ -46,9 +54,16 @@ export async function POST(request: NextRequest) {
       profile: data.data,
     })
   } catch (error) {
+    console.error("[Create Supplier] Request failed:", error)
+
+    const isConfigError = error instanceof Error && error.message.includes("API URL is not configured")
+
     return NextResponse.json(
-      { error: "Failed to connect to backend" },
-      { status: 500 }
+      {
+        error: isConfigError ? "Configuration error" : "Failed to connect to backend",
+        message: error instanceof Error ? error.message : "Unknown error"
+      },
+      { status: isConfigError ? 500 : 503 }
     )
   }
 }

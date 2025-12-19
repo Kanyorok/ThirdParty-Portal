@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
@@ -11,9 +10,9 @@ import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
 import { Textarea } from "@/components/common/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
-import { Checkbox } from "@/components/common/checkbox"
-import { useProfileManagement } from "@/hooks/use-profile-management"
-import { customerProfileSchema, type CustomerProfileFormData } from "@/lib/validations/profile-schemas"
+import { useProfileManagement } from "@/hooks/use-profile-management";
+import { customerProfileSchema } from "@/lib/validations/profile-schemas"
+import { CustomerFormData } from "@/types/profile-management"
 
 interface CreateCustomerModalProps {
   open: boolean
@@ -22,10 +21,10 @@ interface CreateCustomerModalProps {
 }
 
 const countries = [
-  { value: "KE", label: "Kenya" },
-  { value: "UG", label: "Uganda" },
-  { value: "TZ", label: "Tanzania" },
-  { value: "RW", label: "Rwanda" },
+  { id: 1, label: "Kenya" },
+  { id: 2, label: "Uganda" },
+  { id: 3, label: "Tanzania" },
+  { id: 4, label: "Rwanda" },
 ]
 
 export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCustomerModalProps) {
@@ -37,17 +36,18 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
     formState: { errors },
     setValue,
     watch,
-  } = useForm<CustomerProfileFormData>({
+  } = useForm<CustomerFormData>({
     resolver: zodResolver(customerProfileSchema),
     defaultValues: {
-      preferences: {
-        newsletter: false,
-        promotions: false,
-      },
+      third_party_name: "",
+      email: "",
+      phone: "",
+      physical_address: "",
+      registration_number: "",
     },
   })
 
-  const onSubmit = async (data: CustomerProfileFormData) => {
+  const onSubmit = async (data: CustomerFormData) => {
     const profile = await createProfile("customer", data)
     if (profile) {
       onOpenChange(false)
@@ -66,7 +66,7 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
             <div>
               <DialogTitle>Create Customer Profile</DialogTitle>
               <DialogDescription>
-                Fill in your customer information
+                Please provide your business or personal details
               </DialogDescription>
             </div>
           </div>
@@ -78,152 +78,101 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
+            <div className="space-y-2">
+              <Label htmlFor="third_party_name">Full Name / Business Name *</Label>
+              <Input
+                id="third_party_name"
+                {...register("third_party_name")}
+                placeholder="Enter name"
+              />
+              {errors.third_party_name && (
+                <p className="text-sm text-destructive">{errors.third_party_name.message}</p>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="email">Email Address *</Label>
                 <Input
-                  id="firstName"
-                  {...register("firstName")}
-                  placeholder="Enter first name"
+                  id="email"
+                  type="email"
+                  {...register("email")}
+                  placeholder="customer@example.com"
                 />
-                {errors.firstName && (
-                  <p className="text-sm text-destructive">{errors.firstName.message}</p>
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="phone">Phone Number *</Label>
                 <Input
-                  id="lastName"
-                  {...register("lastName")}
-                  placeholder="Enter last name"
+                  id="phone"
+                  {...register("phone")}
+                  placeholder="+254..."
                 />
-                {errors.lastName && (
-                  <p className="text-sm text-destructive">{errors.lastName.message}</p>
+                {errors.phone && (
+                  <p className="text-sm text-destructive">{errors.phone.message}</p>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number *</Label>
+                <Label htmlFor="registration_number">ID / Reg Number (Optional)</Label>
                 <Input
-                  id="phoneNumber"
-                  {...register("phoneNumber")}
-                  placeholder="+254 700 000000"
+                  id="registration_number"
+                  {...register("registration_number")}
+                  placeholder="e.g. 12345678"
                 />
-                {errors.phoneNumber && (
-                  <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>
-                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="alternativePhone">Alternative Phone (Optional)</Label>
-                <Input
-                  id="alternativePhone"
-                  {...register("alternativePhone")}
-                  placeholder="+254 700 000000"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="country">Country *</Label>
+                <Label htmlFor="country_id">Country *</Label>
                 <Select
-                  onValueChange={(value) => setValue("country", value)}
-                  defaultValue={watch("country")}
+                  onValueChange={(v) => setValue("country_id", parseInt(v))}
+                  defaultValue={watch("country_id")?.toString()}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                   <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.value} value={country.value}>
-                        {country.label}
+                    {countries.map((c) => (
+                      <SelectItem key={c.id} value={c.id.toString()}>
+                        {c.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.country && (
-                  <p className="text-sm text-destructive">{errors.country.message}</p>
+                {errors.country_id && (
+                  <p className="text-sm text-destructive">{errors.country_id.message}</p>
                 )}
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="city">City (Optional)</Label>
-                <Input
-                  id="city"
-                  {...register("city")}
-                  placeholder="Enter city"
-                />
-              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="shippingAddress">Shipping Address (Optional)</Label>
+              <Label htmlFor="physical_address">Physical Address *</Label>
               <Textarea
-                id="shippingAddress"
-                {...register("shippingAddress")}
-                placeholder="Enter shipping address"
-                rows={2}
+                id="physical_address"
+                {...register("physical_address")}
+                placeholder="Enter your location details"
+                rows={3}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="billingAddress">Billing Address (Optional)</Label>
-              <Textarea
-                id="billingAddress"
-                {...register("billingAddress")}
-                placeholder="Enter billing address (leave empty to use shipping address)"
-                rows={2}
-              />
-            </div>
-
-            <div className="space-y-3 pt-4 border-t">
-              <Label>Communication Preferences</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="newsletter"
-                    checked={watch("preferences.newsletter")}
-                    onCheckedChange={(checked) =>
-                      setValue("preferences.newsletter", checked as boolean)
-                    }
-                  />
-                  <label
-                    htmlFor="newsletter"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Subscribe to newsletter
-                  </label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="promotions"
-                    checked={watch("preferences.promotions")}
-                    onCheckedChange={(checked) =>
-                      setValue("preferences.promotions", checked as boolean)
-                    }
-                  />
-                  <label
-                    htmlFor="promotions"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Receive promotional offers
-                  </label>
-                </div>
-              </div>
+              {errors.physical_address && (
+                <p className="text-sm text-destructive">{errors.physical_address.message}</p>
+              )}
             </div>
           </motion.div>
 
-          <div className="flex justify-end pt-4 border-t">
+          <div className="flex justify-end pt-4 border-t gap-3">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Saving...
                 </>
               ) : (
                 "Create Profile"

@@ -1,21 +1,30 @@
-import { getBaseUrl } from "@/lib/api-base";
+import {
+    Profile,
+    ProfileType,
+    ProfileFormData,
+    ProfilesResponse,
+    CreateProfileResponse
+} from "@/types/profile-management";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 const request = async (
     url: string,
     accessToken: string,
     options: RequestInit = {}
 ) => {
-    const API_BASE_URL = getBaseUrl();
-    if (!API_BASE_URL) throw new Error("Base URL is not defined");
-
     const isFormData = options.body instanceof FormData;
 
-    const res = await fetch(`${API_BASE_URL}${url}`, {
+    // Ensure URL starts with / and prepend BASE_URL
+    const path = url.startsWith('/') ? url : `/${url}`;
+    const fullUrl = `${BASE_URL}${path}`;
+
+    const res = await fetch(fullUrl, {
         ...options,
         headers: {
             Authorization: `Bearer ${accessToken}`,
             ...(isFormData
-                ? {}
+                ? { Accept: "application/json" }
                 : {
                     Accept: "application/json",
                     "Content-Type": "application/json",
@@ -25,68 +34,73 @@ const request = async (
     });
 
     if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || `Request failed: ${res.status}`);
+        // Log the text response if JSON parsing fails to catch 500 HTML errors
+        const errText = await res.text();
+        let errData;
+        try {
+            errData = JSON.parse(errText);
+        } catch {
+            errData = { message: errText };
+        }
+
+        throw new Error(errData.message || errData.error || `Request failed: ${res.status}`);
     }
 
     return res.json();
 };
 
 export const apiService = {
-    fetcher: (url: string, token: string) =>
-        request(url, token).then((data) =>
-            url.includes("/api/third-party-profile") ? data.userProfile : data
-        ),
-
-    getProfile: (token: string) =>
-        request("/api/third-party-profile", token).then((d) => d.userProfile),
-
-    updateNotifications: (data: object, token: string) =>
-        request("/api/profile/notifications", token, {
-            method: "PUT",
-            body: JSON.stringify(data),
-        }),
-
-    updateProfile: (data: object, token: string) =>
-        request("/api/third-party-profile", token, {
-            method: "PUT",
-            body: JSON.stringify(data),
-        }).then((d) => d.userProfile),
-
-    changePassword: (data: object, token: string) =>
-        request("/api/third-party-profile/password", token, {
-            method: "POST",
-            body: JSON.stringify(data),
-        }),
-
-    uploadProfilePicture: (file: File, token: string) => {
+    uploadProfilePicture: async (
+        file: File,
+        token: string
+    ): Promise<{ success: boolean; imageUrl: string; message: string }> => {
         const formData = new FormData();
-        formData.append("profilePicture", file);
-        return request("/api/user/profile-picture", token, {
+        formData.append("image", file);
+
+        return request("/api/v1/portal/profiles/upload-image", token, {
             method: "POST",
             body: formData,
         });
     },
 
-    deleteAccount: (password: string, token: string) =>
-        request("/api/account", token, {
-            method: "DELETE",
-            body: JSON.stringify({ password }),
-        }),
+    fetchProfiles: (token: string): Promise<ProfilesResponse> =>
+        request("/api/v1/portal/profiles", token),
 
-    submitApplication: (payload: any, token: string) =>
-        request("/api/procurement/prequalification/applications", token, {
+    createProfile: (
+        type: ProfileType,
+        data: ProfileFormData[ProfileType],
+        token: string
+    ): Promise<CreateProfileResponse> =>
+        request(`/api/v1/portal/profiles/${type}`, token, {
             method: "POST",
-            body: JSON.stringify(payload),
-            headers: { "Idempotency-Key": crypto.randomUUID() },
+            body: JSON.stringify(data),
         }),
 
-    getPreferredCategories: (token: string) =>
-        request("/api/supplier/categories/preferred", token),
-
-    updatePreferredCategories: (category_ids: number[], token: string) =>
-        request("/api/supplier/categories/preferred", token, {
-            method: "POST",
-            body: JSON.stringify({ category_ids }),
+    updateProfile: (
+        thirdPartyId: string | number,
+        data: Partial<Profile>,
+        token: string
+    ): Promise<{ success: boolean; message: string }> =>
+        request(`/api/v1/portal/profiles/${thirdPartyId}`, token, {
+            method: "PUT",
+            body: JSON.stringify(data),
         }),
+
+    getProfileDetails: (
+        thirdPartyId: string | number,
+        token: string
+    ): Promise<Profile> =>
+        request(`/api/v1/portal/profiles/${thirdPartyId}`, token),
+
+    validatePortalToken: (token: string) =>
+        request("/api/v1/portal/auth/validate-token", token, {
+            method: "POST"
+        }),
+
+    logout: (token: string) =>
+        request("/api/v1/portal/auth/logout", token, {
+            method: "POST"
+        })
 };
+
+export const profileService = apiService;

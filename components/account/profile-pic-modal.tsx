@@ -8,25 +8,36 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/common/avatar"
 import { UploadCloud, X } from "lucide-react";
 import { toast } from "sonner";
 import { apiService } from "@/lib/api/profile";
-import { UserProfile } from "@/types/next-auth";
+import { BaseUser } from "@/types/next-auth";
 import { MutatorOptions } from "swr";
 import { motion } from "framer-motion";
 import { getInitials } from "@/lib/utils";
 
-export const ProfilePictureModal: React.FC<{
+interface ProfilePictureModalProps {
     isOpen: boolean;
     onClose: () => void;
-    profile: UserProfile;
-    mutateProfile: (data?: any, options?: boolean | MutatorOptions) => Promise<any>;
+    user: BaseUser;
+    mutateUser: (data?: any, options?: boolean | MutatorOptions) => Promise<any>;
     accessToken: string;
-}> = ({ isOpen, onClose, profile, mutateProfile, accessToken }) => {
+}
+
+export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
+    isOpen,
+    onClose,
+    user,
+    mutateUser,
+    accessToken,
+}) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isPending, startTransition] = useTransition();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) setSelectedFile(e.target.files[0]);
-        else setSelectedFile(null);
+        if (e.target.files && e.target.files[0]) {
+            setSelectedFile(e.target.files[0]);
+        } else {
+            setSelectedFile(null);
+        }
     };
 
     const handleUpload = useCallback(async () => {
@@ -34,21 +45,30 @@ export const ProfilePictureModal: React.FC<{
             toast.info("Please select a file to upload.");
             return;
         }
-        try {
-            startTransition(() => { });
-            const result = await apiService.uploadProfilePicture(selectedFile, accessToken);
-            await mutateProfile((prevProfile: UserProfile | undefined) => {
-                if (!prevProfile) return prevProfile;
-                return { ...prevProfile, imageUrl: result.imageUrl };
-            }, { revalidate: false });
-            toast.success("Profile picture updated successfully!");
-            onClose();
-            setSelectedFile(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        } catch (error: any) {
-            toast.error(error.message || "Failed to upload profile picture.");
-        }
-    }, [selectedFile, accessToken, mutateProfile, onClose]);
+
+        startTransition(async () => {
+            try {
+                // Note: result should contain the new image path/URL from Laravel
+                const result = await apiService.uploadProfilePicture(selectedFile, accessToken);
+
+                await mutateUser((prev: BaseUser | undefined) => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        // Update this key based on your backend storage logic
+                        profile: prev.profile ? { ...prev.profile, image_url: result.imageUrl } : null
+                    };
+                }, { revalidate: true });
+
+                toast.success("Profile picture updated successfully!");
+                onClose();
+                setSelectedFile(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+            } catch (error: any) {
+                toast.error(error.message || "Failed to upload profile picture.");
+            }
+        });
+    }, [selectedFile, accessToken, mutateUser, onClose]);
 
     const removeSelectedFile = useCallback(() => {
         setSelectedFile(null);
@@ -57,7 +77,7 @@ export const ProfilePictureModal: React.FC<{
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
+            <DialogContent asChild>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -67,56 +87,83 @@ export const ProfilePictureModal: React.FC<{
                 >
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-                            <div className="p-2 bg-gradient-primary rounded-lg">
-                                <UploadCloud className="h-5 w-5 text-primary-foreground" />
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                                <UploadCloud className="h-5 w-5 text-primary" />
                             </div>
                             Update Profile Picture
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="flex flex-col items-center gap-4">
-                        <Avatar className="h-32 w-32 border-4 border-primary/20 shadow-md">
-                            <AvatarImage
-                                src={selectedFile ? URL.createObjectURL(selectedFile) : profile.imageUrl ?? undefined}
-                                alt="Profile Preview"
-                                className="object-cover"
-                            />
-                            <AvatarFallback className="text-xl font-bold bg-muted text-muted-foreground">
-                                {getInitials(profile.firstName, profile.lastName)}
-                            </AvatarFallback>
-                        </Avatar>
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="relative group">
+                            <Avatar className="h-32 w-32 border-4 border-primary/20 shadow-xl transition-transform group-hover:scale-105">
+                                <AvatarImage
+                                    src={selectedFile ? URL.createObjectURL(selectedFile) : undefined}
+                                    alt="Profile Preview"
+                                    className="object-cover"
+                                />
+                                <AvatarFallback className="text-2xl font-bold bg-muted text-muted-foreground uppercase">
+                                    {getInitials(user.first_name, user.last_name)}
+                                </AvatarFallback>
+                            </Avatar>
 
-                        <label
-                            htmlFor="picture-upload"
-                            className="cursor-pointer bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"
-                        >
-                            <UploadCloud className="h-4 w-4" />
-                            {selectedFile ? selectedFile.name : "Choose File"}
-                            <input
-                                id="picture-upload"
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                className="hidden"
-                                disabled={isPending}
-                                ref={fileInputRef}
-                            />
-                        </label>
+                            {selectedFile && (
+                                <button
+                                    onClick={removeSelectedFile}
+                                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-lg hover:bg-destructive/90 transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
 
-                        {selectedFile && (
-                            <Button variant="ghost" size="icon" onClick={removeSelectedFile}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        )}
+                        <div className="w-full">
+                            <label
+                                htmlFor="picture-upload"
+                                className={`
+                  flex flex-col items-center justify-center w-full h-32 
+                  border-2 border-dashed rounded-lg cursor-pointer 
+                  transition-colors hover:bg-muted/50
+                  ${selectedFile ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
+                `}
+                            >
+                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <UploadCloud className={`h-8 w-8 mb-2 ${selectedFile ? 'text-primary' : 'text-muted-foreground'}`} />
+                                    <p className="text-sm font-medium text-foreground text-center px-4">
+                                        {selectedFile ? selectedFile.name : "Click to upload or drag and drop"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WEBP (MAX. 2MB)</p>
+                                </div>
+                                <input
+                                    id="picture-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                    disabled={isPending}
+                                    ref={fileInputRef}
+                                />
+                            </label>
+                        </div>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-6">
-                        <Button variant="outline" onClick={onClose} disabled={isPending}>
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                        <Button variant="ghost" onClick={onClose} disabled={isPending}>
                             Cancel
                         </Button>
-                        <Button onClick={handleUpload} disabled={isPending || !selectedFile} className="flex items-center gap-2">
-                            {isPending && <Spinner className="h-4 w-4 animate-spin" />}
-                            Upload Picture
+                        <Button
+                            onClick={handleUpload}
+                            disabled={isPending || !selectedFile}
+                            className="min-w-[140px]"
+                        >
+                            {isPending ? (
+                                <>
+                                    <Spinner className="mr-2 h-4 w-4" />
+                                    Uploading...
+                                </>
+                            ) : (
+                                "Save Changes"
+                            )}
                         </Button>
                     </div>
                 </motion.div>

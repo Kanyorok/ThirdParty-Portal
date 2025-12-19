@@ -18,9 +18,9 @@ import {
 
 import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
 
-import { sidebarItems } from "@/navigation/sidebar/sidebar-items"
+import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items"
 import { NavMainItem, NavSection, UserProfile } from "@/types/profile-types"
-import { getProfileMenu } from "@/navigation/sidebar/menu-filter"
+import { getProfileMenu } from "@/navigation/sidebar/profile-menu-filter"
 import { useProfileStore } from "@/store/profile-store"
 
 import { NavMain } from "@/app/dashboard/side-nav/nav-main"
@@ -66,7 +66,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         if (user.isTenant) profiles.push("Tenant")
         if (user.isCustomer) profiles.push("Customer")
 
-        return profiles.length > 0 ? profiles : ["Customer"]
+        return profiles.length > 0 ? profiles : ["Supplier"]
     }, [session, status])
 
     useEffect(() => {

@@ -11,7 +11,7 @@ export async function PUT(req: NextRequest) {
         const body = await req.json();
         const { currentPassword, newPassword } = body;
 
-        const res = await fetch(`${process.env.EXTERNAL_API_URL}/api/third-party-profile/password`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-party-profile/password`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

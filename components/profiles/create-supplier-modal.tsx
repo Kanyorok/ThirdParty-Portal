@@ -28,12 +28,6 @@ const businessTypes = [
   { value: "cooperative", label: "Cooperative" },
 ]
 
-const countries = [
-  { value: "KE", label: "Kenya" },
-  { value: "UG", label: "Uganda" },
-  { value: "TZ", label: "Tanzania" },
-  { value: "RW", label: "Rwanda" },
-]
 
 export function CreateSupplierModal({ open, onOpenChange, onSuccess }: CreateSupplierModalProps) {
   const [step, setStep] = useState(1)
@@ -165,14 +159,14 @@ export function CreateSupplierModal({ open, onOpenChange, onSuccess }: CreateSup
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="kra_pin">KRA PIN (Optional)</Label>
+                  <Label htmlFor="vat_number">VAT Number (Optional)</Label>
                   <Input
-                    id="kra_pin"
-                    {...register("kra_pin")}
-                    placeholder="Enter KRA PIN"
+                    id="vat_number"
+                    {...register("vat_number")}
+                    placeholder="Enter VAT number"
                   />
-                  {errors.kra_pin && (
-                    <p className="text-sm text-destructive">{errors.kra_pin.message}</p>
+                  {errors.vat_number && (
+                    <p className="text-sm text-destructive">{errors.vat_number.message}</p>
                   )}
                 </div>
               </motion.div>
@@ -198,39 +192,6 @@ export function CreateSupplierModal({ open, onOpenChange, onSuccess }: CreateSup
                   {errors.physical_address && (
                     <p className="text-sm text-destructive">{errors.physical_address.message}</p>
                   )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="country">Country (Optional)</Label>
-                    <Select
-                      onValueChange={(value) => setValue("country", value)}
-                      defaultValue={watch("country")}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {countries.map((country) => (
-                          <SelectItem key={country.value} value={country.value}>
-                            {country.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.country && (
-                      <p className="text-sm text-destructive">{errors.country.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City (Optional)</Label>
-                    <Input
-                      id="city"
-                      {...register("city")}
-                      placeholder="Enter city"
-                    />
-                  </div>
                 </div>
 
                 <div className="space-y-2">

@@ -29,26 +29,63 @@ export const userTypeApiSchema = z.enum(USER_TYPE_API_VALUES, {
     invalid_type_error: "Invalid user type",
 });
 
+// export const registerSchema = z.object({
+//     userType: userTypeSchema,
+//     firstName: z.string().min(1, "First Name is required"),
+//     lastName: z.string().min(1, "Last Name is required"),
+//     email: z.string().email("Invalid email address").min(1, "Email is required"),
+//     phone: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number cannot exceed 15 digits"),
+//     password: z
+//         .string()
+//         .min(8, "Password must be at least 8 characters")
+//         .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+//         .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+//         .regex(/[0-9]/, "Password must contain at least one number")
+//         .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
+//     confirmPassword: z.string().min(1, "Confirm Password is required"),
+// }).refine((data) => data.password === data.confirmPassword, {
+//     message: "Passwords do not match",
+//     path: ["confirmPassword"],
+// });
+
 export const registerSchema = z.object({
-    userType: userTypeSchema,
-    firstName: z.string().min(1, "First Name is required"),
-    lastName: z.string().min(1, "Last Name is required"),
-    email: z.string().email("Invalid email address").min(1, "Email is required"),
-    phone: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number cannot exceed 15 digits"),
-    password: z
-        .string()
+    firstName: z.string()
+        .min(2, "First name is too short")
+        .max(50, "First name is too long"),
+    lastName: z.string()
+        .min(2, "Last name is too short")
+        .max(50, "Last name is too long"),
+    email: z.string()
+        .email("Please enter a valid email address")
+        .toLowerCase()
+        .trim(),
+    phone: z.string()
+        .min(7, "Phone number is too short")
+        .max(20, "Phone number is too long"),
+    password: z.string()
         .min(8, "Password must be at least 8 characters")
         .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
         .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-        .regex(/[0-9]/, "Password must contain at least one number")
-        .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
-    confirmPassword: z.string().min(1, "Confirm Password is required"),
+        .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string(),
+
+    thirdPartyName: z.string().min(1, "Company name is required"),
+    tradingName: z.string().optional(),
+    registrationNumber: z.string().min(1, "Registration number is required"),
+    taxPIN: z.string().min(1, "Tax PIN is required"),
+    businessType: z.string().min(1, "Business type is required"),
+    countryId: z.string().min(1, "Country is required"),
+    thirdPartyType: z.string().default("1"),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
 });
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>;
+
+// export type RegisterFormInputs = z.infer<typeof registerSchema>;
+
+// export type RegisterFormInputs = z.infer<typeof registerSchema>;
 
 export type ThirdPartyDetailsFormInputs = {
     thirdPartyName: string;
@@ -167,34 +204,34 @@ export const mapUserTypeFromApi = (apiUserType: UserTypeApiValue): UserTypeValue
     return REVERSE_USER_TYPE_MAP[apiUserType];
 };
 
-export const transformRegisterFormDataForApi = (formData: RegisterFormInputs) => {
-    return {
-        FirstName: formData.firstName,
-        LastName: formData.lastName,
-        Email: formData.email,
-        Phone: formData.phone,
-        Password: formData.password,
-        Password_confirmation: formData.confirmPassword,
-        ThirdPartyType: mapUserTypeToApi(formData.userType),
-    };
-};
+// export const transformRegisterFormDataForApi = (formData: RegisterFormInputs) => {
+//     return {
+//         FirstName: formData.firstName,
+//         LastName: formData.lastName,
+//         Email: formData.email,
+//         Phone: formData.phone,
+//         Password: formData.password,
+//         Password_confirmation: formData.confirmPassword,
+//         ThirdPartyType: mapUserTypeToApi(formData.userType),
+//     };
+// };
 
-export const transformThirdPartyDetailsForApi = (formData: ThirdPartyDetailsFormInputs) => {
-    return {
-        ThirdPartyName: formData.thirdPartyName,
-        TradingName: formData.tradingName,
-        BusinessType: formData.businessType,
-        RegistrationNumber: formData.registrationNumber,
-        TaxPIN: formData.taxPIN,
-        VATNumber: formData.vatNumber,
-        Country: formData.country,
-        PhysicalAddress: formData.physicalAddress,
-        Email: formData.email,
-        Phone: formData.phone,
-        Website: formData.website,
-        ThirdPartyType: mapUserTypeToApi(formData.userType),
-    };
-};
+// export const transformThirdPartyDetailsForApi = (formData: ThirdPartyDetailsFormInputs) => {
+//     return {
+//         ThirdPartyName: formData.thirdPartyName,
+//         TradingName: formData.tradingName,
+//         BusinessType: formData.businessType,
+//         RegistrationNumber: formData.registrationNumber,
+//         TaxPIN: formData.taxPIN,
+//         VATNumber: formData.vatNumber,
+//         Country: formData.country,
+//         PhysicalAddress: formData.physicalAddress,
+//         Email: formData.email,
+//         Phone: formData.phone,
+//         Website: formData.website,
+//         ThirdPartyType: mapUserTypeToApi(formData.userType),
+//     };
+// };
 
 type ServerErrorMap<T> = {
     [key: string]: keyof T;
@@ -221,15 +258,15 @@ const createErrorMapper = <T extends Record<string, any>>(
     };
 };
 
-const registerFieldMap: ServerErrorMap<RegisterFormInputs> = {
-    FirstName: "firstName",
-    LastName: "lastName",
-    Email: "email",
-    Phone: "phone",
-    Password: "password",
-    Password_confirmation: "confirmPassword",
-    ThirdPartyType: "userType",
-};
+// const registerFieldMap: ServerErrorMap<RegisterFormInputs> = {
+//     FirstName: "firstName",
+//     LastName: "lastName",
+//     Email: "email",
+//     Phone: "phone",
+//     Password: "password",
+//     Password_confirmation: "confirmPassword",
+//     ThirdPartyType: "userType",
+// };
 
 const thirdPartyFieldMap: ServerErrorMap<ThirdPartyDetailsFormInputs> = {
     ThirdPartyName: "thirdPartyName",
@@ -246,8 +283,10 @@ const thirdPartyFieldMap: ServerErrorMap<ThirdPartyDetailsFormInputs> = {
     ThirdPartyType: "userType",
 };
 
-export const mapRegisterServerErrorsToFormFields = createErrorMapper<RegisterFormInputs>(registerFieldMap);
+// export const mapRegisterServerErrorsToFormFields = createErrorMapper<RegisterFormInputs>(registerFieldMap);
 export const mapThirdPartyServerErrorsToFormFields = createErrorMapper<ThirdPartyDetailsFormInputs>(thirdPartyFieldMap);
 
 export type { UserTypeValue, UserTypeApiValue };
 export { USER_TYPE_VALUES, USER_TYPE_API_VALUES, USER_TYPE_MAP, REVERSE_USER_TYPE_MAP };
+
+

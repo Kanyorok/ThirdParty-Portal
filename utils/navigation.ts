@@ -1,4 +1,4 @@
-import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
+import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items";
 import type { LucideIcon } from "lucide-react";
 
 export interface SearchableNavItem {

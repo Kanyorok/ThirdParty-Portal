@@ -25,92 +25,67 @@ interface ProfileManagementState {
 export const useProfileManagementStore = create<ProfileManagementState>()(
   devtools(
     persist(
-      (set, get) => ({
-        profiles: [],
-        activeProfileId: null,
-        isLoading: false,
-        error: null,
-
-        setProfiles: (profiles) => {
-          set({ profiles, error: null })
-          if (profiles.length > 0 && !get().activeProfileId) {
-            set({ activeProfileId: profiles[0].third_party_id })
+      (set, get) => {
+        const checkType = (p: Profile, type: ProfileType) => {
+          const mapping: Record<ProfileType, keyof Profile> = {
+            supplier: 'is_supplier',
+            tenant: 'is_tenant',
+            customer: 'is_customer'
           }
-        },
+          return !!p[mapping[type]]
+        }
 
-        addProfile: (profile) => {
-          set((state) => ({
+        return {
+          profiles: [],
+          activeProfileId: null,
+          isLoading: false,
+          error: null,
+
+          setProfiles: (profiles) => set({
+            profiles,
+            error: null,
+            activeProfileId: get().activeProfileId ?? profiles[0]?.third_party_id ?? null
+          }),
+
+          addProfile: (profile) => set((state) => ({
             profiles: [...state.profiles, profile],
             activeProfileId: profile.third_party_id,
             error: null,
-          }))
-        },
+          })),
 
-        updateProfile: (id, updates) => {
-          set((state) => ({
+          updateProfile: (id, updates) => set((state) => ({
             profiles: state.profiles.map((p) =>
-              p.third_party_id === id ? { ...p, ...updates } : p
+              p.third_party_id === id ? ({ ...p, ...updates } as Profile) : p
             ),
             error: null,
-          }))
-        },
+          })),
 
-        deleteProfile: (id) => {
-          set((state) => {
-            const newProfiles = state.profiles.filter((p) => p.third_party_id !== id)
-            const newActiveId =
-              state.activeProfileId === id
-                ? newProfiles[0]?.third_party_id || null
-                : state.activeProfileId
+          deleteProfile: (id) => set((state) => {
+            const profiles = state.profiles.filter((p) => p.third_party_id !== id)
             return {
-              profiles: newProfiles,
-              activeProfileId: newActiveId,
+              profiles,
+              activeProfileId: state.activeProfileId === id ? profiles[0]?.third_party_id ?? null : state.activeProfileId,
               error: null,
             }
-          })
-        },
+          }),
 
-        setActiveProfile: (id) => {
-          const profile = get().profiles.find((p) => p.third_party_id === id)
-          if (profile) {
-            set({ activeProfileId: id, error: null })
-          } else {
-            set({ error: 'Profile not found' })
-          }
-        },
+          setActiveProfile: (id) => {
+            const exists = get().profiles.some((p) => p.third_party_id === id)
+            set(exists ? { activeProfileId: id, error: null } : { error: 'Profile not found' })
+          },
 
-        setLoading: (loading) => set({ isLoading: loading }),
+          setLoading: (isLoading) => set({ isLoading }),
+          setError: (error) => set({ error }),
+          clearError: () => set({ error: null }),
 
-        setError: (error) => set({ error }),
-
-        clearError: () => set({ error: null }),
-
-        getActiveProfile: () => {
-          const { profiles, activeProfileId } = get()
-          return profiles.find((p) => p.third_party_id === activeProfileId) || null
-        },
-
-        getProfilesByType: (type) => {
-          return get().profiles.filter((p) => {
-            if (type === "supplier") return p.is_supplier
-            if (type === "tenant") return p.is_tenant
-            return p.is_customer
-          })
-        },
-
-        hasProfileType: (type) => {
-          return get().profiles.some((p) => {
-            if (type === "supplier") return p.is_supplier
-            if (type === "tenant") return p.is_tenant
-            return p.is_customer
-          })
-        },
-      }),
+          getActiveProfile: () => get().profiles.find((p) => p.third_party_id === get().activeProfileId) ?? null,
+          getProfilesByType: (type) => get().profiles.filter((p) => checkType(p, type)),
+          hasProfileType: (type) => get().profiles.some((p) => checkType(p, type)),
+        }
+      },
       {
         name: 'profile-management-storage',
-        partialize: (state) => ({
-          activeProfileId: state.activeProfileId,
-        }),
+        partialize: (state) => ({ activeProfileId: state.activeProfileId }),
       }
     ),
     { name: 'ProfileManagementStore' }

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
-
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
+import { getApiUrl } from "@/lib/config"
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -20,7 +19,12 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const response = await fetch(`${EXTERNAL_API_BASE}/api/v1/portal/profiles/customer`, {
+    const apiUrl = getApiUrl()
+    const requestUrl = `${apiUrl}/api/v1/portal/profiles/customer`
+
+    console.log("[Create Customer] Request URL:", requestUrl)
+
+    const response = await fetch(requestUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -46,9 +50,16 @@ export async function POST(request: NextRequest) {
       profile: data.data,
     })
   } catch (error) {
+    console.error("[Create Customer] Request failed:", error)
+
+    const isConfigError = error instanceof Error && error.message.includes("API URL is not configured")
+
     return NextResponse.json(
-      { error: "Failed to connect to backend" },
-      { status: 500 }
+      {
+        error: isConfigError ? "Configuration error" : "Failed to connect to backend",
+        message: error instanceof Error ? error.message : "Unknown error"
+      },
+      { status: isConfigError ? 500 : 503 }
     )
   }
 }

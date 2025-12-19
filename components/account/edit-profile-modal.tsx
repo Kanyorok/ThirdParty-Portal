@@ -8,7 +8,7 @@ import { Button } from '@/components/common/button'
 import { Edit, Loader2 } from 'lucide-react'
 import PhoneInput from 'react-phone-input-2'
 import { toast } from 'sonner'
-import { apiService } from '@/lib/api/profile'
+import { profileService } from '@/lib/api/profile'
 import { MutatorOptions } from 'swr'
 
 interface UserProfile {
@@ -58,12 +58,12 @@ export default function EditProfileModal({
     }, [isOpen, profile])
 
     const handleSave = useCallback(async () => {
-        startTransition(() => { })
         setSaving(true)
         try {
-            const updatedProfile = await apiService.updateProfile(formData, accessToken)
-            await mutateProfile(updatedProfile, { revalidate: false })
-            toast.success('Profile updated successfully!')
+            const response = await profileService.updateProfile('me', formData, accessToken)
+
+            await mutateProfile(formData, { revalidate: true })
+            toast.success(response.message || 'Profile updated successfully!')
             onClose()
         } catch (error: any) {
             toast.error(error.message || 'Failed to update profile')

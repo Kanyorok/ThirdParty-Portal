@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Check, ChevronsUpDown, Building2, Home, User, Plus, Loader2, Command as CommandIcon } from "lucide-react"
+import { Check, ChevronsUpDown, Building2, Home, User, Plus, Loader2 } from "lucide-react"
 import { Button } from "@/components/common/button"
 import {
   DropdownMenu,
@@ -11,11 +11,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuShortcut,
 } from "@/components/common/dropdown-menu"
 import { Badge } from "@/components/common/badge"
 import { useProfileManagement } from "@/hooks/use-profile-management"
-import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcuts"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import type { Profile } from "@/types/profile-management"
@@ -30,7 +28,7 @@ const profileIcons = {
 const profileColors = {
   supplier: "text-blue-500 bg-blue-500/10 border-blue-500/20",
   tenant: "text-green-500 bg-green-500/10 border-green-500/20",
-  customer: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+  customer: "text-purple-500 bg-purple-500/10 border-purple-200",
 }
 
 const profileLabels = {
@@ -56,64 +54,40 @@ export function ProfileSwitcher() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const hasFetched = useRef(false)
+
+  // Local state to track selection since the hook doesn't provide a setter
+  const [localActiveId, setLocalActiveId] = useState<number | null>(null)
 
   const {
-    profiles,
+    profiles = [],
     activeProfile,
-    setActiveProfile,
     fetchProfiles,
   } = useProfileManagement()
 
+  // Sync local selection with the hook's initial activeProfile
   useEffect(() => {
-    if (profiles.length === 0) {
-      fetchProfiles()
+    if (activeProfile && localActiveId === null) {
+      setLocalActiveId(activeProfile.third_party_id)
     }
-  }, [profiles.length, fetchProfiles])
+  }, [activeProfile, localActiveId])
 
-  useKeyboardShortcut([
-    {
-      key: "p",
-      ctrlKey: true,
-      shiftKey: true,
-      callback: () => setOpen(prev => !prev),
-      description: "Toggle profile switcher",
-    },
-    {
-      key: "1",
-      ctrlKey: true,
-      altKey: true,
-      callback: () => {
-        if (profiles[0]) handleProfileSelect(profiles[0].third_party_id)
-      },
-      description: "Switch to first profile",
-    },
-    {
-      key: "2",
-      ctrlKey: true,
-      altKey: true,
-      callback: () => {
-        if (profiles[1]) handleProfileSelect(profiles[1].third_party_id)
-      },
-      description: "Switch to second profile",
-    },
-    {
-      key: "3",
-      ctrlKey: true,
-      altKey: true,
-      callback: () => {
-        if (profiles[2]) handleProfileSelect(profiles[2].third_party_id)
-      },
-      description: "Switch to third profile",
-    },
-  ])
+  useEffect(() => {
+    if (!hasFetched.current) {
+      fetchProfiles()
+      hasFetched.current = true
+    }
+  }, [fetchProfiles])
 
   const handleProfileSelect = async (profileId: number) => {
     const selectedProfile = profiles.find(p => p.third_party_id === profileId)
     if (!selectedProfile) return
 
     setIsLoading(true)
+    // Simulating the switch process
     await new Promise(resolve => setTimeout(resolve, 300))
-    setActiveProfile(profileId)
+
+    setLocalActiveId(profileId)
     setIsLoading(false)
     setOpen(false)
 
@@ -129,7 +103,7 @@ export function ProfileSwitcher() {
     router.push("/dashboard/settings/profile")
   }
 
-  if (profiles.length === 0) {
+  if (profiles.length === 0 && !isLoading) {
     return (
       <Button
         variant="outline"
@@ -143,11 +117,14 @@ export function ProfileSwitcher() {
     )
   }
 
-  const activeProfileType = activeProfile ? getProfileType(activeProfile) : "customer"
-  const ActiveIcon = activeProfile ? profileIcons[activeProfileType] : User
-  const activeLabel = activeProfile ? getProfileLabel(activeProfile) : "Select Profile"
-  const activeType = activeProfile ? profileLabels[activeProfileType] : ""
-  const activeColor = activeProfile ? profileColors[activeProfileType] : ""
+  // Determine the display profile based on local selection
+  const currentActiveProfile = profiles.find(p => p.third_party_id === localActiveId) || activeProfile
+
+  const activeProfileType = currentActiveProfile ? getProfileType(currentActiveProfile) : "customer"
+  const ActiveIcon = currentActiveProfile ? profileIcons[activeProfileType] : User
+  const activeLabel = currentActiveProfile ? getProfileLabel(currentActiveProfile) : "Select Profile"
+  const activeType = currentActiveProfile ? profileLabels[activeProfileType] : ""
+  const activeColor = currentActiveProfile ? profileColors[activeProfileType] : ""
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -156,11 +133,11 @@ export function ProfileSwitcher() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          aria-label="Switch profile (Ctrl+Shift+P)"
+          aria-label="Switch profile"
           className={cn(
             "gap-2 min-w-[160px] sm:min-w-[200px] max-w-[240px] justify-between",
             "hover:bg-accent transition-colors border-2",
-            activeProfile && "border-opacity-50"
+            currentActiveProfile && "border-opacity-50"
           )}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -182,17 +159,13 @@ export function ProfileSwitcher() {
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <CommandIcon className="h-3 w-3 opacity-50 hidden lg:block" />
             <ChevronsUpDown className="h-4 w-4 opacity-50" />
           </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[320px] sm:w-[340px]">
-        <DropdownMenuLabel className="flex items-center justify-between">
+        <DropdownMenuLabel>
           <span className="text-xs text-muted-foreground font-semibold">Your Profiles</span>
-          <Badge variant="outline" className="text-[10px] px-2 py-0 font-mono">
-            ⌘⇧P
-          </Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
@@ -202,8 +175,7 @@ export function ProfileSwitcher() {
               const profileType = getProfileType(profile)
               const Icon = profileIcons[profileType]
               const label = getProfileLabel(profile)
-              const isSelected = activeProfile?.third_party_id === profile.third_party_id
-              const status = profile.approval_status || null
+              const isSelected = localActiveId === profile.third_party_id
 
               return (
                 <motion.div
@@ -248,29 +220,9 @@ export function ProfileSwitcher() {
                         <span className="text-xs text-muted-foreground font-medium">
                           {profileLabels[profileType]}
                         </span>
-                        {status && (
-                          <>
-                            <span className="text-xs text-muted-foreground">•</span>
-                            <Badge
-                              variant={
-                                status === "approved" ? "default" :
-                                status === "pending" ? "secondary" :
-                                "destructive"
-                              }
-                              className="text-[9px] px-1.5 py-0.5 font-semibold"
-                            >
-                              {status.toUpperCase()}
-                            </Badge>
-                          </>
-                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {index < 3 && (
-                        <DropdownMenuShortcut className="text-xs opacity-60">
-                          ⌃⌥{index + 1}
-                        </DropdownMenuShortcut>
-                      )}
                       {isSelected && !isLoading && (
                         <motion.div
                           initial={{ scale: 0 }}

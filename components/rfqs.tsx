@@ -66,7 +66,7 @@ export function RfqsFilter() {
                 const params = new URLSearchParams();
                 if (debouncedSearchTerm) params.set("q", debouncedSearchTerm);
                 if (status && status !== "all") params.set("status", status);
-                const url = `/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`;
+                const url = `${process.env.NEXT_PUBLIC_API_URL}/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`;
                 const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
                 const contentType = res.headers.get("content-type") || "";
                 const data = contentType.includes("application/json") ? await res.json() : await res.text();

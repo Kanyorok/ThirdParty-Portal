@@ -1,35 +1,42 @@
-import CredentialsProvider from "next-auth/providers/credentials"
-import type { NextAuthOptions, User, Session } from "next-auth"
-import type { JWT } from "next-auth/jwt"
-import type { BaseUser, ThirdParty, ThirdPartyTypeEntry } from "@/types/next-auth"
+import CredentialsProvider from "next-auth/providers/credentials";
+import type { NextAuthOptions, User, Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
+import type { BaseUser } from "@/types/next-auth";
 
 type TransformedUser = {
-  user_id: number
-  first_name: string
-  last_name: string
-  full_name: string
-  email: string
-  phone: string | null
-  email_verified: boolean
-  is_active: boolean
-  has_profile: boolean
-  is_approved: boolean
+  user_id: number;
+  third_party_id: number | null;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  email_verified: boolean;
+  is_active: boolean;
+  has_profile: boolean;
+  is_approved: boolean;
   profile: {
-    name: string | null
-    trading_name: string | null
-    approval_status: string | null
-  } | null
-}
+    name: string | null;
+    trading_name: string | null;
+    approval_status: string | null;
+  } | null;
+};
 
 type AuthResponse = {
-  success: boolean
-  message: string
-  user: TransformedUser
-  token: string
-}
+  success: boolean;
+  message: string;
+  user: TransformedUser;
+  token: string;
+};
 
-const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
-const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || ""
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
+
+if (!baseUrl && typeof window === "undefined") {
+  console.warn(
+    "Connection not set!"
+  );
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -41,168 +48,97 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials): Promise<User | null> {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("MISSING_FIELDS")
-        }
-        if (!baseUrl) {
-          throw new Error("CONFIG_ERROR: API URL not set")
+          throw new Error("MISSING_FIELDS");
         }
 
-        const payload = {
-          email: credentials.email,
-          password: credentials.password,
-        }
+        const res = await fetch(`${baseUrl}/api/v1/portal/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+          }),
+        });
 
-        let res: Response
-        let text = ""
+        const text = await res.text();
+        let data: Partial<AuthResponse> | null = null;
         try {
-          res = await fetch(`${baseUrl}/api/v1/portal/auth/login`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify(payload),
-          })
-          text = await res.text()
-        } catch (error) {
-          throw new Error("NETWORK_ERROR")
-        }
-
-        let data: Partial<AuthResponse> | null = null
-        try {
-          data = text ? JSON.parse(text) : null
-        } catch (parseError) {
-          throw new Error("SERVER_ERROR: Invalid response")
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          throw new Error("SERVER_ERROR");
         }
 
         if (!res.ok || !data?.success || !data?.user || !data?.token) {
-          const status = res.status
-          const message = data?.message || `Login failed (${status}).`
-
-          if (status === 401 || status === 403 || status === 422) {
-            throw new Error(`AUTH_FAILURE: ${message}`)
-          }
-
-          throw new Error(`SERVER_ERROR: ${message}`)
+          throw new Error(data?.message || "AUTH_FAILURE");
         }
 
-        const rawUser = data.user
-        const thirdPartyProfile = rawUser.profile
+        const u = data.user;
 
-        const thirdPartyObj: ThirdParty | null = thirdPartyProfile && rawUser.has_profile ? {
-          id: rawUser.user_id,
-          thirdPartyName: thirdPartyProfile.name,
-          tradingName: thirdPartyProfile.trading_name,
-          label: thirdPartyProfile.trading_name || thirdPartyProfile.name || rawUser.full_name,
-
-          businessType: null,
-          registrationNumber: null,
-          taxPin: null,
-          kraNo: null,
-          idNumber: null,
-          passportNo: null,
-          country: null,
-          physicalAddress: null,
-          website: null,
-
-          email: rawUser.email,
-          phone: rawUser.phone ?? null,
-          approvalStatus: thirdPartyProfile.approval_status ?? null,
-          status: rawUser.is_active ? 'Active' : 'Inactive',
-          thirdPartyType: null,
-          isPrequalified: false,
-
-          createdOn: null,
-          modifiedOn: null,
-          createdBy: null,
-          deletedOn: null,
-        } : null
-
-        const loggedIn: User = {
-          id: String(rawUser.user_id),
-          userId: String(rawUser.user_id),
-          firstName: rawUser.first_name,
-          lastName: rawUser.last_name,
-          fullName: rawUser.full_name,
-          email: rawUser.email,
-          phone: rawUser.phone ?? null,
-          imageId: null,
-          gender: null,
-          thirdPartyId: rawUser.user_id,
-          isActive: rawUser.is_active,
-          isApproved: rawUser.is_approved,
-          isSupplier: false,
-          isTenant: false,
-          isCustomer: false,
-          types: [],
-          emailVerifiedOn: rawUser.email_verified ? new Date().toISOString() : null,
-          createdOn: new Date().toISOString(),
-          modifiedOn: new Date().toISOString(),
-          thirdParty: thirdPartyObj,
+        return {
+          id: String(u.user_id),
+          user_id: u.user_id,
+          third_party_id: u.third_party_id,
+          first_name: u.first_name,
+          last_name: u.last_name,
+          full_name: u.full_name,
+          email: u.email,
+          phone: u.phone,
+          email_verified: u.email_verified,
+          is_active: u.is_active,
+          has_profile: u.has_profile,
+          is_approved: u.is_approved,
+          profile: u.profile,
           accessToken: data.token,
-        } as User
-
-        return loggedIn
+        } as User;
       },
     }),
   ],
   session: { strategy: "jwt", maxAge: 23 * 60 * 60 },
-  jwt: { secret: NEXTAUTH_SECRET },
   callbacks: {
     async jwt({ token, user }): Promise<JWT> {
       if (user) {
         const u = user as unknown as BaseUser & { accessToken: string };
         return {
           ...token,
-          id: u.id,
-          userId: u.userId,
-          firstName: u.firstName,
-          lastName: u.lastName,
+          user_id: u.user_id,
+          third_party_id: u.third_party_id,
+          first_name: u.first_name,
+          last_name: u.last_name,
+          full_name: u.full_name,
           email: u.email,
+          phone: u.phone,
+          email_verified: u.email_verified,
+          is_active: u.is_active,
+          has_profile: u.has_profile,
+          is_approved: u.is_approved,
+          profile: u.profile,
           accessToken: u.accessToken,
-          thirdPartyId: u.thirdPartyId,
-          isActive: u.isActive,
-          isApproved: u.isApproved,
-          isSupplier: u.isSupplier,
-          isTenant: u.isTenant,
-          isCustomer: u.isCustomer,
-          types: u.types,
-          thirdParty: u.thirdParty,
-        } as JWT
+        };
       }
-      return token as JWT
+      return token;
     },
     async session({ session, token }): Promise<Session> {
-      const t = token as unknown as BaseUser & { accessToken?: string }
+      const t = token as any;
       session.user = {
-        id: t.id,
-        userId: t.userId,
-        firstName: t.firstName,
-        lastName: t.lastName,
-        fullName: t.fullName,
-        email: t.email ?? "",
-        phone: t.phone ?? null,
-        imageId: t.imageId ?? null,
-        gender: t.gender ?? null,
-        thirdPartyId: t.thirdPartyId,
-        isActive: t.isActive,
-        isApproved: t.isApproved,
-        isSupplier: t.isSupplier,
-        isTenant: t.isTenant ?? false,
-        isCustomer: t.isCustomer ?? false,
-        types: t.types ?? [],
-        emailVerifiedOn: t.emailVerifiedOn ?? null,
-        createdOn: t.createdOn,
-        modifiedOn: t.modifiedOn,
-        thirdParty: t.thirdParty ?? null,
-        isDeleted: t.isDeleted ?? false,
-      }
+        user_id: t.user_id,
+        third_party_id: t.third_party_id,
+        first_name: t.first_name,
+        last_name: t.last_name,
+        full_name: t.full_name,
+        email: t.email,
+        phone: t.phone,
+        email_verified: t.email_verified,
+        is_active: t.is_active,
+        has_profile: t.has_profile,
+        is_approved: t.is_approved,
+        profile: t.profile,
+      } as BaseUser;
 
-      session.accessToken = t.accessToken
-      return session
+      session.accessToken = t.accessToken;
+      return session;
     },
   },
   pages: { signIn: "/signin", error: "/signin" },
   secret: NEXTAUTH_SECRET,
-  debug: true,
-}
+  debug: process.env.NODE_ENV === "development",
+};

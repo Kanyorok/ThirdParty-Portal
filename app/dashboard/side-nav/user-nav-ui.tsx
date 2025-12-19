@@ -32,9 +32,11 @@ import { cn, getInitials } from "@/lib/utils"
 interface UserData {
     firstName?: string | null
     lastName?: string | null
+    fullName?: string | null
     email?: string | null
-    isApproved: boolean
+    isActive?: boolean
     imageUrl?: string | null
+    imageId?: number | null
 }
 
 interface UserNavProps {
@@ -173,7 +175,7 @@ const UserAvatar = memo(({ user, size = "default" }: { user: UserData; size?: "d
                     {fallbackInitials}
                 </AvatarFallback>
             </Avatar>
-            {user.isApproved && size === "large" && (
+            {user.isActive && size === "large" && (
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -279,7 +281,7 @@ export const UserNavUI = memo(
                                 {shortName}
                             </span>
                             {/* <span className="w-full truncate text-xs leading-tight text-muted-foreground">
-                                {user.isApproved ? "Verified" : "Pending Verification"}
+                                {user.isActive ? "Verified" : "Pending Verification"}
                             </span> */}
                         </div>
                         <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180 sm:block" />
@@ -326,7 +328,7 @@ export const UserNavUI = memo(
                                         transition={{ delay: 0.1, duration: 0.3 }}
                                         className="mt-3 flex items-center"
                                     >
-                                        {user.isApproved ? (
+                                        {user.isActive ? (
                                             <Badge className="inline-flex items-center gap-1.5 rounded-full border-0 bg-green-500/15 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/20 dark:text-green-400">
                                                 <BadgeCheck className="h-3.5 w-3.5" />
                                                 Verified

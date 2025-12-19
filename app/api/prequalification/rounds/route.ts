@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
+const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export async function GET(request: NextRequest) {
     // Get session for authentication
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     try {
         // Backend doesn't support query parameters, so call it without any
         const res = await fetch(`${EXTERNAL_API_BASE}/api/prequalification/rounds`, {
-            headers: { 
+            headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${session.accessToken}`,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         // Apply search filter
         if (q.trim()) {
             const searchTerm = q.toLowerCase();
-            rounds = rounds.filter((round: any) => 
+            rounds = rounds.filter((round: any) =>
                 round.title?.toLowerCase().includes(searchTerm) ||
                 round.description?.toLowerCase().includes(searchTerm)
             );
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         // Apply sorting
         rounds.sort((a: any, b: any) => {
             let aValue, bValue;
-            
+
             if (sortBy === "title") {
                 aValue = a.title || "";
                 bValue = b.title || "";
@@ -105,9 +105,9 @@ export async function GET(request: NextRequest) {
             filters: { status, q }
         };
 
-        return NextResponse.json(responseData, { 
-            status: 200, 
-            headers: { "Cache-Control": "no-store" } 
+        return NextResponse.json(responseData, {
+            status: 200,
+            headers: { "Cache-Control": "no-store" }
         });
 
     } catch (err: any) {

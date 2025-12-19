@@ -4,52 +4,64 @@ export interface ThirdPartyTypeEntry {
     categoryId: number | null;
 }
 
-export interface ThirdParty {
-    id: number;
-    thirdPartyName: string | null;
-    tradingName: string | null;
-    label: string;
-    businessType: string | null;
-    registrationNumber: string | null;
-    taxPin: string | null;
-    kraNo: string | null;
-    idNumber: string | null;
-    passportNo: string | null;
-    country: string | null;
-    physicalAddress: string | null;
-    email: string;
+export interface ThirdPartyProfile {
+    third_party_id: number;
+    third_party_name: string | null;
+    trading_name: string | null;
+    registration_number: string | null;
+    tax_pin: string | null;
+    email: string | null;
     phone: string | null;
+    physical_address: string | null;
     website: string | null;
-    approvalStatus: string | null;
+    country_id: number | null;
+    location_id: number | null;
+    image_id: number | null;
     status: string;
-    thirdPartyType: string | null;
-    isPrequalified: boolean | null;
-    createdOn: string | null;
-    modifiedOn: string | null;
-    createdBy: number | null;
-    deletedOn: string | null;
+    is_active: boolean;
+    is_supplier: boolean;
+    is_tenant: boolean;
+    is_customer: boolean;
+    approval_status: string | null;
+    is_prequalified: boolean;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 export interface BaseUser {
-    id: number;
-    userId: string;
-    firstName: string;
-    lastName: string;
-    fullName: string;
+    user_id: number;
+    third_party_id: number | null;
+    first_name: string;
+    last_name: string;
+    full_name: string;
     email: string;
-    phone?: string | null;
-    imageId?: number | null;
-    gender?: string | null;
-    thirdPartyId: number;
-    isActive: boolean;
-    isApproved: boolean;
-    isSupplier: boolean;
-    isTenant: boolean;
-    isCustomer: boolean;
-    types?: ThirdPartyTypeEntry[];
-    emailVerifiedOn?: string | null;
-    createdOn: string;
-    modifiedOn: string;
-    thirdParty?: ThirdParty | null;
-    isDeleted?: boolean | null;
+    phone: string | null;
+    email_verified: boolean;
+    is_active: boolean;
+    has_profile: boolean;
+    is_approved: boolean;
+    profile: {
+        name: string | null;
+        trading_name: string | null;
+        approval_status: string | null;
+    } | null;
+}
+
+export interface BackendProfileResponse {
+    success: boolean;
+    profiles: ThirdPartyProfile[];
+}
+
+export interface BackendUser {
+    id: string;
+    email: string;
+    name: string;
+    is_active: boolean;
+    has_profile: boolean;
+    email_verified: boolean;
+}
+
+export interface TokenValidationResponse {
+    valid: boolean;
+    user: BackendUser;
 }

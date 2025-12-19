@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import type React from "react";
-import { memo, useMemo, useCallback } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import type React from "react"
+import { memo, useMemo, useCallback } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 import {
   ChevronRight,
   ExternalLink,
   Clock,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/common/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/common/collapsible"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-} from "@/components/common/dropdown-menu";
+} from "@/components/common/dropdown-menu"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -31,46 +31,46 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from "@/components/common/sidebar";
-import { Badge } from "@/components/common/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/common/tooltip";
-import { cn } from "@/lib/utils";
+} from "@/components/common/sidebar"
+import { Badge } from "@/components/common/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/common/tooltip"
+import { cn } from "@/lib/utils"
 
 export interface NavSubItem {
-  readonly title: string;
-  readonly url: string;
-  readonly icon?: React.ComponentType<{ className?: string }>;
-  readonly comingSoon?: boolean;
-  readonly newTab?: boolean;
-  readonly badge?: string;
-  readonly description?: string;
-  readonly disabled?: boolean;
+  readonly title: string
+  readonly url: string
+  readonly icon?: React.ComponentType<{ className?: string }>
+  readonly comingSoon?: boolean
+  readonly newTab?: boolean
+  readonly badge?: string
+  readonly description?: string
+  readonly disabled?: boolean
 }
 
 export interface NavMainItem {
-  readonly title: string;
-  readonly url: string;
-  readonly icon?: React.ComponentType<{ className?: string }>;
-  readonly subItems?: readonly NavSubItem[];
-  readonly comingSoon?: boolean;
-  readonly newTab?: boolean;
-  readonly badge?: string;
-  readonly description?: string;
-  readonly disabled?: boolean;
+  readonly title: string
+  readonly url: string
+  readonly icon?: React.ComponentType<{ className?: string }>
+  readonly subItems?: readonly NavSubItem[]
+  readonly comingSoon?: boolean
+  readonly newTab?: boolean
+  readonly badge?: string
+  readonly description?: string
+  readonly disabled?: boolean
 }
 
 export interface NavGroup {
-  readonly id: string;
-  readonly label?: string;
-  readonly items: readonly NavMainItem[];
-  readonly collapsible?: boolean;
-  readonly defaultOpen?: boolean;
+  readonly id: string
+  readonly label?: string
+  readonly items: readonly NavMainItem[]
+  readonly collapsible?: boolean
+  readonly defaultOpen?: boolean
 }
 
 interface NavMainProps {
-  readonly items: readonly NavGroup[];
-  readonly onItemClick?: (item: NavMainItem | NavSubItem) => void;
-  readonly className?: string;
+  readonly items: readonly NavGroup[]
+  readonly onItemClick?: (item: NavMainItem | NavSubItem) => void
+  readonly className?: string
 }
 
 const ComingSoonBadge = memo(() => (
@@ -78,18 +78,18 @@ const ComingSoonBadge = memo(() => (
     <Clock className="mr-1 h-3 w-3" />
     Soon
   </Badge>
-));
-ComingSoonBadge.displayName = "ComingSoonBadge";
+))
+ComingSoonBadge.displayName = "ComingSoonBadge"
 
 const NavBadge = memo(({ badge, variant = "default" }: { badge: string; variant?: "default" | "secondary" }) => (
   <Badge variant={variant} className="ml-auto text-xs">
     {badge}
   </Badge>
-));
-NavBadge.displayName = "NavBadge";
+))
+NavBadge.displayName = "NavBadge"
 
-const ExternalLinkIcon = memo(() => <ExternalLink className="ml-1 h-3 w-3 opacity-60" />);
-ExternalLinkIcon.displayName = "ExternalLinkIcon";
+const ExternalLinkIcon = memo(() => <ExternalLink className="ml-1 h-3 w-3 opacity-60" />)
+ExternalLinkIcon.displayName = "ExternalLinkIcon"
 
 const NavItemExpanded = memo(
   ({
@@ -98,19 +98,19 @@ const NavItemExpanded = memo(
     isSubmenuOpen,
     onItemClick,
   }: {
-    item: NavMainItem;
-    isActive: (url: string, subItems?: readonly NavSubItem[]) => boolean;
-    isSubmenuOpen: (subItems?: readonly NavSubItem[]) => boolean;
-    onItemClick?: (item: NavMainItem | NavSubItem) => void;
+    item: NavMainItem
+    isActive: (url: string, subItems?: readonly NavSubItem[]) => boolean
+    isSubmenuOpen: (subItems?: readonly NavSubItem[]) => boolean
+    onItemClick?: (item: NavMainItem | NavSubItem) => void
   }) => {
     const handleItemClick = useCallback(() => {
       if (!item.disabled && !item.comingSoon) {
-        onItemClick?.(item);
+        onItemClick?.(item)
       }
-    }, [item, onItemClick]);
+    }, [item, onItemClick])
 
-    const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems]);
-    const isOpen = useMemo(() => isSubmenuOpen(item.subItems), [isSubmenuOpen, item.subItems]);
+    const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems])
+    const isOpen = useMemo(() => isSubmenuOpen(item.subItems), [isSubmenuOpen, item.subItems])
 
     const menuButtonContent = (
       <>
@@ -129,7 +129,7 @@ const NavItemExpanded = memo(
           )}
         </div>
       </>
-    );
+    )
 
     if (!item.subItems) {
       const button = (
@@ -146,7 +146,7 @@ const NavItemExpanded = memo(
         >
           {menuButtonContent}
         </SidebarMenuButton>
-      );
+      )
 
       return (
         <SidebarMenuItem>
@@ -165,7 +165,7 @@ const NavItemExpanded = memo(
             </Link>
           )}
         </SidebarMenuItem>
-      );
+      )
     }
 
     return (
@@ -204,7 +204,7 @@ const NavItemExpanded = memo(
                     {subItem.comingSoon && <ComingSoonBadge />}
                     {subItem.badge && !subItem.comingSoon && <NavBadge badge={subItem.badge} />}
                   </>
-                );
+                )
 
                 return (
                   <SidebarMenuSubItem key={subItem.title}>
@@ -241,16 +241,16 @@ const NavItemExpanded = memo(
                       </SidebarMenuSubButton>
                     )}
                   </SidebarMenuSubItem>
-                );
+                )
               })}
             </SidebarMenuSub>
           </CollapsibleContent>
         </SidebarMenuItem>
       </Collapsible>
-    );
+    )
   },
-);
-NavItemExpanded.displayName = "NavItemExpanded";
+)
+NavItemExpanded.displayName = "NavItemExpanded"
 
 const NavItemCollapsed = memo(
   ({
@@ -258,19 +258,19 @@ const NavItemCollapsed = memo(
     isActive,
     onItemClick,
   }: {
-    item: NavMainItem;
-    isActive: (url: string, subItems?: readonly NavSubItem[]) => boolean;
-    onItemClick?: (item: NavMainItem | NavSubItem) => void;
+    item: NavMainItem
+    isActive: (url: string, subItems?: readonly NavSubItem[]) => boolean
+    onItemClick?: (item: NavMainItem | NavSubItem) => void
   }) => {
-    const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems]);
+    const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems])
     const handleItemClick = useCallback(
       (clickedItem: NavMainItem | NavSubItem) => {
         if (!clickedItem.disabled && !clickedItem.comingSoon) {
-          onItemClick?.(clickedItem);
+          onItemClick?.(clickedItem)
         }
       },
       [onItemClick],
-    );
+    )
 
     if (!item.subItems) {
       const button = (
@@ -290,7 +290,7 @@ const NavItemCollapsed = memo(
             <span className="sr-only">{item.title}</span>
           </Link>
         </SidebarMenuButton>
-      );
+      )
 
       return (
         <SidebarMenuItem>
@@ -312,7 +312,7 @@ const NavItemCollapsed = memo(
             button
           )}
         </SidebarMenuItem>
-      );
+      )
     }
 
     const buttonContent = (
@@ -324,7 +324,7 @@ const NavItemCollapsed = memo(
           <div className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-amber-500" />
         )}
       </>
-    );
+    )
 
     return (
       <SidebarMenuItem>
@@ -403,33 +403,33 @@ const NavItemCollapsed = memo(
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
-    );
+    )
   },
-);
-NavItemCollapsed.displayName = "NavItemCollapsed";
+)
+NavItemCollapsed.displayName = "NavItemCollapsed"
 
 export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) => {
-  const pathname = usePathname();
-  const { state, isMobile } = useSidebar();
+  const pathname = usePathname()
+  const { state, isMobile } = useSidebar()
 
   const isItemActive = useCallback(
     (url: string, subItems?: readonly NavSubItem[]) => {
       if (subItems?.length) {
         return subItems.some((sub) => {
-          return pathname === sub.url || (sub.url !== "/" && pathname.startsWith(sub.url));
-        });
+          return pathname === sub.url || (sub.url !== "/" && pathname.startsWith(sub.url))
+        })
       }
-      return pathname === url || (url !== "/" && pathname.startsWith(url));
+      return pathname === url || (url !== "/" && pathname.startsWith(url))
     },
     [pathname],
-  );
+  )
 
   const isSubmenuOpen = useCallback(
     (subItems?: readonly NavSubItem[]) => {
-      return subItems?.some((sub) => pathname === sub.url || (sub.url !== "/" && pathname.startsWith(sub.url))) ?? false;
+      return subItems?.some((sub) => pathname === sub.url || (sub.url !== "/" && pathname.startsWith(sub.url))) ?? false
     },
     [pathname],
-  );
+  )
 
   const navigationGroups = useMemo(
     () =>
@@ -460,9 +460,9 @@ export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) =>
         </SidebarGroup>
       )),
     [items, state, isMobile, isItemActive, isSubmenuOpen, onItemClick],
-  );
+  )
 
-  return <div className={className}>{navigationGroups}</div>;
-});
+  return <div className={className}>{navigationGroups}</div>
+})
 
-NavMain.displayName = "NavMain";
+NavMain.displayName = "NavMain"
