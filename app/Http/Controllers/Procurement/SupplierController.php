@@ -152,7 +152,7 @@ class SupplierController extends Controller
                 $this->workflowService->submit($supplierMaster, Auth::user());
             } catch (\Exception $e) {
                 // Log error but allow creation to succeed, specific error handling dependent on requirements
-                \Illuminate\Support\Facades\Log::error("Failed to auto-submit supplier workflow: " . $e->getMessage());
+
             }
         }
 

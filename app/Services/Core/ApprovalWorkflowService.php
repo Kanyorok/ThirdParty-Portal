@@ -142,11 +142,7 @@ abstract class ApprovalWorkflowService
 
         $firstStage = $this->getPermissionFromStage($table);
         if ($firstStage) {
-            Log::info("Using first stage as current", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'stageId' => $firstStage->Id,
-            ]);
+
             return (int)$firstStage->Id;
         }
 
@@ -214,7 +210,7 @@ abstract class ApprovalWorkflowService
                 'ModifiedOn' => now(),
             ];
 
-            Log::info("Creating WorkflowHistory entry", ['data' => $data]);
+
 
             $entry = WorkflowHistory::create($data);
 
@@ -228,11 +224,7 @@ abstract class ApprovalWorkflowService
                 throw new Exception("Failed to create workflow history entry");
             }
 
-            Log::info("WorkflowHistory entry created successfully", [
-                'historyId' => $entry->Id,
-                'table' => $table,
-                'sourceId' => $sourceId,
-            ]);
+
 
             return $entry;
         } catch (\Throwable $e) {
@@ -263,18 +255,11 @@ abstract class ApprovalWorkflowService
         $statusValueToSet = $this->getStatusValueForModule($source, $status);
         $table = (new $class)->getTable();
 
-        Log::info("=== EXECUTING WORKFLOW ACTION ===", [
-            'source_alias' => $source,
-            'sourceId' => $sourceId,
-            'resolved_table' => $table,
-            'actor' => $actor->Id,
-            'statusId' => $status->ID,
-            'statusDescription' => $status->Description,
-        ]);
+
 
         // Get current stage ID BEFORE calling SP
         $currentStageId = $this->getCurrentStageId($table, $sourceId);
-        Log::info("Current stage ID before action", ['currentStageId' => $currentStageId]);
+
 
         //  Check state BEFORE calling SP
         $this->logWorkflowState($table, $sourceId, 'BEFORE_ACTION');
@@ -307,7 +292,7 @@ abstract class ApprovalWorkflowService
                 ]
             );
 
-            Log::info("p_ProcessWorkflowAction result", ['result' => $result]);
+
 
             if (!empty($result) && isset($result[0]->Status)) {
                 if ($result[0]->Status === 'ERROR') {
@@ -332,20 +317,11 @@ abstract class ApprovalWorkflowService
 
             //  Use the properly defined $currentStageId
             if ($result['stageCompleted']) {
-                Log::info("Stage completed, processing next steps (advance or finalize)", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                    'currentStageId' => $currentStageId,
-                ]);
+
 
                 // Always call advanceToNextStage - it handles both moving to next stage AND finalizing if no next stage exists
                 $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id, $statusColumn);
             } else {
-                Log::info("Stage not completed yet", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                    'currentStageId' => $currentStageId,
-                ]);
             }
 
             return $result;
@@ -459,12 +435,7 @@ abstract class ApprovalWorkflowService
     ): bool {
         $result = $this->_executeWorkflowAction($actor, $status, $source, $sourceId, $remarks, $statusColumn);
 
-        Log::info("Approve action completed", [
-            'success' => $result['success'] ?? false,
-            'message' => $result['message'] ?? 'No message',
-            'workflowStatus' => $result['workflowStatus'] ?? 'Unknown',
-            'stageCompleted' => $result['stageCompleted'] ?? false,
-        ]);
+
 
         return $result['success'] ?? false;
     }
@@ -546,12 +517,7 @@ abstract class ApprovalWorkflowService
         $table = $model->getTable();
         $sourceId = $sourceId ?? $model->getKey();
 
-        Log::info("=== STARTING WORKFLOW SUBMISSION ===", [
-            'source_alias' => $source,
-            'table' => $table,
-            'sourceId' => $sourceId,
-            'actorId' => $actor->Id,
-        ]);
+
 
         try {
             // Start a SINGLE transaction for everything
@@ -590,7 +556,7 @@ abstract class ApprovalWorkflowService
                 $amount
             );
 
-            Log::info("=== WORKFLOW HISTORY CREATED ===", ['historyId' => $history->Id]);
+
 
             // Call stored procedure (still within the same transaction)
             $result = DB::select(
@@ -602,7 +568,7 @@ abstract class ApprovalWorkflowService
                 ]
             );
 
-            Log::info("p_ProcessWorkflowPending result", ['result' => $result]);
+
 
             // Check for errors returned by SP
             if (!empty($result) && isset($result[0]->Status)) {
@@ -612,13 +578,6 @@ abstract class ApprovalWorkflowService
                     ]);
                     throw new ErroredException($result[0]->Message ?? 'Failed to create pending approvals');
                 }
-
-                Log::info("Pending approvals created successfully", [
-                    'insertedCount' => $result[0]->InsertedPendingCount ?? 0,
-                    'approvalsRequired' => $result[0]->ApprovalsRequired ?? 'N/A',
-                    'effectivePermission' => $result[0]->EffectivePermissionId ?? 'N/A',
-                    'limitType' => $result[0]->LimitType ?? 'DEFAULT',
-                ]);
             }
 
             // Log state after creating pending approvals
@@ -626,7 +585,7 @@ abstract class ApprovalWorkflowService
 
             // Commit everything together
             DB::commit();
-            Log::info("Workflow submission completed successfully");
+
 
             return true;
         } catch (ErroredException $e) {
@@ -842,10 +801,7 @@ abstract class ApprovalWorkflowService
                     'ModifiedBy' => $actor->Id,
                 ]);
 
-            Log::info("Workflow cancelled", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-            ]);
+
 
             DB::commit();
             return true;
@@ -861,13 +817,6 @@ abstract class ApprovalWorkflowService
     {
         try {
             DB::beginTransaction();
-
-            Log::info("=== ADVANCING TO NEXT STAGE ===", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'currentStageId' => $currentStageId,
-                'userId' => $userId,
-            ]);
 
             if (!$currentStageId) {
                 Log::warning("Cannot advance: currentStageId is null", ['table' => $table, 'sourceId' => $sourceId]);
@@ -889,13 +838,6 @@ abstract class ApprovalWorkflowService
             $currentOrder = $currentStage->Order;
             $workflowId = $currentStage->WorkFlowId;
 
-            Log::info("Current stage info", [
-                'stageId' => $currentStageId,
-                'stageName' => $currentStage->StageName,
-                'order' => $currentOrder,
-                'workflowId' => $workflowId,
-            ]);
-
             $nextStage = DB::table('t_WorkFlowStages')
                 ->where('WorkFlowId', $workflowId)
                 ->where('Order', '>', $currentOrder)
@@ -904,14 +846,6 @@ abstract class ApprovalWorkflowService
                 ->first();
 
             if ($nextStage) {
-                Log::info("Next stage found", [
-                    'nextStageId' => $nextStage->Id,
-                    'nextStageName' => $nextStage->StageName,
-                    'nextOrder' => $nextStage->Order,
-                    'permissionId' => $nextStage->PermissionId,
-                    'workflowTypeId' => $nextStage->WorkFlowTypeId,
-                    'configuredCount' => $nextStage->Count,
-                ]);
 
                 // Retrieve the amount from the history table (mirrors SP logic)
                 $amount = 0;
@@ -926,7 +860,6 @@ abstract class ApprovalWorkflowService
                         ->value('Amount');
 
                     $amount = $historyAmountResult ?? 0;
-                    Log::info("Retrieved amount for next stage from History", ['amount' => $amount]);
                 } catch (\Throwable $e) {
                     Log::warning("Could not retrieve amount from history for next stage", ['error' => $e->getMessage()]);
                 }
@@ -945,13 +878,6 @@ abstract class ApprovalWorkflowService
                         if (!empty($permissionResult)) {
                             $effectivePermissionId = $permissionResult[0]->PermissionId;
                             $limitType = $permissionResult[0]->LimitType;
-                            Log::info("Effective permission for next stage (amount-based)", [
-                                'stageId' => $nextStage->Id,
-                                'amount' => $amount,
-                                'basePermissionId' => $nextStage->PermissionId,
-                                'effectivePermissionId' => $effectivePermissionId,
-                                'limitType' => $limitType,
-                            ]);
                         }
                     } catch (\Throwable $e) {
                         Log::error("Error determining amount-based permission", ['error' => $e->getMessage()]);
@@ -960,11 +886,6 @@ abstract class ApprovalWorkflowService
 
                 // Use the stored procedure to handle pending creation
                 // This is more efficient and consistent with submission logic
-                Log::info("Calling p_ProcessWorkflowPending for next stage", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                    'nextStageId' => $nextStage->Id,
-                ]);
 
                 try {
                     $spResult = DB::select(
@@ -972,7 +893,7 @@ abstract class ApprovalWorkflowService
                         [$table, (string)$sourceId, (int)$nextStage->Id]
                     );
 
-                    Log::info("p_ProcessWorkflowPending result for next stage", ['result' => $spResult]);
+
 
                     if (!empty($spResult) && isset($spResult[0]->Status)) {
                         if ($spResult[0]->Status === 'ERROR') {
@@ -981,15 +902,6 @@ abstract class ApprovalWorkflowService
                             ]);
                             throw new ErroredException($spResult[0]->Message ?? 'Failed to create pending approvals for next stage');
                         }
-
-                        Log::info("Advanced to next stage successfully", [
-                            'table' => $table,
-                            'sourceId' => $sourceId,
-                            'nextStageId' => $nextStage->Id,
-                            'nextStageName' => $nextStage->StageName,
-                            'insertedPendingCount' => $spResult[0]->InsertedPendingCount ?? 0,
-                            'approvalsRequired' => $spResult[0]->ApprovalsRequired ?? 'N/A',
-                        ]);
                     }
 
                     // Get the users who were just inserted for notification
@@ -1017,10 +929,9 @@ abstract class ApprovalWorkflowService
                 }
 
                 DB::commit();
-                Log::info("Stage advancement completed successfully");
             } else {
                 // No next stage - workflow fully approved
-                Log::info("No next stage found - finalizing workflow as fully approved");
+
 
                 try {
                     // Get the morph alias from table name
@@ -1036,13 +947,6 @@ abstract class ApprovalWorkflowService
                     // Get the approved status value for this module
                     $approvedStatusValue = $this->getFinalApprovedStatus($morphAlias, $table);
 
-                    Log::info("Updating source table to approved status", [
-                        'table' => $table,
-                        'sourceId' => $sourceId,
-                        'morphAlias' => $morphAlias,
-                        'approvedStatusValue' => $approvedStatusValue,
-                    ]);
-
                     // Dynamically get the primary key column from the model
                     $primaryKeyColumn = 'Id';  // Default fallback
                     try {
@@ -1057,7 +961,7 @@ abstract class ApprovalWorkflowService
                         ]);
                     }
 
-                    Log::info("Using primary key column for update", ['column' => $primaryKeyColumn]);
+
 
                     // Update the status column in the source table
                     DB::statement("
@@ -1067,8 +971,6 @@ abstract class ApprovalWorkflowService
                 ModifiedOn = GETDATE()
             WHERE {$primaryKeyColumn} = ?
         ", [$approvedStatusValue, $userId, $sourceId]);
-
-                    Log::info("Source table updated to approved status successfully");
                 } catch (\Throwable $e) {
                     Log::error("Failed to update source table status", [
                         'error' => $e->getMessage(),
@@ -1079,7 +981,6 @@ abstract class ApprovalWorkflowService
                 }
 
                 DB::commit();
-                Log::info("Workflow finalization completed successfully");
             }
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -1137,11 +1038,6 @@ abstract class ApprovalWorkflowService
                     'source' => $table,
                     'sourceId' => (string)$sourceId,
                 ]);
-
-                Log::info("Notification sent to next-stage approver via SP", [
-                    'userId' => $user->Id,
-                    'stage' => $nextStage->StageName,
-                ]);
             } catch (\Throwable $e) {
                 Log::error("Failed to notify approver via SP", [
                     'userId' => $user->Id,
@@ -1176,10 +1072,6 @@ abstract class ApprovalWorkflowService
                     ->exists();
 
                 if ($exists) {
-                    Log::info("Found approved status from code details", [
-                        'workflowSource' => $workflowSource,
-                        'status' => $status,
-                    ]);
                     return $status;
                 }
             }
@@ -1191,10 +1083,6 @@ abstract class ApprovalWorkflowService
                 ->value('Value');
 
             if ($tableStatus) {
-                Log::info("Found approved status from table code details", [
-                    'workflowSource' => $workflowSource,
-                    'status' => $tableStatus,
-                ]);
                 return $tableStatus;
             }
 

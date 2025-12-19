@@ -9,7 +9,7 @@ use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+
 
 class SupplierApprovalController extends Controller
 {
@@ -124,7 +124,7 @@ class SupplierApprovalController extends Controller
 
             return redirect()->route('suppliers-approval.index')->with('success', 'Supplier rejected successfully.');
         } catch (\Exception $e) {
-            Log::error('Supplier rejection failed: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Rejection failed: ' . $e->getMessage());
         }
     }
