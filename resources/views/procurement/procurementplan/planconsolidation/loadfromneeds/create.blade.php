@@ -161,7 +161,7 @@
     </form>
 </div>
 
-{{-- 🔹 Script Section --}}
+{{--  Script Section --}}
 <script>
     // Update fiscal year based on selected plan
     const planSelector = document.getElementById('plan_id_selector');

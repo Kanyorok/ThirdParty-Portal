@@ -344,44 +344,50 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const categoryDropdown = document.getElementById('categoryDropdown');
-        const requisitionId = {
-            {
-                $rfq - > requisition - > Id
-            }
-        };
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryDropdown = document.getElementById('categoryDropdown');
+    const rfqId = {{ $rfq->Id }};
+    
+    // Get the requisition ID from the RFQ
+    const requisitionId = {{ $rfq->RequisitionId ?? 'null' }};
+    
+    if (!requisitionId) {
+        categoryDropdown.innerHTML = '<option value="">⚠️ No requisition linked to this RFQ</option>';
+        categoryDropdown.disabled = true;
+        return;
+    }
 
-        categoryDropdown.innerHTML = '<option value="">-- Select Category --</option>';
+    categoryDropdown.innerHTML = '<option value="">Loading categories...</option>';
+    categoryDropdown.disabled = true;
 
-        fetch(`/procurement/requisition/${requisitionId}/categories`)
-            .then(response => response.json())
-            .then(payload => {
-                const categories = Array.isArray(payload) ?
-                    payload :
-                    (payload && Array.isArray(payload.categories) ? payload.categories : []);
+    fetch(`/procurement/requisition/${requisitionId}/categories`)
+        .then(response => response.json())
+        .then(payload => {
+            const categories = Array.isArray(payload) ? 
+                payload : 
+                (payload && Array.isArray(payload.categories) ? payload.categories : []);
 
-                if (!categories.length) {
-                    const option = document.createElement('option');
-                    option.value = "";
-                    option.textContent = "⚠️ No items available for the attached requisition.";
-                    categoryDropdown.appendChild(option);
-                } else {
-                    categories.forEach(cat => {
-                        const option = document.createElement('option');
-                        option.value = cat.Id;
-                        option.textContent = cat.Name;
-                        categoryDropdown.appendChild(option);
-                    });
-                }
-                categoryDropdown.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error loading categories:', error);
-                categoryDropdown.innerHTML = '<option value="">⚠️ Failed to load categories</option>';
+            categoryDropdown.innerHTML = '<option value="">-- Select Category --</option>';
+            
+            if (!categories.length) {
+                categoryDropdown.innerHTML += '<option value=""> No items available for the attached requisition.</option>';
                 categoryDropdown.disabled = true;
-            });
-    });
+            } else {
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.Id;
+                    option.textContent = cat.Name;
+                    categoryDropdown.appendChild(option);
+                });
+                categoryDropdown.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading categories:', error);
+            categoryDropdown.innerHTML = '<option value="">⚠️ Failed to load categories</option>';
+            categoryDropdown.disabled = true;
+        });
+});
 </script>
 
 

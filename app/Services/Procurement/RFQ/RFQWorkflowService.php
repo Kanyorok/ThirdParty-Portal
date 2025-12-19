@@ -125,7 +125,7 @@ class RFQWorkflowService extends ApprovalWorkflowService
      */
     public function getAvailableStatuses(): \Illuminate\Database\Eloquent\Collection
     {
-        return \App\Models\Core\CodeDetail::where('CodeID', $this->codeId)
+        return \App\Models\Core\Approval\CodeDetail::where('CodeID', $this->codeId)
             ->orderBy('Order')
             ->get(['ID', 'value', 'Description', 'Order']);
     }

@@ -26,7 +26,7 @@ abstract class ApprovalWorkflowService
     {
         $code = CodeDetail::query()
             ->where('CodeID', $CodeID)
-            ->where('Value', $status->value)
+            ->where('Value', (string) $status->value)
             ->first();
 
         if ($code instanceof CodeDetail) {

@@ -49,82 +49,88 @@ class TenderController extends Controller
     public function __construct(ApprovalWorkflow $workflow)
     {
         $this->workflow = $workflow;  // Injected with codeId via service container
+        $this->middleware('auth');
     }
     public function index()
     {
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
-
         $tenders = Tender::with(['procurementMode', 'currency'])->get();
+        
         activity()
             ->performedOn(new Tender())
             ->causedBy(Auth::user())
             ->withProperties(['action' => 'viewed'])
             ->log('Viewed tenders list');
+            
         return view('procurement.tendering.tendersetup.tenderinitiation.index', compact('tenders'));
     }
 
+    //b4
     public function create()
-    {
-        $this->authorize(PermissionEnum::TenderWrite, Tender::class);
-        $procurementModes = ProcurementMode::all();
-        $currencies = Currency::all();
-        $tenderTypes = TenderTypeEnum::cases();
-        $statuses = TenderStatusEnum::cases();
-        $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
-        $allItemsCategories = ItemCategories::select('Id', 'Name')->whereNull('ParentId')->get();
-        $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
-        $procurementPlan = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
-            ->where('Status', ProcurementPlanStatusEnum::Approved)
-            ->get();
+{
+       $this->authorize(PermissionEnum::TenderWrite, Tender::class);
+    
+    $procurementModes = ProcurementMode::all();
+    $currencies = Currency::all();
+    $tenderTypes = TenderTypeEnum::cases();
+    $statuses = TenderStatusEnum::cases();
+    $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
+    $allItemsCategories = ItemCategories::select('Id', 'Name')->whereNull('ParentId')->get();
+    $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
 
-        $allCategories = ItemCategories::select('Id', 'ParentId')->get()->keyBy('Id');
-        $categoryToTopLevel = [];
-        foreach ($allCategories as $category) {
-            $current = $category;
-            while ($current->ParentId !== null && isset($allCategories[$current->ParentId])) {
-                $current = $allCategories[$current->ParentId];
-            }
-            $categoryToTopLevel[$category->Id] = $current->Id;
+    // Build category hierarchy map
+    $allCategories = ItemCategories::select('Id', 'ParentId')->get()->keyBy('Id');
+    $categoryToTopLevel = [];
+    foreach ($allCategories as $category) {
+        $current = $category;
+        while ($current->ParentId !== null && isset($allCategories[$current->ParentId])) {
+            $current = $allCategories[$current->ParentId];
         }
+        $categoryToTopLevel[$category->Id] = $current->Id;
+    }
 
-        // Items from t_Items where DeletedOn is NULL (active only)
-        $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')
-            ->whereNull('DeletedOn')
-            ->whereHas('price', function ($q) {
-                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
-            })
-            ->orderBy('ItemName')
-            ->get()->map(function ($item) use ($categoryToTopLevel) {
-                return [
-                    'Id' => $item->Id,
-                    'ItemName' => $item->ItemName,
-                    'Category' => $categoryToTopLevel[$item->Category] ?? $item->Category,
-                ];
-            });
+    // Get active items with prices
+    $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')
+        ->whereNull('DeletedOn')
+        ->whereHas('price', function ($q) {
+            $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+        })
+        ->orderBy('ItemName')
+        ->get()
+        ->map(function ($item) use ($categoryToTopLevel) {
+            return [
+                'Id' => $item->Id,
+                'ItemName' => $item->ItemName,
+                'Category' => $categoryToTopLevel[$item->Category] ?? $item->Category,
+            ];
+        });
 
-        Log::info('All Items With Category IDs count: ' . $allItemsWithCategoryIds->count());
-        if ($allItemsWithCategoryIds->count() > 0) {
-            Log::info('Sample Item: ' . json_encode($allItemsWithCategoryIds->first()));
-        }
+    Log::info('All Items With Category IDs count: ' . $allItemsWithCategoryIds->count());
 
-        $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
-            ->where('Status', ProcurementPlanStatusEnum::Approved)
-            ->get()
-            ->keyBy('PlanID');
+    // Get all approved procurement plans
+    $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
+        ->where('Status', ProcurementPlanStatusEnum::Approved)
+        ->get()
+        ->keyBy('PlanID');
 
-        // Only include plan line items that:
-        // - belong to approved plans
-        // - have procurement method set to a Tender (Description contains 'Tender')
-        // - have NOT already been added to a tender (no TenderItems with this PlanItemID)
-        $approvedPlanIds = $procurementPlans->keys();
-        $usedPlanItemIds = TenderItems::whereNotNull('PlanItemID')->pluck('PlanItemID');
+    $approvedPlanIds = $procurementPlans->keys();
 
-       // Get all tender items to calculate used quantities
-    $usedQuantities = TenderItems::whereNotNull('PlanItemID')
-        ->selectRaw('PlanItemID, SUM(QtyToTender) as UsedQty')
+    //  Calculate used quantities MORE ACCURATELY
+    // Group by PlanItemID and sum only QtyToTender (not PlannedQty)
+    $usedQuantities = DB::table('t_TenderItems')
+        ->whereNotNull('PlanItemID')
+        ->whereNull('DeletedOn') // Exclude soft-deleted items
+        ->select('PlanItemID', DB::raw('SUM(QtyToTender) as UsedQty'))
         ->groupBy('PlanItemID')
-        ->pluck('UsedQty', 'PlanItemID');
+        ->pluck('UsedQty', 'PlanItemID')
+        ->map(fn($val) => (float)$val);
 
+    Log::info('Used quantities calculated', [
+        'count' => $usedQuantities->count(),
+        'sample' => $usedQuantities->take(5)->toArray()
+    ]);
+
+    // Get plan line items with tender procurement method
     $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'BranchID', 'DepartmentID', 'ProcurementMethod')
         ->with([
             'item' => function ($query) {
@@ -141,26 +147,40 @@ class TenderController extends Controller
         })
         ->get();
 
+    Log::info('Plan line items fetched', ['count' => $itemsCategories->count()]);
+
     $procurementPlansOutput = [];
     $planItemData = [];
-
+    $plansWithRemainingItems = [];
+    
     foreach ($itemsCategories as $lineItem) {
         $planId = $lineItem->PlanID;
         $item = $lineItem->item;
 
         if (!$item) {
+            Log::warning("Skipping line item {$lineItem->LineItemID}: No item found");
             continue;
         }
 
-        // Calculate remaining quantity
-        $plannedQty = (float)$lineItem->MergedQty;
+        //  More robust quantity calculation
+        $plannedQty = (float)($lineItem->MergedQty ?? 0);
         $usedQty = (float)($usedQuantities[$lineItem->LineItemID] ?? 0);
         $remainingQty = $plannedQty - $usedQty;
 
-        // Skip if fully consumed
-        if ($remainingQty <= 0) {
+        Log::debug("Item {$item->ItemName} (LineItem {$lineItem->LineItemID})", [
+            'plannedQty' => $plannedQty,
+            'usedQty' => $usedQty,
+            'remainingQty' => $remainingQty
+        ]);
+
+        //  Use a small threshold (0.01) instead of strict > 0
+        if ($remainingQty < 0.01) {
+            Log::info("Skipping fully consumed item: {$item->ItemName}");
             continue;
         }
+
+        // Mark this plan as having available items
+        $plansWithRemainingItems[$planId] = true;
 
         $needId = optional($lineItem->departmentNeed)->NeedID;
 
@@ -171,7 +191,7 @@ class TenderController extends Controller
             'name' => $item->ItemName,
             'plannedQty' => $plannedQty,
             'usedQty' => $usedQty,
-            'remainingQty' => $remainingQty,  // NEW
+            'remainingQty' => round($remainingQty, 2), // Round for display
             'needId' => $needId,
         ];
 
@@ -179,411 +199,451 @@ class TenderController extends Controller
         $planItemData[$planId][] = $entry;
     }
 
-        // Get suppliers with their supplier categories and item categories mapping
-        $suppliers = $this->getPrequalifiedSuppliers();
+    // Filter procurement plans to only show those with remaining items
+    $procurementPlan = $procurementPlans->filter(function ($plan) use ($plansWithRemainingItems) {
+        return isset($plansWithRemainingItems[$plan->PlanID]);
+    })->values();
 
-        activity()
-            ->performedOn(new Tender())
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('View tender creation');
+    Log::info('Procurement plans with remaining items', [
+        'total_approved_plans' => $procurementPlans->count(),
+        'plans_with_items' => $procurementPlan->count(),
+        'plans_with_remaining' => count($plansWithRemainingItems)
+    ]);
 
-        return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
-            'procurementModes',
-            'currencies',
-            'tenderTypes',
-            'tenderCategories',
-            'statuses',
-            'itemsCategories',
-            'procurementPlan',
-            'allItemsCategories',
-            'procurementPlansOutput',
-            'procurementPlans',
-            'planItemData',
-            'suppliers',
-            'allItemsWithCategoryIds',
-            'allCurrency'
-        ));
+    // : Log sample data for debugging
+    if (!empty($procurementPlansOutput)) {
+        $samplePlanId = array_key_first($procurementPlansOutput);
+        Log::info('Sample plan items', [
+            'plan_id' => $samplePlanId,
+            'items_count' => count($procurementPlansOutput[$samplePlanId]),
+            'first_item' => $procurementPlansOutput[$samplePlanId][0] ?? 'none'
+        ]);
     }
 
-   public function store(Request $request)
-{
+    // Get suppliers
+    $suppliers = $this->getPrequalifiedSuppliers();
 
-    $validated = $request->validate([
-        'tender_category_id' => 'required|integer|exists:t_TenderCategories,Id',
-        'item_category_id' => 'required|integer|exists:t_ItemCategories,Id',
-        'submission_deadline' => [
-            'required',
-            'date',
-            'after_or_equal:today'
-        ],
-        'opening_date' => [
-            'required',
-            'date',
-            'after_or_equal:submission_deadline'
-        ],
-        'title' => 'required|string|max:255',
-        'tender_type' => 'required|string',
-        'scope_of_work' => 'nullable|string',
-        'instructions' => 'nullable|string',
-        'currency_id' => 'required|integer|exists:t_Currencies,Id',
-        'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
-    ], [
-        'submission_deadline.after_or_equal' => 'Submission deadline must be today or a future date.',
-        'opening_date.after_or_equal' => 'Opening date must be on or after the submission deadline.',
-    ]);
-    DB::beginTransaction();
+    activity()
+        ->performedOn(new Tender())
+        ->causedBy(Auth::user())
+        ->withProperties(['action' => 'create'])
+        ->log('View tender creation');
 
-       try {
-        // Create the tender model
-        $tender = $this->createTenderModel($request);
-        $tenderId = $tender->Id;
+    return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
+        'procurementModes',
+        'currencies',
+        'tenderTypes',
+        'tenderCategories',
+        'statuses',
+        'itemsCategories',
+        'procurementPlan',
+        'allItemsCategories',
+        'procurementPlansOutput',
+        'procurementPlans',
+        'planItemData',
+        'suppliers',
+        'allItemsWithCategoryIds',
+        'allCurrency'
+    ));
+}
 
-        //  Track which procurement plan this tender is based on**
-        $procurementPlanId = null;
-        if (!empty($request->plan_items)) {
-            // Extract plan ID from first plan item
-            $firstPlanItem = reset($request->plan_items);
-            $procurementPlanId = $firstPlanItem['plan_id'] ?? null;
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'tender_category_id' => 'required|integer|exists:t_TenderCategories,Id',
+            'item_category_id' => 'required|integer|exists:t_ItemCategories,Id',
+             // 1. Submission Deadline must be today or in the future
+               'submission_deadline' => 'required|date|after_or_equal:today',
 
-            if ($procurementPlanId) {
-                $tender->update(['ProcurementPlanId' => $procurementPlanId]);
-            }
-        }
+        // 2. Opening Date must be AFTER the submission deadline
+           'opening_date' => 'required|date|after:submission_deadline',
+            'title' => 'required|string|max:255',
+            'tender_type' => 'required|string',
+            'scope_of_work' => 'nullable|string',
+            'instructions' => 'nullable|string',
+            'currency_id' => 'required|integer|exists:t_Currencies,Id',
+            'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+        ], [
+           'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
+        'opening_date.after' => 'The opening date must be after the submission deadline.',
+        ]);
+        
+        DB::beginTransaction();
 
-        // Document upload to DMS
-        $this->attachDocuments($request, $tender);
-
-        // Get used quantities to validate remaining qty
-        $usedQuantities = TenderItems::whereNotNull('PlanItemID')
-            ->selectRaw('PlanItemID, SUM(QtyToTender) as UsedQty')
-            ->groupBy('PlanItemID')
-            ->pluck('UsedQty', 'PlanItemID');
-
-        // Process plan items
-        if (!empty($request->plan_items)) {
-            Log::info('Plan items received', [
-                'count' => count($request->plan_items),
-                'sample_keys' => array_slice(array_keys($request->plan_items), 0, 3),
-                'sample_data' => array_slice($request->plan_items, 0, 2)
-            ]);
-
-            $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
-
-            foreach ($request->plan_items as $compositeKey => $item) {
-                $split = explode('-', $compositeKey);
-                $planItemId = (int)end($split);
-                $itemId = $item['item_id'] ?? null;
-                $qtyRequested = (float)($item['qty'] ?? 0);
-
-                // Validate remaining quantity
-                $planLineItem = PlanLineItem::find($planItemId);
-                if (!$planLineItem) {
-                    Log::warning("Plan line item not found: {$planItemId}");
-                    continue;
-                }
-
-                $plannedQty = (float)$planLineItem->MergedQty;
-                $usedQty = (float)($usedQuantities[$planItemId] ?? 0);
-                $remainingQty = $plannedQty - $usedQty;
-
-                if ($qtyRequested > $remainingQty) {
-                    Log::warning("Quantity exceeds remaining", [
-                        'plan_item_id' => $planItemId,
-                        'requested' => $qtyRequested,
-                        'remaining' => $remainingQty
-                    ]);
-
-                    DB::rollBack();
-                    return redirect()->back()
-                        ->withErrors(['error' => "Item '{$planLineItem->item->ItemName}' only has {$remainingQty} remaining, but {$qtyRequested} was requested."])
-                        ->withInput();
-                }
-
-                // Validate item type
-                if ($itemId && !$this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
-                    Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
-                    continue;
-                }
-
-                TenderItems::create([
-                    'TenderID' => $tenderId,
-                    'SourceType' => 'PLAN',
-                    'ItemID' => $itemId,
-                    'PlanItemID' => $planItemId,
-                    'PlannedQty' => $plannedQty,  // Original plan quantity
-                    'QtyToTender' => $qtyRequested,  // Quantity for this tender
-                    'ItemCategory' => $request->item_category_id,
-                    'Remarks' => null,
-                    'RelatedPRID' => $item['pr_ref'] ?? null,
-                    'CreatedBy' => Auth::id(),
-                    'ModifiedBy' => Auth::id(),
-                ]);
-            }
-        }
-
-        // Process manual items
-        if (!empty($request->manual_items)) {
-            $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
-            foreach ($request->manual_items as $manualItem) {
-                if (empty($manualItem['item_id'])) {
-                    continue;
-                }
-
-                if (!$this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
-                    Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
-                    continue;
-                }
-
-                TenderItems::create([
-                    'TenderID' => $tenderId,
-                    'SourceType' => 'MANUAL',
-                    'ItemID' => $manualItem['item_id'] ?? null,
-                    'ManualItemDescription' => null,
-                    'PlannedQty' => null,
-                    'QtyToTender' => $manualItem['qty'],
-                    'ItemCategory' => $request->item_category_id,
-                    'Remarks' => null,
-                    'RelatedPRID' => $manualItem['pr_ref'] ?? null,
-                    'CreatedBy' => Auth::id(),
-                    'ModifiedBy' => Auth::id(),
-                ]);
-            }
-        }
-
-        // Process suppliers
-        if (!empty($request->suppliers)) {
-            foreach ($request->suppliers as $supplierId) {
-                TenderSupplier::create([
-                    'TenderID' => $tenderId,
-                    'SupplierID' => $supplierId,
-                    'CreatedBy' => Auth::id(),
-                    'ModifiedBy' => Auth::id(),
-                ]);
-            }
-        }
-
-        DB::commit();
-
-        activity()
-            ->performedOn($tender)
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('Tender created successfully with ID: ' . $tenderId);
-
-        // Initialize workflow for the new tender
         try {
-            $this->workflow->submit($tender, Auth::user(), TenderApprovalStatusEnum::PENDING, 'Tender submitted for approval');
+            // : Create tender in DRAFT status, ApprovalStatus = NULL (not submitted yet)
+            $tender = $this->createTenderModel($request);
+
+            $tenderId = $tender->Id;
+
+            // Track procurement plan
+            $procurementPlanId = null;
+            $planItems = $request->input('plan_items', []);
+            
+            if (!empty($planItems)) {
+                $firstPlanItem = reset($planItems);
+                $procurementPlanId = $firstPlanItem['plan_id'] ?? null;
+
+                if ($procurementPlanId) {
+                    $tender->update(['ProcurementPlanId' => $procurementPlanId]);
+                }
+            }
+
+            // Document upload
+            $this->attachDocuments($request, $tender);
+
+            // Get used quantities
+            $usedQuantities = TenderItems::whereNotNull('PlanItemID')
+                ->selectRaw('PlanItemID, SUM(QtyToTender) as UsedQty')
+                ->groupBy('PlanItemID')
+                ->pluck('UsedQty', 'PlanItemID');
+
+            // Process plan items
+            if (!empty($planItems)) {
+                $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
+                
+                foreach ($planItems as $compositeKey => $item) {
+                    $split = explode('-', $compositeKey);
+                    $planItemId = (int)end($split);
+                    $itemId = $item['item_id'] ?? null;
+                    $qtyRequested = (float)($item['qty'] ?? 0);
+
+                    // Validate remaining quantity
+                    $planLineItem = PlanLineItem::find($planItemId);
+                    if (!$planLineItem) {
+                        Log::warning("Plan line item not found: {$planItemId}");
+                        continue;
+                    }
+
+                    $plannedQty = (float)$planLineItem->MergedQty;
+                    $usedQty = (float)($usedQuantities[$planItemId] ?? 0);
+                    $remainingQty = $plannedQty - $usedQty;
+
+                    if ($qtyRequested > $remainingQty) {
+                        DB::rollBack();
+                        return redirect()->back()
+                            ->withErrors(['error' => "Item '{$planLineItem->item->ItemName}' only has {$remainingQty} remaining, but {$qtyRequested} was requested."])
+                            ->withInput();
+                    }
+
+                    // Validate item type
+                    if ($itemId && !$this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
+                        Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
+                        continue;
+                    }
+
+                    TenderItems::create([
+                        'TenderID' => $tenderId,
+                        'SourceType' => 'PLAN',
+                        'ItemID' => $itemId,
+                        'PlanItemID' => $planItemId,
+                        'PlannedQty' => $plannedQty,
+                        'QtyToTender' => $qtyRequested,
+                        'ItemCategory' => $request->item_category_id,
+                        'Remarks' => null,
+                        'RelatedPRID' => $item['pr_ref'] ?? null,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
+                    ]);
+                }
+            }
+
+            // Process manual items
+            $manualItems = $request->input('manual_items', []);
+            if (!empty($manualItems)) {
+                $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
+                foreach ($manualItems as $manualItem) {
+                    if (empty($manualItem['item_id'])) {
+                        continue;
+                    }
+
+                    if (!$this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
+                        Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
+                        continue;
+                    }
+
+                    TenderItems::create([
+                        'TenderID' => $tenderId,
+                        'SourceType' => 'MANUAL',
+                        'ItemID' => $manualItem['item_id'] ?? null,
+                        'ManualItemDescription' => null,
+                        'PlannedQty' => null,
+                        'QtyToTender' => $manualItem['qty'],
+                        'ItemCategory' => $request->item_category_id,
+                        'Remarks' => null,
+                        'RelatedPRID' => $manualItem['pr_ref'] ?? null,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
+                    ]);
+                }
+            }
+
+            // Process suppliers
+            $suppliers = $request->input('suppliers', []);
+            if (!empty($suppliers)) {
+                foreach ($suppliers as $supplierId) {
+                    TenderSupplier::create([
+                        'TenderID' => $tenderId,
+                        'SupplierID' => $supplierId,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+
             activity()
                 ->performedOn($tender)
                 ->causedBy(Auth::user())
-                ->withProperties(['action' => 'submit for approval'])
-                ->log('Tender submitted for approval with ID: ' . $tenderId);
-        } catch (Throwable $wfEx) {
-        //     Log::error('Failed to initiate workflow for Tender ID ' . $tenderId . ': ' . $wfEx->getMessage());
-        //     throw new Exception('Failed to initiate approval workflow. Please contact the system administrator.');
-         }
+                ->withProperties(['action' => 'create'])
+                ->log('Tender created successfully with ID: ' . $tenderId);
 
-        // Send supplier notifications after successful creation
-        try {
-            $selectedSupplierIds = collect($request->suppliers ?? [])->map(fn($v) => (int)$v)->unique()->values()->all();
-
-            if (!empty($selectedSupplierIds)) {
-                $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
-                    ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
-                    ->whereNull('tpu.DeletedOn')
-                    ->groupBy('tpu.ThirdPartyId');
-
-                $recipientRows = DB::table('t_Suppliers as s')
-                    ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                    ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
-                        $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
-                    })
-                    ->whereIn('s.Id', $selectedSupplierIds)
-                    ->whereNull('s.DeletedOn')
-                    ->whereNull('tp.DeletedOn')
-                    ->select('tp.TradingName', DB::raw('tpu.Email as Email'))
-                    ->get();
-
-                $supplierList = [];
-                $usedEmails = [];
-                foreach ($recipientRows as $row) {
-                    $email = trim((string)$row->Email);
-                    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && !in_array(strtolower($email), $usedEmails, true)) {
-                        $supplierList[] = ['name' => $row->TradingName, 'email' => $email];
-                        $usedEmails[] = strtolower($email);
-                    }
-                }
-
-                if (!empty($supplierList)) {
-                    $actor = Auth::user();
-                    $subject = 'New Tender Published: ' . ($tender->TenderNo ?? 'Tender');
-
-                    $rawSubmission = $tender->SubmissionDeadline;
-                    $submissionFormatted = $rawSubmission ? (string)$rawSubmission : 'N/A';
-                    $openingFormatted = $tender->OpeningDate ? (string)$tender->OpeningDate : 'N/A';
-
-                    $bodyTemplate = '<p>A new tender has been created with the following details:</p>' .
-                        '<ul>' .
-                        '<li><strong>Tender No:</strong> ' . e($tender->TenderNo) . '</li>' .
-                        '<li><strong>Title:</strong> ' . e($tender->Title) . '</li>' .
-                        '<li><strong>Submission Deadline:</strong> ' . e($submissionFormatted) . '</li>' .
-                        '<li><strong>Opening Date:</strong> ' . e($openingFormatted) . '</li>' .
-                        '<li><strong>Scope:</strong> ' . e($tender->ScopeOfWork ?? 'N/A') . '</li>' .
-                        '<li><strong>Instructions:</strong> ' . e($tender->Instructions ?? 'N/A') . '</li>' .
-                        '</ul>' .
-                        '<p>Please log in to the procurement portal to view full details and respond accordingly.</p>';
-
-                    $uniqueEmails = array_values(array_unique(array_map(fn($s) => strtolower($s['email']), $supplierList)));
-                    foreach ($uniqueEmails as $recipientEmail) {
-                        $recipientName = null;
-                        foreach ($supplierList as $s) {
-                            if (strtolower($s['email']) === $recipientEmail) {
-                                $recipientName = $s['name'];
-                                break;
-                            }
-                        }
-
-                        $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
-
-                        $bcc = [];
-                        foreach ($uniqueEmails as $otherEmail) {
-                            if ($otherEmail === $recipientEmail) continue;
-                            $otherName = null;
-                            foreach ($supplierList as $s) {
-                                if (strtolower($s['email']) === $otherEmail) {
-                                    $otherName = $s['name'];
-                                    break;
-                                }
-                            }
-                            $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
-                        }
-
-                        $salutation = $recipientName ?? $recipientEmail;
-                        $personalBody = '<p>Hello ' . e($salutation) . ',</p>' . $bodyTemplate;
-
-                        $service = \App\Services\CRMEmailService::createRaw($actor, $subject, $personalBody, $to, 'ThirdParty', '', [], $bcc, EmailPriorityEnum::Important);
-                        $service->send(true);
-                    }
-                }
-            }
-        } catch (\Throwable $mailEx) {
-            Log::error('Failed sending tender notifications: ' . $mailEx->getMessage());
+            return redirect()->route('initiatetender.show', $tenderId)
+                ->with('success', 'Tender created successfully. Review and submit for approval when ready.');
+                
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
+            return redirect()->route('initiatetender.index')->with('error', 'Failed to create Tender. Please try again.');
         }
-
-        return redirect()->route('initiatetender.index')->with('success', 'Tender created successfully.');
-    } catch (Exception $e) {
-        DB::rollBack();
-        Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
-        return redirect()->route('initiatetender.index')->with('error', 'Failed to create Tender. Please try again.');
-    }
-}
-
-
-    //added maker chekcer
-    public function show(string $id)
-{
-    $this->authorize(PermissionEnum::TenderRead, Tender::class);
-
-    $tender = Tender::with(['procurementPlan'])->findOrFail($id);
-    $user = Auth::user();
-    $canApprove = $this->workflow->canApproveModel($tender, $user);
-
-    Log::info("User {$user->id} canApprove for Tender {$tender->Id}: " . ($canApprove ? 'YES' : 'NO'));
-
-    $show = false;
-    if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED ||
-        $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
-        $show = true;
     }
 
-    // Get tender items with all necessary relationships
-    $items = TenderItems::where('TenderID', $id)
-        ->with([
-            'item.price',
-            'category',
-            'planLineItem' => function($query) {
-                $query->with([
-                    'procurementPlan:PlanID,ReferenceNumber,Title',
-                    'departmentNeed:NeedID,ItemID,BranchID,DepartmentID'
-                ]);
+// Submit tender for approval
+    public function submitForApproval($id)
+    {
+        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+
+        DB::beginTransaction();
+        try {
+            $tender = Tender::findOrFail($id);
+            $user = Auth::user();
+
+            Log::info("Submit for approval attempt", [
+                'tender_id' => $id,
+                'tender_no' => $tender->TenderNo,
+                'user_id' => $user->Id,
+                'current_status' => $tender->Status?->value,
+                'current_approval_status' => $tender->ApprovalStatus
+            ]);
+
+            // Validation - Status must be Draft
+            if ($tender->Status !== TenderStatusEnum::Draft) {
+                return redirect()->back()->with('error', 'Only draft tenders can be submitted.');
             }
-        ])
-        ->get();
 
-    // Separate by source type and enhance plan items with additional data
-    $planItems = $items->where('SourceType', 'PLAN')->map(function($tenderItem) {
-        $planLineItem = $tenderItem->planLineItem;
+            // : Check that ApprovalStatus is NULL (not yet submitted)
+            if ($tender->ApprovalStatus !== null) {
+                return redirect()->back()->with('error', 'This tender has already been submitted for approval.');
+            }
 
-        return [
-            'id' => $tenderItem->Id,
-            'item' => $tenderItem->item,
-            'planReference' => $planLineItem?->procurementPlan?->ReferenceNumber ?? 'N/A',
-            'planTitle' => $planLineItem?->procurementPlan?->Title ?? 'N/A',
-            'needId' => $planLineItem?->departmentNeed?->NeedID ?? 'N/A',
-            'plannedQty' => $tenderItem->PlannedQty ?? 0,
-            'qtyToTender' => $tenderItem->QtyToTender ?? 0,
-            'unitPrice' => $tenderItem->item?->price?->ActualPrice ?? 0,
-            'totalPrice' => ($tenderItem->QtyToTender ?? 0) * ($tenderItem->item?->price?->ActualPrice ?? 0),
-            'remarks' => $tenderItem->Remarks,
-        ];
-    });
+            // Check if tender has items
+            $itemCount = TenderItems::where('TenderID', $tender->Id)->count();
+            if ($itemCount === 0) {
+                return redirect()->back()->with('error', 'Cannot submit tender without items.');
+            }
 
-    $manualItems = $items->where('SourceType', 'MANUAL')->map(function($tenderItem) {
-        return [
-            'id' => $tenderItem->Id,
-            'item' => $tenderItem->item,
-            'description' => $tenderItem->ManualItemDescription,
-            'qtyToTender' => $tenderItem->QtyToTender ?? 0,
-            'unitPrice' => $tenderItem->item?->price?->ActualPrice ?? 0,
-            'totalPrice' => ($tenderItem->QtyToTender ?? 0) * ($tenderItem->item?->price?->ActualPrice ?? 0),
-            'remarks' => $tenderItem->Remarks,
-        ];
-    });
+            // For restricted tenders, ensure suppliers are selected
+            if ($tender->TenderType === TenderTypeEnum::Restricted) {
+                $supplierCount = TenderSupplier::where('TenderID', $tender->Id)->count();
+                if ($supplierCount === 0) {
+                    return redirect()->back()->with('error', 'Restricted tenders must have suppliers.');
+                }
+            }
 
-    // Calculate total estimated cost
-    $totalEstimatedCost = $items->sum(function ($item) {
-        $qty = $item->QtyToTender ?? 0;
-        $price = $item->item?->price?->ActualPrice ?? 0;
-        return $qty * $price;
-    });
+            // Update approval status to PENDING
+            $tender->update([
+                'ApprovalStatus' => TenderApprovalStatusEnum::PENDING->value,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
+            ]);
 
-    // Get suppliers
-    $suppliers = TenderSupplier::where('TenderID', $id)
-        ->with('supplier.thirdParty')
-        ->get();
+            // Submit to workflow
+            $submitted = $this->workflow->submit(
+                $tender, 
+                $user, 
+                TenderApprovalStatusEnum::PENDING, 
+                'Tender submitted for approval'
+            );
 
-    $tenderCategory = TenderCategory::find($tender->TenderCategory);
-    $itemCategory = ItemCategories::find($tender->ItemCategoryId);
-    $currency = Currency::find($tender->CurrencyId);
+            if (!$submitted) {
+                throw new \Exception('Failed to submit to workflow');
+            }
 
-    // Get documents from DMS
-    try {
-        $documents = $tender->documents;
-    } catch (\Exception $e) {
-        Log::error("Failed to load tender documents: " . $e->getMessage());
-        $documents = collect();
+            DB::commit();
+
+            activity()
+                ->performedOn($tender)
+                ->causedBy($user)
+                ->withProperties([
+                    'action' => 'submit_for_approval',
+                    'previous_status' => 'Draft'
+                ])
+                ->log('Tender submitted for approval: ' . $tender->TenderNo);
+
+            return redirect()->route('initiatetender.show', $id)
+                ->with('success', 'Tender submitted for approval successfully.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Submit for approval failed', [
+                'tender_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'Failed to submit tender: ' . $e->getMessage());
+        }
+    }
+public function show(string $id)
+    {
+        $this->authorize(PermissionEnum::TenderRead, Tender::class);
+
+        try {
+            if (!Auth::check()) {
+                return redirect()->route('login')->with('error', 'Please login to view tenders');
+            }
+
+            $user = Auth::user();
+            $userId = $user->Id ?? null;
+            
+            if (!$userId) {
+                return redirect()->route('login')->with('error', 'Session error. Please login again.');
+            }
+
+            $tender = Tender::with(['procurementPlan'])->findOrFail($id);
+            
+            // Check permissions
+            $isSubmitter = ($tender->CreatedBy == $userId);
+            $canApprove = false;
+            $showApprovalButtons = false;
+            $canEdit = false;
+            
+            // 🔥 KEY FIX: Determine edit permissions
+            // Can edit if: (1) Status is Draft AND (2) Not yet submitted (ApprovalStatus is NULL) OR rejected
+            if ($tender->Status === TenderStatusEnum::Draft) {
+                if ($tender->ApprovalStatus === null || $tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED) {
+                    $canEdit = $isSubmitter; // Only creator can edit
+                }
+            }
+            
+            // Only check approval permissions if tender is pending
+            if ($tender->ApprovalStatus === TenderApprovalStatusEnum::PENDING) {
+                $canApprove = $this->workflow->canApproveModel($tender, $user);
+                
+                // Submitter cannot approve their own tender
+                if ($isSubmitter) {
+                    $canApprove = false;
+                }
+                
+                $showApprovalButtons = $canApprove && !$isSubmitter;
+            }
+            
+            Log::info("Tender show permissions", [
+                'tender_id' => $tender->Id,
+                'user_id' => $userId,
+                'is_submitter' => $isSubmitter,
+                'approval_status' => $tender->ApprovalStatus?->value ?? 'null',
+                'can_approve' => $canApprove,
+                'show_approval_buttons' => $showApprovalButtons,
+                'can_edit' => $canEdit
+            ]);
+            
+            // Get tender items with relationships
+            $items = TenderItems::where('TenderID', $id)
+                ->with([
+                    'item.price',
+                    'category',
+                    'planLineItem' => function($query) {
+                        $query->with([
+                            'procurementPlan:PlanID,ReferenceNumber,Title',
+                            'departmentNeed:NeedID,ItemID,BranchID,DepartmentID'
+                        ]);
+                    }
+                ])
+                ->get();
+            
+            // Separate plan and manual items
+            $planItems = $items->where('SourceType', 'PLAN')->map(function($tenderItem) {
+                $planLineItem = $tenderItem->planLineItem;
+                return [
+                    'id' => $tenderItem->Id,
+                    'item' => $tenderItem->item,
+                    'planReference' => $planLineItem?->procurementPlan?->ReferenceNumber ?? 'N/A',
+                    'planTitle' => $planLineItem?->procurementPlan?->Title ?? 'N/A',
+                    'needId' => $planLineItem?->departmentNeed?->NeedID ?? 'N/A',
+                    'plannedQty' => $tenderItem->PlannedQty ?? 0,
+                    'qtyToTender' => $tenderItem->QtyToTender ?? 0,
+                    'unitPrice' => $tenderItem->item?->price?->ActualPrice ?? 0,
+                    'totalPrice' => ($tenderItem->QtyToTender ?? 0) * ($tenderItem->item?->price?->ActualPrice ?? 0),
+                    'remarks' => $tenderItem->Remarks,
+                ];
+            });
+
+            $manualItems = $items->where('SourceType', 'MANUAL')->map(function($tenderItem) {
+                return [
+                    'id' => $tenderItem->Id,
+                    'item' => $tenderItem->item,
+                    'description' => $tenderItem->ManualItemDescription,
+                    'qtyToTender' => $tenderItem->QtyToTender ?? 0,
+                    'unitPrice' => $tenderItem->item?->price?->ActualPrice ?? 0,
+                    'totalPrice' => ($tenderItem->QtyToTender ?? 0) * ($tenderItem->item?->price?->ActualPrice ?? 0),
+                    'remarks' => $tenderItem->Remarks,
+                ];
+            });
+
+            // Calculate total cost
+            $totalEstimatedCost = $items->sum(function ($item) {
+                return ($item->QtyToTender ?? 0) * ($item->item?->price?->ActualPrice ?? 0);
+            });
+
+            // Get related data
+            $suppliers = TenderSupplier::where('TenderID', $id)
+                ->with('supplier.thirdParty')
+                ->get();
+            $tenderCategory = TenderCategory::find($tender->TenderCategory);
+            $itemCategory = ItemCategories::find($tender->ItemCategoryId);
+            $currency = Currency::find($tender->CurrencyId);
+            
+            try {
+                $documents = $tender->documents;
+            } catch (\Exception $e) {
+                Log::error("Failed to load documents: " . $e->getMessage());
+                $documents = collect();
+            }
+
+            $procurementPlan = $tender->procurementPlan;
+
+            return view('procurement.tendering.tendersetup.tenderinitiation.show', compact(
+                'tender',
+                'tenderCategory',
+                'itemCategory',
+                'currency',
+                'planItems',
+                'manualItems',
+                'items',
+                'suppliers',
+                'canApprove',
+                'showApprovalButtons',
+                'isSubmitter',
+                'canEdit',
+                'totalEstimatedCost',
+                'documents',
+                'procurementPlan'
+            ));
+
+        } catch (\Exception $e) {
+            Log::error('Error in show method', [
+                'tender_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->route('initiatetender.index')
+                ->with('error', 'Failed to load tender: ' . $e->getMessage());
+        }
     }
 
-    // Procurement plan is already loaded via with()
-    $procurementPlan = $tender->procurementPlan;
+    ////before 
 
-    return view('procurement.tendering.tendersetup.tenderinitiation.show', compact(
-        'tender',
-        'tenderCategory',
-        'itemCategory',
-        'currency',
-        'planItems',
-        'manualItems',
-        'items',
-        'suppliers',
-        'show',
-        'canApprove',
-        'totalEstimatedCost',
-        'documents',
-        'procurementPlan'
-    ));
-}
+
+
     public function edit(string $id)
     {
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
@@ -972,80 +1032,92 @@ class TenderController extends Controller
         }
     }
 
-public function approveTender(Request $request)
-{
-    $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+ public function approveTender(Request $request)
+    {
+        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
 
-    $request->validate([
-        'tender_id' => 'required|exists:t_Tenders,Id',
-        'reason' => 'required|string|max:1000',
-    ]);
-
-    try {
-        DB::beginTransaction();
-
-        $tender = Tender::findOrFail($request->tender_id);
-        $user = Auth::user();
-
-        // Check if user can approve this tender
-        if (!$this->workflow->canApproveModel($tender, $user)) {
-            return redirect()->route('initiatetender.index')->with('error', 'You are not authorized to approve this tender.');
-        }
-
-        // Use workflow to approve
-        $approved = $this->workflow->approve(
-            $tender,
-            $user,
-            TenderApprovalStatusEnum::APPROVED,
-            $request->reason,
-            'ApprovalStatus' // Use the correct status column name
-        );
-
-        if (!$approved) {
-            throw new Exception('Workflow approval failed');
-        }
-
-        // Update tender status to published after approval
-        $tender->update([
-            'Status' => TenderStatusEnum::Published,
-            'ModifiedBy' => $user->id,
-            'ModifiedOn' => now(),
+        $request->validate([
+            'tender_id' => 'required|exists:t_Tenders,Id',
+            'reason' => 'required|string|max:1000',
         ]);
 
-        // Handle restricted tender invitations
-        $invitationsSent = 0;
-        if ($tender->isRestricted()) {
-            $invitationsSent = $this->sendRestrictedTenderInvitations($tender);
+        DB::beginTransaction();
+        try {
+            $tender = Tender::findOrFail($request->tender_id);
+            $user = Auth::user();
+
+            Log::info("Approval attempt", [
+                'tender_id' => $tender->Id,
+                'user_id' => $user->Id,
+                'current_status' => $tender->ApprovalStatus?->value
+            ]);
+
+            // Check permission
+            if (!$this->workflow->canApproveModel($tender, $user)) {
+                throw new Exception('You are not authorized to approve this tender');
+            }
+
+            // Validate status
+            if ($tender->ApprovalStatus !== TenderApprovalStatusEnum::PENDING) {
+                throw new Exception('Only pending tenders can be approved');
+            }
+
+            // Approve via workflow
+            $result = $this->workflow->approve(
+                $tender,
+                $user,
+                TenderApprovalStatusEnum::APPROVED,
+                $request->reason,
+                'ApprovalStatus'
+            );
+
+            if (!$result) {
+            Log::error("Workflow approval returned false", [
+                'result' => $result,
+                'type' => gettype($result)
+            ]);
+            throw new Exception('Workflow approval failed - workflow service returned false');
         }
 
-        activity()
-            ->performedOn($tender)
-            ->causedBy($user)
-            ->withProperties([
-                'action' => 'approve',
-                'approval_remarks' => $request->reason,
-                'previous_status' => 'Pending',
-                'new_status' => 'Approved',
-                'tender_type' => $tender->TenderType->value,
-                'invitations_sent' => $invitationsSent
-            ])
-            ->log('Tender approved and published with ID: ' . $tender->Id);
+            // Refresh and update
+            $tender->refresh();
+            $tender->update([
+                'Status' => TenderStatusEnum::Published,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
+            ]);
 
-        DB::commit();
+            // Handle restricted invitations
+            $invitationsSent = 0;
+            if ($tender->isRestricted()) {
+                $invitationsSent = $this->sendRestrictedTenderInvitations($tender);
+            }
 
-        $successMessage = 'Tender approved and published successfully.';
-        if ($invitationsSent > 0) {
-            $successMessage .= " Invitations sent to {$invitationsSent} suppliers.";
+            DB::commit();
+
+            activity()
+                ->performedOn($tender)
+                ->causedBy($user)
+                ->withProperties([
+                    'action' => 'approve',
+                    'remarks' => $request->reason,
+                    'invitations_sent' => $invitationsSent
+                ])
+                ->log('Tender approved: ' . $tender->TenderNo);
+
+            $message = 'Tender approved successfully';
+            if ($invitationsSent > 0) {
+                $message .= ". Invitations sent to {$invitationsSent} suppliers.";
+            }
+
+            return redirect()->route('initiatetender.index')->with('success', $message);
+
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error('Approval failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to approve: ' . $e->getMessage());
         }
-
-        return redirect()->route('initiatetender.index')->with('success', $successMessage);
-    } catch (Throwable $th) {
-        DB::rollBack();
-        Log::error("--- APPROVE TENDER ERROR --- " . $th->getMessage());
-        Log::error($th);
-        return redirect()->route('initiatetender.index')->with('error', 'Failed to approve Tender. Please try again.');
     }
-}
 
     // AJAX: return distinct top-level item categories for the selected tender category
 public function allowedCategories(Request $request)
@@ -1161,62 +1233,73 @@ public function allowedCategories(Request $request)
         ], 500);
     }
 }
+
+//reject a tender
  public function rejectTender(Request $request)
-{
-    $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+    {
+        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
 
-    $request->validate([
-        'tender_id' => 'required|exists:t_Tenders,Id',
-        'reason' => 'required|string|max:1000',
-    ]);
-
-    try {
-        DB::beginTransaction();
-
-        $tender = Tender::findOrFail($request->tender_id);
-        $user = Auth::user();
-
-        // Use workflow to reject
-        $rejected = $this->workflow->reject(
-            $tender,
-            $user,
-            TenderApprovalStatusEnum::REJECTED,
-            $request->reason,
-            'ApprovalStatus' // Use the correct status column name
-        );
-
-        if (!$rejected) {
-            throw new Exception('Workflow rejection failed');
-        }
-
-        // Keep tender as draft when rejected
-        $tender->update([
-            'Status' => TenderStatusEnum::Draft,
-            'ModifiedBy' => $user->id,
-            'ModifiedOn' => now(),
+        $request->validate([
+            'tender_id' => 'required|exists:t_Tenders,Id',
+            'reason' => 'required|string|max:1000',
         ]);
 
-        activity()
-            ->performedOn($tender)
-            ->causedBy($user)
-            ->withProperties([
-                'action' => 'reject',
-                'rejection_remarks' => $request->reason,
-                'previous_status' => 'Pending',
-                'new_status' => 'Rejected'
-            ])
-            ->log('Tender rejected with ID: ' . $tender->Id);
+        DB::beginTransaction();
+        try {
+            $tender = Tender::findOrFail($request->tender_id);
+            $user = Auth::user();
 
-        DB::commit();
+            // Check permission
+            if (!$this->workflow->canApproveModel($tender, $user)) {
+                throw new Exception('You are not authorized to reject this tender');
+            }
 
-        return redirect()->route('initiatetender.index')->with('success', 'Tender rejected successfully.');
-    } catch (Throwable $th) {
-        DB::rollBack();
-        Log::error("--- REJECT TENDER ERROR --- " . $th->getMessage());
-        Log::error($th);
-        return redirect()->route('initiatetender.index')->with('error', 'Failed to reject Tender. Please try again.');
+            if ($tender->ApprovalStatus !== TenderApprovalStatusEnum::PENDING) {
+                throw new Exception('Only pending tenders can be rejected');
+            }
+
+            // Reject via workflow
+            $rejected = $this->workflow->reject(
+                $tender,
+                $user,
+                TenderApprovalStatusEnum::REJECTED,
+                $request->reason,
+                'ApprovalStatus'
+            );
+
+            if (!$rejected) {
+                throw new Exception('Workflow rejection failed');
+            }
+
+            // Refresh and update
+            $tender->refresh();
+            $tender->update([
+                'Status' => TenderStatusEnum::Draft,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
+            ]);
+
+            DB::commit();
+
+            activity()
+                ->performedOn($tender)
+                ->causedBy($user)
+                ->withProperties([
+                    'action' => 'reject',
+                    'remarks' => $request->reason
+                ])
+                ->log('Tender rejected: ' . $tender->TenderNo);
+
+            return redirect()->route('initiatetender.index')
+                ->with('success', 'Tender rejected successfully');
+
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error('Rejection failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to reject: ' . $e->getMessage());
+        }
     }
-}
+
 
     /**
      * Get prequalified suppliers based on active prequalification rounds
@@ -1499,44 +1582,42 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
     /**
  * Show workflow history for a tender
  */
-public function workflowHistory($id)
-{
-    $this->authorize(PermissionEnum::TenderRead, Tender::class);
+ public function workflowHistory($id)
+    {
+        try {
+            $tender = Tender::findOrFail($id);
+            $history = $this->workflow->historyForModel($tender);
 
-    $tender = Tender::findOrFail($id);
+            return view('procurement.tendering.initiatetender.workflow-history', compact(
+                'tender',
+                'history'
+            ));
 
-    try {
-        $history = $this->workflow->historyForModel($tender);
-
-        return view('procurement.tendering.tendersetup.tenderinitiation.workflow-history', compact(
-            'tender',
-            'history'
-        ));
-    } catch (Exception $e) {
-        Log::error('Failed to fetch workflow history: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Failed to load workflow history.');
+        } catch (\Exception $e) {
+            Log::error('Failed to load history: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to load workflow history');
+        }
     }
-}
 
     private function createTenderModel(Request $request): Tender
-    {
-        return Tender::create([
-            'TenderNo' => 'TNDR-' . Str::upper(Str::random(8)),
-            'Title' => $request->title,
-            'TenderType' => TenderTypeEnum::from($request->tender_type),
-            'TenderCategory' => $request->tender_category_id,
-            'ScopeOfWork' => $request->scope_of_work,
-            'Instructions' => $request->instructions,
-            'SubmissionDeadline' => $request->submission_deadline,
-            'OpeningDate' => $request->opening_date,
-            'Status' => 'dr',
-            'ItemCategoryId' => $request->item_category_id,
-            'CurrencyId' => $request->currency_id,
-            'CreatedBy' => Auth::id(),
-            'ModifiedBy' => Auth::id(),
-        ]);
-    }
-
+{
+    return Tender::create([
+        'TenderNo' => 'TNDR-' . Str::upper(Str::random(8)),
+        'Title' => $request->title,
+        'TenderType' => TenderTypeEnum::from($request->tender_type),
+        'TenderCategory' => $request->tender_category_id,
+        'ScopeOfWork' => $request->scope_of_work,
+        'Instructions' => $request->instructions,
+        'SubmissionDeadline' => $request->submission_deadline,
+        'OpeningDate' => $request->opening_date,
+        'Status' => TenderStatusEnum::Draft,  // Use enum instead of string
+         'ApprovalStatus' => Null,  // CRITICAL: Set to null, not PENDING
+        'ItemCategoryId' => $request->item_category_id,
+        'CurrencyId' => $request->currency_id,
+        'CreatedBy' => Auth::id(),
+        'ModifiedBy' => Auth::id(),
+    ]);
+}
     private function createTenderItems(Request $request, Tender $tender): void
     {
         if (!empty($request->plan_items)) {
