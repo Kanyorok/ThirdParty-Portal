@@ -139,6 +139,8 @@ class ThirdPartyAuthController extends Controller
                 'emailVerifiedOn' => optional($user->EmailVerifiedOn)->format('Y-m-d H:i:s'),
                 'createdOn' => optional($user->CreatedOn)->format('Y-m-d H:i:s'),
                 'modifiedOn' => optional($user->ModifiedOn)->format('Y-m-d H:i:s'),
+                'isTenant' => $user->isTenant(),
+                'isCustomer' => $user->isCustomer(),
                 // 'thirdParty' => $user->thirdParty, // Avoid full object if not needed, or simpler extraction
             ];
 
