@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\Authenticate;
 use App\Models\Auth\ModelRole;
 use App\Models\Auth\PersonalAccessToken as CustomPersonalAccessToken;
 use App\Models\Auth\Team;
@@ -9,7 +10,6 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Services\Workflow\ApprovalWorkflow;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;
@@ -102,10 +102,8 @@ use App\Models\Fleet\FleetTripLog;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetVehicleInspection;
 use App\Models\Fleet\FleetVehicleRequest;
-use App\Models\FleetManagement\DriverManagement;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
-// use App\Models\FleetManagement\VehicleRegistry;
 use App\Models\HRM\Committee;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
@@ -255,8 +253,8 @@ use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
-
 use App\Policies\RolePolicy;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -274,13 +272,13 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register():void 
+    public function register(): void
 
     {
          $this->app->bind(ApprovalWorkflow::class, function ($app) {
         return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
     });
-    
+
     }
 
     /**
@@ -288,6 +286,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->singleton(
+            \Illuminate\Auth\Middleware\Authenticate::class,
+            Authenticate::class
+        );
+
         \Illuminate\Support\Facades\Blade::if('canRead', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
             if (!$user) return false;
@@ -359,6 +362,7 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
+
             'tender' => Tender::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,

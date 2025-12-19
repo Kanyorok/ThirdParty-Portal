@@ -1,3 +1,5 @@
+{{-- This is to be deleted as it is currently being handled in the Third Party Portal. --}}
+
 @extends('layouts.app')
 @section('title', 'Edit Tenant Details')
 @section('content')

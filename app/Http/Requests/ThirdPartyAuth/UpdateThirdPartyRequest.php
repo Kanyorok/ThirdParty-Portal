@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\ThirdPartyAuth;
 
+use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\ThirdPartyStatusEnum;
-use App\Enums\BusinessTypeEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
 
 class UpdateThirdPartyRequest extends FormRequest
 {

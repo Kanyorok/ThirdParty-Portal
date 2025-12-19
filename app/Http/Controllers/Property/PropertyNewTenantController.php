@@ -14,10 +14,10 @@ class PropertyNewTenantController extends Controller
 {
     protected $service;
 
-    public function __construct(PropertyNewTenantService $service)
-    {
-        $this->service = $service;
-    }
+    // public function __construct(PropertyNewTenantService $service)
+    // {
+    //     $this->service = $service;
+    // }
     public function index()
     {
         $newtenants = PropertyNewTenant::with('type', 'thirdParty')->get();

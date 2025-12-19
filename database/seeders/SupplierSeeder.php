@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use App\Models\ThirdParies\Supplier;
+use App\Models\ThirdParty\ThirdPartyUser;
+use Illuminate\Database\Seeder;
 
 // Use the Supplier model
-use App\Models\ThirdParty\ThirdPartyUser;
 
 // Import the ThirdPartyUser model
-use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\BusinessTypeEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
 
 class SupplierSeeder extends Seeder
 {
@@ -35,7 +35,7 @@ class SupplierSeeder extends Seeder
             'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Approved,
             'CreatedBy' => $creatorId,
             'ModifiedBy' => $creatorId,
-            'Status' => \App\Enums\ThirdPartyStatusEnum::Active,
+            'Status' => \App\Enums\ThirdParty\ThirdPartyStatusEnum::Active,
         ];
 
         Supplier::create(array_merge($commonSupplierData, [

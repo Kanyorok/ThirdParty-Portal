@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Web\ThirdParty;
+namespace App\Http\Controllers\ThirdParty;
 
 use App\Enums\BusinessTypeEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Enums\ThirdPartyStatusEnum;
-use App\Enums\ThirdPartyTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyWithUserRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
@@ -13,16 +12,15 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
-use Illuminate\Support\Facades\DB;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
-use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class ThirdPartyWebController extends Controller
 {

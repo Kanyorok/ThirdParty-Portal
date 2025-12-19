@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\ThirdParty\ThirdParties;
-use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\ThirdPartyStatusEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 

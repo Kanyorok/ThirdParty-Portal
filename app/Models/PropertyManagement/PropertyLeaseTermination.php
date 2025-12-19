@@ -2,6 +2,7 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Enums\Core\ApprovalEnum;
 use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
@@ -24,6 +25,7 @@ class PropertyLeaseTermination extends Model
         'TerminationDate',
         'TerminationReason',
         'Remarks',
+        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
@@ -33,6 +35,9 @@ class PropertyLeaseTermination extends Model
     {
         return 'LeaseTerminationId';
     }
+    protected $casts = [
+        'Status' => ApprovalEnum::class,
+    ];
 
     public function lease()
     {

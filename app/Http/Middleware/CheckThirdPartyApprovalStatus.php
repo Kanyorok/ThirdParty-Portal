@@ -2,12 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Models\ThirdParty\ThirdPartyUser;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ThirdParty\ThirdPartyUser;
-use App\Enums\ThirdPartyApprovalStatusEnum;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckThirdPartyApprovalStatus
 {
