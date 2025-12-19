@@ -10,17 +10,17 @@ import {
     Bell,
     Info,
     Camera,
-    Shield,
     AlertTriangle,
     Trash2,
     Loader2,
     Mail,
     Phone,
-    BadgeCheckIcon,
     UploadCloud,
     X,
     Building2,
-    Users,
+    Globe,
+    MapPin,
+    FileText
 } from 'lucide-react';
 import { Button } from '@/components/common/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/card';
@@ -41,8 +41,6 @@ import {
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/common/dialog';
-import { Checkbox } from '@/components/common/checkbox';
-import { Switch } from '@/components/common/switch';
 import { Separator } from '@/components/common/separator';
 import { Badge } from '@/components/common/badge';
 import { UserProfile } from '@/types/next-auth';
@@ -51,108 +49,7 @@ import { getInitials } from '@/lib/utils';
 import { apiService } from '@/lib/api/profile';
 import { motion } from 'framer-motion';
 
-const RolesCard: React.FC<{
-    profile: UserProfile;
-    accessToken: string;
-    mutateProfile: (data?: any, options?: boolean | MutatorOptions) => Promise<any>;
-}> = ({ profile, accessToken, mutateProfile }) => {
-    const [togglingRoleId, setTogglingRoleId] = useState<number | null>(null);
 
-    const handleToggleRole = async (roleId: number, currentStatus: boolean, roleLabel: string) => {
-        setTogglingRoleId(roleId);
-        try {
-            // Optimistic update? Maybe too risky if backend fails. We'll wait.
-            const newStatus = !currentStatus;
-            await apiService.toggleRole(roleId, newStatus, accessToken);
-            toast.success(`${roleLabel} role ${newStatus ? 'enabled' : 'disabled'} successfully.`);
-
-            // Mutate profile to refresh data
-            await mutateProfile(); // This should re-fetch because toggleRole updates backend state
-        } catch (error: any) {
-            toast.error(error.message || `Failed to toggle ${roleLabel} role.`);
-        } finally {
-            setTogglingRoleId(null);
-        }
-    };
-
-    // Extract roles from 'types' (Assuming ThirdPartyResource returns 'types' which are mapped to profile.thirdParty?.types or similar)
-    // The previous type definition update added types?: ThirdPartyTypeEntry[] to BaseUser.
-    // However, UserProfile interface might need checking. Based on resource, it returns nested under 'user_profile'.
-    // The useSWR hook returns UserProfile.
-    // We need to access the 'types' from the profile. 
-    // Wait, the API returns { user_profile: ... }. The apiService.getProfile unpacks this.
-    // The UserProfile interface in next-auth.d.ts doesn't explicitly have 'types' at the top level, 
-    // it has 'thirdParty.types' implied? No, let's check the resource again.
-    // RESOURCE: 'types' => mapped array.
-    // So 'types' is a top-level property of the returned object (which matches UserProfile structure roughly).
-    // Let's assume profile.types exists as we saw in the resource.
-    // Implementation note: The TS interface UserProfile might strictly not have it, so we cast for now or update interface.
-    // We updated BaseUser but not UserProfile in the d.ts file properly? 
-    // BaseUser has 'types'. UserProfile might likely be the same shape.
-
-    // @ts-ignore
-    const roles = profile.types || [];
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-        >
-            <Card className="border-0 shadow-medium bg-card">
-                <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center gap-3 text-2xl font-bold">
-                        <div className="p-2 bg-gradient-primary rounded-lg">
-                            <Users className="h-5 w-5 text-primary-foreground" />
-                        </div>
-                        Manage Roles
-                    </CardTitle>
-                    <CardDescription>
-                        Enable or disable your access roles. Identifying as a Supplier, Tenant, or Customer.
-                    </CardDescription>
-                </CardHeader>
-                <Separator />
-                <CardContent className="pt-6 space-y-6">
-                    {roles.length === 0 ? (
-                        <div className="text-center text-muted-foreground p-4">
-                            No roles assigned.
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {roles.map((role: any) => (
-                                <div key={role.pivotId} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <p className="font-semibold text-foreground">{role.label || role.code}</p>
-                                            {role.isActive ? (
-                                                <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-200">Active</Badge>
-                                            ) : (
-                                                <Badge variant="outline" className="text-muted-foreground">Inactive</Badge>
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">
-                                            {role.code === 'SU' ? 'Supplier Access' :
-                                                role.code === 'TN' ? 'Tenant Access' :
-                                                    role.code === 'CU' ? 'Customer Access' : 'Generic Access'}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        {togglingRoleId === role.pivotId && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-                                        <Switch
-                                            checked={role.isActive}
-                                            onCheckedChange={() => handleToggleRole(role.pivotId, role.isActive, role.label || role.code)}
-                                            disabled={togglingRoleId !== null}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </motion.div>
-    );
-};
 
 const ProfileDetailsCard: React.FC<{
     profile: UserProfile;
@@ -180,20 +77,20 @@ const ProfileDetailsCard: React.FC<{
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">First Name</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.firstName || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.firstName || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Last Name</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.lastName || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.lastName || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Email Address</Label>
                         <div className="p-3 bg-muted rounded-lg flex items-center gap-2 opacity-80">
                             <Mail className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">{profile.email}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.email}</p>
                             <Badge variant="secondary" className="ml-auto text-xs">Read-only</Badge>
                         </div>
                     </div>
@@ -201,7 +98,7 @@ const ProfileDetailsCard: React.FC<{
                         <Label className="text-sm font-medium text-muted-foreground">Phone Number</Label>
                         <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">{profile.phone || 'Not provided'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.phone || 'Not provided'}</p>
                         </div>
                     </div>
                 </div>
@@ -226,9 +123,81 @@ const ProfileDetailsCard: React.FC<{
     </motion.div>
 );
 
-// ... (Existing Modals: EditProfileModal, PasswordChangeModal, ProfilePictureModal, NotificationModal)
-// I will include them inline or we assume they are there.
-// For stability, I will copy them back in to ensure nothing is lost.
+const CompanyDetailsCard: React.FC<{
+    profile: UserProfile;
+    onEdit: () => void;
+}> = ({ profile, onEdit }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+    >
+        <Card className="border-0 shadow-medium bg-card">
+            <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3 text-2xl font-bold">
+                    <div className="p-2 bg-gradient-primary rounded-lg">
+                        <Building2 className="h-5 w-5 text-primary-foreground" />
+                    </div>
+                    Company Details
+                </CardTitle>
+                <CardDescription>
+                    Manage your business information.
+                </CardDescription>
+            </CardHeader>
+            <Separator />
+            <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Trading Name</Label>
+                        <div className="p-3 bg-muted rounded-lg">
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.tradingName || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Business Type</Label>
+                        <div className="p-3 bg-muted rounded-lg">
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.businessType || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Tax PIN</Label>
+                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.taxPIN || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">VAT Number</Label>
+                        <div className="p-3 bg-muted rounded-lg">
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.vatNumber || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Physical Address</Label>
+                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.physicalAddress || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Website</Label>
+                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-semibold text-foreground truncate">{profile.thirdPartyDetails.website || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+                <Separator />
+                <div className="pt-6">
+                    <Button onClick={onEdit} variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
+                        <Edit className="h-4 w-4" />
+                        Edit Company Details
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    </motion.div>
+);
 
 const EditProfileModal: React.FC<{
     isOpen: boolean
@@ -238,23 +207,19 @@ const EditProfileModal: React.FC<{
     accessToken: string
 }> = ({ isOpen, onClose, profile, mutateProfile, accessToken }) => {
     const [formData, setFormData] = useState({
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
-        // email: profile.email, // Email not editable here
-        phone: profile.phone || '',
-        gender: profile.gender || ''
+        firstName: profile.thirdPartyUser.firstName || '',
+        lastName: profile.thirdPartyUser.lastName || '',
+        phone: profile.thirdPartyUser.phone || '',
     });
 
-    const [isPending, startTransition] = useTransition();
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setFormData({
-                firstName: profile.firstName || '',
-                lastName: profile.lastName || '',
-                phone: profile.phone || '',
-                gender: profile.gender || ''
+                firstName: profile.thirdPartyUser.firstName || '',
+                lastName: profile.thirdPartyUser.lastName || '',
+                phone: profile.thirdPartyUser.phone || '',
             });
         }
     }, [isOpen, profile]);
@@ -262,9 +227,8 @@ const EditProfileModal: React.FC<{
     const handleSave = useCallback(async () => {
         setSaving(true);
         try {
-            // startTransition(() => {}); // Optional
-            const updatedProfile = await apiService.updateProfile(formData, accessToken);
-            await mutateProfile(); // Re-fetch
+            await apiService.updateProfile(formData, accessToken);
+            await mutateProfile();
             toast.success('Profile updated successfully!');
             onClose();
         } catch (error: any) {
@@ -282,7 +246,7 @@ const EditProfileModal: React.FC<{
                         <div className="p-2 bg-gradient-primary rounded-lg">
                             <Edit className="h-5 w-5 text-primary-foreground" />
                         </div>
-                        Edit Profile
+                        Edit Personal Info
                     </DialogTitle>
                 </DialogHeader>
 
@@ -324,6 +288,145 @@ const EditProfileModal: React.FC<{
                                 dropdownClass="!bg-background !text-foreground !z-50"
                             />
                         </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-6">
+                    <Button variant="outline" onClick={onClose} disabled={saving}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
+                        {saving ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>Save Changes</>
+                        )}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+const EditCompanyModal: React.FC<{
+    isOpen: boolean
+    onClose: () => void
+    profile: UserProfile
+    mutateProfile: (data?: any, options?: boolean | MutatorOptions) => Promise<any>
+    accessToken: string
+}> = ({ isOpen, onClose, profile, mutateProfile, accessToken }) => {
+    const [formData, setFormData] = useState({
+        tradingName: profile.thirdPartyDetails.tradingName || '',
+        businessType: profile.thirdPartyDetails.businessType || '',
+        taxPin: profile.thirdPartyDetails.taxPIN || '',
+        vatNumber: profile.thirdPartyDetails.vatNumber || '',
+        physicalAddress: profile.thirdPartyDetails.physicalAddress || '',
+        website: profile.thirdPartyDetails.website || '',
+    });
+
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setFormData({
+                tradingName: profile.thirdPartyDetails.tradingName || '',
+                businessType: profile.thirdPartyDetails.businessType || '',
+                taxPin: profile.thirdPartyDetails.taxPIN || '',
+                vatNumber: profile.thirdPartyDetails.vatNumber || '',
+                physicalAddress: profile.thirdPartyDetails.physicalAddress || '',
+                website: profile.thirdPartyDetails.website || '',
+            });
+        }
+    }, [isOpen, profile]);
+
+    const handleSave = useCallback(async () => {
+        setSaving(true);
+        try {
+            await apiService.updateProfile(formData, accessToken);
+            await mutateProfile();
+            toast.success('Company details updated successfully!');
+            onClose();
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to update company details');
+        } finally {
+            setSaving(false);
+        }
+    }, [formData, accessToken, mutateProfile, onClose]);
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[600px] border-0 shadow-strong">
+                <DialogHeader className="pb-4">
+                    <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+                        <div className="p-2 bg-gradient-primary rounded-lg">
+                            <Building2 className="h-5 w-5 text-primary-foreground" />
+                        </div>
+                        Edit Company Details
+                    </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="tradingName">Trading Name</Label>
+                            <Input
+                                id="tradingName"
+                                value={formData.tradingName}
+                                onChange={e => setFormData(prev => ({ ...prev, tradingName: e.target.value }))}
+                                disabled={saving}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="businessType">Business Type</Label>
+                            <Input
+                                id="businessType"
+                                value={formData.businessType}
+                                onChange={e => setFormData(prev => ({ ...prev, businessType: e.target.value }))}
+                                disabled={saving}
+                            />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="taxPin">Tax PIN</Label>
+                            <Input
+                                id="taxPin"
+                                value={formData.taxPin}
+                                onChange={e => setFormData(prev => ({ ...prev, taxPin: e.target.value }))}
+                                disabled={saving}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="vatNumber">VAT Number</Label>
+                            <Input
+                                id="vatNumber"
+                                value={formData.vatNumber}
+                                onChange={e => setFormData(prev => ({ ...prev, vatNumber: e.target.value }))}
+                                disabled={saving}
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="physicalAddress">Physical Address</Label>
+                        <Input
+                            id="physicalAddress"
+                            value={formData.physicalAddress}
+                            onChange={e => setFormData(prev => ({ ...prev, physicalAddress: e.target.value }))}
+                            disabled={saving}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="website">Website URL</Label>
+                        <Input
+                            id="website"
+                            value={formData.website}
+                            placeholder="https://example.com"
+                            onChange={e => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                            disabled={saving}
+                        />
                     </div>
                 </div>
 
@@ -486,7 +589,7 @@ const ProfilePictureModal: React.FC<{
                     <Avatar className="h-32 w-32 border-4 border-primary/20 shadow-md">
                         <AvatarImage src={selectedFile ? URL.createObjectURL(selectedFile) : profile.imageUrl ?? undefined} alt="Profile Preview" className="object-cover" />
                         <AvatarFallback className="text-xl font-bold bg-muted text-muted-foreground">
-                            {getInitials(profile.firstName, profile.lastName)}
+                            {getInitials(profile.thirdPartyUser.firstName ?? undefined, profile.thirdPartyUser.lastName ?? undefined)}
                         </AvatarFallback>
                     </Avatar>
                     <Label htmlFor="picture-upload" className="cursor-pointer bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
@@ -532,6 +635,7 @@ const UserProfilePage: React.FC = () => {
     );
 
     const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+    const [isEditCompanyModalOpen, setIsEditCompanyModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] = useState(false);
 
@@ -565,7 +669,7 @@ const UserProfilePage: React.FC = () => {
                 <div className="space-y-1">
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">My Account</h1>
                     <p className="text-muted-foreground">
-                        Manage your personal information, security, and role permissions.
+                        Manage your personal information, company details, and role permissions.
                     </p>
                 </div>
             </motion.div>
@@ -585,16 +689,16 @@ const UserProfilePage: React.FC = () => {
                                     className="relative h-32 w-32 border-4 border-primary/20 shadow-strong cursor-pointer"
                                     onClick={() => setIsProfilePictureModalOpen(true)}
                                 >
-                                    <AvatarImage src={profile.imageUrl ?? undefined} alt={profile.firstName} className="object-cover" />
+                                    <AvatarImage src={profile.imageUrl ?? undefined} alt={profile.thirdPartyUser.firstName || 'User'} className="object-cover" />
                                     <AvatarFallback className="text-3xl font-bold bg-gradient-primary-700">
-                                        {getInitials(profile.firstName, profile.lastName)}
+                                        {getInitials(profile.thirdPartyUser.firstName ?? undefined, profile.thirdPartyUser.lastName ?? undefined)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="space-y-2">
-                                    <h2 className="text-2xl font-bold text-foreground">{profile.firstName} {profile.lastName}</h2>
-                                    <p className="text-muted-foreground">{profile.thirdParty?.tradingName || 'No Company'}</p>
+                                    <h2 className="text-2xl font-bold text-foreground">{profile.thirdPartyUser.firstName} {profile.thirdPartyUser.lastName}</h2>
+                                    <p className="text-muted-foreground">{profile.thirdPartyDetails.tradingName || 'No Company Name'}</p>
                                     <Badge variant="secondary" className="bg-blue-500/10 text-blue-600">
-                                        {profile.thirdParty?.businessType || 'User'}
+                                        {profile.thirdPartyDetails.businessType || 'User'}
                                     </Badge>
                                 </div>
                             </CardContent>
@@ -611,10 +715,9 @@ const UserProfilePage: React.FC = () => {
                         onProfilePictureClick={() => setIsProfilePictureModalOpen(true)}
                     />
 
-                    <RolesCard
+                    <CompanyDetailsCard
                         profile={profile}
-                        accessToken={accessToken}
-                        mutateProfile={mutate}
+                        onEdit={() => setIsEditCompanyModalOpen(true)}
                     />
                 </div>
             </div>
@@ -622,6 +725,14 @@ const UserProfilePage: React.FC = () => {
             <EditProfileModal
                 isOpen={isEditProfileModalOpen}
                 onClose={() => setIsEditProfileModalOpen(false)}
+                profile={profile}
+                mutateProfile={mutate}
+                accessToken={accessToken}
+            />
+
+            <EditCompanyModal
+                isOpen={isEditCompanyModalOpen}
+                onClose={() => setIsEditCompanyModalOpen(false)}
                 profile={profile}
                 mutateProfile={mutate}
                 accessToken={accessToken}

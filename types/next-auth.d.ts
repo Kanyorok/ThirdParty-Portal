@@ -3,48 +3,46 @@ import { DefaultJWT } from "next-auth/jwt"
 
 interface UserProfile {
     id: number;
-    userId: string;
-    firstName: string;
-    lastName: string;
-    fullName: string;
-    email: string;
-    phone?: string | null;
-    imageId?: number | null;
-    gender?: string | null;
-    thirdPartyId: number;
-    isActive: boolean;
-    isApproved: boolean;
-    isSupplier: boolean;
-    isTenant: boolean;
-    isCustomer: boolean;
-    emailVerifiedOn?: string | null;
-    createdOn: string;
-    modifiedOn: string;
-    receiveSmsNotifications?: boolean;
-    receiveNewsletter?: boolean;
-    imageUrl?: string | null;
-    thirdParty?: {
+    thirdPartyUser: {
+        firstName: string | null;
+        lastName: string | null;
+        fullName: string;
+        email: string;
+        phone: string | null;
+    };
+    approvalStatusCode: string | null;
+    status: string | null;
+    thirdPartyDetails: {
         id: number;
         thirdPartyName: string | null;
         tradingName: string | null;
-        label: string | null;
         businessType: string | null;
         registrationNumber: string | null;
         taxPIN: string | null;
-        vATNumber: string | null;
-        country: string | null;
+        vatNumber: string | null;
         physicalAddress: string | null;
-        email: string;
-        phone: string | null;
         website: string | null;
+        countryId: number | null;
+        countryInfo?: {
+            id: number;
+            name: string;
+            code: string;
+            iso3: string;
+            phoneCode: string;
+            flag: string;
+        };
         approvalStatus: string | null;
-        status: string | null;
-        thirdPartyType: string | null;
+        statusCode: string | null;
+        isPrequalified: boolean;
+        thirdPartyTypeCode: string | null;
+        types?: ThirdPartyTypeEntry[];
+        categories: any[];
         createdOn: string;
         modifiedOn: string;
         createdBy: number | null;
-        isActive: boolean | null;
     };
+    image?: string | null; // For helper compatibility
+    imageUrl?: string | null; // From API
 }
 
 interface ThirdParty {
@@ -100,6 +98,7 @@ export interface ThirdPartyTypeEntry {
     categoryId: number | null;
     isActive: boolean;
     pivotId: number;
+    label?: string; // Optional label added dynamically
 }
 
 declare module "next-auth" {
