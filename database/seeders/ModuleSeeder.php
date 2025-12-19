@@ -319,10 +319,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 502330, 'Name' => 'Lease Renewal', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'renewlease.index'],
             ['ModuleID' => 502340, 'Name' => 'Lease Termination', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'terminatelease.index'],
             ['ModuleID' => 502390, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => null],
-            ['ModuleID' => 502391, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index'],
-            //['ModuleID' => 502392, 'Name' => 'Renewal Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'renewalapproval.index'],
-            //['ModuleID' => 502393, 'Name' => 'Termination Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'terminationapproval.index'],
-            //['ModuleID' => 502350, 'Name' => 'Payment Frequency', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'paymentfrequency.index'],
+            ['ModuleID' => 502391, 'Name' => 'Property Approvals', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index'],
 
             // First level - Billing & Receipting
             ['ModuleID' => 503000, 'Name' => 'Billing & Receipting', 'Icon' => '<i class="fas fa-file-invoice-dollar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],
@@ -717,7 +714,7 @@ class ModuleSeeder extends Seeder
             //            ['ModuleID' => 1108100, 'Name' => 'Account Setup', 'Icon' => null, 'Description' => '', 'Route' => 'bankaccountsetup.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108200, 'Name' => 'Cash Book', 'Icon' => null, 'Description' => '', 'Route' => 'cashbook.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108300, 'Name' => 'Cash Management', 'Icon' => null, 'Description' => '', 'Route' => 'cashmanagement.index', 'ParentID' => 1108000],
-                        ['ModuleID' => 1108400, 'Name' => 'Cheque Management', 'Icon' => null, 'Description' => '', 'Route' => 'chequemanagement.index', 'ParentID' => 1108000],
+                        //['ModuleID' => 1108400, 'Name' => 'Cheque Management', 'Icon' => null, 'Description' => '', 'Route' => 'chequemanagement.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108500, 'Name' => 'Vouchers', 'Icon' => null, 'Description' => '', 'Route' => 'paymentandreceiptvouchers.index', 'ParentID' => 1108000],
 
             ['ModuleID' => 1109000, 'Name' => 'Finance Settings', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],

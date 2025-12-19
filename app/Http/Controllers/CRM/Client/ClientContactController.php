@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 
 class ClientContactController extends Controller
 {
@@ -47,22 +48,22 @@ class ClientContactController extends Controller
         if ($request->has('conversation')) {
             $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
         }
-
+        $phone = $request->getPhone($client->CountryID);
         try {
-            $this->save($client->contacts(), $request->savable());
+            $this->save($client->contacts(), $request->savable($phone));
 
-            if ($emailConversation instanceof  EmailConversation) {
+            if ($emailConversation instanceof EmailConversation) {
                 $emailConversation->update([
-                                            'Party'   => Client::getPrimaryKey(),
-                                            'PartyID' => $client->ClientID,
-                                           ]);
+                    'Party' => Client::getPrimaryKey(),
+                    'PartyID' => $client->ClientID,
+                ]);
 
                 $emailConversation->emails()->update([
-                                                      'Party'   => Client::getPrimaryKey(),
-                                                      'PartyID' => $client->ClientID,
-                                                     ]);
+                    'Party' => Client::getPrimaryKey(),
+                    'PartyID' => $client->ClientID,
+                ]);
             }
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error adding  client Contact. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

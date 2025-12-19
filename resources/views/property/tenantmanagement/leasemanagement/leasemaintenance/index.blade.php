@@ -76,8 +76,8 @@
                                         </a>
                                     @endif
 
-                                    @if($newlease->IsOfferGenerated)
-                                        <button class="btn btn-sm btn-secondary" title="Offer Generated - Lease Locked" >
+                                    @if($newlease->ApprovalStatus === App\Enums\Core\ApprovalEnum::Approved->value)
+                                        <button class="btn btn-sm btn-secondary" title="Offer letter has been approved - Lease Locked" >
                                             <i class="bi bi-lock"></i>
                                         </button>
                                     @else

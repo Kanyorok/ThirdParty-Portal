@@ -8,61 +8,51 @@ use Illuminate\Support\Facades\DB;
 
 class BranchSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $actor = SystemHelper::user();
         $date = now();
 
-        DB::table('t_Branches')->insert([
+        $branches = [
             [
-                'Name' => 'Head Office',
                 'BranchID' => '000',
-                'CreatedOn' => $date,
+                'Name' => 'Head Office',
                 'IsHQ' => true,
-                'CreatedBy' => $actor->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $actor->Id,
             ],
             [
-                'Name' => 'Moshi',
                 'BranchID' => '001',
-                'CreatedOn' => $date,
+                'Name' => 'Moshi',
                 'IsHQ' => false,
-                'CreatedBy' => $actor->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $actor->Id,
             ],
             [
-                'Name' => 'TANDAHIMBA ',
                 'BranchID' => '002',
-                'CreatedOn' => $date,
+                'Name' => 'TANDAHIMBA',
                 'IsHQ' => false,
-                'CreatedBy' => $actor->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $actor->Id,
             ],
             [
-                'Name' => 'DODOMA ',
                 'BranchID' => '003',
-                'CreatedOn' => $date,
+                'Name' => 'DODOMA',
                 'IsHQ' => false,
-                'CreatedBy' => $actor->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $actor->Id,
             ],
             [
-                'Name' => 'TABORA ',
                 'BranchID' => '004',
-                'CreatedOn' => $date,
+                'Name' => 'TABORA',
                 'IsHQ' => false,
-                'CreatedBy' => $actor->Id,
-                'ModifiedOn' => $date,
-                'ModifiedBy' => $actor->Id,
             ],
-        ]);
-        //
+        ];
+
+        foreach ($branches as $branch) {
+            DB::table('t_Branches')->updateOrInsert(
+                ['BranchID' => $branch['BranchID']], // condition
+                [
+                    'Name' => $branch['Name'],
+                    'IsHQ' => $branch['IsHQ'],
+                    'CreatedOn' => $date,
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedOn' => $date,
+                    'ModifiedBy' => $actor->Id,
+                ]
+            );
+        }
     }
 }

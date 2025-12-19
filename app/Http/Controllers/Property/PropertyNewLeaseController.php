@@ -10,6 +10,8 @@ use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
@@ -17,6 +19,7 @@ use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
+use App\Models\PropertyManagement\PropertyRateAndPricing;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DateTime;
@@ -34,13 +37,13 @@ class PropertyNewLeaseController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
-        $newleases = PropertyNewLease::with(['tenant', 'property'])->get(); 
+        $newleases = PropertyNewLease::with(['tenant', 'property'])->get();
 
         if (request()->wantsJson()) {
             return response()->json($newleases);
         }
         
-        return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
+        return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases' ));
     }
 
 
@@ -57,11 +60,33 @@ class PropertyNewLeaseController extends Controller
                         ->where('CurrentStatus', true);
                 }
             ])->get();
+        $Currencies = Currency::all();
+        $taxtypes = FinanceTaxRuleConfiguration::with('taxType')->get();
 
 
         $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
-        return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
+        return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes', 'taxtypes', 'Currencies'));
+    }
+
+    
+    public function getPricingUnit($UnitId)
+    {
+        $pricing = PropertyRateAndPricing::where('UnitId', $UnitId)->first();
+
+        if (!$pricing) {
+            return response()->json(null, 200);
+        }
+
+        return response()->json([
+            'Rent'          => $pricing->Rent,
+            'DepositAmount' => $pricing->DepositAmount,
+            'ServiceCharge' => $pricing->ServiceCharge,
+            'ParkingFee'    => $pricing->ParkingFee,
+            'OtherCharges'  => $pricing->OtherCharges,
+            'TaxId'        => $pricing->TaxId,
+            'CurrencyId'   => $pricing->CurrencyId,
+        ]);
     }
 
     public function getBlockByProperty($PropertyId)
@@ -129,6 +154,8 @@ class PropertyNewLeaseController extends Controller
         $floor = PropertyFloor::findOrFail($data['FloorID']);
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $paymentFrequency = CodeDetail::findOrFail($data['PaymentFrequency']);
+        $CurrencyId = Currency::findOrFail($data['CurrencyId']);
+        $TaxId = FinanceTaxRuleConfiguration::findOrFail($data['TaxId']);
 
         foreach ($request->file('Document', []) as $uploadedFile) {
         $this->service->create(
@@ -151,6 +178,8 @@ class PropertyNewLeaseController extends Controller
             $data['DueDay'],
             $data['SpecialTerms'] ?? '',
             $request->user(),
+            $CurrencyId,
+            $TaxId,
             $uploadedFile
         );
     }
@@ -164,8 +193,10 @@ class PropertyNewLeaseController extends Controller
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
         $newtenants = PropertyNewLease::with('tenant')->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+        $Currencies = Currency::all();
+        $taxtypes = FinanceTaxRuleConfiguration::with('taxType')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.edit', compact(
-            'newlease', 'newtenants', 'properties', 'codes'
+            'newlease', 'newtenants', 'properties', 'codes', 'taxtypes', 'Currencies'
         ));
     }
 
@@ -181,6 +212,8 @@ class PropertyNewLeaseController extends Controller
         $floor = PropertyFloor::findOrFail($data['FloorID']);
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $frequency = CodeDetail::findOrFail($data['PaymentFrequency']);
+        $CurrencyId = Currency::findOrFail($data['CurrencyId']);
+        $TaxId = FinanceTaxRuleConfiguration::findOrFail($data['TaxId']);
         $user = auth()->user();
 
         $this->service->update(
@@ -199,7 +232,9 @@ class PropertyNewLeaseController extends Controller
             OtherCharges: (float)$data['OtherCharges'],
             DueDay: (int)$data['DueDay'],
             SpecialTerms: $data['SpecialTerms'] ?? '',
-            user: $user
+            user: $user,
+            CurrencyId: $CurrencyId,
+            TaxId: $TaxId,
         );
 
     foreach ($request->file('Document', []) as $uploadedFile) {
@@ -220,6 +255,8 @@ class PropertyNewLeaseController extends Controller
             DueDay: (int)$data['DueDay'],
             SpecialTerms: $data['SpecialTerms'] ?? '',
             user: $user,
+            CurrencyId: $CurrencyId,
+            TaxId: $TaxId,
             document: $uploadedFile
         );
     }
@@ -229,23 +266,20 @@ class PropertyNewLeaseController extends Controller
 
     public function leaseOfferLetter($Id)
     {
-        $lease = PropertyNewLease::with(['tenant.thirdParty', 'property', 'block', 'floor', 'unit', 'code'])->findOrFail($Id);
+        $lease = PropertyNewLease::with(['tenant.thirdParty', 'property', 'block', 'floor', 'unit', 'code', 'currency'])->findOrFail($Id);
 
-        // Update IsOfferGenerated to true
         $lease->update([
             'IsOfferGenerated' => true,
             'ModifiedBy' => auth()->user()->Id,
             'ModifiedOn' => now(),
         ]);
 
-        // Log the activity
         activity()
             ->causedBy(auth()->user()->Id)
             ->performedOn($lease)
             ->event('offer_generated')
             ->log("Generated Lease Offer Letter for {$lease->LeaseNumber}.");
 
-        // Generate PDF
         $pdf = Pdf::loadView('property.tenantmanagement.leasemanagement.leasemaintenance.Offerletter', compact('lease'))->output();
 
         $lease->newDocumentFromContent(module: ModulesEnum::Property, extension: ExtensionsEnum::Pdf,
@@ -253,13 +287,8 @@ class PropertyNewLeaseController extends Controller
             actor: auth()->user(), permissions: [PermissionEnum::PropertyNewLeaseView->value]
         );
 
-        //todo start approval
-
         return redirect()->route('addlease.index')->with('success', 'Lease Offer Letter generated successfully.');
-        //   return $pdf->download("Lease_Offer_{$lease->LeaseNumber}.pdf");
 
-        // OR display in browser as HTML
-        // return view('property.tenantmanagement.leasemanagement.leasemaintenance.letter', compact('lease'));
     }
 
 

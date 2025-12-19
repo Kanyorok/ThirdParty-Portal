@@ -2,20 +2,22 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ApprovalEnum;
+use App\Enums\Core\ExtensionsEnum;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Models\Auth\User;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewLease;
+use App\Services\Workflow\ApprovalWorkflow;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
 class PropertyLeaseRenewalService
 {
-    /**
-     * Create a new lease renewal if one does not already exist for the given lease.
-     *
-     * @throws Exception if the lease renewal already exists or creation fails.
-     */
     public static function create(
         int    $leaseId,
         int    $paymentFrequencyId,
@@ -27,18 +29,17 @@ class PropertyLeaseRenewalService
         float  $ParkingFee,
         float  $OtherCharges,
         string $Remarks = null,
-        User   $user
+        string $Status,
+        User   $user,
+        UploadedFile $document = null
     ): PropertyLeaseRenewal
     {
         DB::beginTransaction();
-
         try {
-            //Prevent duplicate renewal
             if (PropertyLeaseRenewal::where('LeaseNumber', $leaseId)->exists()) {
                 throw new \Exception('This lease is already renewed.');
             }
 
-            //Create LeaseRenewal record
             $leaseRenewal = PropertyLeaseRenewal::create([
                 'LeaseNumber' => $leaseId,
                 'PaymentFrequency' => $paymentFrequencyId,
@@ -50,22 +51,24 @@ class PropertyLeaseRenewalService
                 'ParkingFee' => $ParkingFee,
                 'OtherCharges' => $OtherCharges,
                 'Remarks' => $Remarks,
+                'Status' => $Status,
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
             ]);
 
-            //Update original lease status to "Renewed"
+            // Update original lease status
             $oldLease = PropertyNewLease::findOrFail($leaseId);
-            $oldLease->update([
-                'Status' => PropertyNewLeaseEnum::Renew->value
-            ]);
+            $oldLease->update(['Status' => PropertyNewLeaseEnum::Renew->value]);
 
-            //Deactivate old lease schedule
-            PropertyLeaseSchedule::where('LeaseNumber', $leaseId)
-                ->update(['IsActive' => false]);
+            // Deactivate old schedule
+            PropertyLeaseSchedule::where('LeaseNumber', $leaseId)->update(['IsActive' => false]);
 
-            // Create new lease schedule (active)
-            $newSchedule = PropertyLeaseSchedule::create([
+            // Submit approval workflow
+            $workflow = new ApprovalWorkflow('ApprovalStatus', 'ApprovalStatus');
+            $workflow->submit($leaseRenewal, $user, ApprovalEnum::Pending, 'Lease renewal Submitted for Approval');
+
+            // Create new lease schedule
+            PropertyLeaseSchedule::create([
                 'LeaseNumber' => $leaseId,
                 'PaymentFrequency' => $paymentFrequencyId,
                 'StartDate' => $NewStartDate,
@@ -79,14 +82,25 @@ class PropertyLeaseRenewalService
                 'ModifiedBy' => $user->Id,
             ]);
 
-            activity()
-                ->causedBy($user)
-                ->performedOn($leaseRenewal)
-                ->withProperties(['LeaseId' => $leaseId])
-                ->log("Lease Renewed. Old Lease ID {$leaseId}, New Lease ID {$leaseRenewal->Id}");
+            // ================================
+            // Generate PDF Offer Letter
+            // ================================
+            $leaseRenewal->load(['lease', 'lease.tenant']);
+            $pdf = Pdf::loadView(
+                'property.tenantmanagement.leasemanagement.leaserenewal.renewalofferletter',
+                compact('leaseRenewal')
+            )->output();
+
+            $leaseRenewal->lease->newDocumentFromContent(
+                module: ModulesEnum::Property,
+                extension: ExtensionsEnum::Pdf,
+                fileName: "Lease_Renewal_Offer_{$leaseRenewal->lease->LeaseNumber}.pdf",
+                content: $pdf,
+                actor: $user,
+                permissions: [PermissionEnum::PropertyLeaseRenewalView->value]
+            );
 
             DB::commit();
-
             return $leaseRenewal;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -94,12 +108,6 @@ class PropertyLeaseRenewalService
         }
     }
 
-
-    /**
-     * Update an existing lease renewal.
-     *
-     * @throws \Exception if the update fails
-     */
     public static function update(
         PropertyLeaseRenewal $leaseRenewal,
         int    $leaseId,
@@ -115,9 +123,7 @@ class PropertyLeaseRenewalService
         User   $user
     ): void {
         DB::beginTransaction();
-
         try {
-            // Update lease renewal record
             $leaseRenewal->update([
                 'LeaseNumber' => $leaseId,
                 'PaymentFrequency' => $paymentFrequencyId,
@@ -132,9 +138,7 @@ class PropertyLeaseRenewalService
                 'ModifiedBy' => $user->Id,
             ]);
 
-            // Update existing schedule (if only one exists)
             $schedule = PropertyLeaseSchedule::where('LeaseNumber', $leaseId)->latest()->first();
-
             if ($schedule) {
                 $schedule->update([
                     'PaymentFrequency' => $paymentFrequencyId,
@@ -149,11 +153,21 @@ class PropertyLeaseRenewalService
                 ]);
             }
 
-            activity()
-                ->performedOn($leaseRenewal)
-                ->causedBy($user)
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Lease Renewal and Schedule');
+            // Regenerate PDF Offer Letter after update
+            $leaseRenewal->load(['lease', 'lease.tenant']);
+            $pdf = Pdf::loadView(
+                'property.tenantmanagement.leasemanagement.leaserenewal.renewalofferletter',
+                compact('leaseRenewal')
+            )->output();
+
+            $leaseRenewal->lease->newDocumentFromContent(
+                module: ModulesEnum::Property,
+                extension: ExtensionsEnum::Pdf,
+                fileName: "Lease_Renewal_Offer_{$leaseRenewal->lease->LeaseNumber}.pdf",
+                content: $pdf,
+                actor: $user,
+                permissions: [PermissionEnum::PropertyLeaseRenewalView->value]
+            );
 
             DB::commit();
         } catch (\Exception $e) {
@@ -162,31 +176,21 @@ class PropertyLeaseRenewalService
         }
     }
 
-    public static function delete(
-        PropertyLeaseRenewal $leaseRenewal,
-        User $user
-    ): void {
+    public static function delete(PropertyLeaseRenewal $leaseRenewal, User $user): void
+    {
         DB::beginTransaction();
-
         try {
             $leaseId = $leaseRenewal->LeaseNumber;
 
-            // Soft delete associated schedules (and set DeletedBy)
             PropertyLeaseSchedule::where('LeaseNumber', $leaseId)->get()->each(function ($schedule) use ($user) {
                 $schedule->DeletedBy = $user->Id;
                 $schedule->save();
                 $schedule->delete();
             });
 
-
             $leaseRenewal->DeletedBy = $user->Id;
             $leaseRenewal->save();
             $leaseRenewal->delete();
-
-            activity()
-                ->performedOn($leaseRenewal)
-                ->causedBy($user)
-                ->log("Soft deleted Lease Renewal and associated schedules for Lease ID {$leaseId}");
 
             DB::commit();
         } catch (\Exception $e) {

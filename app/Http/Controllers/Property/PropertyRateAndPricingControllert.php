@@ -50,6 +50,12 @@ class PropertyRateAndPricingControllert extends Controller
         return response()->json($units);
     }
 
+    public function getPricingByUnit($unitId)
+    {
+        $pricing = PropertyRateAndPricing::where('UnitId', $unitId)->first();
+        return response()->json($pricing);
+    }
+
     public function store(PropertyRateAndPricingRequest $request)
     {
         $this->authorize(PermissionEnum::PropertyRateAndPricingCreate, PropertyRateAndPricing::class);
