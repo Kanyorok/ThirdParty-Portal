@@ -15,7 +15,6 @@ const request = async (
 ) => {
     const isFormData = options.body instanceof FormData;
 
-    // Ensure URL starts with / and prepend BASE_URL
     const path = url.startsWith('/') ? url : `/${url}`;
     const fullUrl = `${BASE_URL}${path}`;
 
@@ -34,7 +33,6 @@ const request = async (
     });
 
     if (!res.ok) {
-        // Log the text response if JSON parsing fails to catch 500 HTML errors
         const errText = await res.text();
         let errData;
         try {

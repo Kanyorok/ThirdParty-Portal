@@ -1,7 +1,7 @@
-import UserProfilePage from '@/components/account/user-profile'
+// import UserProfilePage from '@/components/account/user-profile'
 
-export default function UserProfile() {
-    return (
-        <UserProfilePage />
-    )
-}
+// export default function UserProfile() {
+//     return (
+//         <UserProfilePage />
+//     )
+// }
