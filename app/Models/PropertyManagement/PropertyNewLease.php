@@ -4,6 +4,8 @@ namespace App\Models\PropertyManagement;
 
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -41,6 +43,8 @@ class PropertyNewLease extends Model
         'ApprovalStatus',
         'IsActive',
         'IsOfferGenerated',
+        'CurrencyId',
+        'TaxId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
@@ -82,6 +86,16 @@ class PropertyNewLease extends Model
     public function code()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
+    }
+
+    public function taxRule()
+    {
+        return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'TaxId', 'Id');
     }
 
     public function createdByUser()

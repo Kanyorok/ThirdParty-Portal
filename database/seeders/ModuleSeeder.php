@@ -39,12 +39,9 @@ class ModuleSeeder extends Seeder
 
     protected function _thirdParty(bool $fresh): Collection
     {
-        $values = collect([
-            ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 101000, 'Name' => 'Parties', 'Icon' => null, 'Description' => '', 'Route' => 'thirdparty.parties.index', 'ParentID' => 100000],
-
+        return collect([
+            ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => null, 'Route' => 'thirdparty.parties.index'],
         ]);
-        return $values;
     }
 
     protected function _crm(): Collection
@@ -322,10 +319,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 502330, 'Name' => 'Lease Renewal', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'renewlease.index'],
             ['ModuleID' => 502340, 'Name' => 'Lease Termination', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'terminatelease.index'],
             ['ModuleID' => 502390, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => null],
-            ['ModuleID' => 502391, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index'],
-            //['ModuleID' => 502392, 'Name' => 'Renewal Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'renewalapproval.index'],
-            //['ModuleID' => 502393, 'Name' => 'Termination Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'terminationapproval.index'],
-            //['ModuleID' => 502350, 'Name' => 'Payment Frequency', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'paymentfrequency.index'],
+            ['ModuleID' => 502391, 'Name' => 'Property Approvals', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index'],
 
             // First level - Billing & Receipting
             ['ModuleID' => 503000, 'Name' => 'Billing & Receipting', 'Icon' => '<i class="fas fa-file-invoice-dollar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],
@@ -716,7 +710,7 @@ class ModuleSeeder extends Seeder
             //            ['ModuleID' => 1107000, 'Name' => 'Period Management', 'Icon' => '<i class="fas fa-calendar-alt"></i>', 'Description' => '', 'Route' => 'periodmanagement.index', 'ParentID' => 1100000],
 
 
-            //            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
+                        ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
             //            ['ModuleID' => 1108100, 'Name' => 'Account Setup', 'Icon' => null, 'Description' => '', 'Route' => 'bankaccountsetup.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108200, 'Name' => 'Cash Book', 'Icon' => null, 'Description' => '', 'Route' => 'cashbook.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108300, 'Name' => 'Cash Management', 'Icon' => null, 'Description' => '', 'Route' => 'cashmanagement.index', 'ParentID' => 1108000],
