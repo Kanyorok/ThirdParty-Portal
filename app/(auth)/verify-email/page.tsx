@@ -39,10 +39,19 @@ export default function VerifyEmailPage() {
                 if (res.ok) {
                     setStatus('success');
                     setMessage(data.message || 'Email verified successfully!');
-                    // Redirect after delay
+
+                    // Extract User ID from response
+                    const userId = data.user?.id;
+
+                    // Redirect to Complete Profile page with User ID
                     setTimeout(() => {
-                        router.push('/signin?verified=true');
-                    }, 3000);
+                        if (userId) {
+                            router.push(`/third-party-details?userId=${userId}`);
+                        } else {
+                            // Fallback if no user ID (e.g. legacy party verification)
+                            router.push('/signin?verified=true');
+                        }
+                    }, 2000); // 2 second delay for user to see success message
                 } else {
                     setStatus('error');
                     setMessage(data.message || 'Verification failed.');

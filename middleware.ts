@@ -30,7 +30,7 @@ async function validateTokenWithBackend(accessToken: string): Promise<boolean> {
     })
 
     const isValid = response.ok
-    
+
     // Cache the result
     tokenValidationCache.set(accessToken, {
       valid: isValid,
@@ -84,11 +84,11 @@ export async function middleware(req: NextRequest) {
   // Allow certain API endpoints without authentication (for registration process)
   const publicApiRoutes = [
     "/api/v1/countries",           // Countries dropdown for registration form
-    "/api/third-party-details",   // Third party registration endpoint
+    "/api/third-parties/register-details",   // Third party registration endpoint
     "/api/currencies",            // Currencies for forms
     "/api/third-party-auth",      // Authentication endpoints for third parties
   ]
-  
+
   if (publicApiRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.next()
   }
@@ -150,14 +150,14 @@ export async function middleware(req: NextRequest) {
       url.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search)
       return NextResponse.redirect(url)
     }
-    
+
     if (isApiRoute) {
       return new NextResponse(
-        JSON.stringify({ 
-          error: 'Unauthorized', 
-          message: 'Authentication required' 
+        JSON.stringify({
+          error: 'Unauthorized',
+          message: 'Authentication required'
         }),
-        { 
+        {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
         }

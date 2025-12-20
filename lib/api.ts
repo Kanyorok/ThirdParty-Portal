@@ -47,7 +47,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Unauthorized, sign out the user
-            signOut({ callbackUrl: '/auth/signin' });
+            signOut({ callbackUrl: '/signin' });
         }
         return Promise.reject(error);
     }

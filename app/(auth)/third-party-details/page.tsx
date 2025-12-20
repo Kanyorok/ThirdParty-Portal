@@ -26,13 +26,14 @@ import { Button } from '@/components/common/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/common/form';
 import { Input } from '@/components/common/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/select';
-import { CheckboxGroup } from '@/components/common/checkbox-group';
+
 import { useEnums } from '@/hooks/use-enums';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/common/calendar";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Country {
     id: number;
@@ -47,7 +48,7 @@ interface Locality {
 }
 
 const formSchema = z.object({
-    ThirdPartyName: z.string()
+    Name: z.string()
         .min(2, 'Company name must be at least 2 characters')
         .max(100, 'Company name must be less than 100 characters')
         .regex(/^[a-zA-Z0-9\s&.-]+$/, 'Company name contains invalid characters'),
@@ -86,8 +87,8 @@ const formSchema = z.object({
         .optional()
         .or(z.literal('')),
 
-    // Types - Multi-select
-    types: z.array(z.string()).min(1, 'Please select at least one third party type'),
+    // Types - Single Select
+    types: z.string().min(1, 'Please select a third party type'),
 
     // Conditional Fields
     tenant_Remarks: z.string().optional(),
@@ -98,11 +99,11 @@ const formSchema = z.object({
     customer_Occupation: z.string().optional(),
 }).superRefine((data, ctx) => {
     // Tenant Validation
-    if (data.types.includes('TN')) {
+    if (data.types === 'TN') {
         // Remarks optional for tenant? Blade says required_if:type,TN|nullable. nullable allows empty.
     }
     // Customer Validation
-    if (data.types.includes('CU')) {
+    if (data.types === 'CU') {
         if (!data.customer_DateOfBirth) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
@@ -153,8 +154,8 @@ const statusVariants: Variants = {
 
 export default function RegisterThirdPartyDetails() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const userId = searchParams.get('user_id');
+    // searchParams and userId moved to lower scope to avoid duplication with new logic
+
 
     // Fetch Enums
     const { data: businessTypes } = useEnums('BusinessType');
@@ -179,7 +180,7 @@ export default function RegisterThirdPartyDetails() {
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            ThirdPartyName: '',
+            Name: '',
             TradingName: '',
             BusinessType: '',
             RegistrationNumber: '',
@@ -191,7 +192,7 @@ export default function RegisterThirdPartyDetails() {
             Email: '',
             Phone: '',
             Website: '',
-            types: ['SU'], // Default to Supplier
+            types: 'SU', // Default to Supplier
             tenant_Remarks: '',
             customer_Gender: '',
             customer_MaritalStatus: '',
@@ -201,9 +202,9 @@ export default function RegisterThirdPartyDetails() {
     });
 
     // Helper to check selected types
-    const selectedTypes = form.watch('types');
-    const isTenant = selectedTypes?.includes('TN');
-    const isCustomer = selectedTypes?.includes('CU');
+    const selectedType = form.watch('types');
+    const isTenant = selectedType === 'TN';
+    const isCustomer = selectedType === 'CU';
     const selectedCountry = form.watch('Country');
 
     // Fetch Countries
@@ -249,25 +250,45 @@ export default function RegisterThirdPartyDetails() {
     }, [selectedCountry]);
 
 
+    // Capture userId from URL query params
+    const searchParams = useSearchParams();
+    const [userId, setUserId] = useState<string | null>(null);
 
-    // Check for existing party (if re-visiting)
     useEffect(() => {
-        if (userId) {
-            // Logic to check if user already has a party could go here, 
-            // but usually this page is for NEW registration.
+        const uid = searchParams.get('userId'); // Matches 'userId' from backend redirect
+        if (uid) {
+            setUserId(uid);
+            console.log("User ID set from URL:", uid);
+        } else {
+            // Fallback: try reading from session/auth if logged in, or localStorage?
+            // Since we are moving to NO AUTH flow, URL param is critical.
+            // Maybe show error or redirect if missing?
+            console.warn("No User ID found in URL.");
         }
-    }, [userId]);
+    }, [searchParams]);
+
+    // Check for existing party (if re-visiting) - original useEffect removed as userId is now stateful
+    // useEffect(() => {
+    //     if (userId) {
+    //         // Logic to check if user already has a party could go here,
+    //         // but usually this page is for NEW registration.
+    //     }
+    // }, [userId]);
+
+    const [isSubmitting, setIsSubmitting] = useState(false); // Added for submission state
 
     const onSubmit = async (data: FormData) => {
-        if (!userId) {
-            setError('User ID is missing.');
-            return;
-        }
-        setLoading(true);
-        setError(null);
+        setIsSubmitting(true);
         try {
+            if (!userId) {
+                toast.error("User identification missing. Please use the link from your email.");
+                setIsSubmitting(false);
+                return;
+            }
+
             const payload = {
                 ...data,
+                types: [data.types], // Backend expects array
                 user_id: userId,
                 // Ensure dates are strings if needed, though JSON.stringify handles Date -> ISO string
                 // Backend NewThirdPartyRequest expects 'customer_DateOfBirth' as 'date' so ISO string works.
@@ -317,7 +338,7 @@ export default function RegisterThirdPartyDetails() {
                     <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                     <h2 className="text-xl font-bold mb-2">Access Required</h2>
                     <p className="text-slate-600 mb-6">User ID is missing. Please register a user first.</p>
-                    <Button asChild className="w-full"><Link href="/auth/signup">Go to Sign Up</Link></Button>
+                    <Button asChild className="w-full"><Link href="/signup">Go to Sign Up</Link></Button>
                 </div>
             </div>
         );
@@ -365,10 +386,10 @@ export default function RegisterThirdPartyDetails() {
                                         </h3>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <FormField control={form.control} name="ThirdPartyName" render={({ field }) => (
-                                                <FormItem>
+                                            <FormField control={form.control} name="Name" render={({ field }) => (
+                                                <FormItem className="col-span-full">
                                                     <FormLabel>Company Name <span className="text-red-500">*</span></FormLabel>
-                                                    <FormControl><Input placeholder="Legal name" {...field} /></FormControl>
+                                                    <FormControl><Input placeholder="Legal Company Name" {...field} /></FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )} />
@@ -481,13 +502,18 @@ export default function RegisterThirdPartyDetails() {
                                         <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
                                             <UserCircle className="w-5 h-5 text-blue-600" /> Account Types
                                         </h3>
-                                        <CheckboxGroup
-                                            control={form.control}
-                                            name="types"
-                                            label="Select all applicable types"
-                                            options={typeOptions}
-                                            required
-                                        />
+                                        <FormField control={form.control} name="types" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Account Type <span className="text-red-500">*</span></FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl><SelectTrigger><SelectValue placeholder="Select account type" /></SelectTrigger></FormControl>
+                                                    <SelectContent>
+                                                        {typeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
 
                                         {/* Tenant Fields */}
                                         {isTenant && (
