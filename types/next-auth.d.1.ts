@@ -1,48 +1,48 @@
-import type { DefaultSession, DefaultUser } from "next-auth"
-import type { DefaultJWT } from "next-auth/jwt"
+import { DefaultSession } from "next-auth"
+import { DefaultJWT } from "next-auth/jwt"
 
 interface UserProfile {
     id: number;
-    thirdPartyUser: {
-        firstName: string | null;
-        lastName: string | null;
-        fullName: string;
-        email: string;
-        phone: string | null;
-    };
-    approvalStatusCode: string | null;
-    status: string | null;
-    thirdPartyDetails: {
+    userId: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    email: string;
+    phone?: string | null;
+    imageId?: number | null;
+    gender?: string | null;
+    thirdPartyId: number;
+    isActive: boolean;
+    isApproved: boolean;
+    isSupplier: boolean;
+    emailVerifiedOn?: string | null;
+    createdOn: string;
+    modifiedOn: string;
+    receiveSmsNotifications?: boolean;
+    receiveNewsletter?: boolean;
+    imageUrl?: string | null;
+    thirdParty?: {
         id: number;
         thirdPartyName: string | null;
         tradingName: string | null;
+        label: string | null;
         businessType: string | null;
         registrationNumber: string | null;
         taxPIN: string | null;
-        vatNumber: string | null;
+        vATNumber: string | null;
+        country: string | null;
         physicalAddress: string | null;
+        email: string;
+        phone: string | null;
         website: string | null;
-        countryId: number | null;
-        countryInfo?: {
-            id: number;
-            name: string;
-            code: string;
-            iso3: string;
-            phoneCode: string;
-            flag: string;
-        };
         approvalStatus: string | null;
-        statusCode: string | null;
-        isPrequalified: boolean;
-        thirdPartyTypeCode: string | null;
-        types?: ThirdPartyTypeEntry[];
-        categories: any[];
+        status: string | null;
+        thirdPartyType: string | null;
         createdOn: string;
         modifiedOn: string;
         createdBy: number | null;
+        isActive: boolean | null;
     };
-    image?: string | null; // For helper compatibility
-    imageUrl?: string | null; // From API
 }
 
 interface ThirdParty {
@@ -82,8 +82,6 @@ export interface BaseUser {
     isActive: boolean;
     isApproved: boolean;
     isSupplier: boolean;
-    isTenant: boolean;
-    isCustomer: boolean;
     types?: ThirdPartyTypeEntry[];
     emailVerifiedOn?: string | null;
     createdOn: string;
@@ -96,18 +94,15 @@ export interface ThirdPartyTypeEntry {
     id: number;
     code: string;
     categoryId: number | null;
-    isActive: boolean;
-    pivotId: number;
-    label?: string; // Optional label added dynamically
 }
 
 declare module "next-auth" {
-    interface User extends BaseUser {
-        accessToken: string
+    interface Session {
+        accessToken?: string
+        user: BaseUser & DefaultSession["user"]
     }
 
-    interface Session extends DefaultSession {
-        user: BaseUser
+    interface User extends BaseUser {
         accessToken?: string
     }
 }
@@ -116,4 +111,21 @@ declare module "next-auth/jwt" {
     interface JWT extends DefaultJWT, BaseUser {
         accessToken?: string
     }
+}
+
+export interface AuthApiUser extends BaseUser {
+    token: string
+}
+
+export interface UserForNav extends BaseUser {
+    accessToken?: string
+}
+
+export interface UserNavUIProps extends React.HTMLAttributes<HTMLDivElement> {
+    user?: UserForNav
+    isLoading: boolean
+    isPending: boolean
+    isOpen: boolean
+    onLogout: () => void
+    onOpenChange: (open: boolean) => void
 }

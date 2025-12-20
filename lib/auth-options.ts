@@ -3,15 +3,16 @@ import type { NextAuthOptions, User, Session } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 import type { BaseUser, ThirdParty, ThirdPartyTypeEntry } from "@/types/next-auth"
 
-const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
-const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "your-dev-secret-key-change-in-production"
+const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || ""
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || ""
 
 type ApiUser = BaseUser & { thirdParty?: ThirdParty | null; types?: ThirdPartyTypeEntry[] }
 
 type AuthResponse = {
+  success: boolean
+  message?: string
   user: ApiUser
   token: string
-  message?: string
   errors?: Record<string, string[]>
 }
 
@@ -29,12 +30,15 @@ export const authOptions: NextAuthOptions = {
           throw new Error("MISSING_FIELDS: Email, password, and profile type are required")
         }
 
-        const allowDevFallback = process.env.NEXT_PUBLIC_DEV_AUTH_FALLBACK === "1"
+        if (!baseUrl) {
+          throw new Error("CONFIG: Config error.")
+        }
+
         let res: Response
         let text = ""
+
         try {
-          if (!baseUrl) throw new Error("CONFIG: NEXT_PUBLIC_EXTERNAL_API_URL not set")
-          res = await fetch(`${baseUrl}/api/third-party-auth/login`, {
+          res = await fetch(`${baseUrl}/api/v1/portal/auth/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -47,20 +51,7 @@ export const authOptions: NextAuthOptions = {
             }),
           })
           text = await res.text()
-        } catch (_err) {
-          if (allowDevFallback) {
-            const devUser: User = {
-              id: "dev-user-123",
-              email: credentials.email,
-              name: "Development User",
-              thirdPartyId: 3,
-              accessToken: "dev-mock-token",
-              isActive: true,
-              isApproved: true,
-              types: [{ id: 1, code: "SU-GENERAL", categoryId: 1 }],
-            } as unknown as User
-            return devUser
-          }
+        } catch {
           throw new Error("NETWORK: Unable to reach authentication service")
         }
 
@@ -115,13 +106,13 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }): Promise<JWT> {
       if (user) {
-        const merged = { ...token, ...user }
-        return merged as unknown as JWT
+        return { ...token, ...user } as unknown as JWT
       }
       return token as JWT
     },
     async session({ session, token }): Promise<Session> {
       const t = token as unknown as BaseUser & { accessToken?: string }
+
       session.user = {
         id: t.id,
         userId: t.userId,
@@ -153,5 +144,64 @@ export const authOptions: NextAuthOptions = {
     error: "/signin",
   },
   secret: NEXTAUTH_SECRET,
-  debug: process.env.NEXTAUTH_DEBUG === "1",
+}
+
+function parseResponse(text: string): Partial<AuthResponse> | null {
+  try {
+    return text ? JSON.parse(text) : null
+  } catch {
+    return null
+  }
+}
+
+function handleErrorResponses(res: Response, data: Partial<AuthResponse> | null): void {
+  const message = data?.message
+
+  if (res.status === 422) {
+    throw new Error(`VALIDATION: ${message || "Validation failed"}`)
+  }
+
+  if (res.status === 403) {
+    throw new Error(`EMAIL_NOT_VERIFIED: ${message || "Please verify your email address"}`)
+  }
+
+  if (res.status === 401) {
+    throw new Error(`INVALID_CREDENTIALS: ${message || "Invalid email or password"}`)
+  }
+
+  if (!res.ok) {
+    throw new Error(`SERVER_ERROR: ${message || `Login failed (${res.status})`}`)
+  }
+}
+
+function transformApiUser(rawUser: ApiUser, token: string): User {
+  const types: ThirdPartyTypeEntry[] = (rawUser.types ?? []).map((t) => ({
+    id: t.id,
+    code: t.code,
+    categoryId: t.categoryId ?? null,
+  }))
+
+  const isSupplier = rawUser.isSupplier || types.some((t) => t.code?.startsWith("SU"))
+
+  return {
+    id: String(rawUser.id),
+    userId: rawUser.userId,
+    firstName: rawUser.firstName,
+    lastName: rawUser.lastName,
+    fullName: rawUser.fullName,
+    email: rawUser.email,
+    phone: rawUser.phone ?? null,
+    imageId: rawUser.imageId ?? null,
+    gender: rawUser.gender ?? null,
+    thirdPartyId: rawUser.thirdPartyId,
+    isActive: rawUser.isActive,
+    isApproved: rawUser.isApproved,
+    isSupplier,
+    types,
+    emailVerifiedOn: rawUser.emailVerifiedOn ?? null,
+    createdOn: rawUser.createdOn,
+    modifiedOn: rawUser.modifiedOn,
+    thirdParty: rawUser.thirdParty ?? null,
+    accessToken: token,
+  } as unknown as User
 }

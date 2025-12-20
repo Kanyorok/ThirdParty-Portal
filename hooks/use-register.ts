@@ -1,20 +1,41 @@
-// src/hooks/use-register.ts
-"use client";
+"use client"
 
-import { useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
+import { useState, useCallback, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
 
-import type { ApiResponse } from "@/lib/api-types";
-import { getFieldStatus, transformRegisterFormDataForApi, mapRegisterServerErrorsToFormFields } from "@/lib/form-utils";
-import { RegisterFormInputs, registerSchema } from "@/lib/validation";
+import type { ApiResponse } from "@/lib/api-types"
+import {
+    getFieldStatus,
+    transformRegisterFormDataForApi,
+    mapRegisterServerErrorsToFormFields,
+} from "@/lib/form-utils"
+import { RegisterFormInputs, registerSchema } from "@/lib/validation"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || ""
+
+interface RegisterApiResponse {
+    success: boolean
+    message: string
+    data?: {
+        user: {
+            id: number
+            userId: string
+            firstName: string
+            lastName: string
+            email: string
+            phone: string
+        }
+    }
+    errors?: Record<string, string[]>
+}
 
 export const useRegisterForm = () => {
-    const router = useRouter();
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const router = useRouter()
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     const form = useForm<RegisterFormInputs>({
         resolver: zodResolver(registerSchema),
@@ -27,11 +48,11 @@ export const useRegisterForm = () => {
             password: "",
             confirmPassword: "",
         },
-    });
+    })
 
-    const { setError, reset, formState, watch } = form;
-    const { errors, isSubmitting, touchedFields, isValid } = formState;
-    const watchedFields = watch();
+    const { setError, reset, formState, watch } = form
+    const { errors, isSubmitting, touchedFields, isValid } = formState
+    const watchedFields = watch()
 
     const fieldStatuses = useMemo(() => {
         const fields: (keyof RegisterFormInputs)[] = [
@@ -41,16 +62,16 @@ export const useRegisterForm = () => {
             "phone",
             "password",
             "confirmPassword",
-        ];
+        ]
 
         return fields.reduce(
             (acc, field) => {
-                acc[field] = getFieldStatus(field, errors, touchedFields, watchedFields);
-                return acc;
+                acc[field] = getFieldStatus(field, errors, touchedFields, watchedFields)
+                return acc
             },
-            {} as Record<keyof RegisterFormInputs, string>,
-        );
-    }, [errors, touchedFields, watchedFields]);
+            {} as Record<keyof RegisterFormInputs, string>
+        )
+    }, [errors, touchedFields, watchedFields])
 
     const handleRegistrationSuccess = useCallback(
         async (result: ApiResponse) => {
@@ -82,65 +103,76 @@ export const useRegisterForm = () => {
                 }, 2000);
             }
         },
-        [router, reset],
-    );
+        [router, reset]
+    )
 
     const handleRegistrationError = useCallback(
-        (result: ApiResponse) => {
-            if (result.status === "error" && result.errors) {
-                const mappedErrors = mapRegisterServerErrorsToFormFields(result.errors);
+        (result: RegisterApiResponse, status: number) => {
+            if (status === 422 && result.errors) {
+                const mappedErrors = mapRegisterServerErrorsToFormFields(result.errors)
 
                 Object.entries(mappedErrors).forEach(([field, messages]) => {
                     setError(field as keyof RegisterFormInputs, {
                         type: "server",
-                        message: messages.join(", "),
-                    });
-                });
+                        message: Array.isArray(messages) ? messages.join(", ") : messages,
+                    })
+                })
 
-                toast.error(result.message || "Registration failed due to validation errors.");
-            } else {
-                setError("root", {
-                    type: "server",
-                    message: result.message || "Registration failed. Please try again.",
-                });
-                toast.error(result.message || "An unexpected error occurred during registration.");
+                toast.error(result.message || "Please fix the validation errors.")
+                return
             }
+
+            if (status === 409) {
+                toast.error(result.message || "An account with this email already exists.")
+                return
+            }
+
+            setError("root", {
+                type: "server",
+                message: result.message || "Registration failed. Please try again.",
+            })
+            toast.error(result.message || "An unexpected error occurred.")
         },
-        [setError],
-    );
+        [setError]
+    )
 
     const onSubmit = useCallback(
         async (data: RegisterFormInputs) => {
-            const apiData = transformRegisterFormDataForApi(data);
+            if (!API_BASE_URL) {
+                toast.error("Configuration error. Please contact support.")
+                return
+            }
+
+            const apiData = transformRegisterFormDataForApi(data)
 
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-party-auth/register`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/portal/auth/register`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "X-Requested-With": "XMLHttpRequest",
+                        Accept: "application/json",
                     },
                     body: JSON.stringify(apiData),
-                });
+                })
 
-                const result: ApiResponse = await response.json();
+                const result: RegisterApiResponse = await response.json()
 
-                if (response.ok) {
-                    await handleRegistrationSuccess(result);
+                if (response.ok && result.success) {
+                    handleRegistrationSuccess(result)
                 } else {
-                    handleRegistrationError(result);
+                    handleRegistrationError(result, response.status)
                 }
             } catch (error) {
-                console.error("Registration network error:", error);
+                console.error("Registration error:", error)
                 setError("root", {
                     type: "manual",
-                    message: "Network error. Please check your connection and try again.",
-                });
-                toast.error("Network error. Please check your connection and try again.");
+                    message: "Unable to connect to the server. Please try again.",
+                })
+                toast.error("Network error. Please check your connection.")
             }
         },
-        [handleRegistrationSuccess, handleRegistrationError, setError],
-    );
+        [handleRegistrationSuccess, handleRegistrationError, setError]
+    )
 
     return {
         form,
@@ -155,5 +187,5 @@ export const useRegisterForm = () => {
         errors,
         watchedFields,
         touchedFields,
-    };
-};
+    }
+}
