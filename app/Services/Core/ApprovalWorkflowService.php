@@ -30,12 +30,7 @@ abstract class ApprovalWorkflowService
             ->first();
 
         if ($code instanceof CodeDetail) {
-            Log::info("CodeDetail retrieved", [
-                'CodeID' => $CodeID,
-                'Value' => $status->value,
-                'ID' => $code->ID,
-                'Description' => $code->Description,
-            ]);
+
             return $code;
         }
 
@@ -51,7 +46,7 @@ abstract class ApprovalWorkflowService
      */
     protected function getPermissionFromStage(string $table): ?WorkflowStage
     {
-        Log::info('Getting workflow stage', ['table' => $table]);
+
 
         $workflow = Workflow::where('Source', $table)
             ->whereNull('DeletedOn')
@@ -62,10 +57,7 @@ abstract class ApprovalWorkflowService
             return null;
         }
 
-        Log::info("Workflow found", [
-            'WorkFlowId' => $workflow->Id,
-            'Source' => $workflow->Source,
-        ]);
+
 
         $stage = WorkflowStage::where('WorkFlowId', $workflow->Id)
             ->whereNull('DeletedOn')
@@ -90,15 +82,7 @@ abstract class ApprovalWorkflowService
             return null;
         }
 
-        Log::info("Workflow stage retrieved successfully", [
-            'table' => $table,
-            'stageId' => $stage->Id,
-            'stageName' => $stage->StageName,
-            'permissionId' => $stage->PermissionId,
-            'order' => $stage->Order,
-            'count' => $stage->Count,
-            'workflowTypeId' => $stage->WorkFlowTypeId,
-        ]);
+
 
         return $stage;
     }
@@ -116,11 +100,7 @@ abstract class ApprovalWorkflowService
             ->value('Stage');
 
         if ($pendingStage && is_numeric($pendingStage)) {
-            Log::info("Current stage from pending", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'stageId' => $pendingStage,
-            ]);
+
             return (int)$pendingStage;
         }
 
@@ -132,11 +112,7 @@ abstract class ApprovalWorkflowService
             ->first();
 
         if ($history && !empty($history->Stage)) {
-            Log::info("Current stage from history", [
-                'table' => $table,
-                'sourceId' => $sourceId,
-                'stageId' => $history->Stage,
-            ]);
+
             return is_numeric($history->Stage) ? (int)$history->Stage : null;
         }
 
@@ -162,10 +138,7 @@ abstract class ApprovalWorkflowService
         $columnMappings = config('workflow.status_columns', []);
 
         if (isset($columnMappings[$morphAlias])) {
-            Log::info("Found status column from config", [
-                'morphAlias' => $morphAlias,
-                'column' => $columnMappings[$morphAlias],
-            ]);
+
             return $columnMappings[$morphAlias];
         }
 
@@ -174,12 +147,12 @@ abstract class ApprovalWorkflowService
             ->hasColumn($table, 'ApprovalStatus');
 
         if ($hasApprovalStatus) {
-            Log::info("Table has ApprovalStatus column", ['table' => $table]);
+
             return 'ApprovalStatus';
         }
 
         // Default to Status
-        Log::info("Using default Status column", ['table' => $table]);
+
         return 'Status';
     }
 
@@ -400,7 +373,7 @@ abstract class ApprovalWorkflowService
                 ->select('u.Id', 'u.Name', 'p.Stage')
                 ->get();
 
-            Log::info("Pending approvers:", ['users' => $pendingUsers->toArray()]);
+
 
             // List all approvals
             $approvals = DB::table('t_WorkFlowHistory as h')
@@ -412,8 +385,6 @@ abstract class ApprovalWorkflowService
                 ->select('u.Id', 'u.Name', 'h.Stage', 'h.CreatedOn')
                 ->orderBy('h.CreatedOn')
                 ->get();
-
-            Log::info("Approval history:", ['approvals' => $approvals->toArray()]);
         } catch (\Throwable $e) {
             Log::error("Failed to log workflow state", [
                 'error' => $e->getMessage(),
