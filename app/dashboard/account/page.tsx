@@ -10,20 +10,20 @@ import {
     Bell,
     Info,
     Camera,
-    Shield,
     AlertTriangle,
     Trash2,
     Loader2,
-    Settings,
     Mail,
     Phone,
-    BadgeCheckIcon,
     UploadCloud,
     X,
-    Image as ImageIcon,
+    Building2,
+    Globe,
+    MapPin,
+    FileText
 } from 'lucide-react';
 import { Button } from '@/components/common/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/card';
 import { Input } from '@/components/common/input';
 import { Label } from '@/components/common/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/common/avatar';
@@ -41,90 +41,15 @@ import {
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/common/dialog';
-import { Checkbox } from '@/components/common/checkbox';
 import { Separator } from '@/components/common/separator';
 import { Badge } from '@/components/common/badge';
 import { UserProfile } from '@/types/next-auth.1';
 import { useSession } from 'next-auth/react';
 import { getInitials } from '@/lib/utils';
 import { apiService } from '@/lib/api/profile';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-const ProfileCard: React.FC<{
-    profile: UserProfile;
-    onProfilePictureClick: () => void;
-    onEditProfile: () => void;
-}> = ({ profile, onProfilePictureClick, onEditProfile }) => {
-    const displayName = profile.fullName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
 
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-        >
-            <Card className="relative overflow-hidden bg-gradient-accent border-0 shadow-medium p-0">
-                <div className="absolute inset-0 bg-gradient-primary opacity-5" />
-                <CardHeader className="relative z-10 p-4 pb-0 flex flex-row justify-end">
-                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-primary-foreground/80 hover:text-primary-foreground"
-                            onClick={onEditProfile}
-                            aria-label="Edit profile"
-                        >
-                            <Edit className="h-5 w-5" />
-                        </Button>
-                    </motion.div>
-                </CardHeader>
-                <CardContent className="relative p-8 pt-0 text-center flex flex-col items-center space-y-6">
-                    <motion.div
-                        className="relative group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.98 }}
-                    >
-                        <div className="absolute -inset-2 bg-gradient-primary rounded-full opacity-20 group-hover:opacity-40 transition-opacity animate-glow-pulse" />
-                        <Avatar
-                            className="relative h-32 w-32 border-4 border-primary/20 shadow-strong cursor-pointer"
-                            onClick={onProfilePictureClick}
-                        >
-                            <AvatarImage src={profile.imageUrl ?? undefined} alt={displayName} className="object-cover" />
-                            <AvatarFallback className="text-3xl font-bold bg-gradient-primary-700">
-                                {getInitials(profile.firstName, profile.lastName)}
-                            </AvatarFallback>
-                        </Avatar>
-                        <Button
-                            size="icon"
-                            variant="secondary"
-                            className="absolute -bottom-2 -right-2 h-10 w-10 rounded-full shadow-medium transition-all group-hover:scale-110"
-                            onClick={onProfilePictureClick}
-                        >
-                            <Camera className="h-4 w-4" />
-                        </Button>
-                    </motion.div>
-
-                    <div className="space-y-3">
-                        <h2 className="text-3xl font-bold text-foreground">{displayName}</h2>
-                        <p className="text-muted-foreground text-lg">{profile.email}</p>
-                        {profile.emailVerifiedOn && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.3, delay: 0.2 }}
-                            >
-                                <Badge variant="secondary" className="bg-blue-500 text-white dark:bg-blue-600">
-                                    <BadgeCheckIcon className="h-3 w-3 mr-1" />
-                                    Verified
-                                </Badge>
-                            </motion.div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-        </motion.div>
-    );
-};
 
 const ProfileDetailsCard: React.FC<{
     profile: UserProfile;
@@ -152,46 +77,28 @@ const ProfileDetailsCard: React.FC<{
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">First Name</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.firstName}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.firstName || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Last Name</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.lastName}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.lastName || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Email Address</Label>
-                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
+                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2 opacity-80">
                             <Mail className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">{profile.email}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.email}</p>
+                            <Badge variant="secondary" className="ml-auto text-xs">Read-only</Badge>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Phone Number</Label>
                         <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">{profile.phone || 'Not provided'}</p>
-                        </div>
-                    </div>
-                    {profile.gender && (
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-muted-foreground">Gender</Label>
-                            <div className="p-3 bg-muted rounded-lg">
-                                <p className="font-semibold text-foreground">{
-                                    profile.gender === 'm' ? 'Male' :
-                                        profile.gender === 'f' ? 'Female' :
-                                            profile.gender === 'o' ? 'Prefer not to say' : profile.gender
-                                }</p>
-                            </div>
-                        </div>
-                    )}
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium text-muted-foreground">Password</Label>
-                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
-                            <Shield className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">••••••••</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.phone || 'Not provided'}</p>
                         </div>
                     </div>
                 </div>
@@ -216,142 +123,81 @@ const ProfileDetailsCard: React.FC<{
     </motion.div>
 );
 
-const NotificationCard: React.FC<{
+const CompanyDetailsCard: React.FC<{
     profile: UserProfile;
     onEdit: () => void;
 }> = ({ profile, onEdit }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
     >
         <Card className="border-0 shadow-medium bg-card">
             <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-3 text-2xl font-bold">
                     <div className="p-2 bg-gradient-primary rounded-lg">
-                        <Bell className="h-5 w-5 text-primary-foreground" />
+                        <Building2 className="h-5 w-5 text-primary-foreground" />
                     </div>
-                    Notification Preferences
+                    Company Details
                 </CardTitle>
+                <CardDescription>
+                    Manage your business information.
+                </CardDescription>
             </CardHeader>
             <Separator />
             <CardContent className="pt-6 space-y-6">
-                <div className="space-y-4">
-                    <div className="flex items-start space-x-3 p-4 bg-muted rounded-lg">
-                        <Checkbox checked={profile.receiveSmsNotifications || false} disabled className="mt-1" />
-                        <div className="space-y-1">
-                            <p className="font-medium text-foreground">SMS Notifications</p>
-                            <p className="text-sm text-muted-foreground">Receive urgent alerts and updates via text message</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Trading Name</Label>
+                        <div className="p-3 bg-muted rounded-lg">
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.tradingName || '-'}</p>
                         </div>
                     </div>
-
-                    <div className="flex items-start space-x-3 p-4 bg-muted rounded-lg">
-                        <Checkbox checked={profile.receiveNewsletter || false} disabled className="mt-1" />
-                        <div className="space-y-1">
-                            <p className="font-medium text-foreground">Newsletter Subscription</p>
-                            <p className="text-sm text-muted-foreground">Stay informed with weekly insights and industry updates</p>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Business Type</Label>
+                        <div className="p-3 bg-muted rounded-lg">
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.businessType || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Tax PIN</Label>
+                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.taxPIN || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">VAT Number</Label>
+                        <div className="p-3 bg-muted rounded-lg">
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.vatNumber || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Physical Address</Label>
+                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.physicalAddress || '-'}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Website</Label>
+                        <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-semibold text-foreground truncate">{profile.thirdPartyDetails.website || '-'}</p>
                         </div>
                     </div>
                 </div>
-
                 <Separator />
-                <Button onClick={onEdit} className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    Manage Preferences
-                </Button>
+                <div className="pt-6">
+                    <Button onClick={onEdit} variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
+                        <Edit className="h-4 w-4" />
+                        Edit Company Details
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     </motion.div>
 );
-
-const DangerZoneCard: React.FC<{ accessToken: string }> = ({ accessToken }) => {
-    const [isPending, startTransition] = useTransition();
-    const [password, setPassword] = useState('');
-
-    const handleDelete = () => {
-        startTransition(() => {
-            toast.promise(apiService.deleteAccount(password, accessToken), {
-                loading: 'Deleting account...',
-                success: () => {
-                    return 'Account deleted successfully.';
-                },
-                error: err => {
-                    const errorMessage = err instanceof Error ? err.message : 'Deletion failed.';
-                    return errorMessage;
-                },
-            });
-        });
-    };
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-        >
-            <Card className="border-destructive/30 bg-destructive-light/10 shadow-medium">
-                <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center gap-3 text-2xl font-bold text-destructive">
-                        <div className="p-2 bg-destructive/10 rounded-lg">
-                            <AlertTriangle className="h-5 w-5 text-destructive" />
-                        </div>
-                        Danger Zone
-                    </CardTitle>
-                </CardHeader>
-                <Separator className="bg-destructive/20" />
-                <CardContent className="pt-6">
-                    <p className="text-muted-foreground mb-6 text-sm">
-                        This action is permanent and cannot be undone. All your data will be permanently deleted.
-                    </p>
-
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="flex items-center gap-2">
-                                <Trash2 className="h-4 w-4" />
-                                Delete Account
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="border-0 shadow-strong">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle className="text-xl font-bold text-destructive">Delete Account</AlertDialogTitle>
-                                <AlertDialogDescription className="text-muted-foreground">
-                                    This will permanently delete your account and all associated data. This action cannot be undone.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="password-confirm">Confirm with your password</Label>
-                                    <Input
-                                        id="password-confirm"
-                                        type="password"
-                                        value={password}
-                                        onChange={e => setPassword(e.target.value)}
-                                        placeholder="Enter your password"
-                                    />
-                                </div>
-                                <div className="flex items-center gap-2 p-3 bg-destructive-light rounded-lg">
-                                    <Info className="h-4 w-4 text-destructive" />
-                                    <p className="text-sm text-destructive">This action is irreversible</p>
-                                </div>
-                            </div>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                    onClick={handleDelete}
-                                    disabled={isPending || !password}
-                                    className="bg-destructive hover:bg-destructive/90"
-                                >
-                                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Delete Account
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </CardContent>
-            </Card>
-        </motion.div>
-    );
-};
 
 const EditProfileModal: React.FC<{
     isOpen: boolean
@@ -361,40 +207,33 @@ const EditProfileModal: React.FC<{
     accessToken: string
 }> = ({ isOpen, onClose, profile, mutateProfile, accessToken }) => {
     const [formData, setFormData] = useState({
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        email: profile.email,
-        phone: profile.phone || '',
-        // store backend enum values directly: 'm' | 'f' | 'o'
-        gender: profile.gender || ''
+        firstName: profile.thirdPartyUser.firstName || '',
+        lastName: profile.thirdPartyUser.lastName || '',
+        phone: profile.thirdPartyUser.phone || '',
     });
 
-    const [isPending, startTransition] = useTransition();
     const [saving, setSaving] = useState(false);
+
     useEffect(() => {
         if (isOpen) {
             setFormData({
-                firstName: profile.firstName,
-                lastName: profile.lastName,
-                email: profile.email,
-                phone: profile.phone || '',
-                gender: profile.gender || ''
+                firstName: profile.thirdPartyUser.firstName || '',
+                lastName: profile.thirdPartyUser.lastName || '',
+                phone: profile.thirdPartyUser.phone || '',
             });
         }
     }, [isOpen, profile]);
 
     const handleSave = useCallback(async () => {
-        startTransition(() => { });
         setSaving(true);
         try {
-            const updatedProfile = await apiService.updateProfile(formData, accessToken);
-            await mutateProfile(updatedProfile, { revalidate: false });
+            await apiService.updateProfile(formData, accessToken);
+            await mutateProfile();
             toast.success('Profile updated successfully!');
             onClose();
         } catch (error: any) {
             toast.error(error.message || 'Failed to update profile');
         } finally {
-            // in case onClose didn't unmount immediately
             setSaving(false);
         }
     }, [formData, accessToken, mutateProfile, onClose]);
@@ -407,7 +246,7 @@ const EditProfileModal: React.FC<{
                         <div className="p-2 bg-gradient-primary rounded-lg">
                             <Edit className="h-5 w-5 text-primary-foreground" />
                         </div>
-                        Edit Profile
+                        Edit Personal Info
                     </DialogTitle>
                 </DialogHeader>
 
@@ -419,7 +258,7 @@ const EditProfileModal: React.FC<{
                                 id="firstName"
                                 value={formData.firstName}
                                 onChange={e => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                                disabled={saving || isPending}
+                                disabled={saving}
                             />
                         </div>
                         <div className="space-y-2">
@@ -428,32 +267,22 @@ const EditProfileModal: React.FC<{
                                 id="lastName"
                                 value={formData.lastName}
                                 onChange={e => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                                disabled={saving || isPending}
+                                disabled={saving}
                             />
                         </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                            disabled={saving || isPending}
-                        />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="phone">Phone Number</Label>
                         <div className="p-2 bg-muted rounded-lg border border-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                             <PhoneInput
+                                <PhoneInput
                                 country={'us'}
                                 preferredCountries={['us', 'gb', 'ke', 'ng']}
                                 enableSearch
                                 value={formData.phone}
                                 onChange={phone => setFormData(prev => ({ ...prev, phone }))}
-                                disabled={saving || isPending}
+                                disabled={saving}
                                 inputClass="!w-full !bg-transparent !border-none !text-foreground !font-semibold focus:outline-none"
                                 buttonClass="!bg-transparent !border-none"
                                 containerClass="!w-full"
@@ -461,31 +290,13 @@ const EditProfileModal: React.FC<{
                             />
                         </div>
                     </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="gender">Gender</Label>
-                        <div className="p-2 bg-muted rounded-lg border border-input">
-                            <select
-                                id="gender"
-                                value={formData.gender}
-                                onChange={e => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-                                disabled={saving || isPending}
-                                className="w-full bg-transparent text-foreground font-semibold focus:outline-none p-2"
-                            >
-                                <option value="">-- Select gender --</option>
-                                <option value="m">Male</option>
-                                <option value="f">Female</option>
-                                <option value="o">Prefer not to say</option>
-                            </select>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6">
-                    <Button variant="outline" onClick={onClose} disabled={saving || isPending}>
+                    <Button variant="outline" onClick={onClose} disabled={saving}>
                         Cancel
                     </Button>
-                    <Button onClick={handleSave} disabled={saving || isPending} className="flex items-center gap-2">
+                    <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
                         {saving ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -498,101 +309,147 @@ const EditProfileModal: React.FC<{
                 </div>
             </DialogContent>
         </Dialog>
-    )
+    );
 }
 
-const NotificationModal: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    profile: UserProfile;
-    mutateProfile: (data?: any, options?: boolean | MutatorOptions) => Promise<any>;
-    accessToken: string;
+const EditCompanyModal: React.FC<{
+    isOpen: boolean
+    onClose: () => void
+    profile: UserProfile
+    mutateProfile: (data?: any, options?: boolean | MutatorOptions) => Promise<any>
+    accessToken: string
 }> = ({ isOpen, onClose, profile, mutateProfile, accessToken }) => {
-    const [smsEnabled, setSmsEnabled] = useState(profile.receiveSmsNotifications || false);
-    const [newsletterEnabled, setNewsletterEnabled] = useState(profile.receiveNewsletter || false);
-    const [isPending, startTransition] = useTransition();
+    const [formData, setFormData] = useState({
+        tradingName: profile.thirdPartyDetails.tradingName || '',
+        businessType: profile.thirdPartyDetails.businessType || '',
+        taxPin: profile.thirdPartyDetails.taxPIN || '',
+        vatNumber: profile.thirdPartyDetails.vatNumber || '',
+        physicalAddress: profile.thirdPartyDetails.physicalAddress || '',
+        website: profile.thirdPartyDetails.website || '',
+    });
+
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
-            setSmsEnabled(profile.receiveSmsNotifications || false);
-            setNewsletterEnabled(profile.receiveNewsletter || false);
+            setFormData({
+                tradingName: profile.thirdPartyDetails.tradingName || '',
+                businessType: profile.thirdPartyDetails.businessType || '',
+                taxPin: profile.thirdPartyDetails.taxPIN || '',
+                vatNumber: profile.thirdPartyDetails.vatNumber || '',
+                physicalAddress: profile.thirdPartyDetails.physicalAddress || '',
+                website: profile.thirdPartyDetails.website || '',
+            });
         }
     }, [isOpen, profile]);
 
     const handleSave = useCallback(async () => {
+        setSaving(true);
         try {
-            startTransition(() => { });
-            const updatedSettings = await apiService.updateNotifications(
-                { receiveSmsNotifications: smsEnabled, receiveNewsletter: newsletterEnabled },
-                accessToken
-            );
-            await mutateProfile(
-                (prevProfile: UserProfile | undefined) => {
-                    if (!prevProfile) return updatedSettings;
-                    return { ...prevProfile, ...updatedSettings };
-                },
-                { revalidate: false }
-            );
-            toast.success('Notification settings updated successfully!');
+            await apiService.updateProfile(formData, accessToken);
+            await mutateProfile();
+            toast.success('Company details updated successfully!');
             onClose();
         } catch (error: any) {
-            toast.error(error.message || 'Failed to save settings. Please try again.');
+            toast.error(error.message || 'Failed to update company details');
+        } finally {
+            setSaving(false);
         }
-    }, [smsEnabled, newsletterEnabled, accessToken, mutateProfile, onClose]);
+    }, [formData, accessToken, mutateProfile, onClose]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[450px] border-0 shadow-strong">
+            <DialogContent className="sm:max-w-[600px] border-0 shadow-strong">
                 <DialogHeader className="pb-4">
                     <DialogTitle className="text-2xl font-bold flex items-center gap-3">
                         <div className="p-2 bg-gradient-primary rounded-lg">
-                            <Bell className="h-5 w-5 text-primary-foreground" />
+                            <Building2 className="h-5 w-5 text-primary-foreground" />
                         </div>
-                        Notification Settings
+                        Edit Company Details
                     </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-6">
-                    <div className="flex items-start space-x-3 p-4 bg-muted rounded-lg">
-                        <Checkbox
-                            checked={smsEnabled}
-                            onCheckedChange={checked => setSmsEnabled(Boolean(checked))}
-                            className="mt-1"
-                            disabled={isPending}
-                        />
-                        <div className="space-y-1">
-                            <p className="font-medium text-foreground">SMS Notifications</p>
-                            <p className="text-sm text-muted-foreground">Receive urgent alerts and updates via text message</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="tradingName">Trading Name</Label>
+                            <Input
+                                id="tradingName"
+                                value={formData.tradingName}
+                                onChange={e => setFormData(prev => ({ ...prev, tradingName: e.target.value }))}
+                                disabled={saving}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="businessType">Business Type</Label>
+                            <Input
+                                id="businessType"
+                                value={formData.businessType}
+                                onChange={e => setFormData(prev => ({ ...prev, businessType: e.target.value }))}
+                                disabled={saving}
+                            />
                         </div>
                     </div>
-
-                    <div className="flex items-start space-x-3 p-4 bg-muted rounded-lg">
-                        <Checkbox
-                            checked={newsletterEnabled}
-                            onCheckedChange={checked => setNewsletterEnabled(Boolean(checked))}
-                            className="mt-1"
-                            disabled={isPending}
-                        />
-                        <div className="space-y-1">
-                            <p className="font-medium text-foreground">Newsletter Subscription</p>
-                            <p className="text-sm text-muted-foreground">Stay informed with weekly insights and industry updates</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="taxPin">Tax PIN</Label>
+                            <Input
+                                id="taxPin"
+                                value={formData.taxPin}
+                                onChange={e => setFormData(prev => ({ ...prev, taxPin: e.target.value }))}
+                                disabled={saving}
+                            />
                         </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="vatNumber">VAT Number</Label>
+                            <Input
+                                id="vatNumber"
+                                value={formData.vatNumber}
+                                onChange={e => setFormData(prev => ({ ...prev, vatNumber: e.target.value }))}
+                                disabled={saving}
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="physicalAddress">Physical Address</Label>
+                        <Input
+                            id="physicalAddress"
+                            value={formData.physicalAddress}
+                            onChange={e => setFormData(prev => ({ ...prev, physicalAddress: e.target.value }))}
+                            disabled={saving}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="website">Website URL</Label>
+                        <Input
+                            id="website"
+                            value={formData.website}
+                            placeholder="https://example.com"
+                            onChange={e => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                            disabled={saving}
+                        />
                     </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6">
-                    <Button variant="outline" onClick={onClose} disabled={isPending}>
+                    <Button variant="outline" onClick={onClose} disabled={saving}>
                         Cancel
                     </Button>
-                    <Button onClick={handleSave} disabled={isPending} className="flex items-center gap-2">
-                        {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                        Save Preferences
+                    <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
+                        {saving ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>Save Changes</>
+                        )}
                     </Button>
                 </div>
             </DialogContent>
         </Dialog>
     );
-};
+}
 
 const PasswordChangeModal: React.FC<{
     isOpen: boolean;
@@ -611,7 +468,7 @@ const PasswordChangeModal: React.FC<{
         }
         try {
             startTransition(() => { });
-            await apiService.changePassword({ currentPassword, newPassword }, accessToken);
+            await apiService.changePassword({ currentPassword, newPassword, newPassword_confirmation: confirmNewPassword }, accessToken);
             toast.success('Password changed successfully!');
             onClose();
             setCurrentPassword('');
@@ -707,28 +564,15 @@ const ProfilePictureModal: React.FC<{
         }
         try {
             startTransition(() => { });
-            const result = await apiService.uploadProfilePicture(selectedFile, accessToken);
-            await mutateProfile((prevProfile: UserProfile | undefined) => {
-                if (!prevProfile) return prevProfile;
-                return { ...prevProfile, imageUrl: result.imageUrl };
-            }, { revalidate: false });
+            await apiService.uploadProfilePicture(selectedFile, accessToken);
+            await mutateProfile();
             toast.success('Profile picture updated successfully!');
             onClose();
             setSelectedFile(null);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
         } catch (error: any) {
             toast.error(error.message || 'Failed to upload profile picture.');
         }
     }, [selectedFile, accessToken, mutateProfile, onClose]);
-
-    const removeSelectedFile = useCallback(() => {
-        setSelectedFile(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    }, []);
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -746,7 +590,7 @@ const ProfilePictureModal: React.FC<{
                     <Avatar className="h-32 w-32 border-4 border-primary/20 shadow-md">
                         <AvatarImage src={selectedFile ? URL.createObjectURL(selectedFile) : profile.imageUrl ?? undefined} alt="Profile Preview" className="object-cover" />
                         <AvatarFallback className="text-xl font-bold bg-muted text-muted-foreground">
-                            {getInitials(profile.firstName, profile.lastName)}
+                            {getInitials(profile.thirdPartyUser.firstName ?? undefined, profile.thirdPartyUser.lastName ?? undefined)}
                         </AvatarFallback>
                     </Avatar>
                     <Label htmlFor="picture-upload" className="cursor-pointer bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
@@ -762,11 +606,6 @@ const ProfilePictureModal: React.FC<{
                             ref={fileInputRef}
                         />
                     </Label>
-                    {selectedFile && (
-                        <Button variant="ghost" size="icon" onClick={removeSelectedFile} className="mt-2">
-                            <X className="h-4 w-4" />
-                        </Button>
-                    )}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6">
@@ -797,25 +636,13 @@ const UserProfilePage: React.FC = () => {
     );
 
     const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
-    const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
-    const [isPasswordChangeModalOpen, setIsPasswordChangeModalOpen] = useState(false);
+    const [isEditCompanyModalOpen, setIsEditCompanyModalOpen] = useState(false);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] = useState(false);
-
-    const openEditProfileModal = useCallback(() => setIsEditProfileModalOpen(true), []);
-    const closeEditProfileModal = useCallback(() => setIsEditProfileModalOpen(false), []);
-
-    const openNotificationModal = useCallback(() => setIsNotificationModalOpen(true), []);
-    const closeNotificationModal = useCallback(() => setIsNotificationModalOpen(false), []);
-
-    const openPasswordChangeModal = useCallback(() => setIsPasswordChangeModalOpen(true), []);
-    const closePasswordChangeModal = useCallback(() => setIsPasswordChangeModalOpen(false), []);
-
-    const openProfilePictureModal = useCallback(() => setIsProfilePictureModalOpen(true), []);
-    const closeProfilePictureModal = useCallback(() => setIsProfilePictureModalOpen(false), []);
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
+            <div className="flex justify-center items-center h-[50vh]">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
             </div>
         );
@@ -823,81 +650,109 @@ const UserProfilePage: React.FC = () => {
 
     if (error || !profile) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
-                <AlertTriangle className="h-16 w-16 text-destructive mb-4" />
+            <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+                <AlertTriangle className="h-12 w-12 text-destructive" />
                 <h2 className="text-2xl font-bold text-foreground">Failed to load profile</h2>
-                <p className="text-muted-foreground mt-2">Please try refreshing the page or contact support.</p>
-                <Button onClick={() => window.location.reload()} className="mt-6">
-                    Retry
-                </Button>
+                <p className="text-muted-foreground">Please try refreshing the page or contact support.</p>
+                <Button onClick={() => window.location.reload()}>Retry</Button>
             </div>
         );
     }
 
     return (
-        <AnimatePresence mode="wait">
+        <div className="container mx-auto p-6 max-w-5xl space-y-8 animate-in fade-in duration-500">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8"
+                transition={{ duration: 0.5 }}
+                className="flex items-center justify-between"
             >
-                {/* <h1 className="text-4xl font-extrabold text-center text-foreground mb-10">
-                    My Profile
-                </h1> */}
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">My Account</h1>
+                    <p className="text-muted-foreground">
+                        Manage your personal information, company details, and role permissions.
+                    </p>
+                </div>
+            </motion.div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-1">
-                        <ProfileCard
-                            profile={profile}
-                            onProfilePictureClick={openProfilePictureModal}
-                            onEditProfile={openEditProfileModal}
-                        />
-                    </div>
-                    <div className="lg:col-span-2 space-y-8">
-                        <ProfileDetailsCard
-                            profile={profile}
-                            onEdit={openEditProfileModal}
-                            onPasswordChange={openPasswordChangeModal}
-                            onProfilePictureClick={openProfilePictureModal}
-                        />
-                        <NotificationCard
-                            profile={profile}
-                            onEdit={openNotificationModal}
-                        />
-                        <DangerZoneCard accessToken={accessToken} />
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column: Profile Card */}
+                <div className="lg:col-span-1 space-y-6">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <Card className="relative overflow-hidden bg-gradient-accent border-0 shadow-medium p-0">
+                            <div className="absolute inset-0 bg-gradient-primary opacity-5" />
+                            <CardContent className="relative p-8 text-center flex flex-col items-center space-y-6">
+                                <Avatar
+                                    className="relative h-32 w-32 border-4 border-primary/20 shadow-strong cursor-pointer"
+                                    onClick={() => setIsProfilePictureModalOpen(true)}
+                                >
+                                    <AvatarImage src={profile.imageUrl ?? undefined} alt={profile.thirdPartyUser.firstName || 'User'} className="object-cover" />
+                                    <AvatarFallback className="text-3xl font-bold bg-gradient-primary-700">
+                                        {getInitials(profile.thirdPartyUser.firstName ?? undefined, profile.thirdPartyUser.lastName ?? undefined)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-2">
+                                    <h2 className="text-2xl font-bold text-foreground">{profile.thirdPartyUser.firstName} {profile.thirdPartyUser.lastName}</h2>
+                                    <p className="text-muted-foreground">{profile.thirdPartyDetails.tradingName || 'No Company Name'}</p>
+                                    <Badge variant="secondary" className="bg-blue-500/10 text-blue-600">
+                                        {profile.thirdPartyDetails.businessType || 'User'}
+                                    </Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
                 </div>
 
-                <EditProfileModal
-                    isOpen={isEditProfileModalOpen}
-                    onClose={closeEditProfileModal}
-                    profile={profile}
-                    mutateProfile={mutate}
-                    accessToken={accessToken}
-                />
-                <NotificationModal
-                    isOpen={isNotificationModalOpen}
-                    onClose={closeNotificationModal}
-                    profile={profile}
-                    mutateProfile={mutate}
-                    accessToken={accessToken}
-                />
-                <PasswordChangeModal
-                    isOpen={isPasswordChangeModalOpen}
-                    onClose={closePasswordChangeModal}
-                    accessToken={accessToken}
-                />
-                <ProfilePictureModal
-                    isOpen={isProfilePictureModalOpen}
-                    onClose={closeProfilePictureModal}
-                    profile={profile}
-                    mutateProfile={mutate}
-                    accessToken={accessToken}
-                />
-            </motion.div>
-        </AnimatePresence>
+                {/* Right Column: Details & Settings */}
+                <div className="lg:col-span-2 space-y-6">
+                    <ProfileDetailsCard
+                        profile={profile}
+                        onEdit={() => setIsEditProfileModalOpen(true)}
+                        onPasswordChange={() => setIsPasswordModalOpen(true)}
+                        onProfilePictureClick={() => setIsProfilePictureModalOpen(true)}
+                    />
+
+                    <CompanyDetailsCard
+                        profile={profile}
+                        onEdit={() => setIsEditCompanyModalOpen(true)}
+                    />
+                </div>
+            </div>
+
+            <EditProfileModal
+                isOpen={isEditProfileModalOpen}
+                onClose={() => setIsEditProfileModalOpen(false)}
+                profile={profile}
+                mutateProfile={mutate}
+                accessToken={accessToken}
+            />
+
+            <EditCompanyModal
+                isOpen={isEditCompanyModalOpen}
+                onClose={() => setIsEditCompanyModalOpen(false)}
+                profile={profile}
+                mutateProfile={mutate}
+                accessToken={accessToken}
+            />
+
+            <PasswordChangeModal
+                isOpen={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(false)}
+                accessToken={accessToken}
+            />
+
+            <ProfilePictureModal
+                isOpen={isProfilePictureModalOpen}
+                onClose={() => setIsProfilePictureModalOpen(false)}
+                profile={profile}
+                mutateProfile={mutate}
+                accessToken={accessToken}
+            />
+        </div>
     );
 };
 

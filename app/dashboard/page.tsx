@@ -10,6 +10,8 @@ import { RequestSummaryCards } from '@/components/request'
 import { containerVariants, itemVariants } from '@/lib/dashboard-animations'
 import SummaryCharts from '@/components/dashboard/summary-charts'
 import { usePageTitle } from '@/hooks/use-page-title'
+import { TenantDashboard } from "@/components/dashboard/tenant-dashboard"
+
 
 function DashboardContent() {
     const { data: session, status } = useSession()
@@ -36,9 +38,32 @@ function DashboardContent() {
 
     if (status === "authenticated" && session?.user) {
         const firstName =
+            session.user.thirdParty?.thirdPartyName ||
+            session.user.thirdParty?.tradingName ||
+            session.user.thirdParty?.label ||
             session.user.firstName ||
             session.user.name?.split(" ")[0] ||
             "User"
+
+        // Render specialized dashboard for Tenants
+        if (session.user.isTenant && !session.user.isSupplier) {
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+                    <div className="max-w-7xl mx-auto p-4 md:p-8">
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="space-y-12"
+                        >
+                            <WelcomeHeader firstName={firstName} />
+
+                            <TenantDashboard />
+                        </motion.div>
+                    </div>
+                </div>
+            )
+        }
 
         return (
             <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
@@ -50,6 +75,7 @@ function DashboardContent() {
                         className="space-y-12"
                     >
                         <WelcomeHeader firstName={firstName} />
+
 
                         <motion.section
                             variants={itemVariants}
@@ -86,24 +112,6 @@ function DashboardContent() {
                                 <SummaryCharts />
                             </Suspense>
                         </motion.section>
-
-                        {/* <motion.section
-                            variants={itemVariants}
-                            aria-labelledby="tenders-heading"
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between">
-                                <h2
-                                    id="tenders-heading"
-                                    className="text-2xl font-semibold text-foreground"
-                                >
-                                    Recent Tenders
-                                </h2>
-                            </div>
-                            <Suspense fallback={<DashboardSkeleton />}>
-                                <TendersPage />
-                            </Suspense>
-                        </motion.section> */}
                     </motion.div>
                 </div>
             </div>

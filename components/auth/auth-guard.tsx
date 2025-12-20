@@ -20,21 +20,21 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
 
         // If no session, redirect to signin
         if (status === "unauthenticated" || !session) {
-            console.log('No valid session - redirecting to signin')
+
             router.replace('/signin?error=SessionRequired')
             return
         }
 
         // If session exists but user is not active/approved, sign out and redirect
         if (session.user && (!session.user.isActive || !session.user.isApproved)) {
-            console.log('User not active or approved - signing out')
+
             signOut({ callbackUrl: '/signin?error=AccountNotApproved' })
             return
         }
 
         // If no access token, sign out
         if (!session.accessToken) {
-            console.log('No access token - signing out')
+
             signOut({ callbackUrl: '/signin?error=NoAccessToken' })
             return
         }

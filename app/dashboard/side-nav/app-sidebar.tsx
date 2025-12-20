@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo } from "react"
 import { Command, LogOut, User, LucideIcon } from "lucide-react"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
@@ -36,6 +36,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> { }
 
 export function AppSidebar({ ...props }: AppSidebarProps) {
     useRouter()
+    const { data: session } = useSession()
     const currentYear = useMemo(() => new Date().getFullYear(), [])
 
     const handleLogout = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
@@ -75,8 +76,23 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     }, [])
 
     const mainNavigationSections = useMemo((): NavSection[] => {
+        const user = session?.user
+
         return sidebarItems
-            .filter(section => section.id !== "utility")
+            .filter(section => {
+                if (section.id === "utility") return false
+
+                // If no roles defined, show to everyone (e.g. General Dashboard)
+                if (!section.roles || section.roles.length === 0) return true
+
+                if (!user) return false // Should be handled by auth guard, but safe check
+
+                if (section.roles.includes('Supplier') && user.isSupplier) return true
+                if (section.roles.includes('Tenant') && user.isTenant) return true
+                if (section.roles.includes('Customer') && user.isCustomer) return true
+
+                return false
+            })
             .map((group) => ({
                 ...group,
                 items: group.items.map((item: NavMainItem) => ({
@@ -88,7 +104,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                     })),
                 })),
             }))
-    }, [resolveDashboardPath])
+    }, [resolveDashboardPath, session])
 
     const bottomNavigationItems = useMemo((): SecondaryNavItem[] => {
         const utilitySection = sidebarItems.find(section => section.id === "utility")

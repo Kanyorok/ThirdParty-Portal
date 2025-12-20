@@ -59,6 +59,12 @@ export const apiService = {
             body: JSON.stringify(data),
         }),
 
+    toggleRole: (roleId: number, enable: boolean, token: string) =>
+        request("/api/third-party-profile/roles/toggle", token, {
+            method: "PUT",
+            body: JSON.stringify({ roleId, enable }),
+        }),
+
     uploadProfilePicture: (file: File, token: string) => {
         const formData = new FormData();
         formData.append("profilePicture", file);

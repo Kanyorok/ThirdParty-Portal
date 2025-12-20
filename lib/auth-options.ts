@@ -23,10 +23,11 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        profile_type: { label: "Profile Type", type: "text" },
       },
       async authorize(credentials): Promise<User | null> {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("MISSING_FIELDS: Email and password are required")
+        if (!credentials?.email || !credentials?.password || !credentials?.profile_type) {
+          throw new Error("MISSING_FIELDS: Email, password, and profile type are required")
         }
 
         if (!baseUrl) {
@@ -46,6 +47,7 @@ export const authOptions: NextAuthOptions = {
             body: JSON.stringify({
               email: credentials.email,
               password: credentials.password,
+              profile_type: credentials.profile_type,
             }),
           })
           text = await res.text()
@@ -53,15 +55,44 @@ export const authOptions: NextAuthOptions = {
           throw new Error("NETWORK: Unable to reach authentication service")
         }
 
-        const data = parseResponse(text)
+        const data = (text ? JSON.parse(text) : null) as Partial<AuthResponse> | null
+        const message = data?.message
+        if (res.status === 422) throw new Error(`VALIDATION: ${message || "Validation failed"}`)
+        if (res.status === 403) throw new Error(`ACCOUNT_NOT_APPROVED: ${message || "Account pending approval"}`)
+        if (res.status === 401) throw new Error(`INVALID_CREDENTIALS: ${message || "Invalid email or password"}`)
+        if (!res.ok) throw new Error(`SERVER_ERROR: ${message || `Login failed (${res.status})`}`)
+        if (!data?.user || !data?.token) throw new Error("SERVER_ERROR: Malformed login response")
 
-        handleErrorResponses(res, data)
+        const rawUser = data.user as ApiUser
+        const rawTypes = Array.isArray(rawUser.types) ? rawUser.types : []
+        const types: ThirdPartyTypeEntry[] = rawTypes.map((t) => ({ id: t.id, code: t.code, categoryId: t.categoryId ?? null }))
+        const isSupplier = !!rawUser.isSupplier || types.some((t) => t.code?.startsWith("SU-"))
 
-        if (!data?.user || !data?.token) {
-          throw new Error("SERVER_ERROR: Malformed login response")
-        }
+        const loggedIn: User = {
+          id: String(rawUser.id),
+          userId: rawUser.userId,
+          firstName: rawUser.firstName,
+          lastName: rawUser.lastName,
+          fullName: rawUser.fullName,
+          email: rawUser.email,
+          phone: rawUser.phone ?? null,
+          imageId: rawUser.imageId ?? null,
+          gender: rawUser.gender ?? null,
+          thirdPartyId: rawUser.thirdPartyId,
+          isActive: rawUser.isActive,
+          isApproved: rawUser.isApproved,
+          isSupplier,
+          isTenant: !!rawUser.isTenant,
+          isCustomer: !!rawUser.isCustomer,
+          types,
+          emailVerifiedOn: rawUser.emailVerifiedOn ?? null,
+          createdOn: rawUser.createdOn,
+          modifiedOn: rawUser.modifiedOn,
+          thirdParty: rawUser.thirdParty,
+          accessToken: data.token!,
+        } as unknown as User
 
-        return transformApiUser(data.user, data.token)
+        return loggedIn
       },
     }),
   ],
@@ -96,15 +127,15 @@ export const authOptions: NextAuthOptions = {
         isActive: t.isActive,
         isApproved: t.isApproved,
         isSupplier: t.isSupplier,
+        isTenant: t.isTenant,
+        isCustomer: t.isCustomer,
         types: t.types,
         emailVerifiedOn: t.emailVerifiedOn,
         createdOn: t.createdOn,
         modifiedOn: t.modifiedOn,
         thirdParty: t.thirdParty,
       }
-
         ; (session as unknown as { accessToken?: string }).accessToken = t.accessToken
-
       return session
     },
   },

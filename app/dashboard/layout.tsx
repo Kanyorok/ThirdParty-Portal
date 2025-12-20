@@ -18,13 +18,13 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
 
     // Critical security check - redirect unauthorized users
     if (!session || !session.user || !session.accessToken) {
-        console.log('Unauthorized access attempt to dashboard - redirecting to signin');
+
         redirect('/signin?error=SessionExpired');
     }
 
     // Additional validation - check if user is active and approved
     if (!session.user.isActive || !session.user.isApproved) {
-        console.log('User not active or approved - redirecting to signin');
+
         redirect('/signin?error=AccountNotApproved');
     }
 

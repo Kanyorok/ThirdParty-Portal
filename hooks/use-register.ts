@@ -74,19 +74,34 @@ export const useRegisterForm = () => {
     }, [errors, touchedFields, watchedFields])
 
     const handleRegistrationSuccess = useCallback(
-        (result: RegisterApiResponse) => {
-            const userId = result.data?.user?.userId
+        async (result: ApiResponse) => {
 
-            toast.success(result.message || "Registration successful! Please check your email to verify your account.")
-            reset()
+            // Backend returns: { message, token, user: { id, userId, ... } }
+            // So we check for result.user
+            if (result.status === "success" || (result as any).user) {
 
-            setTimeout(() => {
-                if (userId) {
-                    router.push(`/verify-email?userId=${userId}`)
-                } else {
-                    router.push("/signin")
-                }
-            }, 1500)
+                toast.success(result.message || "Registration successful!");
+                reset();
+
+                // Extract userId from the nested user object
+                const u = (result as any).user;
+                const userId = u?.id || u?.userId || (result as any).userId || null;
+
+
+
+                setTimeout(() => {
+                    // For the 'check-email' flow, we don't strictly need userId in the URL,
+                    // but we check it to confirm we have a valid registration.
+                    if (userId) {
+
+                        router.push('/check-email');
+                    } else {
+
+                        // Fallback to signin if something is weird, but we should show the check email page ideally.
+                        router.push("/signin");
+                    }
+                }, 2000);
+            }
         },
         [router, reset]
     )

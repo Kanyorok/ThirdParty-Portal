@@ -59,7 +59,7 @@ export const useThirdPartyRegisterDetailsForm = (p0: { userId: string | null; on
                 toast.success(result.message || "Third-party details submitted successfully! Your account is pending approval.");
                 reset();
                 setTimeout(() => {
-                    router.push("/auth/registration-pending");
+                    router.push("/registration-pending");
                 }, 2000);
             }
         },
@@ -93,7 +93,7 @@ export const useThirdPartyRegisterDetailsForm = (p0: { userId: string | null; on
         async (data: ThirdPartyDetailsFormInputs) => {
             if (!userId) {
                 toast.error("User ID is missing. Please restart the registration process.");
-                router.push("/auth/register");
+                router.push("/register");
                 return;
             }
 

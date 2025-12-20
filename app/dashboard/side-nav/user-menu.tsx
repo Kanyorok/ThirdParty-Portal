@@ -38,6 +38,12 @@ interface UserData {
     email?: string | null;
     isApproved: boolean;
     imageUrl?: string | null;
+    thirdParty?: {
+        thirdPartyName?: string | null;
+        tradingName?: string | null;
+        label?: string | null;
+        email?: string | null;
+    };
 }
 
 interface UserNavProps {
@@ -104,7 +110,11 @@ const UserNavSkeleton = memo(() => (
 UserNavSkeleton.displayName = "UserNavSkeleton";
 
 const UserAvatar = memo(({ user }: { user: UserData }) => {
-    const displayName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    const displayName = user.thirdParty?.thirdPartyName ||
+        user.thirdParty?.tradingName ||
+        user.thirdParty?.label ||
+        `${user.firstName || ""} ${user.lastName || ""}`.trim();
+
     const fallbackInitials = getInitials(displayName || user.email || "User");
 
     return (
@@ -135,8 +145,12 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
         );
     }
 
-    const displayName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
-    const displayEmail = user.email || "No email";
+    const displayName = user.thirdParty?.thirdPartyName ||
+        user.thirdParty?.tradingName ||
+        user.thirdParty?.label ||
+        `${user.firstName || ""} ${user.lastName || ""}`.trim();
+
+    const displayEmail = user.thirdParty?.email || user.email || "No email";
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={onOpenChange}>
@@ -146,13 +160,14 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                     className={cn(
                         "group flex h-auto w-fit items-center justify-center gap-2 rounded-lg p-2 text-left",
                         "transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        "max-w-[200px] lg:max-w-[260px]", // Increased width to accommodate longer company names
                         isPending && "cursor-not-allowed opacity-60"
                     )}
                     disabled={isPending}
                     aria-label="Open user menu"
                 >
                     <UserAvatar user={user} />
-                    <div className="hidden sm:flex flex-col items-start overflow-hidden max-w-[120px] lg:max-w-[180px]">
+                    <div className="hidden sm:flex flex-col items-start overflow-hidden w-full">
                         <span className="font-semibold text-sm text-foreground truncate w-full">
                             {displayName || displayEmail.split('@')[0]}
                         </span>
@@ -162,7 +177,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                             </span>
                         )}
                     </div>
-                    <ChevronsUpDown className="hidden sm:block h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    <ChevronsUpDown className="hidden sm:block h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180 flex-shrink-0" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -179,8 +194,8 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                 >
                     <DropdownMenuLabel className="px-2.5 pt-2 pb-1 font-semibold text-foreground">
                         <div className="flex flex-col items-start gap-1.5">
-                            <span className="truncate text-base font-bold">{displayName || "Guest User"}</span>
-                            {user.email && <span className="truncate text-xs text-muted-foreground">{user.email}</span>}
+                            <span className="truncate text-base font-bold w-full">{displayName || "Guest User"}</span>
+                            {displayEmail && <span className="truncate text-xs text-muted-foreground w-full">{displayEmail}</span>}
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}

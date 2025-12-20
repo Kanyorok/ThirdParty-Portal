@@ -30,6 +30,7 @@ export interface NavMainItem extends NavItemBase {
 export interface NavSection {
     readonly id: string;
     readonly items: readonly NavMainItem[];
+    readonly roles?: readonly ('Supplier' | 'Tenant' | 'Customer')[];
 }
 
 export const sidebarItems: readonly NavSection[] = [
@@ -45,6 +46,7 @@ export const sidebarItems: readonly NavSection[] = [
     },
     {
         id: "procurement",
+        roles: ['Supplier'],
         items: [
             {
                 title: "Tenders",
@@ -64,6 +66,32 @@ export const sidebarItems: readonly NavSection[] = [
             {
                 title: "My Documents",
                 url: "/dashboard/documents",
+                icon: FolderOpen,
+            },
+        ],
+    },
+    {
+        id: "tenancy",
+        roles: ['Tenant'],
+        items: [
+            {
+                title: "My Leases",
+                url: "/dashboard/leases",
+                icon: FileText,
+            },
+            {
+                title: "Rent & Invoices",
+                url: "/dashboard/rent",
+                icon: Receipt,
+            },
+            {
+                title: "Maintenance",
+                url: "/dashboard/maintenance",
+                icon: ClipboardList,
+            },
+            {
+                title: "Documents",
+                url: "/dashboard/tenant-documents",
                 icon: FolderOpen,
             },
         ],
