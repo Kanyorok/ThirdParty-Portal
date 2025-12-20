@@ -229,6 +229,7 @@ use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
+use App\Policies\Procurement\SupplierPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
@@ -280,7 +281,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
 
     {
-       // Default binding for Department Needs
+        // Default binding for Department Needs
         $this->app->bind(ApprovalWorkflow::class, function ($app) {
             return new ApprovalWorkflow('DepartmentNeedsStatus', 'Status');
         });
@@ -329,7 +330,6 @@ class AppServiceProvider extends ServiceProvider
                     'DocStatus'        // Status column name for orders
                 );
             });
-    
     }
 
     /**
@@ -506,6 +506,8 @@ class AppServiceProvider extends ServiceProvider
             // Allow resolving morph type 'ThirdParty' used by legacy data
             'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
+            \App\Models\ThirdParty\SupplierMaster::getPrimaryKey() => \App\Models\ThirdParty\SupplierMaster::class,
+            \App\Models\ThirdParty\ThirdPartyUser::getPrimaryKey() => \App\Models\ThirdParty\ThirdPartyUser::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,
@@ -638,6 +640,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
         Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
+        Gate::policy(SupplierMaster::class, SupplierPolicy::class);
         Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
         // Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);

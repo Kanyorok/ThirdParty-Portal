@@ -25,8 +25,7 @@ class EncryptedBidDocumentService
         BidSubmission $bidSubmission,
         array         $documents,
         User          $actor
-    ): array
-    {
+    ): array {
         try {
             $storedDocuments = [];
             $bidRepository = self::getBidRepository();
@@ -64,7 +63,6 @@ class EncryptedBidDocumentService
             }
 
             return $storedDocuments;
-
         } catch (\Exception $e) {
             Log::error('Error storing encrypted bid documents: ' . $e->getMessage());
             throw new \Exception('Failed to store encrypted bid documents: ' . $e->getMessage());
@@ -110,10 +108,9 @@ class EncryptedBidDocumentService
             }
 
             // Log access for audit trail
-            Log::info("Bid documents accessed for submission {$bidSubmission->Id} by user {$actor->Id}");
+
 
             return $decryptedDocuments;
-
         } catch (\Exception $e) {
             Log::error('Error decrypting bid documents: ' . $e->getMessage());
             throw new \Exception('Failed to decrypt bid documents: ' . $e->getMessage());
@@ -175,7 +172,7 @@ class EncryptedBidDocumentService
             $count++;
         }
 
-        Log::info("Bid opening ceremony started for tender {$tenderRef} by officer {$ceremonyOfficer->Id}. {$count} submissions unlocked.");
+
 
         return $count;
     }

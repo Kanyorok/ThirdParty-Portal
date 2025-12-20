@@ -38,17 +38,7 @@ class WorkFlowStageService
                 throw new ErroredException('Module not found for workflow source.');
             }
 
-            Log::info('Executing p_AddWorkflowStage2', [
-                'Order' => $nextOrder,
-                'StageName' => $data['StageName'],
-                'EscalationLimit' => $data['EscalationLimit'],
-                'WorkFlowId' => $data['WorkFlowId'],
-                'WorkFlowTypeId' => $data['WorkFlowTypeId'],
-                'Count' => $data['Count'] ?? null,
-                'StatusId' => $data['StatusId'] ?? null,
-                'CreatedBy' => $user->Id,
-                'ModuleID' => $moduleId
-            ]);
+
 
             $results = DB::select('EXEC p_AddWorkflowStage2 
             @Order = ?, 
@@ -71,14 +61,14 @@ class WorkFlowStageService
                 $moduleId
             ]);
 
-            Log::info('p_AddWorkflowStage2 Result', ['result' => $results]);
+
 
             // Fix for SP leaving transaction open
             try {
                 $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
                 $laravelTranCount = DB::transactionLevel();
 
-                Log::info('Transaction Check', ['DB_TRANCOUNT' => $dbTranCount, 'Laravel_Level' => $laravelTranCount]);
+
 
                 while ($dbTranCount > $laravelTranCount) {
                     DB::unprepared('COMMIT TRANSACTION');
@@ -99,7 +89,7 @@ class WorkFlowStageService
             if (!$stage) {
                 // Debug: Check if it exists via raw DB
                 $rawStage = DB::table('t_WorkflowStages')->where('Id', $dto->newStageId)->first();
-                Log::info('Raw DB Check for Stage', ['id' => $dto->newStageId, 'found' => $rawStage]);
+
 
                 if ($rawStage) {
                     // If found via raw DB but not Eloquent, it's a model issue. 

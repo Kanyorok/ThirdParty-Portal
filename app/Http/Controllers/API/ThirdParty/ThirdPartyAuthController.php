@@ -4,7 +4,7 @@ namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyRequest;
+use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyUserRequest;
 use App\Http\Requests\ThirdPartyAuth\LoginThirdPartyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +15,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Log;
+use App\Models\ThirdParty\SupplierMaster;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 
 class ThirdPartyAuthController extends Controller
 {
@@ -25,10 +29,10 @@ class ThirdPartyAuthController extends Controller
         $this->registrationService = $registrationService;
     }
 
-    public function register(RegisterThirdPartyRequest $request): JsonResponse
+    public function register(RegisterThirdPartyUserRequest $request): JsonResponse
     {
         try {
-            $userData = $this->registrationService->registerUser($request->validated());
+            $userData = $this->registrationService->registerThirdParty($request->validated());
 
             return response()->json([
                 'message' => __('auth.registration_personal_successful'),
@@ -56,8 +60,10 @@ class ThirdPartyAuthController extends Controller
 
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
+
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
+
 
             if (! $user || ! Hash::check($request->password, $user->Password)) {
                 throw ValidationException::withMessages([
@@ -73,19 +79,51 @@ class ThirdPartyAuthController extends Controller
                 return response()->json(['message' => __('auth.acc_not_approved')], 403);
             }
 
+            // profile_type validation
+            $profileType = $request->input('profile_type');
+            $isAuthorized = false;
+
+            if ($profileType === 'Supplier') {
+                $isAuthorized = SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value) // Use value explicit
+                    ->exists();
+            } elseif ($profileType === 'Tenant') {
+                $isAuthorized = PropertyNewTenant::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->where('IsActive', true)
+                    ->exists();
+            } elseif ($profileType === 'Customer') {
+                $isAuthorized = BancassuranceCustomer::where('ThirdPartyId', $user->ThirdPartyId)->exists();
+            } else {
+                // If no profile type provided or unknown, fail safe or allow if strict check not required?
+                // Request says: "we now need to specify when authenticating what type is logging in"
+                // So strict check seems appropriate.
+                return response()->json(['message' => 'Profile type is required and must be valid.'], 403);
+            }
+
+
+
+            if (!$isAuthorized) {
+                return response()->json(['message' => 'Your account is not authorized for the selected profile type.'], 403);
+            }
+
             // Optional: single-session behavior
             $user->tokens()->delete();
 
             $token = $user->createToken('api')->plainTextToken;
 
-            return response()->json([
-                'user' => new ThirdPartyUserResource($user->load(['thirdParty.types'])),
+            $responseData = [
+                'user' => (new ThirdPartyUserResource($user->load(['thirdParty.types'])))->resolve(),
                 'token' => $token,
                 'token_type' => 'Bearer',
-            ]);
+            ];
+
+
+
+            return response()->json($responseData);
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
+            Log::error('Login Exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json([
                 'message' => __('auth.login_failed'),
                 'error' => config('app.debug') ? $e->getMessage() : null,

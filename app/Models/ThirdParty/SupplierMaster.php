@@ -22,8 +22,14 @@ class SupplierMaster extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'ThirdPartyId', 'SupplierID', 'ApprovalStatus', 'IsPrequalified', 'Extra',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'ThirdPartyId',
+        'SupplierID',
+        'ApprovalStatus',
+        'IsPrequalified',
+        'Extra',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -76,7 +82,7 @@ class SupplierMaster extends Model
             'supplier_category_id',
             'ThirdPartyId',
             'SupplierCategoryID'
-        )->whereNull('t_ThirdParty_SupplierCategory.DeletedOn');
+        );
     }
 
     /**
@@ -113,5 +119,47 @@ class SupplierMaster extends Model
         // Return empty relationship for now
         return $this->hasMany(\App\Models\Contract::class, 'SupplierId', 'Id')
             ->where('Id', '<', 0);
+    }
+
+    /**
+     * Get all workflows for this supplier
+     */
+    public function workflows(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(
+            \App\Models\Core\Approval\Workflow::class,
+            'source',
+            'Source',      // Column name in t_Workflow table
+            'SourceID',    // ID column in t_Workflow table
+            'Id'           // Local key
+        );
+    }
+
+    /**
+     * Get pending workflows for this supplier
+     */
+    public function pendingWorkflows(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(
+            \App\Models\Core\Approval\WorkflowPending::class,
+            'source',
+            'Source',      // Column name in t_WorkFlowPending table
+            'SourceID',    // ID column in t_WorkFlowPending table
+            'Id'           // Local key
+        );
+    }
+
+    /**
+     * Get workflow history for this supplier
+     */
+    public function workflowHistory(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(
+            \App\Models\Core\Approval\WorkflowHistory::class,
+            'source',      // Relationship name
+            'Source',      // Column name in t_WorkflowHistory table
+            'SourceID',    // ID column in t_WorkflowHistory table
+            'Id'           // Local key
+        )->orderBy('CreatedOn', 'desc');
     }
 }

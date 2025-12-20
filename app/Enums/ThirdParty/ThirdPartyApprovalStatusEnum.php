@@ -7,6 +7,8 @@ enum ThirdPartyApprovalStatusEnum: string
     case Pending = 'P';
     case Approved = 'A';
     case Rejected = 'R';
+    case Submitted = 'U';
+    case Suspended = 'S';
 
     public function label(): string
     {
@@ -14,6 +16,8 @@ enum ThirdPartyApprovalStatusEnum: string
             self::Pending => 'Pending',
             self::Approved => 'Approved',
             self::Rejected => 'Rejected',
+            self::Submitted => 'Submitted',
+            self::Suspended => 'Suspended',
         };
     }
 
@@ -23,6 +27,8 @@ enum ThirdPartyApprovalStatusEnum: string
             self::Pending => 'pending',
             self::Approved => 'approved',
             self::Rejected => 'rejected',
+            self::Submitted => 'info',
+            self::Suspended => 'rejected', // Or a darker red/grey? Using rejected logic for now. User said "cannot login", "cannot be used".
         };
     }
 }
