@@ -238,10 +238,7 @@ export default function RegisterThirdPartyDetails() {
         fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/v1/countries/${selectedCountry}/localities`)
             .then(res => res.json())
             .then(data => {
-                console.log('Localities Data:', data);
-                if (data.data && data.data.length > 0) {
-                    console.log('Locality Sample:', data.data[0]);
-                }
+
                 const list = (data.data || []).map((l: any, index: number) => ({
                     ID: l.ID || l.id || l.iD || l.Id || index,
                     Name: l.Name || l.name || `Locality ${index}`,
@@ -251,12 +248,7 @@ export default function RegisterThirdPartyDetails() {
             .catch(err => console.error("Failed to fetch localities", err));
     }, [selectedCountry]);
 
-    // DEBUG: Log data to identify key issues
-    useEffect(() => {
-        if (countries.length > 0) console.log('Countries Sample:', countries[0]);
-        if (typeOptions.length > 0) console.log('ThirdPartyTypes Sample:', typeOptions[0]);
-        if (businessTypes.length > 0) console.log('BusinessTypes Sample:', businessTypes[0]);
-    }, [countries, typeOptions, businessTypes]);
+
 
     // Check for existing party (if re-visiting)
     useEffect(() => {
