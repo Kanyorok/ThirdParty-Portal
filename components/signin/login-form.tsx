@@ -165,10 +165,22 @@ function SignInFormComponent() {
             } else if (result?.ok) {
                 // Show toast then navigate
                 toast.success("Successfully Signed In", {
-                    description: "Redirecting to dashboard...",
+                    description: "Redirecting...",
                 })
-                // Allow toast to paint before navigation
-                setTimeout(() => router.push(result.url || callbackUrl), 300)
+
+                // Allow toast to paint/session to settle before navigation
+                // We fetch the session here to check if they need to complete their profile
+                const { getSession } = await import("next-auth/react")
+                const session = await getSession()
+
+                setTimeout(() => {
+                    if (session?.user && !session.user.thirdPartyId) {
+                        // User has account but no Third Party Profile -> Redirect to Step 2
+                        router.push(`/third-party-details?user_id=${session.user.id}`)
+                    } else {
+                        router.push(result.url || callbackUrl)
+                    }
+                }, 300)
             }
         } catch (error) {
             setError("root", {

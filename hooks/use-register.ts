@@ -54,22 +54,30 @@ export const useRegisterForm = () => {
 
     const handleRegistrationSuccess = useCallback(
         async (result: ApiResponse) => {
-            console.log("--Haha--")
-            if (result.status === "success" || (result as any).userId) {
+            console.log("Registration Response:", result)
+            // Backend returns: { message, token, user: { id, userId, ... } }
+            // So we check for result.user
+            if (result.status === "success" || (result as any).user) {
                 console.log("Register success:", result)
                 toast.success(result.message || "Registration successful!");
                 reset();
-                const userId = (result as any).userId || null;
+
+                // Extract userId from the nested user object
+                const u = (result as any).user;
+                const userId = u?.id || u?.userId || (result as any).userId || null;
+
                 console.log("Extracted userId for redirect:", userId);
 
                 setTimeout(() => {
+                    // For the 'check-email' flow, we don't strictly need userId in the URL,
+                    // but we check it to confirm we have a valid registration.
                     if (userId) {
                         console.log("setTimeout callback triggered, attempting redirect...");
-                        router.push(`/third-party-details?user_id=${userId}`);
+                        router.push('/check-email');
                     } else {
-                        console.error("UserId is null or undefined, cannot redirect to third-party details.")
-                        toast.error("User ID not received. Please contact support.");
-                        router.push("/auth/signin");
+                        console.error("UserId is null or undefined.")
+                        // Fallback to signin if something is weird, but we should show the check email page ideally.
+                        router.push("/signin");
                     }
                 }, 2000);
             }
