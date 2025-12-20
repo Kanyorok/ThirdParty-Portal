@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const apiUrl = getApiUrl()
     const requestUrl = `${apiUrl}/api/v1/portal/profiles/customer`
 
-    console.log("[Create Customer] Request URL:", requestUrl)
+
 
     const response = await fetch(requestUrl, {
       method: "POST",

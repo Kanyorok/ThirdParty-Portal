@@ -258,7 +258,7 @@ export default function RegisterThirdPartyDetails() {
         const uid = searchParams.get('userId'); // Matches 'userId' from backend redirect
         if (uid) {
             setUserId(uid);
-            console.log("User ID set from URL:", uid);
+
         } else {
             // Fallback: try reading from session/auth if logged in, or localStorage?
             // Since we are moving to NO AUTH flow, URL param is critical.

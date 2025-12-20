@@ -31,7 +31,7 @@ interface CreateClarificationRequest {
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'all';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
-    
+
     if (!tenderId) {
       return NextResponse.json(
         { error: "Tender ID is required" },
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       try {
         // Fetch from external API
         const apiUrl = `${externalApiUrl}/api/tender-clarifications?${queryParams}`;
-        
+
         const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${session.accessToken}`,
@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Failed to fetch tender clarifications:', error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to fetch tender clarifications",
         message: error instanceof Error ? error.message : "Unknown error"
       },
@@ -233,7 +233,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -270,7 +270,7 @@ export async function PUT(request: NextRequest) {
       try {
         // Send response to external ERP API
         const apiUrl = `${externalApiUrl}/api/tender-clarifications/${clarificationId}/respond`;
-        
+
         const response = await fetch(apiUrl, {
           method: 'PUT',
           headers: {
@@ -337,7 +337,7 @@ export async function PUT(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -357,7 +357,7 @@ export async function POST(request: NextRequest) {
     }
 
     const thirdPartyId = session.user.thirdPartyId;
-    
+
     if (!thirdPartyId) {
       return NextResponse.json(
         { error: "Third Party ID not found" },
@@ -376,7 +376,7 @@ export async function POST(request: NextRequest) {
       attachments: attachments || [],
       created_by: session.user.id,
       created_on: new Date().toISOString(),
-      
+
       // Also include camelCase versions for backwards compatibility
       tenderId: parseInt(tenderId.toString()),
       thirdPartyId,
@@ -392,7 +392,7 @@ export async function POST(request: NextRequest) {
       try {
         // Send to external API
         const apiUrl = `${externalApiUrl}/api/tender-clarifications`;
-        
+
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
@@ -431,7 +431,7 @@ export async function POST(request: NextRequest) {
       createdOn: new Date().toISOString(),
     };
 
-    console.log('Mock clarification submitted:', mockClarification);
+
 
     return NextResponse.json({
       message: "Clarification request submitted successfully (mock mode)",
@@ -442,7 +442,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to create tender clarification:', error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to submit clarification request",
         message: error instanceof Error ? error.message : "Unknown error"
       },

@@ -57,7 +57,7 @@ export default function VerifyEmailPage() {
                     setMessage(data.message || 'Verification failed.');
                 }
             } catch (err) {
-                console.error(err);
+
                 setStatus('error');
                 setMessage('An unexpected error occurred during verification.');
             }

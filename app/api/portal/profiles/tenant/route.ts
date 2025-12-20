@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const apiUrl = getApiUrl()
     const requestUrl = `${apiUrl}/api/v1/portal/profiles/tenant`
 
-    console.log("[Create Tenant] Request URL:", requestUrl)
+
 
     const response = await fetch(requestUrl, {
       method: "POST",

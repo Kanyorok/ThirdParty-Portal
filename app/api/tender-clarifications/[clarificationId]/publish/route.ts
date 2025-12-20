@@ -11,7 +11,7 @@ interface PublishClarificationRequest {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -19,9 +19,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-  const url = new URL(request.url);
-  const parts = url.pathname.split("/");
-  const clarificationId = parts[parts.length - 2];
+    const url = new URL(request.url);
+    const parts = url.pathname.split("/");
+    const clarificationId = parts[parts.length - 2];
     const body: PublishClarificationRequest = await request.json();
     const { publishToAll, notifySuppliers, publishedBy } = body;
 
@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest) {
       try {
         // Send publish request to external ERP API
         const apiUrl = `${externalApiUrl}/api/tender-clarifications/${clarificationId}/publish`;
-        
+
         const response = await fetch(apiUrl, {
           method: 'PATCH',
           headers: {
@@ -66,7 +66,7 @@ export async function PATCH(request: NextRequest) {
           const publishedClarification = await response.json();
 
           return NextResponse.json({
-            message: publishToAll 
+            message: publishToAll
               ? "Clarification published to all suppliers successfully"
               : "Clarification set to private successfully",
             data: publishedClarification,
@@ -89,10 +89,10 @@ export async function PATCH(request: NextRequest) {
       modifiedOn: new Date().toISOString(),
     };
 
-    console.log('Mock clarification published:', mockPublishedClarification);
+
 
     return NextResponse.json({
-      message: publishToAll 
+      message: publishToAll
         ? "Clarification published to all suppliers successfully (mock mode)"
         : "Clarification set to private successfully (mock mode)",
       data: mockPublishedClarification,

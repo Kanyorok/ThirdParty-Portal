@@ -63,7 +63,7 @@ interface UpdateBidRequest {
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -75,9 +75,9 @@ export async function GET(request: NextRequest) {
     const tenderId = searchParams.get('tenderId');
     const checkExisting = searchParams.get('checkExisting');
     const status = searchParams.get('status') || 'all';
-    
+
     const thirdPartyId = session.user.thirdPartyId;
-    
+
     if (!thirdPartyId) {
       return NextResponse.json(
         { error: "Third Party ID not found" },
@@ -96,8 +96,8 @@ export async function GET(request: NextRequest) {
           });
 
           const apiUrl = `${externalApiUrl}/api/bid-submissions/existing?${queryParams}`;
-          console.log('📡 CHECKING EXISTING BID - Attempting to call:', apiUrl);
-          
+
+
           const response = await fetch(apiUrl, {
             headers: {
               'Authorization': `Bearer ${session.accessToken}`,
@@ -108,8 +108,8 @@ export async function GET(request: NextRequest) {
 
           if (response.ok) {
             const data = await response.json();
-            console.log('✅ EXISTING BID CHECK - Response from ERP:', data);
-            
+
+
             return NextResponse.json({
               success: true,
               hasExistingBid: !!data.data,
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
               message: data.message
             });
           } else {
-            console.log('❌ EXISTING BID CHECK - Failed:', response.status);
+
             return NextResponse.json({
               success: true,
               hasExistingBid: false,
@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch from external API
     const apiUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/tender-bids?${queryParams}`;
-    
+
     const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${session.accessToken}`,
@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Failed to fetch tender bids:', error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to fetch tender bids",
         message: error instanceof Error ? error.message : "Unknown error"
       },
@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
     let formData;
     try {
       formData = await request.formData();
-      console.log('📝 BID FORM DEBUG - FormData parsed successfully');
+
     } catch (error) {
       console.error('❌ BID FORM DEBUG - Failed to parse FormData:', error);
       return NextResponse.json(
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     const tenderId = formData.get('tenderId') as string;
     const bidAmount = parseFloat(formData.get('bidAmount') as string);
     const currency = formData.get('currency') as string;
@@ -227,33 +227,11 @@ export async function POST(request: NextRequest) {
     const status = formData.get('status') as string || 'draft';
 
     // Debug: Log all received values
-    console.log('🔍 API DEBUG - Received values:', {
-      tenderId: tenderId,
-      tenderIdValid: !!tenderId,
-      bidAmountRaw: formData.get('bidAmount'),
-      bidAmount: bidAmount,
-      bidAmountValid: !isNaN(bidAmount),
-      currencyRaw: formData.get('currency'),
-      currency: currency,
-      currencyValid: !!currency,
-      validityPeriodRaw: formData.get('validityPeriod'),
-      validityPeriod: validityPeriod,
-      validityPeriodValid: !isNaN(validityPeriod),
-      deliveryPeriodRaw: formData.get('deliveryPeriod'),
-      deliveryPeriod: deliveryPeriod,
-      deliveryPeriodValid: !isNaN(deliveryPeriod),
-      status: status
-    });
+
 
     // Validate required fields
     if (!tenderId || isNaN(bidAmount) || !currency || isNaN(validityPeriod) || isNaN(deliveryPeriod)) {
-      console.log('❌ API DEBUG - Validation failed:', {
-        tenderIdFailed: !tenderId,
-        bidAmountFailed: isNaN(bidAmount),
-        currencyFailed: !currency,
-        validityPeriodFailed: isNaN(validityPeriod),
-        deliveryPeriodFailed: isNaN(deliveryPeriod)
-      });
+
       return NextResponse.json(
         { error: "Tender ID, bid amount, currency, validity period, and delivery period are required" },
         { status: 400 }
@@ -261,7 +239,7 @@ export async function POST(request: NextRequest) {
     }
 
     const thirdPartyId = session.user.thirdPartyId;
-    
+
     if (!thirdPartyId) {
       return NextResponse.json(
         { error: "Third Party ID not found" },
@@ -281,11 +259,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('📁 DOCUMENTS DEBUG - Processing files:', {
-      fileCount: files.length,
-      status: status,
-      documentTypes: documentTypes
-    });
+
 
     // Create FormData for external API matching ERP bid-submissions endpoint format
     const apiFormData = new FormData();
@@ -305,20 +279,10 @@ export async function POST(request: NextRequest) {
         apiFormData.append(`bid_documents[${index}][document_type]`, documentTypes[index] || 'other');
       });
     } else {
-      console.log('📁 DOCUMENTS DEBUG - No files to upload for this submission');
+
     }
 
-    console.log('📝 BID SUBMISSION DEBUG - Sending to ERP:', {
-      tender_id: tenderId,
-      third_party_id: thirdPartyId,
-      bid_amount: bidAmount,
-      currency: currency,
-      validity_period: validityPeriod,
-      delivery_period: deliveryPeriod,
-      status: status || 'draft',
-      documents_count: files.length,
-      document_types: documentTypes
-    });
+
 
     // Try to send to external API with encryption handling
     const externalApiUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
@@ -327,8 +291,8 @@ export async function POST(request: NextRequest) {
     if (externalApiUrl) {
       try {
         const apiUrl = `${externalApiUrl}/api/bid-submissions`;
-        console.log('📡 BID SUBMISSION API - Attempting to call:', apiUrl);
-        
+
+
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
@@ -340,8 +304,8 @@ export async function POST(request: NextRequest) {
 
         if (response.ok) {
           const newBid = await response.json();
-          console.log('✅ BID SUBMISSION API - Success from ERP backend');
-          
+
+
           // Map ERP response with PascalCase to frontend format
           const frontendResponse = {
             bid_id: newBid.data?.Id || newBid.Id,
@@ -353,7 +317,7 @@ export async function POST(request: NextRequest) {
             submitted_at: newBid.data?.CreatedOn || newBid.CreatedOn,
             documents_count: newBid.documents_count || 0
           };
-          
+
           return NextResponse.json({
             message: "Bid submitted to ERP successfully",
             data: frontendResponse,
@@ -362,8 +326,8 @@ export async function POST(request: NextRequest) {
           // Handle validation errors from ERP
           try {
             const validationErrors = await response.json();
-            console.log('❌ BID SUBMISSION API - Validation errors from ERP:', validationErrors);
-            
+
+
             return NextResponse.json({
               error: "Validation failed",
               message: validationErrors.message || "Please check your bid details",
@@ -378,8 +342,8 @@ export async function POST(request: NextRequest) {
           // Handle business logic errors from ERP (like expired deadlines)
           try {
             const businessError = await response.json();
-            console.log('🚫 BID SUBMISSION API - Business error from ERP:', businessError);
-            
+
+
             return NextResponse.json({
               error: "Submission not allowed",
               message: businessError.message || "This action is not allowed",
@@ -413,7 +377,6 @@ export async function POST(request: NextRequest) {
           let errorMessage = `ERP API responded with status: ${response.status}`;
           try {
             const text = await response.text();
-            console.log('🔍 BID SUBMISSION API - ERP error response:', response.status, text.substring(0, 300));
             try {
               const errorData = JSON.parse(text);
               errorMessage = errorData.message || errorMessage;
@@ -439,8 +402,8 @@ export async function POST(request: NextRequest) {
 
     // Fallback to mock response
     if (useMockResponse) {
-      console.log('Using mock bid submission response');
-      
+
+
       // Generate mock bid data
       const mockBid = {
         id: `mock-bid-${Date.now()}`,
@@ -479,7 +442,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to create tender bid:', error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to create tender bid",
         message: error instanceof Error ? error.message : "Unknown error"
       },
@@ -491,7 +454,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -518,7 +481,7 @@ export async function PUT(request: NextRequest) {
 
     // Send to external API
     const apiUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/tender-bids/${bidId}`;
-    
+
     const response = await fetch(apiUrl, {
       method: 'PUT',
       headers: {
@@ -544,7 +507,7 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Failed to update tender bid:', error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to update tender bid",
         message: error instanceof Error ? error.message : "Unknown error"
       },
