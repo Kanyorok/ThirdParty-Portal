@@ -41,7 +41,7 @@ abstract class ThirdPartiesService
         return $partyTypes;
     }
 
-    public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User $actor): static
+    public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User|ThirdPartyUser $actor): static
     {
         $user = ThirdPartyUser::create([
             'FirstName' => $firstName,
@@ -56,6 +56,7 @@ abstract class ThirdPartiesService
             'ModifiedBy' => $actor->Id,
         ]);
 
+        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
         activity()->causedBy($actor)->performedOn($user)->event('create')->log("Created user {$user->FirstName} {$user->LastName} to thirdparty {$this->party->ThirdPartyName}");
         return $this;
     }
@@ -77,8 +78,9 @@ abstract class ThirdPartiesService
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
-        User $actor
+        User|ThirdPartyUser $actor
     ): mixed {
+        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
         $party = ThirdParties::create([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
@@ -94,8 +96,8 @@ abstract class ThirdPartiesService
             'Website' => $website,
             'Status' => $status?->getKey() ?? self::codeDetail(ThirdPartyStatusEnum::Active)->getKey(),
             'Extra' => $extra,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
 
         activity()->causedBy($actor)->on($party)->withProperties(['thirdParty' => $party])->log('Created thirdparty ' . $name);
@@ -127,13 +129,13 @@ abstract class ThirdPartiesService
         throw new ErroredException('Invalid Status, not set and could not create');
     }
 
-    public function setLogo(\Illuminate\Http\UploadedFile $image, User $actor): self
+    public function setLogo(\Illuminate\Http\UploadedFile $image, User|ThirdPartyUser $actor): self
     {
         $this->party->setImage($image, $actor, 'ImageId');
         return $this;
     }
 
-    public function addBank(Currency $currency, string $accountNumber, BankBranch $branch, User $actor, ?array $extra = null): static
+    public function addBank(Currency $currency, string $accountNumber, BankBranch $branch, User|ThirdPartyUser $actor, ?array $extra = null): static
     {
         $bank = ThirdPartiesBankDetails::create([
             'ThirdPartyId' => $this->party->Id,
@@ -141,8 +143,8 @@ abstract class ThirdPartiesService
             'AccountNumber' => $accountNumber,
             'BranchID' => $branch->BranchID,
             'Extra' => $extra,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
 
         activity()->causedBy($actor)->performedOn($bank)->event('create')->log("Created bank {$bank->AccountNumber} to thirdparty {$this->party->ThirdPartyName}");
@@ -150,15 +152,15 @@ abstract class ThirdPartiesService
         return $this;
     }
 
-    final protected function addType(ThirdPartyType $type, string $partyType, string|int $partyId, User $actor): static
+    final protected function addType(ThirdPartyType $type, string $partyType, string|int $partyId, User|ThirdPartyUser $actor): static
     {
         ThirdPartyTypeTypes::create([
             'TypeId' => $type->TypeId,
             'ThirdPartyId' => $this->party->Id,
             'PartyType' => $partyType,
             'PartyID' => $partyId,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
         return $this;
     }

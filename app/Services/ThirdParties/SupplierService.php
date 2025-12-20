@@ -5,6 +5,7 @@ namespace App\Services\ThirdParties;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
@@ -13,6 +14,7 @@ use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
 
 class SupplierService extends ThirdPartiesService
 {
@@ -24,7 +26,7 @@ class SupplierService extends ThirdPartiesService
     public static function getType(): ThirdPartyType
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeSupplier)->firstOr(function () {
-            $role = FinanceRole::query()->first();// todo fix your Finance role
+            $role = FinanceRole::query()->first(); // todo fix your Finance role
             if ($role instanceof FinanceRole === false) {
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
@@ -41,16 +43,28 @@ class SupplierService extends ThirdPartiesService
 
 
     public static function create(
-        string  $name, ?string $tradingName, CodeDetail $businessType, string $registrationNumber, string $taxPIN, ?string $vatNumber, Locality $locationID, ?string $physicalAddress,
-        ?string $email, ?string $phone, ?string $website, ?CodeDetail $status, ?array $extra, User $actor): self
-    {
+        string  $name,
+        ?string $tradingName,
+        CodeDetail $businessType,
+        string $registrationNumber,
+        string $taxPIN,
+        ?string $vatNumber,
+        Locality $locationID,
+        ?string $physicalAddress,
+        ?string $email,
+        ?string $phone,
+        ?string $website,
+        ?CodeDetail $status,
+        ?array $extra,
+        User|ThirdPartyUser $actor
+    ): self {
         return self::createFromParty(
             party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor),
             actor: $actor
         );
     }
 
-    public static function createFromParty(ThirdParties $party, User $actor): self
+    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $actor, UploadedFile $document = null): self
     {
         $supplier = SupplierMaster::create([
             'ThirdPartyId' => $party->Id,
@@ -58,8 +72,8 @@ class SupplierService extends ThirdPartiesService
             'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Pending,
             'IsPrequalified' => false,
             'Extra' => null,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
         activity()->causedBy($actor)->performedOn($supplier)->event('create')->log("Added Supplier {$supplier->SupplierID} to thirdparty {$party->ThirdPartyName}.");
         $service = new self($supplier);
@@ -110,5 +124,4 @@ class SupplierService extends ThirdPartiesService
             ->orderBy('tp.TradingName', 'asc')
             ->get();
     }
-
 }

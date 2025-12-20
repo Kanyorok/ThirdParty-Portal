@@ -41,11 +41,18 @@ class ThirdPartiesController extends Controller
 
     public function store(NewThirdPartyRequest $request)
     {
-        $actor = $request->user();
+        // Allow unauthenticated submission if valid user_id is provided
+        $userId = $request->input('user_id');
+        $actor = null;
+
+        if ($userId) {
+            $actor = \App\Models\ThirdParty\ThirdPartyUser::find($userId);
+        } else {
+            $actor = $request->user();
+        }
+
         if (!$actor) {
-            // Fallback if not authenticated, though middleware should catch this.
-            // For registration step 2, we expect a logged-in user (the one created in step 1).
-            return response()->json(['message' => 'Unauthenticated.'], 401);
+            return response()->json(['message' => 'User could not be identified.'], 401);
         }
 
         $country = $request->getCountry();

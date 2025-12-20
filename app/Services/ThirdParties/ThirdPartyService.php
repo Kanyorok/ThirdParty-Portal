@@ -4,6 +4,7 @@ namespace App\Services\ThirdParties;
 
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Insurance\BancAssuranceReferral;
@@ -33,7 +34,7 @@ class ThirdPartyService extends ThirdPartiesService
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
-        User $actor,
+        User|ThirdPartyUser $actor,
         array|string $types = null,
         DateTime $CustomerDateOfBirth = null,
         CodeDetail $CustomerGender = null,
@@ -73,7 +74,7 @@ class ThirdPartyService extends ThirdPartiesService
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
-        User $actor,
+        User|ThirdPartyUser $actor,
         array|string $types = null,
         DateTime $CustomerDateOfBirth = null,
         CodeDetail $CustomerGender = null,
@@ -170,17 +171,17 @@ class ThirdPartyService extends ThirdPartiesService
     /**
      * @throws ErroredException
      */
-    public function addTenant(User $actor, ?string $Remarks): PropertyNewTenantService
+    public function addTenant(User|ThirdPartyUser $actor, ?string $Remarks): PropertyNewTenantService
     {
         return PropertyNewTenantService::createFromParty($this->party, $actor, Remarks: $Remarks);
     }
 
-    public function addSupplier(User $actor): SupplierService
+    public function addSupplier(User|ThirdPartyUser $actor): SupplierService
     {
         return SupplierService::createFromParty($this->party, $actor);
     }
 
-    public function addCustomer(?BancAssuranceReferral $Referral, DateTime $DateOfBirth, CodeDetail $Gender, CodeDetail $MaritalStatus, CodeDetail $Occupation, User $actor): BancassuranceCustomersService
+    public function addCustomer(?BancAssuranceReferral $Referral, DateTime $DateOfBirth, CodeDetail $Gender, CodeDetail $MaritalStatus, CodeDetail $Occupation, User|ThirdPartyUser $actor): BancassuranceCustomersService
     {
         return BancassuranceCustomersService::createFromParty($this->party, Referral: $Referral, DateOfBirth: $DateOfBirth, Gender: $Gender, MaritalStatus: $MaritalStatus, Occupation: $Occupation, user: $actor);
     }

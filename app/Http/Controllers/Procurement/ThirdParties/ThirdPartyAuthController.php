@@ -247,37 +247,49 @@ class ThirdPartyAuthController extends Controller
 
     public function verifyEmail(string $id, string $hash, Request $request): JsonResponse
     {
+        // 1. Validate the user/party based on ID
         if ($request->query('type') === 'user') {
             $user = ThirdPartyUser::find($id);
+
             if (! $user || ! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
                 return response()->json(['message' => __('auth.invalid_verification_link')], 403);
             }
 
-            if ($user->hasVerifiedEmail()) {
-                return response()->json(['message' => __('auth.email_already_verified')], 200);
+            if (! $user->hasVerifiedEmail()) {
+                if ($user->markEmailAsVerified()) {
+                    event(new Verified($user));
+                }
             }
 
-            if ($user->markEmailAsVerified()) {
-                event(new Verified($user));
-            }
-            return response()->json(['message' => __('auth.email_verified')], 200);
+            // Return JSON with User ID so frontend can redirect to profile completion
+            return response()->json([
+                'message' => __('auth.email_verified'),
+                'user' => [
+                    'id' => $user->Id,
+                    'email' => $user->Email
+                ]
+            ], 200);
         }
 
+        // ... (Existing logic for 'thirdParty' entity verification if needed)
         $thirdParty = $this->resolveThirdPartyEntity($id);
 
         if (! $thirdParty || ! hash_equals((string) $hash, sha1($thirdParty->getEmailForVerification()))) {
             return response()->json(['message' => __('auth.invalid_verification_link')], 403);
         }
 
-        if ($thirdParty->hasVerifiedEmail()) {
-            return response()->json(['message' => __('auth.email_already_verified')], 200);
+        if (!$thirdParty->hasVerifiedEmail()) {
+            if ($thirdParty->markEmailAsVerified()) {
+                event(new Verified($thirdParty));
+            }
         }
 
-        if ($thirdParty->markEmailAsVerified()) {
-            event(new Verified($thirdParty));
-        }
-
-        return response()->json(['message' => __('auth.email_verified')], 200);
+        return response()->json([
+            'message' => __('auth.email_verified'),
+            'user' => [ // Fallback or maybe null if it's a party verification
+                'id' => null
+            ]
+        ], 200);
     }
 
     public function resendVerification(Request $request): JsonResponse
