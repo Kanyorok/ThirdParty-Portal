@@ -25,7 +25,7 @@ class PrequalificationApplicationController extends Controller
 {
     public function index(): View
     {
-        $applications = PrequalificationApplication::with('round', 'supplier', 'category')
+        $applications = PrequalificationApplication::with('round', 'supplier.party', 'category')
             ->orderByDesc('SubmittedOn')
             ->orderByDesc('CreatedOn')
             ->paginate(10);
@@ -37,7 +37,7 @@ class PrequalificationApplicationController extends Controller
         // $application->load('round.masterSections.criteria');
         // return view('procurement.suppliers.prequalification.supplier-applications.show', compact('application'));
 
-        $application->load('round.prequalificationSections.masterSection.criteria', 'category');
+        $application->load('round.prequalificationSections.masterSection.criteria', 'category', 'supplier.party');
 
         return view(
             'procurement.suppliers.prequalification.supplier-applications.show',
@@ -66,10 +66,13 @@ class PrequalificationApplicationController extends Controller
             // Supplier eligibility: only supplier third parties with Approved status can apply
             $supplierEligible = false;
             if ($user && $user->thirdParty) {
-                $third = $user->thirdParty->loadMissing('types');
-                $typeCodes = $third->relationLoaded('types') ? $third->types->pluck('Code') : collect();
-                $isSupplierUser = $typeCodes->contains(fn($c) => is_string($c) && str_starts_with($c, 'SU-'));
-                $isApprovedUser = ($third->ApprovalStatus ?? null) === ThirdPartyApprovalStatusEnum::Approved;
+                // Check t_SupplierMaster for this third party
+                $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $user->thirdParty->Id)->first();
+
+                // Must exist and be Approved
+                $isSupplierUser = $supplierMaster !== null;
+                $isApprovedUser = ($supplierMaster?->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved);
+
                 $supplierEligible = $isSupplierUser && $isApprovedUser;
             }
 
