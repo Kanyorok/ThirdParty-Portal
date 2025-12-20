@@ -39,7 +39,7 @@ class RFQSectionController extends Controller
     public function saveEvaluation(Request $request)
     {
         // log incoming payload for debugging when needed
-        Log::debug('[saveEvaluation] payload', $request->all());
+
         $request->validate([
             'rfq_id' => 'required|exists:t_RFQ,Id',
             'sections' => 'required|array|min:1',
@@ -87,14 +87,6 @@ class RFQSectionController extends Controller
                 }
 
                 $record->save();
-
-                Log::debug('[saveEvaluation] upserted RFQSection', [
-                    'RFQID' => $rfqId,
-                    'SectionID' => $sectionId,
-                    'RFQSectionID' => $record->{$record->getKeyName()},
-                    'is_new' => $isNew,
-                    'weight' => $weight,
-                ]);
             }
 
             activity()

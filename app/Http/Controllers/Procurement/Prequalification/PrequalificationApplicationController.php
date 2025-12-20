@@ -57,16 +57,10 @@ class PrequalificationApplicationController extends Controller
 
             // Log authentication attempt for debugging
             if ($bearerToken) {
-                Log::info('PrequalificationRounds API access with bearer token', [
-                    'has_bearer_token' => !empty($bearerToken),
-                    'auth_check' => Auth::check(),
-                    'user_id' => Auth::id(),
-                    'request_ip' => $request->ip()
-                ]);
             }
 
             $user = Auth::user();
-            Log::debug('apiIndex: authenticated user', ['id' => $user->Id ?? null, 'email' => $user->email ?? $user->Email ?? null]);
+
             $supplierId = $user && $user->thirdParty ? $user->thirdParty->Id : null;
 
             // Supplier eligibility: only supplier third parties with Approved status can apply
@@ -79,34 +73,34 @@ class PrequalificationApplicationController extends Controller
                 $supplierEligible = $isSupplierUser && $isApprovedUser;
             }
 
-        // Get query parameters with defaults
-        $page = (int) $request->get('page', 1);
-        $pageSize = (int) $request->get('pageSize', 10);
-        $sortBy = $request->get('sortBy', 'startDate');
-        $sortOrder = $request->get('sortOrder', 'asc');
-    $status = $request->get('status', 'open');
-        $search = $request->get('q', '');
+            // Get query parameters with defaults
+            $page = (int) $request->get('page', 1);
+            $pageSize = (int) $request->get('pageSize', 10);
+            $sortBy = $request->get('sortBy', 'startDate');
+            $sortOrder = $request->get('sortOrder', 'asc');
+            $status = $request->get('status', 'open');
+            $search = $request->get('q', '');
 
             // Validate and sanitize parameters
-        $pageSize = max(1, min(100, $pageSize)); // Limit between 1-100
-        $page = max(1, $page); // Minimum page 1
+            $pageSize = max(1, min(100, $pageSize)); // Limit between 1-100
+            $page = max(1, $page); // Minimum page 1
 
             // Validate sortBy parameter
-        $allowedSortFields = ['startDate', 'endDate', 'title', 'createdOn'];
-        if (!in_array($sortBy, $allowedSortFields)) {
-            $sortBy = 'startDate';
-        }
+            $allowedSortFields = ['startDate', 'endDate', 'title', 'createdOn'];
+            if (!in_array($sortBy, $allowedSortFields)) {
+                $sortBy = 'startDate';
+            }
 
             // Validate sortOrder parameter
-        $sortOrder = in_array(strtolower($sortOrder), ['asc', 'desc']) ? strtolower($sortOrder) : 'asc';
+            $sortOrder = in_array(strtolower($sortOrder), ['asc', 'desc']) ? strtolower($sortOrder) : 'asc';
 
             // Map frontend sortBy to database column names
-        $sortColumnMap = [
-            'startDate' => 't_PrequalificationRounds.StartDate',
-            'endDate' => 't_PrequalificationRounds.EndDate',
-            'title' => 't_PrequalificationRounds.Title',
-            'createdOn' => 't_PrequalificationRounds.CreatedOn'
-        ];
+            $sortColumnMap = [
+                'startDate' => 't_PrequalificationRounds.StartDate',
+                'endDate' => 't_PrequalificationRounds.EndDate',
+                'title' => 't_PrequalificationRounds.Title',
+                'createdOn' => 't_PrequalificationRounds.CreatedOn'
+            ];
 
             $sortColumn = $sortColumnMap[$sortBy] ?? 't_PrequalificationRounds.StartDate';
 
@@ -115,27 +109,27 @@ class PrequalificationApplicationController extends Controller
                 ->with(['sections.masterSection', 'sections.criteria', 'criteria.masterCriteria'])
                 ->select('t_PrequalificationRounds.*');
 
-        // Apply status filtering
-        if ($status !== 'all') {
-            if ($status === 'open') {
-                $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Open);
-            } elseif ($status === 'closed') {
-                $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Closed);
-            } elseif ($status === 'draft' || $status === 'd') {
-                $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Draft);
+            // Apply status filtering
+            if ($status !== 'all') {
+                if ($status === 'open') {
+                    $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Open);
+                } elseif ($status === 'closed') {
+                    $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Closed);
+                } elseif ($status === 'draft' || $status === 'd') {
+                    $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Draft);
+                }
             }
-        }
 
-        // Apply search functionality
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('t_PrequalificationRounds.Title', 'LIKE', '%' . $search . '%')
-                  ->orWhere('t_PrequalificationRounds.Description', 'LIKE', '%' . $search . '%');
-            });
-        }
+            // Apply search functionality
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('t_PrequalificationRounds.Title', 'LIKE', '%' . $search . '%')
+                        ->orWhere('t_PrequalificationRounds.Description', 'LIKE', '%' . $search . '%');
+                });
+            }
 
-        // Apply sorting
-        $query->orderBy($sortColumn, $sortOrder);
+            // Apply sorting
+            $query->orderBy($sortColumn, $sortOrder);
 
             // Get total count before pagination
             $totalCount = $query->count();
@@ -154,7 +148,9 @@ class PrequalificationApplicationController extends Controller
                         ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'tpsc.supplier_category_id')
                         ->where('tpsc.third_party_id', $supplierId)
                         ->whereNull('sc.DeletedOn')
-                        ->where(function ($q) { $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive'); })
+                        ->where(function ($q) {
+                            $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive');
+                        })
                         ->select('sc.SupplierCategoryID', 'sc.CategoryName', 'sc.Description')
                         ->orderBy('sc.CategoryName')
                         ->get()
@@ -164,18 +160,22 @@ class PrequalificationApplicationController extends Controller
 
                 // Attempt to scope by round item categories if a mapping table exists
                 $roundItemCategoryMap = collect();
-                if (Schema::hasTable('t_PrequalificationRoundItemCategory')
+                if (
+                    Schema::hasTable('t_PrequalificationRoundItemCategory')
                     && Schema::hasColumn('t_PrequalificationRoundItemCategory', 'RoundID')
-                    && Schema::hasColumn('t_PrequalificationRoundItemCategory', 'ItemCategoryID')) {
+                    && Schema::hasColumn('t_PrequalificationRoundItemCategory', 'ItemCategoryID')
+                ) {
                     $roundItemCategoryMap = DB::table('t_PrequalificationRoundItemCategory')
                         ->whereIn('RoundID', $roundIds)
                         ->whereNull('DeletedOn')
                         ->get(['RoundID', 'ItemCategoryID'])
                         ->groupBy('RoundID')
                         ->map(fn($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
-                } elseif (Schema::hasTable('t_PrequalificationRoundItemCategories')
+                } elseif (
+                    Schema::hasTable('t_PrequalificationRoundItemCategories')
                     && Schema::hasColumn('t_PrequalificationRoundItemCategories', 'RoundID')
-                    && Schema::hasColumn('t_PrequalificationRoundItemCategories', 'ItemCategoryID')) {
+                    && Schema::hasColumn('t_PrequalificationRoundItemCategories', 'ItemCategoryID')
+                ) {
                     $roundItemCategoryMap = DB::table('t_PrequalificationRoundItemCategories')
                         ->whereIn('RoundID', $roundIds)
                         ->whereNull('DeletedOn')
@@ -189,7 +189,9 @@ class PrequalificationApplicationController extends Controller
                     $getAllActiveCats = function () {
                         return DB::table('t_SupplierCategories as sc')
                             ->whereNull('sc.DeletedOn')
-                            ->where(function ($q) { $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive'); })
+                            ->where(function ($q) {
+                                $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive');
+                            })
                             ->select('sc.SupplierCategoryID', 'sc.CategoryName', 'sc.Description')
                             ->orderBy('sc.CategoryName')
                             ->get();
@@ -341,7 +343,9 @@ class PrequalificationApplicationController extends Controller
                 $isExpired = $round->EndDate && $round->EndDate < $now;
                 $hasCategories = $cats->count() > 0;
                 $roundAppsCount = $applications->where('RoundID', $roundId)->count();
-                $hasUnapplied = $cats->contains(function ($c) { return empty($c['has_applied']); });
+                $hasUnapplied = $cats->contains(function ($c) {
+                    return empty($c['has_applied']);
+                });
                 $supplierHasNoAppsInRound = $roundAppsCount === 0;
                 // Enforce Closed and Expired
                 $backendCanApply = $supplierId !== null && $windowOpen && $statusOpen && $hasCategories && !$isClosed && !$isExpired;
@@ -396,13 +400,13 @@ class PrequalificationApplicationController extends Controller
                     'maxVendors' => $round->MaxVendors,
                     'categories' => $cats,
                     // Minimal section structure for UI
-                    'sections' => $round->sections?->map(function($s){
+                    'sections' => $round->sections?->map(function ($s) {
                         return [
                             'id' => $s->Id ?? $s->SectionID ?? null,
                             'sectionId' => $s->SectionId ?? null,
                             'name' => optional($s->masterSection)->SectionName ?? optional($s->masterSection)->Name,
                             'weight' => $s->Weight ?? null,
-                            'criteria' => $s->criteria?->map(function($c){
+                            'criteria' => $s->criteria?->map(function ($c) {
                                 return [
                                     'id' => $c->Id ?? $c->CriteriaID ?? null,
                                     'criteriaId' => $c->CriteriaId ?? null,
@@ -524,8 +528,8 @@ class PrequalificationApplicationController extends Controller
         if (!$round) return response()->json(['error' => 'Round not found.'], 404);
         $now = now();
         $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status;
-    $isClosed = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Closed->value;
-    $isOpen = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value;
+        $isClosed = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Closed->value;
+        $isOpen = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value;
         $windowOpen = (!$round->StartDate || $round->StartDate <= $now) && (!$round->EndDate || $round->EndDate >= $now);
         $isExpired = $round->EndDate && $round->EndDate < $now;
         if ($isClosed || !$isOpen || !$windowOpen || $isExpired) {

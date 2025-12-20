@@ -74,11 +74,11 @@ class ThirdPartyAuthController extends Controller
 
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
-        Log::info('ThirdParty Login Request (Procurement Controller)', $request->all());
+
 
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
-            Log::info('Login User Found', ['user_id' => $user?->Id]);
+
 
             if (! $user || ! Hash::check($request->password, $user->Password)) {
                 throw ValidationException::withMessages([
@@ -122,7 +122,7 @@ class ThirdPartyAuthController extends Controller
                 }
             }
 
-            Log::info('Profile Authorization Result', ['authorized' => $isAuthorized, 'profile' => $profileType]);
+
 
             if (!$isAuthorized) {
                 return response()->json(['message' => 'Your account is not authorized for the selected profile type.'], 403);
@@ -180,7 +180,7 @@ class ThirdPartyAuthController extends Controller
                 'token_type' => 'Bearer',
             ];
 
-            Log::info('Login Response Payload', ['keys' => array_keys($responseData)]);
+
 
             return response()->json($responseData);
         } catch (ValidationException $e) {

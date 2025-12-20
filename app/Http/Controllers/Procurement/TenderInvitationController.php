@@ -95,7 +95,7 @@ class TenderInvitationController extends Controller
             }
 
             // Fetch tender invitations for these suppliers
-            Log::info('Fetching invitations for suppliers', ['supplier_ids' => $supplierIds->values()->all()]);
+
 
             try {
                 $invitationsQuery = TenderInvitation::with(['tender'])
@@ -107,13 +107,6 @@ class TenderInvitationController extends Controller
                 $offset = ($page - 1) * $limit;
                 $total = (clone $invitationsQuery)->count();
                 $invitations = $invitationsQuery->skip($offset)->take($limit)->get();
-
-                Log::info('Found invitations', [
-                    'supplier_ids' => $supplierIds->values()->all(),
-                    'total' => $total,
-                    'returned' => $invitations->count()
-                ]);
-
             } catch (\Exception $e) {
                 Log::error('Error querying invitations', [
                     'supplier_ids' => $supplierIds->values()->all(),
@@ -176,13 +169,7 @@ class TenderInvitationController extends Controller
                 ];
             });
 
-            Log::info('API: Returning tender invitations', [
-                'third_party_id' => $thirdPartyId,
-                'supplier_ids' => $supplierIds->values()->all(),
-                'invitations_count' => $invitations->count(),
-                'total' => $total,
-                'sample_data' => $formattedData->take(1)
-            ]);
+
 
             return response()->json([
                 'data' => $formattedData,
@@ -199,7 +186,6 @@ class TenderInvitationController extends Controller
                     'invitations_found' => $invitations->count()
                 ]
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching tender invitations', [
                 'error' => $e->getMessage(),
@@ -225,21 +211,13 @@ class TenderInvitationController extends Controller
             ]);
 
             // Test 1: Basic validation and logging
-            Log::info('=== STEP 1: Validation successful ===', [
-                'invitation_id' => $id,
-                'request_data' => $validated
-            ]);
+
 
             // Test 2: Try to read from database
             try {
                 $invitation = DB::table('t_TenderInvitations')
                     ->where('InvitationID', $id)
                     ->first();
-
-                Log::info('=== STEP 2: Database read successful ===', [
-                    'invitation_found' => $invitation ? true : false,
-                    'current_status' => $invitation ? $invitation->ResponseStatus : 'N/A'
-                ]);
             } catch (\Exception $readEx) {
                 Log::error('=== STEP 2 FAILED: Database read error ===', [
                     'error' => $readEx->getMessage()
@@ -258,7 +236,7 @@ class TenderInvitationController extends Controller
 
             // Working minimal update - just the essential fields
             try {
-                Log::info('=== STEP 3: Attempting database update ===');
+
 
                 // Start with just the status field that we know works
                 $updateData = [
@@ -266,20 +244,17 @@ class TenderInvitationController extends Controller
                 ];
 
                 // Add decline reason only if provided and we're declining
-                if ($validated['responseStatus'] === 'declined' &&
+                if (
+                    $validated['responseStatus'] === 'declined' &&
                     isset($validated['declineReason']) &&
-                    !empty($validated['declineReason'])) {
+                    !empty($validated['declineReason'])
+                ) {
                     $updateData['DeclineReason'] = $validated['declineReason'];
                 }
 
                 $affected = DB::table('t_TenderInvitations')
                     ->where('InvitationID', $id)
                     ->update($updateData);
-
-                Log::info('=== STEP 3 SUCCESS: Database update completed ===', [
-                    'affected_rows' => $affected,
-                    'update_data' => $updateData
-                ]);
             } catch (\Exception $updateEx) {
                 Log::error('=== STEP 3 FAILED: Database update error ===', [
                     'error' => $updateEx->getMessage(),
@@ -307,7 +282,6 @@ class TenderInvitationController extends Controller
                     'affected_rows' => $affected,
                 ]
             ]);
-
         } catch (\Exception $e) {
             Log::error('=== GENERAL ERROR ===', [
                 'invitation_id' => $id,

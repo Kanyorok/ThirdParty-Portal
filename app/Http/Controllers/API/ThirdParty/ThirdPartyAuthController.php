@@ -4,7 +4,7 @@ namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyRequest;
+use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyUserRequest;
 use App\Http\Requests\ThirdPartyAuth\LoginThirdPartyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -29,10 +29,10 @@ class ThirdPartyAuthController extends Controller
         $this->registrationService = $registrationService;
     }
 
-    public function register(RegisterThirdPartyRequest $request): JsonResponse
+    public function register(RegisterThirdPartyUserRequest $request): JsonResponse
     {
         try {
-            $userData = $this->registrationService->registerUser($request->validated());
+            $userData = $this->registrationService->registerThirdParty($request->validated());
 
             return response()->json([
                 'message' => __('auth.registration_personal_successful'),
@@ -60,10 +60,10 @@ class ThirdPartyAuthController extends Controller
 
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
-        Log::info('ThirdParty Login Request', $request->all());
+
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
-            Log::info('Login User Found', ['user_id' => $user?->Id]);
+
 
             if (! $user || ! Hash::check($request->password, $user->Password)) {
                 throw ValidationException::withMessages([
@@ -100,7 +100,7 @@ class ThirdPartyAuthController extends Controller
                 return response()->json(['message' => 'Profile type is required and must be valid.'], 403);
             }
 
-            Log::info('Profile Authorization Result', ['authorized' => $isAuthorized, 'profile' => $profileType]);
+
 
             if (!$isAuthorized) {
                 return response()->json(['message' => 'Your account is not authorized for the selected profile type.'], 403);
@@ -117,7 +117,7 @@ class ThirdPartyAuthController extends Controller
                 'token_type' => 'Bearer',
             ];
 
-            Log::info('Login Response Payload', ['keys' => array_keys($responseData)]);
+
 
             return response()->json($responseData);
         } catch (ValidationException $e) {
