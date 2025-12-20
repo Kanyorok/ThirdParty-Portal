@@ -38,14 +38,21 @@ class ThirdPartyAuthController extends Controller
     public function register(RegisterThirdPartyUserRequest $request): JsonResponse
     {
         try {
-            $thirdParty = $this->registrationService->registerThirdParty($request->validated());
+            $user = $this->registrationService->registerThirdParty($request->validated());
 
-            $user = ThirdPartyUser::where('ThirdPartyId', $thirdParty->Id)->first();
+            // Auto-login: Create token for the new user
+            $token = $user->createToken('api-thirdparty')->plainTextToken;
 
             return response()->json([
-                'message' => __('auth.registration_successful'),
-                'userId' => $user->UserID,
-                'thirdPartyId' => $thirdParty->Id,
+                'message' => 'Account created successfully! Please verify your email to complete your profile.',
+                'token' => $token,
+                'user' => [
+                    'id' => $user->Id,
+                    'userId' => $user->UserID,
+                    'email' => $user->Email,
+                    'firstName' => $user->FirstName,
+                    'lastName' => $user->LastName,
+                ]
             ], 201);
         } catch (\Exception $e) {
             Log::channel('single')->error('Third-party registration failed', [
@@ -91,22 +98,28 @@ class ThirdPartyAuthController extends Controller
             $profileType = $request->input('profile_type');
             $isAuthorized = false;
 
-            if ($profileType === 'Supplier') {
-                $isAuthorized = SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
-                    ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value)
-                    ->exists();
-            } elseif ($profileType === 'Tenant') {
-                // Check if user is linked to an active Tenant record
-                // Assuming PropertyNewTenant maps to t_TenantMaintenance or similar active tenant table
-                $isAuthorized = PropertyNewTenant::where('ThirdPartyId', $user->ThirdPartyId)
-                    ->where('IsActive', true)
-                    ->exists();
-            } elseif ($profileType === 'Customer') {
-                // Check if user is linked to a customer record
-                $isAuthorized = BancassuranceCustomer::where('ThirdPartyId', $user->ThirdPartyId)->exists();
+            // Allow login for users who haven't completed setup (No ThirdPartyId)
+            // They will be redirected to the setup page by the frontend
+            if (empty($user->ThirdPartyId)) {
+                $isAuthorized = true;
             } else {
-                // Fallback or strict check
-                return response()->json(['message' => 'Profile type is required and must be valid.'], 403);
+                if ($profileType === 'Supplier') {
+                    $isAuthorized = SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
+                        ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value)
+                        ->exists();
+                } elseif ($profileType === 'Tenant') {
+                    // Check if user is linked to an active Tenant record
+                    // Assuming PropertyNewTenant maps to t_TenantMaintenance or similar active tenant table
+                    $isAuthorized = PropertyNewTenant::where('ThirdPartyId', $user->ThirdPartyId)
+                        ->where('IsActive', true)
+                        ->exists();
+                } elseif ($profileType === 'Customer') {
+                    // Check if user is linked to a customer record
+                    $isAuthorized = BancassuranceCustomer::where('ThirdPartyId', $user->ThirdPartyId)->exists();
+                } else {
+                    // Fallback or strict check
+                    return response()->json(['message' => 'Profile type is required and must be valid.'], 403);
+                }
             }
 
             Log::info('Profile Authorization Result', ['authorized' => $isAuthorized, 'profile' => $profileType]);
@@ -197,14 +210,21 @@ class ThirdPartyAuthController extends Controller
             return response()->json(['valid' => false, 'message' => __('auth.account_unauthorized')], 403);
         }
 
-        $thirdParty->setAttribute('FirstName', $user->FirstName);
-        $thirdParty->setAttribute('LastName', $user->LastName);
+        if ($thirdParty) {
+            $thirdParty->setAttribute('FirstName', $user->FirstName);
+            $thirdParty->setAttribute('LastName', $user->LastName);
+            $thirdParty->load(['types', 'country', 'categories']);
 
-        $thirdParty->load(['types', 'country', 'categories']);
+            return response()->json([
+                'valid' => true,
+                'thirdParty' => new ThirdPartyResource($thirdParty),
+            ]);
+        }
 
+        // If no third party, still valid user (Setup Phase)
         return response()->json([
             'valid' => true,
-            'thirdParty' => new ThirdPartyResource($thirdParty),
+            'thirdParty' => null
         ]);
     }
 
@@ -225,8 +245,24 @@ class ThirdPartyAuthController extends Controller
         }
     }
 
-    public function verifyEmail(string $id, string $hash): JsonResponse
+    public function verifyEmail(string $id, string $hash, Request $request): JsonResponse
     {
+        if ($request->query('type') === 'user') {
+            $user = ThirdPartyUser::find($id);
+            if (! $user || ! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+                return response()->json(['message' => __('auth.invalid_verification_link')], 403);
+            }
+
+            if ($user->hasVerifiedEmail()) {
+                return response()->json(['message' => __('auth.email_already_verified')], 200);
+            }
+
+            if ($user->markEmailAsVerified()) {
+                event(new Verified($user));
+            }
+            return response()->json(['message' => __('auth.email_verified')], 200);
+        }
+
         $thirdParty = $this->resolveThirdPartyEntity($id);
 
         if (! $thirdParty || ! hash_equals((string) $hash, sha1($thirdParty->getEmailForVerification()))) {
@@ -246,6 +282,15 @@ class ThirdPartyAuthController extends Controller
 
     public function resendVerification(Request $request): JsonResponse
     {
+        // Resend for User if logged in or specified?
+        // Step 1 user is logged in automatically after registration.
+        // If request is from the "Check your email" screen, it's likely for the User.
+        $user = Auth::guard('sanctum')->user();
+        if ($user instanceof ThirdPartyUser && !$user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
+            return response()->json(['message' => __('auth.verification_link_sent')], 200);
+        }
+
         $thirdParty = $this->resolveThirdPartyEntity($request->third_party_id);
 
         if (! $thirdParty) {

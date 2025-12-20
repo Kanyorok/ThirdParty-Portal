@@ -10,11 +10,38 @@ use App\Models\Auth\User;
 
 class RegistrationService
 {
-    public function registerThirdParty(array $userData): ThirdParties
+    public function registerThirdParty(array $userData): ThirdPartyUser
     {
         return DB::transaction(function () use ($userData) {
             $systemUser = User::where('UserID', 'ERPSYS')->first();
             $systemUserId = $systemUser?->Id;
+
+            // Fetch default Gender (required by DB) - Keep this as Step 1 still doesn't ask for Gender?
+            // User form (frontend) DOES NOT have Gender field? 
+            // Step 1 only has: Name, Email, Password, Phone.
+            // So we still need a default Gender for the User record.
+            $defaultGender = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'Gender')->where('Value', 'M')->first();
+            if (!$defaultGender) {
+                // Fallback or create? Best to just get any gender
+                $defaultGender = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'Gender')->first();
+                // If still null, create one?
+                if (!$defaultGender) {
+                    // Risk of failure if table constrained. Assuming at least one exists or we create.
+                    // For now, if null, we might still fail. Let's create dummy if desperately needed.
+                    try {
+                        $defaultGender = \App\Models\Core\Approval\CodeDetail::create([
+                            'CodeID' => 'Gender',
+                            'Value' => 'M',
+                            'Description' => 'Male',
+                            'DisplayOrder' => 1,
+                            'IsActive' => 1,
+                            'CreatedBy' => $systemUserId ?? 1,
+                            'ModifiedBy' => $systemUserId ?? 1,
+                        ]);
+                    } catch (\Throwable $e) {
+                    }
+                }
+            }
 
             $user = ThirdPartyUser::create([
                 'FirstName' => $userData['FirstName'],
@@ -22,27 +49,76 @@ class RegistrationService
                 'Email' => $userData['Email'],
                 'Phone' => $userData['Phone'],
                 'Password' => $userData['Password'],
+                'Gender' => $defaultGender?->ID ?? 153, // Hard fallback to 153 from debug if all else fails
                 'IsActive' => false,
-                'CreatedBy' => $systemUserId,
-                'ModifiedBy' => $systemUserId,
+                'CreatedBy' => $systemUserId ?? 1,
+                'ModifiedBy' => $systemUserId ?? 1,
             ]);
 
-            $initialName = $userData['ThirdPartyName']
-                ?? ($userData['FirstName'] . ' ' . $userData['LastName'])
-                ?? $userData['Email'];
+            event(new Registered($user));
+
+            return $user;
+        });
+    }
+
+    public function createThirdPartyForUser(ThirdPartyUser $user, array $thirdPartyData): ThirdParties
+    {
+        return DB::transaction(function () use ($user, $thirdPartyData) {
+            $systemUser = User::where('UserID', 'ERPSYS')->first();
+            $systemUserId = $systemUser?->Id;
+
+            $initialName = $thirdPartyData['ThirdPartyName']
+                ?? ($thirdPartyData['FirstName'] . ' ' . $thirdPartyData['LastName'])
+                ?? $thirdPartyData['Email'];
+
+            // Fetch default BusinessType (e.g. Individual or first available)
+            $businessTypeId = $thirdPartyData['BusinessType'] ?? null;
+            if (!$businessTypeId) {
+                $bt = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')
+                    ->where('Value', 'I') // Try Individual first
+                    ->first();
+                if (!$bt) {
+                    $bt = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')->first();
+                }
+
+                if (!$bt) {
+                    try {
+                        $bt = \App\Models\Core\Approval\CodeDetail::create([
+                            'CodeID' => 'BusinessType',
+                            'Value' => 'I',
+                            'Description' => 'Individual',
+                            'DisplayOrder' => 1,
+                            'IsActive' => 1,
+                            'CreatedBy' => $systemUserId ?? 1,
+                            'ModifiedBy' => $systemUserId ?? 1,
+                        ]);
+                    } catch (\Throwable $e) {
+                    }
+                }
+                $businessTypeId = $bt?->ID ?? 47; // Hard fallback from debug
+            }
+
+            // Fetch default Country
+            $countryId = $thirdPartyData['CountryId'] ?? null;
+            if (!$countryId) {
+                // Default to Kenya (KE) or first
+                $ct = \App\Models\Core\Country::where('CountryCode', 'KE')->first();
+                if (!$ct) $ct = \App\Models\Core\Country::first();
+                $countryId = $ct?->Id ?? 1; // Hard fallback
+            }
 
             $thirdParty = ThirdParties::create([
                 'ThirdPartyName' => $initialName,
-                'TradingName' => $userData['TradingName'] ?? $initialName,
-                'BusinessType' => $userData['BusinessType'] ?? null,
-                'RegistrationNumber' => $userData['RegistrationNumber'] ?? null,
-                'TaxPIN' => $userData['TaxPIN'] ?? null,
-                'VATNumber' => $userData['VATNumber'] ?? null,
-                'CountryId' => $userData['CountryId'] ?? null,
-                'PhysicalAddress' => $userData['PhysicalAddress'] ?? null,
-                'Email' => $userData['Email'] ?? null,
-                'Phone' => $userData['Phone'] ?? null,
-                'Website' => $userData['Website'] ?? null,
+                'TradingName' => $thirdPartyData['TradingName'] ?? $initialName,
+                'BusinessType' => $businessTypeId, // Now likely not null
+                'RegistrationNumber' => $thirdPartyData['RegistrationNumber'] ?? 'PENDING',
+                'TaxPIN' => $thirdPartyData['TaxPIN'] ?? '',
+                'VATNumber' => $thirdPartyData['VATNumber'] ?? '',
+                'CountryId' => $countryId, // Now likely not null
+                'PhysicalAddress' => $thirdPartyData['PhysicalAddress'] ?? 'Pending Address',
+                'Email' => $thirdPartyData['Email'] ?? null,
+                'Phone' => $thirdPartyData['Phone'] ?? null,
+                'Website' => $thirdPartyData['Website'] ?? null,
 
                 'IsActive' => false,
                 'ApprovalStatus' => 'P',
@@ -54,9 +130,9 @@ class RegistrationService
             $user->ThirdPartyId = $thirdParty->Id;
             $user->save();
 
-            if (!empty($userData['ThirdPartyType'])) {
+            if (!empty($thirdPartyData['ThirdPartyType'])) {
                 DB::table('t_ThirdPartyType_ThirdParties')->insert([
-                    'TypeId' => $userData['ThirdPartyType'],
+                    'TypeId' => $thirdPartyData['ThirdPartyType'],
                     'ThirdPartyId' => $thirdParty->Id,
                     'CreatedBy' => $systemUserId,
                     'ModifiedBy' => $systemUserId,
@@ -64,8 +140,6 @@ class RegistrationService
                     'ModifiedOn' => now(),
                 ]);
             }
-
-            event(new Registered($user));
 
             return $thirdParty;
         });

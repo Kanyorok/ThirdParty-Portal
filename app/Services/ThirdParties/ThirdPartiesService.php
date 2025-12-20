@@ -20,9 +20,7 @@ use Illuminate\Support\Collection;
 
 abstract class ThirdPartiesService
 {
-    public function __construct(public ThirdParties $party)
-    {
-    }
+    public function __construct(public ThirdParties $party) {}
 
     abstract public static function getType(): ThirdPartyType;
 
@@ -66,24 +64,35 @@ abstract class ThirdPartiesService
      * @throws ErroredException
      */
     public static function create(
-        string  $name, ?string $tradingName, CodeDetail $businessType, string $registrationNumber, string $taxPIN, ?string $vatNumber, Locality $locationID,
-        ?string $physicalAddress, ?string $email, ?string $phone, ?string $website, ?CodeDetail $status, ?array $extra, User $actor
-    ): mixed
-    {
+        string  $name,
+        ?string $tradingName,
+        CodeDetail $businessType,
+        string $registrationNumber,
+        string $taxPIN,
+        ?string $vatNumber,
+        Locality $locationID,
+        ?string $physicalAddress,
+        ?string $email,
+        ?string $phone,
+        ?string $website,
+        ?CodeDetail $status,
+        ?array $extra,
+        User $actor
+    ): mixed {
         $party = ThirdParties::create([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
-            'BusinessType' => $businessType->ID,
+            'BusinessType' => $businessType->getKey(),
             'RegistrationNumber' => $registrationNumber,
             'TaxPIN' => $taxPIN,
             'VATNumber' => $vatNumber,
             'CountryId' => $locationID->CountryId,
-            'LocationId' => $locationID->ID,
+            'LocationId' => $locationID->getKey(),
             'PhysicalAddress' => $physicalAddress,
             'Email' => $email,
             'Phone' => $phone,
             'Website' => $website,
-            'Status' => $status?->ID ?? self::codeDetail(ThirdPartyStatusEnum::Active)->ID,
+            'Status' => $status?->getKey() ?? self::codeDetail(ThirdPartyStatusEnum::Active)->getKey(),
             'Extra' => $extra,
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
@@ -154,4 +163,3 @@ abstract class ThirdPartiesService
         return $this;
     }
 }
-

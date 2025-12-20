@@ -40,7 +40,6 @@ class RegisterThirdPartyUserRequest extends FormRequest
             ],
             'Password' => ['required', 'string', 'min:8', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'Password_confirmation' => ['required', 'string'],
-            'ThirdPartyType' => ['required', 'exists:t_ThirdPartyTypes,TypeId'],
             'ThirdPartyName' => ['nullable', 'string', 'max:255'],
             'TradingName' => ['nullable', 'string', 'max:255'],
             'BusinessType' => ['nullable', 'string', 'max:255', Rule::enum(BusinessTypeEnum::class)],

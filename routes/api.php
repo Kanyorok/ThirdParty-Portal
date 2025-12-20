@@ -10,6 +10,7 @@ use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
+use App\Http\Controllers\API\Enums\CodeDetailsController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
@@ -222,11 +223,13 @@ Route::prefix('v1')->group(function () {
 // countries
 Route::prefix('v1')->group(function () {
     Route::get('countries', [\App\Http\Controllers\Settings\Codes\ApiCountryController::class, 'list']);
+    Route::get('countries/{country}/localities', [\App\Http\Controllers\Settings\Codes\ApiCountryController::class, 'localities']);
 });
 
 // enums (public)
 Route::prefix('enums')->group(function () {
     Route::get('third-party-types', [ThirdPartyTypesEnumController::class, 'index']);
+    Route::get('{codeId}', [CodeDetailsController::class, 'index']);
 });
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
