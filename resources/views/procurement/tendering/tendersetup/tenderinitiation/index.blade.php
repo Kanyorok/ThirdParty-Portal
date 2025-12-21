@@ -253,25 +253,28 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($tender->ApprovalStatus== \App\Enums\TenderApprovalStatusEnum::APPROVED)
+                                @if ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::APPROVED)
                                 <span class="badge rounded-pill bg-success text-white">
                                     Approved
                                 </span>
-                                @endif
-                                @if ($tender->ApprovalStatus== \App\Enums\TenderApprovalStatusEnum::REJECTED)
+                                @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::REJECTED)
                                 <span class="badge rounded-pill bg-danger text-white">
                                     Rejected
                                 </span>
-                                @endif
-                                @if ($tender->ApprovalStatus== \App\Enums\TenderApprovalStatusEnum::PENDING)
+                                @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::PENDING)
                                 <span class="badge rounded-pill bg-warning text-dark">
                                     Pending
+                                </span>
+                                @else
+                                <span class="badge rounded-pill bg-secondary">
+                                    N/A
                                 </span>
                                 @endif
                             </td>
                             <td class="action-buttons">
-                                {{-- 1. View Button (Always visible to those with read permission) --}}
+                                @php $hasActions = false; @endphp
                                 @canRead('tender')
+                                @php $hasActions = true; @endphp
                                 <a href="{{ route('initiatetender.show', $tender->Id) }}"
                                     class="btn btn-sm btn-outline-info"
                                     title="View">
@@ -279,20 +282,16 @@
                                 </a>
                                 @endcanRead
 
-                                {{-- Logic based on ApprovalStatus --}}
                                 @if ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::APPROVED)
-                                {{-- APPROVED: No Edit/Delete/Submit buttons --}}
-                                {{-- View button only (already shown above) --}}
+                                    {{-- APPROVED: View button only --}}
 
                                 @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::PENDING)
-                                {{-- PENDING APPROVAL: No Edit/Delete/Submit buttons --}}
-                                {{-- Only View button available --}}
-                                {{-- Approve/Reject buttons are in the show/view page, not in the list --}}
+                                    {{-- PENDING APPROVAL: View button only --}}
 
                                 @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::REJECTED)
-                                {{-- REJECTED: Can Edit, Delete, and Re-submit --}}
                                 @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
                                 @canUpdate('tender')
+                                @php $hasActions = true; @endphp
                                 <a href="{{ route('initiatetender.edit', $tender->Id) }}"
                                     class="btn btn-sm btn-outline-primary"
                                     title="Edit">
@@ -301,6 +300,7 @@
                                 @endcanUpdate
 
                                 @canUpdate('tender')
+                                @php $hasActions = true; @endphp
                                 <form action="{{ route('initiatetender.submit', $tender->Id) }}"
                                     method="POST"
                                     style="display: inline;">
@@ -317,6 +317,7 @@
                                 @endif
 
                                 @canDelete('tender')
+                                @php $hasActions = true; @endphp
                                 <form action="{{ route('initiatetender.destroy', $tender->Id) }}"
                                     method="POST"
                                     style="display: inline;">
@@ -332,9 +333,9 @@
                                 @endcanDelete
 
                                 @else
-                                {{-- NEW/DRAFT (No approval status set yet) --}}
                                 @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
                                 @canUpdate('tender')
+                                @php $hasActions = true; @endphp
                                 <a href="{{ route('initiatetender.edit', $tender->Id) }}"
                                     class="btn btn-sm btn-outline-primary"
                                     title="Edit">
@@ -343,6 +344,7 @@
                                 @endcanUpdate
 
                                 @canUpdate('tender')
+                                @php $hasActions = true; @endphp
                                 <form action="{{ route('initiatetender.submit', $tender->Id) }}"
                                     method="POST"
                                     style="display: inline;">
@@ -359,6 +361,7 @@
                                 @endif
 
                                 @canDelete('tender')
+                                @php $hasActions = true; @endphp
                                 <form action="{{ route('initiatetender.destroy', $tender->Id) }}"
                                     method="POST"
                                     style="display: inline;">
@@ -372,6 +375,10 @@
                                     </button>
                                 </form>
                                 @endcanDelete
+                                @endif
+
+                                @if (!$hasActions)
+                                <span class="text-muted">-</span>
                                 @endif
                             </td>
                         </tr>
@@ -406,38 +413,75 @@
         var isInitialized = false;
 
         function initializeDataTable() {
-            console.log('Initializing DataTable...');
+            try {
+                console.log('Initializing DataTable...');
 
-            // Check if table exists
-            if (!$('#tendersTable').length) {
-                console.warn('Table not found');
-                return;
-            }
-
-            // DEBUG: Count columns
-            var headerCells = $('#tendersTable thead tr th').length;
-            console.log('Header columns: ' + headerCells);
-            $('#tendersTable tbody tr').each(function(index) {
-                var cellCount = $(this).find('td').length;
-                if (cellCount !== headerCells && !$(this).find('td').attr('colspan')) {
-                    console.error('Row ' + index + ' has ' + cellCount + ' cells (Expected ' + headerCells + ')');
-                    console.log('Row HTML:', $(this).html());
+                // Check if table exists
+                if (!$('#tendersTable').length) {
+                    console.warn('Table not found');
+                    return;
                 }
-            });
 
-            // Destroy existing instance if present
-            if ($.fn.DataTable.isDataTable('#tendersTable')) {
-                try {
-                    $('#tendersTable').DataTable().destroy();
-                    console.log('Destroyed existing DataTable instance');
-                } catch (err) {
-                    console.warn('Error destroying DataTable:', err);
-                    // If destroy fails, might be safe to continue or might need to remove node
+                // Check if DataTables library is loaded
+                if (typeof $.fn.DataTable === 'undefined') {
+                    console.error('DataTables library not loaded');
+                    return;
                 }
-            }
 
-            // Initialize fresh DataTable
-            tableInstance = $('#tendersTable').DataTable({
+                // DEBUG: Count and validate columns
+                var headerCells = $('#tendersTable thead tr th').length;
+                console.log('Header columns: ' + headerCells);
+                
+                var hasErrors = false;
+                var hasDataRows = false;
+                var dataRowCount = 0;
+                
+                $('#tendersTable tbody tr').each(function(index) {
+                    var cellCount = $(this).find('td').length;
+                    var colspan = $(this).find('td[colspan]').attr('colspan');
+                    
+                    // Skip rows with colspan (like empty state)
+                    if (colspan) {
+                        console.log('Row ' + index + ' has colspan=' + colspan + ' (empty state row)');
+                        return;
+                    }
+                    
+                    // This is a data row
+                    hasDataRows = true;
+                    dataRowCount++;
+                    
+                    if (cellCount !== headerCells) {
+                        console.error('Row ' + index + ' has ' + cellCount + ' cells (Expected ' + headerCells + ')');
+                        console.log('Row HTML:', $(this).html());
+                        hasErrors = true;
+                    }
+                });
+
+                // Don't initialize DataTable if there are no data rows (only empty state)
+                if (!hasDataRows) {
+                    console.warn('No data rows found (only empty state). Skipping DataTable initialization.');
+                    return;
+                }
+
+                console.log('Found ' + dataRowCount + ' data rows');
+
+                if (hasErrors) {
+                    console.error('Column count mismatch detected. Cannot initialize DataTable.');
+                    return;
+                }
+
+                // Destroy existing instance if present
+                if ($.fn.DataTable.isDataTable('#tendersTable')) {
+                    try {
+                        $('#tendersTable').DataTable().destroy();
+                        console.log('Destroyed existing DataTable instance');
+                    } catch (err) {
+                        console.warn('Error destroying DataTable:', err);
+                    }
+                }
+
+                // Initialize fresh DataTable
+                tableInstance = $('#tendersTable').DataTable({
                 "pageLength": 10,
                 "lengthMenu": [
                     [10, 25, 50, -1],
@@ -471,6 +515,41 @@
                         "previous": "Previous"
                     }
                 },
+                "columns": [{
+                        "orderable": true
+                    }, // #
+                    {
+                        "orderable": true
+                    }, // Tender No.
+                    {
+                        "orderable": true
+                    }, // Title
+                    {
+                        "orderable": true
+                    }, // Type
+                    {
+                        "orderable": true
+                    }, // Category
+                    {
+                        "orderable": true
+                    }, // Currency
+                    {
+                        "orderable": true
+                    }, // Deadline
+                    {
+                        "orderable": true
+                    }, // Opening Date
+                    {
+                        "orderable": true
+                    }, // Status
+                    {
+                        "orderable": true
+                    }, // Approval
+                    {
+                        "orderable": false,
+                        "searchable": false
+                    } // Actions
+                ],
                 "initComplete": function() {
                     console.log('DataTable initialized successfully');
                     enforceControlVisibility();
@@ -482,6 +561,11 @@
             });
 
             console.log('DataTable instance created');
+            
+            } catch (error) {
+                console.error('Error initializing DataTable:', error);
+                console.error('Error stack:', error.stack);
+            }
         }
 
         function enforceControlVisibility() {
