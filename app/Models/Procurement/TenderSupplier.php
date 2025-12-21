@@ -37,7 +37,8 @@ class TenderSupplier extends Model
 
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
+        // CRITICAL FIX: SupplierID references t_SupplierMaster.Id, not t_Suppliers.Id
+        return $this->belongsTo(\App\Models\ThirdParty\SupplierMaster::class, 'SupplierID', 'Id');
     }
 
     public function bidResponsiveness()

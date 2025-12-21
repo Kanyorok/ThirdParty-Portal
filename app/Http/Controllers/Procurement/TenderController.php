@@ -562,7 +562,7 @@ class TenderController extends Controller
 
             // Get related data
             $suppliers = TenderSupplier::where('TenderID', $id)
-                ->with('supplier.thirdParty')
+                ->with('supplier.party')  // FIXED: Use 'party' not 'thirdParty' (SupplierMaster->party relationship)
                 ->get();
             $tenderCategory = TenderCategory::find($tender->TenderCategory);
             $itemCategory = ItemCategories::find($tender->ItemCategoryId);
@@ -1367,8 +1367,8 @@ class TenderController extends Controller
             }
 
             // Log the final ItemCategoryIds for this supplier
-            if ($supplier->Id == 2) { // Uma Yang
-                Log::info("Building ItemCategoryIds for Uma Yang (Supplier ID 2)", [
+            if ($supplierMaster->Id == 2) { // Uma Yang - use SupplierMaster.Id
+                Log::info("Building ItemCategoryIds for supplier (SupplierMaster ID " . $supplierMaster->Id . ")", [
                     'supplier_name' => $thirdParty->ThirdPartyName,
                     'supplier_category_ids' => $supplierCategoryIds->toArray(),
                     'final_item_category_ids' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
@@ -1377,7 +1377,8 @@ class TenderController extends Controller
             }
 
             $suppliers->push([
-                'Id' => $supplier->Id,
+                'Id' => $supplierMaster->Id,  // CRITICAL FIX: Use SupplierMaster.Id, not t_Suppliers.Id
+                'SupplierId' => $supplierMaster->Id,  // Explicitly add SupplierId for frontend
                 'SupplierName' => $thirdParty->ThirdPartyName,
                 'ThirdPartyName' => $thirdParty->ThirdPartyName,
                 'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
@@ -1644,7 +1645,7 @@ class TenderController extends Controller
             'SubmissionDeadline' => $request->submission_deadline,
             'OpeningDate' => $request->opening_date,
             'Status' => TenderStatusEnum::Draft,  // Use enum instead of string
-            'ApprovalStatus' => Null,  // CRITICAL: Set to null, not PENDING
+            'ApprovalStatus' => TenderApprovalStatusEnum::PENDING,  // Set to PENDING for new drafts
             'ItemCategoryId' => $request->item_category_id,
             'CurrencyId' => $request->currency_id,
             'CreatedBy' => Auth::id(),

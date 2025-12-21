@@ -322,7 +322,7 @@ class ThirdPartyAuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        // Check if user exists and is authorized to reset
+        // Check if user exists
         $user = ThirdPartyUser::where('Email', $request->email)->first();
 
         if (!$user) {
@@ -330,10 +330,9 @@ class ThirdPartyAuthController extends Controller
             return response()->json(['message' => __('passwords.sent')]);
         }
 
-        if (!$user->isApproved()) {
-            return response()->json(['message' => __('auth.account_unauthorized')], 403);
-        }
-
+        // Allow password reset regardless of approval status
+        // Users should be able to reset their password even if not yet approved
+        
         $status = Password::broker('thirdparties')->sendResetLink(
             $request->only('email')
         );

@@ -381,9 +381,9 @@
                                 @forelse ($suppliers as $item)
                                     <tr>
                                         <td>{{$loop->iteration}}</td>
-                                        <td>{{$item->supplier->thirdParty->ThirdPartyName ?? 'N/A'}}</td>
-                                        <td>{{$item->supplier->thirdParty->Email ?? 'N/A'}}</td>
-                                        <td>{{$item->supplier->thirdParty->Phone ?? 'N/A'}}</td>
+                                        <td>{{$item->supplier->party->ThirdPartyName ?? 'N/A'}}</td>
+                                        <td>{{$item->supplier->party->Email ?? 'N/A'}}</td>
+                                        <td>{{$item->supplier->party->Phone ?? 'N/A'}}</td>
                                     </tr>
                                 @empty
                                     <tr>
