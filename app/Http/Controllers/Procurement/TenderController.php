@@ -1088,10 +1088,10 @@ class TenderController extends Controller
         try {
             $tenderCategoryId = $request->input('tender_category_id');
 
-            if (!$tenderCategoryId) {
+            if (!$tenderCategoryId || !is_numeric($tenderCategoryId)) {
                 return response()->json([
                     'ok' => false,
-                    'message' => 'Tender category ID is required',
+                    'message' => 'Valid Tender category ID is required',
                     'categories' => []
                 ], 400);
             }
@@ -1274,12 +1274,13 @@ class TenderController extends Controller
             ->pluck('RoundID');
 
         // Base supplier query: active suppliers, proper supplier type, with needed relations
+        // FIX: 'types' is on ThirdParties (party), not SupplierMaster (thirdParty)
         $supplierQuery = \App\Models\ThirdParies\Supplier::query()
             ->where('Active_Status', 1)
-            ->whereHas('thirdParty.types', function ($q) {
-                $q->where('Code', 'like', 'SU-%');
-            })
-            ->with(['thirdParty', 'supplierCategory.itemCategories']);
+            /* ->whereHas('thirdParty.party.types', function ($q) {
+                 $q->where('Code', 'like', 'SU-%');
+             })*/
+            ->with(['thirdParty.party', 'supplierCategory.itemCategories']);
 
         if ($activeRounds->isNotEmpty()) {
             // Prefer suppliers in active rounds; include rows with NULL RoundID just in case
@@ -1295,9 +1296,11 @@ class TenderController extends Controller
         $suppliers = collect();
 
         foreach ($prequalifiedSuppliers as $supplier) {
-            if (!$supplier->thirdParty) continue;
+            // Check if relationships exist
+            if (!$supplier->thirdParty || !$supplier->thirdParty->party) continue;
 
-            $thirdParty = $supplier->thirdParty;
+            $supplierMaster = $supplier->thirdParty;
+            $thirdParty = $supplier->thirdParty->party;
 
             // Build list of item category IDs this supplier can serve
             $itemCategoryIds = [];
@@ -1319,7 +1322,8 @@ class TenderController extends Controller
             }
             // Add any categories from pivot t_ThirdParty_SupplierCategory (resilient across DB schemas)
             try {
-                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty((int)$supplier->ThirdPartyID);
+                // FIX: Use SupplierMaster->ThirdPartyId
+                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty((int)$supplierMaster->ThirdPartyId);
                 $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
             } catch (\Throwable $e) {
                 Log::warning('Failed resolving supplier categories', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
@@ -1368,7 +1372,7 @@ class TenderController extends Controller
                 'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))), // All categories supplier can serve (incl. top-level)
                 'RoundID' => $supplier->RoundID,
                 'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
-                'ThirdPartyID' => $supplier->ThirdPartyID,
+                'ThirdPartyID' => $supplierMaster->ThirdPartyId, // FIX: Use SupplierMaster->ThirdPartyId
             ]);
         }
 
@@ -1388,6 +1392,25 @@ class TenderController extends Controller
             // guard
         }
         return $result;
+    }
+
+    /**
+     * Public API for fetching prequalified suppliers for a specific category.
+     * Returns JSON format expected by the frontend.
+     */
+    public function getPrequalifiedSuppliersForCategory($categoryId)
+    {
+        $suppliers = $this->getPrequalifiedSuppliers();
+
+        // Filter by Category ID
+        if ($categoryId) {
+            $catIdInt = (int)$categoryId;
+            $suppliers = $suppliers->filter(function ($s) use ($catIdInt) {
+                return isset($s['ItemCategoryIds']) && in_array($catIdInt, $s['ItemCategoryIds']);
+            })->values();
+        }
+
+        return response()->json(['success' => true, 'data' => $suppliers]);
     }
 
     // Return allowed ItemType IDs for a tender category (FK Id)
