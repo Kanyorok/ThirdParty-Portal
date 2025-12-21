@@ -1320,10 +1320,15 @@ class TenderController extends Controller
             if (!empty($supplier->SupplierCategoryID)) {
                 $supplierCategoryIds->push($supplier->SupplierCategoryID);
             }
-            // Add any categories from pivot t_ThirdParty_SupplierCategory (resilient across DB schemas)
+            // Add any categories from pivot tables (resilient across DB schemas)
             try {
-                // FIX: Use SupplierMaster->ThirdPartyId
-                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty((int)$supplierMaster->ThirdPartyId);
+                // CRITICAL FIX: Pass both ThirdPartyId and SupplierMaster.Id
+                // - t_ThirdParty_SupplierCategory uses ThirdPartyId (t_ThirdParties.Id)
+                // - t_PrequalificationRoundSupplierCategory uses SupplierMaster.Id
+                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty(
+                    (int)$supplierMaster->ThirdPartyId,
+                    (int)$supplierMaster->Id  // Pass SupplierMaster.Id for prequalification lookup
+                );
                 $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
             } catch (\Throwable $e) {
                 Log::warning('Failed resolving supplier categories', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
@@ -1359,6 +1364,16 @@ class TenderController extends Controller
                     }
                 }
                 $itemCategoryIds = array_merge($itemCategoryIds, $topLevelSet);
+            }
+
+            // Log the final ItemCategoryIds for this supplier
+            if ($supplier->Id == 2) { // Uma Yang
+                Log::info("Building ItemCategoryIds for Uma Yang (Supplier ID 2)", [
+                    'supplier_name' => $thirdParty->ThirdPartyName,
+                    'supplier_category_ids' => $supplierCategoryIds->toArray(),
+                    'final_item_category_ids' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
+                    'count' => count(array_unique($itemCategoryIds))
+                ]);
             }
 
             $suppliers->push([
@@ -1405,9 +1420,44 @@ class TenderController extends Controller
         // Filter by Category ID
         if ($categoryId) {
             $catIdInt = (int)$categoryId;
+            
+            Log::info("Filtering suppliers for category ID: {$catIdInt}");
+            
             $suppliers = $suppliers->filter(function ($s) use ($catIdInt) {
-                return isset($s['ItemCategoryIds']) && in_array($catIdInt, $s['ItemCategoryIds']);
+                $supplierCategoryIds = $s['ItemCategoryIds'] ?? [];
+                
+                // Direct match: the selected category is already in the supplier's list
+                if (in_array($catIdInt, $supplierCategoryIds)) {
+                    Log::info("Supplier {$s['Id']} matched (direct)", [
+                        'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                        'supplier_categories' => $supplierCategoryIds
+                    ]);
+                    return true;
+                }
+                
+                // Descendant match: check if the selected category is a child of any supplier category
+                foreach ($supplierCategoryIds as $supplierCatId) {
+                    $descendants = $this->getAllDescendantCategoryIds((int)$supplierCatId, includeSelf: false);
+                    if (in_array($catIdInt, $descendants)) {
+                        Log::info("Supplier {$s['Id']} matched (descendant)", [
+                            'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                            'parent_category' => $supplierCatId,
+                            'selected_category' => $catIdInt
+                        ]);
+                        return true;
+                    }
+                }
+                
+                Log::debug("Supplier {$s['Id']} filtered out", [
+                    'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                    'supplier_categories' => $supplierCategoryIds,
+                    'selected_category' => $catIdInt
+                ]);
+                
+                return false;
             })->values();
+            
+            Log::info("Filtered suppliers count: {$suppliers->count()}");
         }
 
         return response()->json(['success' => true, 'data' => $suppliers]);

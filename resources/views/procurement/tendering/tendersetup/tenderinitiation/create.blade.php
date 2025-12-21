@@ -267,13 +267,17 @@
     const allItemsWithCategoryIds = @json($allItemsWithCategoryIds ?? []);
     const planItemsByPlan = @json($procurementPlansOutput ?? []);
     @php
-    $availablePlansData = ($procurementPlan ?? collect())->map(function($p) {
-      return [
-        'PlanID' => $p->PlanID,
-        'Title' => $p->Title,
-        'ReferenceNumber' => $p->ReferenceNumber
-      ];
-    })->values();
+    try {
+        $availablePlansData = ($procurementPlan ?? collect())->map(function($p) {
+          return [
+            'PlanID' => $p->PlanID ?? null,
+            'Title' => $p->Title ?? '',
+            'ReferenceNumber' => $p->ReferenceNumber ?? ''
+          ];
+        })->values();
+    } catch (\Exception $e) {
+        $availablePlansData = collect([]);
+    }
     @endphp
 
     const availablePlans = @json($availablePlansData);
@@ -627,8 +631,12 @@
     // SUPPLIERS: Populate supplier list for restricted tenders
     // ============================================================================
     async function populateSuppliers(categoryId = null) {
-      if (!suppliersList) return;
+      if (!suppliersList) {
+        console.error('suppliersList element not found');
+        return;
+      }
 
+      console.log('populateSuppliers called with categoryId:', categoryId);
       suppliersList.innerHTML = '';
 
       // Validate categoryId is present AND is a number
@@ -638,11 +646,14 @@
         opt.textContent = 'Select an Item Category to see eligible suppliers';
         suppliersList.appendChild(opt);
         if (supplierMatchCount) supplierMatchCount.textContent = '';
+        console.warn('Invalid categoryId, skipping supplier fetch');
         return;
       }
 
       try {
         const url = `{{ url('procurement/initiatetender/prequalified-suppliers') }}/${encodeURIComponent(categoryId)}`;
+        console.log('Fetching suppliers from:', url);
+        
         const res = await fetch(url, {
           credentials: 'same-origin'
         });
@@ -655,7 +666,11 @@
           success,
           data
         } = await res.json();
+        
+        console.log('API Response:', { success, data });
+        
         const rows = Array.isArray(data) ? data : [];
+        console.log('Rows to process:', rows.length);
 
         if (supplierMatchCount) {
           supplierMatchCount.textContent = `Matching suppliers: ${rows.length}`;
@@ -666,17 +681,29 @@
           opt.disabled = true;
           opt.textContent = 'No prequalified suppliers for this category';
           suppliersList.appendChild(opt);
+          console.warn('No suppliers found for category:', categoryId);
           return;
         }
 
-        rows
-          .map(r => ({
-            value: r.SupplierId || r.ThirdPartyId || '',
-            label: r.SupplierName || `Supplier #${r.SupplierId || r.ThirdPartyId || ''}`
-          }))
-          .filter(r => String(r.value).length > 0)
-          .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
-          .forEach(({
+        const mappedRows = rows
+          .map(r => {
+            const mapped = {
+              value: r.SupplierId || r.ThirdPartyId || r.ThirdPartyID || r.Id || '',
+              label: r.SupplierName || r.ThirdPartyName || `Supplier #${r.SupplierId || r.ThirdPartyId || r.ThirdPartyID || r.Id || ''}`
+            };
+            console.log('Mapped row:', r, '->', mapped);
+            return mapped;
+          })
+          .filter(r => {
+            const hasValue = String(r.value).length > 0;
+            if (!hasValue) console.warn('Filtered out row with no value:', r);
+            return hasValue;
+          })
+          .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+          
+        console.log('Final mapped rows:', mappedRows);
+
+        mappedRows.forEach(({
             value,
             label
           }) => {
@@ -684,10 +711,13 @@
             opt.value = value;
             opt.textContent = label;
             suppliersList.appendChild(opt);
+            console.log('Added option:', value, label);
           });
+          
+        console.log('✓ Suppliers populated successfully');
 
       } catch (e) {
-        console.warn('Failed to load suppliers', e);
+        console.error('Failed to load suppliers', e);
         const opt = document.createElement('option');
         opt.disabled = true;
         opt.textContent = 'Failed to load suppliers';
