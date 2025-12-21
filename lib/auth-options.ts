@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
         let text = ""
 
         try {
-          res = await fetch(`${baseUrl}/api/v1/portal/auth/login`, {
+          res = await fetch(`${baseUrl}/api/third-party-auth/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
