@@ -19,6 +19,7 @@ interface PasswordFieldProps {
     showMatchIndicator?: boolean
     passwordsMatch?: boolean
     onPaste?: (e: React.ClipboardEvent) => void
+    inputClassName?: string
 }
 
 export const PasswordField: React.FC<PasswordFieldProps> = ({
@@ -35,6 +36,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
     showMatchIndicator = false,
     passwordsMatch = false,
     onPaste,
+    inputClassName,
 }) => {
     return (
         <FormField status={status} label={label} required helpText={helpText} error={error} id={id}>
@@ -43,7 +45,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
                     id={id}
                     type={showPassword ? "text" : "password"}
                     placeholder={placeholder}
-                    className={`w-full py-4 pl-4 pr-12 text-lg border border-l-0 rounded-r-lg transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 ${error
+                    className={inputClassName || `w-full py-4 pl-4 pr-12 text-lg border border-l-0 rounded-r-lg transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 ${error
                         ? "border-red-300 bg-red-50"
                         : status === "success"
                             ? "border-green-300 bg-green-50"

@@ -95,4 +95,10 @@ export const apiService = {
             method: "POST",
             body: JSON.stringify({ category_ids }),
         }),
+
+    createProfile: (type: string, data: object, token: string) =>
+        request(`/api/portal/profiles/${type}`, token, {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
 };

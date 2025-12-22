@@ -32,18 +32,20 @@ import {
 import { Badge } from "@/components/common/badge";
 import { cn, getInitials } from "@/lib/utils";
 
+interface ThirdParty {
+    thirdPartyName?: string | null;
+    tradingName?: string | null;
+    label?: string | null;
+    email?: string | null;
+}
+
 interface UserData {
     firstName?: string | null;
     lastName?: string | null;
     email?: string | null;
     isApproved: boolean;
     imageUrl?: string | null;
-    thirdParty?: {
-        thirdPartyName?: string | null;
-        tradingName?: string | null;
-        label?: string | null;
-        email?: string | null;
-    };
+    thirdParty?: ThirdParty | null;
 }
 
 interface UserNavProps {

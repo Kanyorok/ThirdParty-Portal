@@ -1,17 +1,17 @@
 import { create } from 'zustand'
-import { UserProfile } from '@/types/profile-types'
+import { UserProfile } from '@/types/next-auth.d'
 
 interface ProfileState {
-    activeProfile: UserProfile
-    availableProfiles: UserProfile[]
+    activeProfile: UserProfile | string
+    availableProfiles: (UserProfile | string)[]
 
-    setActiveProfile: (profile: UserProfile) => void
-    setAvailableProfiles: (profiles: UserProfile[]) => void
+    setActiveProfile: (profile: UserProfile | string) => void
+    setAvailableProfiles: (profiles: (UserProfile | string)[]) => void
 
-    initializeProfiles: (profiles: UserProfile[]) => void
+    initializeProfiles: (profiles: (UserProfile | string)[]) => void
 }
 
-const DEFAULT_PROFILE: UserProfile = "Customer"
+const DEFAULT_PROFILE: string = "Customer"
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
     activeProfile: DEFAULT_PROFILE,
