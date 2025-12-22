@@ -146,7 +146,7 @@ export const useRegisterForm = () => {
             const apiData = transformRegisterFormDataForApi(data)
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/portal/auth/register`, {
+                const response = await fetch(`${API_BASE_URL}/api/third-party-auth/register`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
