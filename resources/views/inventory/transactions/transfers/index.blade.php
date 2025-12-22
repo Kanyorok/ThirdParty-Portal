@@ -746,13 +746,101 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        /* Custom styles for better DataTables appearance */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 1rem;
+            padding: 0.5rem 0;
+        }
+        
+        .dataTables_wrapper .dataTables_length select {
+            margin: 0 0.5rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 0.5rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        /* Tab-specific styling */
+        .nav-tabs .nav-link {
+            color: #495057;
+            border: 1px solid transparent;
+            border-top-left-radius: 0.375rem;
+            border-top-right-radius: 0.375rem;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            border-color: #e9ecef #e9ecef #dee2e6;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+            font-weight: 600;
+        }
+        
+        /* Alert styling */
+        .alert-info {
+            background-color: #e7f1ff;
+            border-color: #cfe2ff;
+            color: #084298;
+        }
+        
+        .alert-info .bi-info-circle-fill {
+            color: #0d6efd;
+        }
+        
+        /* Row highlighting */
+        .incoming-row {
+            background-color: rgba(13, 110, 253, 0.05) !important;
+        }
+        
+        .outgoing-row {
+            background-color: rgba(25, 135, 84, 0.05) !important;
+        }
+        
+        /* Badge styling */
+        .badge {
+            font-size: 0.75em;
+            padding: 0.35em 0.65em;
+        }
+        
+        /* Nav badge styling */
+        .nav-link .badge {
+            font-size: 0.65em;
+            padding: 0.25em 0.5em;
+        }
+        
+        /* Disabled button styling */
+        .btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+@endsection
 
+@section('scripts')
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
         $(document).ready(function () {
             // Initialize DataTables for the active tab
@@ -766,60 +854,84 @@
                 initializeActiveTabDataTable();
             });
             
+            // Initialize tooltips
+            function initializeTooltips() {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+            
             // Initialize DataTable for the currently active tab
             function initializeActiveTabDataTable() {
                 var activeTable = $('.tab-pane.active .transfer-table');
                 if (activeTable.length) {
                     activeTable.DataTable({
-                        pageLength: 10,
+                        pageLength: 10, // Default page length
+                        lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]], // Records per page options
                         ordering: true,
-                        order: [[2, 'desc']], // Sort by Date column
+                        order: [[2, 'desc']], // Sort by Date column (3rd column) in descending order
                         searching: true,
-                        lengthChange: true,
-                        dom: 'rt<"bottom"ip><"clear">',
+                        lengthChange: true, // Enable records per page dropdown ("Show entries")
+                        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>', // Layout with length menu on left
                         language: {
                             emptyTable: "No transfers found.",
                             lengthMenu: "Show _MENU_ entries",
                             search: "Search:",
                             info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                            infoEmpty: "Showing 0 to 0 of 0 entries",
+                            infoFiltered: "(filtered from _MAX_ total entries)",
                             paginate: {
                                 first: "First",
                                 last: "Last",
                                 next: "Next",
                                 previous: "Previous"
                             }
-                        }
+                        },
+                        initComplete: function() {
+                            // Ensure tooltips are initialized after table is fully loaded
+                            initializeTooltips();
+                        },
+                        drawCallback: function() {
+                            initializeTooltips();
+                        },
+                        responsive: true
                     });
+                    
+                    // Add custom styling to the length menu for better visibility
+                    $('.dataTables_length').addClass('mb-2');
+                    $('.dataTables_filter').addClass('mb-2');
                 }
             }
             
-            // Branch filter function for HQ
+            // Initial tooltip setup
+            initializeTooltips();
+            
             @if($isHeadOffice)
+                // Branch filter function for HQ
                 function applyBranchFilter() {
                     var branchId = $('#branchFilter').val();
-                    var table = $('#allTable').DataTable();
+                    var table = $('.tab-pane.active #allTable').DataTable();
                     
                     if (branchId) {
-                        // Filter by From Branch OR To Branch
-                        $.fn.dataTable.ext.search.push(
-                            function(settings, data, dataIndex) {
-                                var fromBranch = data[3]; // From Branch column
-                                var toBranch = data[4]; // To Branch column
-                                return fromBranch.includes(branchId) || toBranch.includes(branchId);
-                            }
-                        );
-                        table.draw();
-                        // Remove the filter function after applying
-                        $.fn.dataTable.ext.search.pop();
+                        // Get the branch name from the selected option
+                        var branchName = $('#branchFilter option:selected').text();
+                        
+                        // Clear any existing search
+                        table.search('').draw();
+                        
+                        // Filter to show only rows containing the branch name
+                        table.columns([3, 4]).search(branchName).draw();
                     } else {
-                        table.search('').columns().search('').draw();
+                        // Clear all filters
+                        table.search('').columns([3, 4]).search('').draw();
                     }
                 }
                 
                 function clearBranchFilter() {
                     $('#branchFilter').val('');
-                    var table = $('#allTable').DataTable();
-                    table.search('').columns().search('').draw();
+                    var table = $('.tab-pane.active #allTable').DataTable();
+                    table.search('').columns([3, 4]).search('').draw();
                 }
             @endif
         });
@@ -858,81 +970,4 @@
             document.getElementById('customErrorContainer').style.display = 'none';
         }
     </script>
-
-    <style>
-        .btn-group .btn {
-            border-radius: 0.375rem;
-            margin-right: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            border: none;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .btn-group .btn:last-child {
-            margin-right: 0;
-        }
-
-        /* Nav tabs styling */
-        .nav-tabs .nav-link {
-            color: #495057;
-            border: 1px solid transparent;
-            border-top-left-radius: 0.375rem;
-            border-top-right-radius: 0.375rem;
-        }
-
-        .nav-tabs .nav-link:hover {
-            border-color: #e9ecef #e9ecef #dee2e6;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: #0d6efd;
-            background-color: #fff;
-            border-color: #dee2e6 #dee2e6 #fff;
-            font-weight: 600;
-        }
-
-        /* Information alert styling */
-        .alert-info {
-            background-color: #e7f1ff;
-            border-color: #cfe2ff;
-            color: #084298;
-        }
-
-        .alert-info .bi-info-circle-fill {
-            color: #0d6efd;
-        }
-
-        /* Tab-specific row highlighting */
-        .incoming-row {
-            background-color: rgba(13, 110, 253, 0.05) !important;
-        }
-
-        .outgoing-row {
-            background-color: rgba(25, 135, 84, 0.05) !important;
-        }
-
-        /* Badge styling */
-        .badge {
-            font-size: 0.75em;
-            padding: 0.35em 0.65em;
-        }
-
-        /* Table responsive adjustments */
-        .table-responsive {
-            border-radius: 0.375rem;
-        }
-
-        /* Tab badge styling */
-        .nav-link .badge {
-            font-size: 0.65em;
-            padding: 0.25em 0.5em;
-        }
-
-        /* Disabled button styling */
-        .btn.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-    </style>
 @endsection

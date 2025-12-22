@@ -958,7 +958,6 @@
             });
         }
         
-        // Initialize DataTable for the currently active tab
        // Initialize DataTable for the currently active tab
 function initializeActiveTabDataTable() {
     var activeTable = $('.tab-pane.active .requisition-table');

@@ -69,55 +69,67 @@ class TransactionTransfersController extends Controller
     ));
 }
 
-    public function create(Request $request)
-    {
-        $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
-            return redirect()->back()->with('fail', 'Current user branch not found.');
-        }
-
-        $branchId = $currentBranch->Id;
-        $this->authorize('create', TransactionTransfer::class);
-        $users = User::whereHas('employee', function ($q) use ($branchId) {
-            $q->where('BranchId', $branchId);
-        })->get();
-        return view('inventory.transactions.transfers.create', compact('users'));
+   public function create(Request $request)
+{
+    $currentBranch = $request->user()->branch;
+    if (!$currentBranch instanceof Branch) {
+        return redirect()->back()->with('fail', 'Current user branch not found.');
     }
 
-    public function store(TransactionTransferRequest $request)
-    {
-        $this->authorize('create', TransactionTransfer::class);
+    $branchId = $currentBranch->Id;
+    $this->authorize('create', TransactionTransfer::class);
+    
+    // Get current user
+    $currentUser = $request->user();
+    
+    // Get other users for dropdown (if needed for override)
+    $users = User::whereHas('employee', function ($q) use ($branchId) {
+        $q->where('BranchId', $branchId);
+    })->get();
 
-        $validatedData = $request->validated();
-        $items = $validatedData['items'] ?? [];
-        unset($validatedData['items']);
+    return view('inventory.transactions.transfers.create', compact('users', 'currentUser'));
+}
 
-        try {
-            foreach ($items as $item) {
-                $itemId = $item['item'];
-                $qty = $item['dispatched_qty'];
+   public function store(TransactionTransferRequest $request)
+{
+    $this->authorize('create', TransactionTransfer::class);
 
-                $branch = $validatedData['RequisitionType'] === 'procurement'
-                    ? app(TransactionTransferService::class)->getHQBranchId()
-                    : $validatedData['FromBranch'];
+    $validatedData = $request->validated();
+    $items = $validatedData['items'] ?? [];
+    unset($validatedData['items']);
 
+    try {
+        $transfer = $this->service->createTransfer($validatedData);
+        $this->service->createTransferItems($transfer, $items);
 
-            }
-
-            $transfer = $this->service->createTransfer($validatedData);
-            $this->service->createTransferItems($transfer, $items);
-
-            return redirect()
-                ->route('transactionstransfers.index')
-                ->with('success', 'Transfer created successfully.');
-        } catch (Throwable $e) {
+        // Check if it's an AJAX request
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'status' => 'error',
+                'success' => true,
+                'message' => 'Transfer created successfully.',
+                'redirect' => route('transactionstransfers.index')
+            ]);
+        }
+
+        return redirect()
+            ->route('transactionstransfers.index')
+            ->with('success', 'Transfer created successfully.');
+            
+    } catch (Throwable $e) {
+        // Check if it's an AJAX request
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
+        
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', 'Error creating transfer: ' . $e->getMessage());
     }
-
+}
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);

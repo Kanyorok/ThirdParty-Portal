@@ -107,15 +107,23 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-2">
-                                <label for="TransferredBy" class="form-label">Transferred By <span class="text-danger">*</span></label>
-                                <select name="TransferredBy" class="form-select" id="TransferredBy" required>
-                                    <option value="">-- Select User --</option>
-                                    @foreach ($users as $user)
-                                        <option value="{{ $user->Id }}">{{ $user->Name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                    <div class="col-md-3">
+                        <label for="TransferredBy" class="form-label">Transferred By <span class="text-danger">*</span></label>
+                        
+                        {{-- Hidden field for form submission --}}
+                        <input type="hidden" name="TransferredBy" id="TransferredBy" 
+                            value="{{ $currentUser->Id ?? auth()->id() }}">
+                        
+                        {{-- Display-only field for user visibility --}}
+                        <input type="text" class="form-control" id="TransferredByDisplay" 
+                            value="{{ $currentUser->Name ?? auth()->user()->Name }}" readonly>
+                        
+                        <small class="text-muted">Current user (non-editable)</small>
+                        
+                        @error('TransferredBy')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
 
                             <input type="hidden" name="RequisitionId" id="RequisitionId">
                             <input type="hidden" name="RequisitionType" id="RequisitionType">
@@ -457,14 +465,25 @@
                     }
                 })
                 .then(response => {
-                    if (response.ok) {
-                        window.location.href = "{{ route('transactionstransfers.index') }}";
-                    } else {
-                        return response.json().then(data => {
-                            throw new Error(data.message || 'Submission failed');
-                        });
-                    }
-                })
+    // Check if response is a redirect (302 or other 3xx)
+    if (response.redirected) {
+        // Follow the redirect
+        window.location.href = response.url;
+    } else if (response.ok) {
+        // Handle JSON response if needed
+        return response.json().then(data => {
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                window.location.href = "{{ route('transactionstransfers.index') }}";
+            }
+        });
+    } else {
+        return response.json().then(data => {
+            throw new Error(data.message || 'Submission failed');
+        });
+    }
+})
                 .catch(error => {
                     showError('Submission failed: ' + error.message);
                     resetSubmitButton();
