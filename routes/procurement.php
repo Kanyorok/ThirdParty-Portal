@@ -356,7 +356,6 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
 
         // Other Tender Resources
         Route::resource('initiateapprove', TenderInitiationApproveController::class);
-        Route::resource('tenderresponse', TenderResponseController::class);
     });
 
 
