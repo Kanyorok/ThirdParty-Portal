@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/common/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/select';
 import { Badge } from '@/components/common/badge';
-import { Currency } from '@/data/currencies';
+import { Currency } from '@/types/currencies';
 import { Spinner } from '@/components/common/spinner'
 
 const bankDetailSchema = z.object({

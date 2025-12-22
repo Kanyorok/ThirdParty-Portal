@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ESNext",
     "lib": [
       "dom",
       "dom.iterable",
@@ -34,15 +34,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "app/forgot-password",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "cypress",
-    "**/*.cy.ts",
-    "**/*.cy.tsx",
-    "**/*.spec.ts",
-    "**/*.spec.tsx"
+    "node_modules"
   ]
 }

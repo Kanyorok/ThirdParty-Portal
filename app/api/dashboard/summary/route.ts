@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
   const thirdPartyId = (session.user as any)?.thirdPartyId as number | undefined;
 
   const origin = new URL(request.url).origin;
-  const externalBase = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.ERP_BASE_URL || process.env.NEXT_PUBLIC_ERP_BASE_URL;
 
   const headers: HeadersInit = accessToken
     ? { Accept: "application/json", Authorization: `Bearer ${accessToken}` }
@@ -73,7 +72,7 @@ export async function GET(request: NextRequest) {
     return null;
   }
 
-  const preqUrl = externalBase ? `${externalBase}/api/prequalification/rounds` : null;
+  const preqUrl = process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api/prequalification/rounds` : null;
   const preqData = await fetchWithFallback(preqUrl, "/api/prequalification/rounds");
 
   const rounds: PreqRound[] = Array.isArray(preqData?.data) ? preqData.data : [];
@@ -104,9 +103,9 @@ export async function GET(request: NextRequest) {
   }
 
   let invitesUrl: string | null = null;
-  if (externalBase && thirdPartyId) {
+  if (process.env.NEXT_PUBLIC_API_URL && thirdPartyId) {
     const qp = new URLSearchParams({ third_party_id: String(thirdPartyId) });
-    invitesUrl = `${externalBase}/api/tender-invitations?${qp.toString()}`;
+    invitesUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/tender-invitations?${qp.toString()}`;
   }
   const invitesData = await fetchWithFallback(invitesUrl, "/api/tender-invitations");
   const invites = Array.isArray(invitesData?.data) ? invitesData.data : [];
@@ -120,8 +119,8 @@ export async function GET(request: NextRequest) {
   }
 
   let tendersUrl: string | null = null;
-  if (externalBase) {
-    const api = new URL(`${externalBase}/api/tenders`);
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const api = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/tenders`);
     api.searchParams.set("enforce_invites", "true");
     if (thirdPartyId) api.searchParams.set("third_party_id", String(thirdPartyId));
     tendersUrl = api.toString();

@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useCallback, useMemo, useEffect } from "react"
-import { Command, LogOut, User, LucideIcon } from "lucide-react"
+import { Command, LogOut, User, LucideIcon, ChevronsUpDown } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
 import {
@@ -16,15 +15,23 @@ import {
     SidebarMenuItem,
 } from "@/components/common/sidebar"
 
-import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/common/dropdown-menu"
 
+import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
 import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items"
 import { NavMainItem, NavSection, UserProfile } from "@/types/profile-types"
 import { getProfileMenu } from "@/navigation/sidebar/profile-menu-filter"
 import { useProfileStore } from "@/store/profile-store"
-
 import { NavMain } from "@/app/dashboard/side-nav/nav-main"
 import { NavSecondary } from "@/app/dashboard/side-nav/nav-secondary"
+import { cn } from "@/lib/utils"
 
 const DASHBOARD_ROOT_PATH = "/dashboard"
 const API_URL = process.env.NEXT_PUBLIC_API_URL!
@@ -36,10 +43,7 @@ interface SecondaryNavItem {
     onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void
 }
 
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> { }
-
-export function AppSidebar({ ...props }: AppSidebarProps) {
-    useRouter()
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { data: session, status } = useSession()
 
     const {
@@ -49,18 +53,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         initializeProfiles
     } = useProfileStore()
 
-
     const availableProfiles: UserProfile[] = useMemo(() => {
-        if (status !== 'authenticated' || !session?.user) {
-            return []
-        }
+        if (status !== 'authenticated' || !session?.user) return []
 
-        const user = session.user as (typeof session.user & {
-            isSupplier?: boolean;
-            isTenant?: boolean;
-            isCustomer?: boolean;
-        })
-
+        const user = session.user as any
         const profiles: UserProfile[] = []
         if (user.isSupplier) profiles.push("Supplier")
         if (user.isTenant) profiles.push("Tenant")
@@ -78,128 +74,124 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     const userProfile: UserProfile = activeProfile
     const currentYear = useMemo(() => new Date().getFullYear(), [])
 
-    const handleLogout = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
+    const handleLogout = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault()
         try {
-            const response = await fetch(`${API_URL}/api/third-party-auth/logout`, {
+            await fetch(`${API_URL}/api/third-party-auth/logout`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
+                headers: { "Content-Type": "application/json", "Accept": "application/json" },
                 credentials: 'include',
             })
-            if (!response.ok) {
-                console.error("Backend logout failed:", await response.text())
-            }
         } catch (error) {
-            console.error("Error during backend logout:", error)
+            console.error("Logout error:", error)
         } finally {
             await signOut({ callbackUrl: "/signin", redirect: true })
         }
     }, [])
 
     const resolveDashboardPath = useCallback((path: string): string => {
-        if (!path || path.startsWith("http://") || path.startsWith("https://") || path.startsWith("#")) {
-            return path
-        }
-        if (path === "/") {
-            return DASHBOARD_ROOT_PATH
-        }
-        if (path.startsWith(DASHBOARD_ROOT_PATH)) {
-            return path
-        }
-        const holyPath = path.startsWith('/') ? path.substring(1) : path
-        return `${DASHBOARD_ROOT_PATH}/${holyPath}`
+        if (!path || path.startsWith("http") || path.startsWith("#")) return path
+        if (path === "/") return DASHBOARD_ROOT_PATH
+        if (path.startsWith(DASHBOARD_ROOT_PATH)) return path
+        return `${DASHBOARD_ROOT_PATH}/${path.startsWith('/') ? path.substring(1) : path}`
     }, [])
 
     const mainNavigationSections = useMemo((): NavSection[] => {
         const filteredSections = getProfileMenu(userProfile, sidebarItems);
-        const mainSections = filteredSections.filter(section => section.id !== "utility");
-
-        return mainSections.map((group) => ({
-            ...group,
-            items: group.items.map((item: NavMainItem) => ({
-                ...item,
-                url: resolveDashboardPath(item.url),
-                subItems: item.subItems?.map((subItem) => ({
-                    ...subItem,
-                    url: resolveDashboardPath(subItem.url),
+        return filteredSections
+            .filter(section => section.id !== "utility")
+            .map((group) => ({
+                ...group,
+                items: group.items.map((item: NavMainItem) => ({
+                    ...item,
+                    url: resolveDashboardPath(item.url),
+                    subItems: item.subItems?.map((subItem) => ({
+                        ...subItem,
+                        url: resolveDashboardPath(subItem.url),
+                    })),
                 })),
-            })),
-        }))
+            }))
     }, [userProfile, resolveDashboardPath])
 
     const bottomNavigationItems = useMemo((): SecondaryNavItem[] => {
-        const allFilteredSections = getProfileMenu(userProfile, sidebarItems);
-        const utilitySection = allFilteredSections.find(section => section.id === "utility");
+        const utilitySection = getProfileMenu(userProfile, sidebarItems).find(s => s.id === "utility");
+        const items = utilitySection?.items.map(item => ({
+            title: item.title,
+            url: resolveDashboardPath(item.url),
+            icon: item.icon || User,
+        })) || []
 
-        const processedUtilityItems: SecondaryNavItem[] = utilitySection
-            ? utilitySection.items.map(item => ({
-                title: item.title,
-                url: resolveDashboardPath(item.url),
-                icon: item.icon || User,
-            }))
-            : []
-
-        processedUtilityItems.push({
-            title: "Logout",
-            url: "/logout",
-            icon: LogOut,
-            onClick: handleLogout,
-        })
-        return processedUtilityItems
+        return [...items, { title: "Logout", url: "/logout", icon: LogOut, onClick: handleLogout }]
     }, [userProfile, resolveDashboardPath, handleLogout])
 
     return (
-        <Sidebar className="bg-blue-50" {...props}>
-            <SidebarHeader>
+        <Sidebar className="border-r border-border/40 bg-background" {...props}>
+            <SidebarHeader className="p-4">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
+                        <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
                             <motion.a
                                 href={DASHBOARD_ROOT_PATH}
-                                aria-label={`${CLIENT_APP_NAME_STRING} dashboard`}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="flex items-center"
+                                whileHover={{ x: 2 }}
+                                className="flex items-center gap-3 px-1"
                             >
-                                <Command className="h-6 w-6 text-primary" />
-                                <span className="ml-2 text-lg font-semibold text-foreground">{CLIENT_APP_NAME_STRING}</span>
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/20">
+                                    <Command className="size-5" />
+                                </div>
+                                <div className="grid flex-1 text-left leading-tight">
+                                    <span className="truncate font-black uppercase tracking-tighter text-lg">
+                                        {CLIENT_APP_NAME_STRING}
+                                    </span>
+                                    <span className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-widest uppercase">
+                                        Enterprise
+                                    </span>
+                                </div>
                             </motion.a>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
 
                 {profilesFromStore.length > 1 && (
-                    <div className="p-4 pt-2">
-                        <label htmlFor="profile-select" className="block text-xs font-medium text-gray-700 mb-1">
-                            Active Profile ({userProfile})
-                        </label>
-                        <select
-                            id="profile-select"
-                            value={userProfile}
-                            onChange={(e) => setActiveProfile(e.target.value as UserProfile)}
-                            className="w-full text-sm p-1.5 border border-blue-200 rounded-md shadow-inner bg-white text-gray-800 transition duration-150 ease-in-out hover:border-blue-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        >
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <SidebarMenuButton size="sm" className="mt-4 h-10 border border-border/50 bg-muted/30 hover:bg-muted/50 transition-all">
+                                <User className="size-4 text-primary" />
+                                <span className="flex-1 text-left text-[11px] font-bold uppercase tracking-tight ml-2">
+                                    {userProfile} Profile
+                                </span>
+                                <ChevronsUpDown className="size-3 text-muted-foreground" />
+                            </SidebarMenuButton>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56" align="start" side="bottom">
+                            <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Switch Identity</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
                             {profilesFromStore.map(profile => (
-                                <option key={profile} value={profile}>
+                                <DropdownMenuItem
+                                    key={profile}
+                                    onClick={() => setActiveProfile(profile)}
+                                    className={cn(
+                                        "flex items-center justify-between font-bold text-xs uppercase tracking-tight py-2",
+                                        activeProfile === profile && "bg-primary/10 text-primary"
+                                    )}
+                                >
                                     {profile}
-                                </option>
+                                    {activeProfile === profile && <div className="size-1.5 rounded-full bg-primary" />}
+                                </DropdownMenuItem>
                             ))}
-                        </select>
-                    </div>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 )}
             </SidebarHeader>
-            <SidebarContent className="flex h-full flex-col">
+
+            <SidebarContent className="scrollbar-none">
                 <NavMain items={mainNavigationSections} />
-                <div className="mt-auto border-t border-gray-200 py-4 dark:border-gray-700">
-                    <NavSecondary items={bottomNavigationItems} />
-                </div>
             </SidebarContent>
-            <SidebarFooter>
-                <div className="py-2 text-center text-xs text-gray-500">
-                    &copy; {currentYear} {CLIENT_APP_NAME_STRING} | V1.0.0
+
+            <SidebarFooter className="p-4 border-t border-border/40">
+                <NavSecondary items={bottomNavigationItems} />
+                <div className="mt-4 px-2 flex items-center justify-between opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
+                    <span className="text-[10px] font-black tracking-widest uppercase">&copy; {currentYear}</span>
+                    <span className="text-[10px] font-black tracking-widest bg-foreground text-background px-1.5 py-0.5 rounded">V1.0.0</span>
                 </div>
             </SidebarFooter>
         </Sidebar>

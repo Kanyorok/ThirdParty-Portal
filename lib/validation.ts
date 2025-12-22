@@ -48,6 +48,7 @@ export const userTypeApiSchema = z.enum(USER_TYPE_API_VALUES, {
 //     path: ["confirmPassword"],
 // });
 
+
 export const registerSchema = z.object({
     firstName: z.string()
         .min(2, "First name is too short")
@@ -68,23 +69,22 @@ export const registerSchema = z.object({
         .regex(/[a-z]/, "Password must contain at least one lowercase letter")
         .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string(),
-
     thirdPartyName: z.string().min(1, "Company name is required"),
     tradingName: z.string().optional(),
-    registrationNumber: z.string().min(1, "Registration number is required"),
     taxPIN: z.string().min(1, "Tax PIN is required"),
-    businessType: z.string().min(1, "Business type is required"),
-    countryId: z.string().min(1, "Country is required"),
-    thirdPartyType: z.string().default("1"),
+    businessType: z.coerce.number().min(1, "Business type is required"),
+    registrationNumber: z.string().min(1, "Enter Registration number"),
+    countryId: z.coerce.number().min(1, "Select Country"),
+    thirdPartyType: z.enum(["Supplier", "Tenant", "Customer"]).default("Supplier"),
+    supplierCategories: z.array(z.number()).default([]),
+    physicalAddress: z.string().min(1, "Physical address is required"),
+    website: z.string().url("Enter a valid URL").optional().or(z.literal("")),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
 });
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>;
-
-// export type RegisterFormInputs = z.infer<typeof registerSchema>;
-
 // export type RegisterFormInputs = z.infer<typeof registerSchema>;
 
 export type ThirdPartyDetailsFormInputs = {

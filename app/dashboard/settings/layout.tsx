@@ -125,8 +125,8 @@ function NavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                    <div className="font-semibold leading-tight">{item.title}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5 leading-tight">
+                    <div className="font-semibold leading-tight text-[11px] uppercase tracking-wider">{item.title}</div>
+                    <div className="text-[10px] font-bold text-muted-foreground/60 mt-0.5 leading-tight tracking-tighter">
                         {item.description}
                     </div>
                 </div>
@@ -160,7 +160,7 @@ function MobileNav({ pathname }: { pathname: string }) {
             <select
                 value={pathname}
                 onChange={(e) => window.location.href = e.target.value}
-                className="w-full px-4 py-3 text-sm rounded-xl border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all appearance-none font-medium"
+                className="w-full px-4 py-3 text-[11px] font-black uppercase tracking-widest rounded-xl border border-border/40 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all appearance-none"
             >
                 {sidebarNavItems.map((item) => (
                     <option key={item.href} value={item.href}>
@@ -169,7 +169,7 @@ function MobileNav({ pathname }: { pathname: string }) {
                 ))}
             </select>
             {activeItem && (
-                <p className="text-xs text-muted-foreground mt-2 px-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 mt-2 px-1">
                     {activeItem.description}
                 </p>
             )}
@@ -187,13 +187,13 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                     variants={headerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="pb-6 border-b border-border/50"
+                    className="pb-6 border-b border-border/40"
                 >
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+                    <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground">
                         Settings
                     </h1>
-                    <p className="text-sm text-muted-foreground mt-2">
-                        Manage your account and preferences
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 mt-1">
+                        System Configuration & Profile Management
                     </p>
                 </motion.header>
 
@@ -230,7 +230,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -12 }}
                                 transition={{
-                                    duration: 0.4,
+                                    duration: 0.3,
                                     ease: easeInOut,
                                 }}
                             >

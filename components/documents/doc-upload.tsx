@@ -2,7 +2,16 @@
 
 import React, { useCallback, useMemo, useReducer } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Check, ChevronRight, FileText, Info, Plus, Trash2, Upload } from 'lucide-react'
+import {
+    Check,
+    ChevronRight,
+    Plus,
+    Trash2,
+    Upload,
+    FileUp,
+    Loader2,
+    Inbox
+} from 'lucide-react'
 import toast from "react-hot-toast"
 
 import { Button } from "@/components/common/button"
@@ -16,7 +25,6 @@ import {
     SelectValue,
 } from "@/components/common/select"
 import { Checkbox } from "@/components/common/checkbox"
-import { Badge } from "@/components/common/badge"
 import { Separator } from "@/components/common/separator"
 import { cn } from "@/lib/utils"
 
@@ -67,12 +75,10 @@ const documentCategories = [
 
 const mandatoryDocuments = [
     "Copy of KRA PIN",
-    "Scanned Copy of Original National ID",
-    "Business Registration Certificate",
-    "Registration certificate (community service provider)",
-    "Partnership Deed (partnership business)",
-    "Copy of CR 12 (directors/shareholders)",
-    "Power of Attorney (authorized person)",
+    "Original National ID",
+    "Registration Certificate",
+    "Partnership Deed",
+    "Copy of CR 12",
 ]
 
 const initialState: State = {
@@ -91,10 +97,7 @@ function reducer(state: State, action: Action): State {
         case "addRow":
             return {
                 ...state,
-                rows: [
-                    ...state.rows,
-                    { id: state.nextId, description: "", file: null, selected: false },
-                ],
+                rows: [...state.rows, { id: state.nextId, description: "", file: null, selected: false }],
                 nextId: state.nextId + 1,
                 isDirty: true,
             }
@@ -107,9 +110,7 @@ function reducer(state: State, action: Action): State {
         case "toggleSelected":
             return {
                 ...state,
-                rows: state.rows.map((r) =>
-                    r.id === action.id ? { ...r, selected: action.value } : r
-                ),
+                rows: state.rows.map((r) => r.id === action.id ? { ...r, selected: action.value } : r),
             }
         case "selectAll":
             return {
@@ -119,17 +120,13 @@ function reducer(state: State, action: Action): State {
         case "setDescription":
             return {
                 ...state,
-                rows: state.rows.map((r) =>
-                    r.id === action.id ? { ...r, description: action.value } : r
-                ),
+                rows: state.rows.map((r) => r.id === action.id ? { ...r, description: action.value } : r),
                 isDirty: true,
             }
         case "setFile":
             return {
                 ...state,
-                rows: state.rows.map((r) =>
-                    r.id === action.id ? { ...r, file: action.file, error: action.error ?? null } : r
-                ),
+                rows: state.rows.map((r) => r.id === action.id ? { ...r, file: action.file, error: action.error ?? null } : r),
                 isDirty: true,
             }
         case "saving":
@@ -144,310 +141,196 @@ function reducer(state: State, action: Action): State {
 export default function DocsUpload() {
     const [state, dispatch] = useReducer(reducer, initialState)
 
-    const selectedCount = useMemo(
-        () => state.rows.filter((r) => r.selected).length,
-        [state.rows]
-    )
+    const selectedCount = state.rows.filter((r) => r.selected).length
     const allSelected = state.rows.length > 0 && selectedCount === state.rows.length
     const someSelected = selectedCount > 0 && !allSelected
-    const readyCount = useMemo(
-        () => state.rows.filter((r) => r.file && r.description && !r.error).length,
-        [state.rows]
-    )
+    const readyCount = state.rows.filter((r) => r.file && r.description && !r.error).length
     const completion = Math.round((readyCount / Math.max(state.rows.length, 1)) * 100)
 
     const validateFile = useCallback((file: File | null): string | null => {
         if (!file) return null
         const mb = file.size / 1024 / 1024
-        if (mb > MAX_FILE_MB) return `File too large. Max ${MAX_FILE_MB}MB.`
-        if (!ACCEPTED_TYPES.includes(file.type)) return "Unsupported file type."
+        if (mb > MAX_FILE_MB) return `Limit ${MAX_FILE_MB}MB`
+        if (!ACCEPTED_TYPES.includes(file.type)) return "Invalid format"
         return null
     }, [])
 
-    const onDropFile = useCallback(
-        (id: number, file: File | null) => {
-            const error = validateFile(file)
-            dispatch({ type: "setFile", id, file, error })
-        },
-        [validateFile]
-    )
-
     const handleSave = useCallback(async () => {
-        if (!state.category) {
-            toast.error("Please select a document category first.")
-            return
-        }
+        if (!state.category) return toast.error("Select category")
         dispatch({ type: "saving" })
-        await new Promise((r) => setTimeout(r, 800))
+        await new Promise((r) => setTimeout(r, 1000))
         dispatch({ type: "saved" })
-        toast.success("Documents saved successfully!")
+        toast.success("Documents synced")
     }, [state.category])
 
-    const canSave = state.isDirty && readyCount > 0 && state.category && !state.isSaving
-
     return (
-        <div className="w-full overflow-x-hidden">
-            <div className="mb-8 text-sm text-gray-500 dark:text-gray-400">
-                Dashboard <ChevronRight className="inline-block h-3 w-3 mx-1" /> <span className="font-semibold text-gray-700 dark:text-gray-200">Documents</span>
-            </div>
-            <div className="mb-4">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">My Documents</h1>
-            </div>
-
-            <section className="grid items-center gap-3 rounded-lg border bg-card p-3 md:grid-cols-[minmax(0,1fr)_auto]">
-                <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                            <FileText className="h-3.5 w-3.5 text-primary" />
+        <div className="min-h-screen w-full overflow-x-hidden bg-background">
+            <div className="mx-auto w-full max-w-none px-4 sm:px-6 py-8 md:py-10">
+                <header className="mb-8 md:mb-12 flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6 border-b pb-6 md:pb-8">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                            <span>Dashboard</span>
+                            <ChevronRight className="h-3 w-3" />
+                            <span className="text-primary">Documentation</span>
                         </div>
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="truncate text-xs font-medium">
-                                    {readyCount} of {state.rows.length} documents ready
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">{completion}%</span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 lg:gap-8 w-full sm:w-auto">
+                        <div className="flex flex-col gap-1.5 w-full sm:min-w-[200px]">
+                            <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
+                                <span className="text-muted-foreground">Verification Progress</span>
+                                <span>{completion}%</span>
                             </div>
-                            <div className="mt-1.5 h-1 w-full rounded-full bg-secondary">
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                                 <motion.div
-                                    className="h-full rounded-full bg-primary"
+                                    className="h-full bg-primary"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${completion}%` }}
-                                    transition={{ duration: 0.35, ease: "easeOut" }}
+                                    transition={{ type: "spring", bounce: 0, duration: 1 }}
                                 />
                             </div>
                         </div>
+                        <Button
+                            onClick={handleSave}
+                            disabled={!state.isDirty || readyCount === 0 || state.isSaving}
+                            className="h-11 px-6 md:px-8 font-bold shadow-xl shadow-primary/10 transition-all active:scale-95 w-full sm:w-auto"
+                        >
+                            {state.isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                            Commit Changes
+                        </Button>
                     </div>
-                </div>
-                <div className="min-w-0">
-                    <Label htmlFor="category" className="sr-only">
-                        Document Category
-                    </Label>
-                    <Select
-                        value={state.category}
-                        onValueChange={(value) => dispatch({ type: "setCategory", value })}
-                    >
-                        <SelectTrigger id="category" className="h-9 max-w-full min-w-0 truncate">
-                            <SelectValue placeholder="Select document category" />
-                        </SelectTrigger>
-                        <SelectContent className="w-[--radix-select-trigger-width] max-h-64">
-                            {documentCategories.map((c) => (
-                                <SelectItem key={c} value={c} className="whitespace-normal text-sm">
-                                    {c}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </section>
+                </header>
 
-            <div className="mx-auto mt-4 grid w-full max-w-6xl grid-cols-1 gap-4 lg:grid-cols-12">
-                <section className="min-w-0 space-y-3 lg:col-span-8">
-                    <div className="flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2">
-                        <div className="flex min-w-0 items-center gap-2">
-                            <Checkbox
-                                checked={allSelected ? true : someSelected ? "indeterminate" : false}
-                                onCheckedChange={(v) => dispatch({ type: "selectAll", value: v === true })}
-                                aria-label="Select all rows"
-                            />
-                            <span className="truncate text-sm font-medium">Documents</span>
-                            {selectedCount > 0 && (
-                                <Badge variant="secondary" className="ml-1 truncate rounded-full text-xs">
-                                    {selectedCount} selected
-                                </Badge>
-                            )}
+                <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                    <div className="lg:flex-1 space-y-8">
+                        <div className="flex flex-col gap-3">
+                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Document Group</Label>
+                            <Select value={state.category} onValueChange={(v) => dispatch({ type: "setCategory", value: v })}>
+                                <SelectTrigger className="h-12 md:h-14 text-base md:text-lg border-2 hover:border-primary/40 bg-background transition-all">
+                                    <SelectValue placeholder="Select classification..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {documentCategories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-1"
-                                onClick={() => dispatch({ type: "addRow" })}
-                            >
-                                <Plus className="h-4 w-4" />
-                                <span className="hidden sm:inline">Add</span>
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="gap-2"
-                                onClick={handleSave}
-                                disabled={!canSave}
-                                aria-label="Save documents"
-                            >
-                                {state.isSaving ? (
-                                    <svg className="h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                ) : (
-                                    <span>Save</span>
-                                )}
-                            </Button>
-                        </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <AnimatePresence mode="popLayout">
-                            {state.rows.map((row) => (
-                                <motion.div
-                                    key={row.id}
-                                    layout
-                                    initial={{ opacity: 0, y: -6 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -6 }}
-                                    transition={{ duration: 0.18, ease: "easeOut" }}
-                                    className={cn(
-                                        "rounded-lg border bg-card p-3",
-                                        row.selected && "border-primary/30 bg-primary/5"
-                                    )}
-                                >
-                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto]">
-                                        <div className="md:pt-2">
+                        <div className="space-y-4">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-0">
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                                        onCheckedChange={(v) => dispatch({ type: "selectAll", value: v === true })}
+                                    />
+                                    <span className="text-sm font-bold tracking-tight">File Queue ({state.rows.length})</span>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={() => dispatch({ type: "addRow" })} className="h-8 rounded-full px-4 text-xs font-bold border-2">
+                                    <Plus className="mr-1 h-3 w-3" /> New Entry
+                                </Button>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <AnimatePresence mode="popLayout" initial={false}>
+                                    {state.rows.map((row) => (
+                                        <motion.div
+                                            key={row.id}
+                                            layout
+                                            initial={{ opacity: 0, y: -5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 5 }}
+                                            className={cn(
+                                                "flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border-2 border-transparent p-4 transition-all hover:bg-muted/30",
+                                                row.selected && "border-primary/10 bg-primary/[0.03]"
+                                            )}
+                                        >
                                             <Checkbox
                                                 checked={row.selected}
-                                                onCheckedChange={(v) =>
-                                                    dispatch({
-                                                        type: "toggleSelected",
-                                                        id: row.id,
-                                                        value: v === true,
-                                                    })
-                                                }
-                                                aria-label={`Select row ${row.id}`}
+                                                onCheckedChange={(v) => dispatch({ type: "toggleSelected", id: row.id, value: v === true })}
+                                                className="mt-1 sm:mt-0"
                                             />
-                                        </div>
 
-                                        <div className="min-w-0">
-                                            <Label
-                                                htmlFor={`file-${row.id}`}
-                                                className={cn(
-                                                    "group relative flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed p-3 transition-colors",
-                                                    row.file
-                                                        ? "border-primary/30 bg-primary/5 hover:bg-primary/10"
-                                                        : "hover:border-primary/50 hover:bg-accent/50"
-                                                )}
-                                                onDragOver={(e) => e.preventDefault()}
-                                                onDrop={(e) => {
-                                                    e.preventDefault()
-                                                    const file = e.dataTransfer.files?.[0] || null
-                                                    onDropFile(row.id, file)
-                                                }}
-                                            >
-                                                {row.file ? (
-                                                    <>
-                                                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                                                            <Check className="h-4 w-4 text-primary" />
-                                                        </div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="truncate text-sm font-medium">{row.file.name}</p>
-                                                            <p className="text-[11px] text-muted-foreground">
-                                                                {(row.file.size / 1024 / 1024).toFixed(1)} MB
-                                                            </p>
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10">
-                                                            <Upload className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground">
-                                                                Choose file
-                                                            </p>
-                                                            <p className="text-[11px] text-muted-foreground">
-                                                                PDF, JPG, PNG, XLSX • Max {MAX_FILE_MB}MB
-                                                            </p>
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </Label>
-                                            <Input
-                                                id={`file-${row.id}`}
-                                                type="file"
-                                                className="sr-only"
-                                                accept=".pdf,.jpg,.jpeg,.png,.xlsx"
-                                                onChange={(e) => onDropFile(row.id, e.target.files?.[0] || null)}
-                                            />
-                                            {row.error && (
-                                                <p className="mt-1 text-[11px] text-destructive">{row.error}</p>
-                                            )}
-                                        </div>
+                                            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 w-full">
+                                                <div className="sm:col-span-1 lg:col-span-5">
+                                                    <Input
+                                                        value={row.description}
+                                                        onChange={(e) => dispatch({ type: "setDescription", id: row.id, value: e.target.value })}
+                                                        placeholder="Untitled Document"
+                                                        className="h-10 md:h-11 border-none bg-transparent text-sm md:text-base font-semibold shadow-none focus-visible:ring-0 px-0 placeholder:text-muted-foreground/30"
+                                                    />
+                                                </div>
 
-                                        <div className="min-w-0">
-                                            <Label htmlFor={`desc-${row.id}`} className="sr-only">
-                                                Document description
-                                            </Label>
-                                            <Input
-                                                id={`desc-${row.id}`}
-                                                value={row.description}
-                                                onChange={(e) =>
-                                                    dispatch({
-                                                        type: "setDescription",
-                                                        id: row.id,
-                                                        value: e.target.value,
-                                                    })
-                                                }
-                                                placeholder="e.g. Audited Financial Statements 2023"
-                                                className="border-0 bg-muted/50 focus-visible:bg-background"
-                                            />
-                                        </div>
-
-                                        <div className="flex items-start justify-end">
-                                            {state.rows.length > 1 && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                                    aria-label={`Delete row ${row.id}`}
-                                                    onClick={() => dispatch({ type: "deleteRow", id: row.id })}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    </div>
-
-                    <p className="px-1 pt-1 text-[11px] text-muted-foreground">
-                        Allowed types: PDF, JPG, JPEG, PNG, XLSX • Max size: {MAX_FILE_MB} MB
-                    </p>
-                </section>
-
-                <aside className="min-w-0 space-y-4 lg:col-span-4">
-                    <div className="sticky top-20 space-y-4">
-                        <div className="rounded-lg border bg-card p-3">
-                            <div className="mb-2 flex items-center gap-2">
-                                <Info className="h-4 w-4 text-primary" />
-                                <span className="text-sm font-medium">Recommended Documents</span>
+                                                <div className="sm:col-span-1 lg:col-span-7 flex items-center gap-2 md:gap-3">
+                                                    <Label
+                                                        htmlFor={`file-${row.id}`}
+                                                        className={cn(
+                                                            "flex h-10 md:h-11 flex-1 cursor-pointer items-center justify-between rounded-lg border-2 border-dashed px-3 md:px-4 transition-all hover:bg-background",
+                                                            row.file ? "border-primary/40 bg-background" : "border-muted-foreground/20",
+                                                            row.error && "border-destructive/40 bg-destructive/[0.02]"
+                                                        )}
+                                                    >
+                                                        <span className="truncate text-xs md:text-sm font-medium mr-2">
+                                                            {row.file ? row.file.name : "Click to upload"}
+                                                        </span>
+                                                        {row.file ? <FileUp className="h-4 w-4 shrink-0 text-primary" /> : <Upload className="h-4 w-4 shrink-0 text-muted-foreground/50" />}
+                                                    </Label>
+                                                    <Input
+                                                        id={`file-${row.id}`}
+                                                        type="file"
+                                                        className="sr-only"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0] || null
+                                                            dispatch({ type: "setFile", id: row.id, file, error: validateFile(file) })
+                                                        }}
+                                                    />
+                                                    {state.rows.length > 1 && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-9 w-9 md:h-10 md:w-10 shrink-0 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5"
+                                                            onClick={() => dispatch({ type: "deleteRow", id: row.id })}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             </div>
-                            <ul className="space-y-1.5">
-                                {mandatoryDocuments.map((item) => (
-                                    <li key={item} className="flex items-start gap-2">
-                                        <span className="mt-2 inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary/60" />
-                                        <span className="text-sm text-muted-foreground">{item}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        <div className="rounded-lg border bg-card p-3">
-                            <span className="text-sm font-medium">Tips</span>
-                            <Separator className="my-2" />
-                            <ul className="space-y-1.5">
-                                <li className="text-sm text-muted-foreground">
-                                    Use clear descriptions to speed up reviews.
-                                </li>
-                                <li className="text-sm text-muted-foreground">
-                                    Prefer PDFs for multi-page documents.
-                                </li>
-                                <li className="text-sm text-muted-foreground">
-                                    Keep scanned images under {MAX_FILE_MB}MB for faster uploads.
-                                </li>
-                            </ul>
                         </div>
                     </div>
-                </aside>
+
+                    <div className="lg:w-80 xl:w-96 shrink-0">
+                        <div className="sticky top-6 space-y-6 md:space-y-8">
+                            <section className="space-y-3 md:space-y-4">
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">Compliance Guide</h3>
+                                <div className="space-y-1 md:space-y-2">
+                                    {mandatoryDocuments.map((item) => (
+                                        <div key={item} className="group flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-primary/30 group-hover:bg-primary" />
+                                            <span className="text-sm font-medium text-muted-foreground/80 group-hover:text-foreground">{item}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <Separator className="opacity-50" />
+
+                            <div className="rounded-xl md:rounded-2xl bg-secondary/30 p-4 md:p-6 space-y-3 md:space-y-4">
+                                <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-background">
+                                    <Inbox className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold">Document Processing</p>
+                                    <p className="text-xs leading-relaxed text-muted-foreground">
+                                        All files are encrypted during transit. High resolution scans (300dpi) are recommended for OCR processing.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     )

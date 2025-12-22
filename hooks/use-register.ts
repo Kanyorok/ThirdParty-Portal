@@ -1,12 +1,34 @@
-"use client"
-
-import { useState, useMemo, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { registerSchema, type RegisterFormInputs } from "@/lib/validation"
+import * as z from "zod"
+import { useState } from "react"
 
-export function useRegisterForm() {
-    const form = useForm<RegisterFormInputs>({
+const registerSchema = z.object({
+    firstName: z.string().min(2, "Required"),
+    lastName: z.string().min(2, "Required"),
+    email: z.string().email("Invalid email"),
+    phone: z.string().min(10, "Invalid phone"),
+    password: z.string().min(8, "Too short"),
+    confirmPassword: z.string(),
+    thirdPartyName: z.string().min(2, "Company name required"),
+    registrationNumber: z.string().min(2, "Reg number required"),
+    taxPIN: z.string().min(2, "Tax PIN required"),
+    businessType: z.union([z.string(), z.number()]).refine(val => val !== "", "Required"),
+    countryId: z.union([z.string(), z.number()]).refine(val => val !== "", "Required"),
+    physicalAddress: z.string().min(1, "Address required"),
+    website: z.string().optional().or(z.literal("")),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+})
+
+export type RegisterFormValues = z.infer<typeof registerSchema>
+
+export const useRegisterForm = () => {
+    const [pwdShown, setPwdShown] = useState(false)
+    const [confirmShown, setConfirmShown] = useState(false)
+
+    const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
         mode: "onTouched",
         defaultValues: {
@@ -17,70 +39,21 @@ export function useRegisterForm() {
             password: "",
             confirmPassword: "",
             thirdPartyName: "",
-            tradingName: "",
             registrationNumber: "",
             taxPIN: "",
             businessType: "",
             countryId: "",
-            thirdPartyType: "1",
-        },
+            physicalAddress: "",
+            website: ""
+        }
     })
-
-    const [pwdShown, setPwdShown] = useState(false)
-    const [confirmShown, setConfirmShown] = useState(false)
-
-    const togglePwd = useCallback(() => setPwdShown(v => !v), [])
-    const toggleConfirm = useCallback(() => setConfirmShown(v => !v), [])
-
-    const phoneHandlers = useMemo(() => ({
-        onInput: (e: React.FormEvent<HTMLInputElement>) => {
-            const target = e.target as HTMLInputElement
-            target.value = target.value.replace(/[^\d+]/g, "")
-        },
-    }), [])
-
-    const triggerFields = useCallback(async (fields: (keyof RegisterFormInputs)[]) => {
-        return await form.trigger(fields)
-    }, [form])
-
-    const handleSubmitAsync = useCallback(
-        async (submitFn: (data: any) => Promise<void>) => {
-            const values = form.getValues()
-            const payload = {
-                FirstName: values.firstName,
-                LastName: values.lastName,
-                Email: values.email,
-                Phone: values.phone,
-                Password: values.password,
-                Password_confirmation: values.confirmPassword,
-                ThirdPartyName: values.thirdPartyName,
-                TradingName: values.tradingName || values.thirdPartyName,
-                RegistrationNumber: values.registrationNumber,
-                TaxPIN: values.taxPIN,
-                BusinessType: values.businessType,
-                CountryId: values.countryId ? Number(values.countryId) : null,
-                ThirdPartyType: values.thirdPartyType,
-            }
-            await submitFn(payload)
-        },
-        [form]
-    )
 
     return {
         form,
-        errors: form.formState.errors,
         pwdShown,
         confirmShown,
-        togglePwd,
-        toggleConfirm,
-        isSubmitting: form.formState.isSubmitting,
-        isValid: form.formState.isValid,
-        phoneHandlers,
-        register: form.register,
-        control: form.control,
-        setValue: form.setValue,
-        setError: form.setError,
-        triggerFields,
-        handleSubmitAsync
+        togglePwd: () => setPwdShown(prev => !prev),
+        toggleConfirm: () => setConfirmShown(prev => !prev),
+        triggerFields: (fields: any) => form.trigger(fields),
     }
 }

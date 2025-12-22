@@ -1,56 +1,62 @@
 import { NextResponse } from "next/server"
+import type Country from "@/types/countries"
 
-const API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL ?? ""
-
-function toStringSafe(v: unknown) {
-    if (v == null) return ""
-    if (typeof v === "string") return v
-    if (typeof v === "number") return String(v)
-    return ""
-}
-
-function parseBoolish(v: unknown) {
-    if (typeof v === "boolean") return v
-    if (typeof v === "number") return v !== 0
-    if (typeof v === "string") {
-        const t = v.trim().toLowerCase()
-        return t === "true" || t === "1"
-    }
-    return false
-}
+const mapper = (r: any): Country => ({
+    id: String(r.id ?? ''),
+    name: String(r.name ?? ''),
+    code: String(r.code ?? ''),
+    iso3: String(r.iso3 ?? ''),
+    phoneCode: String(r.phoneCode ?? ''),
+    flag: String(r.flag ?? ''),
+    isActive: Boolean(r.isActive),
+    sortOrder: Number(r.sortOrder ?? 0),
+    currency: r.currency ? {
+        id: String(r.currency.id ?? ''),
+        name: String(r.currency.name ?? ''),
+        code: String(r.currency.code ?? ''),
+        symbol: String(r.currency.symbol ?? '')
+    } : null
+})
 
 export async function GET() {
+    if (!process.env.NEXT_PUBLIC_API_URL) {
+        return NextResponse.json({ data: [], error: "Config Error" }, { status: 500 })
+    }
+
     try {
-        if (!API_BASE) return NextResponse.json({ data: [] })
-        const res = await fetch(`${API_BASE}/api/v1/countries`, {
-            headers: { Accept: "application/json" },
-            next: { revalidate: 60 },
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/countries`, {
+            headers: {
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            next: { revalidate: 3600 },
+            signal: controller.signal,
         })
-        const ct = res.headers.get("content-type") ?? ""
-        const body = ct.includes("application/json") ? await res.json() : await res.text()
+
+        clearTimeout(timeoutId)
+
         if (!res.ok) {
-            const payload = typeof body === "string" ? { message: body } : body
-            return NextResponse.json(payload, { status: res.status })
+            const errorData = await res.json().catch(() => ({ message: "Upstream Error" }))
+            return NextResponse.json(errorData, { status: res.status })
         }
-        const rows = Array.isArray(body.data) ? body.data : body
-        const normalized = rows.map((r: any) => {
-            const currency = r.currency
-                ? { id: toStringSafe(r.currency.id), name: toStringSafe(r.currency.name), code: toStringSafe(r.currency.code), symbol: toStringSafe(r.currency.symbol) }
-                : null
-            return {
-                id: toStringSafe(r.id),
-                name: toStringSafe(r.name),
-                code: toStringSafe(r.code),
-                iso3: toStringSafe(r.iso3),
-                phoneCode: toStringSafe(r.phoneCode),
-                flag: toStringSafe(r.flag),
-                isActive: parseBoolish(r.isActive),
-                sortOrder: Number(r.sortOrder ?? 0),
-                currency,
-            }
-        }).sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name))
-        return NextResponse.json({ data: normalized })
-    } catch {
-        return NextResponse.json({ message: "Error while fetching countries." }, { status: 500 })
+
+        const json = await res.json()
+        const rows = Array.isArray(json.data) ? json.data : []
+
+        const data: Country[] = rows
+            .map(mapper)
+            .sort((a: Country, b: Country) => a.name.localeCompare(b.name))
+
+        return NextResponse.json({ data })
+
+    } catch (error: any) {
+        const isTimeout = error.name === 'AbortError'
+        return NextResponse.json(
+            { message: isTimeout ? "Request timed out" : "Internal Server Error" },
+            { status: isTimeout ? 504 : 500 }
+        )
     }
 }

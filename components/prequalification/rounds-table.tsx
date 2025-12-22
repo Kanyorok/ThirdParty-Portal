@@ -3,35 +3,28 @@
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
-import { ChevronLeft, ChevronRight, FilePlus2, Lock } from "lucide-react"
+import { ChevronLeft, ChevronRight, FilePlus2, Lock, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/common/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
 import { Separator } from "@/components/common/separator"
+import { Checkbox } from "@/components/common/checkbox"
 import StatusBadge from "./status-badge"
 import ApplicationForm from "./application-form"
 import CategoryApplications from "./category-applications"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { Round } from "@/types/types"
+import { cn } from "@/lib/utils"
 
 function formatDateRange(start: string, end: string) {
-    return `${format(new Date(start), "MMM d, yyyy")} — ${format(new Date(end), "MMM d, yyyy")}`
-}
-
-function toTime(value?: string): number | null {
-    if (!value) return null
-    const t = new Date(value).getTime()
-    return Number.isFinite(t) ? t : null
-}
-
-function rangesOverlap(aStart?: string, aEnd?: string, bStart?: string, bEnd?: string): boolean {
-    const as = toTime(aStart)
-    const ae = toTime(aEnd)
-    const bs = toTime(bStart)
-    const be = toTime(bEnd)
-    if (as == null || ae == null || bs == null || be == null) return false
-    // Overlap if max(start) <= min(end)
-    return Math.max(as, bs) <= Math.min(ae, be)
+    return (
+        <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] font-bold uppercase text-muted-foreground/50 leading-none">Window</span>
+            <span className="text-xs font-bold tabular-nums">
+                {format(new Date(start), "MMM d")} — {format(new Date(end), "MMM d, yyyy")}
+            </span>
+        </div>
+    )
 }
 
 export default function RoundsTable({
@@ -56,252 +49,180 @@ export default function RoundsTable({
     const router = useRouter()
     const [openRoundId, setOpenRoundId] = useState<string | null>(null)
     const [appliedRoundIds, setAppliedRoundIds] = useState<Set<string>>(new Set())
-    // Removed submittingRoundId because we now always open the full application form (categories required)
     const [hideApplied, setHideApplied] = useState(false)
 
     const columns = useMemo(
-    () => [
+        () => [
             {
                 key: "title",
-                label: "Round Name",
-                render: (r: Round) => <span className="font-medium">{r.title}</span>,
-            },
-            {
-                key: "status",
-                label: "Round Status",
-                render: (r: Round) => {
-                    const value = typeof r.status === 'object' ? r.status.value : r.status
-                    const code: 'O' | 'CL' = value === 'O' ? 'O' : 'CL'
-                    return <StatusBadge status={code} />
-                },
+                label: "Round Details",
+                render: (r: Round) => (
+                    <div className="flex flex-col gap-1">
+                        <span className="text-xs font-black uppercase tracking-tight leading-tight">{r.title}</span>
+                        <div className="flex items-center gap-2">
+                            <StatusBadge status={typeof r.status === 'object' ? (r.status.value as any) : (r.status as any)} />
+                        </div>
+                    </div>
+                ),
             },
             {
                 key: "window",
-                label: "Application Window",
+                label: "Timeline",
                 render: (r: Round) => formatDateRange(r.startDate, r.endDate),
             },
             {
                 key: 'categories',
-                label: 'Category Applications',
-                render: (r: Round) => {
-                    return <CategoryApplications round={r} className="justify-start" />
-                }
+                label: 'Status/Progress',
+                render: (r: Round) => <CategoryApplications round={r} className="justify-start scale-90 origin-left" />
             },
             {
                 key: "actions",
-                label: "Actions",
+                label: "Action",
                 align: "right" as const,
                 render: (r: Round) => {
-                    // Check if user has applied to any category in this round
                     const appliedCategories = r.categories?.filter(cat => cat.has_applied) || [];
                     const hasAnyApplication = appliedCategories.length > 0 || appliedRoundIds.has(r.id);
-
-                    // New backend-aligned flags
                     const supplierEligible = r.supplierEligible === false ? false : (r.supplierEligible ?? true);
                     const isClosed = Boolean(r.isClosed);
                     const isExpired = Boolean(r.isExpired);
                     const windowOpen = r.windowOpen !== undefined ? Boolean(r.windowOpen) : true;
                     const isFutureWindow = Boolean(r.isFutureWindow);
                     const duplicateWithinRange = Boolean(r.duplicateWithinRange);
-                    const primaryWindowRoundTitle = r.primaryWindowRoundTitle as string | undefined;
-
-                    // Check if there are any categories available to apply to
                     const availableCategories = r.categories?.filter(cat => !cat.has_applied) || [];
                     const canApplyToMore = availableCategories.length > 0;
-
-                    // Prefer backend decision if provided (now authoritative)
                     const backendCanApply = r.canApply !== undefined ? Boolean(r.canApply) : undefined;
                     const effectiveCanApply = backendCanApply !== undefined ? backendCanApply : true;
 
-                    // Supplier-based lock: Not Eligible
                     if (!supplierEligible) {
                         return (
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={'Supplier profile not approved or not a supplier'}>
-                                <Lock className="h-3 w-3 mr-1" />
-                                Not Eligible
-                            </span>
+                            <div className="flex items-center justify-end gap-1.5 text-[10px] font-black uppercase text-muted-foreground/40">
+                                <Lock className="h-3 w-3" />
+                                <span>Ineligible</span>
+                            </div>
                         )
                     }
 
-                    // Not Applicable cases: future window, duplicate window, owner-created
                     if (isExpired || isClosed || !windowOpen || isFutureWindow || duplicateWithinRange || !effectiveCanApply) {
                         return (
-                <div className="flex flex-col items-end gap-1">
-                                <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={
-                                    isExpired ? 'Round expired' : isClosed ? 'Applications are closed for this round' : !windowOpen ? 'Application window is not active' : isFutureWindow ? 'Round not started yet' : duplicateWithinRange ? 'Another round covers this window' : 'Not applicable'
-                                }>
-                                    <Lock className="h-3 w-3 mr-1" />
-                    {isExpired ? 'Expired' : isClosed ? 'Closed' : !windowOpen ? 'Window Closed' : 'Not Applicable'}
-                                </span>
-                                {duplicateWithinRange && primaryWindowRoundTitle ? (
-                                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" title={`Use this round: ${primaryWindowRoundTitle}`}>
-                                        Use this Round Name: {primaryWindowRoundTitle}
-                                    </span>
-                                ) : null}
+                            <div className="flex items-center justify-end gap-1.5 text-[10px] font-black uppercase text-muted-foreground/40">
+                                <Lock className="h-3 w-3" />
+                                <span>{isExpired ? 'Expired' : isClosed ? 'Closed' : 'Locked'}</span>
                             </div>
                         )
                     }
 
                     if (effectiveCanApply && hasAnyApplication && !canApplyToMore) {
                         return (
-                            <span
-                                title={`Applied to all categories (${appliedCategories.length})`}
-                                aria-label={`Applied to all available categories`}
-                                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
-                                All Applied
-                            </span>
-                        )
-                    }
-                    
-                    if (effectiveCanApply && hasAnyApplication && canApplyToMore) {
-                        return (
-                            <div className="flex flex-col gap-1">
-                                <span className="text-xs text-green-600 font-medium">
-                                    {appliedCategories.length} applied
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 text-xs"
-                                    onClick={() => setOpenRoundId(r.id)}
-                                    disabled={!accessToken}
-                                    title={`Apply to ${availableCategories.length} more categories`}
-                                >
-                                    <FilePlus2 className="h-3 w-3 mr-1" />
-                                    Apply More
-                                </Button>
+                            <div className="flex items-center justify-end gap-1.5 text-[10px] font-black uppercase text-primary">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span>Complete</span>
                             </div>
                         )
                     }
-                    
-                    // Otherwise allow new application
+
                     return (
                         <Button
-                            type="button"
-                            variant="outline"
+                            variant={hasAnyApplication ? "secondary" : "default"}
                             size="sm"
-                            className="gap-2"
-                            aria-haspopup="dialog"
+                            className={cn(
+                                "h-8 px-4 text-[10px] font-black uppercase tracking-widest transition-all",
+                                !hasAnyApplication && "bg-primary hover:bg-primary/90 shadow-sm"
+                            )}
                             onClick={() => {
                                 if (!accessToken) {
-                                    toast.error('You must be signed in to apply.')
+                                    toast.error('Sign in required')
                                     return
                                 }
                                 setOpenRoundId(r.id)
                             }}
                         >
-                            <FilePlus2 className="h-4 w-4" />
-                            Apply
+                            <FilePlus2 className="mr-1.5 h-3 w-3" />
+                            {hasAnyApplication ? "Add More" : "Apply"}
                         </Button>
                     )
                 },
             },
         ],
-    [appliedRoundIds, accessToken]
+        [appliedRoundIds, accessToken]
     )
 
     const visibleRounds = hideApplied ? rounds.filter(r => !(Boolean(r.hasApplied) || appliedRoundIds.has(r.id))) : rounds
 
     return (
-        <>
-        <div className="overflow-hidden rounded-b-xl">
-            <div className="flex items-center justify-end gap-3 p-3">
-                <label className="flex items-center gap-2 text-xs font-medium cursor-pointer select-none">
-                    <input type="checkbox" className="accent-emerald-600" checked={hideApplied} onChange={e => setHideApplied(e.target.checked)} />
-                    Hide applied
+        <div className="w-full">
+            <div className="flex items-center justify-end gap-2 bg-muted/20 px-6 py-3 border-y border-muted/50">
+                <Checkbox
+                    id="hide-applied"
+                    checked={hideApplied}
+                    onCheckedChange={(v) => setHideApplied(!!v)}
+                    className="h-3.5 w-3.5 border-2"
+                />
+                <label htmlFor="hide-applied" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 cursor-pointer">
+                    Hide applied rounds
                 </label>
             </div>
-            <div className="overflow-x-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
+
+            <Table>
+                <TableHeader className="bg-muted/10">
+                    <TableRow className="hover:bg-transparent border-none">
+                        {columns.map((c) => (
+                            <TableHead key={c.key} className={cn(
+                                "h-10 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-6",
+                                c.align === "right" && "text-right"
+                            )}>
+                                {c.label}
+                            </TableHead>
+                        ))}
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {visibleRounds.map((r) => (
+                        <TableRow key={r.id} className="group border-muted/40 hover:bg-muted/5 transition-colors">
                             {columns.map((c) => (
-                                <TableHead
-                                    key={c.key}
-                                    className={c.align === "right" ? "text-right" : undefined}
-                                >
-                                    {c.label}
-                                </TableHead>
+                                <TableCell key={c.key} className={cn(
+                                    "py-4 px-6",
+                                    c.align === "right" && "text-right"
+                                )}>
+                                    {c.render(r)}
+                                </TableCell>
                             ))}
                         </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {visibleRounds.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="py-10 text-center text-muted-foreground">
-                                    {hideApplied ? 'No unapplied rounds.' : 'No rounds match your filters.'}
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            visibleRounds.map((r) => (
-                                <TableRow key={r.id}>
-                                    {columns.map((c) => (
-                                        <TableCell
-                                            key={c.key}
-                                            className={c.align === "right" ? "text-right" : undefined}
-                                        >
-                                            {c.render(r)}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                    ))}
+                </TableBody>
+            </Table>
 
-            <Separator />
-
-            <div className="flex items-center justify-between p-3 text-sm text-muted-foreground">
-                <div>
-                    Page {page} of {totalPages} • {total.toLocaleString()} total
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        disabled={page <= 1}
-                    >
+            <div className="flex items-center justify-between px-6 py-4 border-t-2 border-muted bg-muted/5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                    Page {page} <span className="mx-1 text-muted-foreground/20">/</span> {totalPages}
+                </p>
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-tighter" disabled={page <= 1} asChild>
                         <a href={`?page=${Math.max(1, page - 1)}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`}>
-                            <ChevronLeft className="mr-2 h-4 w-4" />
-                            Previous
+                            <ChevronLeft className="mr-1 h-3 w-3" /> Prev
                         </a>
                     </Button>
-                    <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        disabled={page >= totalPages}
-                    >
+                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-tighter" disabled={page >= totalPages} asChild>
                         <a href={`?page=${Math.min(totalPages, page + 1)}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`}>
-                            Next
-                            <ChevronRight className="ml-2 h-4 w-4" />
+                            Next <ChevronRight className="ml-1 h-3 w-3" />
                         </a>
                     </Button>
                 </div>
             </div>
+
+            {openRoundId && (
+                <ApplicationForm
+                    open={true}
+                    defaultRoundId={openRoundId}
+                    onOpenChange={(o) => { if (!o) setOpenRoundId(null) }}
+                    onSuccess={({ roundId }) => {
+                        setAppliedRoundIds(prev => new Set(prev).add(roundId))
+                        router.refresh()
+                        setOpenRoundId(null)
+                    }}
+                >
+                    <span className="hidden" />
+                </ApplicationForm>
+            )}
         </div>
-        {openRoundId ? (
-            <ApplicationForm
-                open={true}
-                defaultRoundId={openRoundId || undefined}
-                onOpenChange={(o) => { if (!o) setOpenRoundId(null) }}
-                onSuccess={({ roundId, applicationId }) => {
-                    setAppliedRoundIds(prev => {
-                        const next = new Set(prev)
-                        next.add(roundId)
-                        return next
-                    })
-                    toast.success('Application submitted', { description: applicationId ? `Reference: ${applicationId}` : undefined })
-                    // Refresh server-rendered rounds to update applied counts and categories
-                    try { router.refresh() } catch {}
-                    setOpenRoundId(null)
-                }}
-            >
-                <span />
-            </ApplicationForm>
-        ) : null}
-        </>
     )
 }

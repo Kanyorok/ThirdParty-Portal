@@ -1,778 +1,259 @@
-"use client"
-/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/common/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/common/card";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
 import {
-    Loader2,
-    Info,
-    CheckCircle,
-    Calendar,
-    Clock,
-    Building,
-    DollarSign,
-    Users,
-    Shield,
-    FileText,
-    ChevronRight,
-    Search as SearchIcon,
-    XCircle,
-    AlertTriangle,
-    Send
+    Search, Loader2, SlidersHorizontal, ArrowUpRight,
+    Inbox, X, Hash, Calendar, Shield
 } from "lucide-react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
-import { format, isPast, differenceInDays } from 'date-fns';
-import { cn } from "@/lib/utils";
+
 import { Input } from "@/components/common/input";
+import { Button } from "@/components/common/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select";
-import { Separator } from '@/components/common/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table";
+import { Badge } from "@/components/common/badge";
 import TenderDetailModal from "./tenders/tender-detail-modal";
 import { getBaseUrl } from "@/lib/api-base";
 
-interface Tender {
-    id: number;              // Database Id (t_Tenders.Id)
-    tenderNo: string;        // Display number (t_Tenders.TenderNo)
-    title: string;
-    tenderType: string;
-    tenderCategory: string;
-    scopeOfWork: string;
-    instructions: string;
-    submissionDeadline: string;
-    openingDate: string;
-    status: string;
-    procurementModeId: number | null;
-    estimatedValue?: string | null;
-    itemCategoryId: number;
-    currencyId: string;
-    createdBy: string | null;
-    createdOn: string;
-    modifiedBy: string | null;
-    modifiedOn: string;
-    deletedBy: string | null;
-    deletedOn: string | null;
-    relatedPRID?: number | null;
-    approvalRemarks: string | null;
-    approvalStatus: number;
-    procurementMode?: {
-        id: number;
-        name: string;
-    } | null;
-    currency?: {
-        id: number;
-        name: string;
-        code: string;
-        symbol: string;
-        symbolNative: string;
-        decimalDigits: number;
-        rounding: number;
-        createdOn: string;
-        modifiedOn: string;
-        deletedOn: string | null;
-    } | null;
-    tenderCategoryRelation?: {
-        id: number;
-        categoryCode: string;
-        tenderCategory: string;
-        description: string;
-        createdBy: string | null;
-        createdOn: string;
-        modifiedBy: string | null;
-        modifiedOn: string;
-        deletedBy: string | null;
-        deletedOn: string | null;
-    };
-    itemCategoryRelation?: {
-        id: number;
-        name: string;
-        description: string;
-        parentId: number | null;
-        createdBy: number | null;
-        createdOn: string;
-        modifiedBy: number | null;
-        modifiedOn: string;
-        deletedBy: string | null;
-        deletedOn: string | null;
-        categoryCode: string;
-        status: string;
-    };
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
 }
 
-interface TenderInvitation {
-    InvitationID?: number;
-    invitationID?: number;   // Laravel lowercase version
-    TenderId?: number;       // Database Id (t_Tenders.Id) - uppercase
-    tenderId?: number;       // Laravel lowercase version
-    SupplierId?: number;
-    supplierId?: number | string; // Laravel lowercase version
-    ResponseStatus?: 'pending' | 'accepted' | 'declined' | 'submitted';
-    responseStatus?: 'pending' | 'accepted' | 'declined' | 'submitted'; // Laravel lowercase
-    ResponseDate?: string;
-    responseDate?: string;   // Laravel lowercase version
-    DeclineReason?: string;
-    declineReason?: string;  // Laravel lowercase version
-    InvitationDate: string;
-    invitationDate?: string; // Laravel lowercase version
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-interface TenderWithInvitation extends Tender {
-    invitation?: TenderInvitation;
-}
-
-const API_ROOT = `${getBaseUrl()}/api`;
-
-const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.08,
-            delayChildren: 0.1
-        }
+function pick(obj: Record<string, unknown>, keys: readonly string[]): unknown {
+    for (const k of keys) {
+        const v = obj[k];
+        if (v !== undefined && v !== null && v !== "") return v;
     }
-};
-
-const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30, scale: 0.9 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        transition: {
-            type: "spring",
-            stiffness: 120,
-            damping: 18
-        }
-    }
-};
-
-const headerVariants: Variants = {
-    hidden: { opacity: 0, y: -30 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            type: "spring",
-            stiffness: 150,
-            damping: 25
-        }
-    }
-};
-
-function TenderCard({ 
-    tender, 
-    index, 
-    onViewDetails 
-}: { 
-    tender: TenderWithInvitation; 
-    index: number;
-    onViewDetails: (tender: TenderWithInvitation) => void;
-}) {
-    const submissionDeadlineDate = tender.submissionDeadline ? new Date(tender.submissionDeadline) : null;
-    const isValidDeadlineDate = submissionDeadlineDate && !isNaN(submissionDeadlineDate.getTime());
-
-    const deadlinePassed = isValidDeadlineDate ? isPast(submissionDeadlineDate) : false;
-    const daysUntilDeadline = isValidDeadlineDate ? differenceInDays(submissionDeadlineDate, new Date()) : null;
-    const isImminent = isValidDeadlineDate && !deadlinePassed && daysUntilDeadline !== null && daysUntilDeadline <= 7 && daysUntilDeadline >= 0;
-
-    const getStatusBadgeColor = (status: string) => {
-        switch (status) {
-            case 'dr': return 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'; // Draft
-            case 'pb': return 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'; // Published/Open
-            case 'cl': return 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'; // Closed/Cancelled
-            default: return 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-        }
-    };
-
-    const getTenderTypeDisplayName = (typeCode: string): string => {
-        switch (typeCode) {
-            case 'op': return 'Open Tender';
-            case 'rs': return 'Restricted Tender';
-            default: return typeCode;
-        }
-    };
-
-    const getInvitationStatusColor = (status: string) => {
-        switch (status) {
-            case 'accepted': return 'border-green-200 bg-green-50 text-green-700';
-            case 'declined': return 'border-red-200 bg-red-50 text-red-700';
-            case 'submitted': return 'border-blue-200 bg-blue-50 text-blue-700';
-            case 'pending': return 'border-yellow-200 bg-yellow-50 text-yellow-700';
-            default: return 'border-gray-200 bg-gray-50 text-gray-700';
-        }
-    };
-
-    const getInvitationStatusIcon = (status: string) => {
-        switch (status) {
-            case 'accepted': return <CheckCircle className="h-3 w-3" />;
-            case 'declined': return <XCircle className="h-3 w-3" />;
-            case 'submitted': return <Send className="h-3 w-3" />;
-            case 'pending': return <AlertTriangle className="h-3 w-3" />;
-            default: return <Clock className="h-3 w-3" />;
-        }
-    };
-
-    return (
-        <motion.div
-            key={tender.id ? String(tender.id) : `tender-${index}`}
-            variants={itemVariants}
-            layout
-        >
-            <Card className="h-full bg-white dark:bg-black border border-gray-200 dark:border-gray-700 transition-all duration-300 rounded-2xl overflow-hidden relative group">
-                <div className={cn(
-                    "absolute top-0 right-0 text-xs font-bold px-4 py-2 rounded-bl-xl flex items-center gap-1 z-10",
-                    getStatusBadgeColor(tender.status)
-                )}>
-                    <CheckCircle className="h-3 w-3 text-gray-500 dark:text-gray-400" />
-                    {tender.status === 'pb' ? 'Open' : tender.status === 'cl' ? 'Closed' : 'Draft'}
-                </div>
-
-                <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-50 mb-2 line-clamp-2 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
-                                {tender.title}
-                            </h3>
-                            <Separator className="mb-3" />
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Tender No: {tender.tenderNo}</p>
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-                                    <Building className="h-3 w-3 mr-1 inline-block text-gray-600 dark:text-gray-400" /> {tender.tenderCategoryRelation?.tenderCategory || 'N/A'}
-                                </span>
-                                <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-                                    <Shield className="h-3 w-3 mr-1 inline-block text-gray-600 dark:text-gray-400" /> {getTenderTypeDisplayName(tender.tenderType)}
-                                </span>
-                                {tender.invitation && (
-                                    <span className={cn("text-xs px-2.5 py-1 rounded-full flex items-center border", getInvitationStatusColor(tender.invitation.ResponseStatus || tender.invitation.responseStatus || 'pending'))}>
-                                        {getInvitationStatusIcon(tender.invitation.ResponseStatus || tender.invitation.responseStatus || 'pending')}
-                                        <span className="ml-1 font-medium capitalize">
-                                            {tender.invitation.ResponseStatus || tender.invitation.responseStatus || 'pending'}
-                                        </span>
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <Separator className="mb-3" />
-
-                    {tender.scopeOfWork && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                            {tender.scopeOfWork}
-                        </p>
-                    )}
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                    <div className={cn(
-                        "flex items-center gap-2 text-sm p-3 rounded-xl border",
-                        deadlinePassed ? "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700" :
-                            isImminent ? "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700" :
-                                "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700"
-                    )}>
-                        {deadlinePassed ? <Info className="h-4 w-4 text-gray-600 dark:text-gray-400" /> :
-                            isImminent ? <Clock className="h-4 w-4 animate-pulse text-gray-900 dark:text-gray-100" /> :
-                                <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />}
-                        <div className="flex-1">
-                            <p className="font-medium">
-                                Submission Deadline: {isValidDeadlineDate ? format(submissionDeadlineDate, 'MMM d, yyyy') : 'N/A'}
-                            </p>
-                            <p className="text-xs opacity-75">
-                                {deadlinePassed ? "Deadline passed" :
-                                    isValidDeadlineDate && daysUntilDeadline !== null ? `${daysUntilDeadline} days ${daysUntilDeadline >= 0 ? 'remaining' : 'past'}` :
-                                        'Date N/A'}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        {tender.estimatedValue && (
-                            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl flex items-center gap-2 border border-gray-200 dark:border-gray-700">
-                                <DollarSign className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
-                                <div>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-0.5">Est. Value</p>
-                                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{tender.currency?.symbol || '$'}{tender.estimatedValue}</p>
-                                </div>
-                            </div>
-                        )}
-                        {tender.procurementModeId && (
-                            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl flex items-center gap-2 border border-gray-200 dark:border-gray-700">
-                                <Users className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
-                                <div>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-0.5">Proc. Mode</p>
-                                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{tender.procurementMode?.name || 'N/A'}</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </CardContent>
-
-                <CardFooter className="pt-2">
-                    <Button
-                        onClick={() => onViewDetails(tender)}
-                        className="w-full rounded-xl font-medium transition-all hover:scale-[1.01] text-base py-3 bg-gray-900 hover:bg-gray-700 text-white dark:bg-gray-100 dark:hover:bg-gray-300 dark:text-gray-900"
-                        size="lg"
-                    >
-                        View Details
-                        <ChevronRight className="h-4 w-4 ml-2" />
-                    </Button>
-                </CardFooter>
-            </Card>
-        </motion.div>
-    );
+    return undefined;
 }
 
-export default function TendersPage() {
-    const [isLoading, setIsLoading] = useState(true);
-    const [tenders, setTenders] = useState<TenderWithInvitation[]>([]);
-    const [, setInvitations] = useState<TenderInvitation[]>([]);
-    const [searchQuery, setSearchQuery] = useState<string>('');
-    const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
-    const [selectedTenderTypeFilter, setSelectedTenderTypeFilter] = useState<string>('all');
+export default function TendersFilter() {
+    const [searchTerm, setSearchTerm] = useState("");
+    const [status, setStatus] = useState("all");
+    const [isSearching, setIsSearching] = useState(false);
+    const [tenders, setTenders] = useState<unknown[] | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [selectedTender, setSelectedTender] = useState<TenderWithInvitation | null>(null);
+
+    const [selectedTender, setSelectedTender] = useState<any | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const fetchTenders = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+    const fetchTenders = async (signal?: AbortSignal) => {
         try {
-            // Build query parameters
-            const queryParams = new URLSearchParams();
-
-            if (searchQuery) {
-                queryParams.append('search', searchQuery);
+            setIsSearching(true);
+            setError(null);
+            const params = new URLSearchParams();
+            if (debouncedSearchTerm) params.set("search", debouncedSearchTerm);
+            if (status && status !== "all") {
+                const map: Record<string, string> = { ongoing: "pb", drafts: "dr", closed: "cl" };
+                params.set("status", map[status] || status);
             }
 
-            if (selectedStatusFilter !== 'all') {
-                let apiStatus = '';
-                if (selectedStatusFilter === 'open') apiStatus = 'pb';
-                else if (selectedStatusFilter === 'drafts') apiStatus = 'dr';
-                else if (selectedStatusFilter === 'cancelled') apiStatus = 'cl';
-                if (apiStatus) {
-                    queryParams.append('status', apiStatus);
-                }
+            const url = `${getBaseUrl()}/api/tenders${params.toString() ? `?${params.toString()}` : ""}`;
+            const res = await fetch(url, { signal, headers: { Accept: "application/json" } });
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) throw new Error(data?.message || "Failed to load tenders");
+
+            let list: unknown[] = [];
+            if (isRecord(data) && Array.isArray(data["data"])) {
+                list = data["data"] as unknown[];
+            } else if (Array.isArray(data)) {
+                list = data as unknown[];
             }
-
-            if (selectedTenderTypeFilter !== 'all') {
-                let apiTenderType = '';
-                if (selectedTenderTypeFilter === 'open-to-all') apiTenderType = 'op';
-                else if (selectedTenderTypeFilter === 'restricted') apiTenderType = 'rs';
-                if (apiTenderType) {
-                    queryParams.append('tenderType', apiTenderType);
-                }
-            }
-
-            // Build the final URL string
-            const tenderUrl = `${API_ROOT}/tenders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-
-            // Fetch both tenders and invitations simultaneously
-            const [tendersResponse, invitationsResponse] = await Promise.allSettled([
-                fetch(tenderUrl, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    }
-                }),
-                fetch('/api/tender-invitations', {
-                headers: {
-                    'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    }
-                })
-            ]);
-
-            // Handle tenders response
-            let tendersData: Tender[] = [];
-            if (tendersResponse.status === 'fulfilled' && tendersResponse.value.ok) {
-                const data = await tendersResponse.value.json();
-                tendersData = data.data || [];
-                
-                // Show a notice if using fallback data
-                if (data.fallback) {
-                    console.info('Using mock tender data - external API not available');
-                }
-            } else if (tendersResponse.status === 'fulfilled') {
-                try {
-                    const errorData = await tendersResponse.value.json();
-                    throw new Error(errorData.message || `HTTP error! status: ${tendersResponse.value.status}`);
-                } catch {
-                    throw new Error(`HTTP error! status: ${tendersResponse.value.status}`);
-                }
-            } else {
-                throw new Error('Network error: Could not fetch tenders');
-            }
-
-            // Handle invitations response (non-critical - don't fail if invitations can't be loaded)
-            let invitationsData: TenderInvitation[] = [];
-            let invitedTenderObjects: any[] = [];
-            if (invitationsResponse.status === 'fulfilled' && invitationsResponse.value.ok) {
-                const invData = await invitationsResponse.value.json().catch(() => null);
-
-                // Normalize to an array of invitation-like objects
-                let items: any[] = [];
-                if (Array.isArray(invData?.data)) items = invData.data as any[];
-                else if (Array.isArray(invData)) items = invData as any[];
-
-                if (items.length === 0) {
-                    invitationsData = [];
-                    invitedTenderObjects = [];
-                } else if (items[0]?.invitation) {
-                    invitationsData = items.map((item: any) => item.invitation);
-                    invitedTenderObjects = items.map((item: any) => item.tender).filter((t: any) => !!t);
-                } else if (items[0]?.TenderId != null || items[0]?.tenderId != null) {
-                    invitationsData = items as any[] as TenderInvitation[];
-                    invitedTenderObjects = [];
-                } else {
-                    if (process.env.NODE_ENV !== 'production') {
-                        console.info('Invitation response shape not recognized; ignoring. Example item:', items[0]);
-                    }
-                    invitationsData = [];
-                    invitedTenderObjects = [];
-                }
-
-                setInvitations(invitationsData);
-
-                // Show a notice if using fallback data
-                if ((invData as any)?.fallback) {
-                    console.info('Using mock tender invitation data - external API not available');
-                }
-            } else {
-                // Log invitation fetch error but don't fail the whole operation
-                if (process.env.NODE_ENV !== 'production') {
-                    console.warn("Failed to fetch tender invitations:", invitationsResponse);
-                }
-            }
-
-            // Union: ensure invited restricted tenders are present even if backend /api/tenders omitted them
-            try {
-                const existingIds = new Set(tendersData.map(t => parseInt(t.id.toString())));
-                const invitedTenders = (invitedTenderObjects || [])
-                    .filter((t: any) => t && t.id != null);
-
-                for (const invTender of invitedTenders) {
-                    const tid = parseInt(invTender.id.toString());
-                    if (!existingIds.has(tid)) {
-                        // Normalize minimal shape to Tender interface fields if missing
-                        const normalized: Tender = {
-                            id: tid,
-                            tenderNo: invTender.tenderNo ?? invTender.TenderNo ?? '',
-                            title: invTender.title ?? invTender.Title ?? '',
-                            tenderType: invTender.tenderType ?? invTender.TenderType ?? 'rs',
-                            tenderCategory: invTender.tenderCategory ?? invTender.TenderCategory ?? '',
-                            scopeOfWork: invTender.scopeOfWork ?? invTender.ScopeOfWork ?? '',
-                            instructions: invTender.instructions ?? invTender.Instructions ?? '',
-                            submissionDeadline: invTender.submissionDeadline ?? invTender.SubmissionDeadline ?? '',
-                            openingDate: invTender.openingDate ?? invTender.OpeningDate ?? '',
-                            status: invTender.status ?? invTender.Status ?? 'pb',
-                            procurementModeId: invTender.procurementModeId ?? invTender.ProcurementModeId ?? null,
-                            estimatedValue: invTender.estimatedValue ?? invTender.EstimatedValue ?? null,
-                            itemCategoryId: invTender.itemCategoryId ?? invTender.ItemCategoryId ?? 0,
-                            currencyId: invTender.currencyId ?? invTender.CurrencyId ?? '',
-                            createdBy: invTender.createdBy ?? invTender.CreatedBy ?? null,
-                            createdOn: invTender.createdOn ?? invTender.CreatedOn ?? '',
-                            modifiedBy: invTender.modifiedBy ?? invTender.ModifiedBy ?? null,
-                            modifiedOn: invTender.modifiedOn ?? invTender.ModifiedOn ?? '',
-                            deletedBy: invTender.deletedBy ?? invTender.DeletedBy ?? null,
-                            deletedOn: invTender.deletedOn ?? invTender.DeletedOn ?? null,
-                            relatedPRID: invTender.relatedPRID ?? invTender.RelatedPRID ?? null,
-                            approvalRemarks: invTender.approvalRemarks ?? invTender.ApprovalRemarks ?? null,
-                            approvalStatus: invTender.approvalStatus ?? invTender.ApprovalStatus ?? 0,
-                            procurementMode: undefined,
-                            currency: undefined,
-                            tenderCategoryRelation: undefined,
-                            itemCategoryRelation: undefined,
-                        };
-                        tendersData.push(normalized);
-                        existingIds.add(tid);
-                    }
-                }
-            } catch (e) {
-                if (process.env.NODE_ENV !== 'production') {
-                    console.warn('Union with invited tenders failed:', e);
-                }
-            }
-
-            // Merge tenders with invitations
-            const tendersWithInvitations: TenderWithInvitation[] = tendersData.map(tender => {
-                const invitation = invitationsData.find(inv => {
-                    // Support both Laravel field naming conventions
-                    const tenderId = inv?.TenderId || inv?.tenderId;
-                    
-                    if (!inv || tenderId == null || tender.id == null) {
-                        return false;
-                    }
-                    
-                    // Convert both to integers for proper comparison
-                    const tenderDbId = parseInt(tender.id.toString());
-                    const invitationTenderId = parseInt(tenderId.toString());
-                    
-                    return tenderDbId === invitationTenderId;
-                });
-                
-                return {
-                    ...tender,
-                    invitation
-                };
-            });
-
-            setTenders(tendersWithInvitations);
-        } catch (err: any) {
-            console.error("Failed to fetch tenders:", err);
-            setError(err.message || "An unexpected error occurred.");
+            setTenders(list);
+        } catch (e: any) {
+            if (e.name === "AbortError") return;
+            setError(e.message || "Unable to load tenders");
             setTenders([]);
         } finally {
-            setIsLoading(false);
+            setIsSearching(false);
         }
-    }, [searchQuery, selectedStatusFilter, selectedTenderTypeFilter]);
+    };
 
     useEffect(() => {
-        fetchTenders();
-    }, [fetchTenders]);
+        const controller = new AbortController();
+        fetchTenders(controller.signal);
+        return () => controller.abort();
+    }, [debouncedSearchTerm, status]);
 
-    const handleSearch = () => {
-        fetchTenders();
-    };
-
-    const handleClearFilters = () => {
-        setSearchQuery('');
-        setSelectedStatusFilter('all');
-        setSelectedTenderTypeFilter('all');
-    };
-
-    const handleViewDetails = (tender: TenderWithInvitation) => {
+    const handleOpenTender = (tender: any) => {
         setSelectedTender(tender);
         setIsModalOpen(true);
     };
 
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setSelectedTender(null);
-    };
-
-    const handleInvitationUpdate = () => {
-        // Refresh the data when invitation status changes
-        fetchTenders();
-    };
-
-    const statusOptions = [
-        { value: 'all', label: 'All Statuses' },
-        { value: 'open', label: 'Ongoing' },
-        { value: 'drafts', label: 'Drafts' },
-        { value: 'cancelled', label: 'Cancelled' },
-    ];
-
-    const tenderTypeOptions = [
-        { value: 'all', label: 'All Types' },
-        { value: 'open-to-all', label: 'Open to All' },
-        { value: 'restricted', label: 'Direct Invites' },
-    ];
-
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-50">
-            <div className="container mx-auto px-4 py-8 md:py-12">
-                <div className="mb-8 text-sm text-gray-500 dark:text-gray-400">
-                    Dashboard <ChevronRight className="inline-block h-3 w-3 mx-1" /> <span className="font-semibold text-gray-700 dark:text-gray-200">Tenders</span>
+        <div className="w-full space-y-10 py-4">
+            <header className="flex items-center justify-between px-1">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2.5">
+                        <div className="h-8 w-1 bg-primary rounded-full" />
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">Tenders</h2>
+                    </div>
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-[0.15em] ml-3.5">
+                        Procurement | Opportunities
+                    </p>
                 </div>
 
-                <motion.div
-                    variants={headerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="mb-12"
-                >
-                    <div className="mb-4">
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                            Tenders
-                        </h1>
-                    </div>
-                    
-                    {/* Debug UI removed for production cleanliness */}
-
-                    <div className="bg-gray-50 dark:bg-gray-950 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Filter Tenders</h2>
-                        <div className="flex flex-col md:flex-row gap-4 items-center">
-                            <div className="relative flex-1 w-full">
-                                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-600" />
-                                <Input
-                                    type="text"
-                                    placeholder="Search by title or tender number..."
-                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyUp={(e) => {
-                                        if (e.key === 'Enter') {
-                                            handleSearch();
-                                        }
-                                    }}
-                                />
-                            </div>
-                            <Select value={selectedStatusFilter} onValueChange={setSelectedStatusFilter}>
-                                <SelectTrigger className="w-full md:w-[200px] px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all">
-                                    <SelectValue placeholder="All Statuses" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-50">
-                                    {statusOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Select value={selectedTenderTypeFilter} onValueChange={setSelectedTenderTypeFilter}>
-                                <SelectTrigger className="w-full md:w-[200px] px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all">
-                                    <SelectValue placeholder="All Types" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-50">
-                                    {tenderTypeOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Button
-                                onClick={handleSearch}
-                                className="w-full md:w-auto px-6 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300 transition-colors"
-                            >
-                                Search
-                            </Button>
+                <div className="hidden md:flex items-center gap-6 text-sm">
+                    <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none mb-1.5">Published</span>
+                        <div className="flex items-center gap-2">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-lg font-black tracking-tighter tabular-nums">{tenders?.length || 0}</span>
                         </div>
-                        <div className="flex justify-end mt-4">
-                            {(searchQuery || selectedStatusFilter !== 'all' || selectedTenderTypeFilter !== 'all') && (
-                                <Button
-                                    variant="link"
-                                    onClick={handleClearFilters}
-                                    className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 px-0 py-0 h-auto"
-                                >
-                                    Clear filters
-                                </Button>
-                            )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
-                            Showing {tenders.length} results for {statusOptions.find(opt => opt.value === selectedStatusFilter)?.label} tenders
-                            {selectedTenderTypeFilter !== 'all' && ` (${tenderTypeOptions.find(opt => opt.value === selectedTenderTypeFilter)?.label})`}
-                            {searchQuery && ` matching "${searchQuery}"`}
-                        </p>
                     </div>
-                </motion.div>
+                </div>
+            </header>
 
-                <AnimatePresence mode="wait">
-                    {isLoading ? (
-                        <motion.div
-                            key="loading"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center justify-center py-24 bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm"
-                        >
-                            <div className="relative">
-                                <Loader2 className="h-16 w-16 animate-spin text-gray-600 dark:text-gray-400" />
-                                <div className="absolute inset-0 h-16 w-16 border-4 border-gray-300 dark:border-gray-600 rounded-full animate-pulse"></div>
-                            </div>
-                            <p className="text-xl font-medium text-gray-600 dark:text-gray-400 mt-6">
-                                Fetching tenders...
-                            </p>
-                        </motion.div>
-                    ) : error ? (
-                        <motion.div
-                            key="error"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="text-center py-16 bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm text-gray-700 dark:text-gray-300"
-                        >
-                            <Info className="h-12 w-12 mx-auto mb-4 text-gray-600 dark:text-gray-400" />
-                            <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-50">Error Loading Tenders</h3>
-                            <p className="mb-6 text-gray-700 dark:text-gray-300">{error}</p>
-                            <Button
-                                onClick={handleSearch}
-                                variant="outline"
-                                className="px-6 py-3 rounded-xl text-base bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-700"
-                            >
-                                Try Again
-                            </Button>
-                        </motion.div>
-                    ) : tenders.length > 0 ? (
-                        <motion.div
-                            key="tenders-grid"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-                        >
-                            {tenders.map((tender, index) => (
-                                <TenderCard 
-                                    key={tender.id || `tender-${index}`} 
-                                    tender={tender} 
-                                    index={index} 
-                                    onViewDetails={handleViewDetails}
-                                />
-                            ))}
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="empty"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="text-center py-16 bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm"
-                        >
-                            <div className="max-w-md mx-auto">
-                                <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <FileText className="h-12 w-12 text-gray-400 dark:text-gray-600" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-2">
-                                    No tenders found
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                                    {selectedStatusFilter === 'all' && selectedTenderTypeFilter === 'all' && !searchQuery
-                                        ? "There are no tender opportunities available at the moment. Please check back later!"
-                                        : "No tenders found matching your current filters. Try adjusting your search or clearing the filters."
-                                    }
-                                </p>
-                                {(selectedStatusFilter !== 'all' || selectedTenderTypeFilter !== 'all' || searchQuery) && (
-                                    <Button
-                                        onClick={handleClearFilters}
-                                        variant="outline"
-                                        className="mt-4 px-6 py-3 rounded-xl text-base hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-50 transition-colors border-gray-300 dark:border-gray-700"
-                                    >
-                                        Clear Filters
-                                    </Button>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+            <div className="flex items-center gap-4 p-1.5 pl-4 rounded-[1.25rem] bg-card border border-border/60 shadow-sm focus-within:border-primary/30 transition-all duration-300">
+                <Search className="h-4 w-4 text-muted-foreground/40" />
+                <Input
+                    placeholder="Search by Number, Title, or Category..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1 border-none shadow-none focus-visible:ring-0 text-[13px] h-10 bg-transparent"
+                />
+
+                <div className="h-6 w-px bg-border/60" />
+
+                <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger className="w-[140px] border-none shadow-none bg-transparent h-10 text-[13px] font-medium focus:ring-0">
+                        <div className="flex items-center gap-2">
+                            <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/60" />
+                            <SelectValue placeholder="All Status" />
+                        </div>
+                    </SelectTrigger>
+                    <SelectContent align="end" className="rounded-xl border-border/60">
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="ongoing">Ongoing</SelectItem>
+                        <SelectItem value="drafts">Drafts</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                {(searchTerm || status !== "all") && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setSearchTerm(""); setStatus("all"); }}
+                        className="h-9 w-9 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-muted"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                )}
             </div>
 
-            {/* Tender Detail Modal */}
+            <div className="relative overflow-hidden">
+                <div className="rounded-[1.5rem] border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+                    <Table>
+                        <TableHeader className="bg-muted/30 border-b border-border/40">
+                            <TableRow className="hover:bg-transparent border-none">
+                                <TableHead className="h-14 pl-8 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">Tender Details</TableHead>
+                                <TableHead className="h-14 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
+                                    <div className="flex items-center gap-1.5"><Hash className="h-3 w-3" /> Tender No</div>
+                                </TableHead>
+                                <TableHead className="h-14 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
+                                    <div className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Deadline</div>
+                                </TableHead>
+                                <TableHead className="h-14 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 text-center">Status</TableHead>
+                                <TableHead className="h-14 text-right pr-8 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <AnimatePresence mode="popLayout">
+                                {tenders?.map((tender) => {
+                                    const obj = isRecord(tender) ? tender : {};
+                                    const id = pick(obj, ["id", "tenderId", "TenderID"]);
+                                    const title = pick(obj, ["title", "name", "TenderTitle"]) ?? "Untitled Tender";
+                                    const ref = pick(obj, ["tenderNo", "reference", "TenderRef"]) ?? "-";
+                                    const deadline = pick(obj, ["submissionDeadline", "closingDate", "deadline"]);
+                                    const rawStatus = String(pick(obj, ["status", "state"]) ?? "").toLowerCase();
+
+                                    return (
+                                        <motion.tr
+                                            key={String(id)}
+                                            initial={{ opacity: 0, y: 5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="group border-border/30 hover:bg-accent/20 transition-all duration-200"
+                                        >
+                                            <TableCell className="py-5 pl-8">
+                                                <div className="font-bold text-[14px] text-foreground/90 tracking-tight leading-none group-hover:text-primary transition-colors">{String(title)}</div>
+                                                <div className="text-[10px] font-bold text-muted-foreground/30 mt-2 flex items-center gap-1.5 uppercase tracking-tighter">
+                                                    TYPE <span className="h-1 w-1 rounded-full bg-border" /> {String(pick(obj, ["tenderType"]) === 'op' ? 'Open' : 'Restricted')}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-[13px] font-medium text-muted-foreground/70 tabular-nums">
+                                                {String(ref)}
+                                            </TableCell>
+                                            <TableCell className="text-[13px] font-medium text-muted-foreground/70 tabular-nums">
+                                                {deadline ? format(new Date(String(deadline)), "dd MMM, yyyy") : "—"}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge className={`
+                                                    rounded-md px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest border-none
+                                                    ${rawStatus === "pb" ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20" : "bg-muted text-muted-foreground"}
+                                                `}>
+                                                    {rawStatus === 'pb' ? 'Active' : 'Draft'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right pr-8">
+                                                <Button
+                                                    onClick={() => handleOpenTender(obj)}
+                                                    variant="ghost"
+                                                    className="h-9 w-9 p-0 rounded-full hover:bg-primary hover:text-primary-foreground group/btn shadow-none"
+                                                >
+                                                    <ArrowUpRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                                                </Button>
+                                            </TableCell>
+                                        </motion.tr>
+                                    );
+                                })}
+                            </AnimatePresence>
+                        </TableBody>
+                    </Table>
+
+                    {isSearching && (
+                        <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-10">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                    )}
+
+                    {!isSearching && tenders?.length === 0 && (
+                        <div className="py-24 flex flex-col items-center justify-center text-center">
+                            <div className="h-16 w-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+                                <Inbox className="h-6 w-6 text-muted-foreground/20" />
+                            </div>
+                            <h3 className="text-sm font-bold text-foreground tracking-tight uppercase">No Tenders Found</h3>
+                            <p className="text-xs text-muted-foreground/50 mt-1 max-w-[240px]">We couldn't find any tenders matching your search.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {error && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/5 border border-destructive/10">
+                    <div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+                    <p className="text-[11px] font-bold text-destructive uppercase tracking-widest">Error: {error}</p>
+                </div>
+            )}
+
             <TenderDetailModal
                 isOpen={isModalOpen}
-                onClose={handleCloseModal}
-                tender={selectedTender ? {
-                    id: selectedTender.id,
-                    tenderNo: selectedTender.tenderNo,
-                    title: selectedTender.title,
-                    tenderType: selectedTender.tenderType,
-                    tenderCategory: selectedTender.tenderCategory,
-                    scopeOfWork: selectedTender.scopeOfWork,
-                    instructions: selectedTender.instructions,
-                    submissionDeadline: selectedTender.submissionDeadline,
-                    openingDate: selectedTender.openingDate,
-                    status: selectedTender.status,
-                    estimatedValue: selectedTender.estimatedValue,
-                    currency: selectedTender.currency ? {
-                        code: selectedTender.currency.code,
-                        symbol: selectedTender.currency.symbol
-                    } : undefined,
-                    procurementMode: selectedTender.procurementMode ? {
-                        name: selectedTender.procurementMode.name
-                    } : undefined,
-                    tenderCategoryRelation: selectedTender.tenderCategoryRelation
-                } : null}
-                invitation={selectedTender?.invitation}
-                onInvitationUpdate={handleInvitationUpdate}
+                onClose={() => setIsModalOpen(false)}
+                tender={selectedTender}
+                onInvitationUpdate={() => fetchTenders()}
             />
         </div>
     );

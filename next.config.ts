@@ -3,9 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   experimental: {
-    turbopackFileSystemCacheForDev: true, // TODO: remove in prod
   },
-  cacheComponents: true,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -24,15 +22,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "picsum.photos",
-        port: '',
-        pathname: '/**',
+        port: "",
+        pathname: "/**",
       },
     ],
-  },
-  turbopack: {
-    resolveAlias: {
-      "@": "./",
-    },
   },
   async headers() {
     return [

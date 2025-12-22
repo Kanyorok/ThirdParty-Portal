@@ -11,10 +11,6 @@ type SearchResult = {
   meta?: Record<string, unknown>;
 };
 
-function parseJsonSafe<T = any>(text: string): T | null {
-  try { return JSON.parse(text || "{}"); } catch { return null; }
-}
-
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -31,7 +27,6 @@ export async function GET(request: NextRequest) {
 
   const tasks: Array<Promise<SearchResult[]>> = [];
 
-  // Tenders: use ERP /api/tenders with enforce_invites & third_party_id, then filter by search
   tasks.push((async () => {
     try {
       const apiUrl = new URL(`${erpBase}/api/tenders`);
@@ -44,7 +39,7 @@ export async function GET(request: NextRequest) {
       const items: any[] = Array.isArray(data?.data) ? data.data : [];
       return items.slice(0, limit).map((t) => ({
         type: 'tender' as const,
-        id: t.id ?? t.Id ?? t.Id,
+        id: t.id ?? t.Id,
         title: t.title ?? t.Title ?? `${t.tenderNo || ''} ${t.title || ''}`.trim(),
         description: t.scopeOfWork || t.instructions || '',
         href: `/dashboard/tenders?search=${encodeURIComponent(q)}`,
@@ -53,7 +48,6 @@ export async function GET(request: NextRequest) {
     } catch { return []; }
   })());
 
-  // RFQs: supplier portal invitations list; client will navigate to RFQs page with search
   tasks.push((async () => {
     try {
       const apiUrl = new URL(`${erpBase}/api/procurement/rfq-suppliers`);
@@ -77,7 +71,6 @@ export async function GET(request: NextRequest) {
     } catch { return []; }
   })());
 
-  // Documents: via our proxy /api/dms/documents?q=...
   tasks.push((async () => {
     try {
       const origin = new URL(request.url).origin;
@@ -102,6 +95,3 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ data: limited, total: limited.length });
 }
-
-
-
