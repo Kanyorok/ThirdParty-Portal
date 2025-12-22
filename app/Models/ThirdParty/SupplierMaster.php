@@ -162,4 +162,12 @@ class SupplierMaster extends Model
             'Id'           // Local key
         )->orderBy('CreatedOn', 'desc');
     }
+
+    /**
+     * Get supplier table entries (t_Suppliers) linked to this master record
+     */
+    public function suppliers()
+    {
+        return $this->hasMany(\App\Models\ThirdParies\Supplier::class, 'SupplierMasterId', 'Id');
+    }
 }

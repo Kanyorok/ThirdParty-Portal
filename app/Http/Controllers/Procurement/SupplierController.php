@@ -22,7 +22,7 @@ class SupplierController extends Controller
     {
         if ($request->ajax()) {
             $query = SupplierMaster::query()
-                ->with(['party', 'categories.itemCategories'])
+                ->with(['party', 'suppliers.category.itemCategories'])
                 ->select('t_SupplierMaster.*')
                 ->addSelect([
                     'PrimaryFirstName' => DB::table('t_ThirdPartyUsers')
@@ -76,8 +76,12 @@ class SupplierController extends Controller
                     if (!$supplier->IsPrequalified) {
                         return '<span class="text-muted">Not prequalified</span>';
                     }
-                    // Categories via SupplierMaster relationship
-                    $categories = $supplier->categories ?? collect();
+                    // Categories via active t_Suppliers entries (Prequalified)
+                    $categories = $supplier->suppliers
+                        ->where('Active_Status', true)
+                        ->map(fn($s) => $s->category)
+                        ->filter()
+                        ->unique('SupplierCategoryID');
 
                     if ($categories->isEmpty()) {
                         return '<span class="text-warning">No categories assigned</span>';
@@ -85,7 +89,7 @@ class SupplierController extends Controller
 
                     $html = '<dl class="mb-0">';
                     foreach ($categories as $cat) {
-                        $catName = e($cat->Name ?? $cat->Description ?? 'Category');
+                        $catName = e($cat->CategoryName ?? $cat->Description ?? 'Category');
                         $itemCats = $cat->itemCategories ?? collect();
                         $count = $itemCats->count();
                         $badge = $count > 0 ? " <span class=\"badge bg-secondary ms-1\">{$count}</span>" : '';

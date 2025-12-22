@@ -64,7 +64,7 @@
     <div class="card p-4">
         <div class="table-responsive">
             @php
-            $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $supplier->Id)->with(['categories.itemCategories'])->first();
+            $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $supplier->Id)->with(['suppliers.category.itemCategories'])->first();
             $approvalStatus = $supplierMaster?->ApprovalStatus;
             @endphp
             <table class="table table-striped table-borderless">
@@ -144,15 +144,20 @@
                     <tr>
                         <td class="fw-bold">Categories</td>
                         <td>
+                            @php
+                            $prequalifiedCats = $supplierMaster?->suppliers->where('Active_Status', true)->unique('SupplierCategoryID') ?? collect();
+                            @endphp
+
                             @if(!$supplierMaster?->IsPrequalified)
                             <div class="text-muted fst-italic">
                                 You are not prequalified to supply any category.
                             </div>
-                            @elseif($supplierMaster && $supplierMaster->categories->count() > 0)
+                            @elseif($prequalifiedCats->isNotEmpty())
                             <div class="d-flex flex-column gap-2">
-                                @foreach($supplierMaster->categories as $category)
+                                @foreach($prequalifiedCats as $supplierRow)
+                                @php $category = $supplierRow->category; @endphp
                                 <div class="border rounded p-2">
-                                    <div class="fw-bold text-primary">{{ $category->Name ?? $category->Description ?? 'Category' }}</div>
+                                    <div class="fw-bold text-primary">{{ $category->CategoryName ?? $category->Description ?? 'Category' }}</div>
                                     @if($category->itemCategories->isNotEmpty())
                                     <div class="small text-muted mt-1">
                                         Items: {{ $category->itemCategories->pluck('Name')->join(', ') }}

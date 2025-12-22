@@ -562,7 +562,7 @@ class TenderController extends Controller
 
             // Get related data
             $suppliers = TenderSupplier::where('TenderID', $id)
-                ->with('supplier.thirdParty')
+                ->with('supplier.party')  // FIXED: Use 'party' not 'thirdParty' (SupplierMaster->party relationship)
                 ->get();
             $tenderCategory = TenderCategory::find($tender->TenderCategory);
             $itemCategory = ItemCategories::find($tender->ItemCategoryId);
@@ -1088,10 +1088,10 @@ class TenderController extends Controller
         try {
             $tenderCategoryId = $request->input('tender_category_id');
 
-            if (!$tenderCategoryId) {
+            if (!$tenderCategoryId || !is_numeric($tenderCategoryId)) {
                 return response()->json([
                     'ok' => false,
-                    'message' => 'Tender category ID is required',
+                    'message' => 'Valid Tender category ID is required',
                     'categories' => []
                 ], 400);
             }
@@ -1274,12 +1274,13 @@ class TenderController extends Controller
             ->pluck('RoundID');
 
         // Base supplier query: active suppliers, proper supplier type, with needed relations
+        // FIX: 'types' is on ThirdParties (party), not SupplierMaster (thirdParty)
         $supplierQuery = \App\Models\ThirdParies\Supplier::query()
             ->where('Active_Status', 1)
-            ->whereHas('thirdParty.types', function ($q) {
-                $q->where('Code', 'like', 'SU-%');
-            })
-            ->with(['thirdParty', 'supplierCategory.itemCategories']);
+            /* ->whereHas('thirdParty.party.types', function ($q) {
+                 $q->where('Code', 'like', 'SU-%');
+             })*/
+            ->with(['thirdParty.party', 'supplierCategory.itemCategories']);
 
         if ($activeRounds->isNotEmpty()) {
             // Prefer suppliers in active rounds; include rows with NULL RoundID just in case
@@ -1295,9 +1296,11 @@ class TenderController extends Controller
         $suppliers = collect();
 
         foreach ($prequalifiedSuppliers as $supplier) {
-            if (!$supplier->thirdParty) continue;
+            // Check if relationships exist
+            if (!$supplier->thirdParty || !$supplier->thirdParty->party) continue;
 
-            $thirdParty = $supplier->thirdParty;
+            $supplierMaster = $supplier->thirdParty;
+            $thirdParty = $supplier->thirdParty->party;
 
             // Build list of item category IDs this supplier can serve
             $itemCategoryIds = [];
@@ -1317,9 +1320,15 @@ class TenderController extends Controller
             if (!empty($supplier->SupplierCategoryID)) {
                 $supplierCategoryIds->push($supplier->SupplierCategoryID);
             }
-            // Add any categories from pivot t_ThirdParty_SupplierCategory (resilient across DB schemas)
+            // Add any categories from pivot tables (resilient across DB schemas)
             try {
-                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty((int)$supplier->ThirdPartyID);
+                // CRITICAL FIX: Pass both ThirdPartyId and SupplierMaster.Id
+                // - t_ThirdParty_SupplierCategory uses ThirdPartyId (t_ThirdParties.Id)
+                // - t_PrequalificationRoundSupplierCategory uses SupplierMaster.Id
+                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty(
+                    (int)$supplierMaster->ThirdPartyId,
+                    (int)$supplierMaster->Id  // Pass SupplierMaster.Id for prequalification lookup
+                );
                 $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
             } catch (\Throwable $e) {
                 Log::warning('Failed resolving supplier categories', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
@@ -1357,8 +1366,19 @@ class TenderController extends Controller
                 $itemCategoryIds = array_merge($itemCategoryIds, $topLevelSet);
             }
 
+            // Log the final ItemCategoryIds for this supplier
+            if ($supplierMaster->Id == 2) { // Uma Yang - use SupplierMaster.Id
+                Log::info("Building ItemCategoryIds for supplier (SupplierMaster ID " . $supplierMaster->Id . ")", [
+                    'supplier_name' => $thirdParty->ThirdPartyName,
+                    'supplier_category_ids' => $supplierCategoryIds->toArray(),
+                    'final_item_category_ids' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
+                    'count' => count(array_unique($itemCategoryIds))
+                ]);
+            }
+
             $suppliers->push([
-                'Id' => $supplier->Id,
+                'Id' => $supplierMaster->Id,  // CRITICAL FIX: Use SupplierMaster.Id, not t_Suppliers.Id
+                'SupplierId' => $supplierMaster->Id,  // Explicitly add SupplierId for frontend
                 'SupplierName' => $thirdParty->ThirdPartyName,
                 'ThirdPartyName' => $thirdParty->ThirdPartyName,
                 'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
@@ -1368,7 +1388,7 @@ class TenderController extends Controller
                 'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))), // All categories supplier can serve (incl. top-level)
                 'RoundID' => $supplier->RoundID,
                 'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
-                'ThirdPartyID' => $supplier->ThirdPartyID,
+                'ThirdPartyID' => $supplierMaster->ThirdPartyId, // FIX: Use SupplierMaster->ThirdPartyId
             ]);
         }
 
@@ -1388,6 +1408,60 @@ class TenderController extends Controller
             // guard
         }
         return $result;
+    }
+
+    /**
+     * Public API for fetching prequalified suppliers for a specific category.
+     * Returns JSON format expected by the frontend.
+     */
+    public function getPrequalifiedSuppliersForCategory($categoryId)
+    {
+        $suppliers = $this->getPrequalifiedSuppliers();
+
+        // Filter by Category ID
+        if ($categoryId) {
+            $catIdInt = (int)$categoryId;
+            
+            Log::info("Filtering suppliers for category ID: {$catIdInt}");
+            
+            $suppliers = $suppliers->filter(function ($s) use ($catIdInt) {
+                $supplierCategoryIds = $s['ItemCategoryIds'] ?? [];
+                
+                // Direct match: the selected category is already in the supplier's list
+                if (in_array($catIdInt, $supplierCategoryIds)) {
+                    Log::info("Supplier {$s['Id']} matched (direct)", [
+                        'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                        'supplier_categories' => $supplierCategoryIds
+                    ]);
+                    return true;
+                }
+                
+                // Descendant match: check if the selected category is a child of any supplier category
+                foreach ($supplierCategoryIds as $supplierCatId) {
+                    $descendants = $this->getAllDescendantCategoryIds((int)$supplierCatId, includeSelf: false);
+                    if (in_array($catIdInt, $descendants)) {
+                        Log::info("Supplier {$s['Id']} matched (descendant)", [
+                            'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                            'parent_category' => $supplierCatId,
+                            'selected_category' => $catIdInt
+                        ]);
+                        return true;
+                    }
+                }
+                
+                Log::debug("Supplier {$s['Id']} filtered out", [
+                    'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                    'supplier_categories' => $supplierCategoryIds,
+                    'selected_category' => $catIdInt
+                ]);
+                
+                return false;
+            })->values();
+            
+            Log::info("Filtered suppliers count: {$suppliers->count()}");
+        }
+
+        return response()->json(['success' => true, 'data' => $suppliers]);
     }
 
     // Return allowed ItemType IDs for a tender category (FK Id)
@@ -1571,7 +1645,7 @@ class TenderController extends Controller
             'SubmissionDeadline' => $request->submission_deadline,
             'OpeningDate' => $request->opening_date,
             'Status' => TenderStatusEnum::Draft,  // Use enum instead of string
-            'ApprovalStatus' => Null,  // CRITICAL: Set to null, not PENDING
+            'ApprovalStatus' => TenderApprovalStatusEnum::PENDING,  // Set to PENDING for new drafts
             'ItemCategoryId' => $request->item_category_id,
             'CurrencyId' => $request->currency_id,
             'CreatedBy' => Auth::id(),

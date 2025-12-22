@@ -61,13 +61,16 @@ class PrequalificationApplicationController extends Controller
 
             $user = Auth::user();
 
-            $supplierId = $user && $user->thirdParty ? $user->thirdParty->Id : null;
+            // CRITICAL FIX: Get SupplierMaster.Id, not ThirdParty.Id
+            $supplierId = null;
+            $supplierMaster = null;
 
             // Supplier eligibility: only supplier third parties with Approved status can apply
             $supplierEligible = false;
             if ($user && $user->thirdParty) {
                 // Check t_SupplierMaster for this third party
                 $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $user->thirdParty->Id)->first();
+                $supplierId = $supplierMaster ? $supplierMaster->Id : null;
 
                 // Must exist and be Approved
                 $isSupplierUser = $supplierMaster !== null;
@@ -489,7 +492,15 @@ class PrequalificationApplicationController extends Controller
         if (!$user->thirdParty) return response()->json(['error' => 'User not associated with a third party.'], 400);
 
         $validatedData = $request->validated();
-        $supplierId = $user->thirdParty->Id;
+        
+        // CRITICAL FIX: Get SupplierMaster.Id, not ThirdParty.Id
+        // t_SupplierPrequalificationApplications.SupplierID references t_SupplierMaster.Id
+        $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $user->thirdParty->Id)->first();
+        if (!$supplierMaster) {
+            return response()->json(['error' => 'Supplier profile not found for this third party.'], 400);
+        }
+        $supplierId = $supplierMaster->Id;
+        
         $roundId = $validatedData['round_id'];
         $categoryIds = $validatedData['category_ids'] ?? [];
 

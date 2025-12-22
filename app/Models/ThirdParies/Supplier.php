@@ -22,10 +22,18 @@ class Supplier extends Model
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
-
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
     protected $fillable = [
-        'RoundID', 'SupplierMasterId', 'RoundID', 'CategoryId', 'Active_Status', 'SupplierCategoryID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'RoundID',
+        'SupplierMasterId',
+        'RoundID',
+        'CategoryId',
+        'Active_Status',
+        'SupplierCategoryID',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -99,6 +107,14 @@ class Supplier extends Model
     public function supplierCategory()
     {
         return $this->belongsTo(\App\Models\ThirdParty\SupplierCategory::class, 'SupplierCategoryID', 'SupplierCategoryID');
+    }
+
+    /**
+     * Relationship to SupplierCategory via CategoryId (populated by prequalification)
+     */
+    public function category()
+    {
+        return $this->belongsTo(\App\Models\ThirdParty\SupplierCategory::class, 'CategoryId', 'SupplierCategoryID');
     }
 
     /**
