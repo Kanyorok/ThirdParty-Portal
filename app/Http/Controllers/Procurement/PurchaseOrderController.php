@@ -11,15 +11,12 @@ use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\Order;
-use App\Models\Core\Approval\CodeDetail;
 use App\Services\Workflow\ApprovalWorkflow;  // Changed from PurchaseOrderWorkflowService
 use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Orders\OrderService;
-use App\Services\Core\DocumentApprovalService;
-use App\Services\ThirdParty\SupplierService;    
+use App\Services\ThirdParties\SupplierService;  
 use App\Services\Procurement\RFQ\RFQService;
-use App\Services\ThirdParties\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon\Carbon;
