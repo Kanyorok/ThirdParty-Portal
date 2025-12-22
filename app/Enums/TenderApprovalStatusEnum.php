@@ -2,11 +2,11 @@
 
 namespace App\Enums;
 
-enum TenderApprovalStatusEnum: string
+enum TenderApprovalStatusEnum: int
 {
-   case PENDING = 'P';  // Use string '0', not integer 0
-    case APPROVED = 'Ap';
-    case REJECTED = 'R';
+    case PENDING = 0;  // Default for new tenders
+    case APPROVED = 1;
+    case REJECTED = 2;
 
     public function label(): string
     {

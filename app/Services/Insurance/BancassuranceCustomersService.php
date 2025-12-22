@@ -5,6 +5,7 @@ namespace App\Services\Insurance;
 
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
@@ -26,7 +27,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
         parent::__construct($customer->thirdParty);
     }
 
-    public static function createFromParty(ThirdParties $party, ?BancAssuranceReferral $Referral, DateTime $DateOfBirth, CodeDetail $Gender, CodeDetail $MaritalStatus, CodeDetail $Occupation, User $user): self
+    public static function createFromParty(ThirdParties $party, ?BancAssuranceReferral $Referral, DateTime $DateOfBirth, CodeDetail $Gender, CodeDetail $MaritalStatus, CodeDetail $Occupation, User|ThirdPartyUser $user): self
     {
         $customer = BancassuranceCustomer::create([
             'ThirdPartyId' => $party->Id,
@@ -35,8 +36,9 @@ class BancassuranceCustomersService extends ThirdPartiesService
             'Gender' => $Gender->ID,
             'MaritalStatus' => $MaritalStatus->ID,
             'Occupation' => $Occupation->ID,
-            'CreatedBy' => $user->Id,
-            'ModifiedBy' => $user->Id,
+            'Occupation' => $Occupation->ID,
+            'CreatedBy' => ($user instanceof User) ? $user->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($user instanceof User) ? $user->Id : SystemHelper::user()->Id,
         ]);
 
         activity()->causedBy($user->Id)->performedOn($customer)->event('create')->log("Added Customer {$customer->Id}.");
@@ -47,11 +49,26 @@ class BancassuranceCustomersService extends ThirdPartiesService
     }
 
     public static function create(
-        string                 $name, ?string $tradingName, CodeDetail $businessType, string $registrationNumber, string $taxPIN, ?string $vatNumber, Locality $locationID, ?string $physicalAddress,
-        ?string                $email, ?string $phone, ?string $website, ?CodeDetail $status, ?array $extra, User $actor,
-        ?BancAssuranceReferral $Referral = null, DateTime $DateOfBirth = null, CodeDetail $Gender = null, CodeDetail $MaritalStatus = null, CodeDetail $Occupation = null
-    ): self
-    {
+        string                 $name,
+        ?string $tradingName,
+        CodeDetail $businessType,
+        string $registrationNumber,
+        string $taxPIN,
+        ?string $vatNumber,
+        Locality $locationID,
+        ?string $physicalAddress,
+        ?string                $email,
+        ?string $phone,
+        ?string $website,
+        ?CodeDetail $status,
+        ?array $extra,
+        User|ThirdPartyUser $actor,
+        ?BancAssuranceReferral $Referral = null,
+        DateTime $DateOfBirth = null,
+        CodeDetail $Gender = null,
+        CodeDetail $MaritalStatus = null,
+        CodeDetail $Occupation = null
+    ): self {
         if ($DateOfBirth === null) {
             throw new \InvalidArgumentException('DateOfBirth is required parameter.');
         }
@@ -67,7 +84,12 @@ class BancassuranceCustomersService extends ThirdPartiesService
 
         return self::createFromParty(
             party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor),
-            Referral: $Referral, DateOfBirth: $DateOfBirth, Gender: $Gender, MaritalStatus: $MaritalStatus, Occupation: $Occupation, user: $actor
+            Referral: $Referral,
+            DateOfBirth: $DateOfBirth,
+            Gender: $Gender,
+            MaritalStatus: $MaritalStatus,
+            Occupation: $Occupation,
+            user: $actor
         );
     }
 
@@ -99,7 +121,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
     public static function getType(): ThirdPartyType
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeCustomer)->firstOr(function () {
-            $role = FinanceRole::query()->first();// todo fix your Finance role
+            $role = FinanceRole::query()->first(); // todo fix your Finance role
             if ($role instanceof FinanceRole === false) {
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
@@ -114,4 +136,3 @@ class BancassuranceCustomersService extends ThirdPartiesService
         });
     }
 }
-

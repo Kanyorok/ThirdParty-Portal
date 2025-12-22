@@ -44,18 +44,8 @@ class WorkFlowStageService
                 throw new ErroredException('Module not found for workflow source.');
             }
 
-            Log::info('Creating workflow stage', [
-                'Order' => $nextOrder,
-                'StageName' => $data['StageName'],
-                'WorkFlowId' => $data['WorkFlowId'],
-                'IsFinalStage' => !empty($data['IsFinalStage'])
-            ]);
 
-            // Check transaction count BEFORE calling SP
-            $tranCountBefore = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
-            Log::info('Transaction count BEFORE SP', ['count' => $tranCountBefore]);
 
-            // Execute stored procedure WITHOUT wrapping in transaction
             $results = DB::select('EXEC p_AddWorkflowStage2 
                 @Order = ?, 
                 @StageName = ?, 
@@ -77,13 +67,16 @@ class WorkFlowStageService
                 $moduleId
             ]);
 
-            // Check transaction count AFTER SP
-            $tranCountAfter = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
-            Log::info('Transaction count AFTER SP', ['count' => $tranCountAfter]);
 
-            // Fix transaction mismatch - commit any open transactions from SP
-            while ($tranCountAfter > 0) {
-                try {
+
+            // Fix for SP leaving transaction open
+            try {
+                $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
+                $laravelTranCount = DB::transactionLevel();
+
+
+
+                while ($dbTranCount > $laravelTranCount) {
                     DB::unprepared('COMMIT TRANSACTION');
                     $tranCountAfter--;
                     Log::info('Committed open transaction from SP');
@@ -117,24 +110,22 @@ class WorkFlowStageService
                 ->first();
 
             if (!$stage) {
-                Log::error('Stage not found after creation', [
-                    'expected_id' => $dto->newStageId,
-                    'workflow_id' => $data['WorkFlowId']
-                ]);
-                throw new ErroredException('Stage creation failed - Record not found after SP execution.');
+                // Debug: Check if it exists via raw DB
+                $rawStage = DB::table('t_WorkflowStages')->where('Id', $dto->newStageId)->first();
+
+
+                if ($rawStage) {
+                    // If found via raw DB but not Eloquent, it's a model issue. 
+                    // Try to hydrate manually or investigate model scopes.
+                    Log::warning('Stage found via raw DB but not Eloquent. Possible scope or casting issue.');
+                    $stage = new WorkflowStage((array)$rawStage);
+                    $stage->exists = true;
+                } else {
+                    throw new ErroredException('Stage creation failed - Record not found after SP execution.');
+                }
             }
 
-            // Convert to Eloquent model
-            $stageModel = WorkflowStage::find($dto->newStageId);
-            
-            if (!$stageModel) {
-                // Fallback: create model from raw data
-                $stageModel = new WorkflowStage((array)$stage);
-                $stageModel->exists = true;
-                $stageModel->Id = $stage->Id;
-            }
-
-            // Clear permission cache
+            // Clear permission cache to ensure the new permission (created by SP) is visible to Spatie
             app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
             // Handle Permission

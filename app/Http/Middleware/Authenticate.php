@@ -11,9 +11,12 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\ThirdParty\ThirdPartyUser;
 
 class Authenticate extends Middleware
 {
+
+
     /**
      * Handle an incoming request.
      *
@@ -29,7 +32,13 @@ class Authenticate extends Middleware
 
         $this->authenticate($request, $guards);
         $actor = $request->user();
-        $branch = $actor->branch;
+
+        // Allow ThirdPartyUser to bypass branch/internal checks
+        if ($actor instanceof ThirdPartyUser) {
+            return $next($request);
+        }
+
+        $branch = $actor?->branch;
         if (!$actor instanceof User || !$branch instanceof Branch) {
             $this->unauthenticated($request, $guards, $actor);
         }
@@ -54,7 +63,7 @@ class Authenticate extends Middleware
         return $next($request);
     }
 
-    protected function unauthenticated($request, array $guards, User $user = null): void
+    protected function unauthenticated($request, array $guards, $user = null): void
     {
         if ($user instanceof User) {
             activity()
@@ -82,5 +91,4 @@ class Authenticate extends Middleware
     {
         return $request->expectsJson() || $request->json() ? null : route('login');
     }
-
 }

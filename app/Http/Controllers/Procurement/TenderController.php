@@ -59,208 +59,189 @@ class TenderController extends Controller
     {
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
         $tenders = Tender::with(['procurementMode', 'currency'])->get();
-        
+
         activity()
             ->performedOn(new Tender())
             ->causedBy(Auth::user())
             ->withProperties(['action' => 'viewed'])
             ->log('Viewed tenders list');
-            
+
         return view('procurement.tendering.tendersetup.tenderinitiation.index', compact('tenders'));
     }
 
     //b4
     public function create()
-{
-       $this->authorize(PermissionEnum::TenderWrite, Tender::class);
-    
-    $procurementModes = ProcurementMode::all();
-    $currencies = Currency::all();
-    $tenderTypes = TenderTypeEnum::cases();
-    $statuses = TenderStatusEnum::cases();
-    $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
-    $allItemsCategories = ItemCategories::select('Id', 'Name')->whereNull('ParentId')->get();
-    $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
+    {
+        $this->authorize(PermissionEnum::TenderWrite, Tender::class);
 
-    // Build category hierarchy map
-    $allCategories = ItemCategories::select('Id', 'ParentId')->get()->keyBy('Id');
-    $categoryToTopLevel = [];
-    foreach ($allCategories as $category) {
-        $current = $category;
-        while ($current->ParentId !== null && isset($allCategories[$current->ParentId])) {
-            $current = $allCategories[$current->ParentId];
-        }
-        $categoryToTopLevel[$category->Id] = $current->Id;
-    }
+        $procurementModes = ProcurementMode::all();
+        $currencies = Currency::all();
+        $tenderTypes = TenderTypeEnum::cases();
+        $statuses = TenderStatusEnum::cases();
+        $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
+        $allItemsCategories = ItemCategories::select('Id', 'Name')->whereNull('ParentId')->get();
+        $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
 
-    // Get active items with prices
-    $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')
-        ->whereNull('DeletedOn')
-        ->whereHas('price', function ($q) {
-            $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
-        })
-        ->orderBy('ItemName')
-        ->get()
-        ->map(function ($item) use ($categoryToTopLevel) {
-            return [
-                'Id' => $item->Id,
-                'ItemName' => $item->ItemName,
-                'Category' => $categoryToTopLevel[$item->Category] ?? $item->Category,
-            ];
-        });
-
-    Log::info('All Items With Category IDs count: ' . $allItemsWithCategoryIds->count());
-
-    // Get all approved procurement plans
-    $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
-        ->where('Status', ProcurementPlanStatusEnum::Approved)
-        ->get()
-        ->keyBy('PlanID');
-
-    $approvedPlanIds = $procurementPlans->keys();
-
-    //  Calculate used quantities MORE ACCURATELY
-    // Group by PlanItemID and sum only QtyToTender (not PlannedQty)
-    $usedQuantities = DB::table('t_TenderItems')
-        ->whereNotNull('PlanItemID')
-        ->whereNull('DeletedOn') // Exclude soft-deleted items
-        ->select('PlanItemID', DB::raw('SUM(QtyToTender) as UsedQty'))
-        ->groupBy('PlanItemID')
-        ->pluck('UsedQty', 'PlanItemID')
-        ->map(fn($val) => (float)$val);
-
-    Log::info('Used quantities calculated', [
-        'count' => $usedQuantities->count(),
-        'sample' => $usedQuantities->take(5)->toArray()
-    ]);
-
-    // Get plan line items with tender procurement method
-    $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'BranchID', 'DepartmentID', 'ProcurementMethod')
-        ->with([
-            'item' => function ($query) {
-                $query->select('Id', 'ItemName');
-            },
-            'procurementMode',
-            'departmentNeed' => function ($q) {
-                $q->select('NeedID', 'ItemID', 'BranchID', 'DepartmentID');
+        // Build category hierarchy map
+        $allCategories = ItemCategories::select('Id', 'ParentId')->get()->keyBy('Id');
+        $categoryToTopLevel = [];
+        foreach ($allCategories as $category) {
+            $current = $category;
+            while ($current->ParentId !== null && isset($allCategories[$current->ParentId])) {
+                $current = $allCategories[$current->ParentId];
             }
-        ])
-        ->whereIn('PlanID', $approvedPlanIds)
-        ->whereHas('procurementMode', function ($q) {
-            $q->where('Description', 'like', '%Tender%');
-        })
-        ->get();
-
-    Log::info('Plan line items fetched', ['count' => $itemsCategories->count()]);
-
-    $procurementPlansOutput = [];
-    $planItemData = [];
-    $plansWithRemainingItems = [];
-    
-    foreach ($itemsCategories as $lineItem) {
-        $planId = $lineItem->PlanID;
-        $item = $lineItem->item;
-
-        if (!$item) {
-            Log::warning("Skipping line item {$lineItem->LineItemID}: No item found");
-            continue;
+            $categoryToTopLevel[$category->Id] = $current->Id;
         }
 
-        //  More robust quantity calculation
-        $plannedQty = (float)($lineItem->MergedQty ?? 0);
-        $usedQty = (float)($usedQuantities[$lineItem->LineItemID] ?? 0);
-        $remainingQty = $plannedQty - $usedQty;
+        // Get active items with prices
+        $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')
+            ->whereNull('DeletedOn')
+            ->whereHas('price', function ($q) {
+                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            })
+            ->orderBy('ItemName')
+            ->get()
+            ->map(function ($item) use ($categoryToTopLevel) {
+                return [
+                    'Id' => $item->Id,
+                    'ItemName' => $item->ItemName,
+                    'Category' => $categoryToTopLevel[$item->Category] ?? $item->Category,
+                ];
+            });
 
-        Log::debug("Item {$item->ItemName} (LineItem {$lineItem->LineItemID})", [
-            'plannedQty' => $plannedQty,
-            'usedQty' => $usedQty,
-            'remainingQty' => $remainingQty
-        ]);
 
-        //  Use a small threshold (0.01) instead of strict > 0
-        if ($remainingQty < 0.01) {
-            Log::info("Skipping fully consumed item: {$item->ItemName}");
-            continue;
+
+        // Get all approved procurement plans
+        $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
+            ->where('Status', ProcurementPlanStatusEnum::Approved)
+            ->get()
+            ->keyBy('PlanID');
+
+        $approvedPlanIds = $procurementPlans->keys();
+
+        //  Calculate used quantities MORE ACCURATELY
+        // Group by PlanItemID and sum only QtyToTender (not PlannedQty)
+        $usedQuantities = DB::table('t_TenderItems')
+            ->whereNotNull('PlanItemID')
+            ->whereNull('DeletedOn') // Exclude soft-deleted items
+            ->select('PlanItemID', DB::raw('SUM(QtyToTender) as UsedQty'))
+            ->groupBy('PlanItemID')
+            ->pluck('UsedQty', 'PlanItemID')
+            ->map(fn($val) => (float)$val);
+
+
+
+        // Get plan line items with tender procurement method
+        $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'BranchID', 'DepartmentID', 'ProcurementMethod')
+            ->with([
+                'item' => function ($query) {
+                    $query->select('Id', 'ItemName');
+                },
+                'procurementMode',
+                'departmentNeed' => function ($q) {
+                    $q->select('NeedID', 'ItemID', 'BranchID', 'DepartmentID');
+                }
+            ])
+            ->whereIn('PlanID', $approvedPlanIds)
+            ->whereHas('procurementMode', function ($q) {
+                $q->where('Description', 'like', '%Tender%');
+            })
+            ->get();
+
+
+
+        $procurementPlansOutput = [];
+        $planItemData = [];
+        $plansWithRemainingItems = [];
+
+        foreach ($itemsCategories as $lineItem) {
+            $planId = $lineItem->PlanID;
+            $item = $lineItem->item;
+
+            if (!$item) {
+                Log::warning("Skipping line item {$lineItem->LineItemID}: No item found");
+                continue;
+            }
+
+            //  More robust quantity calculation
+            $plannedQty = (float)($lineItem->MergedQty ?? 0);
+            $usedQty = (float)($usedQuantities[$lineItem->LineItemID] ?? 0);
+            $remainingQty = $plannedQty - $usedQty;
+
+
+
+            //  Use a small threshold (0.01) instead of strict > 0
+            if ($remainingQty < 0.01) {
+
+                continue;
+            }
+
+            // Mark this plan as having available items
+            $plansWithRemainingItems[$planId] = true;
+
+            $needId = optional($lineItem->departmentNeed)->NeedID;
+
+            $entry = [
+                'id' => $planId,
+                'planLineItemId' => $lineItem->LineItemID,
+                'itemId' => $item->Id,
+                'name' => $item->ItemName,
+                'plannedQty' => $plannedQty,
+                'usedQty' => $usedQty,
+                'remainingQty' => round($remainingQty, 2), // Round for display
+                'needId' => $needId,
+            ];
+
+            $procurementPlansOutput[$planId][] = $entry;
+            $planItemData[$planId][] = $entry;
         }
 
-        // Mark this plan as having available items
-        $plansWithRemainingItems[$planId] = true;
+        // Filter procurement plans to only show those with remaining items
+        $procurementPlan = $procurementPlans->filter(function ($plan) use ($plansWithRemainingItems) {
+            return isset($plansWithRemainingItems[$plan->PlanID]);
+        })->values();
 
-        $needId = optional($lineItem->departmentNeed)->NeedID;
 
-        $entry = [
-            'id' => $planId,
-            'planLineItemId' => $lineItem->LineItemID,
-            'itemId' => $item->Id,
-            'name' => $item->ItemName,
-            'plannedQty' => $plannedQty,
-            'usedQty' => $usedQty,
-            'remainingQty' => round($remainingQty, 2), // Round for display
-            'needId' => $needId,
-        ];
 
-        $procurementPlansOutput[$planId][] = $entry;
-        $planItemData[$planId][] = $entry;
+
+
+        // Get suppliers
+        $suppliers = $this->getPrequalifiedSuppliers();
+
+        activity()
+            ->performedOn(new Tender())
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'create'])
+            ->log('View tender creation');
+
+        return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
+            'procurementModes',
+            'currencies',
+            'tenderTypes',
+            'tenderCategories',
+            'statuses',
+            'itemsCategories',
+            'procurementPlan',
+            'allItemsCategories',
+            'procurementPlansOutput',
+            'procurementPlans',
+            'planItemData',
+            'suppliers',
+            'allItemsWithCategoryIds',
+            'allCurrency'
+        ));
     }
-
-    // Filter procurement plans to only show those with remaining items
-    $procurementPlan = $procurementPlans->filter(function ($plan) use ($plansWithRemainingItems) {
-        return isset($plansWithRemainingItems[$plan->PlanID]);
-    })->values();
-
-    Log::info('Procurement plans with remaining items', [
-        'total_approved_plans' => $procurementPlans->count(),
-        'plans_with_items' => $procurementPlan->count(),
-        'plans_with_remaining' => count($plansWithRemainingItems)
-    ]);
-
-    // : Log sample data for debugging
-    if (!empty($procurementPlansOutput)) {
-        $samplePlanId = array_key_first($procurementPlansOutput);
-        Log::info('Sample plan items', [
-            'plan_id' => $samplePlanId,
-            'items_count' => count($procurementPlansOutput[$samplePlanId]),
-            'first_item' => $procurementPlansOutput[$samplePlanId][0] ?? 'none'
-        ]);
-    }
-
-    // Get suppliers
-    $suppliers = $this->getPrequalifiedSuppliers();
-
-    activity()
-        ->performedOn(new Tender())
-        ->causedBy(Auth::user())
-        ->withProperties(['action' => 'create'])
-        ->log('View tender creation');
-
-    return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
-        'procurementModes',
-        'currencies',
-        'tenderTypes',
-        'tenderCategories',
-        'statuses',
-        'itemsCategories',
-        'procurementPlan',
-        'allItemsCategories',
-        'procurementPlansOutput',
-        'procurementPlans',
-        'planItemData',
-        'suppliers',
-        'allItemsWithCategoryIds',
-        'allCurrency'
-    ));
-}
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'tender_category_id' => 'required|integer|exists:t_TenderCategories,Id',
             'item_category_id' => 'required|integer|exists:t_ItemCategories,Id',
-             // 1. Submission Deadline must be today or in the future
-               'submission_deadline' => 'required|date|after_or_equal:today',
+            // 1. Submission Deadline must be today or in the future
+            'submission_deadline' => 'required|date|after_or_equal:today',
 
-        // 2. Opening Date must be AFTER the submission deadline
-           'opening_date' => 'required|date|after:submission_deadline',
+            // 2. Opening Date must be AFTER the submission deadline
+            'opening_date' => 'required|date|after:submission_deadline',
             'title' => 'required|string|max:255',
             'tender_type' => 'required|string',
             'scope_of_work' => 'nullable|string',
@@ -268,11 +249,10 @@ class TenderController extends Controller
             'currency_id' => 'required|integer|exists:t_Currencies,Id',
             'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
         ], [
-           'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
-        'opening_date.after' => 'The opening date must be after the submission deadline.',
-        ],
-    );
-        
+            'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
+            'opening_date.after' => 'The opening date must be after the submission deadline.',
+        ]);
+
         DB::beginTransaction();
 
         try {
@@ -284,7 +264,7 @@ class TenderController extends Controller
             // Track procurement plan
             $procurementPlanId = null;
             $planItems = $request->input('plan_items', []);
-            
+
             if (!empty($planItems)) {
                 $firstPlanItem = reset($planItems);
                 $procurementPlanId = $firstPlanItem['plan_id'] ?? null;
@@ -306,7 +286,7 @@ class TenderController extends Controller
             // Process plan items
             if (!empty($planItems)) {
                 $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
-                
+
                 foreach ($planItems as $compositeKey => $item) {
                     $split = explode('-', $compositeKey);
                     $planItemId = (int)end($split);
@@ -417,7 +397,6 @@ class TenderController extends Controller
 
             return redirect()->route('initiatetender.show', $tenderId)
                 ->with('success', 'Tender created successfully. Review and submit for approval when ready.');
-                
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
@@ -425,7 +404,7 @@ class TenderController extends Controller
         }
     }
 
-// Submit tender for approval
+    // Submit tender for approval
     public function submitForApproval($id)
     {
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
@@ -435,13 +414,7 @@ class TenderController extends Controller
             $tender = Tender::findOrFail($id);
             $user = Auth::user();
 
-            Log::info("Submit for approval attempt", [
-                'tender_id' => $id,
-                'tender_no' => $tender->TenderNo,
-                'user_id' => $user->Id,
-                'current_status' => $tender->Status?->value,
-                'current_approval_status' => $tender->ApprovalStatus
-            ]);
+
 
             // Validation - Status must be Draft
             if ($tender->Status !== TenderStatusEnum::Draft) {
@@ -476,9 +449,9 @@ class TenderController extends Controller
 
             // Submit to workflow
             $submitted = $this->workflow->submit(
-                $tender, 
-                $user, 
-                TenderApprovalStatusEnum::PENDING, 
+                $tender,
+                $user,
+                TenderApprovalStatusEnum::PENDING,
                 'Tender submitted for approval'
             );
 
@@ -499,7 +472,6 @@ class TenderController extends Controller
 
             return redirect()->route('initiatetender.show', $id)
                 ->with('success', 'Tender submitted for approval successfully.');
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Submit for approval failed', [
@@ -509,7 +481,7 @@ class TenderController extends Controller
             return redirect()->back()->with('error', 'Failed to submit tender: ' . $e->getMessage());
         }
     }
-public function show(string $id)
+    public function show(string $id)
     {
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
 
@@ -520,55 +492,47 @@ public function show(string $id)
 
             $user = Auth::user();
             $userId = $user->Id ?? null;
-            
+
             if (!$userId) {
                 return redirect()->route('login')->with('error', 'Session error. Please login again.');
             }
 
             $tender = Tender::with(['procurementPlan'])->findOrFail($id);
-            
+
             // Check permissions
             $isSubmitter = ($tender->CreatedBy == $userId);
             $canApprove = false;
             $showApprovalButtons = false;
             $canEdit = false;
-            
-            // 
+
+            // 🔥 KEY FIX: Determine edit permissions
             // Can edit if: (1) Status is Draft AND (2) Not yet submitted (ApprovalStatus is NULL) OR rejected
             if ($tender->Status === TenderStatusEnum::Draft) {
                 if ($tender->ApprovalStatus === null || $tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED) {
                     $canEdit = $isSubmitter; // Only creator can edit
                 }
             }
-            
+
             // Only check approval permissions if tender is pending
             if ($tender->ApprovalStatus === TenderApprovalStatusEnum::PENDING) {
                 $canApprove = $this->workflow->canApproveModel($tender, $user);
-                
+
                 // Submitter cannot approve their own tender
                 if ($isSubmitter) {
                     $canApprove = false;
                 }
-                
+
                 $showApprovalButtons = $canApprove && !$isSubmitter;
             }
-            
-            Log::info("Tender show permissions", [
-                'tender_id' => $tender->Id,
-                'user_id' => $userId,
-                'is_submitter' => $isSubmitter,
-                'approval_status' => $tender->ApprovalStatus?->value ?? 'null',
-                'can_approve' => $canApprove,
-                'show_approval_buttons' => $showApprovalButtons,
-                'can_edit' => $canEdit
-            ]);
-            
+
+
+
             // Get tender items with relationships
             $items = TenderItems::where('TenderID', $id)
                 ->with([
                     'item.price',
                     'category',
-                    'planLineItem' => function($query) {
+                    'planLineItem' => function ($query) {
                         $query->with([
                             'procurementPlan:PlanID,ReferenceNumber,Title',
                             'departmentNeed:NeedID,ItemID,BranchID,DepartmentID'
@@ -576,9 +540,9 @@ public function show(string $id)
                     }
                 ])
                 ->get();
-            
+
             // Separate plan and manual items
-            $planItems = $items->where('SourceType', 'PLAN')->map(function($tenderItem) {
+            $planItems = $items->where('SourceType', 'PLAN')->map(function ($tenderItem) {
                 $planLineItem = $tenderItem->planLineItem;
                 return [
                     'id' => $tenderItem->Id,
@@ -594,7 +558,7 @@ public function show(string $id)
                 ];
             });
 
-            $manualItems = $items->where('SourceType', 'MANUAL')->map(function($tenderItem) {
+            $manualItems = $items->where('SourceType', 'MANUAL')->map(function ($tenderItem) {
                 return [
                     'id' => $tenderItem->Id,
                     'item' => $tenderItem->item,
@@ -613,12 +577,12 @@ public function show(string $id)
 
             // Get related data
             $suppliers = TenderSupplier::where('TenderID', $id)
-                ->with('supplier.thirdParty')
+                ->with('supplier.party')  // FIXED: Use 'party' not 'thirdParty' (SupplierMaster->party relationship)
                 ->get();
             $tenderCategory = TenderCategory::find($tender->TenderCategory);
             $itemCategory = ItemCategories::find($tender->ItemCategoryId);
             $currency = Currency::find($tender->CurrencyId);
-            
+
             try {
                 $documents = $tender->documents;
             } catch (\Exception $e) {
@@ -645,7 +609,6 @@ public function show(string $id)
                 'documents',
                 'procurementPlan'
             ));
-
         } catch (\Exception $e) {
             Log::error('Error in show method', [
                 'tender_id' => $id,
@@ -1149,7 +1112,7 @@ private function generateManualItemPRReference(string $tenderNo, int $counter): 
         }
     }
 
- public function approveTender(Request $request)
+    public function approveTender(Request $request)
     {
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
 
@@ -1189,12 +1152,12 @@ private function generateManualItemPRReference(string $tenderNo, int $counter): 
             );
 
             if (!$result) {
-            Log::error("Workflow approval returned false", [
-                'result' => $result,
-                'type' => gettype($result)
-            ]);
-            throw new Exception('Workflow approval failed - workflow service returned false');
-        }
+                Log::error("Workflow approval returned false", [
+                    'result' => $result,
+                    'type' => gettype($result)
+                ]);
+                throw new Exception('Workflow approval failed - workflow service returned false');
+            }
 
             // Refresh and update
             $tender->refresh();
@@ -1228,7 +1191,6 @@ private function generateManualItemPRReference(string $tenderNo, int $counter): 
             }
 
             return redirect()->route('initiatetender.index')->with('success', $message);
-
         } catch (Throwable $e) {
             DB::rollBack();
             Log::error('Approval failed: ' . $e->getMessage());
@@ -1237,122 +1199,121 @@ private function generateManualItemPRReference(string $tenderNo, int $counter): 
     }
 
     // AJAX: return distinct top-level item categories for the selected tender category
-public function allowedCategories(Request $request)
-{
-    try {
-        $tenderCategoryId = $request->input('tender_category_id');
+    public function allowedCategories(Request $request)
+    {
+        try {
+            $tenderCategoryId = $request->input('tender_category_id');
 
-        if (!$tenderCategoryId) {
+            if (!$tenderCategoryId || !is_numeric($tenderCategoryId)) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Valid Tender category ID is required',
+                    'categories' => []
+                ], 400);
+            }
+
+            Log::info("Fetching allowed categories for tender category: {$tenderCategoryId}");
+
+            // STEP 1: Get allowed ItemType IDs from mapping
+            $allowedItemTypeIds = DB::table('t_TenderCategoryItemTypes')
+                ->where('TenderCategoryId', $tenderCategoryId)
+                ->where('IsActive', 1)
+                ->pluck('ItemTypeId')
+                ->map(fn($id) => (int)$id)
+                ->toArray();
+
+            Log::info("Found ItemType record IDs", ['item_type_record_ids' => $allowedItemTypeIds]);
+
+            if (empty($allowedItemTypeIds)) {
+                return response()->json([
+                    'ok' => true,
+                    'message' => 'No item types configured for this tender category',
+                    'categories' => []
+                ]);
+            }
+
+            // STEP 2: Get the CodeDetail IDs for these ItemTypes
+            $codeDetailIds = DB::table('t_ItemTypes')
+                ->whereIn('Id', $allowedItemTypeIds)
+                ->where('Active', 1)
+                ->pluck('TypeName')
+                ->map(fn($id) => (int)$id)
+                ->toArray();
+
+            Log::info("Found CodeDetail IDs for item types", ['code_detail_ids' => $codeDetailIds]);
+
+            if (empty($codeDetailIds)) {
+                return response()->json([
+                    'ok' => true,
+                    'message' => 'No valid item types found',
+                    'categories' => []
+                ]);
+            }
+
+            // STEP 3: Find ALL categories (including subcategories) that contain items with these types
+            $categoriesWithItems = DB::table('t_Items as i')
+                ->join('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
+                ->whereIn('i.ItemType', $codeDetailIds)
+                ->whereNull('i.DeletedOn')
+                ->whereNull('ic.DeletedBy')
+                ->distinct()
+                ->pluck('ic.Id')
+                ->map(fn($id) => (int)$id)
+                ->toArray();
+
+            Log::info("Found categories with matching items", [
+                'count' => count($categoriesWithItems),
+                'category_ids' => $categoriesWithItems
+            ]);
+
+            // STEP 4: Get top-level parents for all these categories
+            $topLevelCategoryIds = [];
+            foreach ($categoriesWithItems as $categoryId) {
+                $topLevelId = $this->resolveTopLevelCategoryId($categoryId);
+                if ($topLevelId) {
+                    $topLevelCategoryIds[] = $topLevelId;
+                }
+            }
+
+            $topLevelCategoryIds = array_unique($topLevelCategoryIds);
+
+            Log::info("Resolved top-level category IDs", ['top_level_ids' => $topLevelCategoryIds]);
+
+            // STEP 5: Get the actual category records
+            $topLevelCategories = DB::table('t_ItemCategories')
+                ->whereIn('Id', $topLevelCategoryIds)
+                ->whereNull('ParentId')
+                ->whereNull('DeletedBy')
+                ->select('Id', 'Name')
+                ->orderBy('Name')
+                ->get();
+
+            Log::info("Retrieved top-level categories", [
+                'count' => $topLevelCategories->count(),
+                'categories' => $topLevelCategories->toArray()
+            ]);
+
+            return response()->json([
+                'ok' => true,
+                'categories' => $topLevelCategories,
+                'message' => 'Categories retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error fetching allowed categories", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'ok' => false,
-                'message' => 'Tender category ID is required',
+                'message' => 'An error occurred while fetching categories',
                 'categories' => []
-            ], 400);
+            ], 500);
         }
-
-        Log::info("Fetching allowed categories for tender category: {$tenderCategoryId}");
-
-        // STEP 1: Get allowed ItemType IDs from mapping
-        $allowedItemTypeIds = DB::table('t_TenderCategoryItemTypes')
-            ->where('TenderCategoryId', $tenderCategoryId)
-            ->where('IsActive', 1)
-            ->pluck('ItemTypeId')
-            ->map(fn($id) => (int)$id)
-            ->toArray();
-
-        Log::info("Found ItemType record IDs", ['item_type_record_ids' => $allowedItemTypeIds]);
-
-        if (empty($allowedItemTypeIds)) {
-            return response()->json([
-                'ok' => true,
-                'message' => 'No item types configured for this tender category',
-                'categories' => []
-            ]);
-        }
-
-        // STEP 2: Get the CodeDetail IDs for these ItemTypes
-        $codeDetailIds = DB::table('t_ItemTypes')
-            ->whereIn('Id', $allowedItemTypeIds)
-            ->where('Active', 1)
-            ->pluck('TypeName')
-            ->map(fn($id) => (int)$id)
-            ->toArray();
-
-        Log::info("Found CodeDetail IDs for item types", ['code_detail_ids' => $codeDetailIds]);
-
-        if (empty($codeDetailIds)) {
-            return response()->json([
-                'ok' => true,
-                'message' => 'No valid item types found',
-                'categories' => []
-            ]);
-        }
-
-        // STEP 3: Find ALL categories (including subcategories) that contain items with these types
-        $categoriesWithItems = DB::table('t_Items as i')
-            ->join('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
-            ->whereIn('i.ItemType', $codeDetailIds)
-            ->whereNull('i.DeletedOn')
-            ->whereNull('ic.DeletedBy')
-            ->distinct()
-            ->pluck('ic.Id')
-            ->map(fn($id) => (int)$id)
-            ->toArray();
-
-        Log::info("Found categories with matching items", [
-            'count' => count($categoriesWithItems),
-            'category_ids' => $categoriesWithItems
-        ]);
-
-        // STEP 4: Get top-level parents for all these categories
-        $topLevelCategoryIds = [];
-        foreach ($categoriesWithItems as $categoryId) {
-            $topLevelId = $this->resolveTopLevelCategoryId($categoryId);
-            if ($topLevelId) {
-                $topLevelCategoryIds[] = $topLevelId;
-            }
-        }
-
-        $topLevelCategoryIds = array_unique($topLevelCategoryIds);
-
-        Log::info("Resolved top-level category IDs", ['top_level_ids' => $topLevelCategoryIds]);
-
-        // STEP 5: Get the actual category records
-        $topLevelCategories = DB::table('t_ItemCategories')
-            ->whereIn('Id', $topLevelCategoryIds)
-            ->whereNull('ParentId')
-            ->whereNull('DeletedBy')
-            ->select('Id', 'Name')
-            ->orderBy('Name')
-            ->get();
-
-        Log::info("Retrieved top-level categories", [
-            'count' => $topLevelCategories->count(),
-            'categories' => $topLevelCategories->toArray()
-        ]);
-
-        return response()->json([
-            'ok' => true,
-            'categories' => $topLevelCategories,
-            'message' => 'Categories retrieved successfully'
-        ]);
-
-    } catch (\Exception $e) {
-        Log::error("Error fetching allowed categories", [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-
-        return response()->json([
-            'ok' => false,
-            'message' => 'An error occurred while fetching categories',
-            'categories' => []
-        ], 500);
     }
-}
 
-//reject a tender
- public function rejectTender(Request $request)
+    //reject a tender
+    public function rejectTender(Request $request)
     {
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
 
@@ -1409,7 +1370,6 @@ public function allowedCategories(Request $request)
 
             return redirect()->route('initiatetender.index')
                 ->with('success', 'Tender rejected successfully');
-
         } catch (Throwable $e) {
             DB::rollBack();
             Log::error('Rejection failed: ' . $e->getMessage());
@@ -1430,12 +1390,13 @@ public function allowedCategories(Request $request)
             ->pluck('RoundID');
 
         // Base supplier query: active suppliers, proper supplier type, with needed relations
+        // FIX: 'types' is on ThirdParties (party), not SupplierMaster (thirdParty)
         $supplierQuery = \App\Models\ThirdParies\Supplier::query()
             ->where('Active_Status', 1)
-            ->whereHas('thirdParty.types', function ($q) {
-                $q->where('Code', 'like', 'SU-%');
-            })
-            ->with(['thirdParty', 'supplierCategory.itemCategories']);
+            /* ->whereHas('thirdParty.party.types', function ($q) {
+                 $q->where('Code', 'like', 'SU-%');
+             })*/
+            ->with(['thirdParty.party', 'supplierCategory.itemCategories']);
 
         if ($activeRounds->isNotEmpty()) {
             // Prefer suppliers in active rounds; include rows with NULL RoundID just in case
@@ -1451,9 +1412,11 @@ public function allowedCategories(Request $request)
         $suppliers = collect();
 
         foreach ($prequalifiedSuppliers as $supplier) {
-            if (!$supplier->thirdParty) continue;
+            // Check if relationships exist
+            if (!$supplier->thirdParty || !$supplier->thirdParty->party) continue;
 
-            $thirdParty = $supplier->thirdParty;
+            $supplierMaster = $supplier->thirdParty;
+            $thirdParty = $supplier->thirdParty->party;
 
             // Build list of item category IDs this supplier can serve
             $itemCategoryIds = [];
@@ -1473,9 +1436,15 @@ public function allowedCategories(Request $request)
             if (!empty($supplier->SupplierCategoryID)) {
                 $supplierCategoryIds->push($supplier->SupplierCategoryID);
             }
-            // Add any categories from pivot t_ThirdParty_SupplierCategory (resilient across DB schemas)
+            // Add any categories from pivot tables (resilient across DB schemas)
             try {
-                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty((int)$supplier->ThirdPartyID);
+                // CRITICAL FIX: Pass both ThirdPartyId and SupplierMaster.Id
+                // - t_ThirdParty_SupplierCategory uses ThirdPartyId (t_ThirdParties.Id)
+                // - t_PrequalificationRoundSupplierCategory uses SupplierMaster.Id
+                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty(
+                    (int)$supplierMaster->ThirdPartyId,
+                    (int)$supplierMaster->Id  // Pass SupplierMaster.Id for prequalification lookup
+                );
                 $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
             } catch (\Throwable $e) {
                 Log::warning('Failed resolving supplier categories', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
@@ -1513,8 +1482,19 @@ public function allowedCategories(Request $request)
                 $itemCategoryIds = array_merge($itemCategoryIds, $topLevelSet);
             }
 
+            // Log the final ItemCategoryIds for this supplier
+            if ($supplierMaster->Id == 2) { // Uma Yang - use SupplierMaster.Id
+                Log::info("Building ItemCategoryIds for supplier (SupplierMaster ID " . $supplierMaster->Id . ")", [
+                    'supplier_name' => $thirdParty->ThirdPartyName,
+                    'supplier_category_ids' => $supplierCategoryIds->toArray(),
+                    'final_item_category_ids' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
+                    'count' => count(array_unique($itemCategoryIds))
+                ]);
+            }
+
             $suppliers->push([
-                'Id' => $supplier->Id,
+                'Id' => $supplierMaster->Id,  // CRITICAL FIX: Use SupplierMaster.Id, not t_Suppliers.Id
+                'SupplierId' => $supplierMaster->Id,  // Explicitly add SupplierId for frontend
                 'SupplierName' => $thirdParty->ThirdPartyName,
                 'ThirdPartyName' => $thirdParty->ThirdPartyName,
                 'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
@@ -1524,7 +1504,7 @@ public function allowedCategories(Request $request)
                 'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))), // All categories supplier can serve (incl. top-level)
                 'RoundID' => $supplier->RoundID,
                 'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
-                'ThirdPartyID' => $supplier->ThirdPartyID,
+                'ThirdPartyID' => $supplierMaster->ThirdPartyId, // FIX: Use SupplierMaster->ThirdPartyId
             ]);
         }
 
@@ -1546,101 +1526,155 @@ public function allowedCategories(Request $request)
         return $result;
     }
 
-    // Return allowed ItemType IDs for a tender category (FK Id)
-private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
-{
-    if (!$tenderCategoryId) return [];
+    /**
+     * Public API for fetching prequalified suppliers for a specific category.
+     * Returns JSON format expected by the frontend.
+     */
+    public function getPrequalifiedSuppliersForCategory($categoryId)
+    {
+        $suppliers = $this->getPrequalifiedSuppliers();
 
-    // **FIX: Map results to integers**
-    $ids = DB::table('t_TenderCategoryItemTypes')
-        ->where('TenderCategoryId', $tenderCategoryId)
-        ->where('IsActive', 1)
-        ->pluck('ItemTypeId')
-        ->map(fn($id) => (int)$id)  // Ensure integers
-        ->toArray();
+        // Filter by Category ID
+        if ($categoryId) {
+            $catIdInt = (int)$categoryId;
+            
+            Log::info("Filtering suppliers for category ID: {$catIdInt}");
+            
+            $suppliers = $suppliers->filter(function ($s) use ($catIdInt) {
+                $supplierCategoryIds = $s['ItemCategoryIds'] ?? [];
+                
+                // Direct match: the selected category is already in the supplier's list
+                if (in_array($catIdInt, $supplierCategoryIds)) {
+                    Log::info("Supplier {$s['Id']} matched (direct)", [
+                        'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                        'supplier_categories' => $supplierCategoryIds
+                    ]);
+                    return true;
+                }
+                
+                // Descendant match: check if the selected category is a child of any supplier category
+                foreach ($supplierCategoryIds as $supplierCatId) {
+                    $descendants = $this->getAllDescendantCategoryIds((int)$supplierCatId, includeSelf: false);
+                    if (in_array($catIdInt, $descendants)) {
+                        Log::info("Supplier {$s['Id']} matched (descendant)", [
+                            'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                            'parent_category' => $supplierCatId,
+                            'selected_category' => $catIdInt
+                        ]);
+                        return true;
+                    }
+                }
+                
+                Log::debug("Supplier {$s['Id']} filtered out", [
+                    'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
+                    'supplier_categories' => $supplierCategoryIds,
+                    'selected_category' => $catIdInt
+                ]);
+                
+                return false;
+            })->values();
+            
+            Log::info("Filtered suppliers count: {$suppliers->count()}");
+        }
 
-    Log::info("Allowed ItemType IDs for tender category {$tenderCategoryId}", ['type_ids' => $ids]);
-
-    if (empty($ids)) {
-        $label = \App\Models\Procurement\TenderCategory::where('Id', $tenderCategoryId)->value('TenderCategory');
-        $types = DB::table('t_ItemTypes')
-            ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
-            ->pluck('t_ItemTypes.Id', 't_CodeDetails.Description')
-            ->map(fn($id) => (int)$id);  // Ensure integers here too
-
-        return match (strtoupper((string)$label)) {
-            'GOODS' => array_values(array_filter([
-                $types['Stock'] ?? null,
-                $types['Consumable'] ?? null,
-                $types['Asset'] ?? null,
-            ])),
-            'SERVICES' => array_values(array_filter([
-                $types['Services'] ?? null,
-                $types['Intangibles'] ?? null,
-            ])),
-            'WORKS' => array_values(array_filter([
-                $types['Services'] ?? null,
-            ])),
-            default => [],
-        };
+        return response()->json(['success' => true, 'data' => $suppliers]);
     }
-    return $ids;
-}
+
+    // Return allowed ItemType IDs for a tender category (FK Id)
+    private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
+    {
+        if (!$tenderCategoryId) return [];
+
+        // **FIX: Map results to integers**
+        $ids = DB::table('t_TenderCategoryItemTypes')
+            ->where('TenderCategoryId', $tenderCategoryId)
+            ->where('IsActive', 1)
+            ->pluck('ItemTypeId')
+            ->map(fn($id) => (int)$id)  // Ensure integers
+            ->toArray();
+
+        Log::info("Allowed ItemType IDs for tender category {$tenderCategoryId}", ['type_ids' => $ids]);
+
+        if (empty($ids)) {
+            $label = \App\Models\Procurement\TenderCategory::where('Id', $tenderCategoryId)->value('TenderCategory');
+            $types = DB::table('t_ItemTypes')
+                ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
+                ->pluck('t_ItemTypes.Id', 't_CodeDetails.Description')
+                ->map(fn($id) => (int)$id);  // Ensure integers here too
+
+            return match (strtoupper((string)$label)) {
+                'GOODS' => array_values(array_filter([
+                    $types['Stock'] ?? null,
+                    $types['Consumable'] ?? null,
+                    $types['Asset'] ?? null,
+                ])),
+                'SERVICES' => array_values(array_filter([
+                    $types['Services'] ?? null,
+                    $types['Intangibles'] ?? null,
+                ])),
+                'WORKS' => array_values(array_filter([
+                    $types['Services'] ?? null,
+                ])),
+                default => [],
+            };
+        }
+        return $ids;
+    }
     // Validate an item is within tender's top-level category and allowed item types
     // Replace your isItemAllowedForTender method with this debug version:
-// Replace your existing isItemAllowedForTender method with this version
- private function isItemAllowedForTender(int $itemId, int $tenderTopCategoryId, array $allowedTypeIds): bool
-{
-    $item = ItemMasterList::select('Id', 'Category', 'ItemType')->find($itemId);
+    // Replace your existing isItemAllowedForTender method with this version
+    private function isItemAllowedForTender(int $itemId, int $tenderTopCategoryId, array $allowedTypeIds): bool
+    {
+        $item = ItemMasterList::select('Id', 'Category', 'ItemType')->find($itemId);
 
-    if (!$item) {
-        Log::error("Item not found", ['item_id' => $itemId]);
-        return false;
-    }
+        if (!$item) {
+            Log::error("Item not found", ['item_id' => $itemId]);
+            return false;
+        }
 
-    // t_Items.ItemType is FK to t_CodeDetails.ID
-    // t_ItemTypes.TypeName is also FK to t_CodeDetails.ID
-    // So we need to find t_ItemTypes record where TypeName = item's ItemType
-    $itemTypeRecord = DB::table('t_ItemTypes')
-        ->where('TypeName', $item->ItemType)
-        ->where('Active', 1)
-        ->first();
+        // t_Items.ItemType is FK to t_CodeDetails.ID
+        // t_ItemTypes.TypeName is also FK to t_CodeDetails.ID
+        // So we need to find t_ItemTypes record where TypeName = item's ItemType
+        $itemTypeRecord = DB::table('t_ItemTypes')
+            ->where('TypeName', $item->ItemType)
+            ->where('Active', 1)
+            ->first();
 
-    if (!$itemTypeRecord) {
-        Log::warning("Item has no valid ItemType mapping", [
+        if (!$itemTypeRecord) {
+            Log::warning("Item has no valid ItemType mapping", [
+                'item_id' => $itemId,
+                'item_type_code_detail_id' => $item->ItemType
+            ]);
+            return false;
+        }
+
+        //  Normalize both arrays to integers for comparison**
+        $allowedTypeIds = array_map('intval', $allowedTypeIds);
+        $itemTypeRecordId = (int)$itemTypeRecord->Id;
+
+        Log::info("Checking item eligibility", [
             'item_id' => $itemId,
-            'item_type_code_detail_id' => $item->ItemType
-        ]);
-        return false;
-    }
-
-    //  Normalize both arrays to integers for comparison**
-    $allowedTypeIds = array_map('intval', $allowedTypeIds);
-    $itemTypeRecordId = (int)$itemTypeRecord->Id;
-
-    Log::info("Checking item eligibility", [
-        'item_id' => $itemId,
-        'item_type_code_detail_id' => $item->ItemType,
-        'item_type_record_id' => $itemTypeRecordId,
-        'allowed_type_record_ids' => $allowedTypeIds
-    ]);
-
-    // Check if the ItemType RECORD ID is in the allowed list
-    if (!empty($allowedTypeIds) && !in_array($itemTypeRecordId, $allowedTypeIds, true)) {
-        Log::warning("Item rejected: type not allowed", [
-            'item_id' => $itemId,
+            'item_type_code_detail_id' => $item->ItemType,
             'item_type_record_id' => $itemTypeRecordId,
             'allowed_type_record_ids' => $allowedTypeIds
         ]);
-        return false;
-    }
 
-    Log::info("Item ALLOWED for tender", [
-        'item_id' => $itemId,
-        'item_type_record_id' => $itemTypeRecordId
-    ]);
-    return true;
-}
+        // Check if the ItemType RECORD ID is in the allowed list
+        if (!empty($allowedTypeIds) && !in_array($itemTypeRecordId, $allowedTypeIds, true)) {
+            Log::warning("Item rejected: type not allowed", [
+                'item_id' => $itemId,
+                'item_type_record_id' => $itemTypeRecordId,
+                'allowed_type_record_ids' => $allowedTypeIds
+            ]);
+            return false;
+        }
+
+        Log::info("Item ALLOWED for tender", [
+            'item_id' => $itemId,
+            'item_type_record_id' => $itemTypeRecordId
+        ]);
+        return true;
+    }
 
 
     private function resolveTopLevelCategoryId(?int $categoryId): ?int
@@ -1697,9 +1731,9 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
     }
 
     /**
- * Show workflow history for a tender
- */
- public function workflowHistory($id)
+     * Show workflow history for a tender
+     */
+    public function workflowHistory($id)
     {
         try {
             $tender = Tender::findOrFail($id);
@@ -1709,7 +1743,6 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
                 'tender',
                 'history'
             ));
-
         } catch (\Exception $e) {
             Log::error('Failed to load history: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to load workflow history');
@@ -1717,24 +1750,24 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
     }
 
     private function createTenderModel(Request $request): Tender
-{
-    return Tender::create([
-        'TenderNo' => 'TNDR-' . Str::upper(Str::random(8)),
-        'Title' => $request->title,
-        'TenderType' => TenderTypeEnum::from($request->tender_type),
-        'TenderCategory' => $request->tender_category_id,
-        'ScopeOfWork' => $request->scope_of_work,
-        'Instructions' => $request->instructions,
-        'SubmissionDeadline' => $request->submission_deadline,
-        'OpeningDate' => $request->opening_date,
-        'Status' => TenderStatusEnum::Draft,  // Use enum instead of string
-         'ApprovalStatus' => Null,  // CRITICAL: Set to null, not PENDING
-        'ItemCategoryId' => $request->item_category_id,
-        'CurrencyId' => $request->currency_id,
-        'CreatedBy' => Auth::id(),
-        'ModifiedBy' => Auth::id(),
-    ]);
-}
+    {
+        return Tender::create([
+            'TenderNo' => 'TNDR-' . Str::upper(Str::random(8)),
+            'Title' => $request->title,
+            'TenderType' => TenderTypeEnum::from($request->tender_type),
+            'TenderCategory' => $request->tender_category_id,
+            'ScopeOfWork' => $request->scope_of_work,
+            'Instructions' => $request->instructions,
+            'SubmissionDeadline' => $request->submission_deadline,
+            'OpeningDate' => $request->opening_date,
+            'Status' => TenderStatusEnum::Draft,  // Use enum instead of string
+            'ApprovalStatus' => TenderApprovalStatusEnum::PENDING,  // Set to PENDING for new drafts
+            'ItemCategoryId' => $request->item_category_id,
+            'CurrencyId' => $request->currency_id,
+            'CreatedBy' => Auth::id(),
+            'ModifiedBy' => Auth::id(),
+        ]);
+    }
     private function createTenderItems(Request $request, Tender $tender): void
     {
         if (!empty($request->plan_items)) {
@@ -1800,53 +1833,64 @@ private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
         }
     }
 
-private function attachDocuments(Request $request, Tender $tender): void
-{
-    // Handle multiple document uploads
-    if ($request->hasFile('documents')) {
-        foreach ($request->file('documents') as $document) {
+    private function attachDocuments(Request $request, Tender $tender): void
+    {
+        if (!$request->hasFile('documents')) {
+            return;
+        }
+
+        $uploadedCount = 0;
+        $failedCount = 0;
+
+        foreach ((array) $request->file('documents') as $uploadedFile) {
+            if (!$uploadedFile || !$uploadedFile->isValid()) {
+                Log::warning('Invalid file upload detected', [
+                    'tender_id' => $tender->Id,
+                    'file' => $uploadedFile ? $uploadedFile->getClientOriginalName() : 'null'
+                ]);
+                continue;
+            }
+
             try {
-                $tender->newDocument(
+                Log::info('Attempting to attach document', [
+                    'tender_id' => $tender->Id,
+                    'filename' => $uploadedFile->getClientOriginalName(),
+                    'size' => $uploadedFile->getSize(),
+                    'mime' => $uploadedFile->getMimeType()
+                ]);
+
+                $test = $tender->newDocument(
                     ModulesEnum::Procurement,
-                    $document,
-                    [PermissionEnum::TenderRead->value],
+                    $uploadedFile,
+                    [PermissionEnum::TenderWrite->value],
                     Auth::user()
                 );
-                
-                Log::info("Document uploaded successfully", [
+
+                $uploadedCount++;
+                Log::info('Document attached successfully', [
                     'tender_id' => $tender->Id,
-                    'filename' => $document->getClientOriginalName()
+                    'filename' => $uploadedFile->getClientOriginalName(),
+                    'full_log' => $test
                 ]);
             } catch (\Exception $e) {
-                Log::error("Failed to upload document", [
+                $failedCount++;
+                Log::error('Failed to attach document to tender', [
                     'tender_id' => $tender->Id,
-                    'filename' => $document->getClientOriginalName(),
-                    'error' => $e->getMessage()
+                    'filename' => $uploadedFile->getClientOriginalName(),
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
                 ]);
+
+                // Don't throw - allow tender creation to continue
+                // You could throw here if documents are critical:
+                // throw new \Exception("Failed to attach document: " . $e->getMessage());
             }
         }
-    }
 
-    // Handle image upload (if needed)
-    if ($request->hasFile('image')) {
-        $image = $this->storeImage($request->file('image'));
-        $tender->ImageId = $image->ImageID;
-        $tender->save();
-    }
-}
-
-protected function storeImage(UploadedFile $file): Image
-    {
-        $imageContent = base64_encode(file_get_contents($file->getRealPath()));
-
-        return Image::create([
-            'Name' => $file->getClientOriginalName(),
-            'Image' => $imageContent,
-            'MIMEType' => $file->getMimeType(),
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
+        Log::info('Document attachment completed', [
+            'tender_id' => $tender->Id,
+            'uploaded' => $uploadedCount,
+            'failed' => $failedCount
         ]);
     }
 

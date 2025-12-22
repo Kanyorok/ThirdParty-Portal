@@ -45,7 +45,7 @@ class PrequalificationEvaluationController extends Controller
                 return response()->json(['data' => []]);
             }
 
-            $appsQuery = PrequalificationApplication::with(['result', 'supplier'])
+            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party'])
                 ->whereIn('ApplicationID', $appIds);
 
             if (in_array($statusFilter, ['passed', 'failed'])) {
@@ -56,13 +56,13 @@ class PrequalificationEvaluationController extends Controller
 
             $applications = $appsQuery->orderByDesc('SubmittedOn')->limit(500)->get();
 
-            // Load supplier rows (t_Suppliers) for these (ThirdPartyID + RoundID + CategoryId)
-            $supplierRows = \App\Models\ThirdParies\Supplier::whereIn('ThirdPartyID', $applications->pluck('SupplierID')->filter())
+            // Load supplier rows (t_Suppliers) for these (SupplierMasterId + RoundID + CategoryId)
+            $supplierRows = \App\Models\ThirdParies\Supplier::whereIn('SupplierMasterId', $applications->pluck('SupplierID')->filter())
                 ->whereIn('RoundID', $applications->pluck('RoundID')->filter())
                 ->whereIn('CategoryId', $applications->pluck('CategoryID')->filter())
                 ->get()
                 ->groupBy(function ($s) {
-                    return $s->ThirdPartyID . '-' . $s->RoundID . '-' . $s->CategoryId;
+                    return $s->SupplierMasterId . '-' . $s->RoundID . '-' . $s->CategoryId;
                 });
 
             $data = $applications->map(function ($app) use ($supplierRows) {
@@ -86,7 +86,7 @@ class PrequalificationEvaluationController extends Controller
 
                 return [
                     'application_no' => $app->applicationNo,
-                    'supplier' => $app->supplier?->ThirdPartyName,
+                    'supplier' => $app->supplier?->party?->ThirdPartyName,
                     'status' => $app->Status,
                     'submitted_on' => optional($app->SubmittedOn)->format('Y-m-d'),
                     'total_score' => $res ? number_format($res->TotalScore, 2) : null,
@@ -167,15 +167,15 @@ class PrequalificationEvaluationController extends Controller
                     ]
                 );
 
-                // mark third party as prequalified
-                ThirdParties::where('Id', $app->SupplierID)->update([
+                // mark supplier master as prequalified
+                \App\Models\ThirdParty\SupplierMaster::where('Id', $app->SupplierID)->update([
                     'IsPrequalified' => 1,
                     'ModifiedOn' => $now,
                     'ModifiedBy' => $userId,
                 ]);
                 // ensure supplier row exists per category with required audit fields
                 $supplier = Supplier::updateOrCreate(
-                    ['ThirdPartyID' => $app->SupplierID, 'RoundID' => $roundId, 'CategoryId' => $app->CategoryID],
+                    ['SupplierMasterId' => $app->SupplierID, 'RoundID' => $roundId, 'CategoryId' => $app->CategoryID],
                     [
                         'Active_Status' => 1,
                         'CreatedOn' => $now,
@@ -334,8 +334,8 @@ class PrequalificationEvaluationController extends Controller
                 ]
             );
 
-            // Also update the global prequalification flag for backward compatibility
-            ThirdParties::where('Id', $thirdPartyId)->update([
+            // Also update the supplier master prequalification flag
+            \App\Models\ThirdParty\SupplierMaster::where('Id', $thirdPartyId)->update([
                 'IsPrequalified' => 1,
                 'ModifiedOn' => $now,
                 'ModifiedBy' => $userId,
@@ -343,7 +343,7 @@ class PrequalificationEvaluationController extends Controller
 
             // Ensure supplier row exists per category with required audit fields
             Supplier::updateOrCreate(
-                ['ThirdPartyID' => $thirdPartyId, 'RoundID' => $roundId, 'CategoryId' => $categoryId],
+                ['SupplierMasterId' => $thirdPartyId, 'RoundID' => $roundId, 'CategoryId' => $categoryId],
                 [
                     'Active_Status' => 1,
                     'ModifiedOn' => $now,
@@ -444,7 +444,7 @@ class PrequalificationEvaluationController extends Controller
 
     public function showEvaluationForm($applicationId): View|RedirectResponse
     {
-        $application = PrequalificationApplication::with('supplier', 'category')->findOrFail($applicationId);
+        $application = PrequalificationApplication::with('supplier.party', 'category')->findOrFail($applicationId);
         $round = $application->round;
 
         if (!$round) {
@@ -473,7 +473,7 @@ class PrequalificationEvaluationController extends Controller
             $section->setRelation('criteria', $cleaned);
         });
 
-    $existingEvaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
+        $existingEvaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
             ->where('EvaluatorID', $evaluatorId)
             ->get()
             ->keyBy('CriteriaID');
