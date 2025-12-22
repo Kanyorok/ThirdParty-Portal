@@ -43,7 +43,7 @@ import 'react-phone-input-2/lib/style.css'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/common/dialog';
 import { Separator } from '@/components/common/separator';
 import { Badge } from '@/components/common/badge';
-import { UserProfile } from '@/types/next-auth.1';
+import { UserProfile } from '@/types/next-auth.d';
 import { useSession } from 'next-auth/react';
 import { getInitials } from '@/lib/utils';
 import { apiService } from '@/lib/api/profile';
@@ -276,8 +276,7 @@ const EditProfileModal: React.FC<{
                         <Label htmlFor="phone">Phone Number</Label>
                         <div className="p-2 bg-muted rounded-lg border border-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                             <PhoneInput
-                                <PhoneInput
-                                country={'us'}
+                                country="us"
                                 preferredCountries={['us', 'gb', 'ke', 'ng']}
                                 enableSearch
                                 value={formData.phone}

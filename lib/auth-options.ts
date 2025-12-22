@@ -65,7 +65,13 @@ export const authOptions: NextAuthOptions = {
 
         const rawUser = data.user as ApiUser
         const rawTypes = Array.isArray(rawUser.types) ? rawUser.types : []
-        const types: ThirdPartyTypeEntry[] = rawTypes.map((t) => ({ id: t.id, code: t.code, categoryId: t.categoryId ?? null }))
+        const types: ThirdPartyTypeEntry[] = rawTypes.map((t) => ({ 
+          id: t.id, 
+          code: t.code, 
+          categoryId: t.categoryId ?? null,
+          isActive: t.isActive ?? true,
+          pivotId: t.pivotId ?? t.id,
+        }))
         const isSupplier = !!rawUser.isSupplier || types.some((t) => t.code?.startsWith("SU-"))
 
         const loggedIn: User = {
@@ -179,6 +185,8 @@ function transformApiUser(rawUser: ApiUser, token: string): User {
     id: t.id,
     code: t.code,
     categoryId: t.categoryId ?? null,
+    isActive: t.isActive ?? true,
+    pivotId: t.pivotId ?? t.id,
   }))
 
   const isSupplier = rawUser.isSupplier || types.some((t) => t.code?.startsWith("SU"))

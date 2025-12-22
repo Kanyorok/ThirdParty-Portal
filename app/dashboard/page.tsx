@@ -42,7 +42,7 @@ function DashboardContent() {
             session.user.thirdParty?.tradingName ||
             session.user.thirdParty?.label ||
             session.user.firstName ||
-            session.user.name?.split(" ")[0] ||
+            session.user.email?.split("@")[0] ||
             "User"
 
         // Render specialized dashboard for Tenants

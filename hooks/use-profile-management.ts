@@ -40,8 +40,8 @@ export function useProfileManagement() {
     clearError()
 
     try {
-      const response: ProfilesResponse = await apiService.fetchProfiles(accessToken)
-      const profileData = (response.profiles || response.data || []) as Profile[]
+      const profile = await apiService.getProfile(accessToken)
+      const profileData = profile ? [profile] : []
 
       setProfiles(profileData)
       return profileData
@@ -80,7 +80,7 @@ export function useProfileManagement() {
         const newProfile = (result.profile || result.data) as Profile
 
         if (newProfile) {
-          addProfile(newProfile)
+          addProfile(newProfile as any)
           toast.success(result.message || `${type} profile created successfully`)
           return newProfile
         }

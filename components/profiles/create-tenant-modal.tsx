@@ -57,10 +57,7 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
     watch,
   } = useForm<TenantProfileFormData>({
     resolver: zodResolver(tenantProfileSchema),
-    defaultValues: {
-      propertyTypes: [],
-      leasePreferences: [],
-    },
+    defaultValues: {},
   })
 
   const onSubmit = async (data: TenantProfileFormData) => {
@@ -68,7 +65,7 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
       ...data,
       propertyTypes: selectedPropertyTypes,
       leasePreferences: selectedLeasePreferences,
-    })
+    } as any)
     if (profile) {
       onOpenChange(false)
       setStep(1)
@@ -143,11 +140,11 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
                   <Label htmlFor="companyName">Company Name *</Label>
                   <Input
                     id="companyName"
-                    {...register("companyName")}
+                    {...register("third_party_name")}
                     placeholder="Enter company name"
                   />
-                  {errors.companyName && (
-                    <p className="text-sm text-destructive">{errors.companyName.message}</p>
+                  {errors.third_party_name && (
+                    <p className="text-sm text-destructive">{errors.third_party_name.message}</p>
                   )}
                 </div>
 
@@ -155,11 +152,11 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
                   <Label htmlFor="tradingName">Trading Name *</Label>
                   <Input
                     id="tradingName"
-                    {...register("tradingName")}
+                    {...register("trading_name")}
                     placeholder="Enter trading name"
                   />
-                  {errors.tradingName && (
-                    <p className="text-sm text-destructive">{errors.tradingName.message}</p>
+                  {errors.trading_name && (
+                    <p className="text-sm text-destructive">{errors.trading_name.message}</p>
                   )}
                 </div>
 
@@ -167,11 +164,11 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
                   <Label htmlFor="registrationNumber">Registration Number *</Label>
                   <Input
                     id="registrationNumber"
-                    {...register("registrationNumber")}
+                    {...register("registration_number")}
                     placeholder="e.g., PVT-123456"
                   />
-                  {errors.registrationNumber && (
-                    <p className="text-sm text-destructive">{errors.registrationNumber.message}</p>
+                  {errors.registration_number && (
+                    <p className="text-sm text-destructive">{errors.registration_number.message}</p>
                   )}
                 </div>
 
@@ -179,12 +176,12 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
                   <Label htmlFor="physicalAddress">Physical Address *</Label>
                   <Textarea
                     id="physicalAddress"
-                    {...register("physicalAddress")}
+                    {...register("physical_address")}
                     placeholder="Enter full physical address"
                     rows={3}
                   />
-                  {errors.physicalAddress && (
-                    <p className="text-sm text-destructive">{errors.physicalAddress.message}</p>
+                  {errors.physical_address && (
+                    <p className="text-sm text-destructive">{errors.physical_address.message}</p>
                   )}
                 </div>
 
@@ -252,9 +249,6 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
                       </motion.button>
                     ))}
                   </div>
-                  {errors.propertyTypes && (
-                    <p className="text-sm text-destructive">{errors.propertyTypes.message}</p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -277,9 +271,6 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
                       </motion.button>
                     ))}
                   </div>
-                  {errors.leasePreferences && (
-                    <p className="text-sm text-destructive">{errors.leasePreferences.message}</p>
-                  )}
                 </div>
               </motion.div>
             )}
