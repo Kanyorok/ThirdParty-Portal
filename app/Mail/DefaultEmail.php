@@ -32,7 +32,7 @@ class DefaultEmail extends Mailable
      */
     public function envelope(): Envelope
     {
-        $to = collect($this->crmEmail->To)->flatten()->toArray();
+        $to = collect($this->crmEmail->To)->flatten()->filter(fn($email) => filter_var($email, FILTER_VALIDATE_EMAIL))->values()->toArray();
         $cc = collect($this->crmEmail->CC)->flatten()->toArray();
         $bcc = collect($this->crmEmail->BCC)->flatten()->toArray();
 

@@ -43,9 +43,7 @@ use Yajra\DataTables\DataTables;
 
 class CRMEmailService
 {
-    public function __construct(public Email $crmEmail)
-    {
-    }
+    public function __construct(public Email $crmEmail) {}
 
     public static function createClient(Client $client, string $to, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
     {
@@ -179,7 +177,7 @@ class CRMEmailService
             ]));
 
             return $mailer->sendNow(new TestMail()) instanceof SentMessage;
-        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface|\Exception $e) {
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface | \Exception $e) {
         }
 
         return false;
@@ -412,7 +410,7 @@ class CRMEmailService
     protected function _failed(string $reason): static
     {
         $source = $this->crmEmail->source;
-        if ($source instanceof CampaignParty) {//update status
+        if ($source instanceof CampaignParty) { //update status
             $source->update([
                 'Status' => EmailStatusEnum::Failed->value,
                 'Channel' => Email::getPrimaryKey(),
@@ -434,9 +432,9 @@ class CRMEmailService
 
     protected function _send(): static
     {
-        if (config('app.debug')) {
+        /*if (config('app.debug')) {
             return $this->_failed('In debug');
-        }
+        }*/
         //$mailable = Mail::send(new DefaultEmail($this->crmEmail));
         try {
             $mailable = $this->_sendNewConfig();
@@ -453,10 +451,10 @@ class CRMEmailService
             ]);
 
             if (!is_int($this->crmEmail->EmailConversationId)) {
-                $this->_createConversation();//create and set non related (new);
+                $this->_createConversation(); //create and set non related (new);
             }
             $source = $this->crmEmail->source;
-            if ($source instanceof CampaignParty) {//update status
+            if ($source instanceof CampaignParty) { //update status
                 $source->update([
                     'Status' => EmailStatusEnum::Sent->value,
                     'Channel' => Email::getPrimaryKey(),

@@ -28,12 +28,12 @@ class WorkFlowStageService
 
         try {
             $workflow = WorkFlow::findOrFail($data['WorkFlowId']);
-            
+
             // Check if workflow already has a final stage
             if (!empty($workflow->FinalStage)) {
                 throw new ErroredException('This workflow already has a final stage. Please remove the final stage designation before adding more stages.');
             }
-            
+
             $nextOrder = WorkflowStage::where('WorkFlowId', $workflow->Id)->max('Order') + 1;
 
             $moduleId = DB::table('t_ModuleSources')
@@ -70,21 +70,7 @@ class WorkFlowStageService
 
 
             // Fix for SP leaving transaction open
-            try {
-                $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
-                $laravelTranCount = DB::transactionLevel();
-
-
-
-                while ($dbTranCount > $laravelTranCount) {
-                    DB::unprepared('COMMIT TRANSACTION');
-                    $tranCountAfter--;
-                    Log::info('Committed open transaction from SP');
-                } catch (\Exception $e) {
-                    Log::warning('Failed to commit SP transaction: ' . $e->getMessage());
-                    break;
-                }
-            }
+            $this->fixTransactionCount();
 
             Log::info('p_AddWorkflowStage2 Result', ['result' => $results]);
 
@@ -93,7 +79,7 @@ class WorkFlowStageService
             }
 
             $dto = WorkflowStageResult::fromDatabaseResult($results[0]);
-            
+
             if ($dto->isError()) {
                 throw new ErroredException($dto->message);
             }
@@ -105,11 +91,11 @@ class WorkFlowStageService
             usleep(100000); // 100ms
 
             // Fetch the newly created stage with fresh query
-            $stage = DB::table('t_WorkflowStages')
+            $stageModel = DB::table('t_WorkflowStages')
                 ->where('Id', $dto->newStageId)
                 ->first();
 
-            if (!$stage) {
+            if (!$stageModel) {
                 // Debug: Check if it exists via raw DB
                 $rawStage = DB::table('t_WorkflowStages')->where('Id', $dto->newStageId)->first();
 
@@ -118,8 +104,8 @@ class WorkFlowStageService
                     // If found via raw DB but not Eloquent, it's a model issue. 
                     // Try to hydrate manually or investigate model scopes.
                     Log::warning('Stage found via raw DB but not Eloquent. Possible scope or casting issue.');
-                    $stage = new WorkflowStage((array)$rawStage);
-                    $stage->exists = true;
+                    $stageModel = new WorkflowStage((array)$rawStage);
+                    $stageModel->exists = true;
                 } else {
                     throw new ErroredException('Stage creation failed - Record not found after SP execution.');
                 }
@@ -130,7 +116,7 @@ class WorkFlowStageService
 
             // Handle Permission
             $permission = null;
-            
+
             if (!empty($data['PermissionId'])) {
                 $permission = Permission::find($data['PermissionId']);
                 if ($permission && $stageModel->PermissionId != $permission->id) {
@@ -163,7 +149,7 @@ class WorkFlowStageService
 
             // Assign permission to user's roles
             $currentUser = Auth::user();
-            if ($currentUser) {
+            if ($currentUser instanceof \App\Models\Auth\User) {
                 $currentUser->load('roles');
                 foreach ($currentUser->roles as $role) {
                     try {
@@ -199,7 +185,7 @@ class WorkFlowStageService
                         'ModifiedBy' => $user->Id,
                         'ModifiedOn' => now()
                     ]);
-                
+
                 Log::info('Set final stage', [
                     'workflow_id' => $workflow->Id,
                     'final_stage' => $stageModel->StageName
@@ -231,7 +217,6 @@ class WorkFlowStageService
                 'stage' => $stageModel,
                 'permission' => $permission,
             ];
-            
         } catch (ErroredException $e) {
             throw $e;
         } catch (\Throwable $e) {
@@ -275,7 +260,7 @@ class WorkFlowStageService
                 ->get();
 
             $newFinalStage = null;
-            
+
             if ($remainingStages->isNotEmpty()) {
                 // If the deleted stage was final, don't automatically set a new final stage
                 // Let the user explicitly mark another stage as final
@@ -312,7 +297,6 @@ class WorkFlowStageService
                 'final_stage' => $newFinalStage,
                 'was_final_stage' => $wasFinalStage
             ];
-            
         } catch (\Throwable $e) {
             Log::error('Failed to delete workflow stage', [
                 'stage_id' => $id,
@@ -330,7 +314,7 @@ class WorkFlowStageService
     {
         try {
             $stage = WorkflowStage::findOrFail($id);
-            
+
             DB::table('t_WorkflowStages')
                 ->where('Id', $id)
                 ->update(array_merge($data, [
@@ -347,7 +331,6 @@ class WorkFlowStageService
                 ->log("Updated workflow stage: {$stage->StageName}");
 
             return WorkflowStage::find($id);
-            
         } catch (\Throwable $e) {
             Log::error('Failed to update workflow stage', [
                 'stage_id' => $id,
@@ -367,27 +350,28 @@ class WorkFlowStageService
             ->first();
     }
 
+    private function fixTransactionCount(): void
+    {
+        try {
+            $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
+            $laravelTranCount = DB::transactionLevel();
+
+            while ($dbTranCount > $laravelTranCount) {
+                DB::unprepared('COMMIT TRANSACTION');
+                $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
+                Log::warning('Fixed mismatched transaction count from SP (Forced COMMIT)');
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Could not check/fix transaction count: ' . $e->getMessage());
+        }
+    }
+
     /**
-     * Clear all relevant caches
+     * Clear workflow caches
      */
     private function clearAllCaches(int $workflowId): void
     {
-        try {
-            // Clear Laravel cache
-            Cache::forget("workflow_{$workflowId}");
-            Cache::forget("workflow_stages_{$workflowId}");
-            
-            // Clear permission cache
-            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-            
-            // Clear query cache if using it
-            if (method_exists(DB::class, 'flushQueryCache')) {
-                DB::flushQueryCache();
-            }
-            
-            Log::info('Cleared all caches for workflow', ['workflow_id' => $workflowId]);
-        } catch (\Exception $e) {
-            Log::warning('Failed to clear some caches: ' . $e->getMessage());
-        }
+        Cache::forget("workflow_{$workflowId}");
+        Cache::forget("workflow_stages_{$workflowId}");
     }
 }

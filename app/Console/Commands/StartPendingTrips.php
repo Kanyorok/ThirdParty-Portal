@@ -32,18 +32,18 @@ class StartPendingTrips extends Command
         $this->info("Current time: {$now}");
 
         // Find trips that should be started
-        $trips = FleetTripLog::where('Status', $approvedId)
-            ->where(function($query) use ($now) {
-                $query->where(function($q) use ($now) {
+        $trips = FleetTripLog::where('TripStatus', $approvedId)
+            ->where(function ($query) use ($now) {
+                $query->where(function ($q) use ($now) {
                     // If both date and time are set
                     $q->whereNotNull('TripStartDate')
-                      ->whereNotNull('StartTime')
-                      ->whereRaw("CONCAT(TripStartDate, ' ', StartTime) <= ?", [$now->format('Y-m-d H:i:s')]);
-                })->orWhere(function($q) use ($now) {
+                        ->whereNotNull('StartTime')
+                        ->whereRaw("CONCAT(TripStartDate, ' ', StartTime) <= ?", [$now->format('Y-m-d H:i:s')]);
+                })->orWhere(function ($q) use ($now) {
                     // If only date is set (start at beginning of day)
                     $q->whereNotNull('TripStartDate')
-                      ->whereNull('StartTime')
-                      ->whereDate('TripStartDate', '<=', $now->format('Y-m-d'));
+                        ->whereNull('StartTime')
+                        ->whereDate('TripStartDate', '<=', $now->format('Y-m-d'));
                 });
             })
             ->get();
@@ -52,8 +52,8 @@ class StartPendingTrips extends Command
 
         foreach ($trips as $trip) {
             try {
-                $oldStatus = $trip->Status;
-                $trip->update(['Status' => $ongoingId]);
+                $oldStatus = $trip->TripStatus;
+                $trip->update(['TripStatus' => $ongoingId]);
 
                 activity()
                     ->performedOn($trip)
@@ -61,7 +61,6 @@ class StartPendingTrips extends Command
                     ->log("Trip #{$trip->TripNo} started automatically at {$now}");
 
                 $this->info("Trip #{$trip->TripNo} started successfully (Status: Approved → Ongoing)");
-                
             } catch (\Exception $e) {
                 $this->error("Failed to start trip #{$trip->TripNo}: " . $e->getMessage());
                 \Log::error("Failed to start trip #{$trip->TripNo}: " . $e->getMessage());
