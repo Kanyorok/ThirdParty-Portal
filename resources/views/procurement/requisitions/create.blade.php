@@ -163,7 +163,6 @@
         </div>
     </div>
 @endsection
-
 @section('scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -173,67 +172,170 @@
     <script>
         const $Modal = $('#RequisitionItemModal');
 
-    $(function() {
-        @if (!$details->isEmpty())
-        $('#requisitionTable').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true,
-            order: [[3, 'desc']], // Requisition Date column (0-based index)
-            language: {
-                emptyTable: "No data available"
-            }
-        });
-        @endif
+        $(function() {
+            // Initialize DataTable
+            @if (!$details->isEmpty())
+            $('#requisitionTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                order: [[3, 'desc']], 
+                language: {
+                    emptyTable: "No data available"
+                }
+            });
+            @endif
 
-        $(document).on('click', '.modal-create-item', function () {
-            $(".modal-title").html('Add Requisition');
-            $(".modal-item").addClass('d-none');
-            $('#createRequisition').removeClass('d-none');
-            $Modal.modal('show');
-        });
+            // Initialize Select2
+            $('#ProcurementPlan, #Branch, #Department').select2({
+                dropdownParent: $Modal,
+                width: '100%'
+            });
 
-        $('form#createRequisitionForm').submit(async function (e) {
-            e.preventDefault();
-            if (await saveForm($(this), $('#createRequisitionBtn'), true, true, true)) {
-                $Modal.modal('hide');
-            }
-        });
+            // Show modal
+            $(document).on('click', '.modal-create-item', function () {
+                $(".modal-title").html('Add Requisition');
+                $(".modal-item").addClass('d-none');
+                $('#createRequisition').removeClass('d-none');
+                $Modal.modal('show');
+            });
 
-        // Fetch Branch and Department based on Procurement Plan
-        document.getElementById('ProcurementPlan').addEventListener('change', function () {
-            let planId = this.value;
-            if (!planId) return;
+            // Handle form submission - FIXED VERSION
+           $('form#createRequisitionForm').on('submit', function (e) {
+                e.preventDefault();
+                
+                const form = $(this);
+                const submitBtn = $('#createRequisitionBtn');
+                
+                // Create FormData
+                const formData = new FormData(this);
+                
+                // Make AJAX request
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Accept': 'application/json'
+                    },
+                    // 1. CLEAR ERRORS BEFORE SENDING
+                    beforeSend: function() {
+                        // Disable button
+                        submitBtn.prop('disabled', true).html(
+                            '<span class="spinner-border spinner-border-sm me-2"></span>Creating...'
+                        );
+                        // Clear previous errors
+                        $('.invalid-feedback').addClass('d-none').text('');
+                        $('.form-control').removeClass('is-invalid');
+                    },
+                    // 2. HANDLE SUCCESS
+                    success: function(response) {
+                        if (response.success && response.requisition_id) {
+                            $Modal.modal('hide');
+                            
+                            // Show success message
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: response.message || 'Requisition created successfully',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.href = response.route;
+                                });
+                            } else {
+                                alert(response.message || 'Requisition created successfully');
+                                window.location.href = response.route;
+                            }
+                        } else {
+                            // Manually trigger error if success is false
+                            // This goes to the error block below or handles it here
+                            submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Add Requisition');
+                            alert(response.message || 'Failed to create requisition');
+                        }
+                    },
+                    // 3. HANDLE ERRORS
+                    error: function(xhr) {
+                        console.error('Error:', xhr);
+                        
+                        // Re-enable button
+                        submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Add Requisition');
 
-            fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
-                .then(response => response.json())
-                .then(data => {
-                    const branchSelect = document.getElementById('Branch');
-                    const departmentSelect = document.getElementById('Department');
+                        // HANDLE VALIDATION ERRORS (Status 422)
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(key, value) {
+                                // key = Field name (e.g., ProcurementPlan), value = Array of errors
+                                let errorId = '#' + key + '_error';
+                                let inputId = '#' + key;
+                                
+                                $(inputId).addClass('is-invalid'); // Highlight input red
+                                $(errorId).removeClass('d-none').text(value[0]); // Show error message
+                            });
+                            
+                            // Stop here so we don't show the generic popup
+                            return; 
+                        }
 
-                    branchSelect.innerHTML = '<option selected disabled>Select Branch</option>';
-                    departmentSelect.innerHTML = '<option selected disabled>Select Department</option>';
+                        // HANDLE GENERAL SERVER ERRORS
+                        let errorMessage = 'Failed to create requisition. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
 
-                    data.branches.forEach(branch => {
-                        const opt = document.createElement('option');
-                        opt.value = branch.Id;
-                        opt.textContent = branch.Name;
-                        branchSelect.appendChild(opt);
-                    });
-
-                    data.departments.forEach(dept => {
-                        const opt = document.createElement('option');
-                        opt.value = dept.Id;
-                        opt.textContent = dept.Name;
-                        departmentSelect.appendChild(opt);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching plan details:', error);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: errorMessage
+                            });
+                        } else {
+                            alert(errorMessage);
+                        }
+                    }
                 });
+
+                
+            });
+
+            // Fetch Branch and Department based on Procurement Plan
+            $('#ProcurementPlan').on('change', function () {
+                let planId = $(this).val();
+                if (!planId) return;
+
+                fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
+                    .then(response => response.json())
+                    .then(data => {
+                        const branchSelect = $('#Branch');
+                        const departmentSelect = $('#Department');
+
+                        branchSelect.empty().append('<option selected disabled>Select Branch</option>');
+                        departmentSelect.empty().append('<option selected disabled>Select Department</option>');
+
+                        data.branches.forEach(branch => {
+                            branchSelect.append($('<option>', {
+                                value: branch.Id,
+                                text: branch.Name
+                            }));
+                        });
+
+                        data.departments.forEach(dept => {
+                            departmentSelect.append($('<option>', {
+                                value: dept.Id,
+                                text: dept.Name
+                            }));
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching plan details:', error);
+                        alert('Failed to fetch plan details');
+                    });
+            });
         });
-    });
     </script>
 @endsection
- 

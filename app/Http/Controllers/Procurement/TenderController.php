@@ -10,6 +10,7 @@ use App\Enums\TenderStatusEnum;
 use App\Enums\TenderTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Currency;
+use App\Models\DMS\Document;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
@@ -26,6 +27,7 @@ use App\Models\ThirdParies\Supplier;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -41,6 +43,8 @@ use Illuminate\Http\UploadedFile;
 use App\Models\Procurement\TenderDocument;
 use App\Enums\EmailPriorityEnum;
 use App\Enums\Core\ModulesEnum;
+use App\Models\DMS\Image;
+
 
 class TenderController extends Controller
 {
@@ -312,6 +316,14 @@ class TenderController extends Controller
                         Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
                         continue;
                     }
+                      //plan item reference 
+                     $prReference = $this->generatePlanItemPRReference($planLineItem->PlanID, $planItemId);
+                
+                Log::info('Creating PLAN item with auto-generated PR', [
+                    'plan_id' => $planLineItem->PlanID,
+                    'plan_item_id' => $planItemId,
+                    'pr_reference' => $prReference
+                ]);
 
                     TenderItems::create([
                         'TenderID' => $tenderId,
@@ -322,7 +334,7 @@ class TenderController extends Controller
                         'QtyToTender' => $qtyRequested,
                         'ItemCategory' => $request->item_category_id,
                         'Remarks' => null,
-                        'RelatedPRID' => $item['pr_ref'] ?? null,
+                        'RelatedPRID' => $prReference,
                         'CreatedBy' => Auth::id(),
                         'ModifiedBy' => Auth::id(),
                     ]);
@@ -333,6 +345,7 @@ class TenderController extends Controller
             $manualItems = $request->input('manual_items', []);
             if (!empty($manualItems)) {
                 $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
+                $manualCounter = 1;
                 foreach ($manualItems as $manualItem) {
                     if (empty($manualItem['item_id'])) {
                         continue;
@@ -342,6 +355,8 @@ class TenderController extends Controller
                         Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
                         continue;
                     }
+                       //auto generated pr reference 
+                      $prReference = $this->generateManualItemPRReference($tender->TenderNo, $manualCounter++);
 
                     TenderItems::create([
                         'TenderID' => $tenderId,
@@ -352,7 +367,7 @@ class TenderController extends Controller
                         'QtyToTender' => $manualItem['qty'],
                         'ItemCategory' => $request->item_category_id,
                         'Remarks' => null,
-                        'RelatedPRID' => $manualItem['pr_ref'] ?? null,
+                        'RelatedPRID' => $prReference,
                         'CreatedBy' => Auth::id(),
                         'ModifiedBy' => Auth::id(),
                     ]);
@@ -608,82 +623,134 @@ class TenderController extends Controller
 
 
 
-    public function edit(string $id)
-    {
-        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
-        $tender = Tender::findOrFail($id);
+   public function edit(string $id)
+{
+    $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+    $tender = Tender::findOrFail($id);
+    
+    $show = true;
+    if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || 
+        $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
         $show = true;
-        if ($tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED || $tender->ApprovalStatus === TenderApprovalStatusEnum::APPROVED) {
-            $show = true;
-        }
-        $items = TenderItems::where('TenderID', $id)->where('ItemCategory', $tender->ItemCategoryId)->get();
-        $otherItemsForThatTender = ItemMasterList::where('Category', $tender->ItemCategoryId)->get();
-        // Include supplier->thirdParty so we can display proper contact details
-        $suppliers = TenderSupplier::where('TenderID', $id)
-            ->with(['supplier.thirdParty'])
-            ->get();
-
-        $existingSupplierIds = collect($suppliers)->pluck('SupplierID')->map(fn($v) => (int)$v)->values();
-
-        // Build addable suppliers list using the prequalification helper and filter by tender's top-level category
-        $topCategoryId = (int) $tender->ItemCategoryId;
-        $prequalified = $this->getPrequalifiedSuppliers(); // Collection of arrays
-        $otherSuppliers = collect(value: $prequalified)
-            ->filter(function ($s) use ($topCategoryId, $existingSupplierIds) {
-                $id = (int) ($s['Id'] ?? 0);
-                $cats = collect($s['ItemCategoryIds'] ?? []);
-                return $id > 0
-                    && !$existingSupplierIds->contains($id)
-                    && ($topCategoryId ? $cats->contains($topCategoryId) : true);
-            })
-            ->map(function ($s) {
-                // Normalize to object with properties expected by the view
-                return (object) [
-                    'Id'           => (int) ($s['Id'] ?? 0),
-                    'SupplierName' => (string) ($s['ThirdPartyName'] ?? $s['SupplierName'] ?? ''),
-                    'ContactEmail' => (string) ($s['Email'] ?? ''),
-                    'ContactPhone' => (string) ($s['Phone'] ?? ''),
-                ];
-            })
-            ->values();
-        $tenderCategory = TenderCategory::find($tender->TenderCategory)->Id;
-        $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
-        $itemCategory = ItemCategories::find($tender->ItemCategoryId)->Name;
-        $itemCategoryID = ItemCategories::find($tender->ItemCategoryId)->Id;
-        $currency = $tender->CurrencyId;
-
-        $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
-        $procurementPlan = ProcurementPlan::find($tender->procurement_plan_id);
-
-        $planItems = [];
-        $manualItems = [];
-
-        foreach ($planItems as $planItem) {
-            $planItem->item_name = ItemMasterList::find($planItem->item_id)?->ItemName ?? 'N/A';
-        }
-
-        foreach ($manualItems as $manualItem) {
-            $manualItem->item_name = ItemMasterList::find($manualItem->item_id)?->ItemName ?? 'N/A';
-        }
-
-        return view('procurement.tendering.tendersetup.tenderinitiation.edit', compact(
-            'tender',
-            'tenderCategory',
-            'tenderCategories',
-            'itemCategory',
-            'itemCategoryID',
-            'currency',
-            'procurementPlan',
-            'planItems',
-            'manualItems',
-            'items',
-            'otherItemsForThatTender',
-            'suppliers',
-            'otherSuppliers',
-            'show',
-            'allCurrency'
-        ));
     }
+    
+    $items = TenderItems::where('TenderID', $id)
+        ->where('ItemCategory', $tender->ItemCategoryId)
+        ->get();
+    
+    // Build category hierarchy map
+    $allCategories = ItemCategories::select('Id', 'ParentId')->get()->keyBy('Id');
+    $categoryToTopLevel = [];
+    foreach ($allCategories as $category) {
+        $current = $category;
+        while ($current->ParentId !== null && isset($allCategories[$current->ParentId])) {
+            $current = $allCategories[$current->ParentId];
+        }
+        $categoryToTopLevel[$category->Id] = $current->Id;
+    }
+    
+    // Get allowed item types
+    $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
+    
+    // **KEY FIX: If no type restrictions configured, allow all items in category**
+    $checkItemTypes = !empty($allowedTypeIds);
+    
+    // Get items matching category (and optionally type)
+    $otherItemsForThatTender = ItemMasterList::select('Id', 'ItemName', 'Category', 'ItemType')
+        ->whereNull('DeletedOn')
+        ->whereHas('price', function ($q) {
+            $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+        })
+        ->get()
+        ->filter(function ($item) use ($categoryToTopLevel, $tender, $allowedTypeIds, $checkItemTypes) {
+            // Check if item's top-level category matches tender's category
+            $itemTopCategory = $categoryToTopLevel[$item->Category] ?? $item->Category;
+            if ($itemTopCategory != $tender->ItemCategoryId) {
+                return false;
+            }
+            
+            // If type checking is disabled (no mappings), allow all items in category
+            if (!$checkItemTypes) {
+                return true;
+            }
+            
+            // Otherwise, check item type
+            return $this->isItemAllowedForTender(
+                (int)$item->Id, 
+                (int)$tender->ItemCategoryId, 
+                $allowedTypeIds
+            );
+        })
+        ->map(function ($item) {
+            return [
+                'Id' => $item->Id,
+                'ItemName' => $item->ItemName,
+            ];
+        })
+        ->sortBy('ItemName')
+        ->values();
+    
+    // Rest of your code remains the same...
+    $suppliers = TenderSupplier::where('TenderID', $id)
+        ->with(['supplier.thirdParty'])
+        ->get();
+
+   
+       // Load documents - Get documents related to this tender
+    try {
+        $documents = $tender->documents()->with('repository')->get();
+    } catch (\Exception $e) {
+        Log::error("Failed to load documents in edit: " . $e->getMessage());
+        $documents = collect();
+    }
+    
+    $existingSupplierIds = collect($suppliers)->pluck('SupplierID')->map(fn($v) => (int)$v)->values();
+    $topCategoryId = (int) $tender->ItemCategoryId;
+    $prequalified = $this->getPrequalifiedSuppliers();
+    
+    $otherSuppliers = collect($prequalified)
+        ->filter(function ($s) use ($topCategoryId, $existingSupplierIds) {
+            $id = (int) ($s['Id'] ?? 0);
+            $cats = collect($s['ItemCategoryIds'] ?? []);
+            return $id > 0
+                && !$existingSupplierIds->contains($id)
+                && ($topCategoryId ? $cats->contains($topCategoryId) : true);
+        })
+        ->map(function ($s) {
+            return (object) [
+                'Id' => (int) ($s['Id'] ?? 0),
+                'SupplierName' => (string) ($s['ThirdPartyName'] ?? $s['SupplierName'] ?? ''),
+                'ContactEmail' => (string) ($s['Email'] ?? ''),
+                'ContactPhone' => (string) ($s['Phone'] ?? ''),
+            ];
+        })
+        ->values();
+    
+    $tenderCategory = TenderCategory::find($tender->TenderCategory)->Id;
+    $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
+    $itemCategory = ItemCategories::find($tender->ItemCategoryId)->Name;
+    $itemCategoryID = ItemCategories::find($tender->ItemCategoryId)->Id;
+    $currency = $tender->CurrencyId;
+    $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
+    $procurementPlan = ProcurementPlan::find($tender->procurement_plan_id);
+
+    return view('procurement.tendering.tendersetup.tenderinitiation.edit', compact(
+        'tender',
+        'tenderCategory',
+        'tenderCategories',
+        'itemCategory',
+        'itemCategoryID',
+        'currency',
+        'procurementPlan',
+        'items',
+        'otherItemsForThatTender',
+        'suppliers',
+        'otherSuppliers',
+        'show',
+        'documents',
+        'allCurrency'
+    ));
+}
 
     public function update(Request $request, $id)
     {
@@ -697,7 +764,7 @@ class TenderController extends Controller
                 'submission_deadline' => 'required|date|after:today',
                 'opening_date' => 'required|date|after_or_equal:submission_deadline',
                 'TenderType' => ['nullable', new Enum(TenderTypeEnum::class)],
-                'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:2048',
+                'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
             ]);
 
             DB::beginTransaction();
@@ -717,13 +784,8 @@ class TenderController extends Controller
 
                 // Attach Tender Documents to DMS (from edit form)
                 if ($request->hasFile('documents')) {
-                    foreach ((array) $request->file('documents') as $uploadedFile) {
-                        if (!$uploadedFile) {
-                            continue;
-                        }
-                        $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
-                    }
-                }
+            $this->attachDocuments($request, $tender);
+        }
 
                 DB::commit();
 
@@ -745,21 +807,34 @@ class TenderController extends Controller
                 $validated = $request->validate([
                     'item_id' => 'required|integer',
                     'QtyToTender' => 'required|integer|min:1',
-                    'pr_ref' => 'nullable|string|max:255',
+                    
                 ]);
+             
+          
                 DB::beginTransaction();
                 try {
                     $tenderItem = new TenderItems();
                     $tenderItem->TenderID = $id;
+
+                     $existingManualCount = TenderItems::where('TenderID', $id)
+            ->where('SourceType', 'MANUAL')
+            ->count();
+        
+        $prReference = $this->generateManualItemPRReference(
+            $tenderItem->Tender->TenderNo, 
+            $existingManualCount + 1
+        );
                     $tenderItem->SourceType = 'MANUAL';
                     $tenderItem->ItemID = $validated['item_id'];
                     $tenderItem->itemCategory = $request->itemCategoryID;
                     $tenderItem->QtyToTender = $validated['QtyToTender'];
-                    $tenderItem->RelatedPRID = $validated['pr_ref'] ?? null;
+                    $tenderItem->RelatedPRID = $prReference;
                     $tenderItem->CreatedBy = Auth::id();
                     $tenderItem->ModifiedBy = Auth::id();
                     $tenderItem->save();
 
+
+          
                     DB::commit();
 
                     activity()
@@ -796,36 +871,56 @@ class TenderController extends Controller
                     Log::error($e);
                     return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Item. Please try again.');
                 }
-            } elseif ($crudType == 'updateQty') {
-                // Allow adjusting quantity up or down for MANUAL items only
-                $validated = $request->validate([
-                    'item_id' => 'required|integer|exists:t_TenderItems,Id',
-                    'QtyToTender' => 'required|numeric|min:0.01',
-                ]);
-                DB::beginTransaction();
-                try {
-                    $tenderItem = TenderItems::findOrFail($validated['item_id']);
-                    if (strtoupper((string)$tenderItem->SourceType) !== 'MANUAL') {
-                        return redirect()->route('initiatetender.edit', $id)->with('error', 'Only manually added items can be adjusted.');
-                    }
-                    $tenderItem->QtyToTender = $validated['QtyToTender'];
-                    $tenderItem->ModifiedBy = Auth::id();
-                    $tenderItem->save();
+            } // Add this to your update() method in the 'updateQty' section:
+elseif ($crudType == 'updateQty') {
+    // 1. Validation
+    $validated = $request->validate([
+        'item_id' => 'required|integer|exists:t_TenderItems,Id',
+        'QtyToTender' => 'required|numeric|min:0.01',
+    ]);
+    
+    DB::beginTransaction();
+    try {
+        $tenderItem = TenderItems::findOrFail($validated['item_id']);
+        
+        // 2. Security Check: Ensure this item actually belongs to the tender being edited
+        if ($tenderItem->TenderID != $id) {
+            return redirect()->back()->with('error', 'Security Warning: This item does not belong to the current tender.');
+        }
 
-                    DB::commit();
-                    activity()
-                        ->performedOn($tenderItem)
-                        ->causedBy(Auth::user())
-                        ->withProperties(['action' => 'updateQty'])
-                        ->log('Tender Item quantity updated for ID: ' . $tenderItem->Id);
+        // 3. Logic Check: Ensure it is a manual item
+        if (strtoupper((string)$tenderItem->SourceType) !== 'MANUAL') {
+            return redirect()->route('initiatetender.edit', $id)
+                ->with('error', 'Only manually added items can be adjusted.');
+        }
+        
+        // 4. Update Values (Use Direct Assignment Only)
+        // We DO NOT use ->update() here to avoid issues with $fillable arrays
+        $tenderItem->QtyToTender = $validated['QtyToTender'];
+        $tenderItem->ModifiedBy = Auth::id();
+        $tenderItem->ModifiedOn = now();
+        
+        // 5. Save Once
+        $tenderItem->save();
 
-                    return redirect()->route('initiatetender.edit', $id)->with('success', 'Quantity updated successfully.');
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::error("--- UPDATE TENDER ITEM QTY ERROR --- " . $e->getMessage());
-                    return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to update quantity.');
-                }
-            }
+        DB::commit();
+        
+        activity()
+            ->performedOn($tenderItem)
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'updateQty', 'new_qty' => $validated['QtyToTender']])
+            ->log('Tender Item quantity updated for ID: ' . $tenderItem->Id);
+
+        return redirect()->route('initiatetender.edit', $id)
+            ->with('success', 'Quantity updated successfully.');
+            
+    } catch (Exception $e) {
+        DB::rollBack();
+        Log::error("--- UPDATE TENDER ITEM QTY ERROR --- " . $e->getMessage());
+        return redirect()->route('initiatetender.edit', $id)
+            ->with('error', 'Failed to update quantity.');
+    }
+}
         } elseif ($type == 'crudSupplier') {
             $crudType = $request->crudType;
             if ($crudType == 'addSupplier') {
@@ -956,6 +1051,27 @@ class TenderController extends Controller
             return redirect()->route('initiatetender.index')->with('error', 'Failed to update Tender. Please try again.');
         }
     }
+
+    /**
+ * Generate PR reference for PLAN items
+ * Format: PR/PLAN-{PlanID}/ITEM-{PlanItemID}
+ * Example: PL123-456
+ */
+private function generatePlanItemPRReference(int $planId, int $planItemId): string
+{
+     return sprintf('PL%d-%d', $planId, $planItemId);
+}
+
+/**
+ * Generate PR reference for MANUAL items
+ * Format: PR/{TenderNo}/MAN-{Counter}
+ * Example: T6MMNKZA-M001
+ */
+private function generateManualItemPRReference(string $tenderNo, int $counter): string
+{
+    $shortTenderNo = str_replace('TNDR-', '', $tenderNo);
+    return sprintf('%s-M%03d', $shortTenderNo, $counter);
+}
 
     public function destroy(string $id)
     {

@@ -52,6 +52,8 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
         Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
 
         Route::get('/workflows/{id}/state', [WorkFlowController::class, 'getState'])->name('settings.workflows.state');
+         
+        
 
         //         // Add POST alternative for delete to handle form submission
         // Route::post('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy.post');

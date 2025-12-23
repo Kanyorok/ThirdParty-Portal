@@ -1,4 +1,5 @@
 <?php
+use App\Enums\WorkflowStatus;   
 return [
     /*
     |--------------------------------------------------------------------------
@@ -67,6 +68,15 @@ return [
         'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,    // 'p'
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
     ],
+
+
+     'RFQId' => [
+        'Approved' => WorkflowStatus::Approved->value,  // 'A'
+        'Rejected' => WorkflowStatus::Rejected->value,  // 'R'
+        'Pending' => WorkflowStatus::Pending->value,    // 'P'
+        'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
+    ],
+
 
     /*
     |--------------------------------------------------------------------------
