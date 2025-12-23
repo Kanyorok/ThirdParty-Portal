@@ -47,14 +47,14 @@ BEGIN
            CM.Name AS Category,
            PR.Owner,
            PR.AcquisitionDate,
-           PR.Country,
+           PR.CountryId,
            L.Name  AS TownCity,
            U.Name  AS CreatedBy,
            PR.CreatedOn
     FROM t_PropertyRegistry PR
              JOIN t_PropertyType PT ON PT.ID = PR.PropertyType
              JOIN t_CategoryMaster CM ON CM.ID = PR.Category
-             JOIN t_Localities L ON L.ID = PR.TownCity
+             JOIN t_Localities L ON L.ID = PR.CountryId
              JOIN t_Users U ON U.Id = PR.CreatedBy
     --WHERE (@PropertyTypeName IS NULL OR PT.PropertyTypeName = @PropertyTypeName)
     -- WHERE (@PropertyTypeName = 'ALL' OR PT.PropertyTypeName = @PropertyTypeName)

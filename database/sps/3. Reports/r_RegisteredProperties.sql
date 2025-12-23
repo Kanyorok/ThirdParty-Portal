@@ -24,7 +24,7 @@ BEGIN
            C.Name             as Category,
            PR.Owner,
            PR.AcquisitionDate,
-           PR.Country,
+           PR.CountryId,
            T.Name             as TownCity,
            PR.PropertyDescription,
            U.Name             as CreatedBy,
@@ -33,7 +33,7 @@ BEGIN
     FROM t_Propertyregistry PR
              JOIN t_users U ON U.ID = PR.CreatedBy
              JOIN t_CategoryMaster C ON C.ID = PR.Category
-             JOIN t_localities T ON T.ID = PR.TownCity
+             JOIN t_localities T ON T.ID = PR.LocationId
              JOIN t_propertytype P on P.ID = PR.PropertyType
 
     WHERE (@FromDate IS NULL OR PR.CreatedOn >= @FromDate)
