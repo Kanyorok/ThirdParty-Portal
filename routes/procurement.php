@@ -567,9 +567,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('/bid-evaluation/{tenderRef}/report', [\App\Http\Controllers\Procurement\BidEvaluationController::class, 'generateReport'])->name('bid-evaluation.report');
 
     //procurement Consolidation
-    Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
-    Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
-    Route::get('/procurement/dashboard/export', [ConsolidatedDashboardController::class, 'exportExcel'])->name('dashboard.export');
+
 
     //Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class)->except(['show', 'store']);
