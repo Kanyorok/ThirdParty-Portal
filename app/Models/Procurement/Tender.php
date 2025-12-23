@@ -24,6 +24,8 @@ use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\TenderSection;
 use App\Models\Procurement\TenderSupplier;
 use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\Workflow;
+use App\Models\DMS\Document;
 use App\Models\Core\Approval\WorkflowPending;
 use App\Traits\Model\UserActorTrait;
 use App\Traits\Model\DocumentsTrait;
@@ -130,11 +132,9 @@ class Tender extends Model
 {
     return $this->belongsTo(ConsolidatedProcurementPlan::class, 'ProcurementModeId', 'PlanID');
 }
-    // public function documents(): HasMany
-    // {
-    //     return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
-    // }
-
+/**
+ * Returns all submissions for a tender given by its tender reference.
+ */
     public function submissions(): HasMany
     {
         return $this->hasMany(\App\Models\Procurement\BidSubmission::class, 'TenderRef', 'TenderNo');

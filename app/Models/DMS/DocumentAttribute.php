@@ -52,4 +52,5 @@ class DocumentAttribute extends Model
     {
         return $this->belongsTo(Document::class, 'DocumentId');
     }
+    
 }

@@ -12,6 +12,8 @@ enum WorkflowStatus: string
     case Accepted = 'ac';
     case APPROVED = 'Ap';
     case REJECTED = 'Re';
+
+    case Deferred = 'Df';
     case COMMENTED = 'Cm';
     case RETURNED = 'Dr';
     case Pending = 'pe';
