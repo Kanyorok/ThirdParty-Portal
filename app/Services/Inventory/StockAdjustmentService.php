@@ -58,6 +58,7 @@ class StockAdjustmentService
 
 
             Workflow::create([
+                'Name' => 'Stock Adjustment Workflow',
                 'Source' => 'StockAdjustment',
                 'SourceID' => $adjustment->Id,
                 'Stage' => Transfers::Pending->label(),
@@ -243,6 +244,7 @@ class StockAdjustmentService
             }
 
             Workflow::create([
+                'Name' => 'Stock Adjustment Workflow',
                 'Source' => 'StockAdjustment',
                 'SourceID' => $adjustment->Id,
                 'Stage' => Transfers::Approved->label(),
@@ -278,6 +280,7 @@ class StockAdjustmentService
             ]);
 
             Workflow::create([
+                'Name' => 'Stock Adjustment Workflow',
                 'Source' => 'StockAdjustment',
                 'SourceID' => $adjustment->Id,
                 'Stage' => Transfers::Rejected->label(),
