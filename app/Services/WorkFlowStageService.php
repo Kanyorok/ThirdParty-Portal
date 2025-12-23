@@ -64,20 +64,8 @@ class WorkFlowStageService
 
 
             // Fix for SP leaving transaction open
-            try {
-                $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
-                $laravelTranCount = DB::transactionLevel();
-
-
-
-                while ($dbTranCount > $laravelTranCount) {
-                    DB::unprepared('COMMIT TRANSACTION');
-                    $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
-                    Log::warning('Fixed mismatched transaction count from SP (Forced COMMIT)');
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Could not check/fix transaction count: ' . $e->getMessage());
-            }
+            // Fix for SP leaving transaction open
+            $this->fixTransactionCount();
 
             $dto = WorkflowStageResult::fromDatabaseResult($results[0] ?? null);
             if ($dto->isError()) {
@@ -268,5 +256,21 @@ class WorkFlowStageService
         return WorkflowStage::where('WorkFlowId', $workflowId)
             ->orderBy('Order', 'desc')
             ->first();
+    }
+
+    private function fixTransactionCount(): void
+    {
+        try {
+            $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
+            $laravelTranCount = DB::transactionLevel();
+
+            while ($dbTranCount > $laravelTranCount) {
+                DB::unprepared('COMMIT TRANSACTION');
+                $dbTranCount = DB::select('SELECT @@TRANCOUNT as count')[0]->count;
+                Log::warning('Fixed mismatched transaction count from SP (Forced COMMIT)');
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Could not check/fix transaction count: ' . $e->getMessage());
+        }
     }
 }
