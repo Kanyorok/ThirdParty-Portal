@@ -23,5 +23,5 @@ CREATE OR ALTER FUNCTION f_getUserWithPermission(@permissionId INT)
                                                                                                    and [t_ModelPermissions].[model_type] = 'UserID'
                                                                                                    and [t_Permissions].[id] = @permissionId))
                  and [t_Users].[DeletedOn] is null
-                 and t_Users.Id <> 1)
-END;
+                 and t_Users.Id <> 1);
+

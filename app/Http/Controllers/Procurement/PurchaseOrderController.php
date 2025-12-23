@@ -11,6 +11,7 @@ use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\Order;
+
 use App\Services\Workflow\ApprovalWorkflow;  // Changed from PurchaseOrderWorkflowService
 use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
@@ -36,7 +37,7 @@ class PurchaseOrderController extends Controller
         protected RFQService $rfqService,
         protected ApprovalWorkflow $workflowService  // Changed type hint
     ) {
-       $this->middleware('ajax')->except([
+        $this->middleware('ajax')->except([
             'index',
             'create',
             'store',
@@ -66,7 +67,7 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-     /**
+    /**
      * Display a listing of purchase orders
      */
     public function index()
@@ -113,7 +114,7 @@ class PurchaseOrderController extends Controller
             $rfqResponses = $this->rfqService->fetchRFQ();
             $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
             $suppliers = $this->supplierService->getSuppliers();
-            
+
             // Fetch payment terms from t_CodeDetails
             $paymentTerms = CodeDetail::query()
                 ->where('CodeID', 'PaymentTerm')
@@ -350,21 +351,23 @@ class PurchaseOrderController extends Controller
 
             // Use the generic workflow service
             $history = $this->workflowService->historyForModel($order);
-            
+
             // Check if user can approve
             $canApprove = $this->workflowService->canApproveModel($order, auth()->user());
-            
+
             // Get workflow status
             $workflowStatus = $this->workflowService->getStatus($order);
             $isFullyApproved = !isset($workflowStatus['pending']) || $workflowStatus['pending'] === 0;
 
             if ($request->ajax()) {
-                return view('procurement.orders.partials.show_content', 
+                return view(
+                    'procurement.orders.partials.show_content',
                     compact('orderInfo', 'lineInfo', 'history', 'canApprove', 'isFullyApproved')
                 )->render();
             }
-            
-            return view('procurement.orders.show', 
+
+            return view(
+                'procurement.orders.show',
                 compact('orderInfo', 'lineInfo', 'history', 'canApprove', 'isFullyApproved')
             );
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
@@ -402,7 +405,8 @@ class PurchaseOrderController extends Controller
                 ->first();
             $paymentTerms = $paymentTermRow->Description ?? null;
 
-            return view('procurement.orders.approval', 
+            return view(
+                'procurement.orders.approval',
                 compact('orderInfo', 'lineInfo', 'paymentTerms')
             );
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {

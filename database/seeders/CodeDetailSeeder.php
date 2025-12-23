@@ -15,8 +15,6 @@ use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
-use App\Enums\Procurement\DepartmentNeedsEnum;
-use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\TenderApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
@@ -200,7 +198,7 @@ class CodeDetailSeeder extends Seeder
             //ThirdPartyType
             ['CodeID' => 'PartyType', 'Description' => 'Individual', 'Value' => 'IN'],
             ['CodeID' => 'PartyType', 'Description' => 'Cooperate', 'Value' => 'CO'],
-            
+
 
             // Requisition Status
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
