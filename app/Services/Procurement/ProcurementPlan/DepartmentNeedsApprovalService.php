@@ -17,7 +17,7 @@ class DepartmentNeedsApprovalService
        public function submit(User $actor): static
     {
           $remarks = 'User Submitted';
-        (new DepartmentNeedsWorkflow())->submit($this->departmentNeeds, $actor, $remarks);
+        (new DepartmentNeedsWorkflow())->submit($this->departmentNeeds, $actor, remarks: $remarks);
         activity()->causedBy($actor)->performedOn($this->departmentNeeds)->event('submit')->log('Submitted ' . $this->departmentNeeds->NeedID . ' for approval.');
         return $this;
     }
