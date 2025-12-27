@@ -4,14 +4,15 @@ use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
-use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
+// use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
+use App\Http\Controllers\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
+// use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
+// use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierController;
@@ -19,11 +20,12 @@ use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressCo
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\TenderInvitationController;
 use App\Http\Controllers\API\DMS\DocumentApiController;
-use App\Http\Controllers\Procurement\TenderDocumentController;
+// use App\Http\Controllers\Procurement\TenderDocumentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
+// use App\Http\Controllers\Settings\WorkFlowController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -51,12 +53,12 @@ Route::post('auth/validate-token', function (Request $request) {
     ]);
 })->middleware('auth:sanctum')->name('auth.validate-token');
 
-Route::prefix('third-party-auth')->group(function () {
-    Route::post('login', [ThirdPartyAuthController::class, 'login']);
-    Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
-    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
-    Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
-});
+// Route::prefix('third-party-auth')->group(function () {
+//     Route::post('login', [ThirdPartyAuthController::class, 'login']);
+//     Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
+//     Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
+//     Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
+// });
 
 // step 2: Register company info (associated third party)
 Route::post('third-parties/register-details', [ThirdPartiesController::class, 'store']);
@@ -336,7 +338,9 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
 });
 
 // Third paties Portal
-require __DIR__ . '/thirdparty.php';
+Route::prefix('v1')->group(function () {
+    require __DIR__ . '/portal.php';
+});
 
 //api routes for workflow stages
-Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');
+// Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');

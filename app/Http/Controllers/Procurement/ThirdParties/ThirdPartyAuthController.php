@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Procurement\ThirdParties;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyUserRequest;
+use App\Http\Requests\ThirdParty\RegisterThirdPartyUserRequest;
 use App\Http\Requests\ThirdPartyAuth\LoginThirdPartyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,8 +16,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Log;
 use App\Models\ThirdParty\ThirdParties;
-use Illuminate\Support\Str;
-use App\Enums\ThirdPartyTypeEnum;
 
 // @Kimxons
 class ThirdPartyAuthController extends Controller
@@ -76,7 +74,7 @@ class ThirdPartyAuthController extends Controller
                 return response()->json(['message' => __('auth.account_inactive')], 403);
             }
 
-            $thirdParty = ThirdParties::find($user->ThirdPartyId);
+            // $thirdParty = ThirdParties::find($user->ThirdPartyId);
 
             if (!$thirdParty) {
                 // Individual user scenario: unlinked to any Third Party
@@ -123,7 +121,7 @@ class ThirdPartyAuthController extends Controller
             */
 
             $user->tokens()->delete();
-            $tokenName = "api-generic-thirdparty"; 
+            $tokenName = "api-generic-thirdparty";
             $token = $user->createToken($tokenName)->plainTextToken;
 
             $thirdParty->load(['types', 'country', 'categories']);

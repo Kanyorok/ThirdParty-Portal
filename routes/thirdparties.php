@@ -1,4 +1,3 @@
-// thirdparties.php
 <?php
 
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
@@ -19,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('third-party-auth')->group(function () {
+Route::prefix('portal/auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
     Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
     Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');

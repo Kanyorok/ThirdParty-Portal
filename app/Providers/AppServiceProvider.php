@@ -275,10 +275,20 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
 
     {
-         $this->app->bind(ApprovalWorkflow::class, function ($app) {
-        return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
-    });
+        $this->app->bind(ApprovalWorkflow::class, function ($app) {
+            return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
+        });
 
+        // TODO: Profile Management repositories
+        $this->app->bind(
+            \App\Repositories\ThirdParty\Contracts\ThirdPartyRepositoryInterface::class,
+            \App\Repositories\ThirdParty\ThirdPartyRepository::class
+        );
+
+        $this->app->bind(
+            \App\Repositories\ThirdParty\Contracts\SupplierRepositoryInterface::class,
+            \App\Repositories\ThirdParty\SupplierRepository::class
+        );
     }
 
     /**
@@ -620,6 +630,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
         Gate::policy(FleetRepairLog::class, FleetRepairLogPolicy::class);
         Gate::policy(FleetVehicleInspection::class, FleetVehicleInspectionPolicy::class);
+
+        // ThirdParty Profile Management Policies
+        Gate::policy(\App\Models\ThirdParty\ThirdParties::class, \App\Policies\ThirdParty\ThirdPartyPolicy::class);
+        Gate::policy(\App\Models\ThirdParty\SupplierMaster::class, \App\Policies\ThirdParty\SupplierPolicy::class);
 
         Sanctum::usePersonalAccessTokenModel(CustomPersonalAccessToken::class);
 

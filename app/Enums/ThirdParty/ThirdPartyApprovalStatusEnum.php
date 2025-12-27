@@ -25,4 +25,37 @@ enum ThirdPartyApprovalStatusEnum: string
             self::Rejected => 'rejected',
         };
     }
+
+    public function canTransitionTo(self $newStatus): bool
+    {
+        return in_array($newStatus, $this->getAllowedTransitions());
+    }
+
+    public function getAllowedTransitions(): array
+    {
+        return match ($this) {
+            self::Pending => [self::Approved, self::Rejected],
+            self::Approved => [self::Rejected],
+            self::Rejected => [self::Pending],
+        };
+    }
+
+    public function isActive(): bool
+    {
+        return $this === self::Approved;
+    }
+
+    public function canCreateTransactions(): bool
+    {
+        return $this === self::Approved;
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::Pending => 'warning',
+            self::Approved => 'success',
+            self::Rejected => 'danger',
+        };
+    }
 }

@@ -3,11 +3,8 @@
 namespace App\Models\ThirdParty;
 
 use App\Enums\Employee\GenderEnum;
-use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
-use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Notifications\ThirdParty\VerifyThirdPartyEmail;
-use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,10 +14,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
 {
-    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail, UserActorTrait;
+    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
 
     public static $snakeAttributes = false;
 
@@ -63,34 +61,26 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
         'Password' => 'hashed',
+        'Gender' => GenderEnum::class,
     ];
 
     protected static function boot(): void
     {
         parent::boot();
 
-        static::creating(function ($model) {
+        static::creating(function (self $model) {
             if (empty($model->UserID)) {
-                do {
-                    $model->UserID = strtoupper(Str::random(8));
-                } while (static::where('UserID', $model->UserID)->exists());
+                $model->UserID = self::generateUniqueUserId();
             }
-            // Self-registration: temporarily set to 0, will update after creation
-            // $model->CreatedBy ??= 0;
-            // $model->ModifiedBy ??= 0;
         });
+    }
 
-        // static::created(function ($model) {
-        //     // Update CreatedBy to self after creation
-        //     if ($model->CreatedBy === 0) {
-        //         $model->timestamps = false;
-        //         $model->update([
-        //             'CreatedBy' => $model->Id,
-        //             'ModifiedBy' => $model->Id,
-        //         ]);
-        //         $model->timestamps = true;
-        //     }
-        // });
+    private static function generateUniqueUserId(): string
+    {
+        do {
+            $id = strtoupper(Str::random(8));
+        } while (static::where('UserID', $id)->exists());
+        return $id;
     }
 
     public function getAuthIdentifierName(): string
@@ -123,10 +113,11 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         return $this->forceFill(['EmailVerifiedOn' => $this->freshTimestamp()])->save();
     }
 
-    // public function sendEmailVerificationNotification(): void
-    // {
-    //     $this->notify(new VerifyThirdPartyEmail);
-    // }
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyThirdPartyEmail);
+    }
+
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'CountryId', 'Id');
@@ -137,27 +128,14 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
     }
 
-    public function getFullNameAttribute(): string
+    public function fullName(): Attribute
     {
-        return trim("{$this->FirstName} {$this->LastName}");
+        return Attribute::get((fn() => trim("{$this->FirstName} {$this->LastName}")));
     }
 
     public function isActive(): bool
     {
         return $this->IsActive === true;
-    }
-
-    public function isApproved(): bool
-    {
-        if (!$this->IsActive) {
-            return false;
-        }
-
-        if (is_null($this->ThirdPartyId)) {
-            return true;
-        }
-
-        return $this->thirdParty?->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved;
     }
 
     public function isSupplier(): bool
@@ -205,21 +183,6 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         return $query->where('Email', strtolower($email));
     }
 
-    public function scopeSuppliersOnly(Builder $query): Builder
-    {
-        return $query->whereHas('thirdParty', fn($q) => $q->suppliers());
-    }
-
-    public function scopeTenantsOnly(Builder $query): Builder
-    {
-        return $query->whereHas('thirdParty', fn($q) => $q->tenants());
-    }
-
-    public function scopeCustomersOnly(Builder $query): Builder
-    {
-        return $query->whereHas('thirdParty', fn($q) => $q->customers());
-    }
-
     public static function findByEmail(string $email): ?self
     {
         return static::byEmail($email)->first();
@@ -227,6 +190,11 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
 
     public static function getPrimaryKey(): string
     {
-        return 'ThirdPartyUserId';
+        return 'Id';
+    }
+
+    public function getMorphClass(): string
+    {
+        return 'ThirdPartyUser';
     }
 }

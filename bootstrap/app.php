@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\TransformApiRequest;
 use App\Http\Middleware\TransformApiResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -20,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'license' => \App\Http\Middleware\RequireLicense::class,
             'module' => \App\Http\Middleware\RequireModule::class,
             'canAction' => \App\Http\Middleware\CanAction::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         ]);
 
         // Transform keys of requests that are not GET to snake_case

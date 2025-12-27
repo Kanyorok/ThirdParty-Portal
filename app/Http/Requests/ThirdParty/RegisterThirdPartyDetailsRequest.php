@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Http\Requests\ThirdParty;
+namespace App\Http\Requests\Portal\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\Enums\BusinessTypeEnum;
 
 class RegisterThirdPartyDetailsRequest extends FormRequest
 {
@@ -16,28 +14,25 @@ class RegisterThirdPartyDetailsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'string', 'exists:t_ThirdPartyUsers,UserID'],
-            'ThirdPartyName' => ['required', 'string', 'max:255'],
-            'TradingName' => ['nullable', 'string', 'max:255'],
-            'BusinessType' => ['required', 'string', Rule::in(array_column(BusinessTypeEnum::cases(), 'value'))],
-            'RegistrationNumber' => ['required', 'string', 'max:255', 'unique:t_ThirdParties,RegistrationNumber'],
-            'TaxPIN' => ['nullable', 'string', 'max:255'],
-            'VATNumber' => ['nullable', 'string', 'max:255'],
-            'Country' => ['required', 'string', 'max:255'],
-            'PhysicalAddress' => ['required', 'string', 'max:255'],
-            'Email' => ['required', 'string', 'email', 'max:255', 'unique:t_ThirdParties,Email'],
-            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
-            'Website' => ['nullable', 'string', 'url', 'max:255'],
-            'ThirdPartyType' => ['required', 'exists:t_ThirdPartyTypes,TypeId'],
+            'ThirdPartyName'     => 'required|string|max:255',
+            'TradingName'        => 'nullable|string|max:255',
+            'RegistrationNumber' => 'required|string|max:100',
+            'TaxPIN'             => 'required|string|max:100',
+            'BusinessType'       => 'required|integer',
+            'CountryId'          => 'required|integer',
+            'PhysicalAddress'    => 'required|string|max:500',
+            'Website'            => 'nullable|url|max:255',
+            'accountType'        => 'required|string|in:supplier,tenant,customer',
+            'supplierCategories' => 'required_if:accountType,supplier|array',
+            'supplierCategories.*' => 'integer|exists:t_SupplierCategories,Id',
         ];
     }
 
-    public function messages(): array
+    protected function prepareForValidation()
     {
-        return [
-            'user_id.exists' => __('auth.user_id_not_found'),
-            'RegistrationNumber.unique' => __('thirdparty.registration_number_exists'),
-            'Email.unique' => __('thirdparty.email_exists'),
-        ];
+        $this->merge([
+            'LocationId' => $this->LocationId ?? 1,
+            'Status'     => $this->Status ?? 1,
+        ]);
     }
 }

@@ -24,7 +24,7 @@ class SupplierService extends ThirdPartiesService
     public static function getType(): ThirdPartyType
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeSupplier)->firstOr(function () {
-            $role = FinanceRole::query()->first();// todo fix your Finance role
+            $role = FinanceRole::query()->first(); // todo fix your Finance role
             if ($role instanceof FinanceRole === false) {
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
@@ -41,9 +41,21 @@ class SupplierService extends ThirdPartiesService
 
 
     public static function create(
-        string  $name, ?string $tradingName, CodeDetail $businessType, string $registrationNumber, string $taxPIN, ?string $vatNumber, Locality $locationID, ?string $physicalAddress,
-        ?string $email, ?string $phone, ?string $website, ?CodeDetail $status, ?array $extra, User $actor): self
-    {
+        string  $name,
+        ?string $tradingName,
+        CodeDetail $businessType,
+        string $registrationNumber,
+        string $taxPIN,
+        ?string $vatNumber,
+        Locality $locationID,
+        ?string $physicalAddress,
+        ?string $email,
+        ?string $phone,
+        ?string $website,
+        ?CodeDetail $status,
+        ?array $extra,
+        User $actor
+    ): self {
         return self::createFromParty(
             party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor),
             actor: $actor
@@ -110,5 +122,4 @@ class SupplierService extends ThirdPartiesService
             ->orderBy('tp.TradingName', 'asc')
             ->get();
     }
-
 }

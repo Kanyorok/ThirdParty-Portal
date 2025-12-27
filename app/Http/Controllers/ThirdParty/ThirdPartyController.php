@@ -174,7 +174,7 @@ class ThirdPartyController extends Controller
         }
 
         return view('thirdparty.show', [
-            'party' => $thirdParty,
+            'party' =>   $thirdParty,
             'location' => ($thirdParty->location instanceof Locality) ? (new LocalityService($thirdParty->location))->getLocation() : ''
         ])
             ->with('party', $thirdParty);

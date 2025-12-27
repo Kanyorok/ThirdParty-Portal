@@ -29,6 +29,12 @@ class Authenticate extends Middleware
 
         $this->authenticate($request, $guards);
         $actor = $request->user();
+
+        //@Kimxons For API routes (like portal routes), skip branch and session checks
+        if (!$request->hasSession() || in_array('sanctum', $guards)) {
+            return $next($request);
+        }
+
         $branch = $actor->branch;
         if (!$actor instanceof User || !$branch instanceof Branch) {
             $this->unauthenticated($request, $guards, $actor);
@@ -67,9 +73,11 @@ class Authenticate extends Middleware
             ]);
         }
 
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
+        //@Kimxons Only logout and invalidate session if session is available (web routes)
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+        }
 
         throw new AuthenticationException(
             'Unauthenticated.',
@@ -82,5 +90,4 @@ class Authenticate extends Middleware
     {
         return $request->expectsJson() || $request->json() ? null : route('login');
     }
-
 }
