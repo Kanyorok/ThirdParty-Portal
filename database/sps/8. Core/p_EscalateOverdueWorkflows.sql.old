@@ -41,4 +41,3 @@ WHERE ws.DeletedOn IS NULL
       AND e.DeletedOn IS NULL
 );
 END;
-GO

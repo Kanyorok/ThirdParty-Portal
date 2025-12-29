@@ -201,8 +201,8 @@ BEGIN
 
                                 SELECT TOP 1 @WorkflowLimit = MaxAmount
                                 FROM t_WorkFlowLimits
-                                WHERE Source = @Source
-                                  AND PermissionId = @PermissionId;
+                                WHERE --Source = @Source AND
+                                      PermissionId = @PermissionId;
 
                                 IF @WorkflowLimit IS NOT NULL AND @Amount > @WorkflowLimit
                                     BEGIN

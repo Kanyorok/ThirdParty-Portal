@@ -129,7 +129,6 @@ class StockAdjustmentService
             $itemsToDelete = array_diff($existingItemIds, $incomingItemIds);
             if (!empty($itemsToDelete)) {
                 $adjustment->items()->whereIn('Item', $itemsToDelete)->delete();
-                Log::info("Deleted items from adjustment ID {$adjustment->Id}: " . implode(', ', $itemsToDelete));
             }
 
             foreach ($incomingItems as $itemData) {

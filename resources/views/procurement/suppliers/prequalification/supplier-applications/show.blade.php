@@ -57,31 +57,31 @@
                         </tr>
                         <tr>
                             <td class="fw-semibold text-muted">Supplier Name</td>
-                            <td>{{ $application->supplier->ThirdPartyName ?? 'N/A' }}</td>
+                            <td>{{ $application->supplier->party->ThirdPartyName ?? 'N/A' }}</td>
                         </tr>
                         <tr>
                             <td class="fw-semibold text-muted">Trading Name</td>
-                            <td>{{ $application->supplier->TradingName ?? 'N/A' }}</td>
+                            <td>{{ $application->supplier->party->TradingName ?? 'N/A' }}</td>
                         </tr>
                         <tr>
                             <td class="fw-semibold text-muted">Email</td>
                             <td>
-                                <a href="mailto:{{ $application->supplier->Email }}" class="text-decoration-none">
-                                    {{ $application->supplier->Email ?? 'N/A' }}
+                                <a href="mailto:{{ $application->supplier->party->Email }}" class="text-decoration-none">
+                                    {{ $application->supplier->party->Email ?? 'N/A' }}
                                 </a>
                             </td>
                         </tr>
                         <tr>
                             <td class="fw-semibold text-muted">Phone Number</td>
                             <td>
-                                <a href="tel:{{ $application->supplier->Phone }}" class="text-decoration-none">
-                                    {{ $application->supplier->Phone ?? 'N/A' }}
+                                <a href="tel:{{ $application->supplier->party->Phone }}" class="text-decoration-none">
+                                    {{ $application->supplier->party->Phone ?? 'N/A' }}
                                 </a>
                             </td>
                         </tr>
                         <tr>
                             <td class="fw-semibold text-muted">Supplier Physical Address</td>
-                            <td>{{ $application->supplier->PhysicalAddress ?? 'N/A' }}</td>
+                            <td>{{ $application->supplier->party->PhysicalAddress ?? 'N/A' }}</td>
                         </tr>
                         <tr>
                             <td class="fw-semibold text-muted">Categories Applied</td>

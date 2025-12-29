@@ -32,7 +32,7 @@ class InventoryHoldReviewService
 
         $hold = InventoryHold::findOrFail($id);
 
-        Log::info('Reviewing Inventory Hold', ['id' => $hold->Id]);
+
 
         $hold->update([
             'Condition' => $data['Condition'],
@@ -68,7 +68,7 @@ class InventoryHoldReviewService
                 'ModifiedOn' => now(),
             ]);
 
-            Log::info("Disposal record created", ['review_id' => $review->Id]);
+
 
             $hold->update([
                 'Status' => Transfers::Disposed->value,
@@ -78,8 +78,6 @@ class InventoryHoldReviewService
             ]);
 
             $hold->delete();
-
-            Log::info("InventoryHold marked as disposed and soft-deleted", ['id' => $hold->Id]);
         });
     }
 
@@ -105,7 +103,7 @@ class InventoryHoldReviewService
                 throw new Exception("Original transfer not found for Receipt ID {$receipt->Id}");
             }
 
-            $fromBranch = $hold->BranchID;          
+            $fromBranch = $hold->BranchID;
             $toBranch   = $transfer->FromBranch;
 
             // Create Return Transfer
@@ -127,7 +125,7 @@ class InventoryHoldReviewService
             $newTransfer->TransferId = 'RTR-' . now()->format('Y') . '-' . str_pad($newTransfer->Id, 4, '0', STR_PAD_LEFT);
             $newTransfer->save();
 
-            Log::info('✅ Created Return Transfer', ['transfer_id' => $newTransfer->Id]);
+
 
             // Clone only the damaged quantity
             $receiptItems = TransactionReceiptItem::where('ReceiptId', $receipt->Id)
@@ -138,7 +136,7 @@ class InventoryHoldReviewService
                 $transferItem = TransactionTransferItem::create([
                     'TransferId'     => $newTransfer->Id,
                     'Item'           => $item->Item,
-                    'ApprovedQty'    => $hold->Quantity, 
+                    'ApprovedQty'    => $hold->Quantity,
                     'DispatchedQty'  => $hold->Quantity,
                     'UnitCost'       => $item->UnitCost ?? 0,
                     'UOM'            => $item->UOM,
@@ -148,8 +146,6 @@ class InventoryHoldReviewService
                     'CreatedOn'      => now(),
                     'ModifiedOn'     => now(),
                 ]);
-
-                Log::info('↩️ Created Return Transfer Item', ['item_id' => $transferItem->Id]);
             }
 
             // Workflow setup
@@ -194,10 +190,7 @@ class InventoryHoldReviewService
                 'ModifiedOn'      => now(),
             ]);
 
-            Log::info("Return recorded in InventoryHoldReview", [
-                'hold_id' => $hold->Id,
-                'status'  => Transfers::Returned->value
-            ]);
+
 
             // Update InventoryHold
             $hold->update([
@@ -235,77 +228,66 @@ class InventoryHoldReviewService
         });
     }
 
-      private function recordStockTransaction(
-    $itemId,
-    $storeId,
-    $branchId,
-    $unitCost,
-    $uomId,
-    $qtyOut,
-    $remarks,
-    $sourceDescription,
-    $referenceId = null
-) {
-    $skuRecord = StockItem::where('ItemID', $itemId)
-        ->where('Branch', $branchId)
-        ->where('Store', $storeId)
-        ->first();
+    private function recordStockTransaction(
+        $itemId,
+        $storeId,
+        $branchId,
+        $unitCost,
+        $uomId,
+        $qtyOut,
+        $remarks,
+        $sourceDescription,
+        $referenceId = null
+    ) {
+        $skuRecord = StockItem::where('ItemID', $itemId)
+            ->where('Branch', $branchId)
+            ->where('Store', $storeId)
+            ->first();
 
-    if (!$skuRecord) {
-        Log::warning("⚠️ No StockItem record found for ItemID {$itemId} in Branch {$branchId}, Store {$storeId}");
-        return;
+        if (!$skuRecord) {
+            Log::warning("⚠️ No StockItem record found for ItemID {$itemId} in Branch {$branchId}, Store {$storeId}");
+            return;
+        }
+
+        $nextId = (StockTransaction::max('Id') ?? 0) + 1;
+        $skuId = 'STX-' . now()->format('Y') . '-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+
+        $transactionType = CodeDetail::where('CodeID', 'Source')
+            ->where('Description', $sourceDescription)
+            ->value('ID');
+
+        $lastBalance = StockTransaction::where('BranchID', $branchId)
+            ->where('ItemID', $itemId)
+            ->orderByDesc('Id')
+            ->value('BalanceQty') ?? $skuRecord->CurrentQty ?? 0;
+
+        $newBalance = max(0, $lastBalance - $qtyOut);
+
+        $transaction = StockTransaction::create([
+            'SKUID'           => $skuId,
+            'TransactionType' => $transactionType,
+            'ReferenceID'     => $referenceId,
+            'ItemID'          => $itemId,
+            'StoreID'         => $storeId,
+            'BranchID'        => $branchId,
+            'UnitCost'        => $unitCost ?? 0,
+            'UOMID'           => $uomId,
+            'QuantityIn'      => 0,
+            'QuantityOut'     => $qtyOut,
+            'BalanceQty'      => $newBalance,
+            'TransactionDate' => now(),
+            'TotalCost'       => ($unitCost ?? 0) * $qtyOut,
+            'Remarks'         => $remarks,
+            'CreatedBy'       => Auth::id(),
+            'CreatedOn'       => now(),
+            'ModifiedBy'      => Auth::id(),
+            'ModifiedOn'      => now(),
+        ]);
+
+        $skuRecord->update([
+            'CurrentQty'  => $newBalance,
+            'ModifiedBy'  => Auth::id(),
+            'ModifiedOn'  => now(),
+        ]);
     }
-
-    $nextId = (StockTransaction::max('Id') ?? 0) + 1;
-    $skuId = 'STX-' . now()->format('Y') . '-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
-
-    $transactionType = CodeDetail::where('CodeID', 'Source')
-        ->where('Description', $sourceDescription)
-        ->value('ID');
-
-    $lastBalance = StockTransaction::where('BranchID', $branchId)
-        ->where('ItemID', $itemId)
-        ->orderByDesc('Id')
-        ->value('BalanceQty') ?? $skuRecord->CurrentQty ?? 0;
-
-    $newBalance = max(0, $lastBalance - $qtyOut);
-
-    $transaction = StockTransaction::create([
-        'SKUID'           => $skuId, 
-        'TransactionType' => $transactionType,
-        'ReferenceID'     => $referenceId,
-        'ItemID'          => $itemId,
-        'StoreID'         => $storeId,
-        'BranchID'        => $branchId,
-        'UnitCost'        => $unitCost ?? 0,
-        'UOMID'           => $uomId,
-        'QuantityIn'      => 0,
-        'QuantityOut'     => $qtyOut,
-        'BalanceQty'      => $newBalance,
-        'TransactionDate' => now(),
-        'TotalCost'       => ($unitCost ?? 0) * $qtyOut,
-        'Remarks'         => $remarks,
-        'CreatedBy'       => Auth::id(),
-        'CreatedOn'       => now(),
-        'ModifiedBy'      => Auth::id(),
-        'ModifiedOn'      => now(),
-    ]);
-
-    $skuRecord->update([
-        'CurrentQty'  => $newBalance,
-        'ModifiedBy'  => Auth::id(),
-        'ModifiedOn'  => now(),
-    ]);
-
-    Log::info('📉 New Stock Transaction created & stock updated', [
-        'transaction_sku' => $transaction->SKUID,
-        'item_id'         => $itemId,
-        'branch'          => $branchId,
-        'store'           => $storeId,
-        'deducted_qty'    => $qtyOut,
-        'new_balance'     => $newBalance,
-    ]);
-}
-
-
 }

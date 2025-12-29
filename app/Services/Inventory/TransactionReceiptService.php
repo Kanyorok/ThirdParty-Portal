@@ -161,7 +161,7 @@ class TransactionReceiptService
                 ->first();
 
             if (!$stock) {
-                Log::info("Auto-creating new stock record for ItemID: {$itemId}, Branch: {$toBranchId}, Store: {$storeId}");
+
 
                 $stock = StockItem::firstOrCreate(
                     [

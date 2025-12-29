@@ -20,7 +20,7 @@ Begin
     )
     Insert Into #ScheduleLease
     SELECT L.LeaseNumber  as LeaseNumber,
-           T.TenantName   as TenantName,
+           T.ThirdPartyId as TenantName,
            P.PropertyName as PropertyId,
            C.Description  as PaymentFrequency,
            S.StartDate,

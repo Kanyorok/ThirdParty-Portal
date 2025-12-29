@@ -14,7 +14,7 @@ class ThirdPartyResource extends JsonResource
         $userInfo = [
             'firstName' => $this->FirstName,
             'lastName' => $this->LastName,
-            'fullName' => $this->FirstName . ' ' . $this->LastName,
+            'fullName' => $this->ThirdPartyName,
             'email' => $this->Email,
             'phone' => $this->Phone,
         ];
@@ -22,7 +22,7 @@ class ThirdPartyResource extends JsonResource
         $thirdPartyInfo = [
             'thirdPartyName' => $this->ThirdPartyName,
             'tradingName' => $this->TradingName,
-            'businessType' => $this->BusinessType?->label(),
+            'businessType' => $this->businessType?->Description,
             'registrationNumber' => $this->RegistrationNumber,
             'taxPIN' => $this->TaxPIN,
             'vatNumber' => $this->VATNumber,
@@ -46,19 +46,21 @@ class ThirdPartyResource extends JsonResource
         return [
             'id' => $this->Id,
             'thirdPartyUser' => $userInfo,
-            'approvalStatusCode' => $this->ApprovalStatus?->value,
-            'status' => $this->Status?->label(),
+            'approvalStatusCode' => $this->status?->Value,
+            'status' => $this->status?->Description,
             'thirdPartyDetails' => $thirdPartyInfo,
-            'approvalStatus' => $this->ApprovalStatus?->label(),
-            'statusCode' => $this->Status?->value,
+            'approvalStatus' => $this->status?->Description,
+            'statusCode' => $this->status?->Value,
             'isPrequalified' => (bool)$this->IsPrequalified,
-            'thirdPartyTypeCode' => $this->ThirdPartyType?->value,
+            'thirdPartyTypeCode' => null, // $this->ThirdPartyType?->value, // Column does not exist
             'types' => $this->whenLoaded('types', function () {
                 return $this->types->map(fn($t) => [
                     'id' => $t->Id,
                     'code' => $t->Code,
                     'typeCategoryId' => $t->Type,
                     'label' => $t->Code,
+                    'isActive' => isset($t->pivot) && is_null($t->pivot->DeletedOn),
+                    'pivotId' => $t->pivot->Id ?? 0,
                 ]);
             }),
             'categories' => SupplierCategoryResource::collection($this->whenLoaded('categories')),

@@ -2,23 +2,25 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BusinessTypeEnum;
 use App\Enums\CampaignStatusEnum;
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\DMS\DocumentCheckOutStatusEnum;
 use App\Enums\LeadStatusEnum;
+use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Enums\Procurement\PrequalificationApplicationEnum;
+use App\Enums\Procurement\PrequalificationRoundEnum;
+use App\Enums\Procurement\PrequalificationStatusEnum;
+use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
-use App\Enums\Procurement\DepartmentNeedsEnum;
-use App\Enums\Procurement\SchedulePlanEnum;
+use App\Enums\TenderApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\TicketStatusEnum;
-use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\ThirdPartyStatusEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Enums\Procurement\PrequalificationStatusEnum;
-use App\Enums\Procurement\PrequalificationRoundEnum;
-use App\Enums\Procurement\PrequalificationApplicationEnum;
-use App\Enums\BusinessTypeEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
 use Illuminate\Database\Seeder;
@@ -138,6 +140,14 @@ class CodeDetailSeeder extends Seeder
                 'DisplayOrder' => $index + 1,
             ]);
         }
+        foreach (TenderApprovalStatusEnum::cases() as $index => $TenderApprovalStatusEnum){
+            $entries->push([
+                'CodeID' => 'TenderStatus',
+                'Value' => $TenderApprovalStatusEnum->value,
+                'Description' => $TenderApprovalStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
 
         foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
             $entries->push([
@@ -184,12 +194,21 @@ class CodeDetailSeeder extends Seeder
             ]);
         }
 
+        foreach (ApprovalEnum::cases() as $index => $approvalEnum) {
+            $entries->push([
+                'CodeID' => 'ApprovalStatus',
+                'Value' => $approvalEnum->value,
+                'Description' => $approvalEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
         // STATIC ENTRIES (from various modules)
         $static = [
             //ThirdPartyType
             ['CodeID' => 'PartyType', 'Description' => 'Individual', 'Value' => 'IN'],
             ['CodeID' => 'PartyType', 'Description' => 'Cooperate', 'Value' => 'CO'],
-            
+
 
             // Requisition Status
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved', 'Value' => 'Ap'],

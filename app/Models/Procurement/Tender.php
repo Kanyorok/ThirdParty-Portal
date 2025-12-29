@@ -23,6 +23,10 @@ use App\Models\Procurement\TenderItems;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\TenderSection;
 use App\Models\Procurement\TenderSupplier;
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\Workflow;
+use App\Models\DMS\Document;
+use App\Models\Core\Approval\WorkflowPending;
 use App\Traits\Model\UserActorTrait;
 use App\Traits\Model\DocumentsTrait;
 use Carbon\Carbon;
@@ -128,11 +132,9 @@ class Tender extends Model
 {
     return $this->belongsTo(ConsolidatedProcurementPlan::class, 'ProcurementModeId', 'PlanID');
 }
-    // public function documents(): HasMany
-    // {
-    //     return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
-    // }
-
+/**
+ * Returns all submissions for a tender given by its tender reference.
+ */
     public function submissions(): HasMany
     {
         return $this->hasMany(\App\Models\Procurement\BidSubmission::class, 'TenderRef', 'TenderNo');
@@ -270,6 +272,15 @@ class Tender extends Model
     {
         return 'tender'; // This is the morph alias for workflow, not the database column
     }
+    // public function workflows()
+    // {
+    //     return $this->morphMany(
+    //         Workflow::class,
+    //         'source',
+    //         'Source',   // morph type column
+    //         'SourceID'  // morph id column
+    //     );
+    // }
 
     /**
      * Keep your existing route key name to avoid breaking other modules
@@ -283,10 +294,22 @@ class Tender extends Model
      * Workflow history relationship - FIXED
      * The morphMany relationship should use 'source' as the method name in WorkflowHistory
      */
-    public function workflowHistory(): MorphMany
+   public function workflowHistory()
     {
-        return $this->morphMany(\App\Models\Core\Approval\WorkflowHistory::class, 'source', 'Source', 'SourceID');
+        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'PlanID')
+            ->where('Source', $this->getTable())
+            ->whereNull('DeletedOn');
+            
     }
+
+    
+    public function workflowPending()
+    {
+        return $this->hasMany(WorkflowPending::class, 'SourceID', 'PlanID')
+            ->where('Source', $this->getTable())
+            ->whereNull('DeletedOn');
+    }
+
 
     /**
      * Get all awards for this tender (HasMany relationship)
@@ -303,4 +326,34 @@ class Tender extends Model
     {
         return $this->hasOne(TenderAward::class, 'TenderID', 'Id');
     }
+
+     /**
+     * Check if tender is approved
+     */
+    public function isApproved(): bool
+    {
+        return $this->ApprovalStatus === TenderApprovalStatusEnum::APPROVED;
+    }
+
+     /**
+     * Check if tender is rejected
+     */
+    public function isRejected(): bool
+    {
+        return $this->ApprovalStatus === TenderApprovalStatusEnum::REJECTED;
+    }
+
+    /**
+     * Get approval status badge color
+     */
+    public function getApprovalStatusBadgeAttribute(): string
+    {
+        return match($this->ApprovalStatus) {
+            TenderApprovalStatusEnum::PENDING => 'warning',
+            TenderApprovalStatusEnum::APPROVED => 'success',
+            TenderApprovalStatusEnum::REJECTED => 'danger',
+            default => 'secondary',
+        };
+    }
+
 }

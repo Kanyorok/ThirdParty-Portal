@@ -293,7 +293,11 @@ class TransactionTransferService
                 $nextNumber = $latestSKU
                     ? str_pad(((int) preg_replace('/[^0-9]/', '', $latestSKU)) + 1, 3, '0', STR_PAD_LEFT)
                     : '001';
+                $nextNumber = $latestSKU
+                    ? str_pad(((int) preg_replace('/[^0-9]/', '', $latestSKU)) + 1, 3, '0', STR_PAD_LEFT)
+                    : '001';
 
+                $skuId = 'SKU' . $nextNumber;
                 $skuId = 'SKU' . $nextNumber;
 
                 // Get transaction type ID

@@ -96,7 +96,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
     public function canUserApprove(Requisitions $requisition, User $user): bool
     {
         // Check if user has pending workflow task
-        $pending = \DB::select("
+        $pending = DB::select("
             SELECT COUNT(*) as count 
             FROM t_WorkFlowPending 
             WHERE Source = ? AND SourceID = ? AND UserId = ? AND DeletedOn IS NULL
@@ -110,7 +110,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
      */
     public function getPendingApprovals(Requisitions $requisition): array
     {
-        return \DB::select("
+        return DB::select("
             SELECT 
                 p.*, 
                 ws.StageName as stage_name, 
@@ -131,7 +131,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
      */
     public function getAvailableStatuses(): \Illuminate\Database\Eloquent\Collection
     {
-        return \App\Models\Core\CodeDetail::where('CodeID', $this->codeId)
+        return \App\Models\Core\Approval\CodeDetail::where('CodeID', $this->codeId)
             ->orderBy('Order')
             ->get(['ID', 'value', 'Description', 'Order']);
     }
