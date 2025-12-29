@@ -442,7 +442,7 @@ class TenderController extends Controller
 
             // Update approval status to PENDING
             $tender->update([
-                'ApprovalStatus' => TenderApprovalStatusEnum::PENDING->value,
+                'ApprovalStatus' => TenderApprovalStatusEnum::PENDING,
                 'ModifiedBy' => $user->Id,
                 'ModifiedOn' => now(),
             ]);
