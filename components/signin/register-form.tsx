@@ -17,7 +17,8 @@ import {
   X,
   MapPin,
   Hash,
-  Search
+  Search,
+  Globe
 } from "lucide-react"
 
 import { Button } from "@/components/common/button"
@@ -28,6 +29,7 @@ import { cn, handleApiErrors } from "@/lib/utils"
 import { Spinner } from "../common/spinner"
 import { useAuthStore } from "@/store/auth-store"
 import { useRegisterForm } from "@/hooks/use-register"
+import Link from "next/link"
 
 interface Metadata {
   id: number
@@ -66,7 +68,6 @@ export default function SignUpPage() {
 
   const selectedCountryId = watch("countryId")
   const selectedBusinessTypeId = watch("businessType")
-
   const accountType = "supplier"
 
   const filteredCats = useMemo(() =>
@@ -193,186 +194,139 @@ export default function SignUpPage() {
   }
 
   return (
-    <Suspense fallback={<div className="h-screen w-full flex items-center justify-center bg-slate-50"><Spinner /></div>}>
-      <div className="flex min-h-screen w-full bg-[#FDFDFD]">
-        <aside className="hidden lg:flex w-[440px] bg-slate-950 flex-col justify-between p-12 fixed inset-y-0 left-0 overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
-          <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-blue-600/10 blur-[100px]" />
-
-          <div className="relative z-10 space-y-12">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/20">
-                <ShieldCheck className="text-white h-7 w-7" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-black tracking-tight text-white uppercase">Craft Silicon</span>
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-500">Partner Enrollment</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-4xl font-black text-white leading-tight">Join the <span className="text-blue-500">Ecosystem.</span></h2>
-              <p className="text-slate-400 font-medium leading-relaxed">Streamline your enterprise collaboration with our unified provider network.</p>
-            </div>
-
-            <nav className="space-y-8 pt-12 border-t border-white/5">
-              {[
-                { title: "Authentication", subtitle: "Personal Identity", status: step === "form" ? "Active" : "Done" },
-                { title: "Organization", subtitle: "Business Entity Details", status: step === "profile" ? "Active" : step === "success" ? "Done" : "Pending" }
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center gap-5">
-                  <div className={cn(
-                    "h-12 w-12 rounded-2xl border-2 flex items-center justify-center font-black transition-all duration-500",
-                    item.status === "Active" ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-500/30" :
-                      item.status === "Done" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" :
-                        "border-white/5 text-slate-700"
-                  )}>
-                    {item.status === "Done" ? <Check className="h-6 w-6 stroke-[3]" /> : idx + 1}
-                  </div>
-                  <div className="flex flex-col">
-                    <p className={cn("text-sm font-black uppercase tracking-widest", item.status === "Active" ? "text-white" : "text-slate-600")}>{item.title}</p>
-                    <p className="text-[11px] font-bold text-slate-500">{item.subtitle}</p>
-                  </div>
-                </div>
-              ))}
-            </nav>
-          </div>
-
-          <div className="relative z-10">
-            <p className="text-slate-700 text-[10px] font-black tracking-[0.4em] uppercase">Enterprise Standard v2.5</p>
-          </div>
-        </aside>
-
-        <main className="flex-1 lg:ml-[440px] flex items-center justify-center p-6 lg:p-20">
+    <Suspense fallback={<div className="h-screen w-full flex items-center justify-center bg-background"><Spinner /></div>}>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 font-sans">
+        <div className="w-full max-w-[580px] space-y-8">
           <AnimatePresence mode="wait">
             {step !== "success" ? (
               <motion.div
                 key={step}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.4 }}
-                className="w-full max-w-2xl"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
               >
-                <header className="mb-10">
-                  {step === "profile" && (
-                    <button type="button" onClick={() => setStep("form")} className="flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-all text-[10px] font-black mb-8 uppercase tracking-widest group">
-                      <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Return to Identity
-                    </button>
-                  )}
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="h-1 w-8 bg-blue-600 rounded-full" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">Step {step === "form" ? "01" : "02"}</span>
+                <div className="text-center space-y-6 mb-8">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                      Craft Silicon
+                    </h2>
                   </div>
-                  <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-                    {step === "form" ? "Personal Credentials" : "Business Information"}
-                  </h1>
-                </header>
+
+                  <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                      {step === "form" ? "Create your account" : "Business Information"}
+                    </h1>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                      {step === "form"
+                        ? "Enter your personal details to begin sign up process."
+                        : "Please provide your business information."}
+                    </p>
+                  </div>
+                </div>
 
                 {errors?.root && (
-                  <div className="mb-8 bg-rose-50 border border-rose-100 p-5 rounded-3xl flex gap-4 items-center">
-                    <div className="h-10 w-10 rounded-2xl bg-rose-500 flex items-center justify-center shrink-0 shadow-lg shadow-rose-200">
-                      <AlertCircle className="h-5 w-5 text-white" />
-                    </div>
-                    <p className="flex-1 text-sm font-bold text-rose-900">{errors.root.message}</p>
-                    <button type="button" onClick={() => clearErrors("root")} className="p-2 hover:bg-rose-100 rounded-xl transition-colors">
-                      <X className="h-4 w-4 text-rose-400" />
+                  <div className="mb-6 p-3.5 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-3">
+                    <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                    <p className="text-xs font-medium text-destructive">{errors.root.message}</p>
+                    <button type="button" onClick={() => clearErrors("root")} className="ml-auto">
+                      <X className="h-4 w-4 text-destructive/50 hover:text-destructive" />
                     </button>
                   </div>
                 )}
 
-                <form onSubmit={handleFormSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-1 bg-white">
+                <form onSubmit={handleFormSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {step === "form" ? (
                       <>
                         <Field>
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">First Name</FieldLabel>
-                          <Input placeholder="John" className="h-14 bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-blue-600/5 rounded-2xl transition-all" {...register("firstName")} />
-                          {errors?.firstName && <FieldError className="font-bold text-rose-600 ml-1">{errors.firstName.message}</FieldError>}
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">First Name</FieldLabel>
+                          <Input placeholder="John" className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("firstName")} />
+                          {errors?.firstName && <FieldError className="text-xs text-destructive mt-1">{errors.firstName.message}</FieldError>}
                         </Field>
                         <Field>
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Last Name</FieldLabel>
-                          <Input placeholder="Doe" className="h-14 bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-blue-600/5 rounded-2xl transition-all" {...register("lastName")} />
-                          {errors?.lastName && <FieldError className="font-bold text-rose-600 ml-1">{errors.lastName.message}</FieldError>}
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Last Name</FieldLabel>
+                          <Input placeholder="Doe" className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("lastName")} />
+                          {errors?.lastName && <FieldError className="text-xs text-destructive mt-1">{errors.lastName.message}</FieldError>}
                         </Field>
                         <Field className="md:col-span-2">
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Email Address</FieldLabel>
-                          <div className="relative group">
-                            <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 transition-colors group-focus-within:text-blue-600" />
-                            <Input type="email" placeholder="john.doe@company.com" className="h-14 pl-14 bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-blue-600/5 rounded-2xl transition-all" {...register("email")} />
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Email Address</FieldLabel>
+                          <div className="relative">
+                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input type="email" placeholder="john.doe@company.com" className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("email")} />
                           </div>
-                          {errors?.email && <FieldError className="font-bold text-rose-600 ml-1">{errors.email.message}</FieldError>}
+                          {errors?.email && <FieldError className="text-xs text-destructive mt-1">{errors.email.message}</FieldError>}
                         </Field>
                         <Field className="md:col-span-2">
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Phone Number</FieldLabel>
-                          <Input placeholder="+254 700..." className="h-14 bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-blue-600/5 rounded-2xl transition-all" {...register("phone")} />
-                          {errors?.phone && <FieldError className="font-bold text-rose-600 ml-1">{errors.phone.message}</FieldError>}
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Phone Number</FieldLabel>
+                          <Input placeholder="+254 700..." className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("phone")} />
+                          {errors?.phone && <FieldError className="text-xs text-destructive mt-1">{errors.phone.message}</FieldError>}
                         </Field>
                         <Field>
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Password</FieldLabel>
-                          <div className="relative group">
-                            <Input type={pwdShown ? "text" : "password"} className="h-14 bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-blue-600/5 rounded-2xl transition-all" {...register("password")} />
-                            <button type="button" onClick={togglePwd} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors">
-                              {pwdShown ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Password</FieldLabel>
+                          <div className="relative">
+                            <Input type={pwdShown ? "text" : "password"} className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors pr-10" {...register("password")} />
+                            <button type="button" onClick={togglePwd} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                              {pwdShown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
                           </div>
-                          {errors?.password && <FieldError className="font-bold text-rose-600 ml-1">{errors.password.message}</FieldError>}
+                          {errors?.password && <FieldError className="text-xs text-destructive mt-1">{errors.password.message}</FieldError>}
                         </Field>
                         <Field>
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Confirm Password</FieldLabel>
-                          <div className="relative group">
-                            <Input type={confirmShown ? "text" : "password"} className="h-14 bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-blue-600/5 rounded-2xl transition-all" {...register("confirmPassword")} />
-                            <button type="button" onClick={toggleConfirm} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors">
-                              {confirmShown ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Confirm Password</FieldLabel>
+                          <div className="relative">
+                            <Input type={confirmShown ? "text" : "password"} className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors pr-10" {...register("confirmPassword")} />
+                            <button type="button" onClick={toggleConfirm} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                              {confirmShown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
                           </div>
-                          {errors?.confirmPassword && <FieldError className="font-bold text-rose-600 ml-1">{errors.confirmPassword.message}</FieldError>}
+                          {errors?.confirmPassword && <FieldError className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</FieldError>}
                         </Field>
                       </>
                     ) : (
                       <>
                         <Field className="md:col-span-2">
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Legal Entity Name</FieldLabel>
-                          <div className="relative group">
-                            <Building2 className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                            <Input placeholder="Global Solutions Ltd" className="h-14 pl-14 bg-slate-50/50 border-slate-100 focus:ring-4 focus:ring-blue-600/5 rounded-2xl transition-all" {...register("thirdPartyName")} />
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Legal Business Name</FieldLabel>
+                          <div className="relative">
+                            <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Global Solutions Ltd" className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("thirdPartyName")} />
                           </div>
-                          {errors?.thirdPartyName && <FieldError className="font-bold text-rose-600 ml-1">{errors.thirdPartyName.message}</FieldError>}
+                          {errors?.thirdPartyName && <FieldError className="text-xs text-destructive mt-1">{errors.thirdPartyName.message}</FieldError>}
                         </Field>
                         <Field>
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Business Type</FieldLabel>
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Business Type</FieldLabel>
                           <Select onValueChange={(v) => setValue("businessType", Number(v), { shouldValidate: true })} value={selectedBusinessTypeId?.toString()}>
-                            <SelectTrigger className="h-14 bg-slate-50/50 border-slate-100 rounded-2xl">
-                              <SelectValue placeholder="Category" />
+                            <SelectTrigger className="h-11 rounded-lg border-input/60">
+                              <SelectValue placeholder="Select category" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                            <SelectContent className="rounded-lg">
                               {businessTypes.map((t) => (
                                 <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          {errors?.businessType && <FieldError className="font-bold text-rose-600 ml-1">Required</FieldError>}
+                          {errors?.businessType && <FieldError className="text-xs text-destructive mt-1">Required</FieldError>}
                         </Field>
                         <Field>
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Reg Number</FieldLabel>
-                          <div className="relative group">
-                            <Hash className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                            <Input placeholder="PVT-X..." className="h-14 pl-14 bg-slate-50/50 border-slate-100 rounded-2xl uppercase font-bold" {...register("registrationNumber")} />
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Registration Number</FieldLabel>
+                          <div className="relative">
+                            <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="PVT-X..." className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors uppercase" {...register("registrationNumber")} />
                           </div>
-                          {errors?.registrationNumber && <FieldError className="font-bold text-rose-600 ml-1">{errors.registrationNumber.message}</FieldError>}
+                          {errors?.registrationNumber && <FieldError className="text-xs text-destructive mt-1">{errors.registrationNumber.message}</FieldError>}
                         </Field>
                         <Field>
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Tax PIN</FieldLabel>
-                          <Input placeholder="P051..." className="h-14 bg-slate-50/50 border-slate-100 rounded-2xl uppercase font-bold" {...register("taxPIN")} />
-                          {errors?.taxPIN && <FieldError className="font-bold text-rose-600 ml-1">{errors.taxPIN.message}</FieldError>}
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Tax PIN</FieldLabel>
+                          <Input placeholder="P051..." className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors uppercase" {...register("taxPIN")} />
+                          {errors?.taxPIN && <FieldError className="text-xs text-destructive mt-1">{errors.taxPIN.message}</FieldError>}
                         </Field>
                         <Field>
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Primary Jurisdiction</FieldLabel>
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Primary Jurisdiction</FieldLabel>
                           <Select onValueChange={(v) => setValue("countryId", Number(v), { shouldValidate: true })} value={selectedCountryId?.toString()}>
-                            <SelectTrigger className="h-14 bg-slate-50/50 border-slate-100 rounded-2xl">
-                              <SelectValue placeholder="Country" />
+                            <SelectTrigger className="h-11 rounded-lg border-input/60">
+                              <SelectValue placeholder="Select country" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                            <SelectContent className="rounded-lg">
                               {countries.map((c) => (
                                 <SelectItem key={c.id} value={c.id.toString()}>
                                   <span className="mr-2">{c.flag}</span> {c.name}
@@ -380,17 +334,13 @@ export default function SignUpPage() {
                               ))}
                             </SelectContent>
                           </Select>
-                          {errors?.countryId && <FieldError className="font-bold text-rose-600 ml-1">Required</FieldError>}
+                          {errors?.countryId && <FieldError className="text-xs text-destructive mt-1">Required</FieldError>}
                         </Field>
-
                         <Field className="md:col-span-2">
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-3 ml-1">
-                            Industry Service Categories <span className="text-rose-500">*</span>
-                          </FieldLabel>
-
-                          <div className="flex flex-wrap gap-2 mb-3 min-h-[40px] p-2 rounded-2xl bg-slate-50/30 border border-dashed border-slate-100">
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Industry Service Categories</FieldLabel>
+                          <div className="flex flex-wrap gap-2 mb-2.5 min-h-[40px] p-2.5 rounded-lg bg-muted/20 border border-dashed border-input/60">
                             <AnimatePresence>
-                              {selectedCats.length === 0 && <span className="text-[10px] text-slate-400 font-medium my-auto ml-1 italic">No categories selected</span>}
+                              {selectedCats.length === 0 && <span className="text-xs text-muted-foreground/50 my-auto italic">No categories selected</span>}
                               {selectedCats.map(catId => {
                                 const cat = supplierCategories.find(c => c.id === catId);
                                 return (
@@ -399,14 +349,10 @@ export default function SignUpPage() {
                                     initial={{ scale: 0.8, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     exit={{ scale: 0.8, opacity: 0 }}
-                                    className="bg-blue-600 text-white px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-sm group"
+                                    className="bg-primary text-primary-foreground px-2.5 py-1 rounded-md flex items-center gap-1.5 text-xs font-medium"
                                   >
-                                    <span className="text-[10px] font-black uppercase tracking-wider">{cat?.name}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedCats(prev => prev.filter(id => id !== catId))}
-                                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                                    >
+                                    <span>{cat?.name}</span>
+                                    <button type="button" onClick={() => setSelectedCats(prev => prev.filter(id => id !== catId))} className="hover:bg-white/20 rounded-full p-0.5">
                                       <X className="h-3 w-3" />
                                     </button>
                                   </motion.div>
@@ -414,84 +360,87 @@ export default function SignUpPage() {
                               })}
                             </AnimatePresence>
                           </div>
-
                           <Select onValueChange={(v) => {
                             const id = Number(v);
-                            if (!selectedCats.includes(id)) {
-                              setSelectedCats(prev => [...prev, id]);
-                              setCatSearch("");
-                            }
+                            if (!selectedCats.includes(id)) { setSelectedCats(prev => [...prev, id]); setCatSearch(""); }
                           }}>
-                            <SelectTrigger className="h-14 bg-slate-50/50 border-slate-100 rounded-2xl">
-                              <SelectValue placeholder="Select Business Categories" />
+                            <SelectTrigger className="h-11 rounded-lg border-input/60">
+                              <SelectValue placeholder="Select categories" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-2xl border-slate-100 shadow-2xl max-h-64">
-                              <div className="p-2 sticky top-0 bg-white border-b z-10">
+                            <SelectContent className="rounded-lg max-h-64">
+                              <div className="p-2 sticky top-0 bg-popover border-b z-10">
                                 <div className="relative">
-                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                  <Input
-                                    placeholder="Filter categories..."
-                                    className="h-10 pl-9 text-xs border-slate-100 bg-slate-50 rounded-xl"
-                                    value={catSearch}
-                                    onChange={(e) => setCatSearch(e.target.value)}
-                                    onKeyDown={(e) => e.stopPropagation()}
-                                  />
+                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                  <Input placeholder="Filter..." className="h-9 pl-9 text-xs rounded-md" value={catSearch} onChange={(e) => setCatSearch(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
                                 </div>
                               </div>
-                              <div className="overflow-y-auto">
-                                {filteredCats.map((cat) => (
-                                  <SelectItem key={cat.id} value={cat.id.toString()} className="rounded-lg m-1">
-                                    <span className="text-xs font-bold text-slate-700">{cat.name}</span>
-                                  </SelectItem>
-                                ))}
-                                {filteredCats.length === 0 && (
-                                  <div className="p-6 text-center text-xs text-slate-400 font-medium">
-                                    All matching categories selected
-                                  </div>
-                                )}
-                              </div>
+                              {filteredCats.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </Field>
-
                         <Field className="md:col-span-2">
-                          <FieldLabel className="text-slate-500 font-black text-[10px] uppercase tracking-[0.15em] mb-2 ml-1">Physical HQ Address</FieldLabel>
-                          <div className="relative group">
-                            <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                            <Input placeholder="Plaza, 4th Floor, Suite 12" className="h-14 pl-14 bg-slate-50/50 border-slate-100 rounded-2xl transition-all" {...register("physicalAddress")} />
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Physical Address</FieldLabel>
+                          <div className="relative">
+                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Plaza, Suite 12" className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("physicalAddress")} />
                           </div>
-                          {errors?.physicalAddress && <FieldError className="font-bold text-rose-600 ml-1">{errors.physicalAddress.message}</FieldError>}
+                          {errors?.physicalAddress && <FieldError className="text-xs text-destructive mt-1">{errors.physicalAddress.message}</FieldError>}
+                        </Field>
+                        <Field className="md:col-span-2">
+                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Website (Optional)</FieldLabel>
+                          <div className="relative">
+                            <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="https://www.example.com" className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("website")} />
+                          </div>
+                          {errors?.website && <FieldError className="text-xs text-destructive mt-1">{errors.website.message}</FieldError>}
                         </Field>
                       </>
                     )}
                   </div>
 
-                  <div className="pt-6">
+                  <div className="pt-4 space-y-3.5">
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full h-16 bg-slate-900 hover:bg-blue-600 text-white font-black text-[13px] uppercase tracking-[0.2em] rounded-2xl shadow-2xl shadow-slate-200 transition-all duration-300 active:scale-[0.98] group"
+                      className="w-full h-11 rounded-lg font-semibold text-sm transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       {isSubmitting ? (
-                        <div className="flex items-center gap-3">
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          <span>Syncing Profile...</span>
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Processing...</span>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-center gap-3">
-                          <span>{step === "form" ? "Business Details" : "Initialize Account"}</span>
-                          <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span>{step === "form" ? "Continue" : "Complete Registration"}</span>
+                          <ChevronRight className="h-4 w-4" />
                         </div>
                       )}
                     </Button>
+
+                    {step === "profile" && (
+                      <button type="button" onClick={() => setStep("form")} className="w-full text-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                        Go back to personal details
+                      </button>
+                    )}
                   </div>
                 </form>
+
+                <div className="text-center pt-6 border-t border-border/30 mt-6">
+                  <p className="text-sm text-muted-foreground">
+                    Already have an account?{" "}
+                    <Link href="/signin" className="text-primary font-semibold hover:underline underline-offset-2">
+                      Log In
+                    </Link>
+                  </p>
+                </div>
               </motion.div>
             ) : (
               <SuccessState router={router} />
             )}
           </AnimatePresence>
-        </main>
+        </div>
       </div>
     </Suspense>
   )
@@ -499,25 +448,21 @@ export default function SignUpPage() {
 
 function SuccessState({ router }: { router: any }) {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push("/signin")
-    }, 4000)
+    const timer = setTimeout(() => { router.push("/signin") }, 4000)
     return () => clearTimeout(timer)
   }, [router])
 
   return (
-    <motion.div
-      initial={{ scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      className="text-center max-w-lg bg-white p-16 lg:p-20 rounded-[3rem] shadow-2xl border border-slate-50"
-    >
-      <div className="mb-10 h-24 w-24 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-        <Check className="h-12 w-12 stroke-[3]" />
+    <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center space-y-8">
+      <div className="h-20 w-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-sm">
+        <Check className="h-10 w-10 stroke-[3]" />
       </div>
-      <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Onboarding Complete.</h2>
-      <p className="text-slate-500 font-medium leading-relaxed mb-10">Verification initialized. Your partner console is being prepared.</p>
-      <div className="flex items-center justify-center gap-4 text-blue-600 font-black text-[11px] uppercase tracking-[0.3em]">
-        <Spinner className="h-4 w-4" /> Finalizing Session
+      <div className="space-y-3">
+        <h2 className="text-3xl font-bold text-foreground tracking-tight">Registration Complete</h2>
+        <p className="text-muted-foreground font-medium max-w-xs mx-auto">Your account is being initialized. Redirecting to login...</p>
+      </div>
+      <div className="flex items-center justify-center gap-3 text-primary font-bold text-sm">
+        <Spinner className="h-4 w-4" /> Finalizing session
       </div>
     </motion.div>
   )
