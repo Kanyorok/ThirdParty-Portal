@@ -31,19 +31,18 @@ class ItemMasterListController extends Controller
     }
 
     public function index()
-    {
-        $items = ItemMasterList::with([
-            'category.parent',
-            'itemType',
-            'inventoryType',
-            'uom',
-            'price',
-            'status'
-        ])->get();
+        {
+            $items = ItemMasterList::with([
+                'category.parent',
+                'itemType.type',  
+                'inventoryType.type',  
+                'uom',
+                'price',
+                'status'
+            ])->get();
 
-        return view('inventory.itemmaster.itemmasterlist.index', compact('items'));
-    }
-
+            return view('inventory.itemmaster.itemmasterlist.index', compact('items'));
+        }
 
     public function create()
     {
@@ -54,10 +53,10 @@ class ItemMasterListController extends Controller
                 ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
                 ->get(),
             'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
-            'itemTypes' => CodeDetail::where('CodeID', 'ItemTypeStatus')->orderBy('Value')->get(),
             'uoms' => UnitOfMeasure::all(),
             'price' => PriceManagement::all(),
-            'inventoryTypes' => CodeDetail::where('CodeID', 'InventoryTypeStatus')->orderBy('Value')->get(),
+            'itemTypes' => ItemType::with('type')->get(),
+            'inventoryTypes' => InventoryType::with('type')->get(),
         ]);
     }
 
@@ -204,9 +203,9 @@ class ItemMasterListController extends Controller
             'subcategories' => ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)
                 ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
                 ->get(),
-            'itemTypes' => CodeDetail::where('CodeID', 'ItemTypeStatus')->orderBy('Value')->get(),
+            'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
-            'inventoryTypes' => CodeDetail::where('CodeID', 'InventoryTypeStatus')->orderBy('Value')->get(),
+            'inventoryTypes' => InventoryType::all(),
             'priceManagement' => PriceManagement::all(),
         ]);
     }

@@ -51,12 +51,12 @@
                     <div class="col-md-4">
                         <label for="ItemType" class="form-label">Item Type <span class="text-danger">*</span></label>
                         <select name="ItemType" id="ItemType" class="form-select @error('ItemType') is-invalid @enderror" required>
-                            <option value="" selected disabled>Select Type</option>
-                            @foreach($itemTypes as $itemType)
-                                <option value="{{ $itemType->ID }}" {{ old('ItemType') == $itemType->ID ? 'selected' : '' }}>
-                                    {{ $itemType->Description }}
-                                </option>
-                            @endforeach
+                        <option value="" selected disabled>-- Select Type --</option>
+                        @foreach($itemTypes as $itemType)
+                            <option value="{{ $itemType->Id }}" {{ old('ItemType') == $itemType->Id ? 'selected' : '' }}>
+                                {{ $itemType->type->Description ?? $itemType->Id }}
+                            </option>
+                        @endforeach
                         </select>
                         @error('ItemType')
                             <div class="invalid-feedback">
@@ -120,8 +120,8 @@
                         <select name="InventoryType" id="InventoryType" class="form-select @error('InventoryType') is-invalid @enderror" required>
                             <option value="" selected disabled>Select Inventory Type</option>
                             @foreach($inventoryTypes as $inventoryType)
-                                <option value="{{ $inventoryType->ID }}" {{ old('InventoryType') == $inventoryType->ID ? 'selected' : '' }}>
-                                    {{ $inventoryType->Description }}
+                                <option value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
+                                    {{ $inventoryType->type->Description ?? $inventoryType->Id }}
                                 </option>
                             @endforeach
                         </select>
@@ -140,16 +140,20 @@
                             </div>
                         @enderror
                     </div>
-                    <div class="mb-3 mt-3">
+                    <div class="col-md-4">
                         <label class="form-label">Upload Supporting Document</label>
                         <input type="file" name="Document" class="form-control">
                         <small class="text-muted">Attach inspection sheet, photos, or related files</small>
                     </div>
                 </div>
+                
                 {{-- Full-width Row --}}
                 <div class="mb-3">
                     <label for="ItemDescription" class="form-label">Item Description <span class="text-danger">*</span></label>
                     <textarea name="ItemDescription" id="ItemDescription" class="form-control @error('ItemDescription') is-invalid @enderror" rows="3" required>{{ old('ItemDescription') }}</textarea>
+                    <div class="invalid-feedback" id="description-error" style="display: none;">
+                        Please enter a description for the item.
+                    </div>
                     @error('ItemDescription')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -158,11 +162,9 @@
                 </div>
  
                 <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-success"
-                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                    <button type="submit" class="btn btn-success" id="submitBtn">
                         ✅ Save Item
                     </button>
- 
                 </div>
             </form>
         </div>
@@ -174,6 +176,7 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
+        // Category change for subcategories
         $('#category').change(function () {
             let categoryId = $(this).val();
             $('#subcategory').html('<option value="">Loading...</option>');
@@ -200,6 +203,60 @@
                 $('#subcategory').val('{{ old('SubCategory') }}');
             }, 500);
         @endif
+
+        // Form validation
+        $('#itemMasterListForm').on('submit', function(e) {
+            let isValid = true;
+            
+            // Reset error states
+            $(this).find('.is-invalid').removeClass('is-invalid');
+            $('.invalid-feedback').hide();
+            
+            // Check required fields
+            $('#ItemName, #BarCode, #ItemType, #Category, #UOM, #InventoryType, #ItemDescription').each(function() {
+                if (!$(this).val() || $(this).val().trim() === '') {
+                    isValid = false;
+                    $(this).addClass('is-invalid');
+                    
+                    // Show specific error for description
+                    if ($(this).is('#ItemDescription')) {
+                        $('#description-error').show();
+                    }
+                }
+            });
+            
+            // Check if description is not just whitespace
+            const description = $('#ItemDescription').val().trim();
+            if (!description) {
+                isValid = false;
+                $('#ItemDescription').addClass('is-invalid');
+                $('#description-error').show();
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                // Show alert message
+                alert('Please fill in all required fields (marked with *) before submitting.');
+                return false;
+            }
+            
+            // Disable submit button to prevent double submission
+            $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...');
+            
+            return true;
+        });
+
+        // Real-time validation for description
+        $('#ItemDescription').on('input', function() {
+            const value = $(this).val().trim();
+            if (value) {
+                $(this).removeClass('is-invalid');
+                $('#description-error').hide();
+            } else {
+                $(this).addClass('is-invalid');
+                $('#description-error').show();
+            }
+        });
     });
 </script>
  
@@ -209,6 +266,15 @@
 }
 .form-label {
     font-weight: 500;
+}
+/* Style for required field labels */
+.form-label span.text-danger {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+/* Style for invalid fields */
+.is-invalid {
+    border-color: #dc3545 !important;
 }
 </style>
 @endsection
