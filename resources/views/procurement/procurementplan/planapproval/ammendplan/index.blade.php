@@ -85,10 +85,15 @@
               <td>{{ $item->branch->Name ?? 'N/A' }}</td>
               <td>{{ $item->OriginalQTY }}</td>
               <td>{{ $item->MergedQty }}</td>
-              <td>
-                  <input type="number" class="form-control form-control-sm" name="qty_{{ $item->LineItemID }}"
-                         value="{{ $item->MergedQty }}" min="1" max="{{ $item->OriginalQTY }}">
-              </td>
+                            <td>
+                                    <input type="number" class="form-control form-control-sm" name="qty_{{ $item->LineItemID }}"
+                                                 value="{{ $item->MergedQty }}"
+                                                 min="0"
+                                                 @if(strtolower((string)($item->SourceType ?? '')) !== 'manual')
+                                                     max="{{ $item->OriginalQTY }}"
+                                                 @endif
+                                    >
+                            </td>
             <td>
                 <input type="number" class="form-control form-control-sm" name="unitCost_{{ $item->LineItemID }}"
                        value="{{ $item->EstimatedUnitCost }}" min="0" step="0.01">

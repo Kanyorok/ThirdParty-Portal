@@ -39,7 +39,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Country of Origin</label>
                     <input type="text" class="form-control bg-light"
-                           value="{{ $newtenant->thirdParty->Country ?? '-' }}" readonly>
+                           value="{{ $newtenant->thirdParty->Country->Name ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -87,7 +87,6 @@
             </div>
 
             <div>
-                <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-sm btn-primary">Edit</a>
                 <a href="{{ route('addtenant.index') }}" class="btn btn-sm btn-secondary">Back</a>
             </div>
         </div>

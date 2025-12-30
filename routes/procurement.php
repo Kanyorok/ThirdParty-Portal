@@ -107,20 +107,38 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
         ]);
     });
 
+    //submit requisitons routes
+    Route::post('requisition/{id}/submit', [RequisitionsController::class, 'submit'])
+        ->name('requisition.submit');
 
     //this route is static affecting orders\create.blade.php & requisitions\show
     Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 
     // this route is static affecting orders\create.blade.php & requisitions\show
-    Route::get('requisitionItem/getItemDetails/{item}', [RequisitionItemsController::class, 'getItemDetails'])->name('requisitionItem.getItemDetails');
+    Route::get('requisitionItem/getItemDetails/{item}', action: [RequisitionItemsController::class, 'getItemDetails'])->name('requisitionItem.getItemDetails');
 
-    //    Route::get('requisitionItem/{id}', [RequisitionItemsController::class, 'show'])->name('requisitionItem.show');
-    //    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
+    Route::get('procurement/requisition/getPlanDetails/{id}', [RequisitionsController::class, 'getPlanDetails'])
+        ->name('requisition.getPlanDetails');
+
+
+    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
+
+    Route::post('requisitionLine/{lineId}/updateQuantity', [
+        \App\Http\Controllers\Procurement\RequisitionItemsController::class,
+        'updateQuantity'
+    ])->name('requisitionLine.updateQuantity');
+
+    Route::delete('requisitionLine/{lineId}', [
+        \App\Http\Controllers\Procurement\RequisitionItemsController::class,
+        'destroy'
+    ])->name('requisitionLine.destroy');
 
     Route::post('requisition/approve/{id}', [RequisitionsController::class, 'approve'])->name('requisition.approve');
     Route::get('requisition/approval/{id}', [RequisitionsController::class, 'approval'])->name('requisition.approval');
     Route::get('procurementplan/details/{id}', [RequisitionsController::class, 'getPlanDetails'])
         ->name('procurement.plan.details');
+    // Add this route for fetching requisition categories
+
     Route::prefix('admin')->group(function () {
         Route::put('/approval-settings/{id}', [ApprovalSetupController::class, 'update'])->name('approval-setup.update');
         Route::post('/approval-settings', [ApprovalSetupController::class, 'store'])->name('approval-settings.store');
@@ -132,6 +150,9 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('purchaseOrder/getSuppliers', [PurchaseOrderController::class, 'getSuppliers'])->name('purchaseOrder.getSuppliers');
     Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
     Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
+    Route::post('purchaseOrder/submit/{id}', [PurchaseOrderController::class, 'submit'])->name('purchaseOrder.submit');
+    Route::post('purchaseOrder/reject/{id}', [PurchaseOrderController::class, 'reject'])->name('purchaseOrder.reject');
+    Route::post('purchaseOrder/return/{id}', [PurchaseOrderController::class, 'return'])->name('purchaseOrder.return');
     Route::get('purchaseOrder/approval/{id}', [PurchaseOrderController::class, 'approval'])->name('purchaseOrder.approval');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
@@ -209,7 +230,16 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::put('/engaged-auditors/{id}', [EngagedAuditorController::class, 'update'])->name('engaged-auditors.update');
     Route::delete('/engaged-auditors/{id}', [EngagedAuditorController::class, 'destroy'])->name('engaged-auditors.destroy');
 
+    // Supplier Approval Screen
+    Route::get('suppliers-approval', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'index'])->name('suppliers-approval.index');
+    Route::get('suppliers-approval/{id}', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'show'])->name('suppliers-approval.show');
+    Route::post('suppliers-approval/{id}/approve', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'approve'])->name('suppliers-approval.approve');
+    Route::post('suppliers-approval/{id}/reject', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'reject'])->name('suppliers-approval.reject');
+
     // Suppliers
+    Route::post('suppliers/{id}/submit', [SupplierController::class, 'submit'])->name('suppliers.submit');
+    Route::post('suppliers/{id}/reject', [SupplierController::class, 'reject'])->name('suppliers.reject');
+    Route::post('suppliers/{id}/activate', [SupplierController::class, 'activate'])->name('suppliers.activate');
     Route::resource('suppliers', SupplierController::class);
 
 
@@ -247,6 +277,10 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::post('/rfqs/{rfq}/reject', [RFQController::class, 'reject'])
         ->middleware(\App\Http\Middleware\CanAction::class . ':approve,rfqs')
         ->name('rfqs.reject');
+    Route::post('/rfqs/{rfq}/publish', [RFQController::class, 'publish'])
+        ->middleware(\App\Http\Middleware\CanAction::class . ':approve,rfqs')
+        ->name('rfqs.publish');
+    Route::get('procurement/requisition/{id}/categories', [RFQController::class, 'getRequisitionCategories']);
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');
@@ -291,11 +325,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('goods-receipt/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'show'])->name('goods-receipt.show');
     Route::get('goods-receipt/dashboard', [EnhancedGoodsReceiptController::class, 'dashboard'])->name('goods-receipt.dashboard');
 
-    //Tenders
-    Route::get('initiatetender/allowed-categories', [TenderController::class, 'allowedCategories'])
-        ->name('initiatetender.allowedCategories');
 
-    Route::resource('initiatetender', TenderController::class);
 
     // Tender Categories CRUD
     Route::resource('tendercategory', TenderCategoryController::class);
@@ -304,11 +334,43 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('tendercategory/{id}/itemtypes', [TenderCategoryController::class, 'itemTypes'])->name('tendercategory.itemtypes');
     Route::post('tendercategory/{id}/itemtypes', [TenderCategoryController::class, 'updateItemTypes'])->name('tendercategory.itemtypes.update');
     Route::resource('tendertype', TenderTypeController::class);
-    //Route for tender approval and Reject
-    Route::post('/tenderapproval', [TenderController::class, 'approveTender'])->name('tender.approve');
-    Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])->name('tender.reject');
-    Route::resource('initiateapprove', TenderInitiationApproveController::class);
-    Route::resource('tenderresponse', TenderResponseController::class);
+    Route::get('/tender-category/generate-code', [TenderCategoryController::class, 'generateCategoryCode'])
+        ->name('tendercategory.generateCode');
+
+    //tendering routes
+    Route::get('initiatetender/prequalified-suppliers/{categoryId}', [TenderController::class, 'getPrequalifiedSuppliersForCategory'])
+        ->name('initiatetender.prequalifiedSuppliers');
+
+    Route::middleware(['auth', 'module:300000'])->prefix('procurement/tendering')->group(function () {
+
+        // Tender Initiation Routes
+        Route::resource('initiatetender', TenderController::class);
+
+        // Submit for approval (must be authenticated)
+        Route::post('initiatetender/{id}/submit', [TenderController::class, 'submitForApproval'])
+            ->name('initiatetender.submit');
+
+        //  Approval/Rejection (must be authenticated)
+        Route::post('/tenderapproval', [TenderController::class, 'approveTender'])
+            ->name('initiatetender.approve');
+
+        Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])
+            ->name('initiatetender.reject');
+
+        // Workflow History
+        Route::get('tenders/{id}/workflow-history', [TenderController::class, 'workflowHistory'])
+            ->name('initiatetender.workflow-history');
+
+        // AJAX Route for Allowed Categories
+        Route::get('/allowed-categories', [TenderController::class, 'allowedCategories'])
+            ->name('initiatetender.allowedCategories');
+
+
+
+        // Other Tender Resources
+        Route::resource('initiateapprove', TenderInitiationApproveController::class);
+    });
+
 
     Route::resource('tenderopening', TenderOpeningController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);
@@ -412,6 +474,14 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
 
     //Procurement Plan, Plan Consolidation
     // Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
+    // Route::get('/procurement/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('procurement.show');
+
+
+    Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
+    Route::get('/dashboard/export', [ConsolidatedDashboardController::class, 'exportExcel'])->name('dashboard.export');
+
+
 
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);
@@ -497,9 +567,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('/bid-evaluation/{tenderRef}/report', [\App\Http\Controllers\Procurement\BidEvaluationController::class, 'generateReport'])->name('bid-evaluation.report');
 
     //procurement Consolidation
-    Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
-    Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
-    Route::get('/procurement/dashboard/export', [ConsolidatedDashboardController::class, 'exportExcel'])->name('dashboard.export');
+
 
     //Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
     Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class)->except(['show', 'store']);
@@ -616,6 +684,19 @@ Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->nam
 Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
 Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
 Route::post('/awards/{award}/cancel', [AwardsController::class, 'cancel'])->name('awards.cancel');
+
+// Workflow history
+Route::get('/{id}/workflow-history', [AwardsController::class, 'workflowHistory'])->name('workflow-history');
+
+// Direct from consolidation
+Route::get('/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])
+    ->name('create-from-consolidation');
+// Workflow actions
+Route::post('/{id}/submit-approval', [AwardsController::class, 'submitForApproval'])->name('submit-approval');
+Route::post('/approve', [AwardsController::class, 'approve'])->name('approve');
+Route::post('/reject', [AwardsController::class, 'reject'])->name('reject');
+Route::post('/{id}/cancel', [AwardsController::class, 'cancel'])->name('cancel');
+
 // RFQ direct award approval (no TenderAward model yet)
 Route::post('/awards/rfq/{rfq}/approve', [AwardsController::class, 'approveRfq'])->name('awards.rfq.approve');
 
@@ -741,3 +822,12 @@ Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController
 Route::get('committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
 Route::get('tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show.typed');
 Route::get('rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
+
+Route::get('/fix-rfq-1', function () {
+    $s = app(\App\Services\Procurement\RFQ\RFQWorkflowService::class);
+    $r = \App\Models\Procurement\RFQ::find(1);
+    $u = \App\Models\Auth\User::find(4); // User 4 is likely the admin/current user
+    if (!$u) $u = \App\Models\Auth\User::first();
+    $s->submit($r, $u, 'Manual Fix Submission');
+    return 'Submitted RFQ 1';
+});

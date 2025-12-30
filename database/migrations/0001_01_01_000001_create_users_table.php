@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->string('Email')->unique();
             $table->string('Phone')->unique();
             $table->boolean('Linked');
-            $table->char('Gender', 1)->default('o');//enum
+            $table->char('Gender', 1)->default('o'); //enum
             $table->longText('Notes')->nullable();
             $table->longText('Email_Signature')->nullable();
             $table->char('BranchId', '5')->index();

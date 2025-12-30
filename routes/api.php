@@ -4,11 +4,13 @@ use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
+use App\Http\Controllers\API\Enums\CodeDetailsController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
@@ -55,10 +57,12 @@ Route::prefix('third-party-auth')->group(function () {
     Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
     Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
     Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
+    Route::post('forgot-password', [ThirdPartyAuthController::class, 'forgotPassword']);
+    Route::post('reset-password', [ThirdPartyAuthController::class, 'resetPassword']);
 });
 
 // step 2: Register company info (associated third party)
-Route::post('third-parties/register-details', [ThirdPartyController::class, 'store']);
+Route::post('third-parties/register-details', [ThirdPartiesController::class, 'store']);
 
 // Health check endpoint
 Route::get('/health', function () {
@@ -172,21 +176,22 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
     });
 
     Route::prefix('third-party-profile')->group(function () {
-        Route::get('/', [ThirdPartyUserProfileController::class, 'show']);
-        Route::put('/', [ThirdPartyUserProfileController::class, 'update']);
-        Route::patch('/', [ThirdPartyUserProfileController::class, 'partialUpdate']);
-        Route::delete('/', [ThirdPartyUserProfileController::class, 'destroy']);
-        Route::put('/password', [ThirdPartyUserProfileController::class, 'changePassword']);
+        Route::get('/', [ThirdPartyProfileController::class, 'show']);
+        Route::put('/', [ThirdPartyProfileController::class, 'update']);
+        Route::patch('/', [ThirdPartyProfileController::class, 'partialUpdate']);
+        Route::delete('/', [ThirdPartyProfileController::class, 'destroy']);
+        Route::put('/roles/toggle', [ThirdPartyProfileController::class, 'toggleRole']);
+        Route::put('/password', [ThirdPartyProfileController::class, 'changePassword']);
     });
 
     Route::prefix('third-parties')->group(function () {
-        Route::get('/', [ThirdPartyController::class, 'index']);
+        Route::get('/', [ThirdPartiesController::class, 'index']);
 
-        Route::get('me', [ThirdPartyController::class, 'showMyThirdPartyDetails']);
+        Route::get('me', [ThirdPartiesController::class, 'showMyThirdPartyDetails']);
 
-        Route::get('{third_party}', [ThirdPartyController::class, 'show']);
-        Route::put('{third_party}', [ThirdPartyController::class, 'update']);
-        Route::delete('{third_party}', [ThirdPartyController::class, 'destroy']);
+        Route::get('{third_party}', [ThirdPartiesController::class, 'show']);
+        Route::put('{third_party}', [ThirdPartiesController::class, 'update']);
+        Route::delete('{third_party}', [ThirdPartiesController::class, 'destroy']);
         // Upload supporting documents for a third party
         Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
         // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
@@ -218,11 +223,13 @@ Route::prefix('v1')->group(function () {
 // countries
 Route::prefix('v1')->group(function () {
     Route::get('countries', [\App\Http\Controllers\Settings\Codes\ApiCountryController::class, 'list']);
+    Route::get('countries/{country}/localities', [\App\Http\Controllers\Settings\Codes\ApiCountryController::class, 'localities']);
 });
 
 // enums (public)
 Route::prefix('enums')->group(function () {
     Route::get('third-party-types', [ThirdPartyTypesEnumController::class, 'index']);
+    Route::get('{codeId}', [CodeDetailsController::class, 'index']);
 });
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
@@ -303,9 +310,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 /***
  *  This Are the API Routes for Central Report Unit C.R.U
  */
+
 use App\Http\Controllers\API\CRDB\CRDBAuthController;
 use App\Http\Controllers\API\CRDB\CRDBGeneralLedgerController;
-use App\Http\Controllers\API\CRDB\CRDBCustomerController;   
+use App\Http\Controllers\API\CRDB\CRDBCustomerController;
 // CRDB Authentication Routes (Public)
 Route::prefix('crdb')->group(function () {
     Route::post('login', [CRDBAuthController::class, 'login'])->name('crdb.login');
@@ -321,7 +329,7 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
     Route::get('syncCustomers', [CRDBCustomerController::class, 'syncCustomers'])->name('syncCustomers');
     Route::get('getClientSummaryStatement', [CRDBCustomerController::class, 'getClientSummaryStatement'])->name('getClientSummaryStatement');
     // Route::get('data', [CRDBDataController::class, 'fetch']);
-    
+
     // Health check for authenticated requests
     Route::get('health', function () {
         return response()->json([
@@ -335,4 +343,3 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
 
 //api routes for workflow stages
 Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');
-

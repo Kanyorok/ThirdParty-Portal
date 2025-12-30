@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_MeetingUserhs', static function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('UserID')->constrained('t_Users', 'Id');
-            $table->foreignId('MeetingId')->constrained('t_Meetings', 'MeetingID');
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('CreatedOn');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('ModifiedOn');
-        });
+        if (!Schema::hasTable('t_MeetingUsers')) {
+            Schema::create('t_MeetingUsers', static function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('UserID')->constrained('t_Users', 'Id');
+                $table->foreignId('MeetingId')->constrained('t_Meetings', 'MeetingID');
+                $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+                $table->dateTime('CreatedOn');
+                $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+                $table->dateTime('ModifiedOn');
+            });
+        }
     }
 
     /**

@@ -88,23 +88,24 @@
                     <th>Actions</th>
                 </tr>
                 </thead>
-                <tbody>
-                @foreach($rfqs as $rfq)
-                    <tr>
-                        {{-- pagination-aware index: first item on current page + loop index --}}
-                        <td>{{ ($rfqs->currentPage() - 1) * $rfqs->perPage() + $loop->iteration }}</td>
-                        <td>{{ $rfq->RFQNumber ?? '-' }}</td>
-                        <td>{{ $rfq->requisition->RequisitionNo ?? '-' }}</td>
-                        <td>{{ $rfq->Status ?? '-' }}</td>
-                        <td>{{ $rfq->SubmissionDeadline ? Carbon::parse($rfq->SubmissionDeadline)->format('d M Y') : '-' }}</td>
-                        <td>{{ $createdByMap[$rfq->CreatedBy] ?? '-' }}</td>
-                        <td>{{ $rfq->CreatedOn ? Carbon::parse($rfq->CreatedOn)->format('d M Y') : '-' }}</td>
-                        <td>
-                            <a href="{{ route('rfqs.show', $rfq->Id) }}" class="btn btn-sm btn-info">View</a>
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
+                
+<tbody>
+@foreach($rfqs as $rfq)
+    <tr>
+        {{-- pagination-aware index: first item on current page + loop index --}}
+        <td>{{ ($rfqs->currentPage() - 1) * $rfqs->perPage() + $loop->iteration }}</td>
+        <td>{{ $rfq->RFQNumber ?? '-' }}</td>
+        <td>{{ $rfq->RequisitionNo ?? '-' }}</td>
+        <td>{{ $rfq->StatusDescription ?? $rfq->Status ?? '-' }}</td>
+        <td>{{ $rfq->SubmissionDeadline ? Carbon::parse($rfq->SubmissionDeadline)->format('d/m/Y') : '-' }}</td>
+        <td>{{ $createdByMap[$rfq->CreatedBy] ?? '-' }}</td>
+        <td>{{ $rfq->CreatedOn ? Carbon::parse($rfq->CreatedOn)->format('d/m/Y') : '-' }}</td>
+        <td>
+            <a href="{{ route('rfqs.show', $rfq->Id) }}" class="btn btn-sm btn-info">View</a>
+        </td>
+    </tr>
+@endforeach
+</tbody>
             </table>
             <div class="d-flex justify-content-center">
                 {{ $rfqs->links() }}
@@ -145,14 +146,40 @@
                     </div>
 
                     <!-- Submission Deadline -->
-                    <div class="mb-3">
-                        <label for="SubmissionDeadline" class="form-label">Submission Deadline <span
-                                class="text-danger">*</span></label>
-                        <input type="date" name="SubmissionDeadline" id="SubmissionDeadline" class="form-control"
-                               required
-                               min="{{ Carbon::now()->toDateString() }}">
-
-                    </div>
+                  <div class="mb-3">
+    <label for="SubmissionDeadline" class="form-label">Submission Deadline <span class="text-danger">*</span></label>
+    <input type="date" 
+           name="SubmissionDeadline" 
+           id="SubmissionDeadline" 
+           class="form-control"
+           required
+           min="{{ Carbon::tomorrow()->toDateString() }}">
+</div>
+                    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const submissionDeadlineInput = document.getElementById('SubmissionDeadline');
+    
+    if (submissionDeadlineInput) {
+        // Set minimum date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const minDate = tomorrow.toISOString().split('T')[0];
+        submissionDeadlineInput.setAttribute('min', minDate);
+        
+        // Validate on change
+        submissionDeadlineInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate <= today) {
+                alert('Submission deadline must be a future date (at least tomorrow).');
+                this.value = '';
+            }
+        });
+    }
+});
+</script>
                 </div>
 
                 <div class="modal-footer">

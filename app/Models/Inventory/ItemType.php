@@ -55,9 +55,14 @@ class ItemType extends Model
     {
         return $this->hasMany(Requisitions::class, 'ItemTypeId', 'Id');
     }
-    
+
     public function type()
     {
         return $this->belongsTo(CodeDetail::class, 'TypeName', 'ID');
+    }
+
+    public function getTypeNameTextAttribute()
+    {
+        return $this->type ? $this->type->Description : (string)$this->TypeName;
     }
 }

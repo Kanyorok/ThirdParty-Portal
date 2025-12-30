@@ -32,7 +32,7 @@ BEGIN
      DueDay,
      SpecialTerms)
     SELECT LC.LeaseNumber,
-           TM.TenantName       AS Tenant,
+           TM.Id AS Tenant,
            PT.PropertyTypeName AS Property,
            PB.BlockName        AS BlockID,
            PF.FloorLabel       AS FloorID,

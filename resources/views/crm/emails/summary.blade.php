@@ -30,12 +30,12 @@
                 @include('snippets.client_summary', ['client'=>$party,'show_summary'=>true])
             @elseif($party instanceof Lead)
                 @include('snippets.lead_summary', ['lead'=>$party,'show_summary'=>true])
-
             @else
                 <h3>No Party Set</h3>
             @endif
         </li>
         <li class="list-group-item">Priority : <span class="float-end">{{$crmEmail->Priority->name}}</span></li>
+        <li class="list-group-item">Status : <span class="float-end">{{$crmEmail->Status->name}}</span></li>
         <li class="list-group-item">Dated : <span
                 class="float-end">{{$crmEmail->Dated?->format('d M Y, h:i A')}}</span></li>
     </ul>

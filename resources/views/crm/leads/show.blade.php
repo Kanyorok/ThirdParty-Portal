@@ -31,7 +31,7 @@
     <li class="breadcrumb-item"><a href="{{ route('leads.index') }}">Leads</a></li>
 @endsection
 @section('content')
-    <div class="row">
+   <div class="row">
         <div class="col-md-4 col-xxl-3">
             <div class="card">
                 @if($won)
@@ -116,7 +116,7 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><b>Location</b><span class="float-end">{{ $location }} </span></li>
                     <li class="list-group-item"><b>Industry</b><span
-                            class="float-end">{{ $lead->industry?->Description }} </span></li>
+                            class="float-end">{{ $lead->indu?->Description }} </span></li>
                     <li class="list-group-item"><b>Source</b><span
                             class="float-end">{{ $lead->source?->Description }} </span></li>
                     <li class="list-group-item"><b>Customer Type</b><span
@@ -558,8 +558,9 @@
                     <div class="card">
                         <div class="card-header"><h5>Private Notes</h5></div>
                         <div class="card-body">
+                            <div class="table-responsive">
                             <table id="notesTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -570,6 +571,7 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
 
@@ -640,8 +642,9 @@
                     <div class="card">
                         <div class="card-header"><h5>Task associated</h5></div>
                         <div class="card-body">
+                            <div class="table-responsive">
                             <table id="tasksTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -652,6 +655,7 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -726,9 +730,9 @@
                     <div class="card">
                         <div class="card-header"><h5>Emails <small>Incoming & outgoing</small></h5></div>
                         <div class="card-body">
-
+                            <div class="table-responsive">
                             <table id="EmailsTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>Type</th>
@@ -739,23 +743,7 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
-                            {{-- Email Details Modal --}}
-                            <div class="modal fade" id="viewEmailModal" tabindex="-1" role="dialog" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Email Details</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body" id="emailDetailsContent">
-                                            <div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
-
                         </div>
                     </div>
 
@@ -776,7 +764,6 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
-
                         </div>
                     </div>
 
@@ -956,7 +943,7 @@
                                         <label for="Location" class="form-label">Location <span
                                                 class="text-danger">*</span></label>
                                         <select class="form-control locations" name="Location" id="Location"
-                                                required disabled>
+                                                required>
                                             <option selected
                                                     value="{{ $lead->LocationID }}">{{ $location }}</option>
                                         </select>
@@ -994,7 +981,8 @@
                                                     class="text-danger">*</span></label>
                                             <select class="form-control" name="Gender" id="Gender" required>
                                                 @foreach(App\Enums\Employee\GenderEnum::getAll() as $gender)
-                                                    <option value="{{ $gender->value }}">{{ $gender->name }}</option>
+                                                    <option
+                                                        {{ ($lead->Gender->value === $gender->value)?'selected':'' }} value="{{ $gender->value }}">{{ $gender->name }}</option>
                                                 @endforeach
                                             </select>
                                             <p id="Gender_error" class="invalid-feedback d-none error col-12"
@@ -1016,7 +1004,7 @@
                                         <select class="form-control" name="Industry" id="Industry" required>
                                             @foreach($Industries as $Industry)
                                                 <option
-                                                    value="{{ $Industry->ID }}" {{ ($Industry->ID===$lead->Industry)?'selected':'' }} >{{ $Industry->Description }}</option>
+                                                    value="{{ $Industry->ID }}" {{ ($Industry->ID===(integer)$lead->Industry)?'selected':'' }} >{{ $Industry->Description }}</option>
                                             @endforeach
                                         </select>
                                         <p id="Industry_error" class="invalid-feedback d-none error col-12"
@@ -1200,21 +1188,32 @@
                                 <div class="mb-3">
                                     <label class="form-label" for="meeting_initiated_title">Title <span
                                             class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="`meeting_initiated_title`"
+                                    <input type="text" class="form-control" id="meeting_initiated_title"
                                            name="meeting_initiated_title"
                                            placeholder="Title"
                                            value="{{ ($schedule instanceof \App\Models\CRM\Schedule)?$schedule->Title:'' }}">
-                                    <p id="meeting_initiated_title" class="invalid-feedback d-none error col-12"
+                                    <p id="meeting_initiated_title_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label" for="meeting_initiated_location">Location <span
                                             class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="meeting_initiated_location"
-                                           name="meeting_initiated_location"
-                                           placeholder="Location"
-                                           value="{{ ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof Meeting)?$schedule->scheduled->Location:'' }}">
-                                    <p id="meeting_location_error" class="invalid-feedback d-none error col-12"
+                                    <select class="form-control" name="meeting_initiated_location" required
+                                            id="meeting_initiated_location">
+                                        <option selected disabled>Select or Type Location/Link</option>
+                                        @foreach(\App\Services\MeetingService::rooms() as $room)
+                                            <option value="{{ $room->RoomID }}">{{ $room->Name }} - {{ $room->RoomID }}
+                                                ({{ $room->Capacity }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+
+                                    {{--  <input type="text" class="form-control" id="meeting_initiated_location"
+                                             name="meeting_initiated_location"
+                                             placeholder="Location"
+                                             value="{ { ($schedule instanceof \App\Models\CRM\Schedule && $schedule->scheduled instanceof Meeting)?$schedule->scheduled->Location:'' } }">--}}
+                                    <p id="meeting_initiated_location_error"
+                                       class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
 
@@ -1322,7 +1321,6 @@
                                 </div>
                             </form>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -1393,6 +1391,13 @@
                     },
                     cache: true
                 }
+            });
+
+            $('#meeting_initiated_location').select2({
+                allowClear: true,
+                tags: true,
+                placeholder: "Select Location or Type it In",
+                dropdownParent: $Modal,
             });
 
             $(document).on('click', '.add-watcher-btn', function () {
@@ -1495,7 +1500,27 @@
                     }
                 });
             });
-            $('#Location').select2();
+            $('#Location').val('{{ $lead->LocationID }}').change().prop('disabled', false).select2({
+                placeholder: "Search for the Location",
+                minimumInputLength: 2,
+                dropdownParent: $Modal,
+                ajax: {
+                    url: "{{ route('locality.select2',['country'=>$lead->country->CountryCode]) }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {q: $.trim(params.term)};
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return {text: item.Name, id: item.ID}
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
 
             {{--   $('#Location').select2({
                 placeholder: "Select a Town/City", minimumInputLength: 2,
@@ -1676,6 +1701,9 @@
             $('form#CallUnreachableForm').submit(async function (e) {
                 e.preventDefault();
                 if (await saveForm($(this), $('#CallUnreachableBtn'), false, true, true)) {
+                    window.setTimeout(function () {
+                           window.location.replace('{{ route('leads.show',[$lead->LeadID]) }}');
+                        }, 3000)
                     $Modal.modal('hide');
                 }
             });
@@ -2036,29 +2064,6 @@
             $("#activitiesMain").prepend(activity.html);
         }
 
-
-        function loadEmailDetailsModal(id) {
-            if (!id) return;
-
-            $('#emailDetailsContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
-            $('#viewEmailModal').modal('show');
-
-            const leadId = {{ $lead->LeadID }}; // Make sure $lead is available in the view
-            const url = "{{ route('lead-mail.show', ['lead' => ':lead_id', 'lead_mail' => ':id']) }}"
-                .replace(':lead_id', leadId)
-                .replace(':id', id);
-
-            $.get(url)
-                .done(function (response) {
-                    $('#emailDetailsContent').html(response);
-                })
-                .fail(function (jqXHR) {
-                    $('#emailDetailsContent').html('<div class="text-danger">Failed to load email details</div>');
-                    codeNotify(jqXHR.status);
-                });
-        }
-
-
         function fetchMailsTable() {
             if (EmailsTable === null) {
                 EmailsTable = $('#EmailsTable').DataTable({
@@ -2079,22 +2084,8 @@
                         {data: 'action', name: 'action', orderable: false, searchable: false},
                     ],
                     oLanguage: {
-                        sEmptyTable: "<span class='text-center'>No records found</span>"
+                        sEmptyTable: "<span class='text-center'>No emails found</span>"
                     }
-                });
-
-                // View on double-click
-                $('#EmailsTable tbody').on('dblclick', 'tr', function () {
-                    const data = EmailsTable.row(this).data();
-                    if (data?.id) {
-                        loadEmailDetailsModal(data.id);
-                    }
-                });
-
-                // View on button click
-                $(document).on('click', '.view-email', function () {
-                    const id = $(this).data('id');
-                    loadEmailDetailsModal(id);
                 });
             } else {
                 EmailsTable.ajax.reload();

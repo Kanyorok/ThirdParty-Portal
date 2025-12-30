@@ -43,6 +43,10 @@ class FinanceInvoice extends Model
         'InvoiceDate',
         'DueDate',
         'InvoiceRemarks',
+        'InvoiceAmount',
+        'TaxID',
+        'TaxAmount',
+        'TaxPercentage',
         'TotalAmount',
         'AmountPaid',
         'IsPaid',
@@ -71,6 +75,9 @@ class FinanceInvoice extends Model
         'DueDate'     => 'date',
         'IsPaid'      => 'boolean',
         'IsGenerated' => 'boolean',
+        'TaxAmount' => 'float',
+        'InvoiceAmount' => 'float',
+        'TaxPercentage' => 'float',
         'UseCredit' => 'boolean',
         'CreditAppliedOn' => 'datetime',
     ];
@@ -166,6 +173,11 @@ class FinanceInvoice extends Model
 
     public function currency(){
         return $this->belongsTo(Currency::class,'CurrencyID','Id');
+    }
+
+    public function taxRule()
+    {
+        return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'TaxID', 'Id');
     }
 
     public function creditAppliedByUser()

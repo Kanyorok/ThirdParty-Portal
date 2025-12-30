@@ -13,75 +13,82 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class RequisitionItemsController extends Controller
 {
-    public function __construct(protected RequisitionItemService $service,protected ItemService $itemService)
+    public function __construct(protected RequisitionItemService $service, protected ItemService $itemService)
     {
 
         $this->middleware('ajax')->except(['index', 'create', 'show']);
-       // $this->authorizeResource(RequisitionLines::class);
+        // $this->authorizeResource(RequisitionLines::class);
     }
     /**
      * Display a listing of the resource.
      *
      */
 
-//    public function getItems(string $type): JsonResponse
-//    {
-////        $this->authorize('view',RequisitionLines::class);
-//        try{
-//            $items = $this->itemService->getItemByType($type);
-//            return response()->json([
-//                'success' => true,
-//                'data' => $items,
-//            ]);}
-//        catch(\Exception $e){
-//            return response()->json([
-//                'success' => false,
-//                'message' => 'Failed to fetch items.',
-//                'error' => $e->getMessage(),
-//            ], 500);
-//        }
-//    }
-
-    public function getItems(string $type, Request $request): JsonResponse
-    {
-//        $this->authorize('view',RequisitionLines::class);
-        try{
-            $requisitionId = $request->query('requisition_id');
-            // Attempt plan-aware fetch first
-            $planRef = null;
-            if ($requisitionId) {
-                $planRef = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
-            }
-            $items = $this->itemService->getItemByType($type, $requisitionId);
-
-            // Fallback ONLY when no plan is attached to requisition.
-            // If a plan exists but has no items, do not fallback (should show empty list).
-            if ((!$items || (is_countable($items) && count($items) === 0)) && empty($planRef)) {
-                $items = $this->itemService->getItemByType($type, null);
-            }
-            return response()->json([
-                'success' => true,
-                'data' => $items,
-            ]);
-        } catch (Exception $e) {
-            Log::error('Failed to fetch items', [
-                'type' => $type,
-                'requisition_id' => $request->query('requisition_id'),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch items.',
-                'error' => $e->getMessage(),
-            ], 500);
+  public function getItems(string $type, Request $request): JsonResponse
+{
+    try {
+        $requisitionId = $request->query('requisition_id');
+        
+        Log::info('getItems called', [
+            'type' => $type,
+            'requisition_id' => $requisitionId
+        ]);
+        
+        // Attempt plan-aware fetch first
+        $planRef = null;
+        if ($requisitionId) {
+            $planRef = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
+            Log::info('Plan reference found', ['plan_ref' => $planRef]);
         }
-    }
+        
+        $items = $this->itemService->getItemByType($type, $requisitionId);
+        
+        Log::info('Items fetched from service', [
+            'count' => is_countable($items) ? count($items) : 'not countable',
+            'type' => gettype($items),
+            'first_item' => $items ? (is_array($items) || $items instanceof \Illuminate\Support\Collection ? $items[0] ?? null : $items) : null
+        ]);
 
+        // Fallback ONLY when no plan is attached to requisition.
+        if ((!$items || (is_countable($items) && count($items) === 0)) && empty($planRef)) {
+            Log::info('Fetching generic items (no plan)');
+            $items = $this->itemService->getItemByType($type, null);
+        }
+        
+        // Ensure items is always a collection or array
+        if ($items instanceof \Illuminate\Support\Collection) {
+            $items = $items->toArray();
+        }
+        
+        Log::info('Final items to return', [
+            'count' => is_array($items) ? count($items) : 0,
+            'sample' => is_array($items) && count($items) > 0 ? $items[0] : null
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $items ?? [],
+        ]);
+    } catch (Exception $e) {
+        Log::error('Failed to fetch items', [
+            'type' => $type,
+            'requisition_id' => $request->query('requisition_id'),
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch items.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
     public function getItemDetails(Request $request, $item): JsonResponse
     {
         // Never return 500 here; always provide a safe JSON payload
@@ -92,7 +99,7 @@ class RequisitionItemsController extends Controller
             ]);
         }
 
-        // Extract requisition_id from query
+        // Extract requisition_id from queryx   
         $requisitionId = $request->query('requisition_id');
         $planId = null;
 
@@ -145,7 +152,7 @@ class RequisitionItemsController extends Controller
 
     public function getRequisitionItems(): JsonResponse
     {
-        try{
+        try {
             $details = $this->service->getRequisitionItems();
             return response()->json([
                 'success' => true,
@@ -165,8 +172,8 @@ class RequisitionItemsController extends Controller
         $this->authorize('viewAny', RequisitionLine::class);
         // use for requisitionItem approval
 
-//        return view ('procurement.requisitionItems.approval');
-//
+        //        return view ('procurement.requisitionItems.approval');
+        //
         try {
             $details = $this->service->getRequisitionPriorityList();
             return view('procurement.requisitionItems.priorityList', compact('details'));
@@ -234,7 +241,6 @@ class RequisitionItemsController extends Controller
                 'message' => $requisitionAddLines['message'],
                 'error' => $requisitionAddLines['error'] ?? 'Unknown error'
             ], 500);
-
         } catch (Throwable $e) {
             Log::error('Exception occurred while creating requisitionLines.', [
                 'error' => $e->getMessage(),
@@ -253,7 +259,7 @@ class RequisitionItemsController extends Controller
      */
     public function show($id)
     {
-//        dd($id);
+        //        dd($id);
         $this->authorize('view', Requisitions::query()->findOrFail($id));
         try {
             $details = $this->service->getRequisitionRelatedItems($id);
@@ -276,16 +282,65 @@ class RequisitionItemsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
+   public function updateQuantity(Request $request, $lineId)
+{
+    try {
+        $result = RequisitionItemService::updateLineQuantity(
+            $lineId,
+            $request->input('quantity'),
+            Auth::user()
+        );
+        
+        if ($result['status'] === 'success') {
+            return response()->json([
+                'success' => true,
+                'message' => $result['message']
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 400);
+        }
+    } catch (\Exception $e) {
+        Log::error('Controller: Failed to update quantity: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update quantity'
+        ], 500);
     }
+}
 
     /**
      * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+     *//**
+ * Remove a requisition line
+ */
+public function destroy($lineId)
+{
+    try {
+        $result = RequisitionItemService::deleteRequisitionLine(
+            $lineId,
+            Auth::user()
+        );
+        
+        if ($result['status'] === 'success') {
+            return response()->json([
+                'success' => true,
+                'message' => $result['message']
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 400);
+        }
+    } catch (\Exception $e) {
+        Log::error('Controller: Failed to remove item: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to remove item'
+        ], 500);
     }
+}
 }

@@ -292,7 +292,7 @@ class InvoiceGenerationController extends Controller
                     'TransactionType' => 'Account Receivables Invoice',
                     'ReferenceNumber' => $invoice->InvoiceNumber,
                     'TransactionDate' => $invoice->InvoiceDate ?? now()->toDateString(),
-                    'Amount' => (float)($invoice->TotalAmount ?? 0),   // net (excl. tax) if that's your model
+                    'Amount' => (float)($invoice->TotalAmount ?? 0) - (float)($invoice->TaxAmount ?? 0),   //
                     'TaxAmount' => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
                     'BranchID' => session('LoginBranchId', 1),
                     'DepartmentID' => $invoice->DepartmentID ?? null,

@@ -129,7 +129,7 @@
                                                     class="text-primary">{{ $contract->ContractRef ?? 'PENDING' }}</strong>
                                                 @if($contract->CreatedOn)
                                                     <div class="text-muted small">
-                                                        Created: {{ $contract->CreatedOn->format('d M Y') }}
+                                                        Created: {{ $contract->CreatedOn->format('d/m/Y') }}
                                                     </div>
                                                 @endif
                                             </div>
@@ -180,10 +180,10 @@
                                         <td>
                                             @if($contract->ContractStartDate && $contract->ContractEndDate)
                                                 <div class="text-success small">
-                                                    <strong>Start:</strong> {{ $contract->ContractStartDate->format('d M Y') }}
+                                                    <strong>Start:</strong> {{ $contract->ContractStartDate->format('d/m/Y') }}
                                                 </div>
                                                 <div class="text-danger small">
-                                                    <strong>End:</strong> {{ $contract->ContractEndDate->format('d M Y') }}
+                                                    <strong>End:</strong> {{ $contract->ContractEndDate->format('d/m/Y') }}
                                                 </div>
                                             @else
                                                 <span class="text-muted">Duration not set</span>

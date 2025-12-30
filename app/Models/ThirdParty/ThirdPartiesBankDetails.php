@@ -2,37 +2,32 @@
 
 namespace App\Models\ThirdParty;
 
+use App\Models\Core\Currency;
+use App\Models\Finance\BankBranch;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Core\Currency;
-use App\Models\ThirdParty\ThirdPartyUser;
 
 class ThirdPartiesBankDetails extends Model
 {
-    use Notifiable, SoftDeletes;
+    use Notifiable, SoftDeletes, UserActorTrait;
 
     protected $table = 't_ThirdPartiesBankDetails';
     protected $primaryKey = 'BankID';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'ThirdPartyId',
-        'BankName',
-        'Branch',
-        'AccountNumber',
-        'CurrencyId',
-        'SwiftCode',
-        'CreatedBy',
-        'ModifiedBy',
-        'DeletedBy',
+        'ThirdPartyId', 'CurrencyId', 'AccountNumber', 'BranchID', 'Extra',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
+        'Extra' => 'array',
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
@@ -47,14 +42,19 @@ class ThirdPartiesBankDetails extends Model
     {
         return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
     }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(ThirdPartyUser::class, 'CreatedBy', 'Id');
-    }
-
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(BankBranch::class, 'BranchID', 'BranchID');
+    }
+
+
+    public static function getPrimaryKey(): string
+    {
+        return 'ThirdPartiesBankID';
     }
 }

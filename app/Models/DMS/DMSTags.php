@@ -45,7 +45,7 @@ class DMSTags extends Model
     public function documents(): BelongsToMany
     {
         return $this->belongsToMany(Document::class, 't_DocumentTags', 'TagId', 'DocId', 'Id', 'Id')
-            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps(); //->using(DocumentTags::class);
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn'])->withTimestamps(); //->using(DocumentTags::class);
     }
 
     public function rules(): HasMany|DMSTags

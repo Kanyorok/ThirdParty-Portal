@@ -4,10 +4,12 @@ namespace App\Services\Finance;
 
 use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceInvoiceLine;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class InvoiceIntakeService
 {
@@ -35,6 +37,10 @@ class InvoiceIntakeService
             'InvoiceDate' => ['required', 'date'],
             'DueDate' => ['nullable', 'date', 'after_or_equal:InvoiceDate'],
             'InvoiceRemarks' => ['nullable', 'string', 'max:100'],
+            'TaxID' => ['nullable', 'integer', Rule::exists('t_FinanceTaxRuleConfiguration', 'Id')],
+            'TaxAmount' => ['nullable', 'numeric'],
+            'TaxPercentage' => ['nullable', 'numeric'],
+            'InvoiceAmount' => ['nullable', 'numeric'],
             'TotalAmount' => ['required', 'integer'],
             'AmountPaid' => ['nullable', 'integer'],
             'IsPaid' => ['nullable', 'boolean'],
@@ -70,9 +76,29 @@ class InvoiceIntakeService
         // Compute IdempotencyKey if not provided
         $idk = $payload['IdempotencyKey'] ?? $this->computeIdempotencyKey($payload);
 
+        $lineSubtotal = array_sum(array_map(fn($l) => (int)$l['Total'], $payload['lines']));
+
+        $invoiceAmount = $payload['InvoiceAmount'] ?? (float)$lineSubtotal;
+        $taxAmount = $payload['TaxAmount'] ?? 0.0;
+        $taxPercentage = $payload['TaxPercentage'] ?? null;
+
+        if (!empty($payload['TaxID'])) {
+            $taxConfig = FinanceTaxRuleConfiguration::find($payload['TaxID']);
+            if ($taxConfig) {
+                $taxPercentage = (float)$taxConfig->Rate;
+                if (!array_key_exists('TaxAmount', $payload)) {
+                    $taxAmount = round($invoiceAmount * ($taxPercentage / 100), 2);
+                }
+                if (!array_key_exists('InvoiceAmount', $payload)) {
+                    $invoiceAmount = $lineSubtotal + $taxAmount;
+                }
+            }
+        }
+
+        $effectiveTotal = $invoiceAmount - $taxAmount;
+
         if ($enforceHeaderTotalMatch) {
-            $sum = array_sum(array_map(fn($l) => (int)$l['Total'], $payload['lines']));
-            if ((int)$payload['TotalAmount'] !== $sum) {
+            if ((int)$payload['TotalAmount'] !== (int)$lineSubtotal) {
                 return [
                     'message' => "Header TotalAmount does not match sum of lines.",
                     'request_id' => null,
@@ -80,7 +106,7 @@ class InvoiceIntakeService
             }
         }
 
-        $invoice = DB::transaction(function () use ($payload, $idk) {
+        $invoice = DB::transaction(function () use ($payload, $idk, $invoiceAmount, $taxAmount, $taxPercentage, $effectiveTotal) {
             $now = Carbon::now();
 
             $header = [
@@ -96,7 +122,11 @@ class InvoiceIntakeService
                 'InvoiceDate' => $payload['InvoiceDate'],
                 'DueDate' => $payload['DueDate'] ?? null,
                 'InvoiceRemarks' => $payload['InvoiceRemarks'] ?? null,
-                'TotalAmount' => (int)$payload['TotalAmount'],
+                'TotalAmount' => round($invoiceAmount, 2),
+                'TaxAmount' => round($taxAmount, 2),
+                'InvoiceAmount' => (int)round($effectiveTotal),
+                'TaxPercentage' => $taxPercentage !== null ? round($taxPercentage, 4) : null,
+                'TaxID' => $payload['TaxID'] ?? null,
                 'AmountPaid' => (int)($payload['AmountPaid'] ?? 0),
                 'IsPaid' => (bool)($payload['IsPaid'] ?? false),
                 'IsGenerated' => (bool)($payload['IsGenerated'] ?? true),

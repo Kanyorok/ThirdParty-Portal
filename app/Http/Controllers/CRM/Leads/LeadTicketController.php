@@ -40,7 +40,7 @@ class LeadTicketController extends Controller
      */
     public function index(Lead $lead): JsonResponse
     {
-        return $this->tickets($lead->tickets()->where('t_Tickets.Status', TicketStatusEnum::Active));
+        return $this->tickets($lead->tickets()->where('t_Tickets.StatusId', TicketStatusEnum::Active));
     }
 
     /**

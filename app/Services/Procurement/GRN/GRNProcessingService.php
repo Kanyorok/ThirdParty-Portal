@@ -77,15 +77,9 @@ class GRNProcessingService
 
             DB::commit();
 
-            Log::info("GRN line processed successfully", [
-                'grn_id' => $grnLine->GRNID,
-                'item_no' => $grnLine->ItemNo,
-                'item_type' => $grnLine->ItemType,
-                'received_qty' => $grnLine->ReceivedQTY,
-            ]);
+
 
             return true;
-
         } catch (Exception $e) {
             DB::rollBack();
 
@@ -169,12 +163,6 @@ class GRNProcessingService
             'UpdatedStock' => true,
             'StockTransactionRef' => $stockTransaction->Id,
         ]);
-
-        Log::info("Stock item processed", [
-            'item_id' => $grnLine->ItemNo,
-            'quantity_received' => $grnLine->ReceivedQTY,
-            'new_balance' => $stockItem->CurrentQty,
-        ]);
     }
 
     /**
@@ -191,12 +179,6 @@ class GRNProcessingService
             'AssetRegisterRef' => $assetRef,
             'RequiresAssetTagging' => true,
         ]);
-
-        Log::info("Asset item marked for asset register creation", [
-            'item_id' => $grnLine->ItemNo,
-            'asset_ref' => $assetRef,
-            'requires_tagging' => true,
-        ]);
     }
 
     /**
@@ -207,10 +189,7 @@ class GRNProcessingService
         // Services don't need inventory updates, just journal entry
         // The journal entry will be created in the main process method
 
-        Log::info("Service item processed - direct expense", [
-            'item_id' => $grnLine->ItemNo,
-            'service_value' => $grnLine->TotalValue,
-        ]);
+
     }
 
     /**
@@ -279,13 +258,6 @@ class GRNProcessingService
             'JournalEntryRef' => $journalEntry->RefNo,
             'DebitAmount' => $grnLine->TotalValue,
             'CreditAmount' => $grnLine->TotalValue,
-        ]);
-
-        Log::info("Journal entry created", [
-            'journal_ref' => $journalEntry->RefNo,
-            'debit_account' => $glMapping->DebitGLAccountID,
-            'credit_account' => $glMapping->CreditGLAccountID,
-            'amount' => $grnLine->TotalValue,
         ]);
     }
 
