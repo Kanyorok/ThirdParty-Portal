@@ -14,6 +14,21 @@
 @endsection
 
 @section('content')
+<!-- Toast Notification Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+    @if(session('success'))
+    <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                {{ session('success') }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    @endif
+</div>
+
 <div class="container my-3">
     <div class="card shadow rounded-4">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -147,4 +162,20 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Show toast notification if it exists
+    document.addEventListener('DOMContentLoaded', function() {
+        const toastEl = document.getElementById('successToast');
+        if (toastEl) {
+            const toast = new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 3000  // 3 seconds
+            });
+            toast.show();
+        }
+    });
+</script>
 @endsection
