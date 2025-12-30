@@ -131,12 +131,20 @@
                                   name="PropertyDescription">{{ old('PropertyDescription', $property->PropertyDescription) }}</textarea>
                     </div>
 
-                    <div class="form-check form-switch mb-3">
-                        <input type="hidden" name="IsActive" value="0">
-                        <input class="form-check-input" type="checkbox" id="IsActive" name="IsActive"
-                               value="1" {{ old('IsActive', $property->IsActive) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="IsActive">Is Active</label>
-                    </div>
+<div class="form-check form-switch mb-3">
+    <input type="hidden" name="IsActive" value="0">
+    <input class="form-check-input @error('IsActive') is-invalid @enderror" type="checkbox" id="IsActive" name="IsActive"
+           value="1" {{ old('IsActive', $property->IsActive) ? 'checked' : '' }}>
+    <label class="form-check-label" for="IsActive">Is Active</label>
+
+@if ($errors->has('error'))
+    <div class="alert alert-danger">
+        {{ $errors->first('error') }}
+    </div>
+@endif
+
+</div>
+
 
                     <div class="text-end">
                         <button type="submit" class="btn btn-success">Update Property</button>

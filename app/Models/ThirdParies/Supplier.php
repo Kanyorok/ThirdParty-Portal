@@ -2,35 +2,37 @@
 
 namespace App\Models\ThirdParies;
 
+use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\ProcurementPeriod;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\Tender;
-use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\SupplierMaster;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-
-class Supplier extends ThirdParties
+/**
+ * This Model is used as a t_Suppliers_Categories for supplier use t_SupplierMaster
+ */
+class Supplier extends Model
 {
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
-    // Limit fillable to actual supplier table columns to avoid parent fillables bleeding in
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
     protected $fillable = [
         'RoundID',
-        'ThirdPartyID',
+        'SupplierMasterId',
         'RoundID',
         'CategoryId',
         'Active_Status',
         'SupplierCategoryID',
         'CreatedBy',
-        'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn',
         'DeletedBy',
     ];
 
@@ -39,15 +41,22 @@ class Supplier extends ThirdParties
         'CategoryId' => 'integer',
     ];
 
-    protected static function booted()
+    public static function getPrimaryKey(): string
     {
-        // Intentionally empty: suppress parent ThirdParties booted() logic that sets ApprovalStatus/Status
-        // because t_Suppliers does not have those columns.
+        return 'SupplierCategoriesId';
     }
 
+    /**
+     * @deprecated use supplierMaster
+     */
     public function thirdParty(): BelongsTo
     {
-        return $this->belongsTo(ThirdParties::class, 'ThirdPartyID', 'Id');
+        return $this->belongsTo(SupplierMaster::class, 'SupplierMasterId', 'Id');
+    }
+
+    public function supplierMaster(): BelongsTo
+    {
+        return $this->belongsTo(SupplierMaster::class, 'SupplierMasterId', 'Id');
     }
 
     public function rfqEvaluations(): HasMany
@@ -98,6 +107,14 @@ class Supplier extends ThirdParties
     public function supplierCategory()
     {
         return $this->belongsTo(\App\Models\ThirdParty\SupplierCategory::class, 'SupplierCategoryID', 'SupplierCategoryID');
+    }
+
+    /**
+     * Relationship to SupplierCategory via CategoryId (populated by prequalification)
+     */
+    public function category()
+    {
+        return $this->belongsTo(\App\Models\ThirdParty\SupplierCategory::class, 'CategoryId', 'SupplierCategoryID');
     }
 
     /**

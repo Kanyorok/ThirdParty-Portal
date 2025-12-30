@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 
 class UserSelectController extends Controller
 {
-    protected const LIMIT = 10;
+    protected const int LIMIT = 10;
 
     /**
      * Handle the incoming request.
@@ -107,7 +107,7 @@ class UserSelectController extends Controller
                 ->orWhere('t_Users.Name', 'LIKE', "%$search%")
                 ->orWhere('t_Users.Email', 'LIKE', "%$search%")
                 ->orWhere('t_Users.Phone', 'LIKE', "%$search%");
-        })->lock('WITH(NOLOCK)')->select(['UserID', 'Name'])->lock('WITH(NOLOCK)')->limit(self::LIMIT)->get(['UserID', 'Name']);
+        })->limit(self::LIMIT)->where('UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->get(['UserID', 'Name']);
         $append = ($request->has('with_teams')) ? ' (user)' : '';
         return $users->map(function ($user) use ($append) {
             return [

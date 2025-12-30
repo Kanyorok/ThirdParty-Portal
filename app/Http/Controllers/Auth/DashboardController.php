@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\LeadStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Dashboard\DashboardWidget;
-use App\Models\Dashboard\UserDashboardWidget;
 use App\Models\Auth\User;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\CRM\Lead;
+use App\Models\Dashboard\DashboardWidget;
+use App\Models\Dashboard\UserDashboardWidget;
 use App\Models\Procurement\DepartmentNeed;
 use Carbon\Carbon;
 use Exception;
@@ -18,7 +18,8 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    protected const MONTHS = 6;
+    protected const int MONTHS = 6;
+
     /**
      * Handle the incoming request.
      *
@@ -28,7 +29,7 @@ class DashboardController extends Controller
     public function __invoke(Request $request): View
     {
         $actor = $request->user();
-        $actorId = $actor?->Id ?? 1;
+        //$actorId = $actor?->Id ?? 1; DON'T DO THIS, CHECK IF USER IS NOT LOGOUT.
         $data = [
             'leads'     => [
                 'line'  => [
@@ -55,7 +56,7 @@ class DashboardController extends Controller
         $totalGLS = BudgetGLMaster::count();
 
         // Widgets: ensure base widgets exist
-        $this->ensureDefaultWidgets($actorId);
+        $this->ensureDefaultWidgets($actor->Id);
 
         // Build simple stats for widgets
         $needsTotal = DepartmentNeed::count();

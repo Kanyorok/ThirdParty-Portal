@@ -10,16 +10,19 @@ class ThirdPartyTypesEnumController extends Controller
 {
     public function index(): JsonResponse
     {
-        // Fetch ThirdPartyTypes with related category names; value = TypeId, label = CategoryMaster.Name
+        // Fetch ThirdPartyTypes; value = Code, label = Description (or Name)
+        // Original code joined with CategoryMaster, but model says 'Description' is in t_ThirdPartyTypes itself.
+        // Let's rely on the model 'Code' and 'Description' if possible, or keep the join if 'Name' is preferred.
+        // The join was: ->select('tpt.TypeId', 'cm.Name')
+        // I will change it to return Code.
         $rows = DB::table('t_ThirdPartyTypes as tpt')
-            ->join('t_CategoryMaster as cm', 'cm.Id', '=', 'tpt.Type')
-            ->select('tpt.TypeId', 'cm.Name')
-            ->orderBy('cm.Name')
+            ->select('tpt.Code', 'tpt.Description')
+            ->orderBy('tpt.Description')
             ->get();
 
         $data = $rows->map(fn($r) => [
-            'value' => $r->TypeId,
-            'label' => $r->Name,
+            'value' => $r->Code,
+            'label' => $r->Description,
         ]);
 
         return response()->json($data);

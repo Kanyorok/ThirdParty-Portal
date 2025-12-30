@@ -15,7 +15,7 @@ class RFQLinesController extends Controller
     public function create($rfqId)
     {
         // Get the linked requisition for this RFQ
-        $requisition = DB::table('t_Requisition')
+        $requisition = DB::table('t_Requisitions')
             ->where('Id', function ($query) use ($rfqId) {
                 $query->select('RequisitionId')
                     ->from('t_RFQ')
@@ -34,12 +34,23 @@ class RFQLinesController extends Controller
         // Step 1: Validate request
         $validatedData = $request->validate([
             'ItemCategoryId' => 'required|exists:t_ItemCategories,Id',
+            'RFQId' => 'required|exists:t_RFQ,Id',
         ]);
 
-        // Step 2: Load requisition lines with related items and categories
-        $requisitionlines = RequisitionLine::with('item.category')->get();
+        // Step 2: Get the requisition ID from the RFQ
+        $rfq = DB::table('t_RFQ')->where('Id', $request->RFQId)->first();
+        
+        if (!$rfq || !$rfq->RequisitionId) {
+            return redirect()->back()->with('error', 'Invalid RFQ or no requisition linked.');
+        }
 
-        // Step 3: Filter requisition lines
+        // Step 3: Load ONLY requisition lines from THIS specific requisition
+        $requisitionlines = RequisitionLine::with('item.category')
+            ->where('RequisitionID', $rfq->RequisitionId) //  Filter by specific requisition
+            ->whereNull('DeletedOn') // Exclude deleted lines
+            ->get();
+
+        // Step 4: Filter requisition lines
         $filteredItems = $requisitionlines->filter(function ($line) use ($request) {
             // Check if the item belongs to the selected category
             $isInCategory = $line->item
@@ -53,37 +64,56 @@ class RFQLinesController extends Controller
             return $isInCategory && !$existsInRFQLines;
         });
 
-        // Step 4: If no matching items, redirect with warning
+        // Step 5: If no matching items, redirect with warning
         if ($filteredItems->isEmpty()) {
-            return redirect()->back()->with('warning', 'No items requisitioned with the chosen category.');
+            return redirect()->back()->with('warning', 'No items requisitioned with the chosen category or all items already added to RFQ.');
         }
 
-        // Step 5: Create RFQ lines
+        // Step 6: Group items by ItemId and sum quantities (in case same item appears multiple times)
+        $groupedItems = $filteredItems->groupBy('Item')->map(function ($group) {
+            $firstItem = $group->first();
+            return [
+                'RequisitionLineIds' => $group->pluck('Id')->toArray(), // Store all line IDs
+                'ItemId' => $firstItem->Item,
+                'ItemName' => $firstItem->item->ItemName,
+                'TotalQuantity' => $group->sum('Quantity'), // Sum quantities
+                'UOM' => $firstItem->item->UOM ?? '',
+                'RequisitionID' => $firstItem->RequisitionID,
+            ];
+        });
+
+        // Step 7: Create RFQ lines
         $prefix = 'RFQL-';
         $lastRFQ = RFQLine::where('RFQLineNo', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
         $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQLineNo, strlen($prefix))) : 0;
 
         $counter = $lastNumber;
-        foreach ($filteredItems as $line) {
+        $createdCount = 0;
+
+        foreach ($groupedItems as $item) {
             $counter++;
             $rfqLineNumber = $prefix . str_pad($counter, 5, '0', STR_PAD_LEFT);
 
+            // Create one RFQ line per unique item (with consolidated quantity)
             RFQLine::create([
                 'RFQLineNo' => $rfqLineNumber,
-                'RequisitionLineId' => $line->Id, // updated field
-                'RequisitionId' => $line->RequisitionID,
+                'RequisitionLineId' => $item['RequisitionLineIds'][0], // Use first line ID as reference
+                'RequisitionId' => $item['RequisitionID'],
                 'ItemCategoryId' => $request->ItemCategoryId,
                 'RFQId' => $request->RFQId,
-                'ItemId' => $line->Item,
-                'ItemName' => $line->item->ItemName,
-                'Quantity' => intval($line->Quantity),
-                'UOM' => $line->item->UOM ?? '',
+                'ItemId' => $item['ItemId'],
+                'ItemName' => $item['ItemName'],
+                'Quantity' => intval($item['TotalQuantity']), // Use consolidated quantity
+                'UOM' => $item['UOM'],
                 'CreatedBy' => \Illuminate\Support\Facades\Auth::user()->Id,
                 'ModifiedBy' => \Illuminate\Support\Facades\Auth::user()->Id,
             ]);
+            
+            $createdCount++;
         }
 
-        return redirect()->route('rfqs.show', $request->RFQId)->with('success', 'RFQ line(s) created successfully.');
+        return redirect()->route('rfqs.show', $request->RFQId)
+            ->with('success', "RFQ line(s) created successfully. Added {$createdCount} item(s) from requisition.");
     }
 
     public function getRequisitionCategories(Request $request, $requisitionId)
@@ -104,11 +134,15 @@ class RFQLinesController extends Controller
             $scicSupCol  = collect(['SupplierCategoryID','SupplierCategoryId','supplier_category_id'])
                 ->first(fn($c) => Schema::hasColumn($scicTable, $c)) ?? 'SupplierCategoryID';
 
-            // Base categories present on requisition lines (do not exclude those already tied to RFQ lines)
+            // Get ONLY categories from THIS specific requisition (not already in RFQ lines)
             $categories = DB::table('t_RequisitionLines as rl')
                 ->join('t_Items as i', 'rl.Item', '=', 'i.Id')
                 ->join($catTable . ' as c', 'i.Category', '=', DB::raw("c.$catIdCol"))
-                ->where('rl.RequisitionID', $requisitionId)
+                ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+                ->where('rl.RequisitionID', $requisitionId) // Filter by specific requisition
+                ->whereNull('rl.DeletedOn')
+                ->whereNull('i.DeletedOn')
+                ->whereNull('rfql.Id') //  Exclude categories already fully added to RFQ
                 ->select(DB::raw("c.$catIdCol as Id"), DB::raw("c.$catNameCol as Name"))
                 ->distinct()
                 ->get();
@@ -180,34 +214,33 @@ class RFQLinesController extends Controller
                           ->whereIn("scic.$scicItemCol", $allCategoryIds)
                           ->whereColumn("scic.$scicSupCol", 's.CategoryId');
                     });
+                  if (Schema::hasTable('t_ThirdParty_SupplierCategory')
+    && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'ThirdPartyID')
+    && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'SupplierCategoryID')) {
+    $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
+        $q->select(DB::raw(1))
+          ->from('t_ThirdParty_SupplierCategory as tpsc')
+          ->join($scicTable . ' as scic', "scic.$scicSupCol", '=', 'tpsc.SupplierCategoryID')
+          ->whereNull('scic.DeletedOn')
+          ->whereIn("scic.$scicItemCol", $allCategoryIds)
+          ->whereColumn('tpsc.ThirdPartyID', 'tp.Id');
+    });
+}
 
-                    // Pivot: through t_ThirdParty_SupplierCategory (PascalCase columns)
-                    if (Schema::hasTable('t_ThirdParty_SupplierCategory')
-                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'ThirdPartyID')
-                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'SupplierCategoryID')) {
-                        $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
-                            $q->select(DB::raw(1))
-                              ->from('t_ThirdParty_SupplierCategory as tpsc')
-                              ->join($scicTable . ' as scic', "scic.$scicSupCol", '=', 'tpsc.SupplierCategoryID')
-                              ->whereNull('scic.DeletedOn')
-                              ->whereIn("scic.$scicItemCol", $allCategoryIds)
-                              ->whereColumn('tpsc.ThirdPartyID', 'tp.Id');
-                        });
-                    }
+// Pivot: snake_case columns
+if (Schema::hasTable('t_ThirdParty_SupplierCategory')
+    && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'third_party_id')
+    && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'supplier_category_id')) {
+    $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
+        $q->select(DB::raw(1))
+          ->from('t_ThirdParty_SupplierCategory as tpsc2')
+          ->join($scicTable . ' as scic2', "scic2.$scicSupCol", '=', 'tpsc2.supplier_category_id')
+          ->whereNull('scic2.DeletedOn')
+          ->whereIn("scic2.$scicItemCol", $allCategoryIds)
+          ->whereColumn('tpsc2.third_party_id', 'tp.Id');
+    });
+}
 
-                    // Pivot: snake_case columns
-                    if (Schema::hasTable('t_ThirdParty_SupplierCategory')
-                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'third_party_id')
-                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'supplier_category_id')) {
-                        $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
-                            $q->select(DB::raw(1))
-                              ->from('t_ThirdParty_SupplierCategory as tpsc2')
-                              ->join($scicTable . ' as scic2', "scic2.$scicSupCol", '=', 'tpsc2.supplier_category_id')
-                              ->whereNull('scic2.DeletedOn')
-                              ->whereIn("scic2.$scicItemCol", $allCategoryIds)
-                              ->whereColumn('tpsc2.third_party_id', 'tp.Id');
-                        });
-                    }
                 })
                 ->select(
                     's.Id as SupplierId',

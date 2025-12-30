@@ -8,6 +8,7 @@ use App\Services\Inventory\StoreService;
 use App\Models\Inventory\Store;
 use App\Models\Core\Branch;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class StoreController extends Controller
 {
@@ -18,18 +19,28 @@ class StoreController extends Controller
         $this->service = $service;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+        $branchId = $currentBranch->Id; 
         $stores = Store::where('BranchID', $branchId)->get();
         return view('inventory.stores.index', compact('stores'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize('create', Store::class);
 
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+        $branchId = $currentBranch->Id; 
         $branch = Branch::find($branchId);
         
         $mainStoreExists = Store::where('BranchID', $branchId)
@@ -57,13 +68,18 @@ class StoreController extends Controller
         return view('inventory.stores.show', compact('store'));
     }
 
-    public function edit($Id)
+    public function edit($Id, Request $request)
     {
         $store = Store::findOrFail($Id);
         $this->authorize('update', $store);
         
-        $branchId = auth()->user()->employee?->BranchId;
-        $branch = Branch::find($branchId); // Changed from $branches to $branch
+        $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+        $branchId = $currentBranch->Id; 
+        $branch = Branch::find($branchId); 
         
         $mainStoreExists = Store::where('BranchID', $branchId)
             ->where('IsMainStore', true)

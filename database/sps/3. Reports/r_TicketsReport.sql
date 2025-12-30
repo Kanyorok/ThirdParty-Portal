@@ -13,12 +13,13 @@ BEGIN
            tc.Description                                           as CategoryID,
            (SELECT f.Name FROM t_users f WHERE f.id = t.PartyID)    AS Party,
            t.Source,
-           CASE
-               WHEN t.Status = 'A' THEN 'Active'
-               WHEN t.Status = 'C' THEN 'Cancelled'
-               WHEN t.Status = 'R' THEN 'Resolved'
-               WHEN t.Status = 'P' THEN 'Approval'
-               END                                                  AS Status,
+        /* CASE
+             WHEN t.Status = 'A' THEN 'Active'
+             WHEN t.Status = 'C' THEN 'Cancelled'
+             WHEN t.Status = 'R' THEN 'Resolved'
+             WHEN t.Status = 'P' THEN 'Approval'
+             END         */
+           'Get from CodeDetails' AS Status,
            t.Priority,
            (SELECT f.Name FROM t_users f WHERE f.id = t.OwnerID)    AS Owner,
            t.StartDate,

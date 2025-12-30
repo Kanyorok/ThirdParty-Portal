@@ -98,6 +98,17 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="ModuleID">Module (Required for new sources)</label>
+                        <select name="ModuleID" id="ModuleID" class="form-control select2">
+                            <option value="">-- Select Module --</option>
+                            @foreach($modules as $module)
+                            <option value="{{ $module->ModuleID }}">{!! $module->indentation !!}{{ $module->Name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Select the module this document belongs to. Required if not already configured.</small>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -128,6 +139,13 @@
             allowClear: true
         });
 
+        $('#ModuleID').select2({
+            dropdownParent: $modal,
+            width: '100%',
+            placeholder: "Select Module...",
+            allowClear: true
+        });
+
         // Create
         $('.modal-create-approval').on('click', function() {
             $form.attr('action', "{{ route('settings.workflows.store') }}");
@@ -135,6 +153,7 @@
             $('.modal-title').text('New Approval WorkFlow');
             $form[0].reset();
             $('#DocType').val('').trigger('change');
+            $('#ModuleID').val('').trigger('change');
             $modal.modal('show');
         });
 

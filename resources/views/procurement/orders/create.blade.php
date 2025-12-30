@@ -246,7 +246,6 @@
             </button>
         </div>
 
-
             <!-- Line Items Table -->
             <div class="table-responsive mb-4">
                 <table class="table table-bordered" id="line-items-table">
@@ -991,3 +990,5 @@
 
 </script>
 @endsection
+
+

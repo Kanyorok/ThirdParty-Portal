@@ -21,7 +21,7 @@ class TenderSubmissionController extends Controller
 
     public function create()
     {
-        $tenders = Tender::select('TenderNo')->get();
+        $tenders = Tender::select('TenderNo', 'Title')->get();
 
         // Fix: Get supplier names from the related ThirdParty table
         $suppliers = Supplier::select('t_Suppliers.Id')

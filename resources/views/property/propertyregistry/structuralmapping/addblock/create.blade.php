@@ -22,7 +22,7 @@
         <div class="col-md-6">
           <label class="form-label">Select Property<span class="text-danger">*</span></label>
             <select name="PropertyID" class="form-select" required>
-                <option value="#">--Select a property--</option>
+                <option value="">--Select a property--</option>
               @foreach ($properties as $property)
                     <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
               @endforeach
@@ -30,7 +30,7 @@
         </div>
         <div class="col-md-6">
           <label class="form-label">Block Name<span class="text-danger">*</span></label>
-          <input type="text" class="form-control" name="BlockName" placeholder="e.g. Block A, Tower 1">
+          <input type="text" class="form-control" name="BlockName" placeholder="e.g. Block A, Tower 1" required>
         </div>
       </div>
 

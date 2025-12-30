@@ -23,10 +23,10 @@ class FuelTypeService
             $data['CreatedBy'] = Auth::id();
             $data['CreatedOn'] = now();
 
-            \Log::info('Attempting to create fuel type with code: ' . $data['FuelTypeCode']);
+
 
             $fuelType = FuelType::create($data);
-            
+
             activity()
                 ->performedOn($fuelType)
                 ->causedBy(Auth::user())
@@ -44,7 +44,7 @@ class FuelTypeService
             ->where('FuelTypeCode', 'LIKE', 'FUEL-%')
             ->get();
 
-        \Log::info('All fuel type codes found:', $allFuelTypes->pluck('FuelTypeCode')->toArray());
+
 
         if ($allFuelTypes->isEmpty()) {
             return 'FUEL-0001';
@@ -62,7 +62,7 @@ class FuelTypeService
         $newId = $maxCode + 1;
         $newCode = 'FUEL-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
 
-        \Log::info("Generated new fuel type code: {$newCode} (max found: {$maxCode})");
+
 
         return $newCode;
     }

@@ -23,7 +23,7 @@ class MeetingService
     {
     }
 
-    public static function rooms(): Collection
+    public static function rooms(): Collection //todo fix this
     {
         return MeetingRoom::all();
     }

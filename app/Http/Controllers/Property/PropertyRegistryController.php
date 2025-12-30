@@ -15,49 +15,32 @@ use App\Models\PropertyManagement\PropertyType;
 use App\Services\Property\PropertyRegistry\PropertyRegistryService;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Support\Carbon;
-
+use Illuminate\Http\JsonResponse;
 
 class PropertyRegistryController extends Controller
 {
-    //
     public function index()
     {
-        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
+
         $properties = PropertyRegistry::with('type')->orderBy('Id', 'desc')->get();
+
+        if (request()->expectsJson()) {
+            return response()->json($properties);
+        }
+
         return view('property.propertyregistry.registry.index', compact('properties'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
+
         $lineentries = CategoryMaster::with('propertytypes')
             ->where('Type', 'PropertyCategory')->get();
         $countries = Country::all();
+
         return view('property.propertyregistry.registry.create', compact('lineentries', 'countries'));
     }
-
-    public function getTypesByCategory($categoryId)
-    {
-        $types = PropertyType::where('PropertyCategoryId', $categoryId)->get();
-        return response()->json($types);
-    }
-
-    public function getLocalityByCountry($country)
-    {
-        $localities = Locality::where('CountryId', $country)->get();
-        return response()->json($localities);
-    }
-
-    public function show($id)
-    {
-        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
-
-        $property = PropertyRegistry::with([
-            'getBlockByProperty.floor.units'
-        ])->findOrFail($id);
-
-        return view('property.propertyregistry.registry.show', compact('property'));
-    }
-
 
     public function store(PropertyRegistryRequest $request)
     {
@@ -66,12 +49,11 @@ class PropertyRegistryController extends Controller
         $validated = $request->validated();
 
         $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-        $propertyType = PropertyType::findOrFail($validated['PropertyType']);
-        $category = CategoryMaster::findOrFail($validated['Category']);
-        $location = Locality::findOrFail($validated['LocationId']);
-        $country = Country::findOrFail($validated['CountryId']);
+        $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
+        $category        = CategoryMaster::findOrFail($validated['Category']);
+        $location        = Locality::findOrFail($validated['LocationId']);
+        $country         = Country::findOrFail($validated['CountryId']);
 
-        // Take first file (if any) for the initial create
         $firstFile = $request->file('file')[0] ?? null;
 
         $service = PropertyRegistryService::create(
@@ -89,7 +71,6 @@ class PropertyRegistryController extends Controller
             $firstFile
         );
 
-        // Attach remaining files (if more than one uploaded)
         if ($request->hasFile('file')) {
             foreach (array_slice($request->file('file'), 1) as $uploadedFile) {
                 $service->propertyRegistry->newDocument(
@@ -101,9 +82,32 @@ class PropertyRegistryController extends Controller
             }
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Property registry created successfully',
+                'data'    => $service->propertyRegistry,
+            ], 201);
+        }
+
         return redirect()
             ->route('PropertyRegistry.index')
             ->with('success', 'Property registry created successfully');
+    }
+
+
+    public function show($id)
+    {
+        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
+
+        $property = PropertyRegistry::with([
+            'getBlockByProperty.floor.units'
+        ])->findOrFail($id);
+
+        if (request()->expectsJson()) {
+            return response()->json($property);
+        }
+
+        return view('property.propertyregistry.registry.show', compact('property'));
     }
 
 
@@ -111,19 +115,12 @@ class PropertyRegistryController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyRegistryUpdate, PropertyRegistry::class);
 
-        $property = PropertyRegistry::findOrFail($id);
-
-        // Preload only the types for the selected category so the edit dropdown matches the saved category
-        $types = PropertyType::where('PropertyCategoryId', $property->Category)->get();
-
-        // Keep both variables if other views use them
-        $categories = CategoryMaster::all();
+        $property    = PropertyRegistry::findOrFail($id);
+        $types       = PropertyType::where('PropertyCategoryId', $property->Category)->get();
+        $categories  = CategoryMaster::all();
         $lineentries = CategoryMaster::with('propertytypes')->get();
-
-        $countries = Country::all();
-
-        // NOTE: use plural $localities (collection) to match your blade
-        $localities = Locality::where('CountryId', $property->CountryId)->get();
+        $countries   = Country::all();
+        $localities  = Locality::where('CountryId', $property->CountryId)->get();
 
         return view(
             'property.propertyregistry.registry.edit',
@@ -135,17 +132,19 @@ class PropertyRegistryController extends Controller
     public function update(PropertyRegistryRequest $request, $id)
     {
         $this->authorize(PermissionEnum::PropertyRegistryUpdate, PropertyRegistry::class);
+
         $validated = $request->validated();
-        $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-        $propertyType = PropertyType::findOrFail($validated['PropertyType']);
-        $category = CategoryMaster::findOrFail($validated['Category']);
-        $location = Locality::findOrFail($validated['LocationId']);
-        $country = Country::findOrFail($validated['CountryId']);
 
         DB::beginTransaction();
 
         try {
             $property = PropertyRegistry::findOrFail($id);
+
+            $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
+            $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
+            $category        = CategoryMaster::findOrFail($validated['Category']);
+            $location        = Locality::findOrFail($validated['LocationId']);
+            $country         = Country::findOrFail($validated['CountryId']);
 
             PropertyRegistryService::update(
                 $property,
@@ -163,33 +162,39 @@ class PropertyRegistryController extends Controller
                 $validated['IsActive'] ?? $property->IsActive
             );
 
+            // Upload new files
             foreach ($request->file('file', []) as $uploadedFile) {
-                PropertyRegistryService::update(
-                    $property,
-                    $validated['PropertyName'],
-                    $validated['PropertyCode'],
-                    $propertyType,
-                    $category,
-                    $validated['Owner'],
-                    $acquisitionDate,
-                    $country,
-                    $location,
-                    $validated['Address'],
-                    $validated['PropertyDescription'] ?? '',
-                    $request->user(),
-                    $validated['IsActive'],
-                    $uploadedFile
+                $property->newDocument(
+                    ModulesEnum::Property,
+                    $uploadedFile,
+                    [PermissionEnum::PropertyRegistryView->value],
+                    $request->user()
                 );
             }
 
             DB::commit();
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Property updated successfully',
+                    'data'    => $property->refresh(),
+                ]);
+            }
+
             return redirect()
                 ->route('PropertyRegistry.index')
                 ->with('success', 'Property updated successfully');
+
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update property: ' . $th->getMessage());
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Failed to update property',
+                    'error'   => $th->getMessage(),
+                ], 500);
+            }
 
             return back()
                 ->withErrors(['error' => 'Failed to update property'])
@@ -197,33 +202,51 @@ class PropertyRegistryController extends Controller
         }
     }
 
-
-
     public function destroy($id)
     {
-        //Check if user has permission to delete property categories
         $this->authorize(PermissionEnum::PropertyRegistryDelete, PropertyRegistry::class);
+
         try {
             $property = PropertyRegistry::findOrFail($id);
 
-
             if ($property->getBlockByProperty()->exists()) {
-                return redirect()->back()
-                    ->withErrors(['error' => 'This Property is in use and cannot be deleted.']);
+                $errorMsg = 'This Property is in use and cannot be deleted.';
+
+                return request()->expectsJson()
+                    ? response()->json(['message' => $errorMsg], 409)
+                    : back()->withErrors(['error' => $errorMsg]);
             }
 
             $property->delete();
 
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Property Deleted Successfully!'], 204);
+            }
+
             return redirect()->route('PropertyRegistry.index')
                 ->with('success', 'Property Deleted Successfully!');
+
         } catch (\Throwable $th) {
-            // Log the error for debugging
             Log::error('Error deleting property: ' . $th->getMessage());
-            return redirect()->back()
-                ->withErrors(['error' => 'Failed to delete Property. Please try again.'])
-                ->withInput();
+
+            return request()->expectsJson()
+                ? response()->json(['message' => 'Failed to delete Property'], 500)
+                : back()->withErrors(['error' => 'Failed to delete Property'])->withInput();
         }
     }
 
 
+    public function getTypesByCategory($categoryId)
+    {
+        return response()->json(
+            PropertyType::where('PropertyCategoryId', $categoryId)->get()
+        );
+    }
+
+    public function getLocalityByCountry($countryId)
+    {
+        return response()->json(
+            Locality::where('CountryId', $countryId)->get()
+        );
+    }
 }

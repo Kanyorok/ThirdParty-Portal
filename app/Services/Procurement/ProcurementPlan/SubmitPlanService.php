@@ -3,28 +3,26 @@
 namespace App\Services\Procurement\ProcurementPlan;
 
 use App\Enums\ProcurementPlanStatusEnum;
-use App\Enums\WorkflowStatus;
 use App\Models\Auth\User;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use Illuminate\Support\Facades\Log;
+use App\Services\Procurement\ProcurementPlan\ProcurementPlanWorkflow;
 
 class SubmitPlanService
 {
-    public function __construct(public ConsolidatedProcurementPlan $plan)
-    {
-         $this->plan = $plan;
-    }
+    public function __construct(public ConsolidatedProcurementPlan $consolidatedProcurementPlan) {}
 
-    public function submit(User $actor, string $remarks = 'Submitted for approval'): bool
+    public function submit(User $actor): static
     {
-        Log::info("SubmitPlanService: Submitting plan", [
-            'planId' => $this->plan->PlanId,
-            'actorId' => $actor->Id,
-        ]);
+        // Initialize workflow
+        /** @var ProcurementPlanWorkflow $workflow */
+        $workflow = app(ProcurementPlanWorkflow::class);
+        $workflow->submit($this->consolidatedProcurementPlan, $actor);
 
-        // Use the workflow service to handle submission
-        $workflowService = new ConsolidatedPlanWorkflowService($this->plan);
-        
-        return $workflowService->submitForApproval($actor, $remarks);
+        // Update plan status to Submitted
+        $this->consolidatedProcurementPlan->forceFill([
+            'Status' => ProcurementPlanStatusEnum::Submitted,
+        ])->save();
+
+        return $this;
     }
 }

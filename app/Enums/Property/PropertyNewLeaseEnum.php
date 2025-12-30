@@ -8,6 +8,8 @@ enum PropertyNewLeaseEnum: string
 {
     use UsefulEnumTrait;
 
+    case OfferLetter = 'o';
+
     case New = 'n';
 
     case Renew = 'r';
@@ -21,6 +23,7 @@ enum PropertyNewLeaseEnum: string
             self::New => 'New',
             self::Renew => 'Renew',
             self::Terminate => 'Terminate',
+            Self::OfferLetter => 'Offer Letter',
         };
     }
 
@@ -30,6 +33,7 @@ enum PropertyNewLeaseEnum: string
             self::New => 'success',
             self::Renew => 'info',
             self::Terminate => 'danger',
+            Self::OfferLetter => 'primary',
         };
     }
 }

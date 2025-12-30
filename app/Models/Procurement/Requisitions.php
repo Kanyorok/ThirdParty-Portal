@@ -1,8 +1,11 @@
 <?php
 
 namespace App\Models\Procurement;
+
 use App\Enums\WorkflowStatus;
-use App\Services\Procurement\Requisition\RequisitionWorkFlowService;
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\WorkflowPending;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,7 +15,7 @@ use App\Models\Inventory\TransactionTransfer;
 class Requisitions extends Model
 {
     //
- 
+
     use UserActorTrait;
 
     const CREATED_AT = 'CreatedOn';
@@ -28,15 +31,23 @@ class Requisitions extends Model
     }
 
     protected $fillable = [
-        'RequisitionNo', 'Branch', 'Department', 'NeededBy', 'Remarks', 'Category',
-         'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CategoryId'
+        'RequisitionNo',
+        'Branch',
+        'Department',
+        'NeededBy',
+        'Remarks',
+        'Category',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+        'CategoryId'
     ];
 
     protected $casts = [
         // 'Status' => CampaignStatusEnum::class,
         // 'Type' => CampaignTypeEnum::class,
         'CreatedBy'  => 'integer',
-        'ModifiedBy' => 'integer',//,
+        'ModifiedBy' => 'integer', //,
         // 'Processing' => 'boolean'
     ];
     public function requisitionLines()
@@ -81,18 +92,57 @@ class Requisitions extends Model
         ]);
     }
 
+    public function statusDetail()
+    {
+        return $this->belongsTo(\App\Models\Core\Approval\CodeDetail::class, 'StatusID', 'ID');
+    }
+
+    public function getStatusAttribute()
+    {
+        return $this->statusDetail?->Value;
+    }
+
     // Auto-submit for approval when created
     protected static function boot()
     {
         parent::boot();
 
         static::created(function (Requisitions $requisition) {
+            // Reload to get status relationship
+            $requisition->load('statusDetail');
+
             if ($requisition->isPendingApproval()) {
                 // Use the workflow service to submit for approval
-                $workflowService = app(RequisitionWorkFlowService::class);
+                $workflowService = app(RequisitionWorkflowService::class);
                 $workflowService->submit($requisition, $requisition->creator, 'Initial submission');
             }
         });
     }
+
+     /**
+     * Workflow history relationship
+     */
+    public function workflowHistory()
+    {
+        return $this->morphMany(
+            WorkflowHistory::class,
+            'source',
+            'Source',  // The morph type column in t_WorkFlowHistory
+            'SourceID', // The morph id column
+            'Id'        // Local key
+        );
+    }
+
+    public function pendingWorkflows()
+    {
+        return $this->morphMany(
+            WorkflowPending::class,
+            'source',
+            'Source',  // The morph type column in t_WorkFlowPending
+            'SourceID', // The morph id column
+            'Id'        // Local key
+        );
+    }
+
 
 }

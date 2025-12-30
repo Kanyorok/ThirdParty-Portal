@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 
 class LeadContactController extends Controller
 {
@@ -47,28 +48,27 @@ class LeadContactController extends Controller
      */
     public function store(ContactRequest $request, Lead $lead): JsonResponse
     {
-        $emailConversation = null;
-        if ($request->has('conversation')) {
-            $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
-        }
+        $emailConversation = ($request->has('conversation'))
+            ? EmailConversation::query()->where('Id', $request->conversation)->first() : null;
 
+        $phone = $request->getPhone($lead->country->CountryCode);
         try {
-            DB::transaction(function () use ($lead, $emailConversation, $request) {
-                $this->save($lead->contacts(), $request->savable());
+            DB::transaction(function () use ($phone, $lead, $emailConversation, $request) {
+                $this->save($lead->contacts(), $request->savable($phone));
 
-                if ($emailConversation instanceof  EmailConversation) {
+                if ($emailConversation instanceof EmailConversation) {
                     $emailConversation->update([
-                                                'Party'   => Lead::getPrimaryKey(),
-                                                'PartyID' => $lead->LeadID,
-                                               ]);
+                        'Party' => Lead::getPrimaryKey(),
+                        'PartyID' => $lead->LeadID,
+                    ]);
 
                     $emailConversation->emails()->update([
-                                                          'Party'   => Lead::getPrimaryKey(),
-                                                          'PartyID' => $lead->LeadID,
-                                                         ]);
+                        'Party' => Lead::getPrimaryKey(),
+                        'PartyID' => $lead->LeadID,
+                    ]);
                 }
             });
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error adding  Lead Contact. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

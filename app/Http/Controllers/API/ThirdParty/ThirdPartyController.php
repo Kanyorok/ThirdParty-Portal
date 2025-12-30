@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\API\ThirdParty;
 
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyStatusRequest;
-use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest;
 use App\Http\Resources\ThirdParty\ThirdPartyResource;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
-use Illuminate\Http\Request;
-use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Services\RegistrationService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 
 class ThirdPartyController extends Controller

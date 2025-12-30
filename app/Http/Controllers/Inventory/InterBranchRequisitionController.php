@@ -26,55 +26,126 @@ class InterBranchRequisitionController extends Controller
     {
         $this->service = $service;
     }
+public function index(Request $request)
+{
+    $this->authorize('viewAny', InterBranchRequisition::class);
 
-    public function index(Request $request)
-    {
-        $this->authorize('viewAny', InterBranchRequisition::class);
+    $currentBranch = $request->user()->branch;
+    if (!$currentBranch instanceof Branch) {
+        return redirect()->back()->with('fail', 'Current user branch not found.');
+    }
+    
+    $isHeadOffice = $currentBranch->IsHQ;
+    $branchId = $currentBranch->Id;
 
-        $branchId = auth()->user()->employee?->BranchId;
-        $currentBranch = Branch::findOrFail($branchId);
+    $baseQuery = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items', 'creator']);
+
+    if ($isHeadOffice) {
+        // For Head Office:
         
-        $isHeadOffice = $currentBranch->IsHQ;
-
-        $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
-
-        if (!$isHeadOffice) {
-            $query->where(function ($q) use ($branchId) {
-                $q->where('FromBranch', $branchId)
-                ->orWhere('ToBranch', $branchId);
-            });
-        }
-
+        $allQuery = clone $baseQuery;
+        $incomingQuery = clone $baseQuery;
+        $otherQuery = clone $baseQuery;
+        
+        // Apply status filter if provided
         if ($request->filled('status')) {
             $enum = InterBranchRequisitionEnum::tryFrom($request->status);
             $status = $enum ? $enum->value : $request->status;
-            $query->where('Status', $status);
+            $allQuery->where('Status', $status);
+            $incomingQuery->where('Status', $status);
+            $otherQuery->where('Status', $status);
         }
-
-        $groupedRequisitions = $query->latest()->get();
-
-        return view('inventory.interbranchrequisition.index', compact('groupedRequisitions', 'isHeadOffice'));
+        
+        // Get all requisitions with ordering
+        $allRequisitions = $allQuery->orderBy('CreatedOn', 'desc')->get();
+        
+        // Incoming to HQ (other branches requesting FROM HQ)
+        $incomingRequisitions = $incomingQuery
+            ->where('FromBranch', $branchId) 
+            ->orderBy('CreatedOn', 'desc')
+            ->get();
+            
+        // Other requisitions (between other branches)
+        $otherRequisitions = $otherQuery
+            ->where('FromBranch', '!=', $branchId)
+            ->where('ToBranch', '!=', $branchId)
+            ->orderBy('CreatedOn', 'desc')
+            ->get();
+            
+        $groupedRequisitions = $allRequisitions;
+        $outgoingRequisitions = collect(); 
+    } else {
+        // For Non-HQ Branches:
+        
+        // Clone base query before applying status filter
+        $incomingQuery = clone $baseQuery;
+        $outgoingQuery = clone $baseQuery;
+        $allQuery = clone $baseQuery;
+        
+        // Apply status filter if provided
+        if ($request->filled('status')) {
+            $enum = InterBranchRequisitionEnum::tryFrom($request->status);
+            $status = $enum ? $enum->value : $request->status;
+            $incomingQuery->where('Status', $status);
+            $outgoingQuery->where('Status', $status);
+            $allQuery->where('Status', $status);
+        }
+        
+        // Incoming to current branch (other branches requesting FROM us)
+        $incomingRequisitions = $incomingQuery
+            ->where('FromBranch', $branchId) 
+            ->orderBy('CreatedOn', 'desc')
+            ->get();
+            
+        // Outgoing from current branch (we're requesting FROM other branches)
+        $outgoingRequisitions = $outgoingQuery
+            ->where('ToBranch', $branchId) 
+            ->orderBy('CreatedOn', 'desc')
+            ->get();
+            
+        // All requisitions involving current branch
+        $allRequisitions = $allQuery
+            ->where(function ($q) use ($branchId) {
+                $q->where('FromBranch', $branchId)
+                  ->orWhere('ToBranch', $branchId);
+            })
+            ->orderBy('CreatedOn', 'desc')
+            ->get();
+            
+        // For non-HQ, other requisitions don't apply
+        $otherRequisitions = collect();
+        
+        // For backward compatibility
+        $groupedRequisitions = $allRequisitions;
     }
 
-
-  public function create()
+    return view('inventory.interbranchrequisition.index', compact(
+        'groupedRequisitions',
+        'allRequisitions',
+        'incomingRequisitions',
+        'outgoingRequisitions',
+        'otherRequisitions',
+        'isHeadOffice',
+        'currentBranch'
+    ));
+}
+  public function create(Request $request)
     {
         $this->authorize('create', InterBranchRequisition::class);
 
-        $branchId = auth()->user()->employee?->BranchId;
-        $currentBranch = Branch::findOrFail($branchId);
+        $currentBranch = $request->user()->branch;
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
         
-        // Use IsHQ column to determine head office status
         $isHeadOffice = $currentBranch->IsHQ;
 
         if ($isHeadOffice) {
-            // Head Office: Fixed as From Branch, can send to any other branch
             $fromBranch = $currentBranch;
-            $branches = Branch::where('Id', '!=', $branchId)->get();
+            $branches = Branch::where('Id', '!=', $currentBranch->Id)->get();
         } else {
-            // Non-Head Office: Can request from any branch except own, fixed as To Branch
-            $fromBranch = null; // Will be selected by user
-            $branches = Branch::where('Id', '!=', $branchId)->get();
+            $fromBranch = null; 
+            $branches = Branch::where('Id', '!=', $currentBranch->Id)->get();
         }
 
         $uoms = UnitOfMeasure::all();
@@ -117,7 +188,7 @@ class InterBranchRequisitionController extends Controller
         }
 
         if (!isset($data['Status'])) {
-            $data['Status'] = InterBranchRequisitionEnum::Submitted->value;
+            $data['Status'] = InterBranchRequisitionEnum::Pending->value;
         }
         $this->service->create($data);
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition submitted successfully.');
@@ -139,7 +210,11 @@ class InterBranchRequisitionController extends Controller
 
    public function edit($Id)
 {
-    $branchId = auth()->user()->employee?->BranchId;
+    
+    $currentBranch = $request->user()->branch;
+    if (!$currentBranch instanceof Branch) {
+        return redirect()->back()->with('fail', 'Current user branch not found.');
+    }
     $this->authorize('update', InterBranchRequisition::class);
 
     $item = InterBranchRequisition::with([
@@ -165,8 +240,8 @@ class InterBranchRequisitionController extends Controller
         })
         ->get();
 
-    $fromBranch = Branch::findOrFail($branchId);
-    $branches   = Branch::where('Id', '!=', $branchId)->get(); 
+    $fromBranch = Branch::findOrFail($currentBranch->Id);
+    $branches   = Branch::where('Id', '!=', $currentBranch->Id)->get(); 
     $uoms = UnitOfMeasure::all();
 
     return view('inventory.interbranchrequisition.edit', compact(

@@ -3,6 +3,7 @@
 namespace App\Models\PropertyManagement;
 
 use App\Models\Core\Approval\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
@@ -11,7 +12,7 @@ use App\Models\Auth\User;
 class PropertyLeaseRenewal extends Model
 {
 
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
     //
     protected $table = 't_RenewLease';
     public const CREATED_AT = 'CreatedOn';
@@ -30,6 +31,7 @@ class PropertyLeaseRenewal extends Model
         'ParkingFee',
         'OtherCharges',
         'Remarks',
+        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'

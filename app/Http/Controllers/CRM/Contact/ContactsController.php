@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CRM\Contact;
 
+use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\ContactRequest;
 use App\Models\CRM\Contact;
@@ -40,8 +41,9 @@ class ContactsController extends Controller
      */
     public function update(ContactRequest $request, Contact $contact): JsonResponse
     {
+        $phone = $request->getPhone(SystemHelper::CountyCode);
         try {
-            $this->change($contact, $request->savable(true));
+            $this->change($contact, $request->savable($phone, true));
         } catch (Exception $e) {
             Log::error('Error updating contact. e: ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');

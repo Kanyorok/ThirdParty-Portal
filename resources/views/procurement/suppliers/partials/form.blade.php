@@ -1,3 +1,6 @@
+@php
+$supplierMaster = isset($supplier) ? \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $supplier->Id)->first() : null;
+@endphp
 <div class="row g-4">
     <div class="col-md-6">
         <label for="ThirdPartyName" class="form-label">Legal Name <span class="text-danger">*</span></label>
@@ -17,10 +20,10 @@
         <label for="BusinessType" class="form-label">Business Type <span class="text-danger">*</span></label>
         <select name="BusinessType" id="BusinessType" class="form-select" required>
             <option value="">-- Select Business Type --</option>
-            @foreach (\App\Enums\BusinessTypeEnum::cases() as $type)
-            <option value="{{ $type->value }}"
-                {{ old('BusinessType', optional($supplier)->BusinessType->value ?? '') == $type->value ? 'selected' : '' }}>
-                {{ $type->label() }}
+            @foreach ($businessTypes ?? [] as $type)
+            <option value="{{ $type->ID }}"
+                {{ (string)old('BusinessType', optional($supplier)->getAttribute('BusinessType')) === (string)$type->ID ? 'selected' : '' }}>
+                {{ $type->Description }}
             </option>
             @endforeach
         </select>
@@ -50,8 +53,15 @@
     {{-- Country --}}
     <div class="col-md-6">
         <label for="Country" class="form-label">Country <span class="text-danger">*</span></label>
-        <input type="text" name="Country" id="Country" class="form-control" required
-            value="{{ old('Country', optional($supplier)->Country) }}">
+        <select name="Country" id="Country" class="form-select" required>
+            <option value="">-- Select Country --</option>
+            @foreach($countries ?? [] as $country)
+            <option value="{{ $country->Id }}"
+                {{ (string)old('Country', optional($supplier)->getAttribute('CountryId')) === (string)$country->Id ? 'selected' : '' }}>
+                {{ $country->Name }}
+            </option>
+            @endforeach
+        </select>
     </div>
 
     {{-- Physical Address --}}
@@ -63,17 +73,16 @@
 
     {{-- Email --}}
     <div class="col-md-6">
-        <label for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+        <label for="Email" class="form-label">Email Address <span class="text-danger">*</span></label>
         <input type="email" name="Email" id="Email" class="form-control" required
             value="{{ old('Email', optional($supplier)->Email) }}">
     </div>
 
     {{-- Phone --}}
     <div class="col-md-6">
-        <label for="Phone" class="form-label">Phone</label>
-        <input type="tel" name="Phone" id="Phone" class="form-control" pattern="^\+[1-9]\d{7,14}$" inputmode="tel"
-            placeholder="e.g., +12025550123" value="{{ old('Phone', optional($supplier)->Phone) }}">
-        <div class="form-text">Use international format (E.164), starting with + and country code.</div>
+        <label for="Phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+        <input type="text" name="Phone" id="Phone" class="form-control" required
+            value="{{ old('Phone', optional($supplier)->Phone) }}">
     </div>
 
     {{-- Website --}}
@@ -86,45 +95,45 @@
     {{-- Categories --}}
     <div class="col-md-6">
         <label for="category_ids" class="form-label">Categories <span class="text-danger">*</span></label>
-        <select name="category_ids[]" id="category_ids" class="form-select" multiple required>
+        <select id="category_ids_disabled" class="form-select" multiple disabled>
             @php
+            // Only show categories if prequalified
+            // Force boolean cast to ensure correct logic
+            $isPrequalified = (bool)optional($supplierMaster)->IsPrequalified;
+            $currentCats = optional($supplier)->supplierCategories ? $supplier->supplierCategories->pluck('SupplierCategoryID')->toArray() : [];
             $selectedCategories = old(
             'category_ids',
-            optional($supplier)->supplierCategories ? $supplier->supplierCategories->pluck('SupplierCategoryID')->toArray() : []
+            $isPrequalified ? $currentCats : []
             );
             @endphp
+            @if($isPrequalified)
             @foreach ($supplierCategories ?? [] as $category)
             <option value="{{ $category->SupplierCategoryID }}"
                 {{ in_array($category->SupplierCategoryID, $selectedCategories) ? 'selected' : '' }}>
                 {{ $category->CategoryName }}
             </option>
             @endforeach
+            @endif
         </select>
+        {{-- Hidden inputs to maintain current categories on submit since editing is disabled --}}
+        @foreach($selectedCategories as $catId)
+        <input type="hidden" name="category_ids[]" value="{{ $catId }}">
+        @endforeach
+        <div class="form-text text-muted">Category modification is disabled.</div>
     </div>
 
-    {{-- Prequalified Switch --}}
+    {{-- Suspended Toggle --}}
     <div class="col-md-6 d-flex align-items-center">
         <div class="form-check form-switch">
-            <input type="checkbox" name="IsPrequalified" value="1" class="form-check-input" role="switch"
-                id="IsPrequalified"
-                {{ old('IsPrequalified', optional($supplier)->IsPrequalified ?? false) ? 'checked' : '' }}>
-            <label class="form-check-label ms-2" for="IsPrequalified">Prequalified</label>
+            <input type="checkbox" name="Suspended" value="1" class="form-check-input" role="switch"
+                id="Suspended"
+                {{ old('Suspended', optional($supplierMaster)->ApprovalStatus?->value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Suspended->value) ? 'checked' : '' }}>
+            <label class="form-check-label ms-2" for="Suspended">Suspended</label>
+            <div class="form-text">If suspended, the supplier cannot login or be used in the system.</div>
         </div>
     </div>
+    <input type="hidden" name="ApprovalStatus" value="{{ optional($supplierMaster?->ApprovalStatus)->value ?? \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Pending->value }}">
 
-    {{-- Approval Status (edit only) --}}
-    @if(isset($supplier))
-    <div class="col-md-6">
-        <label for="ApprovalStatus" class="form-label">Approval Status</label>
-        <select name="ApprovalStatus" id="ApprovalStatus" class="form-select">
-            @foreach (\App\Enums\ThirdPartyApprovalStatusEnum::cases() as $status)
-            <option value="{{ $status->value }}"
-                {{ old('ApprovalStatus', optional($supplier)->ApprovalStatus->value) == $status->value ? 'selected' : '' }}>
-                {{ $status->label() }}
-            </option>
-            @endforeach
-        </select>
-    </div>
-    @endif
+
 
 </div>
