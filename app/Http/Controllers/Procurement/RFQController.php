@@ -496,7 +496,7 @@ public function reject(Request $request, $id)
     /**
      * Display the specified resource.
      */
-    public function show($id)
+   public function show($id)
 {
     // Get the RFQ and its associated RFQLines
     $rfq = RFQ::with('rfqLines', 'rfqLines.uom', 'requisition')->findOrFail($id);
@@ -548,7 +548,7 @@ public function reject(Request $request, $id)
         ->whereNull('tpu.DeletedOn')
         ->groupBy('tpu.ThirdPartyId');
 
-    // Select suppliers and de-duplicate by ThirdPartyId (one row per supplier in UI)
+    // FIXED: Select suppliers using correct join path through SupplierMaster
     $suppliers = DB::table('t_Suppliers as s')
         ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
         ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
@@ -568,24 +568,29 @@ public function reject(Request $request, $id)
                 ->whereIn('scic.ItemCategoryID', $allCategoryIds)
                 ->whereColumn('sc.SupplierCategoryID', 's.CategoryId');
         })
-        ->groupBy('tp.Id', 'tp.TradingName', 'tp.BusinessType')
+        ->groupBy('sm.ThirdPartyId', 'tp.TradingName', 'tp.BusinessType')
         ->select(
             DB::raw('MIN(s.Id) as Id'),
             DB::raw('MIN(s.CategoryId) as SupplierCategoryId'),
-            'tp.Id as ThirdPartyId',
+            'sm.ThirdPartyId',
             'tp.TradingName as SupplierName',
             'tp.BusinessType',
             DB::raw('MIN(tpu.Email) as Email')
         )
         ->get();
 
+    Log::info('Suppliers fetched for RFQ', [
+        'rfq_id' => $rfq->Id,
+        'supplier_count' => $suppliers->count(),
+        'suppliers' => $suppliers->toArray()
+    ]);
+
     // Load RFQ responses (supplier quotations) with items and supplier info for printing
-    $rfqResponses = RFQResponse::with(['items.uom', 'supplier.thirdParty'])
+    $rfqResponses = RFQResponse::with(['items.uom', 'supplier.supplierMaster.thirdParty'])
         ->where('RFQId', $rfq->Id)
         ->get();
 
     // Get workflow data
-
     $canApprove = false;
     $history = collect();
     $pendingApprovals = [];
