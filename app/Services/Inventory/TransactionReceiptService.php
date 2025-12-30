@@ -122,7 +122,7 @@ class TransactionReceiptService
                 ->first();
 
             if (!$stock) {
-                Log::info("Auto-creating new stock record for ItemID: {$itemId}, Branch: {$toBranchId}, Store: {$storeId}");
+
 
                 $stock = StockItem::firstOrCreate(
                     [
@@ -218,23 +218,12 @@ class TransactionReceiptService
                 'ModifiedOn' => now(),
             ]);
 
-            Log::info('Stock transaction recorded', [
-                'ItemID' => $itemId,
-                'StoreID' => $storeId,
-                'QuantityIn' => $itemData['received_qty'],
-                'TransactionType' => 'Receipt',
-                'ReferenceID' => $receipt->Id,
-            ]);
+
 
             // Handle Damaged Items
             $damagedQty = (float)($itemData['damaged_qty'] ?? 0);
             if ($damagedQty > 0) {
-                Log::info('Recording to InventoryHold', [
-                    'ItemID' => $itemId,
-                    'Quantity' => $damagedQty,
-                    'SourceID' => $receipt->Id,
-                    'Source' => $transferSource,
-                ]);
+
 
                 $status = CodeDetail::where('CodeID', 'AdjustmentReason')
                     ->where('Description', 'Damaged in Transit')

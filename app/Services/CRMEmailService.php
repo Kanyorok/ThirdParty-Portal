@@ -20,10 +20,10 @@ use App\Models\Communication\Email;
 use App\Models\Communication\EmailConversation;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
-use App\Models\Fleet\FleetDriver;
 use App\Models\CRM\Contact;
 use App\Models\CRM\Lead;
 use App\Models\DMS\Image;
+use App\Models\Fleet\FleetDriver;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Services\DMS\ImageService;
@@ -38,15 +38,12 @@ use Illuminate\Mail\SentMessage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use RuntimeException;
 use SensitiveParameter;
 use Yajra\DataTables\DataTables;
 
 class CRMEmailService
 {
-    public function __construct(public Email $crmEmail)
-    {
-    }
+    public function __construct(public Email $crmEmail) {}
 
     public static function createClient(Client $client, string $to, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
     {
@@ -143,23 +140,24 @@ class CRMEmailService
             $query->with($with);
         }
 
-        return Datatables::of($query->select('*'))
-            ->addIndexColumn()
-            ->addColumn('id', fn(Email $email) => $email->EmailID) // 👈 required for JS
+        return Datatables::of($query->select('*'))->addIndexColumn()
             ->addColumn('action', function (Email $email) {
-                return '<button class="btn btn-sm btn-primary view-email" data-id="' . $email->EmailID . '">
+                return '<a class="btn btn-sm btn-primary click-summary-data" data-click_url="' . route('emails.summary', $email->EmailID) . '"
+                       data-summary_title="Email details." >
                         <i class="fas fa-eye"></i> View
                     </button>';
-            })
-            ->editColumn('Type', fn(Email $email) => $email->Type->name)
+            })->editColumn('Type', fn(Email $email) => $email->Type->name)
             ->editColumn('CreatedOn', fn(Email $email) => $email->CreatedOn?->format('F d, Y h:i A'))
             ->editColumn('Dated', function (Email $email) {
                 return $email->Dated instanceof Carbon
                     ? $email->Dated->format('F d, Y h:i A')
                     : $email->CreatedOn?->format('F d, Y h:i A');
-            })
-            ->rawColumns(['action'])
-            ->make();
+            })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
+                'dbl_click_url' => function (Email $email) {
+                    return route('emails.summary', $email->EmailID);
+                },
+                'summary_title' => 'Emails details.',
+            ])->rawColumns(['action'])->make();
     }
 
     public static function testConfig(string $host, int $port, EmailEncryptionEnum $encryption, string $username, #[SensitiveParameter] string $password): bool
@@ -179,25 +177,7 @@ class CRMEmailService
             ]));
 
             return $mailer->sendNow(new TestMail()) instanceof SentMessage;
-
-        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
-            Log::error('Mail transport error', [
-                'host' => $host,
-                'port' => $port,
-                'encryption' => $encryption->value,
-                'username' => $username,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-        } catch (\Exception $e) {
-            Log::error('General mail config error', [
-                'host' => $host,
-                'port' => $port,
-                'encryption' => $encryption->value,
-                'username' => $username,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface | \Exception $e) {
         }
 
         return false;
@@ -430,7 +410,7 @@ class CRMEmailService
     protected function _failed(string $reason): static
     {
         $source = $this->crmEmail->source;
-        if ($source instanceof CampaignParty) {//update status
+        if ($source instanceof CampaignParty) { //update status
             $source->update([
                 'Status' => EmailStatusEnum::Failed->value,
                 'Channel' => Email::getPrimaryKey(),
@@ -452,9 +432,9 @@ class CRMEmailService
 
     protected function _send(): static
     {
-        if (config('app.debug')) {
+        /*if (config('app.debug')) {
             return $this->_failed('In debug');
-        }
+        }*/
         //$mailable = Mail::send(new DefaultEmail($this->crmEmail));
         try {
             $mailable = $this->_sendNewConfig();
@@ -471,10 +451,10 @@ class CRMEmailService
             ]);
 
             if (!is_int($this->crmEmail->EmailConversationId)) {
-                $this->_createConversation();//create and set non related (new);
+                $this->_createConversation(); //create and set non related (new);
             }
             $source = $this->crmEmail->source;
-            if ($source instanceof CampaignParty) {//update status
+            if ($source instanceof CampaignParty) { //update status
                 $source->update([
                     'Status' => EmailStatusEnum::Sent->value,
                     'Channel' => Email::getPrimaryKey(),

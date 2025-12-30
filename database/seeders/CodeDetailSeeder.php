@@ -15,6 +15,7 @@ use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
+use App\Enums\TenderApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
@@ -129,6 +130,14 @@ class CodeDetailSeeder extends Seeder
                 'DisplayOrder' => $index + 1,
             ]);
         }
+        foreach (TenderApprovalStatusEnum::cases() as $index => $TenderApprovalStatusEnum){
+            $entries->push([
+                'CodeID' => 'TenderStatus',
+                'Value' => $TenderApprovalStatusEnum->value,
+                'Description' => $TenderApprovalStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
 
         foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
             $entries->push([
@@ -189,7 +198,7 @@ class CodeDetailSeeder extends Seeder
             //ThirdPartyType
             ['CodeID' => 'PartyType', 'Description' => 'Individual', 'Value' => 'IN'],
             ['CodeID' => 'PartyType', 'Description' => 'Cooperate', 'Value' => 'CO'],
-            
+
 
             // Requisition Status
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved', 'Value' => 'Ap'],

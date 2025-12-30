@@ -1,4 +1,5 @@
 <?php
+use App\Enums\WorkflowStatus;   
 return [
     /*
     |--------------------------------------------------------------------------
@@ -35,6 +36,13 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
     ],
 
+    'LeaseTerminationId' => [
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'r'
+        'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,    // 'p'
+        'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
+    ],
+
     'OrderID' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'A'
         'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'R'
@@ -42,6 +50,11 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 'S'
     ],
 
+    'tender' => [
+        'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED->value, // Will now be 'Ap'
+        'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED->value, // Will now be 'R'
+        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
+    ],
     'LeaseTerminationId' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
         'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'r'
@@ -55,6 +68,15 @@ return [
         'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,    // 'p'
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 's'
     ],
+
+
+     'RFQId' => [
+        'Approved' => WorkflowStatus::Approved->value,  // 'A'
+        'Rejected' => WorkflowStatus::Rejected->value,  // 'R'
+        'Pending' => WorkflowStatus::Pending->value,    // 'P'
+        'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
+    ],
+
 
     /*
     |--------------------------------------------------------------------------

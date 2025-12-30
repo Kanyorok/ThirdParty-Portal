@@ -37,7 +37,7 @@ BEGIN
     FROM t_StockAdjustments SA
              JOIN t_Branches B ON B.ID = SA.Branch
              JOIN t_CodeDetails CD ON CD.Value = SA.Status AND CD.CodeID = 'RequisitionStatus'
-             JOIN t_CodeDetails C ON C.ID = SA.Reason AND C.CodeID = 'AdjustmentReason'
+             JOIN t_CodeDetails C ON C.ID = SA.Status AND C.CodeID = 'AdjustmentReason'
              JOIN t_Users U1 ON U1.ID = SA.AdjustedBy
              JOIN t_Users U2 ON U2.ID = SA.CreatedBy
     WHERE (@FromDate IS NULL OR SA.AdjustmentDate >= @FromDate)

@@ -33,8 +33,24 @@ class ThirdParties extends Model
     }
 
     protected $fillable = [
-        'ThirdPartyName', 'TradingName', 'BusinessType', 'RegistrationNumber', 'TaxPIN', 'VATNumber', 'CountryId', 'LocationId', 'PhysicalAddress', 'Email', 'Phone',
-        'ImageId', 'Website', 'Status', 'Extra', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'ThirdPartyName',
+        'TradingName',
+        'BusinessType',
+        'RegistrationNumber',
+        'TaxPIN',
+        'VATNumber',
+        'CountryId',
+        'LocationId',
+        'PhysicalAddress',
+        'Email',
+        'Phone',
+        'ImageId',
+        'Website',
+        'Status',
+        'Extra',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -100,9 +116,11 @@ class ThirdParties extends Model
             ->withPivot('Id', 'PartyType', 'PartyID', 'CreatedBy', 'ModifiedBy', 'DeletedBy')->wherePivotNull('DeletedOn');
     }
 
-    public function scopeSuppliers(): BelongsToMany
+    public function scopeSuppliers($query)
     {
-        return $this->types()->wherePivot('PartyType', SupplierMaster::getPrimaryKey());
+        return $query->whereHas('types', function ($q) {
+            $q->where('t_ThirdPartyType_ThirdParties.PartyType', SupplierMaster::getPrimaryKey());
+        });
     }
 
     public function scopeCustomers(): BelongsToMany
@@ -163,6 +181,39 @@ class ThirdParties extends Model
             ->whereNull('DeletedOn')
             ->with('category');
     }
+    public function isApproved(): bool
+    {
+        return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
+    }
 
+    public function isSupplier(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return (isset($type->Code) && str_starts_with($type->Code, 'SU'))
+                    || (isset($type->pivot->PartyType) && $type->pivot->PartyType === SupplierMaster::getPrimaryKey());
+            });
+        }
+        return $this->ThirdPartyType === \App\Enums\ThirdParty\ThirdPartyTypeEnum::Supplier;
+    }
 
+    public function isTenant(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return isset($type->pivot->PartyType) && $type->pivot->PartyType === PropertyNewTenant::getPrimaryKey();
+            });
+        }
+        return false;
+    }
+
+    public function isCustomer(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return isset($type->pivot->PartyType) && $type->pivot->PartyType === BancassuranceCustomer::getPrimaryKey();
+            });
+        }
+        return false;
+    }
 }

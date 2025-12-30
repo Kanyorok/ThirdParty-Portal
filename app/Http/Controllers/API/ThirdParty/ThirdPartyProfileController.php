@@ -324,4 +324,86 @@ class ThirdPartyProfileController extends Controller
 
         return response()->json(['message' => __('auth.profile_delete_ok')], 204);
     }
+
+    /**
+     * Enable or disable a specific role for the third party.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function toggleRole(Request $request): JsonResponse
+    {
+        /** @var ThirdPartyUser $user */
+        $user = Auth::guard('sanctum')->user();
+        $thirdParty = $user->thirdParty;
+
+        if (!$thirdParty) {
+            return response()->json(['message' => __('auth.third_party_not_linked')], 404);
+        }
+
+        $request->validate([
+            'roleId' => 'required|integer',
+            'enable' => 'required|boolean',
+        ]);
+
+        $roleId = $request->input('roleId');
+        $enable = $request->input('enable');
+
+        try {
+            DB::transaction(function () use ($thirdParty, $roleId, $enable, $user) {
+                // Find the pivot record
+                $pivot = DB::table('t_ThirdPartyType_ThirdParties')
+                    ->where('Id', $roleId)
+                    ->where('ThirdPartyId', $thirdParty->Id)
+                    ->first();
+
+                if (!$pivot) {
+                    throw new \Exception("Role not found.");
+                }
+
+                if ($enable) {
+                    // Restore role
+                    DB::table('t_ThirdPartyType_ThirdParties')
+                        ->where('Id', $roleId)
+                        ->update([
+                            'DeletedOn' => null,
+                            'DeletedBy' => null,
+                            'ModifiedOn' => now(),
+                            'ModifiedBy' => $user->Id
+                        ]);
+                } else {
+                    // Disable role (Soft Delete)
+                    DB::table('t_ThirdPartyType_ThirdParties')
+                        ->where('Id', $roleId)
+                        ->update([
+                            'DeletedOn' => now(),
+                            'DeletedBy' => $user->Id,
+                            'ModifiedOn' => now(),
+                            'ModifiedBy' => $user->Id
+                        ]);
+                }
+            });
+
+            // Refresh user types to ensuring cache/state is updated
+            $thirdParty->load('types');
+
+            // Re-fetch formatted types via resource logic
+            $types = $thirdParty->types->map(fn($t) => [
+                'id' => $t->Id,
+                'code' => $t->Code,
+                'typeCategoryId' => $t->Type,
+                'label' => $t->Code,
+                'isActive' => is_null($t->pivot->DeletedOn),
+                'pivotId' => $t->pivot->Id,
+            ]);
+
+            return response()->json([
+                'message' => $enable ? 'Role enabled successfully.' : 'Role disabled successfully.',
+                'roles' => $types
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Role toggle failed: ' . $e->getMessage(), ['user_id' => $user->Id, 'exception' => $e]);
+            return response()->json(['message' => 'Failed to update role status.'], 500);
+        }
+    }
 }

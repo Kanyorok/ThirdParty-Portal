@@ -140,20 +140,23 @@
                             </div>
                         </div>
                         <hr class="mt-0 mb-2">
-                        <table id="clientsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th></th>
-                                <th>MemberNo</th>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-responsive m-1">
+                            <table id="clientsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>MemberNo</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
                     </div>
                     <div
                         class="tab-pane  {{ ($list->Source === Client::getPrimaryKey())?'':'active' }}   m-2"
@@ -176,8 +179,9 @@
                             </div>
                         </div>
                         <hr class="mt-0 mb-2">
+                        <div class="table-responsive m-1">
                         <table id="leadsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                               class="table table-striped dataTable no-footer dtr-inline w-100">
                             <thead>
                             <tr>
                                 <th></th>
@@ -190,6 +194,7 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>

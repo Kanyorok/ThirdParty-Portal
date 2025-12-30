@@ -90,7 +90,7 @@ class DepartmentNeed extends Model
             'Source',      // Column name in t_WorkflowHistory table
             'SourceID',    // ID column in t_WorkflowHistory table
             'Id'           // Local key
-        )->orderBy('CreatedOn', 'desc');
+        );
     }
 
     public function department()

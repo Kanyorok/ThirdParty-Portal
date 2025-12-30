@@ -88,4 +88,6 @@ Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(fun
         'index' => 'dms-reports.index',
         'show' => 'dms-reports.show'
     ]);
+
+
 });

@@ -22,7 +22,7 @@ BEGIN
     INSERT INTO #GoodsReceipts
     SELECT G.GRNID,
            G.POID,
-           S.SupplierName,
+           S.SupplierMasterId,
            G.StoreId,
            U2.Name as ReceivedBy,
            G.ItemNo, -- Number of items

@@ -12,18 +12,24 @@ use Illuminate\Support\Facades\DB;
 class RFQClarificationController extends Controller
 {
     // Full-screen page
-    public function page()
-    {
-        // Preload minimal filters: approved RFQs and suppliers (optional)
-        $rfqs = DB::table('t_RFQ')->where('Status', 'Approved')->orderByDesc('Id')->get(['Id','RFQNumber']);
-        $suppliers = DB::table('t_ThirdParties as tp')
-            ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
-            ->whereNull('tp.DeletedOn')->whereNull('s.DeletedOn')->where('s.Active_Status', 1)
-            ->groupBy('tp.Id','tp.TradingName')
-            ->orderBy('tp.TradingName')
-            ->get(['tp.Id','tp.TradingName']);
-        return view('procurement.rfqclarifications.index', compact('rfqs','suppliers'));
-    }
+   public function page()
+{
+    // Preload minimal filters: approved RFQs and suppliers (optional)
+    $rfqs = DB::table('t_RFQ')->where('Status', 'Approved')->orderByDesc('Id')->get(['Id','RFQNumber']);
+    
+    $suppliers = DB::table('t_ThirdParties as tp')
+        ->join('t_SupplierMaster as sm', 'sm.ThirdPartyId', '=', 'tp.Id')
+        ->join('t_Suppliers as s', 's.SupplierMasterId', '=', 'sm.Id')
+        ->whereNull('tp.DeletedOn')
+        ->whereNull('sm.DeletedOn')
+        ->whereNull('s.DeletedOn')
+        ->where('s.Active_Status', 1)
+        ->groupBy('tp.Id','tp.TradingName')
+        ->orderBy('tp.TradingName')
+        ->get(['tp.Id','tp.TradingName']);
+        
+    return view('procurement.rfqclarifications.index', compact('rfqs','suppliers'));
+}
 
     // List clarifications across RFQs (filters)
     public function listAll(Request $request): \Illuminate\Http\JsonResponse

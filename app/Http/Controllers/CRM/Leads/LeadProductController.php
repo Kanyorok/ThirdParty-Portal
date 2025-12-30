@@ -9,6 +9,7 @@ use App\Models\CRM\LeadProduct;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -44,28 +45,43 @@ class LeadProductController extends Controller
     public function store(Request $request, Lead $lead): JsonResponse
     {
         $request->validate([
-                            'lead_product'  => ['required'],
-                            'product_notes' => [
-                                                'nullable',
-                                                'string',
-                                                'max:1000',
-                                               ],
-                           ]);
+            'lead_product' => ['required'],
+            'product_notes' => [
+                'nullable',
+                'string',
+                'max:1000',
+            ],
+        ]);
 
         $product = Product::query()->where('ProductID', $request->lead_product)->select(['ProductID', 'Description'])->first(['ProductID', 'Description']);
         if (!$product instanceof Product) {
             throw ValidationException::withMessages(['lead_product' => 'Product not found']);
         }
 
-        $lead->products()->create([
-                                   'ProductID'   => $product->ProductID,
-                                   'ProductName' => $product->Description,
-                                   'Notes'       => $request->product_notes,
-                                   'CreatedBy'   => $request->user()->Id,
-                                   'ModifiedBy'  => $request->user()->Id,
-                                  ]);
+        if ($lead->products()->where('ProductID', $product->ProductID)->exists()) {
+            throw ValidationException::withMessages(['lead_product' => 'Product already added to this lead']);
+        }
 
-        return $this->succeeded('Product added successfully');
+        $actor = $request->user();
+
+        try {
+            return \DB::transaction(function () use ($lead, $product, $request, $actor) {
+                $lead->products()->create([
+                    'ProductID' => $product->ProductID,
+                    'ProductName' => $product->Description,
+                    'Notes' => $request->product_notes,
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                activity()->causedBy($actor)->performedOn($lead)->event('add-product')->log("add lead  L" . Str::padLeft($lead->LeadID, 5, '0') . " product ({$product->ProductID}) interested.");
+                return $this->succeeded('Product added successfully');
+            });
+        } catch (\Throwable $e) {
+            Log::error('Error adding product to lead ' . $e->getMessage());
+        }
+
+        return $this->errored('unexpected error, try again latter');
     }
 
     public function show(Lead $lead, string $lead_product_id): View|JsonResponse
@@ -91,9 +107,9 @@ class LeadProductController extends Controller
         }
 
         $leadProduct->forceFill([
-                                 'DeletedBy' => $request->user()->Id,
-                                 'DeletedOn' => now(),
-                                ])->save();
+            'DeletedBy' => $request->user()->Id,
+            'DeletedOn' => now(),
+        ])->save();
 
         return $this->succeeded('product trashed successfully');
     }
