@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\DMS\Image;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
 use Illuminate\Http\UploadedFile;
 
 class VehicleManagementService
@@ -25,7 +23,7 @@ class VehicleManagementService
                 throw new \Exception('The Registration Number already exists.');
             }
 
-            if (!empty($data['ChassisNumber']) && FleetVehicle::where('ChassisNumber', $data['ChassisNumber'])->exists()) {
+            if (!empty($data['ChassisNo']) && FleetVehicle::where('ChassisNo', $data['ChassisNo'])->exists()) {
                 throw new \Exception('The Chassis Number already exists.');
             }
 
@@ -41,16 +39,13 @@ class VehicleManagementService
             // Create vehicle
             $vehicle = FleetVehicle::create($data);
 
-            // Set initial status to 'Available'
+            // Set initial status to 'Available' - NO WORKFLOW LOGGING
             $statusValue = $this->getStatusValue('Available');   // enum string
             $statusId = $this->getStatusIdByValue($statusValue); // numeric ID
             $vehicle->VehicleStatus = $statusId; // update vehicle field
             $vehicle->save();
 
-            // Log workflow
-            $this->logWorkflow('VehicleAvailability', $vehicle->Id, $statusId, $statusValue, 'Vehicle created');
-
-            // Activity log
+            // Activity log only (no workflow)
             activity()
                 ->performedOn($vehicle)
                 ->causedBy(Auth::user())
@@ -78,16 +73,13 @@ class VehicleManagementService
                 $this->updateVehicleImage($vehicle, $imageFile);
             }
 
-            // Update status if provided or changed
+            // Update status if provided or changed - NO WORKFLOW LOGGING
             if (isset($data['VehicleStatus']) && $data['VehicleStatus'] !== $originalStatus) {
                 $statusValue = $data['VehicleStatus'];
                 $statusId = $this->getStatusIdByValue($statusValue);
 
-                // Update vehicle field
+                // Update vehicle field only (no workflow log)
                 $vehicle->VehicleStatus = $statusId;
-
-                // Log workflow
-                $this->logWorkflow('VehicleAvailability', $vehicle->Id, $statusId, $statusValue, 'Vehicle status updated');
             }
 
             $vehicle->save();
@@ -190,39 +182,5 @@ class VehicleManagementService
         return CodeDetail::where('CodeID', 'VehicleAvailabilityStatus')
             ->where('Value', $value)
             ->value('ID'); // integer ID
-    }
-
-    /**
-     * Log workflow and pending workflow
-     */
-    private function logWorkflow(string $source, int $sourceId, ?int $statusId, ?string $statusValue, ?string $notes = null)
-    {
-        if (!$statusId) return;
-
-        // Create workflow entry
-        Workflow::create([
-            'Source' => $source,
-            'SourceID' => $sourceId,
-            'Stage' => $statusId,       // numeric ID
-            'Status' => $statusValue,    // enum string
-            'Notes' => $notes,
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
-
-        // Update or create pending workflow
-        PendingWorkflow::updateOrCreate(
-            ['Source' => $source, 'SourceID' => $sourceId],
-            [
-                'Stage' => $statusId,
-                'UserId' => Auth::id(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]
-        );
     }
 }

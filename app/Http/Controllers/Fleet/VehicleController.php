@@ -180,27 +180,22 @@ class VehicleController extends Controller
         return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle updated successfully.');
     }
 
-    /**
-     * Deactivate vehicle.
-     */
-    public function deactivate($id)
-    {
-        $vehicle = FleetVehicle::findOrFail($id);
-        $this->authorize('update', $vehicle);
+public function deactivate($id)
+{
+    $vehicle = FleetVehicle::findOrFail($id);
+    $this->authorize('update', $vehicle);
 
-        $vehicle->update([
-            'IsActive' => 0,
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
+    $vehicle->update([
+        'IsActive' => 0,
+        'ModifiedBy' => Auth::id(),
+        'ModifiedOn' => now(),
+    ]);
 
-        // Log workflow as inactive
-        $statusId = $this->vehicleService->getStatusId('Inactive');
-        $this->vehicleService->logWorkflow('VehicleAvailability', $vehicle->Id, $statusId, 'Vehicle deregistered');
+    // Removed workflow logging for vehicle availability module
+    // Just update the status without workflow logging
 
-        return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle deregistered successfully.');
-    }
-
+    return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle deregistered successfully.');
+}
     /**
      * Delete vehicle.
      */

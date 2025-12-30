@@ -77,6 +77,12 @@ return [
         'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
     ],
 
+    // 'VehicleId' => [
+    //     'Available' => \App\Enums\Core\ApprovalEnum::Available->value,  // 'av'
+    //     'OnTrip' => \App\Enums\Core\ApprovalEnum::OnTrip->value,  // 'ot'
+    //     'AssignedTrip' => \App\Enums\Core\ApprovalEnum::AssignedTrip->value,  // 'at'
+    // ],
+
 
     /*
     |--------------------------------------------------------------------------
