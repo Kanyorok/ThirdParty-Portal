@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Core\Currency;
 
 class PriceManagement extends Model
 {
@@ -53,6 +54,11 @@ class PriceManagement extends Model
     public function uom()
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyCode', 'Id');
     }
 
     public function creator()

@@ -20,9 +20,14 @@ class InventoryHoldReviewController extends Controller
         $this->service = $service;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+        $branchId = $currentBranch->Id; 
 
         $holds = InventoryHoldReview::with([
             'item.uom',
@@ -45,11 +50,16 @@ class InventoryHoldReviewController extends Controller
         return view('inventory.inventoryholdreview.index', compact('holds'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize('create', InventoryHoldReview::class);
 
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+        $branchId = $currentBranch->Id; 
 
         $holds = InventoryHold::whereNull('DeletedOn')
             ->where('BranchID', $branchId) 
@@ -83,11 +93,16 @@ class InventoryHoldReviewController extends Controller
         return redirect()->back()->with('success', 'Inventory item reviewed successfully.');
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
         $this->authorize('view', InventoryHoldReview::class);
 
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+        $branchId = $currentBranch->Id; 
 
         $holds = InventoryHoldReview::with([
             'item.uom',
@@ -113,7 +128,12 @@ class InventoryHoldReviewController extends Controller
 {
     $this->authorize('update', InventoryHoldReview::class);
 
-    $branchId = auth()->user()->employee?->BranchId;
+    $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+    $branchId = $currentBranch->Id; 
     $action = $request->input('Action');
     $extras = [
         'Condition' => $request->input('Condition'),
@@ -150,11 +170,16 @@ class InventoryHoldReviewController extends Controller
         return redirect()->back()->with('error', $th->getMessage());
     }
 }
-    public function destroy($id)
+    public function destroy($id, Request $request)
     {
         $this->authorize('destroy', InventoryHoldReview::class);
 
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+        $branchId = $currentBranch->Id; 
 
         $hold = InventoryHoldReview::where('Id', $id)
             ->where('FromBranch', $branchId) 
@@ -165,9 +190,14 @@ class InventoryHoldReviewController extends Controller
         return redirect()->back()->with('success', 'Inventory hold deleted successfully.');
     }
 
-    public function getDetails($id)
+    public function getDetails($id, Request $request)
     {
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+            if (!$currentBranch instanceof Branch) {
+                 return redirect()->back()->with('fail', 'Current user branch not found.');
+            }
+
+        $branchId = $currentBranch->Id; 
 
         $hold = InventoryHold::with(['item', 'branch', 'store'])
             ->where('BranchID', $branchId) 
