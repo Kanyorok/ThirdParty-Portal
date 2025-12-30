@@ -10,6 +10,7 @@ class PropertyViewController extends Controller
 {
     public function index(): PropertyCollection
     {
+        //viewing All properties that are available for renting
         $properties = PropertyRegistry::with([
             'getBlockByProperty.floor.units' => function ($query) {
                 $query->where('IsRentable', true)

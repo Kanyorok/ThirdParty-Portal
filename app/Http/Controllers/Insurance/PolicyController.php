@@ -58,18 +58,40 @@ public function create()
         'customers', 'insurers', 'paymentfrequencys', 'referrals'));
 }
 
+// public function getReferralsByCustomer($customerId)
+// {
+//     $referrals = BancAssuranceReferral::with([
+//             'customerreferral.thirdParty',
+//             'referredByEmployee'
+//         ])
+//         ->where('ClientId', $customerId)
+//         ->orderByDesc('Id')
+//         ->get();
+
+//     return response()->json($referrals);
+// }
 public function getReferralsByCustomer($customerId)
 {
     $referrals = BancAssuranceReferral::with([
-            'customerreferral.thirdParty',
-            'referredByEmployee'
-        ])
-        ->where('ClientId', $customerId)
-        ->orderByDesc('Id')
-        ->get();
+        'customerreferral.thirdParty',
+        'referredByEmployee'
+    ])
+    ->where('ClientId', $customerId)
+    ->orderByDesc('Id')
+    ->get()
+    ->map(function ($ref) {
+        return [
+            'id' => $ref->Id,
+            'customer_name' => $ref->customerreferral?->thirdParty?->ThirdPartyName ?? 'Unknown Customer',
+            'referred_by' => $ref->referredByEmployee?->Name ?? 'Unknown Staff',
+            'Product' => $ref->insuranceProduct?->Name,
+            'Insurer' => $ref->preferredInsurer?->Name,
+        ];
+    });
 
     return response()->json($referrals);
 }
+
 
 
 public function getProductsByInsurer($insurerId)
@@ -119,7 +141,21 @@ public function store(BancassurancePolicyRequest $request)
     return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
 }
 
+public function print($id)
+{
+    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
 
+    $policy = BancassurancePolicy::with([
+        'customer.thirdParty',
+        'insurer',
+        'product',
+        'referral.customerreferral.thirdParty',
+        'referral.referredByEmployee',
+        'riderAddOn',
+    ])->findOrFail($id);
+
+    return view('bancassurance.policies.print', compact('policy'));
+}
 
 
 //Proposal Review

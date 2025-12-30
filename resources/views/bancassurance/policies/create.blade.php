@@ -190,9 +190,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 referrals.forEach(ref => {
                     options += `
-                        <option value="${ref.Id}">
-                            ${ref.customerreferral?.thirdParty?.ThirdPartyName ?? 'Customer'}
-                            — Referred by ${ref.referredByEmployee?.Name ?? 'Staff'}
+                        <option value="${ref.id}">
+                            NAME: ${ref.customer_name} — BY: ${ref.referred_by} — INSURER: ${ref.Insurer} — PRODUCT: ${ref.Product}
                         </option>
                     `;
                 });
