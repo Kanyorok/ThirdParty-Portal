@@ -4,9 +4,9 @@ namespace App\Models\Legal;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PolicyCategory extends Model
+class TrainingTypecopy extends Model
 {
-    protected $table = 't_PolicyCategories';
+    protected $table = 't_TrainingTypes';
     protected $primaryKey = 'Id';
     public $timestamps = true;
 

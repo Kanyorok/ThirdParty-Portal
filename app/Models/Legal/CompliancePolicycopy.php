@@ -4,7 +4,7 @@ namespace App\Models\Legal;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CompliancePolicy extends Model
+class CompliancePolicycopy extends Model
 {
     protected $table = 't_CompliancePolicies';
     protected $primaryKey = 'Id';

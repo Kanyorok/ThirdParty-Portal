@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Procurement;
+namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
