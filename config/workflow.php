@@ -92,6 +92,7 @@ return [
         'lease_creation' => 'ApprovalStatus',
         'procurement_plan' => 'Status',
         'consolidated_procurement_plan' => 'Status',
+        
         // Add more as needed
     ],
 
