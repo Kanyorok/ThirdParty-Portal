@@ -77,11 +77,15 @@ return [
         'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
     ],
 
-    // 'VehicleId' => [
-    //     'Available' => \App\Enums\Core\ApprovalEnum::Available->value,  // 'av'
-    //     'OnTrip' => \App\Enums\Core\ApprovalEnum::OnTrip->value,  // 'ot'
-    //     'AssignedTrip' => \App\Enums\Core\ApprovalEnum::AssignedTrip->value,  // 'at'
-    // ],
+    'TripId' => [
+        'Scheduled' => \App\Enums\Core\ApprovalEnum::Scheduled->value,  // 'Sc'
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'A'
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'R'
+        'Ongoing' => \App\Enums\Core\ApprovalEnum::Ongoing->value,  // 'Og'
+        'Completed' => \App\Enums\Core\ApprovalEnum::Completed->value,  // 'Co'
+        'Cancelled' => \App\Enums\Core\ApprovalEnum::Cancelled->value,  // 'Ca'
+    ],
+
 
 
     /*

@@ -12,14 +12,13 @@ return new class extends Migration {
 
             $table->dropColumn('TripStatus');
 
-            $table->foreignId('Status')->nullable()->constrained('t_CodeDetails', 'ID')->after('Notes');
+            $table->string('Status')->nullable()->after('Notes');
         });
     }
 
     public function down(): void
     {
         Schema::table('t_TripLogs', function (Blueprint $table) {
-            $table->dropForeign(['Status']);
 
             $table->dropColumn('Status');
             $table->foreignId('TripStatus')
