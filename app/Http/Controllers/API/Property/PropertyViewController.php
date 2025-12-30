@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Controllers\API\Property;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\property\PropertyCollection;
+use App\Models\PropertyManagement\PropertyRegistry;
+
+class PropertyViewController extends Controller
+{
+    public function index(): PropertyCollection
+    {
+        $properties = PropertyRegistry::with([
+            'getBlockByProperty.floor.units' => function ($query) {
+                $query->where('IsRentable', true)
+                    ->where('CurrentStatus', true);
+            }
+        ])
+        ->whereHas('getBlockByProperty.floor.units', function ($query) {
+            $query->where('IsRentable', true)
+                ->where('CurrentStatus', true);
+        })
+        ->paginate(10);
+
+        return 
+            new PropertyCollection($properties);
+    }
+
+
+    // public function propertyStructure($id): JsonResponse
+    //     {
+    //         $property = PropertyRegistry::with([
+    //             'getBlockByProperty.floor.units' => function ($query) {
+    //                 $query->where('IsRentable', true)
+    //                     ->where('CurrentStatus', true);
+    //             }
+    //         ])->findOrFail($id);
+
+    //         return new PropertyViewResource($property);
+    //     }
+}

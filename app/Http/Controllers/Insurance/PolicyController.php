@@ -49,7 +49,7 @@ public function index(Request $request)
 public function create()
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
-    $referrals = BancAssuranceReferral::all();
+    $referrals = BancAssuranceReferral::with('customerreferral.thirdParty', 'referredByEmployee')->get();
     $customers = BancassuranceCustomer::all();
     $insurers = InsuranceProvider::all();
     $paymentfrequencys = CodeDetail::where('CodeID','PaymentFrequency')->get();

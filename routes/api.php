@@ -239,6 +239,8 @@ Route::prefix('v1')->group(function () {
 
     require __DIR__ . '/integrations/dms.php';
 
+    require __DIR__ . '/integrations/property.php';
+    
     Route::prefix('inventory')->group(function () {
         Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);
     });

@@ -17,14 +17,13 @@
 
             <form method="POST" action="{{ route('bancassurance.policies.store') }}">
                 @csrf
-
                 <div class="mb-3">
                     <label class="form-label">Referral</label>
                     <select name="ReferralID" id="referral-select" class="form-select form-select-sm">
                         <option value="">-- None --</option>
                         @foreach($referrals as $ref)
-                            <option value="{{ $ref->Id }}" {{ old('ReferralID') == $ref->Id ? 'selected' : '' }}>
-                                Name: {{ $ref->customerreferral->thirdParty->ThirdPartyName ?? 'Customer Name'  }}  &nbsp;&nbsp;&nbsp;&nbsp;  Referral: {{ $ref->referredByEmployee->Name ?? 'Referred By' }}
+                            <option value="{{ $ref->Id }}">
+                                Name: {{ $ref->customerreferral?->thirdParty?->ThirdPartyName ?? 'Unknown Customer' }}  &nbsp;&nbsp;&nbsp;&nbsp;  Referral: {{ $ref->referredByEmployee->Name ?? 'Referred By' }}
                             </option>
                         @endforeach
                     </select>
@@ -153,56 +152,44 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const insurerSelect   = document.getElementById('insurer-select');
-    const productSelect   = document.getElementById('product-select');
-    const customerSelect  = document.getElementById('customer-select');
-    const referralSelect  = document.getElementById('referral-select');
-    const riderSelect     = document.getElementById('rideraddon-select');
+    const customerSelect = document.getElementById('customer-select');
+    const referralSelect = document.getElementById('referral-select');
+    const insurerSelect  = document.getElementById('insurer-select');
+    const productSelect  = document.getElementById('product-select');
+    const riderSelect    = document.getElementById('rideraddon-select');
 
-    const productsRoute = @json(route(
-        'bancassurance.referrals.referrals.products',
-        ['insurerId' => 'INSURER_ID']
-    ));
+    const referralsByCustomerRoute = @json(
+        route('bancassurance.policies.customers.referrals', ['customerId' => 'CUSTOMER_ID'])
+    );
 
-    const referralDefaultsRoute = @json(route(
-        'bancassurance.customers.referral-defaults',
-        ['customerId' => 'CUSTOMER_ID']
-    ));
+    const productsRoute = @json(
+        route('bancassurance.referrals.referrals.products', ['insurerId' => 'INSURER_ID'])
+    );
 
-    const referralsByCustomerRoute = @json(route(
-        'bancassurance.customers.referrals',
-        ['customerId' => 'CUSTOMER_ID']
-    ));
+    const riderAddOnsRoute = @json(
+        route('bancassurance.policies.policy.rideraddons', ['productId' => 'PRODUCT_ID'])
+    );
 
-    const riderAddOnsRoute = @json(route(
-        'bancassurance.policies.policy.rideraddons',
-        ['productId' => 'PRODUCT_ID']
-    ));
-
-    let intendedProductId = null;
-
-    /* -------------------------
-       CUSTOMER CHANGE HANDLER
-    --------------------------*/
+    /* ------------------------------
+       CUSTOMER → REFERRALS
+    -------------------------------*/
     customerSelect.addEventListener('change', function () {
 
         const customerId = this.value;
-
-        referralSelect.innerHTML = '<option>Loading referrals...</option>';
+        referralSelect.innerHTML = '<option>Loading...</option>';
 
         if (!customerId) {
             referralSelect.innerHTML = '<option value="">-- None --</option>';
             return;
         }
 
-        /* Load referrals */
         fetch(referralsByCustomerRoute.replace('CUSTOMER_ID', customerId))
-            .then(r => r.json())
+            .then(res => res.json())
             .then(referrals => {
-                let opts = '<option value="">-- None --</option>';
+                let options = '<option value="">-- None --</option>';
 
                 referrals.forEach(ref => {
-                    opts += `
+                    options += `
                         <option value="${ref.Id}">
                             ${ref.customerreferral?.thirdParty?.ThirdPartyName ?? 'Customer'}
                             — Referred by ${ref.referredByEmployee?.Name ?? 'Staff'}
@@ -210,77 +197,56 @@ document.addEventListener('DOMContentLoaded', function () {
                     `;
                 });
 
-                referralSelect.innerHTML = opts;
-            });
-
-        /* Load defaults (preferred insurer / product) */
-        fetch(referralDefaultsRoute.replace('CUSTOMER_ID', customerId))
-            .then(r => r.json())
-            .then(data => {
-                insurerSelect.value = data.preferredInsurer || '';
-                intendedProductId   = data.product || null;
-                insurerSelect.dispatchEvent(new Event('change'));
+                referralSelect.innerHTML = options;
             });
     });
 
-    /* -------------------------
+    /* ------------------------------
        INSURER → PRODUCTS
-    --------------------------*/
+    -------------------------------*/
     insurerSelect.addEventListener('change', function () {
 
-        const id = this.value;
-
+        const insurerId = this.value;
         productSelect.innerHTML = '<option>Loading...</option>';
-        riderSelect.innerHTML   = '<option value="">-- Select --</option>';
+        riderSelect.innerHTML = '<option value="">-- Select --</option>';
 
-        if (!id) {
+        if (!insurerId) {
             productSelect.innerHTML = '<option value="">-- Select --</option>';
             return;
         }
 
-        fetch(productsRoute.replace('INSURER_ID', id))
-            .then(r => r.json())
+        fetch(productsRoute.replace('INSURER_ID', insurerId))
+            .then(res => res.json())
             .then(products => {
-                let opts = '<option value="">-- Select --</option>';
-
-                products.forEach(p => {
-                    opts += `<option value="${p.Id}">${p.Name}</option>`;
-                });
-
-                productSelect.innerHTML = opts;
-
-                if (intendedProductId) {
-                    productSelect.value = intendedProductId;
-                    productSelect.dispatchEvent(new Event('change'));
-                    intendedProductId = null;
-                }
+                let options = '<option value="">-- Select --</option>';
+                products.forEach(p =>
+                    options += `<option value="${p.Id}">${p.Name}</option>`
+                );
+                productSelect.innerHTML = options;
             });
     });
 
-    /* -------------------------
+    /* ------------------------------
        PRODUCT → RIDERS
-    --------------------------*/
+    -------------------------------*/
     productSelect.addEventListener('change', function () {
 
-        const id = this.value;
+        const productId = this.value;
         riderSelect.innerHTML = '<option>Loading...</option>';
 
-        if (!id) {
+        if (!productId) {
             riderSelect.innerHTML = '<option value="">-- Select --</option>';
             return;
         }
 
-        fetch(riderAddOnsRoute.replace('PRODUCT_ID', id))
-            .then(r => r.json())
+        fetch(riderAddOnsRoute.replace('PRODUCT_ID', productId))
+            .then(res => res.json())
             .then(riders => {
-                riders.sort((a, b) => a.RiderName.localeCompare(b.RiderName));
-
-                let opts = '<option value="">-- Select --</option>';
+                let options = '<option value="">-- Select --</option>';
                 riders.forEach(r =>
-                    opts += `<option value="${r.Id}">${r.RiderName}</option>`
+                    options += `<option value="${r.Id}">${r.RiderName}</option>`
                 );
-
-                riderSelect.innerHTML = opts;
+                riderSelect.innerHTML = options;
             });
     });
 
