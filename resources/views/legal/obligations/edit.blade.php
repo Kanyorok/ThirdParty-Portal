@@ -21,10 +21,18 @@
                 required>{{ old('Description', $obligation->Description) }}</textarea>
         </div>
 
-        <div class="mb-3">
-            <label for="DueDate" class="form-label">Due Date</label>
-            <input type="date" name="DueDate" class="form-control"
-                value="{{ old('DueDate', \Carbon\Carbon::parse($obligation->DueDate)->format('Y-m-d')) }}" required>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="DueDate" class="form-label">Due Date</label>
+                <input type="date" name="DueDate" class="form-control"
+                    value="{{ old('DueDate', \Carbon\Carbon::parse($obligation->DueDate)->format('Y-m-d')) }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="ExpiryDate" class="form-label">Expiry Date</label>
+                <input type="date" name="ExpiryDate" class="form-control"
+                    value="{{ old('ExpiryDate', $obligation->ExpiryDate ? \Carbon\Carbon::parse($obligation->ExpiryDate)->format('Y-m-d') : '') }}">
+            </div>
         </div>
 
         <div class="mb-3">
