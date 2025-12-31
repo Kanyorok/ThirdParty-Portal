@@ -658,13 +658,26 @@ class TenderController extends Controller
         $checkItemTypes = !empty($allowedTypeIds);
 
         // Get items matching category (and optionally type)
-        $otherItemsForThatTender = ItemMasterList::select('Id', 'ItemName', 'Category', 'ItemType')
-            ->whereNull('DeletedOn')
-            ->whereHas('price', function ($q) {
-                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
-            })
-            ->get()
-            ->filter(function ($item) use ($categoryToTopLevel, $tender, $allowedTypeIds, $checkItemTypes) {
+        // If Tender is linked to a Procurement Plan, ONLY show items from that Plan
+        $planId = $tender->ProcurementModeId; // Assuming ProcurementModeId acts as the Plan ID link
+
+        if ($planId) {
+            // Fetch items from the plan
+            $planItems = PlanLineItem::where('PlanID', $planId)
+                ->whereNull('DeletedOn')
+                ->with(['item'])
+                ->get();
+
+            // Get IDs of items already in this tender to exclude them
+            $existingItemIds = $items->pluck('ItemId')->toArray();
+
+            $otherItemsForThatTender = $planItems->filter(function ($planItem) use ($categoryToTopLevel, $tender, $allowedTypeIds, $checkItemTypes, $existingItemIds) {
+                $item = $planItem->item;
+                if (!$item) return false;
+
+                // Exclude already added items
+                if (in_array($item->Id, $existingItemIds)) return false;
+
                 // Check if item's top-level category matches tender's category
                 $itemTopCategory = $categoryToTopLevel[$item->Category] ?? $item->Category;
                 if ($itemTopCategory != $tender->ItemCategoryId) {
@@ -683,18 +696,55 @@ class TenderController extends Controller
                     $allowedTypeIds
                 );
             })
-            ->map(function ($item) {
-                return [
-                    'Id' => $item->Id,
-                    'ItemName' => $item->ItemName,
-                ];
-            })
-            ->sortBy('ItemName')
-            ->values();
+                ->map(function ($planItem) {
+                    $item = $planItem->item;
+                    return [
+                        'Id' => $item->Id,
+                        'ItemName' => $item->ItemName . ' (Plan Ref: ' . $planItem->Id . ')', // Add visual cue
+                    ];
+                })
+                ->sortBy('ItemName')
+                ->values();
+        } else {
+            // Fallback: Fetch ALL items matching category (for tenders without plans)
+            $otherItemsForThatTender = ItemMasterList::select('Id', 'ItemName', 'Category', 'ItemType')
+                ->whereNull('DeletedOn')
+                ->whereHas('price', function ($q) {
+                    $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+                })
+                ->get()
+                ->filter(function ($item) use ($categoryToTopLevel, $tender, $allowedTypeIds, $checkItemTypes) {
+                    // Check if item's top-level category matches tender's category
+                    $itemTopCategory = $categoryToTopLevel[$item->Category] ?? $item->Category;
+                    if ($itemTopCategory != $tender->ItemCategoryId) {
+                        return false;
+                    }
+
+                    // If type checking is disabled (no mappings), allow all items in category
+                    if (!$checkItemTypes) {
+                        return true;
+                    }
+
+                    // Otherwise, check item type
+                    return $this->isItemAllowedForTender(
+                        (int)$item->Id,
+                        (int)$tender->ItemCategoryId,
+                        $allowedTypeIds
+                    );
+                })
+                ->map(function ($item) {
+                    return [
+                        'Id' => $item->Id,
+                        'ItemName' => $item->ItemName,
+                    ];
+                })
+                ->sortBy('ItemName')
+                ->values();
+        }
 
         // Rest of your code remains the same...
         $suppliers = TenderSupplier::where('TenderID', $id)
-            ->with(['supplier.thirdParty'])
+            ->with(['supplier.party'])
             ->get();
 
 
@@ -1669,6 +1719,7 @@ class TenderController extends Controller
     // Validate an item is within tender's top-level category and allowed item types
     // Replace your isItemAllowedForTender method with this debug version:
     // Replace your existing isItemAllowedForTender method with this version
+    // Validate an item is within tender's top-level category and allowed item types
     private function isItemAllowedForTender(int $itemId, int $tenderTopCategoryId, array $allowedTypeIds): bool
     {
         $item = ItemMasterList::select('Id', 'Category', 'ItemType')->find($itemId);
@@ -1678,47 +1729,27 @@ class TenderController extends Controller
             return false;
         }
 
-        // t_Items.ItemType is FK to t_CodeDetails.ID
-        // t_ItemTypes.TypeName is also FK to t_CodeDetails.ID
-        // So we need to find t_ItemTypes record where TypeName = item's ItemType
-        $itemTypeRecord = DB::table('t_ItemTypes')
-            ->where('TypeName', $item->ItemType)
-            ->where('Active', 1)
-            ->first();
+        // t_Items.ItemType is FK to t_ItemTypes.Id (e.g., 9 for Stock)
+        // allowedTypeIds contains t_ItemTypes.Id values allowed for this Tender Category
 
-        if (!$itemTypeRecord) {
-            Log::warning("Item has no valid ItemType mapping", [
-                'item_id' => $itemId,
-                'item_type_code_detail_id' => $item->ItemType
-            ]);
-            return false;
-        }
-
-        //  Normalize both arrays to integers for comparison**
+        $itemTypeId = (int)$item->ItemType;
         $allowedTypeIds = array_map('intval', $allowedTypeIds);
-        $itemTypeRecordId = (int)$itemTypeRecord->Id;
 
         Log::info("Checking item eligibility", [
             'item_id' => $itemId,
-            'item_type_code_detail_id' => $item->ItemType,
-            'item_type_record_id' => $itemTypeRecordId,
-            'allowed_type_record_ids' => $allowedTypeIds
+            'item_type_id' => $itemTypeId,
+            'allowed_type_ids' => $allowedTypeIds
         ]);
 
-        // Check if the ItemType RECORD ID is in the allowed list
-        if (!empty($allowedTypeIds) && !in_array($itemTypeRecordId, $allowedTypeIds, true)) {
+        if (!empty($allowedTypeIds) && !in_array($itemTypeId, $allowedTypeIds, true)) {
             Log::warning("Item rejected: type not allowed", [
                 'item_id' => $itemId,
-                'item_type_record_id' => $itemTypeRecordId,
-                'allowed_type_record_ids' => $allowedTypeIds
+                'item_type_id' => $itemTypeId,
+                'allowed_type_ids' => $allowedTypeIds
             ]);
             return false;
         }
 
-        Log::info("Item ALLOWED for tender", [
-            'item_id' => $itemId,
-            'item_type_record_id' => $itemTypeRecordId
-        ]);
         return true;
     }
 
