@@ -61,7 +61,7 @@ type ApiResponse = {
 async function getRounds(query: Record<string, string | undefined>): Promise<ApiResponse> {
     // Get session for authentication
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.accessToken) {
         console.error("No valid session found for rounds data");
         return {
@@ -71,7 +71,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
             total: 0,
             totalPages: 1,
             sortBy: "startDate",
-            sortOrder: "asc",
+            sortOrder: "desc",
             filters: {}
         };
     }
@@ -81,13 +81,13 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
     const backendUrl = `${EXTERNAL_API_BASE}/api/prequalification/rounds`;
 
     try {
-        const res = await fetch(backendUrl, { 
-            cache: "no-store", 
-            headers: { 
-                Accept: "application/json", 
+        const res = await fetch(backendUrl, {
+            cache: "no-store",
+            headers: {
+                Accept: "application/json",
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${session.accessToken}`,
-            } 
+            }
         });
 
         const backendData = await res.json().catch(() => null);
@@ -101,7 +101,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
                 total: 0,
                 totalPages: 1,
                 sortBy: "startDate",
-                sortOrder: "asc",
+                sortOrder: "desc",
                 filters: {}
             };
         }
@@ -110,7 +110,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
         const page = parseInt(String(query.page || "1"));
         const pageSize = parseInt(String(query.pageSize || "10"));
         const sortBy = String(query.sortBy || "startDate");
-        const sortOrder = String(query.sortOrder || "asc") as "asc" | "desc";
+        const sortOrder = String(query.sortOrder || "desc") as "asc" | "desc";
         const status = String(query.status || "all");
         const q = String(query.q || "");
 
@@ -138,7 +138,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
         // Apply sorting
         rounds.sort((a: any, b: any) => {
             let aValue, bValue;
-            
+
             if (sortBy === "title") {
                 aValue = a.title || "";
                 bValue = b.title || "";
@@ -165,7 +165,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
         const endIndex = startIndex + pageSize;
         const paginatedRounds = rounds.slice(startIndex, endIndex);
 
-    // Return data in expected format
+        // Return data in expected format
         return {
             data: paginatedRounds,
             page,
@@ -185,7 +185,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
             total: 0,
             totalPages: 1,
             sortBy: "startDate",
-            sortOrder: "asc",
+            sortOrder: "desc",
             filters: {}
         };
     }
@@ -230,7 +230,7 @@ export default async function RoundsView({
             const v = (rawStatus ?? r.status)
             status = v === 'O' || v === 'CL' ? v : (v === 'Open' ? 'O' : 'CL')
         }
-    // Map categories with their application status
+        // Map categories with their application status
         const rawCats = (r as unknown as { categories?: ApiCategory[] }).categories || [];
         const categories = rawCats.map((cat) => ({
             category_id: Number(cat.category_id ?? cat.categoryId ?? cat.SupplierCategoryID ?? cat.id),
@@ -248,11 +248,11 @@ export default async function RoundsView({
             rejection_reason: cat.rejection_reason ?? cat.rejectionReason,
         }));
 
-    // Calculate summary from categories
+        // Calculate summary from categories
         const appliedCategories = categories.filter((cat: any) => cat.has_applied);
         const approvedCategories = categories.filter((cat: any) => cat.status === 'APPROVED');
         const rejectedCategories = categories.filter((cat: any) => cat.status === 'REJECTED');
-        const pendingCategories = categories.filter((cat: any) => 
+        const pendingCategories = categories.filter((cat: any) =>
             ['SUBMITTED', 'UNDER_REVIEW'].includes(cat.status)
         );
 
@@ -280,7 +280,7 @@ export default async function RoundsView({
                 approved_categories: approvedCategories.length,
                 rejected_categories: rejectedCategories.length,
                 pending_categories: pendingCategories.length,
-                overall_progress: categories.length > 0 ? 
+                overall_progress: categories.length > 0 ?
                     Math.round(categories.reduce((sum: number, cat) => sum + (Number(cat.progress_percent) || 0), 0) / categories.length) : 0
             } : undefined,
         };
