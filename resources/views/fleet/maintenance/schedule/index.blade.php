@@ -2,6 +2,7 @@
 @section('title', 'Maintenance Schedule')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 @section('content')
     <div class="card p-4 shadow rounded-4">
@@ -64,7 +65,6 @@
                                 @if($statusDesc === 'Scheduled') bg-primary
                                 @elseif($statusDesc === 'Acknowledged') bg-warning
                                 @elseif($statusDesc === 'Completed') bg-success
-
                                 @else bg-secondary
                                 @endif">
                                 {{ $statusDesc }}
@@ -80,24 +80,33 @@
 
                             <td>{{ $schedule->Notes ?? '-' }}</td>
                             <td>
-                                <a href="{{ route('fleet.maintenance_schedule.show', $schedule->Id) }}"
-                                   class="btn btn-sm btn-secondary">Details</a>
-                                <a href="{{ route('fleet.maintenance_schedule.edit', $schedule->Id) }}"
-                                   class="btn btn-sm btn-warning">Edit</a>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ route('fleet.maintenance_schedule.show', $schedule->Id) }}"
+                                       class="btn btn-sm btn-secondary" title="Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('fleet.maintenance_schedule.edit', $schedule->Id) }}"
+                                       class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
 
-                                @if ($schedule->Status)
-                                    <form action="{{ route('fleet.maintenance_schedule.cancel', $schedule->Id) }}"
-                                          method="POST" class="d-inline">
-                                        @csrf
-                                        @method('PUT')
-                                        <button class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Cancel this schedule?')">
-                                            Cancel
+                                    @if ($schedule->Status)
+                                        <form action="{{ route('fleet.maintenance_schedule.cancel', $schedule->Id) }}"
+                                              method="POST" class="d-inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <button class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('Cancel this schedule?')"
+                                                    title="Cancel">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <button class="btn btn-sm btn-secondary" disabled title="Inactive">
+                                            <i class="fas fa-ban"></i>
                                         </button>
-                                    </form>
-                                @else
-                                    <button class="btn btn-sm btn-secondary" disabled>Inactive</button>
-                                @endif
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -109,25 +118,24 @@
                 </table>
             </div>
         </div>
+@endsection
 
-
-        @endsection
-        @section('scripts')
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-            <script>
-                $(document).ready(function () {
-                    @if(!$schedules->isEmpty())
-                    $('#scheduleTable').DataTable({
-                        pageLength: 10,
-                        ordering: true,
-                        searching: true,
-                        lengthChange: true,
-                        language: {
-                            emptyTable: ""
-                        }
-                    });
-                    @endif
-                });
-            </script>
+@section('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            @if(!$schedules->isEmpty())
+            $('#scheduleTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: ""
+                }
+            });
+            @endif
+        });
+    </script>
 @endsection

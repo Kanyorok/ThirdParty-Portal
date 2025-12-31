@@ -65,11 +65,22 @@
 
 
                 <!-- Location -->
-                <div class="col-md-6">
-                    <label for="Location" class="form-label">Location</label>
-                    <input type="text" name="Location" id="Location" class="form-control"
-                           value="{{ old('Location', $schedule->Location) }}" required>
-                </div>
+               <div class="col-md-6">
+                <label for="VendorID" class="form-label">Vendor Name<span class="text-danger">*</span></label>
+                <select name="VendorID" class="form-select @error('VendorID') is-invalid @enderror">
+                    <option value="">Select Vendor</option>
+                    @foreach($vendors as $vendor)
+                    <option value="{{ $vendor->Id }}" 
+                        {{ old('VendorID', $vendor->VendorID ?? '') == $vendor->Id ? 'selected' : '' }}>
+                        {{ $vendor->party->ThirdPartyName ?? 'Unknown Vendor' }}
+                    </option>
+                    @endforeach
+                </select>
+                @error('VendorID')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+                    
 
                 <!-- Notes -->
                 <div class="col-md-12">
