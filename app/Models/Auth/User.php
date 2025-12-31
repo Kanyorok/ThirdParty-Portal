@@ -112,7 +112,7 @@ class User extends Authenticatable
 
     public function hasPermissionTo($permission, $guardName = null): bool
     {
-        if ($this->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) {
+        if ($this->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) {//todo fix this
             return true;
         }
         return $this->getPermissionsViaRoles()->contains('name', $permission);
