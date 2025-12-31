@@ -77,9 +77,13 @@ class TenderInvitationController extends Controller
             }
 
             // Get all supplier IDs for this third party (some have multiple supplier rows)
-            $supplierIds = Supplier::whereHas('thirdParty', function ($query) use ($thirdPartyId) {
-                $query->where('Id', $thirdPartyId);
-            })->pluck('Id');
+            // FIXED: Use direct DB Join to correctly resolve Supplier from ThirdParty via SupplierMaster
+            // Previous code queried SupplierMaster.Id instead of SupplierMaster.ThirdPartyId
+            $supplierIds = DB::table('t_Suppliers')
+                ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+                ->where('t_SupplierMaster.ThirdPartyId', (int)$thirdPartyId)
+                ->whereNull('t_Suppliers.DeletedOn')
+                ->pluck('t_Suppliers.Id');
 
             if ($supplierIds->isEmpty()) {
                 return response()->json([

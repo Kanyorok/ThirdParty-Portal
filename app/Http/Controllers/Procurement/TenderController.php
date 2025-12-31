@@ -2233,13 +2233,35 @@ class TenderController extends Controller
                 ]);
 
                 // Send email invitation
+                // Send email invitation
                 try {
-                    Mail::to($thirdParty->Email)
-                        ->send(new TenderInvitationMail($tender, $validSupplierCategory));
+                    // Refactor: Use CRMEmailService standard
+                    $subject = 'Tender Invitation - ' . $tender->TenderNo . ': ' . $tender->Title;
+
+                    // Render view to string
+                    $body = view('emails.tender-invitation', [
+                        'tender' => $tender,
+                        'supplier' => $validSupplierCategory,
+                        'supplierName' => $validSupplierCategory->thirdParty->ThirdPartyName ?? 'Valued Supplier',
+                        'submissionDeadline' => $tender->SubmissionDeadline,
+                        'portalUrl' => config('app.url') . '/supplier/tenders/' . $tender->Id,
+                    ])->render();
+
+                    // Create and send email via CRMEmailService
+                    $actor = Auth::user() ?? \App\Models\Auth\User::find(1); // Fallback to Admin if system process
+
+                    \App\Services\CRMEmailService::createRaw(
+                        $actor,
+                        $subject,
+                        $body,
+                        [['Name' => $thirdParty->ThirdPartyName, 'Email' => $thirdParty->Email]], // To
+                        'ThirdParty', // Party Type
+                        $thirdParty->Id // Party ID
+                    )->send();
 
                     $invitationsSent++;
 
-                    Log::info("Tender invitation sent to {$thirdParty->ThirdPartyName} ({$thirdParty->Email}) for tender {$tender->TenderNo}");
+                    Log::info("Tender invitation sent via CRMEmailService to {$thirdParty->ThirdPartyName} ({$thirdParty->Email}) for tender {$tender->TenderNo}");
                 } catch (Exception $emailException) {
                     Log::error("Failed to send email to {$thirdParty->Email}: " . $emailException->getMessage());
 
