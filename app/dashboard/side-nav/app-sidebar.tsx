@@ -58,9 +58,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         const user = session.user as any
         const profiles: UserProfile[] = []
-        if (user.isSupplier) profiles.push("Supplier")
-        if (user.isTenant) profiles.push("Tenant")
-        if (user.isCustomer) profiles.push("Customer")
+        if (user.is_supplier) profiles.push("Supplier")
+        if (user.is_tenant) profiles.push("Tenant")
+        if (user.is_customer) profiles.push("Customer")
 
         return profiles.length > 0 ? profiles : ["Supplier"]
     }, [session, status])
@@ -126,24 +126,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     return (
         <Sidebar className="border-r border-border/40 bg-background" {...props}>
-            <SidebarHeader className="p-4">
+            <SidebarHeader className="p-6 space-y-6">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
                             <motion.a
                                 href={DASHBOARD_ROOT_PATH}
                                 whileHover={{ x: 2 }}
-                                className="flex items-center gap-3 px-1"
+                                className="flex items-center gap-4 px-2"
                             >
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/20">
-                                    <Command className="size-5" />
+                                <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30">
+                                    <Command className="size-6" />
                                 </div>
                                 <div className="grid flex-1 text-left leading-tight">
-                                    <span className="truncate font-black uppercase tracking-tighter text-lg">
+                                    <span className="truncate font-black uppercase tracking-tight text-xl">
                                         {CLIENT_APP_NAME_STRING}
                                     </span>
-                                    <span className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-widest uppercase">
-                                        Enterprise
+                                    <span className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-widest uppercase mt-0.5">
+                                        Enterprise Portal
                                     </span>
                                 </div>
                             </motion.a>
@@ -152,46 +152,71 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenu>
 
                 {profilesFromStore.length > 1 && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <SidebarMenuButton size="sm" className="mt-4 h-10 border border-border/50 bg-muted/30 hover:bg-muted/50 transition-all">
-                                <User className="size-4 text-primary" />
-                                <span className="flex-1 text-left text-[11px] font-bold uppercase tracking-tight ml-2">
-                                    {userProfile} Profile
-                                </span>
-                                <ChevronsUpDown className="size-3 text-muted-foreground" />
-                            </SidebarMenuButton>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56" align="start" side="bottom">
-                            <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Switch Identity</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {profilesFromStore.map(profile => (
-                                <DropdownMenuItem
-                                    key={profile}
-                                    onClick={() => setActiveProfile(profile)}
-                                    className={cn(
-                                        "flex items-center justify-between font-bold text-xs uppercase tracking-tight py-2",
-                                        activeProfile === profile && "bg-primary/10 text-primary"
-                                    )}
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                    >
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <SidebarMenuButton
+                                    size="sm"
+                                    className="h-12 border-2 border-border/50 bg-gradient-to-r from-muted/30 to-muted/20 hover:from-muted/50 hover:to-muted/40 hover:border-border transition-all duration-300 rounded-xl shadow-sm hover:shadow-md"
                                 >
-                                    {profile}
-                                    {activeProfile === profile && <div className="size-1.5 rounded-full bg-primary" />}
-                                </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                    <User className="size-4 text-primary" />
+                                    <span className="flex-1 text-left text-xs font-bold uppercase tracking-tight ml-3">
+                                        {userProfile} Profile
+                                    </span>
+                                    <ChevronsUpDown className="size-4 text-muted-foreground" />
+                                </SidebarMenuButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-64 p-2 rounded-xl shadow-xl" align="start" side="bottom" sideOffset={8}>
+                                <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                    Switch Identity
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="my-2" />
+                                {profilesFromStore.map((profile, index) => (
+                                    <motion.div
+                                        key={profile}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                    >
+                                        <DropdownMenuItem
+                                            onClick={() => setActiveProfile(profile)}
+                                            className={cn(
+                                                "flex items-center justify-between font-bold text-sm uppercase tracking-tight py-3 px-3 my-1 rounded-lg cursor-pointer transition-all duration-200",
+                                                activeProfile === profile
+                                                    ? "bg-primary/10 text-primary border-2 border-primary/20 shadow-sm"
+                                                    : "hover:bg-muted/50 border-2 border-transparent"
+                                            )}
+                                        >
+                                            {profile}
+                                            {activeProfile === profile && (
+                                                <motion.div
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    className="size-2 rounded-full bg-primary shadow-sm"
+                                                />
+                                            )}
+                                        </DropdownMenuItem>
+                                    </motion.div>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </motion.div>
                 )}
             </SidebarHeader>
 
-            <SidebarContent className="scrollbar-none">
+            <SidebarContent className="scrollbar-none px-3 py-4">
                 <NavMain items={mainNavigationSections} />
             </SidebarContent>
 
-            <SidebarFooter className="p-4 border-t border-border/40">
+            <SidebarFooter className="p-6 border-t border-border/40 space-y-4">
                 <NavSecondary items={bottomNavigationItems} />
-                <div className="mt-4 px-2 flex items-center justify-between opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
+                <div className="mt-6 px-3 py-4 flex items-center justify-between opacity-40 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500 bg-muted/30 rounded-lg border border-border/40">
                     <span className="text-[10px] font-black tracking-widest uppercase">&copy; {currentYear}</span>
-                    <span className="text-[10px] font-black tracking-widest bg-foreground text-background px-1.5 py-0.5 rounded">V1.0.0</span>
+                    <span className="text-[10px] font-black tracking-widest bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-2 py-1 rounded shadow-sm">V1.0.0</span>
                 </div>
             </SidebarFooter>
         </Sidebar>

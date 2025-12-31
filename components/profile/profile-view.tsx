@@ -226,7 +226,7 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
 
           <div className="border border-border/50 rounded-2xl p-6 bg-card">
             <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-6">
-              Portal Roles
+              Profiles
             </h2>
 
             <div className="space-y-3">
@@ -249,7 +249,7 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
                 />
               )}
               {!profile.isSupplier && !profile.isTenant && !profile.isCustomer && (
-                <p className="text-sm text-muted-foreground">No roles assigned</p>
+                <p className="text-sm text-muted-foreground">No profiles assigned</p>
               )}
             </div>
           </div>

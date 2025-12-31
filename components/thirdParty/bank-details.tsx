@@ -141,13 +141,13 @@ export default function BankDetailsForm() {
 
     const openInlineFormForEdit = (detail?: BankDetail) => {
         setEditingBankDetail(detail || null);
-        const currencyId = detail?.currencyId ?? currencies[0]?.id ?? 1;
+        const currencyId = detail?.currencyId ?? (currencies[0]?.id || 1);
 
         form.reset({
             bankName: detail?.bankName || '',
             branch: detail?.branch || '',
             accountNumber: detail?.accountNumber || '',
-            currencyId,
+            currencyId: Number(detail?.currencyId ?? currencies[0]?.id ?? 1),
             swiftCode: detail?.swiftCode || '',
         });
 
@@ -170,6 +170,8 @@ export default function BankDetailsForm() {
         const method = editingBankDetail ? 'PUT' : 'POST';
         const url = editingBankDetail ? `/api/third-parties-bank-details/${editingBankDetail.id}` : '/api/third-parties-bank-details';
 
+        console.log('Submitting bank detail:', { method, url, payload });
+
         toast.promise(
             (async () => {
                 const r = await fetch(url, {
@@ -182,7 +184,14 @@ export default function BankDetailsForm() {
                 });
 
                 const res = await r.json();
-                if (!r.ok) throw new Error(res.message);
+                console.log('Response:', { status: r.status, data: res });
+
+                if (!r.ok) {
+                    const errorMsg = res.message || res.errors
+                        ? Object.values(res.errors).flat().join(', ')
+                        : 'Failed to save';
+                    throw new Error(errorMsg);
+                }
 
                 await fetchBankDetails();
                 closeInlineForm();
@@ -191,7 +200,7 @@ export default function BankDetailsForm() {
             {
                 loading: editingBankDetail ? 'Updating...' : 'Saving...',
                 success: (v) => v,
-                error: (e) => e.message,
+                error: (e) => e.message || 'An error occurred',
             }
         );
     };

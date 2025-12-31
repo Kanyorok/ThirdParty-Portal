@@ -16,7 +16,6 @@ import {
 } from "@/components/common/form"
 import { useProfile } from "@/hooks/use-profile"
 import {
-  Loader2,
   Building2,
   MapPin,
   Globe,
@@ -26,8 +25,11 @@ import {
   CreditCard,
   CheckCircle2,
   Save,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
+import { motion, Variants } from "framer-motion"
+import { Spinner } from "@/components/common/spinner"
 
 const profileFormSchema = z.object({
   ThirdPartyName: z.string().min(2, "Company name must be at least 2 characters"),
@@ -38,6 +40,7 @@ const profileFormSchema = z.object({
   PhysicalAddress: z.string().optional().nullable(),
   RegistrationNumber: z.string().optional().nullable(),
   TaxPIN: z.string().optional().nullable(),
+  BusinessType: z.string().optional().nullable(),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -45,6 +48,23 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 interface ProfileEditFormProps {
   onCancel?: () => void
   onSuccess?: () => void
+}
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06 }
+  }
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 450, damping: 32 }
+  }
 }
 
 export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
@@ -61,27 +81,34 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
       PhysicalAddress: thirdPartyDetails?.physicalAddress || "",
       RegistrationNumber: thirdPartyDetails?.registrationNumber || "",
       TaxPIN: thirdPartyDetails?.taxPIN || "",
+      BusinessType: thirdPartyDetails?.businessType || "",
     },
   })
 
   const onSubmit = async (data: ProfileFormValues) => {
-    try {
-      const cleanedData = Object.fromEntries(
-        Object.entries(data).map(([k, v]) => [k, v === "" ? null : v])
-      )
-      await updateProfile(cleanedData)
-      toast.success("Profile updated successfully")
-      onSuccess?.()
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to update profile")
-    }
+    const cleanedData = Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, v === "" ? null : v])
+    )
+
+    toast.promise(
+      (async () => {
+        await updateProfile(cleanedData)
+        onSuccess?.()
+        return 'Profile updated successfully'
+      })(),
+      {
+        loading: 'Updating profile...',
+        success: (msg) => msg,
+        error: (e) => e?.message || 'Failed to update profile',
+      }
+    )
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-[500px] flex items-center justify-center">
+      <div className="flex justify-center items-center h-96">
         <div className="text-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+          <Spinner className="animate-spin h-8 w-8 text-primary mx-auto" />
           <p className="text-sm text-muted-foreground">Loading profile data...</p>
         </div>
       </div>
@@ -89,317 +116,275 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Header */}
-        <div className="bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border border-border/50 rounded-2xl p-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">Edit Profile</h1>
-              <p className="text-muted-foreground">
-                Update your business information and contact details
-              </p>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="w-full space-y-4"
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Header */}
+          <motion.div variants={itemVariants} className="flex items-center justify-between pb-2 border-b">
+            <div className="space-y-1">
+              <h2 className="text-xl font-bold">Edit Profile</h2>
+              <p className="text-sm text-muted-foreground">Update your business information and contact details</p>
             </div>
-            <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={onCancel}
                 disabled={isUpdating}
-                className="flex-1 md:flex-none rounded-xl px-6 h-11 font-semibold border-2"
               >
+                <X className="h-3.5 w-3.5 mr-1" />
                 Cancel
               </Button>
               <Button
                 type="submit"
+                size="sm"
                 disabled={isUpdating}
-                className="flex-1 md:flex-none rounded-xl px-8 h-11 font-semibold"
               >
                 {isUpdating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
+                  <Spinner className="animate-spin h-3.5 w-3.5 mr-1" />
                 ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </>
+                  <Save className="h-3.5 w-3.5 mr-1" />
                 )}
+                Save Changes
               </Button>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        <div className="border border-border/50 rounded-2xl p-8 bg-card space-y-8">
-          <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-primary" />
+          {/* Business Information Section */}
+          <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+              <Building2 className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold">Business Information</h3>
             </div>
-            <div>
-              <h2 className="text-lg font-bold">Business Information</h2>
-              <p className="text-sm text-muted-foreground">
-                Official company registration details
-              </p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="ThirdPartyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Legal Company Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="Enter legal company name"
+                        className="h-9 text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="TradingName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Trading Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="Trading name (optional)"
+                        className="h-9 text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="RegistrationNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Registration Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="e.g., CR123456"
+                        className="h-9 text-sm font-mono"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="TaxPIN"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Tax PIN / VAT Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="e.g., P051234567X"
+                        className="h-9 text-sm font-mono"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="BusinessType"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel className="text-xs">Business Type</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="e.g., Limited Company, Sole Proprietorship"
+                        className="h-9 text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </motion.div>
+
+          {/* Contact Information Section */}
+          <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+              <Mail className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold">Contact Information</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="Email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Corporate Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        type="email"
+                        placeholder="contact@company.com"
+                        className="h-9 text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="Phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Phone Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        type="tel"
+                        placeholder="+254 700 000 000"
+                        className="h-9 text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="Website"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel className="text-xs">Website URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        type="url"
+                        placeholder="https://www.yourcompany.com"
+                        className="h-9 text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </motion.div>
+
+          {/* Physical Location Section */}
+          <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+              <MapPin className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold">Physical Location</h3>
+            </div>
+
             <FormField
               control={form.control}
-              name="ThirdPartyName"
+              name="PhysicalAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-primary/60" />
-                    Legal Company Name
-                  </FormLabel>
+                  <FormLabel className="text-xs">Full Physical Address</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       value={field.value || ""}
-                      placeholder="Enter legal company name"
-                      className="h-11 rounded-xl border-2 focus-visible:ring-1"
+                      placeholder="Building, Street, City, Country"
+                      className="h-9 text-sm"
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
+          </motion.div>
 
-            <FormField
-              control={form.control}
-              name="TradingName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-semibold">
-                    Trading Name
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value || ""}
-                      placeholder="Enter trading name (optional)"
-                      className="h-11 rounded-xl border-2 focus-visible:ring-1"
-                    />
-                  </FormControl>
-                  <FormDescription className="text-xs">
-                    The name your business operates under
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="RegistrationNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                    <Hash className="w-4 h-4 text-primary/60" />
-                    Registration Number
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value || ""}
-                      placeholder="Enter registration number"
-                      className="h-11 rounded-xl border-2 focus-visible:ring-1"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="TaxPIN"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-primary/60" />
-                    Tax PIN / VAT Number
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value || ""}
-                      placeholder="Enter tax PIN or VAT number"
-                      className="h-11 rounded-xl border-2 focus-visible:ring-1"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        {/* Contact Information Section */}
-        <div className="border border-border/50 rounded-2xl p-8 bg-card space-y-8">
-          <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Mail className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold">Contact Information</h2>
-              <p className="text-sm text-muted-foreground">
-                Primary communication channels
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="Email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-primary/60" />
-                    Corporate Email
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value || ""}
-                      type="email"
-                      placeholder="contact@company.com"
-                      className="h-11 rounded-xl border-2 focus-visible:ring-1"
-                    />
-                  </FormControl>
-                  <FormDescription className="text-xs">
-                    Primary email for business communications
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="Phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-primary/60" />
-                    Phone Number
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value || ""}
-                      type="tel"
-                      placeholder="+254 700 000 000"
-                      className="h-11 rounded-xl border-2 focus-visible:ring-1"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="Website"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-primary/60" />
-                    Website URL
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value || ""}
-                      type="url"
-                      placeholder="https://www.yourcompany.com"
-                      className="h-11 rounded-xl border-2 focus-visible:ring-1"
-                    />
-                  </FormControl>
-                  <FormDescription className="text-xs">
-                    Your company's official website
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        <div className="border border-border/50 rounded-2xl p-8 bg-card space-y-8">
-          <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold">Physical Location</h2>
-              <p className="text-sm text-muted-foreground">
-                Your business headquarters address
-              </p>
-            </div>
-          </div>
-
-          <FormField
-            control={form.control}
-            name="PhysicalAddress"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary/60" />
-                  Full Physical Address
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    value={field.value || ""}
-                    placeholder="Building, Street, City, Country"
-                    className="h-11 rounded-xl border-2 focus-visible:ring-1"
-                  />
-                </FormControl>
-                <FormDescription className="text-xs">
-                  Complete address including building, street, city, and country
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-6 bg-muted/30 rounded-2xl border border-border/50">
-          <div className="flex items-center gap-3">
+          {/* Footer Actions */}
+          <motion.div variants={itemVariants} className="flex justify-end gap-2 pt-2 border-t">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
+              size="sm"
               onClick={onCancel}
               disabled={isUpdating}
-              className="rounded-xl px-6 h-11 font-semibold"
             >
+              <X className="h-3.5 w-3.5 mr-1" />
               Discard Changes
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isUpdating}
-              size="lg"
-              className="rounded-xl px-10 h-11 font-semibold"
             >
               {isUpdating ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Updating...
-                </>
+                <Spinner className="animate-spin h-3.5 w-3.5 mr-1" />
               ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Save Profile
-                </>
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
               )}
+              Save Profile
             </Button>
-          </div>
-        </div>
-      </form>
-    </Form>
+          </motion.div>
+        </form>
+      </Form>
+    </motion.div>
   )
 }
