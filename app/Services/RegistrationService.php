@@ -4,7 +4,8 @@ namespace App\Services;
 
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Models\ThirdParty\SupplierMaster;
+use App\Services\ThirdParties\SupplierService;
+use App\Services\ThirdParties\TenantService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -37,65 +38,72 @@ class RegistrationService
                 'Website'            => $data['Website'] ?? null,
                 'Email'              => $user->Email,
                 'Phone'              => $user->Phone,
-                'Status'             => $data['Status'] ?? 1,
-                'CreatedBy'          => $user->Id,
+                'Status'             => 1,
+                // Use lowercase ->id if that is your DB standard, or check your model
+                'CreatedBy'          => $user->id ?? $user->Id,
             ]);
 
-            $typeMap = ['tenant' => 4, 'supplier' => 5, 'customer' => 6];
-            $accountType = strtolower($data['accountType'] ?? 'supplier');
-            $typeId = $typeMap[$accountType] ?? null;
+            $accountType = $data['accountType'] ?? 'supplier';
+            $this->attachAccountType($thirdParty, $accountType, $user, $data);
 
-            if ($accountType === 'supplier') {
-                $supplier = SupplierMaster::create([
-                    'ThirdPartyId'   => $thirdParty->Id,
-                    'SupplierID'     => $this->generateSupplierCode(),
-                    'ApprovalStatus' => 1,
-                    'IsPrequalified' => 0,
-                    'CreatedBy'      => $user->Id,
-                ]);
+            $user->update([
+                'ThirdPartyId' => $thirdParty->id ?? $thirdParty->Id,
+                'ModifiedBy'   => $user->id ?? $user->Id
+            ]);
 
-                if ($typeId) {
-                    $thirdParty->types()->attach($typeId, [
-                        'PartyType' => 'SupplierMasterId',
-                        'PartyID'   => $supplier->Id,
-                        'CreatedBy' => $user->Id,
-                        'CreatedOn' => now()
-                    ]);
-                }
+            return $thirdParty->fresh(['types', 'businessType']);
+        });
+    }
+
+    protected function attachAccountType(ThirdParties $thirdParty, string $accountType, ThirdPartyUser $user, array $data): void
+    {
+        switch ($accountType) {
+            case 'supplier':
+                SupplierService::createFromParty($thirdParty, $user);
 
                 if (!empty($data['supplierCategories'])) {
                     $thirdParty->categories()->sync($data['supplierCategories']);
                 }
-            } elseif ($typeId) {
-                $thirdParty->types()->attach($typeId, [
-                    'PartyType' => 'ThirdPartyId',
-                    'PartyID'   => $thirdParty->Id,
-                    'CreatedBy' => $user->Id,
-                    'CreatedOn' => now()
-                ]);
-            }
+                break;
 
-            $user->update([
-                'ThirdPartyId' => $thirdParty->Id,
-                'ModifiedBy'   => $user->Id
-            ]);
+            case 'tenant':
+                TenantService::createFromParty($thirdParty, $user);
 
-            return $thirdParty;
-        });
+                if (!empty($data['tenantRemarks'])) {
+                    $thirdParty->tenantProfile()->updateOrCreate(
+                        ['ThirdPartyId' => $thirdParty->Id],
+                        [
+                            'Remarks' => $data['tenantRemarks'],
+                            'ModifiedBy' => $user->Id,
+                        ]
+                    );
+                }
+                break;
+
+            case 'customer':
+                $this->attachCustomerType($thirdParty, $user, $data);
+                break;
+        }
     }
 
-    private function generateSupplierCode(): string
+    protected function attachCustomerType(ThirdParties $thirdParty, ThirdPartyUser $user, array $data): void
     {
-        $year = date('Y');
-        $latest = SupplierMaster::where('SupplierID', 'like', "SUP-$year-%")
-            ->orderBy('Id', 'desc')
-            ->first();
+        $thirdParty->types()->syncWithoutDetaching([6 => [
+            'PartyType' => 'ThirdPartyId',
+            'PartyID'   => $thirdParty->Id,
+            'CreatedBy' => $user->Id,
+            'CreatedOn' => now()
+        ]]);
 
-        $sequence = 1;
-        if ($latest && preg_match('/-(\d+)$/', $latest->SupplierID, $matches)) {
-            $sequence = ((int) $matches[1]) + 1;
-        }
-
-        return "SUP-$year-" . str_pad((string)$sequence, 4, '0', STR_PAD_LEFT);
+        $thirdParty->customerProfile()->updateOrCreate(
+            ['ThirdPartyId' => $thirdParty->Id],
+            [
+                'Gender' => $data['Gender'] ?? null,
+                'MaritalStatus' => $data['MaritalStatus'] ?? null,
+                'Occupation' => $data['Occupation'] ?? null,
+                'CreatedBy' => $user->Id,
+                'ModifiedBy' => $user->Id,
+            ]
+        );
     }
 }

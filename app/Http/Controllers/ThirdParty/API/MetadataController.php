@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\ThirdParty;
+namespace App\Http\Controllers\ThirdParty\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Core\Country;
@@ -20,6 +20,7 @@ class MetadataController extends Controller
                 return [
                     'id' => $country->id,
                     'name' => $country->name,
+                    'code' => $country->CountryCode,
                     'flag' => $this->getFlagEmoji($country->CountryCode)
                 ];
             });
@@ -30,6 +31,17 @@ class MetadataController extends Controller
     public function getBusinessTypes(): JsonResponse
     {
         $types = CodeDetail::where('CodeID', 'BusinessType')
+            ->select('ID as id', 'Description as name', 'Value as value')
+            ->whereNull('DeletedOn')
+            ->orderBy('Description')
+            ->get();
+
+        return response()->json(['status' => 'success', 'data' => $types]);
+    }
+
+    public function getTenantTypes(): JsonResponse
+    {
+        $types = CodeDetail::where('CodeID', 'TenantType')
             ->select('ID as id', 'Description as name')
             ->whereNull('DeletedOn')
             ->orderBy('Description')
@@ -60,5 +72,31 @@ class MetadataController extends Controller
             ->get();
 
         return response()->json(['success' => true, 'data' => $categories]);
+    }
+
+    public function getLocalities(string $countryId): JsonResponse
+    {
+        $localities = DB::table('t_Localities')
+            ->where('CountryId', $countryId)
+            ->whereNull('DeletedOn')
+            ->select(
+                'ID as id',
+                'Name as name'
+            )
+            ->orderBy('Name', 'asc')
+            ->get();
+
+        return response()->json(['status' => 'success', 'data' => $localities]);
+    }
+
+    public function getCodeDetails(string $group): JsonResponse
+    {
+        $details = CodeDetail::where('CodeID', $group)
+            ->select('ID as id', 'Description as name', 'Value as value')
+            ->whereNull('DeletedOn')
+            ->orderBy('Description')
+            ->get();
+
+        return response()->json(['status' => 'success', 'data' => $details]);
     }
 }

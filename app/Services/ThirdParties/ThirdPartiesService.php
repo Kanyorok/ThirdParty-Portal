@@ -20,9 +20,7 @@ use Illuminate\Support\Collection;
 
 abstract class ThirdPartiesService
 {
-    public function __construct(public ThirdParties $party)
-    {
-    }
+    public function __construct(public ?ThirdParties $party) {}
 
     abstract public static function getType(): ThirdPartyType;
 
@@ -43,20 +41,26 @@ abstract class ThirdPartiesService
         return $partyTypes;
     }
 
-    public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User $actor): static
+    public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User $actor, ?string $password = null, bool $sendVerification = true): static
     {
         $user = ThirdPartyUser::create([
             'FirstName' => $firstName,
             'LastName' => $lastName,
             'Email' => $email,
             'Phone' => $phone,
-            'Gender' => $gender->ID,
+            // 'Gender' => $gender->ID,
+            'Gender' => $gender->Id,
             'ThirdPartyId' => $this->party->Id,
-            'Password' => 'NON SET',
-            'IsActive' => true,
+            'Password' => $password ? \Illuminate\Support\Facades\Hash::make($password) : 'NON SET',
+            'IsActive' => $password ? true : false, // Only activate if password is set
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
+
+        // Send email verification notification if password is set
+        if ($password && $sendVerification) {
+            $user->sendEmailVerificationNotification();
+        }
 
         activity()->causedBy($actor)->performedOn($user)->event('create')->log("Created user {$user->FirstName} {$user->LastName} to thirdparty {$this->party->ThirdPartyName}");
         return $this;
@@ -66,10 +70,21 @@ abstract class ThirdPartiesService
      * @throws ErroredException
      */
     public static function create(
-        string  $name, ?string $tradingName, CodeDetail $businessType, string $registrationNumber, string $taxPIN, ?string $vatNumber, Locality $locationID,
-        ?string $physicalAddress, ?string $email, ?string $phone, ?string $website, ?CodeDetail $status, ?array $extra, User $actor
-    ): mixed
-    {
+        string  $name,
+        ?string $tradingName,
+        CodeDetail $businessType,
+        string $registrationNumber,
+        string $taxPIN,
+        ?string $vatNumber,
+        Locality $locationID,
+        ?string $physicalAddress,
+        ?string $email,
+        ?string $phone,
+        ?string $website,
+        ?CodeDetail $status,
+        ?array $extra,
+        User $actor
+    ): mixed {
         $party = ThirdParties::create([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
@@ -141,17 +156,18 @@ abstract class ThirdPartiesService
         return $this;
     }
 
-    final protected function addType(ThirdPartyType $type, string $partyType, string|int $partyId, User $actor): static
+    final protected function addType(ThirdPartyType $type, string $partyType, string|int $partyId, User|ThirdPartyUser $actor): static
     {
+        $userId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
         ThirdPartyTypeTypes::create([
             'TypeId' => $type->TypeId,
             'ThirdPartyId' => $this->party->Id,
             'PartyType' => $partyType,
             'PartyID' => $partyId,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'CreatedBy' => $userId,
+            'ModifiedBy' => $userId,
         ]);
         return $this;
     }
 }
-

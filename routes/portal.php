@@ -2,16 +2,15 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ThirdParty\ThirdPartyAuthController;
-use App\Http\Controllers\ThirdParty\SupplierRegistrationController;
+use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
+use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
+use App\Http\Controllers\ThirdParty\API\ProfileController;
 use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
-use App\Http\Controllers\ThirdParty\MetadataController;
-use App\Http\Controllers\ThirdParty\ThirdPartyProfileController;
+use App\Http\Controllers\ThirdParty\API\MetadataController;
+use App\Http\Controllers\Auth\NewPasswordController;
 
 Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
-
-    // Public Routes
-    Route::post('register', SupplierRegistrationController::class)
+    Route::post('register', [NewThirdPartyController::class, 'store'])
         ->name('register')
         ->middleware(['throttle:5,1']);
 
@@ -22,46 +21,61 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::get('metadata/countries', [MetadataController::class, 'getCountries']);
     Route::get('metadata/business-types', [MetadataController::class, 'getBusinessTypes']);
     Route::get('metadata/supplier-categories', [MetadataController::class, 'getSupplierCategories']);
+    Route::get('metadata/tenant-types', [MetadataController::class, 'getTenantTypes']);
+    Route::get('metadata/localities/{countryId}', [MetadataController::class, 'getLocalities']);
+    Route::get('metadata/code-details/{group}', [MetadataController::class, 'getCodeDetails']);
+
+    Route::post('password/forgot', [NewPasswordController::class, 'forgotPassword'])->name('password.forgot');
+    Route::post('password/reset', [NewPasswordController::class, 'resetPassword'])->name('password.reset');
 
     Route::get('email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verify'])
         ->name('verification.verify')
         ->middleware(['signed', 'throttle:6,1']);
 
-    // Authenticated Routes
-    Route::middleware(['auth:sanctum'])->group(function () {
+    Route::controller(ThirdPartyAuthController::class)->middleware(['auth.thirdparty'])->group(function () {
+        Route::post('logout', 'logout')->name('logout');
+        Route::post('me', 'me')->name('me');
+        Route::post('email/verification-notification', 'resendVerificationEmail')
+            ->name('verification.send')
+            ->middleware(['throttle:3,1']);
+    });
 
-        // 1. Profile Completion (Allow before email verification)
-        Route::post('complete-profile', [SupplierRegistrationController::class, 'completeProfile'])
-            ->name('complete_profile');
+    // Profile management routes
+    Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->middleware(['auth.thirdparty'])->group(function () {
+        // Base company profile
+        Route::get('/', 'show')->name('show');
+        Route::put('/', 'updateProfile')->name('update');
 
-        // 2. Auth Management
-        Route::controller(ThirdPartyAuthController::class)->group(function () {
-            Route::post('logout', 'logout')->name('logout');
-            Route::post('me', 'me')->name('me');
-            Route::post('email/verification-notification', 'resendVerificationEmail')
-                ->name('verification.send')
-                ->middleware(['throttle:3,1']);
-        });
+        // Get available profiles for user
+        Route::get('/available', 'getAvailableProfiles')->name('available');
 
-        // 3. Verified-Only Routes
-        Route::middleware(['verified'])->group(function () {
-            Route::patch('profile', [ThirdPartyProfileController::class, 'update'])
-                ->name('profile.update');
+        // Supplier profile
+        Route::get('/supplier', 'getSupplierProfile')->name('supplier.show');
+        Route::put('/supplier', 'updateSupplierProfile')->name('supplier.update');
 
-            Route::get('validate-token', function (Request $request) {
-                $user = $request->user()->load([
-                    'thirdParty.types',
-                    'thirdParty.status',
-                    'thirdParty.businessType',
-                    'thirdParty.supplierMaster',
-                    'thirdParty.supplierMaster.status'
-                ]);
+        // Tenant profile
+        Route::get('/tenant', 'getTenantProfile')->name('tenant.show');
+        Route::put('/tenant', 'updateTenantProfile')->name('tenant.update');
 
-                return response()->json([
-                    'valid' => true,
-                    'user' => new ThirdPartyUserResource($user),
-                ]);
-            })->name('validate_token');
-        });
+        // Customer profile
+        Route::get('/customer', 'getCustomerProfile')->name('customer.show');
+        Route::put('/customer', 'updateCustomerProfile')->name('customer.update');
+    });
+
+    Route::middleware(['verified'])->group(function () {
+        Route::get('validate-token', function (Request $request) {
+            $user = $request->user()->load([
+                'thirdParty.types',
+                'thirdParty.status',
+                'thirdParty.businessType',
+                'thirdParty.supplierMaster',
+                'thirdParty.supplierMaster.status'
+            ]);
+
+            return response()->json([
+                'valid' => true,
+                'user' => new ThirdPartyUserResource($user),
+            ]);
+        })->name('validate_token');
     });
 });

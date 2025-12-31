@@ -60,6 +60,7 @@ use App\Http\Controllers\Procurement\RFQSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\RFQSettingController;
+use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
 use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;

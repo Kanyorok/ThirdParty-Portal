@@ -24,7 +24,7 @@ class ThirdPartyResource extends JsonResource
             ],
             'isPrequalified' => (bool) ($this->supplierMaster?->IsPrequalified ?? false),
             'supplierId'     => $this->supplierMaster?->SupplierID,
-            'approvalStatus' => $this->supplierMaster?->status?->CodeDetailsName ?? $this->status?->CodeDetailsName,
+            'approvalStatus' => $this->supplierMaster?->ApprovalStatus,
             'types' => $this->whenLoaded('types', function () {
                 return $this->types->map(fn($t) => [
                     'id'    => $t->Id,

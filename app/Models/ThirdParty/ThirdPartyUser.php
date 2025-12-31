@@ -2,7 +2,7 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Enums\Employee\GenderEnum;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Notifications\ThirdParty\VerifyThirdPartyEmail;
 use Illuminate\Auth\MustVerifyEmail;
@@ -61,7 +61,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
         'Password' => 'hashed',
-        'Gender' => GenderEnum::class,
+        // 'Gender' => GenderEnum::class,
     ];
 
     protected static function boot(): void
@@ -196,5 +196,10 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
     public function getMorphClass(): string
     {
         return 'ThirdPartyUser';
+    }
+
+    public function genderDetail(): BelongsTo
+    {
+        return $this->belongsTo(CodeDetail::class, 'Gender', 'Id');
     }
 }

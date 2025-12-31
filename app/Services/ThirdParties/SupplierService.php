@@ -5,6 +5,7 @@ namespace App\Services\ThirdParties;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
@@ -13,12 +14,19 @@ use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
 
 class SupplierService extends ThirdPartiesService
 {
     public function __construct(public SupplierMaster $supplier)
     {
-        parent::__construct($supplier->party);
+        // Load party relationship if not already loaded
+        if (!$supplier->relationLoaded('party')) {
+            $supplier->load('party');
+        }
+
+        // Pass party to parent even if null (defensive programming)
+        parent::__construct($supplier->party ?? null);
     }
 
     public static function getType(): ThirdPartyType
@@ -54,7 +62,7 @@ class SupplierService extends ThirdPartiesService
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
-        User $actor
+        User|ThirdPartyUser $actor
     ): self {
         return self::createFromParty(
             party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor),
@@ -62,7 +70,7 @@ class SupplierService extends ThirdPartiesService
         );
     }
 
-    public static function createFromParty(ThirdParties $party, User $actor): self
+    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $actor, UploadedFile $document = null): self
     {
         $supplier = SupplierMaster::create([
             'ThirdPartyId' => $party->Id,
@@ -70,8 +78,8 @@ class SupplierService extends ThirdPartiesService
             'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Pending,
             'IsPrequalified' => false,
             'Extra' => null,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
         activity()->causedBy($actor)->performedOn($supplier)->event('create')->log("Added Supplier {$supplier->SupplierID} to thirdparty {$party->ThirdPartyName}.");
         $service = new self($supplier);

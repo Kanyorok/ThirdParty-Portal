@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\ThirdParty;
+namespace App\Http\Requests\ThirdParty\Api;
 
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
@@ -36,7 +36,10 @@ class NewThirdPartyRequest extends FormRequest
             'VATNumber' => ['nullable', 'string', 'max:200'],
 
             'Email' => [
-                'nullable', Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(), 'max:250',
+                'nullable',
+                Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(),
+                Rule::unique('t_ThirdParties', 'Email')->whereNull('DeletedOn'),
+                'max:250',
             ],
             'Phone' => ['required', (new Phone)->countryField('Country')],
             'PhysicalAddress' => ['nullable', 'string', 'max:200'],
@@ -45,9 +48,23 @@ class NewThirdPartyRequest extends FormRequest
 
             'user_FirstName' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
             'user_LastName' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
-            'user_Email' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
+            'user_Email' => [
+                'nullable',
+                Rule::requiredIf($this->boolean('createUser')),
+                Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(),
+                Rule::unique('t_ThirdPartyUsers', 'Email')->whereNull('DeletedOn'),
+                'max:200'
+            ],
             'user_Phone' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
             'user_Gender' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
+            'user_Password' => [
+                'nullable',
+                Rule::requiredIf($this->boolean('createUser')),
+                'string',
+                'min:8',
+                'confirmed'
+            ],
+            'user_Password_confirmation' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string'],
 
             'customer_DateOfBirth' => [Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'date'],
             'customer_Gender' => [Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
@@ -79,10 +96,14 @@ class NewThirdPartyRequest extends FormRequest
     public function getGender(string $field): CodeDetail
     {
         $gender = CodeDetail::query()->where('CodeID', 'Gender')->where('Value', $this->validated($field))->first();
-        if ($gender instanceof CodeDetail) {
-            return $gender;
-        }
-        throw ValidationException::withMessages(['Gender' => 'Gender is not a valid Gender.']);
+
+        return $gender ?? throw ValidationException::withMessages([
+            $field => "The selected gender for $field is invalid."
+        ]);
+        // if ($gender instanceof CodeDetail) {
+        //     return $gender;
+        // }
+        // throw ValidationException::withMessages(['Gender' => 'Gender is not a valid Gender.']);
 
     }
 

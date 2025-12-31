@@ -93,6 +93,16 @@ class ThirdParties extends Model
         return $this->hasOne(SupplierMaster::class, 'ThirdPartyId', 'Id');
     }
 
+    public function tenantProfile(): HasOne
+    {
+        return $this->hasOne(\App\Models\PropertyManagement\PropertyNewTenant::class, 'ThirdPartyId', 'Id');
+    }
+
+    public function customerProfile(): HasOne
+    {
+        return $this->hasOne(\App\Models\Insurance\BancassuranceCustomer::class, 'ThirdPartyId', 'Id');
+    }
+
     public function businessType(): BelongsTo
     {
         return $this->belongsTo(CodeDetail::class, 'BusinessType', 'Id');
@@ -120,7 +130,7 @@ class ThirdParties extends Model
 
     public function isSupplier(): bool
     {
-        return $this->types()->wherePivot('PartyType', 'SupplierMasterId')->exists();
+        return $this->types()->wherePivot('PartyType', 'SupplierId')->exists();
     }
 
     public function isTenant(): bool
