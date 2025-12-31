@@ -180,41 +180,6 @@ public function review($id)
     return view('bancassurance.policies.review', compact('policy'));
 }
 
-// public function submitForUnderwriting(Request $request, $id)
-// {
-//     $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
-
-//     $validated = $request->validate([
-//         'Document' => 'nullable|file|max:2048'
-//     ]);
-
-//     $document = $request->file('Document');
-
-//     // Get policy as Eloquent model
-//     $policy = BancassurancePolicy::find($id);
-
-//     if (!$policy) {
-//         return redirect()->back()->with('error', 'Policy not found.');
-//     }
-
-//     // Upload file + update ModifiedBy
-//     $upload = BancassurancePolicyService::uploadpolicy(
-//         $policy,
-//         $request->user(),
-//         $document
-//     );
-
-//     // Update policy status
-//     $policy->update([
-//         'Status'     => InsurancePolicyStatus::SubmittedForUnderwriting->value,
-//         'ModifiedBy' => auth()->id(),
-//         'ModifiedOn' => now()
-//     ]);
-
-//     return redirect()->route('bancassurance.policies.index')
-//         ->with('success', 'Proposal submitted to underwriter.');
-// }
-
 public function submitForUnderwriting(request $request, $id)
     {
         $validated = $request->validate([

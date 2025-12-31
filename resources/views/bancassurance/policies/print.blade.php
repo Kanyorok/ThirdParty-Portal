@@ -147,7 +147,7 @@
         </tr>
         <tr>
             <td>Policy Status</td>
-            <td>{{ $policy->Status }}</td>
+            <td>{{ $policy->Status->label()}}</td>
         </tr>
         </tbody>
     </table>

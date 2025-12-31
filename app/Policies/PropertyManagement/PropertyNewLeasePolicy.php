@@ -38,4 +38,14 @@ class PropertyNewLeasePolicy
     {
         return $user->can(PermissionEnum::PropertyNewLeaseDelete->value);
     }
+
+    public function approve(User $user): bool
+    {
+        return $user->can(PermissionEnum::PropertyNewLeaseApproval->value);
+    }
+
+    public function reject(User $user): bool
+    {
+        return $user->can(PermissionEnum::PropertyNewLeaseApproval->value);
+    }
 }
