@@ -1266,7 +1266,7 @@ class TenderController extends Controller
             // B) Legacy Item-based linkage
             $itemBasedCategoryIds = DB::table('t_Items as i')
                 ->join('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
-                ->whereIn('i.ItemType', $codeDetailIds)
+                ->whereIn('i.ItemType', $allowedItemTypeIds)
                 ->whereNull('i.DeletedOn')
                 ->whereNull('ic.DeletedBy')
                 ->distinct()
@@ -1558,35 +1558,33 @@ class TenderController extends Controller
 
             Log::info("Filtering suppliers for category ID: {$catIdInt}");
 
-            $suppliers = $suppliers->filter(function ($s) use ($catIdInt) {
+            // Get all ancestors of the selected category (including itself)
+            // If a supplier is prequalified for any of these ancestors, they are eligible.
+            $validCategoryIds = $this->getAllAncestorCategoryIds($catIdInt, includeSelf: true);
+
+            Log::info("Ancestors for Category {$catIdInt}: " . implode(',', $validCategoryIds));
+
+            $suppliers = $suppliers->filter(function ($s) use ($validCategoryIds) {
                 $supplierCategoryIds = $s['ItemCategoryIds'] ?? [];
 
-                // Direct match: the selected category is already in the supplier's list
-                if (in_array($catIdInt, $supplierCategoryIds)) {
-                    Log::info("Supplier {$s['Id']} matched (direct)", [
+                // Check if supplier has ANY of the valid ancestor categories
+                // array_intersect requires consistent types, ensuring integers
+                $supplierCategoryIdsInt = array_map('intval', $supplierCategoryIds);
+
+                $common = array_intersect($supplierCategoryIdsInt, $validCategoryIds);
+
+                if (!empty($common)) {
+                    Log::info("Supplier {$s['Id']} matched (Ancestor Check)", [
                         'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
-                        'supplier_categories' => $supplierCategoryIds
+                        'matched_categories' => array_values($common)
                     ]);
                     return true;
-                }
-
-                // Descendant match: check if the selected category is a child of any supplier category
-                foreach ($supplierCategoryIds as $supplierCatId) {
-                    $descendants = $this->getAllDescendantCategoryIds((int)$supplierCatId, includeSelf: false);
-                    if (in_array($catIdInt, $descendants)) {
-                        Log::info("Supplier {$s['Id']} matched (descendant)", [
-                            'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
-                            'parent_category' => $supplierCatId,
-                            'selected_category' => $catIdInt
-                        ]);
-                        return true;
-                    }
                 }
 
                 Log::debug("Supplier {$s['Id']} filtered out", [
                     'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
                     'supplier_categories' => $supplierCategoryIds,
-                    'selected_category' => $catIdInt
+                    'required_one_of' => $validCategoryIds
                 ]);
 
                 return false;
@@ -1596,6 +1594,36 @@ class TenderController extends Controller
         }
 
         return response()->json(['success' => true, 'data' => $suppliers]);
+    }
+
+    /**
+     * Get all ancestor category IDs (recursive) for a specific category.
+     * Includes the provided category ID in the returned set when $includeSelf is true.
+     */
+    private function getAllAncestorCategoryIds(int $categoryId, bool $includeSelf = true): array
+    {
+        $ancestors = $includeSelf ? [$categoryId] : [];
+        $currentId = $categoryId;
+
+        // Safety limit to prevent infinite loops in case of circular references
+        $maxDepth = 20;
+        $depth = 0;
+
+        while ($depth < $maxDepth) {
+            $parent = DB::table('t_ItemCategories')
+                ->where('Id', $currentId)
+                ->value('ParentId');
+
+            if (empty($parent) || $parent == 0) {
+                break;
+            }
+
+            $ancestors[] = (int)$parent;
+            $currentId = $parent;
+            $depth++;
+        }
+
+        return array_unique($ancestors);
     }
 
     // Return allowed ItemType IDs for a tender category (FK Id)
