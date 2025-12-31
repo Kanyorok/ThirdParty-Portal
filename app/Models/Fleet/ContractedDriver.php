@@ -17,6 +17,7 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\DocumentsTrait;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\SupplierMaster;
 
 
 class ContractedDriver extends Model
@@ -58,7 +59,7 @@ class ContractedDriver extends Model
 
     public function company()
     {
-        return $this->belongsTo(ThirdParties::class, 'CompanyID', 'Id');
+        return $this->belongsTo(SupplierMaster::class, 'CompanyID', 'Id');
     }
 
 
