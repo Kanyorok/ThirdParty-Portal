@@ -19,6 +19,7 @@ use App\Enums\TenderApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\TicketStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
@@ -109,6 +110,15 @@ class CodeDetailSeeder extends Seeder
                 'CodeID' => 'SchedulePlanStatus',
                 'Value' => $scheduleplanEnum->value,
                 'Description' => $scheduleplanEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (InterBranchRequisitionEnum::cases() as $index => $interBranchRequisitionEnum) {
+            $entries->push([
+                'CodeID' => 'InterBranchRequisitionStatus',
+                'Value' => $interBranchRequisitionEnum->value,
+                'Description' => $interBranchRequisitionEnum->name,
                 'DisplayOrder' => $index + 1,
             ]);
         }
@@ -525,10 +535,14 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
 
 
-            ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'PE'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'IT'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'DE'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'Rejected', 'Value' => 'RJ'],
+            
+            ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'it'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'de'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Returned', 'Value' => 'rt'],
+
 
             // Fleet Management
 

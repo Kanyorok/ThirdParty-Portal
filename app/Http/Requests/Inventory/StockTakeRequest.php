@@ -25,7 +25,7 @@ class StockTakeRequest extends FormRequest
             'lines.*.ItemId' => 'required|exists:t_StockItems,Id',
             'lines.*.ActualQuantity' => 'required|numeric|min:0',
             'lines.*.CountedQuantity' => 'required|numeric|min:0',
-            'lines.*.Remarks' => 'nullable|string|max:100',
+            'lines.*.Remarks' => 'required|string|max:100',
         ];
     }
 }

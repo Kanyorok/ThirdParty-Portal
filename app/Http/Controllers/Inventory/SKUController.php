@@ -22,9 +22,14 @@ class SKUController extends Controller
         $this->stockItemService = $stockItemService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
+
+        $branchId = $currentBranch->Id;
         $this->authorize('viewAny', StockItem::class);
 
         $items = StockItem::with(['item', 'store', 'uom'])
@@ -33,19 +38,27 @@ class SKUController extends Controller
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
-    public function create()
+   public function create(Request $request)
     {
         $this->authorize('create', StockItem::class);
 
-        $branches = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
+
+        $branchId = $currentBranch->Id; 
+        $branch = $currentBranch; 
 
         $categories = ItemCategories::whereNull('ParentId')
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
-        $stores = Store::where('BranchID', $branches)->get();
+        
+        $stores = Store::where('BranchID', $branchId)->get();
 
-        return view('inventory.itemmaster.sku.create', compact('branches', 'stores', 'categories'));
+        return view('inventory.itemmaster.sku.create', compact('branch', 'stores', 'categories'));
     }
+
 
     public function store(StockItemRequest $request)
     {
@@ -74,12 +87,17 @@ class SKUController extends Controller
         return view('inventory.itemmaster.sku.show', compact('item', 'categories'));
     }
 
-   public function edit($id)
+   public function edit($id, Request $request)
     {
         $item = StockItem::with('item.category.parent')->findOrFail($id);
         $this->authorize('update', $item);
 
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
+
+        $branchId = $currentBranch->Id;
         $branch = Branch::find($branchId);
 
         $categories = ItemCategories::whereNull('ParentId')

@@ -67,8 +67,8 @@
                         <div class="col-md-4">
                             <label class="form-label">Branch <span class="text-danger">*</span></label>
                             <input type="text" class="form-control"
-                                   value="{{ auth()->user()->employee->branch->Name ?? 'N/A' }}" readonly>
-                            <input type="hidden" name="Branch" value="{{ auth()->user()->employee->BranchId }}">
+                                   value="{{ $branch->Name ?? 'N/A' }}" readonly>
+                            <input type="hidden" name="Branch" value="{{ $branch->Id ?? '' }}">
                         </div>
                     </div>
 
@@ -78,12 +78,10 @@
                             <select name="Store" id="Store" class="form-select" required>
                                 <option value="">-- Select Store --</option>
                                 @foreach($stores as $store)
-                                    @if($store->BranchID == (auth()->user()->employee->BranchId ?? null))
-                                        <option
-                                            value="{{ $store->Id }}" {{ old('Store') == $store->Id ? 'selected' : '' }}>
-                                            {{ $store->StoreName }}
-                                        </option>
-                                    @endif
+                                    <option
+                                        value="{{ $store->Id }}" {{ old('Store') == $store->Id ? 'selected' : '' }}>
+                                        {{ $store->StoreName }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -245,7 +243,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const storeSelect = document.getElementById('Store');
-            const userBranchId = {{ auth()->user()->employee->BranchId ?? 'null' }};
+            const userBranchId = {{ $branch->Id ?? 'null' }};
 
             // If no stores are available for the user's branch, show message
             if (userBranchId) {

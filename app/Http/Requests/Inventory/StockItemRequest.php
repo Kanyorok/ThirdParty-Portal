@@ -35,13 +35,22 @@ class StockItemRequest extends FormRequest
             // 'Perishable' => 'required|boolean',
             // 'Saleable' => 'required|boolean',
             // 'Purchasable' => 'required|boolean',
-            'Store' => 'nullable|exists:t_Stores,Id', 
+            'Store' => 'required|exists:t_Stores,Id', 
             'Branch' => 'required|integer|exists:t_Branches,Id',
-            'CurrentQty' => 'required|integer|min:0',
+            'CurrentQty' => 'required|integer|min:1',
             'Min' => 'required|integer|min:0',
             'Reorder' => 'required|integer|min:0',
             'LastReceived' => ['required', 'date', 'before_or_equal:today'],
             'Status' => 'nullable|boolean',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'ItemID.required' => 'Item field is required.',
+            'Store.required' => 'Store field is required.',
+            'CurrentQty.required' => 'Current Qty field is required.',
         ];
     }
 }

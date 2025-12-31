@@ -25,10 +25,9 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="adjustmentDate" class="form-label">Adjustment Date</label>
-                    <input type="date" class="form-control @error('AdjustmentDate') is-invalid @enderror"
-                           id="adjustmentDate" name="AdjustmentDate"
-                           value="{{ old('AdjustmentDate', $adjustment->AdjustmentDate ? \Carbon\Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') : now()->format('Y-m-d')) }}"
-                           required>
+                    <input type="hidden" id="adjustmentDate" name="AdjustmentDate" value="{{ now()->format('Y-m-d') }}">
+                    <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
+                    <small class="text-muted">Current date (non-editable)</small>
                     @error('AdjustmentDate')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -36,15 +35,29 @@
 
                 <div class="col-md-6">
                     <label for="branch" class="form-label">Branch</label>
-                    <select id="branch" name="Branch" class="form-select @error('Branch') is-invalid @enderror" required>
-                        <option value="">Select Branch</option>
-                        @foreach($branches as $branch)
-                            <option value="{{ $branch->Id }}"
-                                {{ (old('Branch', $adjustment->Branch) == $branch->Id) ? 'selected' : '' }}>
-                                {{ $branch->Name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    @php
+                        $currentUserBranchId = auth()->user()->branch->Id ?? null;
+                    @endphp
+                    
+                    @if($currentUserBranchId)
+                        <input type="hidden" id="branch" name="Branch" value="{{ $currentUserBranchId }}">
+                        <input type="text" class="form-control" value="{{ auth()->user()->branch->Name ?? 'N/A' }}" readonly>
+                        <small class="text-muted">Your branch (non-editable)</small>
+                    @else
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Unable to determine your branch. Please contact administrator.
+                        </div>
+                        <select id="branch" name="Branch" class="form-select @error('Branch') is-invalid @enderror" required disabled>
+                            <option value="">Select Branch</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->Id }}"
+                                    {{ (old('Branch', $adjustment->Branch) == $branch->Id) ? 'selected' : '' }}>
+                                    {{ $branch->Name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+                    
                     @error('Branch')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -151,14 +164,8 @@
 
             <div class="mb-3">
                 <label class="form-label">Adjusted By</label>
-                <select name="AdjustedBy" class="form-select select2 @error('AdjustedBy') is-invalid @enderror" required>
-                    <option value="">-- Select User --</option>
-                    @foreach ($users as $user)
-                        <option value="{{ $user->Id }}" {{ (old('AdjustedBy', $adjustment->AdjustedBy) == $user->Id) ? 'selected' : '' }}>
-                            {{ $user->Name }}
-                        </option>
-                    @endforeach
-                </select>
+                <input type="hidden" name="AdjustedBy" value="{{ auth()->user()->Id }}">
+                <input type="text" class="form-control" value="{{ auth()->user()->Name }}" readonly>
                 @error('AdjustedBy')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -167,7 +174,7 @@
             <div class="d-flex justify-content-between">
                 <a href="{{ route('transactionsadjustment.index') }}" class="btn btn-outline-secondary">Back</a>
                 <button type="submit" class="btn btn-success"
-                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Adjustment
+                        onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Adjustment
                 </button>
             </div>
         </form>
@@ -203,85 +210,23 @@
             $(this).closest('tr').remove();
         });
 
-        // handle dynamic branch reload (mirror create behavior)
+        // Since branch is now read-only, we don't need the branch change event
+        // Remove or comment out the branch change event listener
+        /* 
         document.getElementById('branch').addEventListener('change', function () {
-            const branchId = this.value;
-            if (!branchId) return;
-
-            fetch(`/inventory/branch-stock/${branchId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const tbody = document.querySelector('tbody');
-                    tbody.innerHTML = '';
-
-                    data.forEach((stock, index) => {
-                        const item = stock.item || {};
-                        const uom = stock.uom || {};
-
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${index + 1}</td>
-                            <td>
-                                <input type="text" class="form-control" value="${item.ItemCode ?? ''}" readonly>
-                                <input type="hidden" name="items[${index}][Item]" value="${stock.ItemID}">
-                                <input type="hidden" name="items[${index}][ItemCode]" value="${item.ItemCode ?? ''}">
-                            </td>
-                            <td>
-                                <input type="text" class="form-control" value="${item.ItemName ?? ''}" readonly>
-                                <input type="hidden" name="items[${index}][ItemName]" value="${item.ItemName ?? ''}">
-                            </td>
-                            <td>
-                                <input type="text" class="form-control" value="${uom.Code ?? ''}" readonly>
-                                <input type="hidden" name="items[${index}][UOM]" value="${uom.Id ?? ''}">
-                            </td>
-                            <td>
-                                <input type="number" class="form-control" value="${stock.UnitCost}" readonly>
-                                <input type="hidden" name="items[${index}][UnitCost]" value="${stock.UnitCost}">
-                            </td>
-                            <td>
-                                <input type="number" class="form-control current-qty" value="${stock.CurrentQty}" readonly>
-                                <input type="hidden" name="items[${index}][CurrentQty]" value="${stock.CurrentQty}">
-                            </td>
-                            <td>
-                                <input type="number" step="any" class="form-control adjustment-qty" name="items[${index}][AdjustmentQty]" placeholder="+/-" onchange="calculateNewQty(this)">
-                                <div class="invalid-feedback adjustment-qty-feedback"></div>
-                            </td>
-                            <td>
-                                <input type="number" class="form-control new-qty" readonly>
-                            </td>
-                            <td>
-                                <select name="items[${index}][Reason]" class="form-select" required>
-                                    <option value="">Select Reason</option>
-                                    @foreach($reasons as $reason)
-                                        <option value="{{ $reason->ID }}">{{ $reason->Description }}</option>
-                                    @endforeach
-                                </select>
-                            </td>
-                            <td>
-                                <input type="text" class="form-control" name="items[${index}][Remarks]" placeholder="Optional remarks">
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-danger remove-row">Remove</button>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-
-                        row.querySelector('.adjustment-qty').addEventListener('input', function () {
-                            calculateNewQty(this);
-                        });
-                    });
-                })
-                .catch(error => console.error('Error fetching stock:', error));
+            // This function is no longer needed since branch is read-only
         });
+        */
 
         $(document).ready(function () {
-            $('.select2').select2({ placeholder: 'Select user', allowClear: true });
-
-            // trigger branch change to reload items when branch changed or on initial load if needed
+            // Since branch is read-only, we don't need to trigger branch change
+            // Remove or comment out this section
+            /*
             const selectedBranch = "{{ old('Branch', $adjustment->Branch) }}";
             if (selectedBranch) {
                 $('#branch').val(selectedBranch).trigger('change');
             }
+            */
 
             // run initial calculations for existing rows
             document.querySelectorAll('.adjustment-qty').forEach(input => calculateNewQty(input));
