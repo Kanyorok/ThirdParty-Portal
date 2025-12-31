@@ -396,6 +396,10 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     // Helper to compute next start/end based on last book for a bank account
     Route::get('chequebooks/next-range/{bankAccountId}', [ChequeBookController::class, 'nextRange'])
         ->name('chequebooks.next-range');
+    
+    // Get available leaves for a cheque book
+    Route::get('chequebooks/{id}/leaves', [ChequeBookController::class, 'getAvailableLeaves'])
+        ->name('chequebooks.leaves');
 
     Route::resource('chequebooks', ChequeBookController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
@@ -428,6 +432,7 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     Route::post('cheques/{id}/clear', [ChequeController::class, 'clear'])->name('cheques.clear');     // both
     Route::post('cheques/{id}/bounce', [ChequeController::class, 'bounce'])->name('cheques.bounce');   // both
     Route::post('cheques/{id}/cancel', [ChequeController::class, 'cancel'])->name('cheques.cancel');   // Draft/Issued/OnHand
+    Route::post('cheques/{id}/issue', [ChequeController::class, 'issueCheque'])->name('cheques.issue');  // Draft -> Issued/Rejected
 
     // Optional: spoil a specific unused leaf (mark as not usable)
     Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function ($book, $leaf) {

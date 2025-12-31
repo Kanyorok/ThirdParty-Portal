@@ -699,7 +699,32 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed', 'Value' => 'A'],
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Dismissed', 'Value' => 'D'],
 
+            //Finance Cheque Management
+            //Cheque Leaf Status
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Available', 'Value' => 'A', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Issued', 'Value' => 'I', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Used', 'Value' => 'U', 'DisplayOrder' => 3],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Posted', 'Value' => 'P', 'DisplayOrder' => 4],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Post-Dated Cheque', 'Value' => 'PD', 'DisplayOrder' => 5],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Presented', 'Value' => 'PR', 'DisplayOrder' => 6], // optional
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Cleared', 'Value' => 'C', 'DisplayOrder' => 7],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Bounced', 'Value' => 'B', 'DisplayOrder' => 8],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Void', 'Value' => 'V', 'DisplayOrder' => 9],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Spoiled', 'Value' => 'S', 'DisplayOrder' => 10],
 
+            //Cheque Book Status
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Active', 'Value' => 'A', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Completed', 'Value' => 'C', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Cancelled', 'Value' => 'Ca', 'DisplayOrder' => 3],
+
+            //Cheque Book Sizes (25, 50, 100 only per business rules)
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '25', 'Value' => '25', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '50', 'Value' => '50', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '100', 'Value' => '100', 'DisplayOrder' => 3],
+
+            //Cheque Party Type
+            ['CodeID' => 'ChequePartyType', 'Description' => 'Vendor', 'Value' => 'V', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequePartyType', 'Description' => 'Tenant', 'Value' => 'T', 'DisplayOrder' => 2],
 
         ];
 
