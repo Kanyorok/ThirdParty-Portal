@@ -2,17 +2,6 @@
 @section('title', 'Create Stock Adjustment')
 
 @section('content')
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <strong>There were some issues with your submission:</strong>
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">Stock Adjustment Form</h4>
 
@@ -21,12 +10,9 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="adjustmentDate" class="form-label">Adjustment Date</label>
-                <input type="date"
-                       class="form-control @error('AdjustmentDate') is-invalid @enderror"
-                       id="adjustmentDate"
-                       name="AdjustmentDate"
-                       value="{{ old('AdjustmentDate', now()->format('Y-m-d')) }}"
-                       required>
+                <input type="hidden" id="adjustmentDate" name="AdjustmentDate" value="{{ now()->format('Y-m-d') }}">
+                <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
+                <small class="text-muted">Current date (non-editable)</small>
                 @error('AdjustmentDate')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -91,9 +77,9 @@
                                 <input type="number" step="any" name="items[{{ $index }}][AdjustmentQty]"
                                        class="form-control adjustment-qty @error("items.$index.AdjustmentQty") is-invalid @enderror"
                                        value="{{ $item['AdjustmentQty'] ?? '' }}" onchange="calculateNewQty(this)">
-                                <div class="invalid-feedback adjustment-qty-feedback">
-                                    @error("items.$index.AdjustmentQty") {{ $message }} @enderror
-                                </div>
+                                @error("items.$index.AdjustmentQty")
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </td>
                             <td>
                                 <input type="number" class="form-control new-qty" readonly>
@@ -117,6 +103,9 @@
                                 <input type="text" name="items[{{ $index }}][Remarks]"
                                        class="form-control @error("items.$index.Remarks") is-invalid @enderror"
                                        value="{{ $item['Remarks'] ?? '' }}" placeholder="Optional remarks">
+                                @error("items.$index.Remarks")
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-danger remove-row">Remove</button>
@@ -189,18 +178,13 @@
 
         <div class="mb-3">
             <label class="form-label">Adjusted By</label>
-            <select name="AdjustedBy" class="form-select select2 @error('AdjustedBy') is-invalid @enderror" required>
-                <option value="">-- Select User --</option>
-                @foreach ($users as $user)
-                    <option value="{{ $user->Id }}" {{ old('AdjustedBy') == $user->Id ? 'selected' : '' }}>
-                        {{ $user->Name }}
-                    </option>
-                @endforeach
-            </select>
+            <input type="hidden" name="AdjustedBy" value="{{ auth()->user()->Id }}">
+            <input type="text" class="form-control" value="{{ auth()->user()->Name }}" readonly>
             @error('AdjustedBy')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
+        
         <button type="submit" class="btn btn-success"
                 onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">✅ Submit Adjustment
         </button>
@@ -309,8 +293,6 @@
     });
 
     $(document).ready(function () {
-        $('.select2').select2({ placeholder: 'Select user', allowClear: true });
-
         const oldBranchId = "{{ old('Branch') }}";
         const oldItems = @json(old('items'));
 

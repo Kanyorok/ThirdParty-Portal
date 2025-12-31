@@ -109,6 +109,7 @@ class ReceiptsPostingController extends Controller
             ->where('IsPaid', false)
                 ->where('ApprovalStatus', 'posted')
             ->whereColumn('TotalAmount', '>', 'AmountPaid')
+            ->with('currency')
             ->orderBy('InvoiceDate')
             ->get()
             ->map(function ($inv) {
@@ -140,8 +141,8 @@ class ReceiptsPostingController extends Controller
                     'issue_date' => $issueDate,
                     'due_date' => $dueDate,
                     'currency'  => [
-                        'code' => 'KES', // Default currency
-                        'symbol' => 'KSh'  // Default symbol
+                        'code' => $inv->currency->Code ?? 'KES',
+                        'symbol' => $inv->currency->Symbol ?? 'KSh'
                     ],
                     'total' => (float)($inv->TotalAmount ?? 0),
                     'paid' => (float)($inv->AmountPaid ?? 0),

@@ -10,10 +10,8 @@
         <div class="card mb-4">
             <div class="card-body">
                 <p><strong>Adjustment ID:</strong> {{ $adjustment->AdjustmentId }}</p>
-                <p><strong>Adjustment
-                        Date:</strong> {{ Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</p>
+                <p><strong>Adjustment Date:</strong> {{ Carbon::parse($adjustment->AdjustmentDate)->format('Y-m-d') }}</p>
                 <p><strong>Branch:</strong> {{ optional($adjustment->branch)->Name ?? 'N/A' }}</p>
-                <p><strong>Reason:</strong> {{ optional($adjustment->reason)->Description ?? 'N/A' }}</p>
                 <p><strong>Adjusted By:</strong> {{ $adjustment->adjustedBy->Name ?? 'N/A' }}</p>
                 <p><strong>Status:</strong>
                     @php
@@ -35,20 +33,48 @@
                     <th>#</th>
                     <th>Item Code</th>
                     <th>Item Name</th>
+                    <th>UOM</th>
+                    <th>Unit Cost</th>
                     <th>Current Qty</th>
-                    <th>Adjusted Qty</th>
+                    <th>Adjustment Qty</th>
+                    <th>New Qty</th>
+                    <th>Adjustment Reason</th>
                     <th>Remarks</th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach($adjustment->items as $index => $item)
+                    @php
+                        // Calculate new quantity
+                        $currentQty = $item->current_stock_qty ?? 0;
+                        $adjustmentQty = $item->AdjustmentQty ?? 0;
+                        $newQty = $currentQty + $adjustmentQty;
+                        
+                        // Find reason description
+                        $reasonDescription = 'N/A';
+                        if ($item->Reason && $reasons) {
+                            $reason = $reasons->firstWhere('ID', $item->Reason);
+                            $reasonDescription = $reason ? $reason->Description : 'N/A';
+                        }
+                    @endphp
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $item->item->ItemCode ?? 'N/A'}}</td>
                         <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
-                        {{-- THIS IS THE CRUCIAL CHANGE: Access the 'current_stock_qty' attribute --}}
-                        <td>{{ $item->current_stock_qty ?? 0 }}</td>
-                        <td>{{ $item->AdjustmentQty }}</td>
+                        <td>{{ $item->item->uom->Code ?? 'N/A' }}</td>
+                        <td>{{ number_format($item->UnitCost ?? 0, 2) }}</td>
+                        <td>{{ $currentQty }}</td>
+                        <td>
+                            <span class="{{ $adjustmentQty >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ $adjustmentQty >= 0 ? '+' : '' }}{{ $adjustmentQty }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="{{ $newQty >= 0 ? 'text-primary fw-bold' : 'text-danger fw-bold' }}">
+                                {{ $newQty }}
+                            </span>
+                        </td>
+                        <td>{{ $reasonDescription }}</td>
                         <td>{{ $item->Remarks ?? '-' }}</td>
                     </tr>
                 @endforeach
