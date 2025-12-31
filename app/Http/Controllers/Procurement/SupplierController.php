@@ -153,9 +153,10 @@ class SupplierController extends Controller
         $supplierMaster = SupplierMaster::where('ThirdPartyId', $supplier->Id)->first();
         if ($supplierMaster) {
             try {
-                $this->workflowService->submit($supplierMaster, Auth::user());
+                $this->workflowService->submit($supplierMaster, actor: Auth::user(), remarks: 'Submitted ');
             } catch (\Exception $e) {
                 // Log error but allow creation to succeed, specific error handling dependent on requirements
+                \Log::error('Failed to submit supplier for approval: ' . $e->getMessage());
 
             }
         }

@@ -107,6 +107,8 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
         ]);
     });
 
+
+
     //submit requisitons routes
     Route::post('requisition/{id}/submit', [RequisitionsController::class, 'submit'])
         ->name('requisition.submit');
@@ -252,10 +254,6 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('/procurement-periods/{period}/plans/create', [ProcurementPlanController::class, 'create'])->name('procurement-periods.plans.create');
     Route::post('/procurement-periods/{period}/plans', [ProcurementPlanController::class, 'store'])->name('procurement-periods.plans.store');
 
-    // RFQLines Routes
-    Route::post('/rfqlines', [RFQLinesController::class, 'store'])->name('linecategories.store');
-    Route::get('/requisition/{requisitionId}/categories', [RFQLinesController::class, 'getRequisitionCategories']);
-    Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
 
 
     // RFQ routes (enforced via CanAction middleware)
@@ -280,7 +278,16 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::post('/rfqs/{rfq}/publish', [RFQController::class, 'publish'])
         ->middleware(\App\Http\Middleware\CanAction::class . ':approve,rfqs')
         ->name('rfqs.publish');
-    Route::get('procurement/requisition/{id}/categories', [RFQController::class, 'getRequisitionCategories']);
+
+    // RFQLines Routes
+ Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
+
+// Fix this route to match what the JavaScript is expecting
+Route::get('/rfq-lines/requisition/{requisitionId}/categories', [RFQLinesController::class, 'getRequisitionCategories'])
+    ->name('rfq-lines.requisition.categories');
+
+Route::post('/rfq-lines/store', [RFQLinesController::class, 'store'])
+    ->name('rfq-lines.store');
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');
@@ -298,6 +305,10 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::get('/rfq-responses/{rfqId}', [RFQEvaluationController::class, 'getRFQResponses'])->name('rfq.responses');
     Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
     Route::get('/rfqresponses/find-existing', [RFQResponseController::class, 'findExisting']);
+
+    // Route to get categories for a requisition
+
+
 
     // RFQ Evaluation routes
     Route::get('/rfq-evaluations', [RFQEvaluationController::class, 'index'])->name('evaluations.index');

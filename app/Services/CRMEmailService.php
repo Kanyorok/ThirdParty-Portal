@@ -50,7 +50,7 @@ class CRMEmailService
         return self::create($actor, $subject, $body, ($priorityEnum) ?? EmailPriorityEnum::Normal, [[$client->Name => $to]], Client::getPrimaryKey(), $client->ClientID, $cc, replyTo: $replyTo);
     }
 
-    private static function create(User $actor, string $subject, string $body, EmailPriorityEnum $priority, array $to, string $Party, string $PartyID, array $cc = [], array $bcc = [], Email $replyTo = null): CRMEmailService
+    private static function create(User $actor, string $subject, string $body, EmailPriorityEnum $priority, array $to, ?string $Party = null, ?string $PartyID = null, array $cc = [], array $bcc = [], Email $replyTo = null): CRMEmailService
     {
         if (!$replyTo instanceof Email && !Str::contains($subject, ['RE:', config('org.name')])) {
             $subject .= ' - ' . config('org.name');
@@ -67,8 +67,8 @@ class CRMEmailService
             'Subject' => $subject,
             'Body' => $body,
             'Text' => StringHelper::cleanHtml($body),
-            'Party' => $Party,
-            'PartyID' => $PartyID,
+            'Party' => $Party ?: null,
+            'PartyID' => $PartyID ?: null,
             'EmailConversationId' => $replyTo?->EmailConversationId,
             'ReferenceId' => $replyTo?->MailID,
             'CreatedBy' => $actor->Id,
@@ -105,15 +105,15 @@ class CRMEmailService
      * @param string $subject
      * @param string $body
      * @param array $to Array of associative arrays like [["Name" => "email@domain"]]
-     * @param string $Party Optional party key (e.g., 'ThirdParty')
-     * @param string $PartyID Optional party id
+     * @param string|null $Party Optional party key (e.g., 'ThirdParty')
+     * @param string|null $PartyID Optional party id
      * @param array $cc Array of associative arrays like [["Name" => "email@domain"]]
      * @param array $bcc Array of associative arrays like [["Name" => "email@domain"]]
      * @param EmailPriorityEnum|null $priorityEnum
      * @param Email|null $replyTo
      * @return CRMEmailService
      */
-    public static function createRaw(User $actor, string $subject, string $body, array $to, string $Party = '', string $PartyID = '', array $cc = [], array $bcc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
+    public static function createRaw(User $actor, string $subject, string $body, array $to, ?string $Party = null, ?string $PartyID = null, array $cc = [], array $bcc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
     {
         return self::create($actor, $subject, $body, ($priorityEnum) ?? EmailPriorityEnum::Normal, $to, $Party, $PartyID, $cc, $bcc, $replyTo);
     }

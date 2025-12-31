@@ -17,6 +17,8 @@ use App\Models\Core\Currency;
 
 class SupplierRFQController extends Controller
 {
+
+
     public function listInvitations(Request $request): JsonResponse
     {
         $user = Auth::user();
@@ -25,10 +27,14 @@ class SupplierRFQController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $mySupplierIds = DB::table('t_Suppliers')
-            ->where('ThirdPartyID', $thirdPartyId)
-            ->where('Active_Status', 1)
-            ->pluck('Id');
+        // FIXED: Get supplier IDs through SupplierMaster
+        $mySupplierIds = DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->where('sm.ThirdPartyId', $thirdPartyId)
+            ->where('s.Active_Status', 1)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->pluck('s.Id');
 
         $invitations = DB::table('t_RFQ_Supplier as p')
             ->join('t_RFQ as r', 'r.Id', '=', 'p.RFQId')
@@ -61,9 +67,21 @@ class SupplierRFQController extends Controller
             return response()->json(['error' => 'RFQ not found'], 404);
         }
 
-        // Find invited supplier rows for this third party for this RFQ
-        $mySupplierIds = DB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->where('Active_Status', 1)->pluck('Id');
-        $invitation = DB::table('t_RFQ_Supplier')->where('RFQId', $rfqId)->whereIn('SupplierId', $mySupplierIds)->select('SupplierId', 'Status', 'CreatedOn', 'ModifiedOn')->first();
+        // FIXED: Get supplier IDs through SupplierMaster
+        $mySupplierIds = DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->where('sm.ThirdPartyId', $thirdPartyId)
+            ->where('s.Active_Status', 1)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->pluck('s.Id');
+
+        $invitation = DB::table('t_RFQ_Supplier')
+            ->where('RFQId', $rfqId)
+            ->whereIn('SupplierId', $mySupplierIds)
+            ->select('SupplierId', 'Status', 'CreatedOn', 'ModifiedOn')
+            ->first();
+
         if (!$invitation) {
             return response()->json(['error' => 'No invitation for this RFQ'], 404);
         }
@@ -163,17 +181,38 @@ class SupplierRFQController extends Controller
             return response()->json(['error' => 'RFQ not found'], 404);
         }
 
-        // Match invitation SupplierId for this third party
-        $mySupplierIds = DB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->where('Active_Status', 1)->pluck('Id');
-        $supplierId = DB::table('t_RFQ_Supplier')->where('RFQId', $rfq->Id)->whereIn('SupplierId', $mySupplierIds)->min('SupplierId');
+        // FIXED: Get supplier IDs through SupplierMaster
+        $mySupplierIds = DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->where('sm.ThirdPartyId', $thirdPartyId)
+            ->where('s.Active_Status', 1)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->pluck('s.Id');
+
+        $supplierId = DB::table('t_RFQ_Supplier')
+            ->where('RFQId', $rfq->Id)
+            ->whereIn('SupplierId', $mySupplierIds)
+            ->min('SupplierId');
+
         if (!$supplierId) {
             return response()->json(['error' => 'No invitation found for this supplier'], 403);
         }
 
-        $tradingName = DB::table('t_ThirdParties as tp')->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')->where('s.Id', $supplierId)->value('tp.TradingName');
+        // FIXED: Get trading name through SupplierMaster
+        $tradingName = DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
+            ->where('s.Id', $supplierId)
+            ->value('tp.TradingName');
+
         $actor = SystemHelper::user();
 
-        $existing = RFQResponse::where('RFQId', $rfq->Id)->where('SupplierId', $supplierId)->whereNull('DeletedOn')->first();
+        $existing = RFQResponse::where('RFQId', $rfq->Id)
+            ->where('SupplierId', $supplierId)
+            ->whereNull('DeletedOn')
+            ->first();
+
         if ($existing && strtoupper($existing->Status ?? 'FINAL') === 'FINAL') {
             return response()->json([
                 'code' => 'AlreadySubmitted',
@@ -188,7 +227,9 @@ class SupplierRFQController extends Controller
 
         DB::transaction(function () use ($request, $rfq, $supplierId, $tradingName, $actor, $existing) {
             $prefix = 'RFQRE-';
-            $last = RFQResponse::where('RFQResponseNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
+            $last = RFQResponse::where('RFQResponseNumber', 'like', $prefix . '%')
+                ->orderBy('Id', 'desc')
+                ->first();
             $lastNumber = $last ? intval(substr($last->RFQResponseNumber, strlen($prefix))) : 0;
             $code = $existing?->RFQResponseNumber ?? ($prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT));
 
@@ -247,8 +288,20 @@ class SupplierRFQController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $mySupplierIds = DB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->where('Active_Status', 1)->pluck('Id');
-        $supplierId = DB::table('t_RFQ_Supplier')->where('RFQId', $request->rfqId)->whereIn('SupplierId', $mySupplierIds)->min('SupplierId');
+        // FIXED: Get supplier IDs through SupplierMaster
+        $mySupplierIds = DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->where('sm.ThirdPartyId', $thirdPartyId)
+            ->where('s.Active_Status', 1)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->pluck('s.Id');
+
+        $supplierId = DB::table('t_RFQ_Supplier')
+            ->where('RFQId', $request->rfqId)
+            ->whereIn('SupplierId', $mySupplierIds)
+            ->min('SupplierId');
+
         if (!$supplierId) {
             return response()->json(['error' => 'No invitation found for this supplier'], 403);
         }
@@ -275,7 +328,14 @@ class SupplierRFQController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $mySupplierIds = DB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->pluck('Id');
+        // FIXED: Get supplier IDs through SupplierMaster
+        $mySupplierIds = DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->where('sm.ThirdPartyId', $thirdPartyId)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->pluck('s.Id');
+
         $clarifications = RFQClarification::query()
             ->where('RFQId', $rfqId)
             ->whereIn('SupplierId', $mySupplierIds)
@@ -286,3 +346,4 @@ class SupplierRFQController extends Controller
         return response()->json(['data' => $clarifications]);
     }
 }
+

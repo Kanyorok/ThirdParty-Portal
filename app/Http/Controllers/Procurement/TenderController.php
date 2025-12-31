@@ -442,7 +442,7 @@ class TenderController extends Controller
 
             // Update approval status to PENDING
             $tender->update([
-                'ApprovalStatus' => TenderApprovalStatusEnum::PENDING->value,
+                'ApprovalStatus' => TenderApprovalStatusEnum::PENDING,
                 'ModifiedBy' => $user->Id,
                 'ModifiedOn' => now(),
             ]);
@@ -505,7 +505,7 @@ class TenderController extends Controller
             $showApprovalButtons = false;
             $canEdit = false;
 
-            // 🔥 KEY FIX: Determine edit permissions
+            //  Determine edit permissions
             // Can edit if: (1) Status is Draft AND (2) Not yet submitted (ApprovalStatus is NULL) OR rejected
             if ($tender->Status === TenderStatusEnum::Draft) {
                 if ($tender->ApprovalStatus === null || $tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED) {
@@ -577,7 +577,7 @@ class TenderController extends Controller
 
             // Get related data
             $suppliers = TenderSupplier::where('TenderID', $id)
-                ->with('supplier.party')  // FIXED: Use 'party' not 'thirdParty' (SupplierMaster->party relationship)
+                ->with('supplier.party')  
                 ->get();
             $tenderCategory = TenderCategory::find($tender->TenderCategory);
             $itemCategory = ItemCategories::find($tender->ItemCategoryId);
@@ -652,7 +652,7 @@ class TenderController extends Controller
     // Get allowed item types
     $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
     
-    // **KEY FIX: If no type restrictions configured, allow all items in category**
+    // If no type restrictions configured, allow all items in category**
     $checkItemTypes = !empty($allowedTypeIds);
     
     // Get items matching category (and optionally type)
@@ -1733,21 +1733,80 @@ private function generateManualItemPRReference(string $tenderNo, int $counter): 
     /**
      * Show workflow history for a tender
      */
-    public function workflowHistory($id)
-    {
-        try {
-            $tender = Tender::findOrFail($id);
-            $history = $this->workflow->historyForModel($tender);
+   public function workflowHistory($id)
+{
+    try {
+        $tender = Tender::with([
+            'currency',
+            'procurementMode',
+        ])->findOrFail($id);
+        
+        // Get workflow status using the service method
+        $workflowStatus = $this->workflow->getStatus($tender);
+        
+        // Get full workflow history with relationships
+        $history = $tender->workflowHistory()
+            ->with(['creator', 'status', 'stage', 'modifier'])
+            ->orderBy('CreatedOn', 'desc')
+            ->get();
 
-            return view('procurement.tendering.initiatetender.workflow-history', compact(
-                'tender',
-                'history'
-            ));
-        } catch (\Exception $e) {
-            Log::error('Failed to load history: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to load workflow history');
+        // Extract workflow information
+        $hasWorkflow = $workflowStatus['hasWorkflow'] ?? false;
+        $currentStage = $workflowStatus['currentStage'] ?? null;
+        $pendingApprovers = collect($workflowStatus['pendingApprovers'] ?? []);
+        $completedApprovals = collect($workflowStatus['completedApprovals'] ?? []);
+        $totalPending = $workflowStatus['totalPending'] ?? 0;
+        $totalCompleted = $workflowStatus['totalCompleted'] ?? 0;
+        
+        // Get next stage information
+        $nextStage = null;
+        $nextStageApprovers = collect();
+        
+        if ($currentStage) {
+            $nextStage = \App\Models\Core\Approval\WorkflowStage::where('Order', '>', $currentStage['order'])
+                ->orderBy('Order', 'asc')
+                ->first();
+            
+            if ($nextStage) {
+                $nextStageApprovers = DB::table('t_WorkflowPending as wa')
+                    ->join('t_Users as u', 'wa.UserId', '=', 'u.Id')
+                    ->where('wa.Stage', $nextStage->Id)
+                    ->whereNull('wa.DeletedOn')
+                    ->whereNull('u.DeletedOn')
+                    ->select('u.Id', 'u.Name as Name', 'u.Email')
+                    ->get();
+            }
         }
+        
+        // Debug logging
+        \Log::info('Workflow History Debug', [
+            'tender_id' => $tender->Id,
+            'has_workflow' => $hasWorkflow,
+            'history_count' => $history->count(),
+            'current_stage' => $currentStage,
+            'pending_count' => $totalPending,
+            'completed_count' => $totalCompleted,
+            'next_stage' => $nextStage?->StageName ?? 'None',
+        ]);
+
+        return view('procurement.tendering.initiatetender.workflow-history', compact(
+            'tender',
+            'history',
+            'hasWorkflow',
+            'currentStage',
+            'pendingApprovers',
+            'completedApprovals',
+            'totalPending',
+            'totalCompleted',
+            'nextStage',
+            'nextStageApprovers'
+        ));
+    } catch (\Exception $e) {
+        \Log::error('Failed to load workflow history: ' . $e->getMessage());
+        \Log::error($e->getTraceAsString());
+        return redirect()->back()->with('error', 'Failed to load workflow history: ' . $e->getMessage());
     }
+}
 
     private function createTenderModel(Request $request): Tender
     {
@@ -1761,7 +1820,7 @@ private function generateManualItemPRReference(string $tenderNo, int $counter): 
             'SubmissionDeadline' => $request->submission_deadline,
             'OpeningDate' => $request->opening_date,
             'Status' => TenderStatusEnum::Draft,  // Use enum instead of string
-            'ApprovalStatus' => TenderApprovalStatusEnum::PENDING,  // Set to PENDING for new drafts
+            'ApprovalStatus' => null,  // Set to null for new drafts
             'ItemCategoryId' => $request->item_category_id,
             'CurrencyId' => $request->currency_id,
             'CreatedBy' => Auth::id(),
