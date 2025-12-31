@@ -2,7 +2,7 @@
 
 namespace App\Traits\Controller;
 
-use App\Models\Core\Workflow;
+use App\Models\CRM\Approval\Workflow;
 use Exception;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Query\Builder;

@@ -40,7 +40,7 @@ class SurveyService
 
     public function canApprove(User $actor): bool
     {
-        return in_array($actor->Id, $this->survey->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true) || $actor->hasPermission(PermissionEnum::SurveyApproval->value);
+        return in_array($actor->Id, $this->survey->pendingWorkflows()->get('t_PendingWorkflows_static.UserId')->pluck('UserId')->toArray(), true);// || $actor->hasPermission(PermissionEnum::SurveyApproval->value);
     }
 
     public function addQuestion(SurveyQuestionTypeEnum $type, string $question, User $actor, string $help): static

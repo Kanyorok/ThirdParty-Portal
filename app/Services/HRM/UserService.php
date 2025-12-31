@@ -154,6 +154,7 @@ class UserService
         if (!(new BranchService($branch))->isHQ()) {
             return false;
         }
+
         return self::marketingManagers(true)->where('Id', $this->user->Id)->exists();
     }
 

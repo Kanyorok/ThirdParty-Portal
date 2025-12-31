@@ -40,6 +40,7 @@ class FinanceGLAccountsSeeder extends Seeder
             ['2000', 'Liabilities', 'L', 'CL', 'CL_LIAB', null, 'CR', 1, 0, null, 005, 'Top-level liabilities header', '2000', '100', '10', '3'],
             ['2100', 'Accounts Payable', 'L', 'CL', 'CL_AP', '2000', 'CR', 0, 1, 'CBS2001', 005, 'Supplier invoices outstanding', '2000', '200', '20', '3'],
             ['2200', 'Expense Payables', 'L', 'CL', 'CL_EXP', '2000', 'CR', 0, 1, null, 005, 'Accrued expenses payable', '2000', '210', '21', '3'],
+            ['2200', 'Cheque Clearing', 'L', 'CL', 'CL_CQ', '2000', 'CR', 0, 1, null, 005, 'Accrued expenses payable', '2000', '210', '22', '3'],
 
             // --- INCOME & EXPENSES ---
             ['4000', 'Revenue / Income', 'I', 'REV', 'RV_INCOME', '3000', 'CR', 0, 1, null, 005, 'Sales or service income', '4000', '100', '10', '3'],
