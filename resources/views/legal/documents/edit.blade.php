@@ -147,6 +147,22 @@
                         @enderror
                     </div>
 
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="DueDate" class="form-label">Due Date</label>
+                            <input type="date" name="DueDate" id="DueDate" class="form-control"
+                                   value="{{ old('DueDate', $doc->DueDate ? \Carbon\Carbon::parse($doc->DueDate)->format('Y-m-d') : '') }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ExpiryDate" class="form-label">Expiry Date</label>
+                            <input type="date" name="ExpiryDate" id="ExpiryDate" class="form-control"
+                                   value="{{ old('ExpiryDate', $doc->ExpiryDate ? \Carbon\Carbon::parse($doc->ExpiryDate)->format('Y-m-d') : '') }}">
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted"><i class="fa fa-info-circle"></i> Optional: Setting a due date will automatically create a legal obligation to track compliance</small>
+                        </div>
+                    </div>
+
                     {{-- Optional: let admins update statuses --}}
                     <div class="row mb-3">
                         {{--                        <div class="col-md-6">--}}

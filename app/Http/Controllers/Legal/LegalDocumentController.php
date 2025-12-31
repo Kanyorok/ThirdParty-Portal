@@ -27,7 +27,7 @@ class LegalDocumentController extends Controller
         $query = LegalDocument::query()
             ->select([
                 'Id', 'DocumentTitle', 'DocumentType', 'SourceModule', 'SourceID',
-                'ReviewStatus', 'ExecutionStatus', 'LinkedDMSDocID',
+                'ReviewStatus', 'ExecutionStatus', 'LinkedDMSDocID', 'DueDate', 'ExpiryDate',
                 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn'
             ]);
 
@@ -87,7 +87,7 @@ class LegalDocumentController extends Controller
             ->select([
                 'Id', 'DocumentTitle', 'DocumentType', 'SourceModule', 'SourceID',
                 'LinkedDMSDocID', 'ReviewStatus', 'ExecutionStatus',
-                'DispatchDate', 'SignOffDate', 'Remarks',
+                'DispatchDate', 'SignOffDate', 'Remarks', 'DueDate', 'ExpiryDate',
                 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'ReviewedBy', 'ReviewedOn'
             ])
             ->findOrFail($id);
@@ -130,6 +130,8 @@ class LegalDocumentController extends Controller
             'SourceModule' => ['required', 'string', 'max:100'],
             'SourceID' => ['nullable', 'integer'],
             'Remarks' => ['nullable', 'string'],
+            'DueDate' => ['nullable', 'date'],
+            'ExpiryDate' => ['nullable', 'date', 'after_or_equal:DueDate'],
             'creation_mode' => ['required', 'in:upload,template'],
         ];
 
@@ -160,6 +162,8 @@ class LegalDocumentController extends Controller
                 'ExecutionStatus' => 'Pending',
                 'DispatchDate' => null,
                 'SignOffDate' => null,
+                'DueDate' => $validated['DueDate'] ?? null,
+                'ExpiryDate' => $validated['ExpiryDate'] ?? null,
 
                 'ReviewedBy' => $userId,
                 'ReviewedOn' => now(),
@@ -249,6 +253,20 @@ class LegalDocumentController extends Controller
                 Storage::disk('local')->delete($tmpPath);
             }
 
+            // Auto-create Legal Obligation if DueDate is provided
+            if (!empty($validated['DueDate'])) {
+                \App\Models\Legal\LegalObligation::create([
+                    'Title' => $validated['DocumentTitle'],
+                    'SourceType' => $validated['DocumentType'],
+                    'DueDate' => $validated['DueDate'],
+                    'ExpiryDate' => $validated['ExpiryDate'] ?? null,
+                    'Status' => 'Pending',
+                    'Description' => 'Auto-created from Legal Document: ' . $validated['DocumentTitle'] . ' (ID: ' . $doc->Id . ')',
+                    'CreatedBy' => Auth::id(),
+                    'ModifiedBy' => Auth::id(),
+                ]);
+            }
+
             DB::commit();
 
             return redirect()
@@ -333,6 +351,8 @@ class LegalDocumentController extends Controller
             'SourceModule' => ['required', 'string', 'max:100'],
             'SourceID' => ['nullable', 'integer'],
             'Remarks' => ['nullable', 'string'],
+            'DueDate' => ['nullable', 'date'],
+            'ExpiryDate' => ['nullable', 'date', 'after_or_equal:DueDate'],
             'ReviewStatus' => ['nullable', 'string', 'max:50'],
             'ExecutionStatus' => ['nullable', 'string', 'max:50'],
             'DispatchDate' => ['nullable', 'date'],
@@ -357,12 +377,15 @@ class LegalDocumentController extends Controller
 
             $moduleName = Module::where('ModuleID', $validated['SourceModule'])->pluck('Name')->first();
             // Update normal fields
+            $previousDueDate = $doc->DueDate; // Store old value to check if changed
             $doc->fill([
                 'DocumentTitle' => $validated['DocumentTitle'],
                 'DocumentType' => $validated['DocumentType'],
                 'SourceModule' => $moduleName,
                 'SourceID' => $validated['SourceModule'],
                 'Remarks' => $validated['Remarks'] ?? $doc->Remarks,
+                'DueDate' => $validated['DueDate'] ?? $doc->DueDate,
+                'ExpiryDate' => $validated['ExpiryDate'] ?? $doc->ExpiryDate,
                 'ReviewStatus' => $validated['ReviewStatus'] ?? $doc->ReviewStatus,
                 'ExecutionStatus' => $validated['ExecutionStatus'] ?? $doc->ExecutionStatus,
                 'DispatchDate' => $validated['DispatchDate'] ?? $doc->DispatchDate,
@@ -455,6 +478,20 @@ class LegalDocumentController extends Controller
 
                 // Cleanup temp file
                 Storage::disk('local')->delete($tmpPath);
+            }
+
+            // Auto-create Legal Obligation if DueDate was null and is now provided
+            if (empty($previousDueDate) && !empty($validated['DueDate'])) {
+                \App\Models\Legal\LegalObligation::create([
+                    'Title' => $validated['DocumentTitle'],
+                    'SourceType' => $validated['DocumentType'],
+                    'DueDate' => $validated['DueDate'],
+                    'ExpiryDate' => $validated['ExpiryDate'] ?? null,
+                    'Status' => 'Pending',
+                    'Description' => 'Auto-created from Legal Document: ' . $validated['DocumentTitle'] . ' (ID: ' . $doc->Id . ')',
+                    'CreatedBy' => Auth::id(),
+                    'ModifiedBy' => Auth::id(),
+                ]);
             }
 
             DB::commit();

@@ -117,6 +117,20 @@
                         <textarea name="Remarks" id="Remarks" class="form-control" rows="2"></textarea>
                     </div>
 
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="DueDate" class="form-label">Due Date</label>
+                            <input type="date" name="DueDate" id="DueDate" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ExpiryDate" class="form-label">Expiry Date</label>
+                            <input type="date" name="ExpiryDate" id="ExpiryDate" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted"><i class="fa fa-info-circle"></i> Optional: Setting a due date will automatically create a legal obligation to track compliance</small>
+                        </div>
+                    </div>
+
                     <!-- Editor Section -->
                     <div id="templateEditorSection" style="display: none;">
                         <hr>
