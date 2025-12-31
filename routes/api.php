@@ -245,6 +245,8 @@ Route::prefix('v1')->group(function () {
 
     require __DIR__ . '/integrations/dms.php';
 
+    require __DIR__ . '/integrations/property.php';
+    
     Route::prefix('inventory')->group(function () {
         Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);
     });
@@ -342,4 +344,4 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
 });
 
 //api routes for workflow stages
-Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');
+Route::get('api/workflows/{id}/state', [\App\Http\Controllers\Settings\WorkFlowController::class, 'getState']);

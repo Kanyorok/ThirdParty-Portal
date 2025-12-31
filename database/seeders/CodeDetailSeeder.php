@@ -140,9 +140,9 @@ class CodeDetailSeeder extends Seeder
                 'DisplayOrder' => $index + 1,
             ]);
         }
-        foreach (TenderApprovalStatusEnum::cases() as $index => $TenderApprovalStatusEnum){
+        foreach (TenderApprovalStatusEnum::cases() as $index => $TenderApprovalStatusEnum) {
             $entries->push([
-                'CodeID' => 'TenderStatus',
+                'CodeID' => 'TenderApprovalStatus',
                 'Value' => $TenderApprovalStatusEnum->value,
                 'Description' => $TenderApprovalStatusEnum->name,
                 'DisplayOrder' => $index + 1,
@@ -301,8 +301,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
-            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PR', 'Description' => 'Requisition'],
-            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PO', 'Description' => 'Purchase Order'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PO', 'Description' => 'Purchase Order'],
 
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
@@ -406,13 +406,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimType', 'Description' => 'Other', 'Value' => 'O'],
 
             //Insurance Cover Type
-            ['CodeID' => 'CoverType','Description' => 'Comprehensive', 'Value' => 'C'],
-            ['CodeID' => 'CoverType','Description' => 'InPatient', 'Value' => 'I'],
-            ['CodeID' => 'CoverType','Description' => 'OutPatient', 'Value' => 'O'],
+            ['CodeID' => 'CoverType', 'Description' => 'Comprehensive', 'Value' => 'C'],
+            ['CodeID' => 'CoverType', 'Description' => 'InPatient', 'Value' => 'I'],
+            ['CodeID' => 'CoverType', 'Description' => 'OutPatient', 'Value' => 'O'],
 
             //Insurance Contributor Types
-            ['CodeID' => 'ContributorType','Description' => 'Employee', 'Value' => 'I'],
-            ['CodeID' => 'ContributorType','Description' => 'Employer', 'Value' => 'C'],
+            ['CodeID' => 'ContributorType', 'Description' => 'Employee', 'Value' => 'I'],
+            ['CodeID' => 'ContributorType', 'Description' => 'Employer', 'Value' => 'C'],
 
             //Insurance Claim Status
             ['CodeID' => 'ClaimStatus', 'Description' => 'Initiated', 'Value' => 'I'],
@@ -422,10 +422,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimStatus', 'Description' => 'Paid', 'Value' => 'P'],
 
             //MedicalContributorStatus
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Active', 'Value' => 'A'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Inactive', 'Value' => 'I'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Pending', 'Value' => 'P'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Suspended', 'Value' => 'S'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Active', 'Value' => 'A'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Inactive', 'Value' => 'I'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Suspended', 'Value' => 'S'],
 
             // Beneficiary Relationship
             ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Spouse', 'Value' => 'S'],
@@ -535,7 +535,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
 
 
-            
+
             ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'P'],
             ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'it'],
             ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'de'],
@@ -699,7 +699,32 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed', 'Value' => 'A'],
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Dismissed', 'Value' => 'D'],
 
+            //Finance Cheque Management
+            //Cheque Leaf Status
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Available', 'Value' => 'A', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Issued', 'Value' => 'I', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Used', 'Value' => 'U', 'DisplayOrder' => 3],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Posted', 'Value' => 'P', 'DisplayOrder' => 4],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Post-Dated Cheque', 'Value' => 'PD', 'DisplayOrder' => 5],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Presented', 'Value' => 'PR', 'DisplayOrder' => 6], // optional
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Cleared', 'Value' => 'C', 'DisplayOrder' => 7],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Bounced', 'Value' => 'B', 'DisplayOrder' => 8],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Void', 'Value' => 'V', 'DisplayOrder' => 9],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Spoiled', 'Value' => 'S', 'DisplayOrder' => 10],
 
+            //Cheque Book Status
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Active', 'Value' => 'A', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Completed', 'Value' => 'C', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Cancelled', 'Value' => 'Ca', 'DisplayOrder' => 3],
+
+            //Cheque Book Sizes (25, 50, 100 only per business rules)
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '25', 'Value' => '25', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '50', 'Value' => '50', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '100', 'Value' => '100', 'DisplayOrder' => 3],
+
+            //Cheque Party Type
+            ['CodeID' => 'ChequePartyType', 'Description' => 'Vendor', 'Value' => 'V', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequePartyType', 'Description' => 'Tenant', 'Value' => 'T', 'DisplayOrder' => 2],
 
         ];
 
@@ -724,6 +749,4 @@ class CodeDetailSeeder extends Seeder
             }
         }
     }
-
-
 }

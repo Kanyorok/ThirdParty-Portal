@@ -24,11 +24,8 @@ class BancAssuranceReferralRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ClientName' => 'required|string',
-            'ClientIDNumber' => 'required|String',
-            'ClientPhone' => 'required|string',
-            'ClientEmail' => 'required|email',
-            'ReferredBy' => 'nullable|exists:t_Users,Id',
+            'ClientId' => 'required|exists:t_BancassuranceCustomers,Id',
+            'ReferredBy' => 'required|exists:t_Users,Id',
             'ReferralDate' => 'nullable|date',
             'InsuranceProductId' => 'nullable|exists:t_InsuranceProducts,Id',
             'PreferredInsurerId' => 'required|exists:t_InsuranceProviders,Id',

@@ -25,7 +25,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">National ID</label>
-                    <input type="text" class="form-control bg-light" value="{{ $customer->NationalID ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $customer->thirdParty->RegistrationNumber ?? '-' }}" readonly>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">KRA PIN</label>
@@ -70,7 +70,7 @@
 
                 {{-- Footer --}}
                 <div class="text-end mt-4">
-                    <a href="{{ route('bancassurance.customers.check') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <a href="{{ route('bancassurance.customers.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
                         <i class="fas fa-arrow-left me-2"></i> Back to List
                     </a>
                 </div>
