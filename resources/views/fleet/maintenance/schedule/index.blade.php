@@ -96,10 +96,10 @@
                                             @csrf
                                             @method('PUT')
                                             <button class="btn btn-sm btn-danger" 
-                                                    onclick="return confirm('Cancel this schedule?')"
-                                                    title="Cancel">
-                                                <i class="fas fa-ban"></i>
-                                            </button>
+                                                onclick="return confirm('Are you sure you want to delete this schedule?')"
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                         </form>
                                     @else
                                         <button class="btn btn-sm btn-secondary" disabled title="Inactive">
