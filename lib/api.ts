@@ -1,119 +1,129 @@
-import { Property } from '@/types/property';
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { getSession, signOut } from 'next-auth/react';
 
-const API_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-let isRefreshing = false;
-let failedQueue: Array<{
-    resolve: (token: string) => void;
-    reject: (error: any) => void;
-}> = [];
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const session = await getSession();
 
-const processQueue = (error: any, token: string | null = null) => {
-    failedQueue.forEach((prom) => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token!);
-        }
-    });
-    failedQueue = [];
-};
+    const headers = new Headers(options.headers);
+    headers.set('Content-Type', 'application/json');
+    headers.set('Accept', 'application/json');
 
-const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    },
-    withCredentials: true,
-});
-
-api.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
-        try {
-            const session = await getSession();
-            if (session?.accessToken) {
-                config.headers.Authorization = `Bearer ${session.accessToken}`;
-            }
-        } catch (error) {
-            return Promise.reject(error);
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+    if (session?.accessToken) {
+        headers.set('Authorization', `Bearer ${session.accessToken}`);
     }
-);
 
-api.interceptors.response.use(
-    (response) => response,
-    async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const config: RequestInit = {
+        ...options,
+        headers,
+    };
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            if (isRefreshing) {
-                return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
-                }).then((token) => {
-                    if (originalRequest.headers) {
-                        originalRequest.headers.Authorization = `Bearer ${token}`;
-                    }
-                    return api(originalRequest);
-                }).catch((err) => {
-                    return Promise.reject(err);
-                });
-            }
+    const response = await fetch(`${API_URL}${endpoint}`, config);
 
-            originalRequest._retry = true;
-            isRefreshing = true;
+    if (response.status === 401) {
+        const refreshedSession = await getSession();
 
-            try {
-                const newSession = await getSession();
+        if (refreshedSession?.accessToken) {
+            headers.set('Authorization', `Bearer ${refreshedSession.accessToken}`);
+            const retryResponse = await fetch(`${API_URL}${endpoint}`, { ...config, headers });
 
-                if (newSession?.accessToken) {
-                    const newToken = newSession.accessToken;
-
-                    api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
-
-                    processQueue(null, newToken);
-
-                    if (originalRequest.headers) {
-                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                    }
-                    return api(originalRequest);
-                } else {
-                    throw new Error('Session refresh failed');
-                }
-            } catch (refreshError) {
-                processQueue(refreshError, null);
-                signOut({ callbackUrl: '/auth/signin' });
-                return Promise.reject(refreshError);
-            } finally {
-                isRefreshing = false;
-            }
+            if (retryResponse.ok) return retryResponse.json();
         }
 
-        if (error.response?.status === 401) {
-            signOut({ callbackUrl: '/auth/signin' });
-        }
-
-        return Promise.reject(error);
+        await signOut({ callbackUrl: '/signin' });
+        throw new Error('Unauthorized');
     }
-);
 
-export async function fetchProperties(): Promise<Property[]> {
-    try {
-        const response = await api.get('/api/properties');
-        return response.data;
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            const message = error.response?.data?.message || error.message;
-            throw new Error(message || `Failed to fetch properties: ${error.response?.statusText}`);
-        }
-        throw new Error('An unknown error occurred while fetching properties.');
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
+
+    return response.json();
 }
 
-export default api;
+export const apiClient = {
+    get: <T>(endpoint: string, options?: RequestInit) =>
+        request<T>(endpoint, { ...options, method: 'GET' }),
+    post: <T>(endpoint: string, body: any, options?: RequestInit) =>
+        request<T>(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }),
+    put: <T>(endpoint: string, body: any, options?: RequestInit) =>
+        request<T>(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+    delete: <T>(endpoint: string, options?: RequestInit) =>
+        request<T>(endpoint, { ...options, method: 'DELETE' }),
+};
+
+export interface ThirdPartyUserProfile {
+    id: number;
+    userId: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    imageId: number | null;
+    gender: string | null;
+    thirdPartyId: string;
+    isActive: boolean;
+    isPrequalified: boolean;
+    approvalStatus: string;
+    isSupplier: boolean;
+    isTenant: boolean;
+    isCustomer: boolean;
+    hasProfile: boolean;
+    emailVerified: boolean;
+    emailVerifiedOn: string | null;
+    createdOn: string;
+    modifiedOn: string;
+    thirdParty?: {
+        id: number;
+        profileCompletion: number;
+        thirdPartyDetails: {
+            thirdPartyName: string;
+            tradingName: string | null;
+            businessType: string | null;
+            registrationNumber: string;
+            taxPIN: string;
+            physicalAddress: string | null;
+            website: string | null;
+            countryId: string;
+        };
+        isPrequalified: boolean;
+        supplierId: string | null;
+        approvalStatus: string;
+        types?: Array<{ id: number; code: string; label: string }>;
+        createdOn: string;
+    };
+}
+
+export interface ProfileResponse {
+    success: boolean;
+    message: string;
+    data: ThirdPartyUserProfile;
+}
+
+export interface UpdateThirdPartyPayload {
+    ThirdPartyName?: string;
+    TradingName?: string;
+    BusinessType?: number;
+    RegistrationNumber?: string;
+    TaxPIN?: string;
+    CountryId?: number;
+    LocationId?: number;
+    PhysicalAddress?: string;
+    Website?: string;
+}
+
+export async function getProfile(): Promise<ProfileResponse> {
+    return apiClient.get<ProfileResponse>('/api/v1/portal/auth/profile');
+}
+
+export async function updateProfile(
+    profileData: UpdateThirdPartyPayload
+): Promise<ProfileResponse> {
+    return apiClient.put<ProfileResponse>('/api/v1/portal/auth/profile', profileData);
+}
+
+export async function getCurrentUser(): Promise<ProfileResponse> {
+    return apiClient.post<ProfileResponse>('/api/v1/portal/auth/me', {});
+}

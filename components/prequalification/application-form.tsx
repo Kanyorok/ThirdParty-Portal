@@ -14,38 +14,14 @@ import { useSession } from "next-auth/react"
 import { getRounds, getSupplierCategories, submitApplicationSafe, getBaseUrl } from "@/lib/api-base"
 import { cn } from "@/lib/utils"
 
-// Local round shape used inside the form (separate from global Round but can overlap)
-type Round = {
-    id: string;
-    name: string;
-    status: string;
-    deadline?: string;
-    applicantCount?: number;
-    hasApplied?: boolean;
-    applicationId?: string;
-};
-
-type SupplierCategory = {
-    id: string;
-    name: string;
-    is_active: boolean;
-};
+import type { Round, RoundSection, SupplierCategory } from "@/types/prequalification-rounds-types"
 
 type LoadingState = "idle" | "loading" | "success" | "error" | "submitting" | "warning";
-
-type RoundSection = {
-    id?: number | string | null;
-    sectionId?: number | null;
-    name?: string;
-    weight?: number | null;
-    criteria?: { id?: number | string | null; criteriaId?: number | null; maxScore?: number | null; included?: boolean }[];
-};
 
 type UploadStatus = 'pending' | 'uploading' | 'done' | 'error';
 type UploadItem = { id: string; file?: File | null; sectionId?: number | null; fileType?: string; categoryId: string; status: UploadStatus; error?: string; serverId?: number | null };
 type UnknownSection = Record<string, unknown>;
 type UnknownCriteria = Record<string, unknown>;
-// --- Helpers to normalize sections from varying backend shapes
 const firstOf = <T = unknown>(o: unknown, keys: string[]): T | undefined => {
     if (!o || typeof o !== 'object') return undefined;
     const obj = o as Record<string, unknown>;
@@ -90,7 +66,6 @@ const RoundApiItemSchema = z.object({
     endDate: z.string().optional(),
     deadline: z.string().optional(),
     applicantCount: z.number().optional(),
-    // optional fields sometimes present from API
     applicationId: z.union([z.string(), z.number()]).optional(),
     hasApplied: z.boolean().optional(),
     appliedCount: z.number().optional(),
@@ -330,7 +305,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
 
     const form = useForm<FormValues>({
         resolver: zodResolver(FormSchema),
-    defaultValues: { roundId: defaultRoundId ?? "", categoryIds: [], descriptions: {} },
+        defaultValues: { roundId: defaultRoundId ?? "", categoryIds: [], descriptions: {} },
         mode: "onChange",
     });
 
@@ -363,7 +338,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                 criteriaId: (c['criteriaId'] ?? c['id'] ?? c['criteriaID'] ?? c['CriteriaID'] ?? null) as number | null,
                                 maxScore: (c['maxScore'] ?? c['weight'] ?? c['Weight'] ?? c['score'] ?? null) as number | null,
                                 included: (c['included'] ?? c['Included'] ?? true) as boolean,
-                              }))
+                            }))
                             : undefined;
                         const nm = sname || (sid != null ? `Section ${sid}` : undefined);
                         return { id: sid, sectionId: typeof sid === 'number' ? sid : Number(sid) || null, name: nm, weight: sweight, criteria: crit } as RoundSection;
@@ -371,7 +346,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     : undefined;
                 meta[rid] = { description: r.description, sections: normSections };
             });
-        const normalizedAll = (raw as z.infer<typeof RoundApiItemSchema>[]).map((r) => {
+            const normalizedAll = (raw as z.infer<typeof RoundApiItemSchema>[]).map((r) => {
                 const statusCode = typeof r.status === "string" ? r.status : (r.status as { value?: string })?.value;
                 const deadline = r.deadline || r.endDate || r.startDate;
                 return {
@@ -379,9 +354,9 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     name: r.title ?? r.name ?? "Untitled Round",
                     status: (statusCode || "O") as string,
                     deadline,
-            applicantCount: r.applicantCount,
-            hasApplied: Boolean(r.hasApplied || r.applicationId),
-            applicationId: r.applicationId !== undefined && r.applicationId !== null ? String(r.applicationId) : undefined,
+                    applicantCount: r.applicantCount,
+                    hasApplied: Boolean(r.hasApplied || r.applicationId),
+                    applicationId: r.applicationId !== undefined && r.applicationId !== null ? String(r.applicationId) : undefined,
                 };
             }).filter(r => r.id);
             const filtered = defaultRoundId
@@ -562,7 +537,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             }
             fd.append('section_id', String(sectionId));
             if (u.fileType) fd.append('file_type', u.fileType);
-            fd.append('description', (form.getValues('descriptions') as Record<string,string> | undefined)?.[u.categoryId] || '');
+            fd.append('description', (form.getValues('descriptions') as Record<string, string> | undefined)?.[u.categoryId] || '');
             const url = `/api/procurement/prequalification/applications/${encodeURIComponent(String(rid))}/categories/${encodeURIComponent(String(u.categoryId))}/documents`;
             const res = await fetch(url, { method: 'POST', body: fd, cache: 'no-store' });
             if (!res.ok) throw new Error(await res.text());
@@ -640,7 +615,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 setFormMessage({ type: "error", message: (err as Error)?.message || "Please check your connection and try again." });
             }
         },
-    [accessToken, onSuccess, uploads, uploadFile, effectiveRoundId]
+        [accessToken, onSuccess, uploads, uploadFile, effectiveRoundId]
     );
 
     const handleClose = useCallback(() => {
@@ -855,7 +830,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                     placeholder="Describe your capability or any notes (optional)"
                                                                     value={(descriptionsMap?.[cid] ?? '')}
                                                                     onChange={(e) => {
-                                                                        const next = { ...(descriptionsMap || {}) , [cid]: e.target.value };
+                                                                        const next = { ...(descriptionsMap || {}), [cid]: e.target.value };
                                                                         form.setValue('descriptions', next, { shouldDirty: true, shouldValidate: false });
                                                                     }}
                                                                 />
@@ -877,7 +852,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                             if (inputEl) inputEl.value = '';
                                                                         }} />
                                                                     </div>
-                                                                            {uploads.filter(u => u.categoryId === cid).length > 0 && (
+                                                                    {uploads.filter(u => u.categoryId === cid).length > 0 && (
                                                                         <div className="space-y-2 text-xs">
                                                                             {uploads.filter(u => u.categoryId === cid).map((u) => (
                                                                                 <div key={u.id} className="flex flex-col gap-2 border rounded p-2">

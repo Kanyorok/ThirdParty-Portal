@@ -1,25 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Search, ListFilter, ArrowUpDown, ChevronDown } from 'lucide-react'
+import { Search, ListFilter, ArrowUpDown } from 'lucide-react'
 import { Input } from "@/components/common/input"
 import { Button } from "@/components/common/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
 import { cn } from "@/lib/utils"
-
-type StatusFilter = "all" | "open" | "closed"
-
-type ToolbarProps = {
-    defaultQuery?: {
-        q?: string
-        status?: StatusFilter
-        sortBy?: string
-        sortOrder?: "asc" | "desc"
-        pageSize?: number
-    }
-    className?: string
-}
+import type { ToolbarProps, StatusFilter } from "@/types/prequalification-rounds-types"
 
 const SORT_OPTIONS = [
     { value: "title", label: "Title" },

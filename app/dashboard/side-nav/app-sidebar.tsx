@@ -77,7 +77,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const handleLogout = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault()
         try {
-            await fetch(`${API_URL}/api/third-party-auth/logout`, {
+            await fetch(`${API_URL}/api/v1/portal/auth/logout`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Accept": "application/json" },
                 credentials: 'include',

@@ -1,104 +1,176 @@
-import {
-    Profile,
-    ProfileType,
-    ProfileFormData,
-    ProfilesResponse,
-    CreateProfileResponse
-} from "@/types/profile-management";
+// import {
+//     Profile,
+//     ProfileType,
+//     ProfileFormData,
+//     ProfilesResponse,
+//     CreateProfileResponse
+// } from "@/types/profile-management";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+// const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-const request = async (
-    url: string,
-    accessToken: string,
-    options: RequestInit = {}
-) => {
-    const isFormData = options.body instanceof FormData;
+// interface ApiResponse<T = any> {
+//     success?: boolean;
+//     message?: string;
+//     data?: T;
+// }
 
-    const path = url.startsWith('/') ? url : `/${url}`;
-    const fullUrl = `${BASE_URL}${path}`;
+// const request = async (
+//     url: string,
+//     accessToken: string,
+//     options: RequestInit = {}
+// ) => {
+//     const isFormData = options.body instanceof FormData;
 
-    const res = await fetch(fullUrl, {
-        ...options,
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            ...(isFormData
-                ? { Accept: "application/json" }
-                : {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                }),
-            ...options.headers,
-        },
-    });
+//     const path = url.startsWith('/') ? url : `/${url}`;
+//     const fullUrl = `${BASE_URL}${path}`;
 
-    if (!res.ok) {
-        const errText = await res.text();
-        let errData;
-        try {
-            errData = JSON.parse(errText);
-        } catch {
-            errData = { message: errText };
-        }
+//     const res = await fetch(fullUrl, {
+//         ...options,
+//         headers: {
+//             Authorization: `Bearer ${accessToken}`,
+//             ...(isFormData
+//                 ? { Accept: "application/json" }
+//                 : {
+//                     Accept: "application/json",
+//                     "Content-Type": "application/json",
+//                 }),
+//             ...options.headers,
+//         },
+//     });
 
-        throw new Error(errData.message || errData.error || `Request failed: ${res.status}`);
-    }
+//     if (!res.ok) {
+//         const errText = await res.text();
+//         let errData;
+//         try {
+//             errData = JSON.parse(errText);
+//         } catch {
+//             errData = { message: errText };
+//         }
 
-    return res.json();
-};
+//         throw new Error(errData.message || errData.error || `Request failed: ${res.status}`);
+//     }
 
-export const apiService = {
-    uploadProfilePicture: async (
-        file: File,
-        token: string
-    ): Promise<{ success: boolean; imageUrl: string; message: string }> => {
-        const formData = new FormData();
-        formData.append("image", file);
+//     return res.json();
+// };
 
-        return request("/api/v1/portal/profiles/upload-image", token, {
-            method: "POST",
-            body: formData,
-        });
-    },
+// export const apiService = {
+//     uploadProfilePicture: async (
+//         file: File,
+//         token: string
+//     ): Promise<{ success: boolean; imageUrl: string; message: string }> => {
+//         const formData = new FormData();
+//         formData.append("image", file);
 
-    fetchProfiles: (token: string): Promise<ProfilesResponse> =>
-        request("/api/v1/portal/profiles", token),
+//         return request("/api/v1/portal/profiles/upload-image", token, {
+//             method: "POST",
+//             body: formData,
+//         });
+//     },
 
-    createProfile: (
-        type: ProfileType,
-        data: ProfileFormData[ProfileType],
-        token: string
-    ): Promise<CreateProfileResponse> =>
-        request(`/api/v1/portal/profiles/${type}`, token, {
-            method: "POST",
-            body: JSON.stringify(data),
-        }),
+//     fetchProfiles: (token: string): Promise<ProfilesResponse> =>
+//         request("/api/v1/portal/profiles", token),
 
-    updateProfile: (
-        thirdPartyId: string | number,
-        data: Partial<Profile>,
-        token: string
-    ): Promise<{ success: boolean; message: string }> =>
-        request(`/api/v1/portal/profiles/${thirdPartyId}`, token, {
-            method: "PUT",
-            body: JSON.stringify(data),
-        }),
+//     createProfile: (
+//         type: ProfileType,
+//         data: ProfileFormData[ProfileType],
+//         token: string
+//     ): Promise<CreateProfileResponse> =>
+//         request(`/api/v1/portal/profiles/${type}`, token, {
+//             method: "POST",
+//             body: JSON.stringify(data),
+//         }),
 
-    getProfileDetails: (
-        thirdPartyId: string | number,
-        token: string
-    ): Promise<Profile> =>
-        request(`/api/v1/portal/profiles/${thirdPartyId}`, token),
+//     updateProfile: (
+//         thirdPartyId: string | number,
+//         data: Partial<Profile>,
+//         token: string
+//     ): Promise<{ success: boolean; message: string }> =>
+//         request(`/api/v1/portal/profiles/${thirdPartyId}`, token, {
+//             method: "PUT",
+//             body: JSON.stringify(data),
+//         }),
 
-    validatePortalToken: (token: string) =>
-        request("/api/v1/portal/auth/validate-token", token, {
-            method: "POST"
-        }),
+//     getProfileDetails: (
+//         thirdPartyId: string | number,
+//         token: string
+//     ): Promise<Profile> =>
+//         request(`/api/v1/portal/profiles/${thirdPartyId}`, token),
 
-    logout: (token: string) =>
-        request("/api/v1/portal/auth/logout", token, {
-            method: "POST"
-        })
-};
+//     validatePortalToken: (token: string) =>
+//         request("/api/v1/portal/auth/validate-token", token, {
+//             method: "POST"
+//         }),
 
-export const profileService = apiService;
+//     logout: (token: string) =>
+//         request("/api/v1/portal/auth/logout", token, {
+//             method: "POST"
+//         }),
+
+//     // Get current user profile
+//     getProfile: (token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/profile", token, {
+//             method: "GET"
+//         }),
+
+//     // Update profile
+//     updateProfile: (data: Partial<Profile>, token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/profile", token, {
+//             method: "PATCH",
+//             body: JSON.stringify(data)
+//         }),
+
+//     // Get profile status
+//     getProfileStatus: (token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/profile/status", token, {
+//             method: "GET"
+//         }),
+
+//     // Get supplier profile
+//     getSupplierProfile: (token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/profile/supplier", token, {
+//             method: "GET"
+//         }),
+
+//     // Get tenant profile
+//     getTenantProfile: (token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/profile/tenant", token, {
+//             method: "GET"
+//         }),
+
+//     // Update supplier categories
+//     updateSupplierCategories: (categories: number[], token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/profile/supplier/categories", token, {
+//             method: "PATCH",
+//             body: JSON.stringify({ categories })
+//         }),
+
+//     // Change password
+//     changePassword: (data: {
+//         current_password: string;
+//         password: string;
+//         password_confirmation: string;
+//     }, token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/password/change", token, {
+//             method: "PATCH",
+//             body: JSON.stringify(data)
+//         }),
+
+//     // Document management
+//     getDocuments: (token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/documents", token, {
+//             method: "GET"
+//         }),
+
+//     uploadDocument: (formData: FormData, token: string): Promise<ApiResponse> =>
+//         request("/api/v1/portal/auth/documents", token, {
+//             method: "POST",
+//             body: formData
+//         }),
+
+//     deleteDocument: (documentId: string | number, token: string): Promise<ApiResponse> =>
+//         request(`/api/v1/portal/auth/documents/${documentId}`, token, {
+//             method: "DELETE"
+//         })
+// };
+
+// export const profileService = apiService;

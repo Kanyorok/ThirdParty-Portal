@@ -6,7 +6,6 @@ import { format } from "date-fns"
 import { ChevronLeft, ChevronRight, FilePlus2, Lock, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/common/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
-import { Separator } from "@/components/common/separator"
 import { Checkbox } from "@/components/common/checkbox"
 import StatusBadge from "./status-badge"
 import ApplicationForm from "./application-form"
@@ -29,7 +28,6 @@ function formatDateRange(start: string, end: string) {
 
 export default function RoundsTable({
     rounds = [],
-    total = 0,
     page = 1,
     pageSize = 10,
     totalPages = 1,

@@ -72,6 +72,7 @@ export async function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/api/dashboard/:path*",
     "/api/:path*",
     "/signin",
     "/signup",

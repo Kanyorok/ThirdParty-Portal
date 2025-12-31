@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  cacheComponents: true,
   experimental: {
   },
   typescript: {
@@ -12,20 +13,7 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "assets.example.com",
-        port: "",
-        pathname: "/logos/**",
-      },
-      {
-        protocol: "https",
-        hostname: "picsum.photos",
-        port: "",
-        pathname: "/**",
-      },
-    ],
+    remotePatterns: [],
   },
   async headers() {
     return [

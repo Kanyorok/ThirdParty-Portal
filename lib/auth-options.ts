@@ -3,29 +3,57 @@ import type { NextAuthOptions, User, Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import type { BaseUser } from "@/types/next-auth";
 
-type TransformedUser = {
-  user_id: number;
-  third_party_id: number | null;
-  first_name: string;
-  last_name: string;
-  full_name: string;
+type BackendUser = {
+  id: number;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
   email: string;
   phone: string | null;
-  email_verified: boolean;
-  is_active: boolean;
-  has_profile: boolean;
-  is_approved: boolean;
-  profile: {
-    name: string | null;
-    trading_name: string | null;
-    approval_status: string | null;
+  imageId: string | null;
+  gender: string | null;
+  thirdPartyId: string | null;
+  isActive: boolean;
+  isPrequalified: boolean;
+  approvalStatus: string;
+  isSupplier: boolean;
+  isTenant: boolean;
+  isCustomer: boolean;
+  hasProfile: boolean;
+  emailVerified: boolean;
+  emailVerifiedOn: string | null;
+  createdOn: string;
+  modifiedOn: string | null;
+  thirdParty?: {
+    id: number;
+    profileCompletion: number;
+    thirdPartyDetails: {
+      thirdPartyName: string;
+      tradingName: string | null;
+      businessType: string | null;
+      registrationNumber: string;
+      taxPIN: string;
+      physicalAddress: string;
+      website: string | null;
+      countryId: string;
+    };
+    isPrequalified: boolean;
+    supplierId: string | null;
+    approvalStatus: string;
+    types?: Array<{
+      id: number;
+      code: string;
+      label: string;
+    }>;
+    createdOn: string;
   } | null;
 };
 
 type AuthResponse = {
   success: boolean;
   message: string;
-  user: TransformedUser;
+  user: BackendUser;
   token: string;
 };
 
@@ -75,19 +103,27 @@ export const authOptions: NextAuthOptions = {
         const u = data.user;
 
         return {
-          id: String(u.user_id),
-          user_id: u.user_id,
-          third_party_id: u.third_party_id,
-          first_name: u.first_name,
-          last_name: u.last_name,
-          full_name: u.full_name,
+          id: String(u.id),
+          user_id: u.id,
+          third_party_id: u.thirdPartyId ? Number(u.thirdPartyId) : null,
+          first_name: u.firstName,
+          last_name: u.lastName,
+          full_name: u.fullName,
           email: u.email,
           phone: u.phone,
-          email_verified: u.email_verified,
-          is_active: u.is_active,
-          has_profile: u.has_profile,
-          is_approved: u.is_approved,
-          profile: u.profile,
+          email_verified: u.emailVerified,
+          is_active: u.isActive,
+          has_profile: u.hasProfile,
+          is_approved: u.approvalStatus === 'Approved' || u.approvalStatus === 'Active',
+          is_supplier: u.isSupplier,
+          is_tenant: u.isTenant,
+          is_customer: u.isCustomer,
+          approval_status: u.approvalStatus,
+          profile: u.thirdParty ? {
+            name: u.thirdParty.thirdPartyDetails.thirdPartyName,
+            trading_name: u.thirdParty.thirdPartyDetails.tradingName,
+            approval_status: u.thirdParty.approvalStatus,
+          } : null,
           accessToken: data.token,
         } as unknown as User;
       },
@@ -111,6 +147,10 @@ export const authOptions: NextAuthOptions = {
           is_active: u.is_active,
           has_profile: u.has_profile,
           is_approved: u.is_approved,
+          is_supplier: u.is_supplier,
+          is_tenant: u.is_tenant,
+          is_customer: u.is_customer,
+          approval_status: u.approval_status,
           profile: u.profile,
           accessToken: u.accessToken,
         };
@@ -134,6 +174,10 @@ export const authOptions: NextAuthOptions = {
         is_active: t.is_active,
         has_profile: t.has_profile,
         is_approved: t.is_approved,
+        is_supplier: t.is_supplier,
+        is_tenant: t.is_tenant,
+        is_customer: t.is_customer,
+        approval_status: t.approval_status,
         profile: t.profile,
       } as any;
 

@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-
 export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken) {
@@ -17,7 +15,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: "Invalid RFQ id" }, { status: 400 });
     }
     const search = request.nextUrl.searchParams.toString();
-    const targetUrl = `${EXTERNAL_API_BASE}/api/procurement/rfq-clarifications/${encodeURIComponent(id)}${search ? `?${search}` : ""}`;
+    const targetUrl = `${process.env.NEXTAUTH_URL}/api/procurement/rfq-clarifications/${encodeURIComponent(id)}${search ? `?${search}` : ""}`;
 
     try {
         const res = await fetch(targetUrl, {

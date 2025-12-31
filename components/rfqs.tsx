@@ -1,85 +1,85 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
+import { format } from "date-fns"
 import {
     Search, Loader2,
     SlidersHorizontal, ArrowUpRight, Inbox,
     X, Hash, Calendar
-} from "lucide-react";
+} from "lucide-react"
 
-import { Input } from "@/components/common/input";
-import { Button } from "@/components/common/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table";
-import { Badge } from "@/components/common/badge";
+import { Input } from "@/components/common/input"
+import { Button } from "@/components/common/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
+import { Badge } from "@/components/common/badge"
 
 function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    const [debouncedValue, setDebouncedValue] = useState<T>(value)
     useEffect(() => {
-        const handler = setTimeout(() => setDebouncedValue(value), delay);
-        return () => clearTimeout(handler);
-    }, [value, delay]);
-    return debouncedValue;
+        const handler = setTimeout(() => setDebouncedValue(value), delay)
+        return () => clearTimeout(handler)
+    }, [value, delay])
+    return debouncedValue
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-    return !!value && typeof value === "object" && !Array.isArray(value);
+    return !!value && typeof value === "object" && !Array.isArray(value)
 }
 
 function pick(obj: Record<string, unknown>, keys: readonly string[]): unknown {
     for (const k of keys) {
-        const v = obj[k];
-        if (v !== undefined && v !== null && v !== "") return v;
+        const v = obj[k]
+        if (v !== undefined && v !== null && v !== "") return v
     }
-    return undefined;
+    return undefined
 }
 
 export function RfqsFilter() {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [status, setStatus] = useState("all");
-    const [isSearching, setIsSearching] = useState(false);
-    const [invitations, setInvitations] = useState<unknown[] | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("")
+    const [status, setStatus] = useState("all")
+    const [isSearching, setIsSearching] = useState(false)
+    const [invitations, setInvitations] = useState<unknown[] | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
-    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
     useEffect(() => {
-        const controller = new AbortController();
+        const controller = new AbortController()
         const fetchInvitations = async () => {
             try {
-                setIsSearching(true);
-                setError(null);
-                const params = new URLSearchParams();
-                if (debouncedSearchTerm) params.set("q", debouncedSearchTerm);
-                if (status && status !== "all") params.set("status", status);
+                setIsSearching(true)
+                setError(null)
+                const params = new URLSearchParams()
+                if (debouncedSearchTerm) params.set("q", debouncedSearchTerm)
+                if (status && status !== "all") params.set("status", status)
 
-                const url = `${process.env.NEXT_PUBLIC_API_URL}/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`;
-                const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
-                const data = await res.json().catch(() => null);
+                const url = `${process.env.NEXTAUTH_URL}/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`
+                const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } })
+                const data = await res.json().catch(() => null)
 
-                if (!res.ok) throw new Error(data?.message || "Failed to load RFQs");
+                if (!res.ok) throw new Error(data?.message || "Failed to load RFQs")
 
-                let list: unknown[] = [];
+                let list: unknown[] = []
                 if (isRecord(data) && Array.isArray(data["data"])) {
-                    list = data["data"] as unknown[];
+                    list = data["data"] as unknown[]
                 } else if (Array.isArray(data)) {
-                    list = data as unknown[];
+                    list = data as unknown[]
                 }
-                setInvitations(list);
+                setInvitations(list)
             } catch (e: any) {
-                if (e.name === "AbortError") return;
-                setError(e.message || "Unable to load RFQs");
-                setInvitations([]);
+                if (e.name === "AbortError") return
+                setError(e.message || "Unable to load RFQs")
+                setInvitations([])
             } finally {
-                setIsSearching(false);
+                setIsSearching(false)
             }
-        };
-        fetchInvitations();
-        return () => controller.abort();
-    }, [debouncedSearchTerm, status]);
+        }
+        fetchInvitations()
+        return () => controller.abort()
+    }, [debouncedSearchTerm, status])
 
     return (
         <div className="w-full space-y-10 py-4">
@@ -134,7 +134,7 @@ export function RfqsFilter() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => { setSearchTerm(""); setStatus("all"); }}
+                        onClick={() => { setSearchTerm(""); setStatus("all") }}
                         className="h-9 w-9 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-muted"
                     >
                         <X className="h-4 w-4" />
@@ -161,12 +161,12 @@ export function RfqsFilter() {
                         <TableBody>
                             <AnimatePresence mode="popLayout">
                                 {invitations?.map((rfq) => {
-                                    const obj = isRecord(rfq) ? rfq : {};
-                                    const id = pick(obj, ["id", "rfqId", "RFQID", "rfq_id"]);
-                                    const title = pick(obj, ["comments", "title", "RFQTitle", "name"]) ?? "Untitled RFQ";
-                                    const ref = pick(obj, ["number", "reference", "RFQRef", "ref"]) ?? "-";
-                                    const closing = pick(obj, ["submissionDeadline", "closingDate", "deadline"]);
-                                    const rfqStatus = String(pick(obj, ["status", "state"]) ?? "").toUpperCase();
+                                    const obj = isRecord(rfq) ? rfq : {}
+                                    const id = pick(obj, ["id", "rfqId", "RFQID", "rfq_id"])
+                                    const title = pick(obj, ["comments", "title", "RFQTitle", "name"]) ?? "Untitled RFQ"
+                                    const ref = pick(obj, ["number", "reference", "RFQRef", "ref"]) ?? "-"
+                                    const closing = pick(obj, ["submissionDeadline", "closingDate", "deadline"])
+                                    const rfqStatus = String(pick(obj, ["status", "state"]) ?? "").toUpperCase()
 
                                     return (
                                         <motion.tr
@@ -203,7 +203,7 @@ export function RfqsFilter() {
                                                 </Button>
                                             </TableCell>
                                         </motion.tr>
-                                    );
+                                    )
                                 })}
                             </AnimatePresence>
                         </TableBody>
@@ -234,5 +234,5 @@ export function RfqsFilter() {
                 </div>
             )}
         </div>
-    );
+    )
 }

@@ -1,71 +1,10 @@
-import { getServerSession } from "next-auth/next";
-import RoundsTable from "./rounds-table";
-import RoundsToolbar from "./rounds-toolbar";
-import { Round } from "@/types/types";
-import { authOptions } from "@/lib/auth-options";
-import { FolderSearch } from "lucide-react";
-
-type ApiRound = {
-    id?: string | number;
-    roundID?: number | string;
-    roundId?: string;
-    title?: string;
-    name?: string;
-    status?: "O" | "CL" | string | { value: string; label?: string };
-    startDate?: string;
-    endDate?: string;
-    maxVendors?: number;
-    categories?: ApiCategory[];
-    supplierEligible?: boolean;
-    canApply?: boolean;
-    isClosed?: boolean;
-    isExpired?: boolean;
-    windowOpen?: boolean;
-    isFutureWindow?: boolean;
-    duplicateWithinRange?: boolean;
-    primaryWindowRoundId?: number;
-    primaryWindowRoundTitle?: string;
-};
-
-type ApiCategory = {
-    id?: number | string;
-    category_id?: number;
-    categoryId?: number;
-    SupplierCategoryID?: number;
-    name?: string;
-    CategoryName?: string;
-    category_name?: string;
-    description?: string;
-    has_applied?: boolean;
-    hasApplied?: boolean;
-    application_id?: string | number;
-    applicationId?: string | number;
-    application_date?: string;
-    applicationDate?: string;
-    progress_percent?: number;
-    progressPercent?: number;
-    stage?: string;
-    stage_label?: string;
-    stageLabel?: string;
-    updated_on?: string;
-    updatedOn?: string;
-    decision_date?: string;
-    decisionDate?: string;
-    rejection_reason?: string;
-    rejectionReason?: string;
-    status?: string;
-};
-
-type ApiResponse = {
-    data: ApiRound[];
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-    sortBy: string;
-    sortOrder: "asc" | "desc";
-    filters: Record<string, string | undefined>;
-};
+import { getServerSession } from "next-auth/next"
+import RoundsTable from "./rounds-table"
+import RoundsToolbar from "./rounds-toolbar"
+import { Round } from "@/types/types"
+import { authOptions } from "@/lib/auth-options"
+import { FolderSearch } from "lucide-react"
+import type { ApiRound, ApiResponse } from "@/types/prequalification-rounds-types"
 
 const DEFAULT_RESPONSE: ApiResponse = {
     data: [],
@@ -76,13 +15,13 @@ const DEFAULT_RESPONSE: ApiResponse = {
     sortBy: "startDate",
     sortOrder: "asc",
     filters: {}
-};
+}
 
 async function getRounds(query: Record<string, string | undefined>): Promise<ApiResponse> {
-    const session = await getServerSession(authOptions);
-    if (!session?.accessToken) return DEFAULT_RESPONSE;
+    const session = await getServerSession(authOptions)
+    if (!session?.accessToken) return DEFAULT_RESPONSE
 
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/prequalification/rounds`;
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/prequalification/rounds`
 
     try {
         const res = await fetch(backendUrl, {
@@ -92,50 +31,50 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${session.accessToken}`,
             }
-        });
+        })
 
-        if (!res.ok) return DEFAULT_RESPONSE;
+        if (!res.ok) return DEFAULT_RESPONSE
 
-        const backendData = await res.json();
-        let rounds: ApiRound[] = Array.isArray(backendData?.data) ? backendData.data : [];
+        const backendData = await res.json()
+        let rounds: ApiRound[] = Array.isArray(backendData?.data) ? backendData.data : []
 
-        const page = parseInt(query.page || "1", 10);
-        const pageSize = parseInt(query.pageSize || "10", 10);
-        const sortBy = query.sortBy || "startDate";
-        const sortOrder = (query.sortOrder || "asc") as "asc" | "desc";
-        const status = query.status || "all";
-        const q = (query.q || "").toLowerCase().trim();
+        const page = parseInt(query.page || "1", 10)
+        const pageSize = parseInt(query.pageSize || "10", 10)
+        const sortBy = query.sortBy || "startDate"
+        const sortOrder = (query.sortOrder || "asc") as "asc" | "desc"
+        const status = query.status || "all"
+        const q = (query.q || "").toLowerCase().trim()
 
         if (q) {
             rounds = rounds.filter(r =>
                 r.title?.toLowerCase().includes(q) ||
                 r.name?.toLowerCase().includes(q)
-            );
+            )
         }
 
         if (status !== "all") {
-            const target = status === "open" ? "O" : "CL";
+            const target = status === "open" ? "O" : "CL"
             rounds = rounds.filter(r => {
-                const val = typeof r.status === "object" ? r.status.value : r.status;
-                return val === target;
-            });
+                const val = typeof r.status === "object" ? r.status.value : r.status
+                return val === target
+            })
         }
 
         rounds.sort((a, b) => {
-            let vA: any = a[sortBy as keyof ApiRound] || "";
-            let vB: any = b[sortBy as keyof ApiRound] || "";
+            let vA: any = a[sortBy as keyof ApiRound] || ""
+            let vB: any = b[sortBy as keyof ApiRound] || ""
 
             if (sortBy.toLowerCase().includes("date")) {
-                vA = new Date(vA).getTime() || 0;
-                vB = new Date(vB).getTime() || 0;
+                vA = new Date(vA).getTime() || 0
+                vB = new Date(vB).getTime() || 0
             }
 
-            if (vA < vB) return sortOrder === "asc" ? -1 : 1;
-            if (vA > vB) return sortOrder === "asc" ? 1 : -1;
-            return 0;
-        });
+            if (vA < vB) return sortOrder === "asc" ? -1 : 1
+            if (vA > vB) return sortOrder === "asc" ? 1 : -1
+            return 0
+        })
 
-        const total = rounds.length;
+        const total = rounds.length
         return {
             data: rounds.slice((page - 1) * pageSize, page * pageSize),
             page,
@@ -145,18 +84,18 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
             sortBy,
             sortOrder,
             filters: { status, q }
-        };
+        }
     } catch (error) {
-        return DEFAULT_RESPONSE;
+        return DEFAULT_RESPONSE
     }
 }
 
 export default async function RoundsView({
     initialQuery = {},
 }: {
-    initialQuery?: Record<string, string | undefined>;
+    initialQuery?: Record<string, string | undefined>
 }) {
-    const apiData = await getRounds(initialQuery);
+    const apiData = await getRounds(initialQuery)
 
     if (apiData.total === 0) {
         return (
@@ -169,11 +108,11 @@ export default async function RoundsView({
                     Adjust your filters or check back later for new prequalification windows.
                 </p>
             </div>
-        );
+        )
     }
 
     const mappedRounds: Round[] = apiData.data.map((r, idx) => {
-        const id = String(r.roundID ?? r.id ?? r.roundId ?? `idx-${idx}`);
+        const id = String(r.roundID ?? r.id ?? r.roundId ?? `idx-${idx}`)
 
         const categories = (r.categories || []).map(cat => ({
             category_id: Number(cat.category_id ?? cat.categoryId ?? cat.SupplierCategoryID ?? cat.id),
@@ -189,9 +128,9 @@ export default async function RoundsView({
             updated_on: cat.updated_on ?? cat.updatedOn,
             decision_date: cat.decision_date ?? cat.decisionDate,
             rejection_reason: cat.rejection_reason ?? cat.rejection_reason,
-        }));
+        }))
 
-        const applied = categories.filter(c => c.has_applied);
+        const applied = categories.filter(c => c.has_applied)
 
         return {
             id,
@@ -212,8 +151,8 @@ export default async function RoundsView({
                 pending_categories: categories.filter(c => ['SUBMITTED', 'UNDER_REVIEW'].includes(c.status)).length,
                 overall_progress: Math.round(categories.reduce((acc, c) => acc + c.progress_percent, 0) / categories.length)
             } : undefined
-        } as Round;
-    });
+        } as Round
+    })
 
     return (
         <section className="overflow-hidden rounded-2xl border-2 border-muted bg-background shadow-sm">
@@ -252,5 +191,5 @@ export default async function RoundsView({
                 />
             </div>
         </section>
-    );
+    )
 }

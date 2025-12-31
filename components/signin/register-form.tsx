@@ -1,469 +1,432 @@
 "use client"
 
-import { useState, Suspense, useEffect, useMemo } from "react"
+import * as React from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 import {
-  Eye,
-  EyeOff,
-  Loader2,
-  Mail,
-  Building2,
-  ArrowLeft,
-  ChevronRight,
-  ShieldCheck,
-  Check,
-  AlertCircle,
-  X,
-  MapPin,
-  Hash,
-  Search,
-  Globe
+  UserPlus, Loader2, AlertCircle,
+  CheckCircle2, ChevronDown
 } from "lucide-react"
 
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
-import { Field, FieldLabel, FieldError } from "@/components/common/field"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
-import { cn, handleApiErrors } from "@/lib/utils"
-import { Spinner } from "../common/spinner"
-import { useAuthStore } from "@/store/auth-store"
-import { useRegisterForm } from "@/hooks/use-register"
-import Link from "next/link"
 
-interface Metadata {
-  id: number
-  name: string
-  flag?: string
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
+
+const registerSchema = z.object({
+  Name: z.string().min(2, "Company name is required"),
+  TradingName: z.string().optional(),
+  BusinessType: z.string().min(1, "Business type is required"),
+  RegistrationNumber: z.string().min(2, "Registration number is required"),
+  TaxPIN: z.string().min(2, "Tax PIN is required"),
+  VATNumber: z.string().optional(),
+  Country: z.string().min(1, "Country is required"),
+  Location: z.string().min(1, "Location is required"),
+  Email: z.string().optional().or(z.literal("")).refine(val => !val || z.string().email().safeParse(val).success, "Invalid email address"),
+  Phone: z.string().min(10, "Invalid phone number").refine(
+    (val) => /^\+?\d{10,15}$/.test(val.replace(/\s/g, '')),
+    "Phone must be in format +254700000000"
+  ),
+  PhysicalAddress: z.string().optional(),
+  Website: z.string().optional().or(z.literal("")).refine(val => !val || z.string().url().safeParse(val).success, "Invalid URL"),
+  types: z.array(z.string()).min(1, "Select at least one account type"),
+  createUser: z.boolean(),
+  user_FirstName: z.string().optional(),
+  user_LastName: z.string().optional(),
+  user_Email: z.string().optional().refine(val => !val || z.string().email().safeParse(val).success, "Invalid email address"),
+  user_Phone: z.string().optional(),
+  user_Gender: z.string().optional(),
+  user_Password: z.string().optional(),
+  user_Password_confirmation: z.string().optional(),
+  supplier_category: z.string().optional(),
+}).refine((data) => {
+  if (data.createUser) {
+    return !!data.user_FirstName && !!data.user_LastName && !!data.user_Email && !!data.user_Password && !!data.user_Password_confirmation
+  }
+  return true
+}, {
+  message: "Admin details are required",
+  path: ["user_FirstName"],
+}).refine((data) => {
+  if (data.createUser && data.user_Password && data.user_Password_confirmation) {
+    return data.user_Password === data.user_Password_confirmation
+  }
+  return true
+}, {
+  message: "Passwords must match",
+  path: ["user_Password_confirmation"],
+})
+
+type FormValues = z.infer<typeof registerSchema>
 
 export default function SignUpPage() {
   const router = useRouter()
-  const { step, setStep } = useAuthStore()
-  const [authToken, setAuthToken] = useState<string | null>(null)
-  const [countries, setCountries] = useState<Metadata[]>([])
-  const [businessTypes, setBusinessTypes] = useState<Metadata[]>([])
-  const [supplierCategories, setSupplierCategories] = useState<Metadata[]>([])
-  const [selectedCats, setSelectedCats] = useState<number[]>([])
-  const [catSearch, setCatSearch] = useState("")
-
-  const {
-    form,
-    pwdShown,
-    confirmShown,
-    togglePwd,
-    toggleConfirm,
-    triggerFields,
-  } = useRegisterForm()
+  const [authError, setAuthError] = React.useState<string | null>(null)
+  const [success, setSuccess] = React.useState(false)
+  const [metadata, setMetadata] = React.useState({
+    countries: [],
+    businessTypes: [],
+    supplierCategories: [],
+    localities: []
+  })
 
   const {
     register,
-    watch,
+    handleSubmit,
     setValue,
-    setError,
-    clearErrors,
-    getValues,
-    formState: { errors, isSubmitting }
-  } = form
-
-  const selectedCountryId = watch("countryId")
-  const selectedBusinessTypeId = watch("businessType")
-  const accountType = "supplier"
-
-  const filteredCats = useMemo(() =>
-    supplierCategories.filter(cat =>
-      cat.name.toLowerCase().includes(catSearch.toLowerCase()) &&
-      !selectedCats.includes(cat.id)
-    ), [supplierCategories, catSearch, selectedCats]
-  )
-
-  useEffect(() => {
-    if (step === "profile") {
-      const fetchMetadata = async () => {
-        try {
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL
-          const [cRes, bRes, sRes] = await Promise.all([
-            fetch(`${baseUrl}/api/v1/portal/auth/metadata/countries`),
-            fetch(`${baseUrl}/api/v1/portal/auth/metadata/business-types`),
-            fetch(`${baseUrl}/api/v1/portal/auth/metadata/supplier-categories`)
-          ])
-
-          if (!cRes.ok || !bRes.ok || !sRes.ok) throw new Error("Metadata sync failed")
-
-          const [cData, bData, sData] = await Promise.all([cRes.json(), bRes.json(), sRes.json()])
-          setCountries(cData.data || [])
-          setBusinessTypes(bData.data || [])
-          setSupplierCategories(sData.data || [])
-        } catch (err) {
-          setError("root", { message: "Connectivity issue: Unable to load regional settings." })
-        }
-      }
-      fetchMetadata()
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    resolver: zodResolver(registerSchema),
+    mode: "onBlur",
+    defaultValues: {
+      Name: "",
+      TradingName: "",
+      BusinessType: "",
+      RegistrationNumber: "",
+      TaxPIN: "",
+      VATNumber: "",
+      Country: "",
+      Location: "",
+      Email: "",
+      Phone: "",
+      PhysicalAddress: "",
+      Website: "",
+      types: [],
+      createUser: true,
+      user_FirstName: "",
+      user_LastName: "",
+      user_Email: "",
+      user_Phone: "",
+      user_Gender: "",
+      user_Password: "",
+      user_Password_confirmation: "",
+      supplier_category: ""
     }
-  }, [step, setError])
+  })
 
-  const onRegisterAccount = async () => {
-    const isValid = await triggerFields(['firstName', 'lastName', 'email', 'phone', 'password', 'confirmPassword'])
-    if (!isValid) return
+  const accountTypes = watch("types") || []
+  const isSupplier = accountTypes.includes("Supplier")
+  const createUser = watch("createUser")
+  const selectedCountry = watch("Country")
 
-    clearErrors("root")
-    const values = getValues()
-
+  const fetchMetadata = React.useCallback(async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-          FirstName: values.firstName,
-          LastName: values.lastName,
-          Email: values.email,
-          Phone: values.phone,
-          Password: values.password,
-          Password_confirmation: values.confirmPassword
-        }),
-      })
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+      const endpoints = [
+        { key: 'countries', url: `${baseUrl}/api/v1/portal/auth/metadata/countries` },
+        { key: 'businessTypes', url: `${baseUrl}/api/v1/portal/auth/metadata/business-types` }
+      ]
+      if (isSupplier) endpoints.push({ key: 'supplierCategories', url: `${baseUrl}/api/v1/portal/auth/metadata/supplier-categories` })
 
-      const result = await res.json()
-      if (res.status === 422) {
-        handleApiErrors(result.errors, setError)
+      const results = await Promise.all(endpoints.map(e => fetch(e.url).then(res => res.json())))
+      const newMetadata: any = {}
+      endpoints.forEach((e, i) => {
+        newMetadata[e.key] = results[i].data || []
+      })
+      setMetadata(prev => ({ ...prev, ...newMetadata }))
+    } catch (err) {
+      console.error(err)
+    }
+  }, [isSupplier])
+
+  React.useEffect(() => { fetchMetadata() }, [fetchMetadata])
+
+  React.useEffect(() => {
+    const fetchLocalities = async () => {
+      if (!selectedCountry) {
+        setMetadata(prev => ({ ...prev, localities: [] }))
+        setValue("Location", "")
         return
       }
-      if (!res.ok) throw new Error(result.message || "Credential verification failed")
 
-      setAuthToken(result.token)
-      setStep("profile")
-    } catch (err: any) {
-      setError("root", { message: err.message })
-    }
-  }
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+        const country = metadata.countries.find((c: any) => c.code === selectedCountry || c.name === selectedCountry)
+        if (!country) return
 
-  const onCompleteProfile = async () => {
-    const isValid = await triggerFields(['thirdPartyName', 'registrationNumber', 'taxPIN', 'businessType', 'countryId', 'physicalAddress'])
-    if (!isValid) return
+        const response = await fetch(`${baseUrl}/api/v1/portal/auth/metadata/localities/${(country as any).id}`)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
-    if (selectedCats.length === 0) {
-      setError("root", { message: "Selection Required: Industry service categories must be defined." })
-      return
+        const result = await response.json()
+        setMetadata(prev => ({ ...prev, localities: result.data || [] }))
+      } catch (err) {
+        setMetadata(prev => ({ ...prev, localities: [] }))
+      }
     }
 
-    clearErrors("root")
-    const values = getValues()
+    fetchLocalities()
+  }, [selectedCountry, metadata.countries, setValue])
 
+  const onSubmit = async (data: FormValues) => {
+    setAuthError(null)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/complete-profile`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+
+      const formatPhone = (phone: string) => {
+        if (!phone) return phone
+        let cleaned = phone.replace(/[\s\-\(\)\.\+]/g, '')
+        return '+' + cleaned
+      }
+
+      const payload: any = {
+        Name: data.Name,
+        TradingName: data.TradingName || data.Name,
+        BusinessType: data.BusinessType,
+        RegistrationNumber: data.RegistrationNumber,
+        TaxPIN: data.TaxPIN,
+        Country: data.Country,
+        Location: data.Location,
+        Phone: formatPhone(data.Phone),
+        types: data.types,
+        createUser: data.createUser
+      }
+
+      if (data.VATNumber) payload.VATNumber = data.VATNumber
+      if (data.Email) payload.Email = data.Email
+      if (data.PhysicalAddress) payload.PhysicalAddress = data.PhysicalAddress
+      if (data.Website) payload.Website = data.Website
+
+      if (data.createUser) {
+        payload.user_FirstName = data.user_FirstName
+        payload.user_LastName = data.user_LastName
+        payload.user_Email = data.user_Email
+        payload.user_Password = data.user_Password
+        payload.user_Password_confirmation = data.user_Password_confirmation
+        if (data.user_Phone) payload.user_Phone = formatPhone(data.user_Phone)
+        if (data.user_Gender) payload.user_Gender = data.user_Gender
+      }
+
+      if (data.supplier_category && data.types.includes("Supplier")) {
+        payload.supplier_category = data.supplier_category
+      }
+
+      const response = await fetch(`${baseUrl}/api/v1/portal/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": `Bearer ${authToken}`
+          "Accept": "application/json"
         },
-        body: JSON.stringify({
-          ThirdPartyName: values.thirdPartyName,
-          TradingName: values.thirdPartyName,
-          RegistrationNumber: values.registrationNumber.toUpperCase(),
-          TaxPIN: values.taxPIN.toUpperCase(),
-          BusinessType: Number(values.businessType),
-          CountryId: Number(values.countryId),
-          PhysicalAddress: values.physicalAddress,
-          Website: values.website || null,
-          accountType: accountType,
-          supplierCategories: selectedCats
-        }),
+        body: JSON.stringify(payload)
       })
 
-      const result = await res.json()
-      if (res.status === 422) {
-        handleApiErrors(result.errors, setError)
-        return
+      const result = await response.json()
+      if (!response.ok) {
+        // Handle validation errors from backend
+        if (result.errors) {
+          const errorMessages = Object.values(result.errors).flat() as string[]
+          throw new Error(result.message || errorMessages.join(', '))
+        }
+        throw new Error(result.message || result.error || "Registration failed")
       }
-      if (!res.ok) throw new Error(result.message || "Organization profiling failed")
-
-      setStep("success")
+      setSuccess(true)
     } catch (err: any) {
-      setError("root", { message: err.message })
+      setAuthError(err.message || "Registration failed. Please try again.")
     }
   }
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (step === "form") {
-      await onRegisterAccount()
-    } else {
-      await onCompleteProfile()
-    }
+  const onError = (errors: any) => {
+    const firstError = Object.values(errors)[0] as any
+    setAuthError(firstError?.message || "Please fill in all required fields correctly")
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  return (
-    <Suspense fallback={<div className="h-screen w-full flex items-center justify-center bg-background"><Spinner /></div>}>
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 font-sans">
-        <div className="w-full max-w-[580px] space-y-8">
-          <AnimatePresence mode="wait">
-            {step !== "success" ? (
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="text-center space-y-6 mb-8">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                      Craft Silicon
-                    </h2>
-                  </div>
+  const fieldBase = "h-12 w-full rounded-lg border border-slate-200 bg-transparent px-4 text-sm transition-all outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-slate-900 placeholder:text-slate-400"
+  const labelBase = "text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block ml-1"
 
-                  <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                      {step === "form" ? "Create your account" : "Business Information"}
-                    </h1>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      {step === "form"
-                        ? "Enter your personal details to begin sign up process."
-                        : "Please provide your business information."}
-                    </p>
-                  </div>
-                </div>
-
-                {errors?.root && (
-                  <div className="mb-6 p-3.5 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-3">
-                    <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-                    <p className="text-xs font-medium text-destructive">{errors.root.message}</p>
-                    <button type="button" onClick={() => clearErrors("root")} className="ml-auto">
-                      <X className="h-4 w-4 text-destructive/50 hover:text-destructive" />
-                    </button>
-                  </div>
-                )}
-
-                <form onSubmit={handleFormSubmit} className="space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {step === "form" ? (
-                      <>
-                        <Field>
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">First Name</FieldLabel>
-                          <Input placeholder="John" className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("firstName")} />
-                          {errors?.firstName && <FieldError className="text-xs text-destructive mt-1">{errors.firstName.message}</FieldError>}
-                        </Field>
-                        <Field>
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Last Name</FieldLabel>
-                          <Input placeholder="Doe" className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("lastName")} />
-                          {errors?.lastName && <FieldError className="text-xs text-destructive mt-1">{errors.lastName.message}</FieldError>}
-                        </Field>
-                        <Field className="md:col-span-2">
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Email Address</FieldLabel>
-                          <div className="relative">
-                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input type="email" placeholder="john.doe@company.com" className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("email")} />
-                          </div>
-                          {errors?.email && <FieldError className="text-xs text-destructive mt-1">{errors.email.message}</FieldError>}
-                        </Field>
-                        <Field className="md:col-span-2">
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Phone Number</FieldLabel>
-                          <Input placeholder="+254 700..." className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("phone")} />
-                          {errors?.phone && <FieldError className="text-xs text-destructive mt-1">{errors.phone.message}</FieldError>}
-                        </Field>
-                        <Field>
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Password</FieldLabel>
-                          <div className="relative">
-                            <Input type={pwdShown ? "text" : "password"} className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors pr-10" {...register("password")} />
-                            <button type="button" onClick={togglePwd} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                              {pwdShown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                          {errors?.password && <FieldError className="text-xs text-destructive mt-1">{errors.password.message}</FieldError>}
-                        </Field>
-                        <Field>
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Confirm Password</FieldLabel>
-                          <div className="relative">
-                            <Input type={confirmShown ? "text" : "password"} className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors pr-10" {...register("confirmPassword")} />
-                            <button type="button" onClick={toggleConfirm} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                              {confirmShown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                          {errors?.confirmPassword && <FieldError className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</FieldError>}
-                        </Field>
-                      </>
-                    ) : (
-                      <>
-                        <Field className="md:col-span-2">
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Legal Business Name</FieldLabel>
-                          <div className="relative">
-                            <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Global Solutions Ltd" className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("thirdPartyName")} />
-                          </div>
-                          {errors?.thirdPartyName && <FieldError className="text-xs text-destructive mt-1">{errors.thirdPartyName.message}</FieldError>}
-                        </Field>
-                        <Field>
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Business Type</FieldLabel>
-                          <Select onValueChange={(v) => setValue("businessType", Number(v), { shouldValidate: true })} value={selectedBusinessTypeId?.toString()}>
-                            <SelectTrigger className="h-11 rounded-lg border-input/60">
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-lg">
-                              {businessTypes.map((t) => (
-                                <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {errors?.businessType && <FieldError className="text-xs text-destructive mt-1">Required</FieldError>}
-                        </Field>
-                        <Field>
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Registration Number</FieldLabel>
-                          <div className="relative">
-                            <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="PVT-X..." className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors uppercase" {...register("registrationNumber")} />
-                          </div>
-                          {errors?.registrationNumber && <FieldError className="text-xs text-destructive mt-1">{errors.registrationNumber.message}</FieldError>}
-                        </Field>
-                        <Field>
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Tax PIN</FieldLabel>
-                          <Input placeholder="P051..." className="h-11 rounded-lg border-input/60 focus:border-primary transition-colors uppercase" {...register("taxPIN")} />
-                          {errors?.taxPIN && <FieldError className="text-xs text-destructive mt-1">{errors.taxPIN.message}</FieldError>}
-                        </Field>
-                        <Field>
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Primary Jurisdiction</FieldLabel>
-                          <Select onValueChange={(v) => setValue("countryId", Number(v), { shouldValidate: true })} value={selectedCountryId?.toString()}>
-                            <SelectTrigger className="h-11 rounded-lg border-input/60">
-                              <SelectValue placeholder="Select country" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-lg">
-                              {countries.map((c) => (
-                                <SelectItem key={c.id} value={c.id.toString()}>
-                                  <span className="mr-2">{c.flag}</span> {c.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {errors?.countryId && <FieldError className="text-xs text-destructive mt-1">Required</FieldError>}
-                        </Field>
-                        <Field className="md:col-span-2">
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Industry Service Categories</FieldLabel>
-                          <div className="flex flex-wrap gap-2 mb-2.5 min-h-[40px] p-2.5 rounded-lg bg-muted/20 border border-dashed border-input/60">
-                            <AnimatePresence>
-                              {selectedCats.length === 0 && <span className="text-xs text-muted-foreground/50 my-auto italic">No categories selected</span>}
-                              {selectedCats.map(catId => {
-                                const cat = supplierCategories.find(c => c.id === catId);
-                                return (
-                                  <motion.div
-                                    key={catId}
-                                    initial={{ scale: 0.8, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.8, opacity: 0 }}
-                                    className="bg-primary text-primary-foreground px-2.5 py-1 rounded-md flex items-center gap-1.5 text-xs font-medium"
-                                  >
-                                    <span>{cat?.name}</span>
-                                    <button type="button" onClick={() => setSelectedCats(prev => prev.filter(id => id !== catId))} className="hover:bg-white/20 rounded-full p-0.5">
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  </motion.div>
-                                );
-                              })}
-                            </AnimatePresence>
-                          </div>
-                          <Select onValueChange={(v) => {
-                            const id = Number(v);
-                            if (!selectedCats.includes(id)) { setSelectedCats(prev => [...prev, id]); setCatSearch(""); }
-                          }}>
-                            <SelectTrigger className="h-11 rounded-lg border-input/60">
-                              <SelectValue placeholder="Select categories" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-lg max-h-64">
-                              <div className="p-2 sticky top-0 bg-popover border-b z-10">
-                                <div className="relative">
-                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                  <Input placeholder="Filter..." className="h-9 pl-9 text-xs rounded-md" value={catSearch} onChange={(e) => setCatSearch(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
-                                </div>
-                              </div>
-                              {filteredCats.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </Field>
-                        <Field className="md:col-span-2">
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Physical Address</FieldLabel>
-                          <div className="relative">
-                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Plaza, Suite 12" className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("physicalAddress")} />
-                          </div>
-                          {errors?.physicalAddress && <FieldError className="text-xs text-destructive mt-1">{errors.physicalAddress.message}</FieldError>}
-                        </Field>
-                        <Field className="md:col-span-2">
-                          <FieldLabel className="text-sm font-medium text-foreground mb-1.5">Website (Optional)</FieldLabel>
-                          <div className="relative">
-                            <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="https://www.example.com" className="h-11 pl-10 rounded-lg border-input/60 focus:border-primary transition-colors" {...register("website")} />
-                          </div>
-                          {errors?.website && <FieldError className="text-xs text-destructive mt-1">{errors.website.message}</FieldError>}
-                        </Field>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="pt-4 space-y-3.5">
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full h-11 rounded-lg font-semibold text-sm transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 text-primary-foreground"
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Processing...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center gap-1.5">
-                          <span>{step === "form" ? "Continue" : "Complete Registration"}</span>
-                          <ChevronRight className="h-4 w-4" />
-                        </div>
-                      )}
-                    </Button>
-
-                    {step === "profile" && (
-                      <button type="button" onClick={() => setStep("form")} className="w-full text-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                        Go back to personal details
-                      </button>
-                    )}
-                  </div>
-                </form>
-
-                <div className="text-center pt-6 border-t border-border/30 mt-6">
-                  <p className="text-sm text-muted-foreground">
-                    Already have an account?{" "}
-                    <Link href="/signin" className="text-primary font-semibold hover:underline underline-offset-2">
-                      Log In
-                    </Link>
-                  </p>
-                </div>
-              </motion.div>
-            ) : (
-              <SuccessState router={router} />
-            )}
-          </AnimatePresence>
+  if (success) return (
+    <div className="flex min-h-screen items-center justify-center p-6 text-center">
+      <div className="max-w-sm space-y-6">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/5">
+          <CheckCircle2 className="h-10 w-10 text-primary" />
         </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-slate-900">Application Sent</h2>
+          <p className="text-slate-500 text-sm leading-relaxed">We are reviewing your organization details. Check your email for an activation link shortly.</p>
+        </div>
+        <Button onClick={() => router.push("/signin")} className="w-full rounded-full h-12">Return to Login</Button>
       </div>
-    </Suspense>
+    </div>
   )
-}
-
-function SuccessState({ router }: { router: any }) {
-  useEffect(() => {
-    const timer = setTimeout(() => { router.push("/signin") }, 4000)
-    return () => clearTimeout(timer)
-  }, [router])
 
   return (
-    <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center space-y-8">
-      <div className="h-20 w-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-sm">
-        <Check className="h-10 w-10 stroke-[3]" />
+    <div className="min-h-screen w-full bg-white flex flex-col items-center py-12 px-6">
+      <div className="w-full max-w-[480px] space-y-10">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Third Party Registration</h1>
+          <p className="text-slate-500 text-sm">Enter your details to create account.</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-6">
+          {authError && (
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-xs font-medium text-red-600 border border-red-100">
+              <AlertCircle className="h-4 w-4" /> {authError}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Organization Details</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className={labelBase}>Legal Company Name</label>
+                <Input {...register("Name")} placeholder="e.g. Acme Corp" className={fieldBase} />
+              </div>
+              <div>
+                <label className={labelBase}>Business Type</label>
+                <div className="relative">
+                  <select {...register("BusinessType")} className={cn(fieldBase, "appearance-none")}>
+                    <option value="" className="bg-white text-slate-900">Select...</option>
+                    {metadata.businessTypes.map((t: any) => (
+                      <option key={t.id} value={t.value || t.id} className="bg-white text-slate-900">{t.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+              <div>
+                <label className={labelBase}>Country</label>
+                <div className="relative">
+                  <select {...register("Country")} className={cn(fieldBase, "appearance-none")}>
+                    <option value="" className="bg-white text-slate-900">Select...</option>
+                    {metadata.countries.map((c: any) => (
+                      <option key={c.id} value={c.code || c.name} className="bg-white text-slate-900">
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <label className={labelBase}>Location / City</label>
+                <div className="relative">
+                  <select {...register("Location")} className={cn(fieldBase, "appearance-none")} disabled={!selectedCountry || metadata.localities.length === 0}>
+                    <option value="" className="bg-white text-slate-900">
+                      {!selectedCountry ? "Select country first..." : metadata.localities.length === 0 ? "Loading localities..." : "Select location..."}
+                    </option>
+                    {metadata.localities.map((l: any) => (
+                      <option key={l.id} value={l.id} className="bg-white text-slate-900">{l.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {isSupplier && (
+              <div className="animate-in fade-in duration-300">
+                <label className={labelBase}>Supplier Category</label>
+                <div className="relative">
+                  <select {...register("supplier_category")} className={cn(fieldBase, "appearance-none border-primary/40")}>
+                    <option value="" className="bg-white text-slate-900">Select Category...</option>
+                    {metadata.supplierCategories.map((s: any) => (
+                      <option key={s.id} value={s.id} className="bg-white text-slate-900">{s.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-primary/50 pointer-events-none" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2"><h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Identification & Contact</h3></div>
+            <div>
+              <label className={labelBase}>Reg Number</label>
+              <Input {...register("RegistrationNumber")} placeholder="RC123456" className={fieldBase} />
+            </div>
+            <div>
+              <label className={labelBase}>Tax PIN / ID</label>
+              <Input {...register("TaxPIN")} placeholder="A0012345" className={fieldBase} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={labelBase}>Company Phone</label>
+              <Input {...register("Phone")} placeholder="+254700000000" className={fieldBase} />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className={labelBase}>Applying as</label>
+            <div className="flex flex-wrap gap-2">
+              {['Supplier', 'Tenant', 'Customer'].map((type) => {
+                const active = accountTypes.includes(type)
+                return (
+                  <label key={type} className={cn(
+                    "flex-1 min-w-[100px] cursor-pointer rounded-lg border px-4 py-3 text-center transition-all",
+                    active ? "border-primary bg-primary/5 text-primary" : "border-slate-200 text-slate-500 hover:border-slate-300"
+                  )}>
+                    <input type="checkbox" value={type} {...register("types")} className="hidden" />
+                    <span className="text-xs font-bold">{type}</span>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-100 p-4 space-y-4 bg-slate-50/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-slate-400" />
+                <span className="text-sm font-bold text-slate-900">Admin Account</span>
+              </div>
+              <input type="checkbox" {...register("createUser")} className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary" />
+            </div>
+
+            {createUser && (
+              <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-300">
+                <Input {...register("user_FirstName")} placeholder="First Name" className={fieldBase} />
+                <Input {...register("user_LastName")} placeholder="Last Name" className={fieldBase} />
+                <div className="col-span-2">
+                  <Input {...register("user_Email")} placeholder="Admin Work Email" type="email" className={fieldBase} />
+                </div>
+                <Input {...register("user_Phone")} placeholder="Phone (optional)" className={fieldBase} />
+                <div className="relative">
+                  <select {...register("user_Gender")} className={cn(fieldBase, "appearance-none")}>
+                    <option value="" className="bg-white text-slate-900">Gender</option>
+                    <option value="m" className="bg-white text-slate-900">Male</option>
+                    <option value="f" className="bg-white text-slate-900">Female</option>
+                    <option value="o" className="bg-white text-slate-900">Other</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+                <div className="col-span-2">
+                  <Input {...register("user_Password")} placeholder="Password" type="password" className={fieldBase} />
+                  {errors.user_Password && (
+                    <p className="text-xs text-red-500 mt-1 ml-1">{errors.user_Password.message}</p>
+                  )}
+                </div>
+                <div className="col-span-2">
+                  <Input {...register("user_Password_confirmation")} placeholder="Confirm Password" type="password" className={fieldBase} />
+                  {errors.user_Password_confirmation && (
+                    <p className="text-xs text-red-500 mt-1 ml-1">{errors.user_Password_confirmation.message}</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-12 rounded-lg bg-slate-900 hover:bg-black text-white font-bold transition-all disabled:opacity-50"
+          >
+            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Complete Registration"}
+          </Button>
+
+          <div className="text-center">
+            <p className="text-sm text-slate-500">
+              Already registered? <Link href="/signin" className="text-primary font-bold hover:underline">Sign In</Link>
+            </p>
+          </div>
+        </form>
       </div>
-      <div className="space-y-3">
-        <h2 className="text-3xl font-bold text-foreground tracking-tight">Registration Complete</h2>
-        <p className="text-muted-foreground font-medium max-w-xs mx-auto">Your account is being initialized. Redirecting to login...</p>
-      </div>
-      <div className="flex items-center justify-center gap-3 text-primary font-bold text-sm">
-        <Spinner className="h-4 w-4" /> Finalizing session
-      </div>
-    </motion.div>
+    </div>
   )
 }
