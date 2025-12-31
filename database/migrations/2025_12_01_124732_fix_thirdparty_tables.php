@@ -50,6 +50,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        // DROP FKs FIRST to avoid constraints during delete
+        $this->dropFkIfExists('t_ThirdParties', 'CountryId');
+        foreach (['CreatedBy', 'ModifiedBy', 'DeletedBy'] as $col) {
+            $this->dropFkIfExists('t_ThirdParties', $col);
+        }
+
         DB::table('t_ScheduleLease')->delete();
         DB::table('t_TenantClearance')->delete();
         DB::table('t_RenewLease')->delete();
@@ -57,6 +63,7 @@ return new class extends Migration {
         DB::table('t_RentReceipt')->delete();
         DB::table('t_RentInvoice')->delete();
         DB::table('t_LeaseCreation')->delete();
+        DB::table('t_FleetRepairLogs')->delete();
         DB::table('t_TenantMaintenance')->delete();
 
         DB::table('t_BancassurancePremiumPayments')->delete();
@@ -72,7 +79,6 @@ return new class extends Migration {
         DB::table('t_BancassuranceBeneficiaries')->delete();
         DB::table('t_BancassuranceCustomers')->delete();
 
-        DB::table('t_ThirdParties')->delete();
         DB::table('t_ThirdPartyType_ThirdParties')->delete();
         DB::table('t_RFQResponse')->delete();
         DB::table('t_TenderInvitations')->delete();
@@ -98,9 +104,9 @@ return new class extends Migration {
         DB::table('t_FinanceCustomerWallet')->delete();
         DB::table('t_FinanceCreditMovements')->delete();
         DB::table('t_ContractedDrivers')->delete();
-        DB::table('t_ThirdParties')->delete();
         DB::table('t_ThirdPartyUsers')->delete();
         DB::table('t_FinancialTransactions')->delete();
+        DB::table('t_ThirdParties')->delete();
         DB::table('t_ThirdPartyTypes')->delete();
 
         Schema::create('t_SupplierMaster', function (Blueprint $table) {
@@ -120,7 +126,7 @@ return new class extends Migration {
 
         Schema::table('t_ThirdParties', function (Blueprint $table) {});
 
-        $this->dropFkIfExists('t_ThirdParties', 'CountryId');
+        // $this->dropFkIfExists('t_ThirdParties', 'CountryId'); // Moved to top
         Schema::table('t_ThirdParties', function (Blueprint $table) {
             $table->dropColumn('CountryId');
         });
@@ -167,7 +173,7 @@ return new class extends Migration {
 
         // Drop CreatedBy/ModifiedBy/DeletedBy FKs
         foreach (['CreatedBy', 'ModifiedBy', 'DeletedBy'] as $col) {
-            $this->dropFkIfExists('t_ThirdParties', $col);
+            // $this->dropFkIfExists('t_ThirdParties', $col); // Moved to top
             if (Schema::hasColumn('t_ThirdParties', $col)) {
                 Schema::table('t_ThirdParties', fn(Blueprint $t) => $t->dropColumn($col));
             }

@@ -31,19 +31,18 @@ class ItemMasterListController extends Controller
     }
 
     public function index()
-    {
-        $items = ItemMasterList::with([
-            'category.parent',
-            'itemType',
-            'inventoryType',
-            'uom',
-            'price',
-            'status'
-        ])->get();
+        {
+            $items = ItemMasterList::with([
+                'category.parent',
+                'itemType.type',  
+                'inventoryType.type',  
+                'uom',
+                'price',
+                'status'
+            ])->get();
 
-        return view('inventory.itemmaster.itemmasterlist.index', compact('items'));
-    }
-
+            return view('inventory.itemmaster.itemmasterlist.index', compact('items'));
+        }
 
     public function create()
     {
@@ -54,27 +53,112 @@ class ItemMasterListController extends Controller
                 ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
                 ->get(),
             'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
-            'itemTypes' => CodeDetail::where('CodeID', 'ItemTypeStatus')->orderBy('Value')->get(),
             'uoms' => UnitOfMeasure::all(),
             'price' => PriceManagement::all(),
-            'inventoryTypes' => CodeDetail::where('CodeID', 'InventoryTypeStatus')->orderBy('Value')->get(),
+            'itemTypes' => ItemType::with('type')->get(),
+            'inventoryTypes' => InventoryType::with('type')->get(),
         ]);
     }
 
-    public function import(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv',
-        ]);
+   public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|mimes:xlsx,xls,csv',
+    ]);
 
-        try {
-            Excel::import(new ItemMasterListImport, $request->file('file'));
-            return back()->with('success', 'Items imported successfully.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: ' . $e->getMessage());
+    try {
+        // Create import instance
+        $import = new ItemMasterListImport();
+        
+        // Import the file
+        Excel::import($import, $request->file('file'));
+        
+        // Get the Items sheet from the associative array
+        $sheets = $import->sheets();
+        $itemsSheet = $sheets['Items'] ?? null;
+        
+        if (!$itemsSheet) {
+            // Try to find the sheet with different casing
+            foreach ($sheets as $sheetName => $sheet) {
+                if (strtolower($sheetName) === 'items') {
+                    $itemsSheet = $sheet;
+                    break;
+                }
+            }
+            
+            if (!$itemsSheet) {
+                throw new \Exception('Could not find the Items sheet in the import file.');
+            }
         }
+        
+        // Get the import statistics
+        $processed = $itemsSheet->getProcessedCount();
+        $created = $itemsSheet->getCreatedCount();
+        $updated = $itemsSheet->getUpdatedCount();
+        $skipped = $itemsSheet->getSkippedCount();
+        $errors = $itemsSheet->getErrors();
+        
+        // Build success message with details
+        $successMessage = "Import completed! ";
+        $successMessage .= "Processed: {$processed} rows. ";
+        $successMessage .= "Created: {$created} new items. ";
+        $successMessage .= "Updated: {$updated} existing items. ";
+        
+        if ($skipped > 0) {
+            $successMessage .= "Skipped: {$skipped} rows.";
+        }
+        
+        // If there are validation errors, show them
+        if (!empty($errors)) {
+            $errorMessage = "<strong>Some rows had errors:</strong><br>";
+            foreach (array_slice($errors, 0, 20) as $error) { // Show first 20 errors max
+                $errorMessage .= "• {$error}<br>";
+            }
+            
+            if (count($errors) > 20) {
+                $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
+            }
+            
+            return back()
+                ->with('warning', $successMessage)
+                ->with('error_details', $errorMessage);
+        }
+        
+        // Log for debugging
+        \Log::info('Item Master List Import Statistics', [
+            'processed' => $processed,
+            'created' => $created,
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'imported_by' => Auth::id(),
+        ]);
+        
+        return back()->with('success', $successMessage);
+        
+    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        // Handle Excel validation errors
+        $errors = collect($e->failures())->map(function($failure) {
+            $row = $failure->row();
+            $errors = implode(', ', $failure->errors());
+            return "Row {$row}: {$errors}";
+        })->implode('<br>');
+        
+        return back()->with('error', "Validation errors:<br>{$errors}");
+        
+    } catch (\Exception $e) {
+        \Log::error('Item Master List Import Failed', [
+            'error' => $e->getMessage(),
+            'file' => $request->file('file')?->getClientOriginalName(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        
+        $errorMessage = config('app.debug') 
+            ? "Import failed: " . $e->getMessage()
+            : "Import failed. Please check the file format and try again.";
+            
+        return back()->with('error', $errorMessage);
     }
-
+}
     public function export()
     {
         return Excel::download(new ItemMasterListExport, 'ItemMasterList.xlsx');
@@ -119,9 +203,9 @@ class ItemMasterListController extends Controller
             'subcategories' => ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)
                 ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
                 ->get(),
-            'itemTypes' => CodeDetail::where('CodeID', 'ItemTypeStatus')->orderBy('Value')->get(),
+            'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
-            'inventoryTypes' => CodeDetail::where('CodeID', 'InventoryTypeStatus')->orderBy('Value')->get(),
+            'inventoryTypes' => InventoryType::all(),
             'priceManagement' => PriceManagement::all(),
         ]);
     }

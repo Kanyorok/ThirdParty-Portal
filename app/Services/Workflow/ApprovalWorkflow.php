@@ -2,8 +2,10 @@
 
 namespace App\Services\Workflow;
 
+use App\Enums\Procurement\DepartmentNeedsEnum;  
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
+use App\Models\Procurement\DepartmentNeed;  
 use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Database\Eloquent\Collection;
 use BackedEnum;
