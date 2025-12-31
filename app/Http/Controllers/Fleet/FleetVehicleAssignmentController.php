@@ -56,6 +56,9 @@ class FleetVehicleAssignmentController extends Controller
             ->where('Description', 'Approved')
             ->value('ID');
 
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
+        ->pluck('Description', 'ID');
+
         $fleetVehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
@@ -68,7 +71,7 @@ class FleetVehicleAssignmentController extends Controller
 
         $fleetInspections = FleetVehicleInspection::all();
 
-        return view('fleet.assignments.create', compact('fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
+        return view('fleet.assignments.create', compact('fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections','vehicleTypes'));
     }
 
     /** Store a new assignment */

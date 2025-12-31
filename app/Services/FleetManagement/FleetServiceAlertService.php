@@ -4,10 +4,7 @@ namespace App\Services\FleetManagement;
 
 use App\Models\Fleet\FleetServiceAlert;
 use App\Models\Fleet\FleetMaintenanceSchedule;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Approval\CodeDetail;
-use App\Enums\WorkflowStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -46,8 +43,6 @@ class FleetServiceAlertService
                 'AcknowledgedOn' => null,
             ]);
 
-            $this->logWorkflow('ServiceAlert', $alert->Id, $statusId, 'Alert created from schedule');
-
             return $alert;
         });
     }
@@ -72,14 +67,12 @@ class FleetServiceAlertService
                 'ModifiedOn' => now(),
             ]);
 
+            // Update schedule status
             $schedule->update([
                 'MaintenanceStatus' => $statusId,
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
-
-            $this->logWorkflow('ServiceAlert', $alert->Id, $statusId, 'Alert acknowledged');
-            $this->logWorkflow('MaintenanceSchedule', $schedule->Id, $statusId, 'Schedule acknowledged via alert');
 
             activity()
                 ->causedBy(Auth::user())
@@ -98,7 +91,6 @@ class FleetServiceAlertService
     {
         return DB::transaction(function () use ($alertId, $mileage) {
             $alert = FleetServiceAlert::findOrFail($alertId);
-            $schedule = $alert->schedule;
             $statusId = $this->getStatusId('Completed');
 
             $alert->update([
@@ -107,12 +99,6 @@ class FleetServiceAlertService
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
-
-
-            $this->logWorkflow('ServiceAlert', $alert->Id, $statusId, 'Alert completed');
-            if ($schedule) {
-                $this->logWorkflow('MaintenanceSchedule', $schedule->Id, $statusId, 'Schedule completed via alert');
-            }
 
             activity()
                 ->causedBy(Auth::user())
@@ -134,8 +120,6 @@ class FleetServiceAlertService
             $alert->update(['DeletedBy' => Auth::id(), 'DeletedOn' => now()]);
             $alert->delete();
 
-            $this->logWorkflow('ServiceAlert', $alert->Id, null, 'Alert deleted');
-
             activity()
                 ->causedBy(Auth::user())
                 ->performedOn($alert)
@@ -152,40 +136,4 @@ class FleetServiceAlertService
             ->where('Description', $description)
             ->value('ID');
     }
-
-    private function logWorkflow(string $source, int $sourceId, ?int $statusId, ?string $notes = null)
-    {
-        $enumValue = match ($statusId) {
-            $this->getStatusId('Scheduled') => WorkflowStatus::Scheduled,
-            $this->getStatusId('Acknowledged') => WorkflowStatus::Acknowledged,
-            $this->getStatusId('Completed') => WorkflowStatus::Completed,
-            default => null,
-        };
-
-        Workflow::create([
-            'Source' => $source,
-            'SourceID' => $sourceId,
-            'Stage' => $statusId,
-            'Status' => $enumValue,
-            'Notes' => $notes,
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
-
-        PendingWorkflow::updateOrCreate(
-            ['Source' => $source, 'SourceID' => $sourceId],
-            [
-                'Stage' => $statusId,
-                'UserId' => Auth::id(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]
-        );
-    }
-
-
 }
