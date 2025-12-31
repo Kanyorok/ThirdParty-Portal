@@ -61,9 +61,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr>
-                    <td colspan="7" class="text-center">No submitted suppliers found.</td>
-                </tr>
+                {{-- DataTables handles empty state --}}
                 @endforelse
             </tbody>
         </table>
