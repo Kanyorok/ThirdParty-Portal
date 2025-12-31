@@ -40,20 +40,20 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
-        Route::get('workflows', 'WorkFlowController@index')->name('settings.workflows.index');
-        Route::post('workflows/create', 'WorkFlowController@store')->name('settings.workflows.store');
-        Route::put('workflows/{id}', 'WorkFlowController@update')->name('settings.workflows.update');
+        Route::get('workflows', [WorkFlowController::class, 'index'])->name('settings.workflows.index');
+        Route::post('workflows/create', [WorkFlowController::class, 'store'])->name('settings.workflows.store');
+        Route::put('workflows/{id}', [WorkFlowController::class, 'update'])->name('settings.workflows.update');
         // Delete workflow: use proper HTTP verb. Remove old GET delete route.
-        Route::delete('workflows/{id}', 'WorkFlowController@destroy')->name('settings.workflows.destroy');
+        Route::delete('workflows/{id}', [WorkFlowController::class, 'destroy'])->name('settings.workflows.destroy');
         // Optional fallback if DELETE is blocked by infra
-        Route::post('workflows/delete/{id}', 'WorkFlowController@destroy')->name('settings.workflows.delete.post');
-        Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
+        Route::post('workflows/delete/{id}', [WorkFlowController::class, 'destroy'])->name('settings.workflows.delete.post');
+        Route::get('workflows/{id}', [WorkFlowController::class, 'show'])->name('settings.workflows.show');
         Route::post('workflow-stages', 'WorkflowStagesController@store')->name('settings.workflow_stages.store');
         Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
 
         Route::get('/workflows/{id}/state', [WorkFlowController::class, 'getState'])->name('settings.workflows.state');
-         
-        
+
+
 
         //         // Add POST alternative for delete to handle form submission
         // Route::post('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy.post');
