@@ -61,7 +61,7 @@ type ApiResponse = {
 async function getRounds(query: Record<string, string | undefined>): Promise<ApiResponse> {
     // Get session for authentication
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.accessToken) {
         console.error("No valid session found for rounds data");
         return {
@@ -71,23 +71,33 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
             total: 0,
             totalPages: 1,
             sortBy: "startDate",
-            sortOrder: "asc",
+            sortOrder: "desc",
             filters: {}
         };
     }
 
     // Call Laravel backend directly from server component (skip Next.js API route)
     const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-    const backendUrl = `${EXTERNAL_API_BASE}/api/prequalification/rounds`;
+
+    // Construct query parameters
+    const params = new URLSearchParams();
+    if (query.page) params.set("page", String(query.page));
+    if (query.pageSize) params.set("pageSize", String(query.pageSize));
+    if (query.sortBy) params.set("sortBy", String(query.sortBy));
+    if (query.sortOrder) params.set("sortOrder", String(query.sortOrder));
+    if (query.status && query.status !== "all") params.set("status", String(query.status));
+    if (query.q) params.set("q", String(query.q));
+
+    const backendUrl = `${EXTERNAL_API_BASE}/api/prequalification/rounds?${params.toString()}`;
 
     try {
-        const res = await fetch(backendUrl, { 
-            cache: "no-store", 
-            headers: { 
-                Accept: "application/json", 
+        const res = await fetch(backendUrl, {
+            cache: "no-store",
+            headers: {
+                Accept: "application/json",
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${session.accessToken}`,
-            } 
+            }
         });
 
         const backendData = await res.json().catch(() => null);
@@ -101,80 +111,21 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
                 total: 0,
                 totalPages: 1,
                 sortBy: "startDate",
-                sortOrder: "asc",
+                sortOrder: "desc",
                 filters: {}
             };
         }
 
-        // Extract query parameters for client-side filtering/sorting
-        const page = parseInt(String(query.page || "1"));
-        const pageSize = parseInt(String(query.pageSize || "10"));
-        const sortBy = String(query.sortBy || "startDate");
-        const sortOrder = String(query.sortOrder || "asc") as "asc" | "desc";
-        const status = String(query.status || "all");
-        const q = String(query.q || "");
-
-        // Process the data from backend and apply frontend filtering/sorting
-        let rounds = backendData?.data || [];
-
-        // Apply search filter
-        if (q.trim()) {
-            const searchTerm = q.toLowerCase();
-            rounds = rounds.filter((round: any) =>
-                round.title?.toLowerCase().includes(searchTerm) ||
-                round.description?.toLowerCase().includes(searchTerm)
-            );
-        }
-
-        // Apply status filter
-        if (status !== "all") {
-            const statusValue = status === "open" ? "O" : "CL";
-            rounds = rounds.filter((round: any) => {
-                const roundStatus = typeof round.status === "object" ? round.status.value : round.status;
-                return roundStatus === statusValue;
-            });
-        }
-
-        // Apply sorting
-        rounds.sort((a: any, b: any) => {
-            let aValue, bValue;
-            
-            if (sortBy === "title") {
-                aValue = a.title || "";
-                bValue = b.title || "";
-            } else if (sortBy === "startDate") {
-                aValue = new Date(a.startDate || 0).getTime();
-                bValue = new Date(b.startDate || 0).getTime();
-            } else if (sortBy === "endDate") {
-                aValue = new Date(a.endDate || 0).getTime();
-                bValue = new Date(b.endDate || 0).getTime();
-            } else {
-                aValue = a.startDate || "";
-                bValue = b.startDate || "";
-            }
-
-            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-            return 0;
-        });
-
-        // Apply pagination
-        const total = rounds.length;
-        const totalPages = Math.ceil(total / pageSize);
-        const startIndex = (page - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const paginatedRounds = rounds.slice(startIndex, endIndex);
-
-    // Return data in expected format
+        // Return backend data directly as it is already filtered, sorted, and paginated
         return {
-            data: paginatedRounds,
-            page,
-            pageSize,
-            total,
-            totalPages,
-            sortBy,
-            sortOrder,
-            filters: { status, q }
+            data: backendData.data || [],
+            page: backendData.page || 1,
+            pageSize: backendData.pageSize || 10,
+            total: backendData.total || 0,
+            totalPages: backendData.totalPages || 1,
+            sortBy: backendData.sortBy || "startDate",
+            sortOrder: backendData.sortOrder || "desc",
+            filters: backendData.filters || {}
         };
     } catch (error) {
         console.error(`Error fetching rounds from Laravel backend:`, error);
@@ -185,7 +136,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
             total: 0,
             totalPages: 1,
             sortBy: "startDate",
-            sortOrder: "asc",
+            sortOrder: "desc",
             filters: {}
         };
     }
@@ -230,7 +181,7 @@ export default async function RoundsView({
             const v = (rawStatus ?? r.status)
             status = v === 'O' || v === 'CL' ? v : (v === 'Open' ? 'O' : 'CL')
         }
-    // Map categories with their application status
+        // Map categories with their application status
         const rawCats = (r as unknown as { categories?: ApiCategory[] }).categories || [];
         const categories = rawCats.map((cat) => ({
             category_id: Number(cat.category_id ?? cat.categoryId ?? cat.SupplierCategoryID ?? cat.id),
@@ -248,11 +199,11 @@ export default async function RoundsView({
             rejection_reason: cat.rejection_reason ?? cat.rejectionReason,
         }));
 
-    // Calculate summary from categories
+        // Calculate summary from categories
         const appliedCategories = categories.filter((cat: any) => cat.has_applied);
         const approvedCategories = categories.filter((cat: any) => cat.status === 'APPROVED');
         const rejectedCategories = categories.filter((cat: any) => cat.status === 'REJECTED');
-        const pendingCategories = categories.filter((cat: any) => 
+        const pendingCategories = categories.filter((cat: any) =>
             ['SUBMITTED', 'UNDER_REVIEW'].includes(cat.status)
         );
 
@@ -280,7 +231,7 @@ export default async function RoundsView({
                 approved_categories: approvedCategories.length,
                 rejected_categories: rejectedCategories.length,
                 pending_categories: pendingCategories.length,
-                overall_progress: categories.length > 0 ? 
+                overall_progress: categories.length > 0 ?
                     Math.round(categories.reduce((sum: number, cat) => sum + (Number(cat.progress_percent) || 0), 0) / categories.length) : 0
             } : undefined,
         };
