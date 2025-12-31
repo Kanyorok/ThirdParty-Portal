@@ -19,17 +19,21 @@ class TenderResponseController extends Controller
     }
 
     public function create(){
-        // Include Title so the view can display TenderNo-Title
         $tenders = Tender::select('Id', 'TenderNo', 'Title')->get();
 
-        // Fix: Get supplier names from the related ThirdParty table
-        $suppliers = Supplier::select('t_Suppliers.Id')
-            ->join('t_ThirdParties', 't_Suppliers.ThirdPartyID', '=', 't_ThirdParties.Id')
-            ->selectRaw('t_Suppliers.Id, COALESCE(t_ThirdParties.TradingName, t_ThirdParties.ThirdPartyName) as SupplierName')
-            ->whereNull('t_Suppliers.DeletedOn')
-            ->get();
+    
+    $suppliers = Supplier::with('supplierMaster.thirdParty')
+        ->whereNull('DeletedOn')
+        ->get()
+        ->map(function($supplier) {
+            return [
+                'Id' => $supplier->Id,
+                'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName 
+                    ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
+            ];
+        });
 
-        return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create', compact('tenders', 'suppliers'));
+    return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create', compact('tenders', 'suppliers'));
     }
      public function storeResponse(Request $request)
     {

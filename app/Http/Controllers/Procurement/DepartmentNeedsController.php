@@ -94,7 +94,7 @@ class DepartmentNeedsController extends Controller
         DB::transaction(function () use ($departmentNeed, $actor) {
             /** @var ApprovalWorkflow $workflow */
             $workflow = app(ApprovalWorkflow::class, ['codeId' => 'DepartmentNeeds']);
-            $workflow->submit($departmentNeed, $actor, DepartmentNeedsEnum::Pending, 'Submitted for approval');
+            $workflow->submit($departmentNeed, $actor, DepartmentNeedsEnum::Pending, remarks: 'Submitted for approval');
         });
 
         return redirect()

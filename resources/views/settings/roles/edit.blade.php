@@ -21,17 +21,25 @@
         <p id="permissions_error" class="text-danger d-none error col-12" role="alert"></p>
 
         @php
-        $moduleLabels = collect(\App\Enums\Core\ModulesEnum::cases())
-        ->mapWithKeys(fn($m) => [$m->value => $m->description()]);
-        $grouped = [];
-        foreach (\App\Enums\Core\PermissionEnum::cases() as $perm) {
-        $mod = $perm->module()->value;
-        $section = $perm->title();
-        $grouped[$mod] = $grouped[$mod] ?? [];
-        $grouped[$mod][$section] = $grouped[$mod][$section] ?? [];
-        $grouped[$mod][$section][] = $perm;
-        }
-        ksort($grouped);
+$moduleLabels = collect(\App\Enums\Core\ModulesEnum::cases())
+    ->mapWithKeys(fn($m) => [$m->value => $m->description()]);
+$grouped = [];
+
+// Only process permissions that exist in the enum
+foreach (\App\Enums\Core\PermissionEnum::cases() as $perm) {
+    try{
+    $mod = $perm->module()->value;
+    $section = $perm->title();
+    $grouped[$mod] = $grouped[$mod] ?? [];
+    $grouped[$mod][$section] = $grouped[$mod][$section] ?? [];
+    $grouped[$mod][$section][] = $perm;
+    }catch(\UnhandeledMatchError $e){
+        \log::warning("PermissionEnum case " . $perm->value . " does not map to any ModulesEnum case.");
+        // Skip permissions that do not map to a module
+        continue;
+    }
+}
+ksort($grouped);
         @endphp
 
         <div class="accordion" id="modulesAccordion">
