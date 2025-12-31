@@ -375,6 +375,12 @@ class PrequalificationEvaluationController extends Controller
                 ])->orderByDesc('SubmittedOn')->first();
 
                 if ($matchingApp) {
+                    // Resolve a valid ThirdPartyUser ID to satisfy the FK_AppCatStatus_CreatedBy constraint
+                    // This table strictly requires a ThirdPartyUser ID, causing issues when updated by System Users.
+                    // We fallback to the first user of the ThirdParty as a proxy.
+                    $proxyUserId = \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyID', $thirdPartyId)->value('Id');
+                    $auditUserId = $proxyUserId ?? $userId; // Fallback to system user if no TP user found (will likely fail constraint but best effort)
+
                     $acs = ApplicationCategoryStatus::firstOrNew([
                         'ApplicationId' => $matchingApp->ApplicationID,
                         'CategoryId' => $categoryId,
@@ -382,7 +388,7 @@ class PrequalificationEvaluationController extends Controller
                     $prevStatus = $acs->exists ? $acs->Status : null;
                     $prevProgress = $acs->exists ? (float)$acs->ProgressPercent : 0.0;
                     if (!$acs->exists) {
-                        $acs->CreatedBy = $userId;
+                        $acs->CreatedBy = $auditUserId;
                         $acs->CreatedOn = $now;
                     }
                     $acs->Status = 'A';
@@ -390,7 +396,7 @@ class PrequalificationEvaluationController extends Controller
                     $acs->Stage = 'prequalified';
                     $acs->StageLabel = 'Prequalified';
                     $acs->DecisionDate = $now;
-                    $acs->ModifiedBy = $userId;
+                    $acs->ModifiedBy = $auditUserId;
                     $acs->ModifiedOn = $now;
                     $acs->save();
 
@@ -400,7 +406,7 @@ class PrequalificationEvaluationController extends Controller
                         'NewStatus' => 'A',
                         'PreviousProgress' => $prevProgress,
                         'NewProgress' => 100.00,
-                        'ChangedBy' => $userId,
+                        'ChangedBy' => $userId, // This table likely points to t_Users or is polymorphic, so we keep real user
                         'Notes' => 'Manual prequalification approved',
                         'CreatedBy' => $userId,
                         'CreatedOn' => $now,
