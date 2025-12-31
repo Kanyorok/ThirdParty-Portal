@@ -90,7 +90,7 @@ class PropertyNewLease extends Model
 
     public function currency()
     {
-        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id')->withTrashed();
     }
 
     public function taxRule()

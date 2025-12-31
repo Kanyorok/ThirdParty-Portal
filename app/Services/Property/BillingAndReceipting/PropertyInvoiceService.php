@@ -140,10 +140,10 @@ class PropertyInvoiceService
                     'lines' => $lines, //This should be an array of the items that will be disp in your module
                 ];
 
-                //dd($payload);
                 // Finance service will internally generate RequestID
                 $result = $finance->intake($payload, true);
 
+                dd($payload);
                 
                 // Store only the RequestID back into t_RentInvoice
                 if (!empty($result['request_id'])) {
