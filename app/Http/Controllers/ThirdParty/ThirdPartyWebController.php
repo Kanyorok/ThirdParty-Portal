@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Yajra\DataTables\DataTables;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 
 class ThirdPartyWebController extends Controller
 {
