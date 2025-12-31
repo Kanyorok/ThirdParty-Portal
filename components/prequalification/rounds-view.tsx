@@ -78,7 +78,17 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
 
     // Call Laravel backend directly from server component (skip Next.js API route)
     const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-    const backendUrl = `${EXTERNAL_API_BASE}/api/prequalification/rounds`;
+
+    // Construct query parameters
+    const params = new URLSearchParams();
+    if (query.page) params.set("page", String(query.page));
+    if (query.pageSize) params.set("pageSize", String(query.pageSize));
+    if (query.sortBy) params.set("sortBy", String(query.sortBy));
+    if (query.sortOrder) params.set("sortOrder", String(query.sortOrder));
+    if (query.status && query.status !== "all") params.set("status", String(query.status));
+    if (query.q) params.set("q", String(query.q));
+
+    const backendUrl = `${EXTERNAL_API_BASE}/api/prequalification/rounds?${params.toString()}`;
 
     try {
         const res = await fetch(backendUrl, {
@@ -106,75 +116,16 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
             };
         }
 
-        // Extract query parameters for client-side filtering/sorting
-        const page = parseInt(String(query.page || "1"));
-        const pageSize = parseInt(String(query.pageSize || "10"));
-        const sortBy = String(query.sortBy || "startDate");
-        const sortOrder = String(query.sortOrder || "desc") as "asc" | "desc";
-        const status = String(query.status || "all");
-        const q = String(query.q || "");
-
-        // Process the data from backend and apply frontend filtering/sorting
-        let rounds = backendData?.data || [];
-
-        // Apply search filter
-        if (q.trim()) {
-            const searchTerm = q.toLowerCase();
-            rounds = rounds.filter((round: any) =>
-                round.title?.toLowerCase().includes(searchTerm) ||
-                round.description?.toLowerCase().includes(searchTerm)
-            );
-        }
-
-        // Apply status filter
-        if (status !== "all") {
-            const statusValue = status === "open" ? "O" : "CL";
-            rounds = rounds.filter((round: any) => {
-                const roundStatus = typeof round.status === "object" ? round.status.value : round.status;
-                return roundStatus === statusValue;
-            });
-        }
-
-        // Apply sorting
-        rounds.sort((a: any, b: any) => {
-            let aValue, bValue;
-
-            if (sortBy === "title") {
-                aValue = a.title || "";
-                bValue = b.title || "";
-            } else if (sortBy === "startDate") {
-                aValue = new Date(a.startDate || 0).getTime();
-                bValue = new Date(b.startDate || 0).getTime();
-            } else if (sortBy === "endDate") {
-                aValue = new Date(a.endDate || 0).getTime();
-                bValue = new Date(b.endDate || 0).getTime();
-            } else {
-                aValue = a.startDate || "";
-                bValue = b.startDate || "";
-            }
-
-            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-            return 0;
-        });
-
-        // Apply pagination
-        const total = rounds.length;
-        const totalPages = Math.ceil(total / pageSize);
-        const startIndex = (page - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const paginatedRounds = rounds.slice(startIndex, endIndex);
-
-        // Return data in expected format
+        // Return backend data directly as it is already filtered, sorted, and paginated
         return {
-            data: paginatedRounds,
-            page,
-            pageSize,
-            total,
-            totalPages,
-            sortBy,
-            sortOrder,
-            filters: { status, q }
+            data: backendData.data || [],
+            page: backendData.page || 1,
+            pageSize: backendData.pageSize || 10,
+            total: backendData.total || 0,
+            totalPages: backendData.totalPages || 1,
+            sortBy: backendData.sortBy || "startDate",
+            sortOrder: backendData.sortOrder || "desc",
+            filters: backendData.filters || {}
         };
     } catch (error) {
         console.error(`Error fetching rounds from Laravel backend:`, error);
