@@ -29,4 +29,10 @@ enum TicketStatusEnum: string
         }
         throw new ErroredException('Invalid Status');
     }
+
+    public static function fromCodeDetail(CodeDetail $code): TicketStatusEnum
+    {
+        return self::fromValue($code->Value);
+
+    }
 }

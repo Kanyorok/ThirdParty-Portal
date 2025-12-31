@@ -84,17 +84,16 @@
         <table>
             <tr class="header-row">
                 <td>
-                    <h1>IMARISHA SAVINGS AND CREDIT</h1>
-                    <p>CO-OPERATIVE SOCIETY LTD</p>
-                    <p>(FORMER KIPSIGIS TEACHERS SACCO SOCIECTY LTD)</p>
+                    <h1>{{ $name }}</h1>
+                    <p>{{ $motto }}</p>
                 </td>
 
             </tr>
-            <tr>
-                <td style="text-align: center;">HEAD OFFICE: KERICHO/NAKURU ROAD OPPOSITE KOBIL PETROL STATION, PO BOX
-                    682-20200, TEL 254 -052-30229, KERICHO
-                </td>
-            </tr>
+            {{--   <tr>
+                   <td style="text-align: center;">HEAD OFFICE: KERICHO/NAKURU ROAD OPPOSITE KOBIL PETROL STATION, PO BOX
+                       682-20200, TEL 254 -052-30229, KERICHO
+                   </td>
+               </tr>--}}
         </table>
         <hr>
         <h2 style="text-align: center; margin:5px 0;">{{  $title  }} - {{ $planner->Name }}</h2>
