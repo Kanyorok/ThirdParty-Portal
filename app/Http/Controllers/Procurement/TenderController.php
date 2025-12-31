@@ -1866,6 +1866,46 @@ class TenderController extends Controller
                 'next_stage' => $nextStage?->StageName ?? 'None',
             ]);
 
+
+            // Fetch additional workflow details
+            $approvalType = 'N/A';
+            $approversNeeded = 0;
+            $fullCurrentStage = null;
+
+            if ($currentStage && isset($currentStage['id'])) {
+                $fullCurrentStage = \App\Models\Core\Approval\WorkflowStage::find($currentStage['id']);
+                if ($fullCurrentStage) {
+                    $approversNeeded = $fullCurrentStage->Count ?? 0;
+
+                    // Fetch Workflow Type from Stage directly (since t_WorkflowStages has WorkFlowTypeId)
+                    if (!empty($fullCurrentStage->WorkFlowTypeId)) {
+                        $typeModel = \App\Models\Settings\WorkFlowType::find($fullCurrentStage->WorkFlowTypeId);
+                        if ($typeModel) {
+                            $approvalType = $typeModel->Name;
+                        }
+                    }
+
+                    // Fallback to Workflow relationship if Stage doesn't have it (legacy check)
+                    if ($approvalType === 'N/A') {
+                        $workflow = $fullCurrentStage->workflow;
+                        if ($workflow && $workflow->relationLoaded('type_name') && $workflow->type_name) {
+                            $approvalType = $workflow->type_name->Name ?? 'N/A';
+                        }
+                    }
+                }
+            }
+            // Fallback: if no current stage, try to get workflow from history or tender
+            if ($approvalType === 'N/A' && $history->count() > 0) {
+                // Try to guess or fetch from first history item stage
+                $firstItem = $history->first();
+                if ($firstItem && $firstItem->stage) {
+                    $workflow = $firstItem->stage->workflow;
+                    if ($workflow) {
+                        $approvalType = $workflow->type_name->Name ?? 'N/A';
+                    }
+                }
+            }
+
             return view('procurement.tendering.initiatetender.workflow-history', compact(
                 'tender',
                 'history',
@@ -1876,7 +1916,9 @@ class TenderController extends Controller
                 'totalPending',
                 'totalCompleted',
                 'nextStage',
-                'nextStageApprovers'
+                'nextStageApprovers',
+                'approvalType',
+                'approversNeeded'
             ));
         } catch (\Exception $e) {
             \Log::error('Failed to load workflow history: ' . $e->getMessage());
@@ -2134,7 +2176,7 @@ class TenderController extends Controller
         try {
             // Get all selected suppliers for this tender from t_TenderSuppliers
             $selectedSuppliers = TenderSupplier::where('TenderID', $tender->Id)
-                ->with(['supplier.thirdParty'])
+                ->with(['supplier.party'])
                 ->get();
 
             if ($selectedSuppliers->isEmpty()) {
@@ -2143,24 +2185,42 @@ class TenderController extends Controller
             }
 
             foreach ($selectedSuppliers as $tenderSupplier) {
-                if (!$tenderSupplier->supplier || !$tenderSupplier->supplier->thirdParty) {
-                    Log::warning("Missing supplier or thirdParty data for TenderSupplier ID: {$tenderSupplier->id}");
+                if (!$tenderSupplier->supplier || !$tenderSupplier->supplier->party) {
+                    Log::warning("Missing supplier or party data for TenderSupplier ID: {$tenderSupplier->id}");
                     continue;
                 }
 
-                $supplier = $tenderSupplier->supplier;
-                $thirdParty = $supplier->thirdParty;
+                $masterSupplier = $tenderSupplier->supplier;
+                $thirdParty = $masterSupplier->party;
 
                 // Skip if no email address
                 if (!$thirdParty->Email) {
-                    Log::warning("No email address for supplier {$thirdParty->ThirdPartyName} (ID: {$supplier->Id})");
+                    Log::warning("No email address for supplier {$thirdParty->ThirdPartyName} (ID: {$masterSupplier->Id})");
+                    continue;
+                }
+
+                // Resolve valid valid SupplierId for t_TenderInvitations (FK to t_Suppliers)
+                $validSupplierCategory = \App\Models\ThirdParies\Supplier::where('SupplierMasterId', $masterSupplier->Id)
+                    ->where('Active_Status', 1)
+                    ->when($tender->Category, function ($q) use ($tender) {
+                        return $q->where('CategoryId', $tender->Category);
+                    })
+                    ->first();
+
+                // Fallback: If no category-specific match, take ANY active supplier record for this master
+                if (!$validSupplierCategory) {
+                    $validSupplierCategory = \App\Models\ThirdParies\Supplier::where('SupplierMasterId', $masterSupplier->Id)->first();
+                }
+
+                if (!$validSupplierCategory) {
+                    Log::error("Cannot send invitation to Supplier Master ID {$masterSupplier->Id}: No enabling record found in t_Suppliers.");
                     continue;
                 }
 
                 // Create invitation record in t_TenderInvitations
                 $invitation = TenderInvitation::create([
                     'TenderId' => $tender->Id,
-                    'SupplierId' => $supplier->Id,
+                    'SupplierId' => $validSupplierCategory->Id,
                     'InvitationDate' => now(),
                     'ResponseStatus' => TenderInvitation::STATUS_PENDING,
                     'ResponseDate' => null,
@@ -2175,7 +2235,7 @@ class TenderController extends Controller
                 // Send email invitation
                 try {
                     Mail::to($thirdParty->Email)
-                        ->send(new TenderInvitationMail($tender, $supplier));
+                        ->send(new TenderInvitationMail($tender, $validSupplierCategory));
 
                     $invitationsSent++;
 
