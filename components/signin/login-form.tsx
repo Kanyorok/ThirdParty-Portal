@@ -104,6 +104,7 @@ function SignInFormComponent() {
             })
 
             if (result?.error) {
+                console.error('SignIn Result Error:', result.error);
                 const raw = result.error
                 let code = "UNKNOWN"
                 let message = raw
@@ -154,6 +155,7 @@ function SignInFormComponent() {
                 }, 300)
             }
         } catch (error) {
+            console.error('Sign In Error:', error);
             setError("root", {
                 type: "manual",
                 message: "A network error occurred. Please check your connection.",

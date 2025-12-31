@@ -45,8 +45,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        console.error('API Response Error:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: error.response?.status,
+            data: error.response?.data,
+            headers: error.response?.headers,
+            message: error.message
+        });
+
         if (error.response?.status === 401) {
             // Unauthorized, sign out the user
+            console.warn('Unauthorized access detected, signing out...');
             signOut({ callbackUrl: '/signin' });
         }
         return Promise.reject(error);
