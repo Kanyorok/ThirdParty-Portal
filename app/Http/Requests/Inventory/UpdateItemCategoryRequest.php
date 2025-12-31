@@ -35,11 +35,12 @@ class UpdateItemCategoryRequest extends FormRequest
                 Rule::unique('t_ItemCategories', 'Name')
                     ->ignore($this->route('id'))
                     ->where('ParentId', $this->ParentId)
-                    ->whereNull('DeletedOn'),  
+                    ->whereNull('DeletedOn'),
             ],
             'Description' => 'nullable|string',
             'ParentId' => 'nullable|exists:t_ItemCategories,Id',
             'Status' => 'nullable|exists:t_CodeDetails,ID',
+            'ItemTypeId' => 'nullable|integer|exists:t_ItemTypes,Id',
         ];
     }
 

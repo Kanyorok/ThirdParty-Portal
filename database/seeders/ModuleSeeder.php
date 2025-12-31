@@ -21,20 +21,23 @@ class ModuleSeeder extends Seeder
             DB::table(config('permission.table_names.permissions'))->delete();
         }
 
-        $this->_seed($this->_thirdParty($fresh));
-        $this->_seed($this->_crm());
-        $this->_seed($this->_procurement($fresh));
-        $this->_seed($this->_inventory($fresh));
-        $this->_seed($this->_propertyManagement($fresh));
-        $this->_seed($this->_fleetManagement());
-        $this->_seed($this->_documentManagement());
-        $this->_seed($this->_legal($fresh));
-        $this->_seed($this->_insurance($fresh));
-        $this->_seed($this->_hrm($fresh));
-        $this->_seed($this->_finance($fresh));
-        $this->_seed($this->_settings($fresh));
-        $this->_seed($this->_myAccount($fresh));
-        $this->_seed($this->_budgetline($fresh));
+        $allModules = collect();
+        $allModules = $allModules->merge($this->_thirdParty($fresh));
+        $allModules = $allModules->merge($this->_crm());
+        $allModules = $allModules->merge($this->_procurement($fresh));
+        $allModules = $allModules->merge($this->_inventory($fresh));
+        $allModules = $allModules->merge($this->_propertyManagement($fresh));
+        $allModules = $allModules->merge($this->_fleetManagement());
+        $allModules = $allModules->merge($this->_documentManagement());
+        $allModules = $allModules->merge($this->_legal($fresh));
+        $allModules = $allModules->merge($this->_insurance($fresh));
+        $allModules = $allModules->merge($this->_hrm($fresh));
+        $allModules = $allModules->merge($this->_finance($fresh));
+        $allModules = $allModules->merge($this->_settings($fresh));
+        $allModules = $allModules->merge($this->_myAccount($fresh));
+        $allModules = $allModules->merge($this->_budgetline($fresh));
+
+        $this->_seed($allModules);
     }
 
     protected function _thirdParty(bool $fresh): Collection
@@ -593,7 +596,21 @@ class ModuleSeeder extends Seeder
         $actor = SystemHelper::user();
         $dated = now()->toDateTimeString();
 
-        // Process each module individually to ensure updates happen
+        // 1. Get all ModuleIDs from the provided collection
+        $moduleIds = $modules->pluck('ModuleID')->toArray();
+
+        // 2. Soft-Delete any modules in DB that are NOT in the collection
+        // "Removed even from the database" -> Using Soft Delete (DeletedOn) for safety, 
+        // as Module model uses SoftDeletes. This effectively removes them from view.
+        DB::table('t_Modules')
+            ->whereNotIn('ModuleID', $moduleIds)
+            ->whereNull('DeletedOn') // Only update if not already deleted
+            ->update([
+                'DeletedOn' => $dated,
+                'DeletedBy' => $actor->Id,
+            ]);
+
+        // 3. Upsert modules
         foreach ($modules as $module) {
             $existing = DB::table('t_Modules')
                 ->where('ModuleID', $module['ModuleID'])
@@ -601,6 +618,7 @@ class ModuleSeeder extends Seeder
 
             if ($existing) {
                 // Update existing module (preserve CreatedBy and CreatedOn)
+                // Ensure DeletedOn is NULL to "restore" if it was deleted
                 DB::table('t_Modules')
                     ->where('ModuleID', $module['ModuleID'])
                     ->update([
@@ -611,6 +629,8 @@ class ModuleSeeder extends Seeder
                         'ParentID' => $module['ParentID'] ?? null,
                         'ModifiedBy' => $actor->Id,
                         'ModifiedOn' => $dated,
+                        'DeletedOn' => null, // Restore if deleted
+                        'DeletedBy' => null,
                     ]);
             } else {
                 // Insert new module
@@ -625,6 +645,8 @@ class ModuleSeeder extends Seeder
                     'CreatedOn' => $dated,
                     'ModifiedBy' => $actor->Id,
                     'ModifiedOn' => $dated,
+                    'DeletedOn' => null,
+                    'DeletedBy' => null,
                 ]);
             }
         }
