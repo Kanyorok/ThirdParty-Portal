@@ -683,6 +683,10 @@ enum PermissionEnum: string
     case DebitNoteUpdate = 'debitNote-update';
     case DebitNoteDelete = 'debitNote-delete';
 
+    //Supplier Permissions
+    case SupplierView = 'supplier-view';     
+    case SupplierApproval = 'supplier-approval';
+
         //Tax Setting
     case FinanceTaxSettingView = 'financeTaxSetting-view';
     case FinanceTaxSettingCreate = 'financeTaxSetting-create';
@@ -1198,6 +1202,7 @@ enum PermissionEnum: string
             self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete,
             self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete,
             => ModulesEnum::Legal,
+            default => ModulesEnum::Settings,
         };
     }
 

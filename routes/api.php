@@ -264,12 +264,11 @@ Route::prefix('procurement')->name('api.procurement.')
         Route::apiResource('supp', SupplierController::class);
 
         // Prequalification API endpoints (for frontend compatibility)
-        Route::prefix('prequalification')->name('prequalification.')->group(function () {
+         Route::prefix('prequalification')->name('prequalification.')->group(function () {
             Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
-
         // Supplier RFQ endpoints (supplier portal)
         Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
         Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
@@ -278,13 +277,18 @@ Route::prefix('procurement')->name('api.procurement.')
         Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
 
-// Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage
-Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
+// PUBLIC routes for prequalification (viewing rounds) - NO AUTH REQUIRED
+Route::prefix('prequalification')->name('api.prequalification.')->group(function () {
+    Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+    Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+});
+
+// PROTECTED routes for prequalification (submitting applications) - AUTH REQUIRED
+Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
     ->prefix('prequalification')
     ->name('api.prequalification.')
     ->group(function () {
-        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
-        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+        Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
     });
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
