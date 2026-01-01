@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const tenderId = searchParams.get('tenderId');
+    const tenderId = searchParams.get('tender_id') || searchParams.get('tenderId');
     const status = searchParams.get('status') || 'all';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
           } = await response.json();
 
           return NextResponse.json({
-            data: data.data,
+            data: data.data || [],
             pagination: {
               total: data.total,
               page: data.page,
@@ -103,119 +103,21 @@ export async function GET(request: NextRequest) {
               pages: Math.ceil(data.total / data.limit),
             },
           });
+        } else {
+          const errorData = await response.json();
+          return NextResponse.json(errorData, { status: response.status });
         }
       } catch (error) {
-        console.warn('External API not available for clarifications, using mock data:', error);
-        console.warn('ERP URL attempted:', `${externalApiUrl}/api/tender-clarifications?${queryParams}`);
+        console.error('External API error:', error);
+        // Better to return the actual error than fallback to mock data silently in production
+        return NextResponse.json(
+          { error: "External API Error", details: error instanceof Error ? error.message : String(error) },
+          { status: 502 }
+        );
       }
     }
 
-    // Fallback to mock data
-    const mockClarifications: TenderClarification[] = [
-      {
-        id: 1,
-        tenderId: tenderId,
-        supplierId: 1,
-        question: "Can you clarify the technical specifications for item #3 in the tender document?",
-        questionDate: "2024-11-20T09:30:00.000Z",
-        response: "The technical specifications for item #3 require a minimum processing speed of 3.2GHz and 16GB RAM. Please refer to appendix A for detailed requirements.",
-        responseDate: "2024-11-20T14:45:00.000Z",
-        responseBy: "John Smith - Procurement Manager",
-        status: "answered",
-        isPublic: true,
-        createdBy: "supplier",
-        createdOn: "2024-11-20T09:30:00.000Z",
-        modifiedBy: "procurement",
-        modifiedOn: "2024-11-20T14:45:00.000Z",
-      },
-      {
-        id: 2,
-        tenderId: tenderId,
-        supplierId: 1,
-        question: "What is the delivery timeline expectation for this tender?",
-        questionDate: "2024-11-19T11:15:00.000Z",
-        status: "pending",
-        isPublic: false,
-        createdBy: "supplier",
-        createdOn: "2024-11-19T11:15:00.000Z",
-      },
-      {
-        id: 3,
-        tenderId: tenderId,
-        supplierId: 2,
-        question: "Are there any preferred brands for the networking equipment?",
-        questionDate: "2024-11-18T16:20:00.000Z",
-        response: "We do not have preferred brands, but all equipment must meet the ISO standards specified in section 4.2 of the tender document.",
-        responseDate: "2024-11-19T08:30:00.000Z",
-        responseBy: "Sarah Johnson - Technical Lead",
-        status: "answered",
-        isPublic: true,
-        createdBy: "supplier",
-        createdOn: "2024-11-18T16:20:00.000Z",
-        modifiedBy: "procurement",
-        modifiedOn: "2024-11-19T08:30:00.000Z",
-      },
-      {
-        id: 4,
-        tenderId: tenderId,
-        supplierId: 1,
-        question: "What is the payment schedule for this project? Are milestone payments available?",
-        questionDate: new Date(Date.now() - 3600000).toISOString(),
-        response: "Payment terms are Net 30 days from invoice date. Milestone payments are available upon completion of each phase as outlined in Section 7. Early payment discount of 2% applies if paid within 10 days.",
-        responseDate: new Date(Date.now() - 1800000).toISOString(),
-        responseBy: "Finance Department",
-        status: "answered",
-        isPublic: true,
-        createdBy: "supplier",
-        createdOn: new Date(Date.now() - 3600000).toISOString(),
-        modifiedBy: "procurement",
-        modifiedOn: new Date(Date.now() - 1800000).toISOString(),
-      },
-      {
-        id: 5,
-        tenderId: tenderId,
-        supplierId: 3,
-        question: "Are site visits required before bid submission? If so, when can they be scheduled?",
-        questionDate: new Date(Date.now() - 1800000).toISOString(),
-        status: "pending",
-        isPublic: false,
-        createdBy: "supplier3@example.com",
-        createdOn: new Date(Date.now() - 1800000).toISOString(),
-      },
-      {
-        id: 6,
-        tenderId: tenderId,
-        supplierId: 2,
-        question: "Can you clarify the warranty requirements? The document mentions 2 years but doesn't specify coverage.",
-        questionDate: new Date(Date.now() - 900000).toISOString(),
-        status: "pending",
-        isPublic: false,
-        createdBy: "supplier2@example.com",
-        createdOn: new Date(Date.now() - 900000).toISOString(),
-      },
-    ];
 
-    // Filter by status if requested
-    let filteredClarifications = [...mockClarifications];
-    if (status !== 'all') {
-      filteredClarifications = filteredClarifications.filter(c => c.status === status);
-    }
-
-    // Apply pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredClarifications.slice(startIndex, endIndex);
-
-    return NextResponse.json({
-      data: paginatedData,
-      pagination: {
-        total: filteredClarifications.length,
-        page,
-        limit,
-        pages: Math.ceil(filteredClarifications.length / limit),
-      },
-      fallback: true, // Indicates mock data is being used
-    });
 
   } catch (error) {
     console.error('Failed to fetch tender clarifications:', error);
@@ -289,38 +191,28 @@ export async function PUT(request: NextRequest) {
             message: "Clarification response submitted successfully",
             data: updatedClarification,
           });
+        } else {
+          const errorData = await response.json();
+          return NextResponse.json(errorData, { status: response.status });
         }
       } catch (error) {
-        console.warn('External ERP API not available for clarification response, using mock response:', error);
+        console.error('External ERP API error:', error);
+        return NextResponse.json(
+          { error: "External API Error", details: error instanceof Error ? error.message : String(error) },
+          { status: 502 }
+        );
       }
+    } else {
+      return NextResponse.json(
+        { error: "Configuration Error", details: "NEXT_PUBLIC_EXTERNAL_API_URL is not defined" },
+        { status: 500 }
+      );
     }
 
-    // Fallback: Mock successful response submission
-    const mockUpdatedClarification: TenderClarification = {
-      id: clarificationId,
-      tenderId: "mock-tender-id",
-      supplierId: 1,
-      question: "Mock question for demonstration",
-      questionDate: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-      response: response.trim(),
-      responseDate: new Date().toISOString(),
-      responseBy: responseBy || 'Procurement Team',
-      status: 'answered',
-      isPublic: publishToAll || false,
-      attachments: [],
-      createdBy: 'mock-supplier',
-      createdOn: new Date(Date.now() - 86400000).toISOString(),
-      modifiedBy: session.user.id,
-      modifiedOn: new Date().toISOString(),
-    };
-
-    console.log('Mock clarification response submitted:', mockUpdatedClarification);
-
-    return NextResponse.json({
-      message: "Clarification response submitted successfully (mock mode)",
-      data: mockUpdatedClarification,
-      fallback: true,
-    });
+    return NextResponse.json(
+      { error: "Unknown Error", details: "Failed to process request" },
+      { status: 500 }
+    );
 
   } catch (error) {
     console.error('Failed to respond to clarification:', error);
@@ -345,8 +237,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body: CreateClarificationRequest = await request.json();
-    const { tenderId, question, isPublic, attachments } = body;
+    const body = await request.json();
+    // Support both camelCase and snake_case
+    const tenderId = body.tenderId || body.tender_id;
+    const { question, isPublic, attachments } = body;
 
     // Validate required fields
     if (!tenderId || !question?.trim()) {
@@ -411,33 +305,28 @@ export async function POST(request: NextRequest) {
             message: "Clarification request submitted successfully",
             data: newClarification,
           });
+        } else {
+          const errorData = await response.json();
+          return NextResponse.json(errorData, { status: response.status });
         }
       } catch (error) {
-        console.warn('External API not available for submitting clarification, using mock response:', error);
+        console.error('External API error:', error);
+        return NextResponse.json(
+          { error: "External API Error", details: error instanceof Error ? error.message : String(error) },
+          { status: 502 }
+        );
       }
+    } else {
+      return NextResponse.json(
+        { error: "Configuration Error", details: "NEXT_PUBLIC_EXTERNAL_API_URL is not defined" },
+        { status: 500 }
+      );
     }
 
-    // Fallback: Mock successful submission
-    const mockClarification: TenderClarification = {
-      id: Math.floor(Math.random() * 1000) + 100, // Random ID for mock
-      tenderId,
-      supplierId: 1, // Mock supplier ID
-      question: question.trim(),
-      questionDate: new Date().toISOString(),
-      status: 'pending',
-      isPublic: isPublic || false,
-      attachments: attachments || [],
-      createdBy: session.user.email || session.user.id,
-      createdOn: new Date().toISOString(),
-    };
-
-
-
-    return NextResponse.json({
-      message: "Clarification request submitted successfully (mock mode)",
-      data: mockClarification,
-      fallback: true, // Indicates mock submission
-    });
+    return NextResponse.json(
+      { error: "Unknown Error", details: "Failed to process request" },
+      { status: 500 }
+    );
 
   } catch (error) {
     console.error('Failed to create tender clarification:', error);
