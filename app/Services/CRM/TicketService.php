@@ -168,7 +168,7 @@ class TicketService extends ApprovalWorkflowService
         return Datatables::of($query->lock('WITH(NOLOCK)')->with(empty($with) ? ['status'] : array_merge($with, ['status']))->select('*'))->addIndexColumn()
             ->editColumn('category', function (Ticket $ticket) use ($with) {
                 if (in_array('category', $with, true)) {
-                    return $ticket->category->Description;
+                    return $ticket->category?->Description;
                 }
                 return '';
             })->editColumn('party', function (Ticket $ticket) use ($with) {
