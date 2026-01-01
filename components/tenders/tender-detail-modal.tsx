@@ -212,10 +212,7 @@ export default function TenderDetailModal({
                       <label className="text-sm font-medium text-muted-foreground">Type</label>
                       <p className="text-sm">{tender.tenderType === 'op' ? 'Open to All' : 'Restricted'}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Procurement Mode</label>
-                      <p className="text-sm">{tender.procurementMode?.name || 'Not specified'}</p>
-                    </div>
+
                   </CardContent>
                 </Card>
 
@@ -327,50 +324,50 @@ export default function TenderDetailModal({
 
             <TabsContent value="documents" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
               <div className="px-4 py-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Tender Documents
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-blue-600" />
-                        <div>
-                          <p className="font-medium">Tender Document.pdf</p>
-                          <p className="text-sm text-muted-foreground">2.4 MB • PDF</p>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Tender Documents
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-8 w-8 text-blue-600" />
+                          <div>
+                            <p className="font-medium">Tender Document.pdf</p>
+                            <p className="text-sm text-muted-foreground">2.4 MB • PDF</p>
+                          </div>
                         </div>
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-green-600" />
-                        <div>
-                          <p className="font-medium">Bill of Quantities.xlsx</p>
-                          <p className="text-sm text-muted-foreground">1.8 MB • Excel</p>
+
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-8 w-8 text-green-600" />
+                          <div>
+                            <p className="font-medium">Bill of Quantities.xlsx</p>
+                            <p className="text-sm text-muted-foreground">1.8 MB • Excel</p>
+                          </div>
                         </div>
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
+
+                      <div className="text-center py-8 text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>Additional documents will appear here</p>
+                      </div>
                     </div>
-                    
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Additional documents will appear here</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
           </div>
