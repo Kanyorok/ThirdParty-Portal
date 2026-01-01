@@ -13,7 +13,6 @@ use App\Models\HRM\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 
 class FleetVehicleAssignmentController extends Controller
@@ -23,7 +22,6 @@ class FleetVehicleAssignmentController extends Controller
     public function __construct(FleetVehicleAssignmentService $service)
     {
         $this->service = $service;
-
     }
 
     /** Show all assignments */
@@ -51,13 +49,22 @@ class FleetVehicleAssignmentController extends Controller
     /** Show create form */
     public function create()
     {
+        // Get current user and their employee record
+        $currentUser = Auth::user();
+        $currentEmployee = $currentUser->employee;
+        
+        if (!$currentEmployee) {
+            return redirect()->back()
+                ->with('error', 'You must have an employee record to assign vehicles.');
+        }
+
         // Fetch the CodeDetail ID for TripStatus = Approved
         $statusId = CodeDetail::where('CodeID', 'TripStatus')
             ->where('Description', 'Approved')
             ->value('ID');
 
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
-        ->pluck('Description', 'ID');
+            ->pluck('Description', 'ID');
 
         $fleetVehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
@@ -71,14 +78,35 @@ class FleetVehicleAssignmentController extends Controller
 
         $fleetInspections = FleetVehicleInspection::all();
 
-        return view('fleet.assignments.create', compact('fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections','vehicleTypes'));
+        return view('fleet.assignments.create', compact(
+            'fleetVehicles', 
+            'assigners', 
+            'fleetTrips', 
+            'fleetInspections',
+            'vehicleTypes',
+            'currentEmployee'
+        ));
     }
 
     /** Store a new assignment */
     public function store(FleetVehicleAssignmentRequest $request)
     {
         try {
-            $this->service->create($request->validated());
+            // Get current user's employee ID
+            $currentEmployeeId = Auth::user()->employee?->Id;
+            
+            if (!$currentEmployeeId) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'You must have an employee record to assign vehicles.');
+            }
+
+            $validated = $request->validated();
+            
+            // Override AssignedBy with current employee ID
+            $validated['AssignedBy'] = $currentEmployeeId;
+
+            $this->service->create($validated);
 
             return redirect()->route('fleet.assignments.index')
                 ->with('success', 'Vehicle assignment created successfully.');
@@ -98,29 +126,42 @@ class FleetVehicleAssignmentController extends Controller
     }
 
     /** Show edit form */
-    public function edit($id)
-    {
-        $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
-            ->where('Id', $id)
-            ->firstOrFail();
+   public function edit($id)
+{
+    $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
+        ->where('Id', $id)
+        ->firstOrFail();
 
-        $fleetVehicles = FleetVehicle::all();
-        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-            ->pluck('name', 'Id');
+    // Get all vehicles initially (will be filtered by JS based on selected trip)
+    $fleetVehicles = FleetVehicle::all();
+    
+    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+        ->pluck('name', 'Id');
 
-        // fetch only approved parent trips for the edit form
-        $statusId = CodeDetail::where('Description', 'Approved')->value('ID');
-        $fleetTrips = FleetTripLog::whereNull('ParentTripID')
-            ->when($statusId, fn($q) => $q->where('Status', $statusId))
-            ->orderByDesc('TripStartDate')
-            ->get();
+    // fetch only approved parent trips for the edit form
+    $statusId = CodeDetail::where('CodeID', 'TripStatus')
+        ->where('Description', 'Approved')
+        ->value('ID');
+    
+    $fleetTrips = FleetTripLog::whereNull('ParentTripID')
+        ->when($statusId, fn($q) => $q->where('Status', $statusId))
+        ->orderByDesc('TripStartDate')
+        ->get();
 
-        $fleetInspections = FleetVehicleInspection::all();
+    $fleetInspections = FleetVehicleInspection::all();
+    
+    $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
+        ->pluck('Description', 'ID');
 
-        return view('fleet.assignments.edit', compact('assignment', 'fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
-    }
-
-
+    return view('fleet.assignments.edit', compact(
+        'assignment', 
+        'fleetVehicles', 
+        'assigners', 
+        'fleetTrips', 
+        'fleetInspections',
+        'vehicleTypes'
+    ));
+}
     /** Update an assignment */
     public function update(FleetVehicleAssignmentRequest $request, $id)
     {
@@ -199,6 +240,4 @@ class FleetVehicleAssignmentController extends Controller
             'fuelTypeName' => $vehicle?->fuelType?->FuelName,
         ]);
     }
-
-
 }

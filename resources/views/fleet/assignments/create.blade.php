@@ -91,12 +91,18 @@
                 {{-- Assigned By --}}
                 <div class="col-md-6">
                     <label class="form-label">Assigned By<span class="text-danger">*</span></label>
-                    <select name="AssignedBy" class="form-select" required>
-                        <option value="">-- Select Employee --</option>
-                        @foreach ($assigners as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
+                    
+                    <!-- Hidden field for form submission -->
+                    <input type="hidden" name="AssignedBy" id="AssignedBy" 
+                           value="{{ $currentEmployee->Id ?? '' }}">
+                    
+                    <!-- Read-only display field -->
+                    <input type="text" class="form-control" 
+                           value="{{ ($currentEmployee->FirstName ?? '') . ' ' . ($currentEmployee->LastName ?? '') }} (You)"
+                           readonly
+                           placeholder="Automatically assigned to you">
+                    
+                    <small class="text-muted">Assignment is automatically recorded under your name</small>
                 </div>
             </div>
 
