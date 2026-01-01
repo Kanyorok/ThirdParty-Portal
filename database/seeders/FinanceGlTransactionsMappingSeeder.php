@@ -23,7 +23,8 @@ class FinanceGlTransactionsMappingSeeder extends Seeder
             [19, '7', '4'], // Debit Note (Supplier): Expense -> AP
             [20, '1', '2'], // Receipts: Cash -> AR
             [21, '2', '4'], // Credit Management: AR -> AP
-            
+            [23, '2', '4'], // Interbranch Transfers: AR -> AP
+
         ];
 
         foreach ($mappings as [$transactionTypeId, $debitCode, $creditCode]) {

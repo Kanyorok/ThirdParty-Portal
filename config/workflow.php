@@ -74,9 +74,9 @@ return [
     ],
 
     'tender' => [
-        'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED->value, // Will now be 'Ap'
-        'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED->value, // Will now be 'R'
-        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
+        'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED, // Will now be 'Ap'
+        'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED, // Will now be 'R'
+        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING,  // Will now be 'P'
     ],
     'LeaseTerminationId' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
@@ -98,6 +98,13 @@ return [
         'Rejected' => WorkflowStatus::Rejected->value,  // 'R'
         'Pending' => WorkflowStatus::Pending->value,    // 'P'
         'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
+    ],
+
+    'SupplierID' => [
+        'Approved' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value,  // 'A'
+        'Rejected' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Rejected->value,  // 'R'
+        'Pending' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Pending->value,    // 'P'
+        'Submitted for Approval' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Submitted->value,  // 'U'
     ],
 
 

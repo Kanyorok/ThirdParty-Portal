@@ -11,7 +11,7 @@
             </span>
         </div>
      {{-- Status Display Section --}}
-{{-- Show 'Ready to Submit' ONLY if Status is Draft AND Approval is NOT Pending --}}
+{{-- Show 'Ready to Submit' ONLY if Status is Draft AND Approval is  Pending --}}
 @if($tender->Status === \App\Enums\TenderStatusEnum::Draft && $tender->ApprovalStatus !== \App\Enums\TenderApprovalStatusEnum::PENDING)
     {{-- DRAFT STATE: Show info that tender needs to be submitted --}}
     <div class="alert alert-info" role="alert">

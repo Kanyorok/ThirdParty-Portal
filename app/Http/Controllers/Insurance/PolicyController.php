@@ -27,12 +27,11 @@ use Illuminate\Validation\Rule;
 
 class PolicyController extends Controller
 {
-    // Policy Proposal
+
 public function index(Request $request)
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $statuses = InsurancePolicyStatus::cases();
-    //dd($request->customer);
 
     $query = BancassurancePolicy::with(['customer.thirdParty', 'product', 'insurer'])
         ->when($request->status, fn($q) => $q->where('Status', $request->status))
@@ -50,7 +49,7 @@ public function index(Request $request)
 public function create()
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
-    $referrals = BancAssuranceReferral::all();
+    $referrals = BancAssuranceReferral::with('customerreferral.thirdParty', 'referredByEmployee')->get();
     $customers = BancassuranceCustomer::all();
     $insurers = InsuranceProvider::all();
     $paymentfrequencys = CodeDetail::where('CodeID','PaymentFrequency')->get();
@@ -58,6 +57,42 @@ public function create()
     return view('bancassurance.policies.create', compact(
         'customers', 'insurers', 'paymentfrequencys', 'referrals'));
 }
+
+// public function getReferralsByCustomer($customerId)
+// {
+//     $referrals = BancAssuranceReferral::with([
+//             'customerreferral.thirdParty',
+//             'referredByEmployee'
+//         ])
+//         ->where('ClientId', $customerId)
+//         ->orderByDesc('Id')
+//         ->get();
+
+//     return response()->json($referrals);
+// }
+public function getReferralsByCustomer($customerId)
+{
+    $referrals = BancAssuranceReferral::with([
+        'customerreferral.thirdParty',
+        'referredByEmployee'
+    ])
+    ->where('ClientId', $customerId)
+    ->orderByDesc('Id')
+    ->get()
+    ->map(function ($ref) {
+        return [
+            'id' => $ref->Id,
+            'customer_name' => $ref->customerreferral?->thirdParty?->ThirdPartyName ?? 'Unknown Customer',
+            'referred_by' => $ref->referredByEmployee?->Name ?? 'Unknown Staff',
+            'Product' => $ref->insuranceProduct?->Name,
+            'Insurer' => $ref->preferredInsurer?->Name,
+        ];
+    });
+
+    return response()->json($referrals);
+}
+
+
 
 public function getProductsByInsurer($insurerId)
 {
@@ -106,7 +141,21 @@ public function store(BancassurancePolicyRequest $request)
     return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
 }
 
+public function print($id)
+{
+    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
 
+    $policy = BancassurancePolicy::with([
+        'customer.thirdParty',
+        'insurer',
+        'product',
+        'referral.customerreferral.thirdParty',
+        'referral.referredByEmployee',
+        'riderAddOn',
+    ])->findOrFail($id);
+
+    return view('bancassurance.policies.print', compact('policy'));
+}
 
 
 //Proposal Review
@@ -130,41 +179,6 @@ public function review($id)
 
     return view('bancassurance.policies.review', compact('policy'));
 }
-
-// public function submitForUnderwriting(Request $request, $id)
-// {
-//     $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
-
-//     $validated = $request->validate([
-//         'Document' => 'nullable|file|max:2048'
-//     ]);
-
-//     $document = $request->file('Document');
-
-//     // Get policy as Eloquent model
-//     $policy = BancassurancePolicy::find($id);
-
-//     if (!$policy) {
-//         return redirect()->back()->with('error', 'Policy not found.');
-//     }
-
-//     // Upload file + update ModifiedBy
-//     $upload = BancassurancePolicyService::uploadpolicy(
-//         $policy,
-//         $request->user(),
-//         $document
-//     );
-
-//     // Update policy status
-//     $policy->update([
-//         'Status'     => InsurancePolicyStatus::SubmittedForUnderwriting->value,
-//         'ModifiedBy' => auth()->id(),
-//         'ModifiedOn' => now()
-//     ]);
-
-//     return redirect()->route('bancassurance.policies.index')
-//         ->with('success', 'Proposal submitted to underwriter.');
-// }
 
 public function submitForUnderwriting(request $request, $id)
     {

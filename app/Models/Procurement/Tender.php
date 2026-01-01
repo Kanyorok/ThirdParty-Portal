@@ -7,6 +7,7 @@ use App\Enums\TenderCategoryEnum;
 use App\Enums\TenderStatusEnum;
 use App\Enums\TenderTypeEnum;
 use App\Models\ThirdParies\Supplier;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -296,8 +297,8 @@ class Tender extends Model
      */
    public function workflowHistory()
     {
-        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'PlanID')
-            ->where('Source', $this->getTable())
+        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'Id')
+            ->where('Source', 'tender')
             ->whereNull('DeletedOn');
             
     }
@@ -305,11 +306,19 @@ class Tender extends Model
     
     public function workflowPending()
     {
-        return $this->hasMany(WorkflowPending::class, 'SourceID', 'PlanID')
-            ->where('Source', $this->getTable())
+        return $this->hasMany(WorkflowPending::class, 'SourceID', 'Id')
+            ->where('Source', 'tender')
             ->whereNull('DeletedOn');
     }
+    
+    
 
+public function currentStage()
+{
+    return $this->workflowHistory()
+        ->orderBy('CreatedOn', 'desc')
+        ->first();
+}
 
     /**
      * Get all awards for this tender (HasMany relationship)

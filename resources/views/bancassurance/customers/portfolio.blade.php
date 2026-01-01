@@ -151,12 +151,6 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                    No policies found for this customer.
-                                </td>
-                            </tr>
                         @endforelse
                     </tbody>
                 </table>

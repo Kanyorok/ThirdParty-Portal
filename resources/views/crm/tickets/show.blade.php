@@ -130,7 +130,7 @@
                                 <tr>
                                     <th>No.</th>
                                     <th>Stage</th>
-                                    <th>Status</th>
+                                    {{-- <th>Status</th>--}}
                                     <th>Dated</th>
                                     <th>By</th>
                                 </tr>
@@ -185,7 +185,8 @@
                         <h3>Unknown party</h3>
                     @endif
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Status: <b class="float-end">{{ $ticket->Status->name }}</b></li>
+                        <li class="list-group-item">Status: <b class="float-end">{{ $ticket->status->Description }}</b>
+                        </li>
                         <li class="list-group-item">Priority: <br>
                             <form class="w-100" id="ticketPriorityForm"
                                   action="{{ route('tickets.priority',[$ticket->TicketID]) }}">
@@ -798,7 +799,7 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    "order": [[3, 'asc']],
+                    "order": [[2, 'asc']],
                     /*"columnDefs": [
                         {"className": "text-center", "targets": [2]}
                     ],
@@ -812,7 +813,7 @@
                     columns: [
                         {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
                         {data: 'Status', name: 'Status'},
-                        {data: 'Stage', name: 'Stage'},
+                        /* {data: 'Stage', name: 'Stage'},*/
                         {data: 'CreatedOn', name: 'CreatedOn'},
                         {data: 'creator.Name', name: 'creator.Name'},
                     ], "oLanguage": {
