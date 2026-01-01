@@ -71,7 +71,7 @@
                     <option value="">Select Vendor</option>
                     @foreach($vendors as $vendor)
                     <option value="{{ $vendor->Id }}" 
-                        {{ old('VendorID', $vendor->VendorID ?? '') == $vendor->Id ? 'selected' : '' }}>
+                        {{ old('VendorID', $schedule->VendorID ?? '') == $vendor->Id ? 'selected' : '' }}>
                         {{ $vendor->party->ThirdPartyName ?? 'Unknown Vendor' }}
                     </option>
                     @endforeach

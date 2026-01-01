@@ -16,7 +16,7 @@
             <dd class="col-sm-9">{{ $repair->RepairDate }}</dd>
 
             <dt class="col-sm-3">Vendor</dt>
-            <dd class="col-sm-9">{{ $repair->vendor->party->ThirdPartyName ?? 'N/A' }}</dd>
+            <dd class="col-sm-9">{{ $repair->Vendor ?? '-' }}</dd>
 
             <dt class="col-sm-3">Cost</dt>
             <dd class="col-sm-9">{{ number_format($repair->Cost, 2) }} KES</dd>
@@ -26,9 +26,9 @@
 
             <dt class="col-sm-3">Notes</dt>
             <dd class="col-sm-9">{{ $repair->Notes }}</dd>
-
+{{-- 
             <dt class="col-sm-3">Maintenance Schedule</dt>
-            <dd class="col-sm-9">{{ $repair->schedule->ScheduleID }}</dd>
+            <dd class="col-sm-9">{{ $repair->schedule->ScheduleID }}</dd> --}}
         </dl>
         <div class="mt-4">
             <a href="{{ route('fleet.repair_logs.index') }}" class="btn btn-secondary">⬅ Back</a>
