@@ -332,7 +332,7 @@ class ThirdPartyAuthController extends Controller
 
         // Allow password reset regardless of approval status
         // Users should be able to reset their password even if not yet approved
-        
+
         $status = Password::broker('thirdparties')->sendResetLink(
             $request->only('email')
         );
@@ -350,8 +350,11 @@ class ThirdPartyAuthController extends Controller
             'password' => 'required|confirmed|min:8',
         ]);
 
+        $credentials = $request->only('password', 'password_confirmation', 'token');
+        $credentials['Email'] = $request->email;
+
         $status = Password::broker('thirdparties')->reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
+            $credentials,
             function ($user, $password) {
                 $user->forceFill([
                     'Password' => Hash::make($password)

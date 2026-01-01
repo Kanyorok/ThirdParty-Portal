@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
@@ -33,6 +34,7 @@ class PropertyInvoiceController extends Controller
 
         $newleases = PropertyNewLease::where('IsActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
+            ->where('ApprovalStatus', ApprovalEnum::Approved)
             ->with('tenant')
             ->get();
 

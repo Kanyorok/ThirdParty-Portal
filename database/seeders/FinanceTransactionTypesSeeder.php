@@ -38,6 +38,8 @@ class FinanceTransactionTypesSeeder extends Seeder
             ['Id' => 19, 'Code' => 'DebitNote', 'Name' => 'Debit Note', 'Description' => 'Issues a debit note to a customer or supplier, typically to request additional payment for under-billed amounts.'],
             ['Id' => 20, 'Code' => 'Receipts', 'Name' => 'Receipts', 'Description' => 'Records approved payments received, such as customer payments for invoices or other dues.'],
             ['Id' => 21, 'Code' => 'CreditManagement', 'Name' => 'Credit Management', 'Description' => 'Manages approved credit transactions, such as credit limits or payment terms for customers.'],
+            ['Id' => 22, 'Code' => 'ChequeIssuance', 'Name' => 'Cheque Issuance', 'Description' => 'Manages Cheque issued.'],
+
         ];
 
         foreach ($transactionTypes as $type) {

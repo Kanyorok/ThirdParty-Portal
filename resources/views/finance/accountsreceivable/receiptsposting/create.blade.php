@@ -345,7 +345,8 @@
         let state = {
             customer: null,
             invoices: [], // each: { id, number, issue_date, due_date, currency:{code,symbol?}, total, paid, balance, allocate, selected }
-            walletBalance: 0
+            walletBalance: 0,
+            currency: { code: 'KES', symbol: 'KSh' } // Default currency
         };
 
         /* ====================== RESET / CLEAR ====================== */
@@ -382,11 +383,12 @@
             state.customer = null;
             state.invoices = [];
             state.walletBalance = 0;
+            state.currency = { code: 'KES', symbol: 'KSh' }; // Reset to default
             clearCustomerUI();
             clearInvoicesUI();
             clearPaymentUI();
             // Reset wallet display
-            walletBalance.textContent = 'KSh 0.00';
+            walletBalance.textContent = `${state.currency.symbol} 0.00`;
             setHidden(walletSection, true);
             if (message) hint.textContent = message;
         }
@@ -419,6 +421,7 @@
                 // Seed state
                 resetAll();
                 state.customer = data.customer || null;
+                state.currency = data.customer?.currency || { code: 'KES', symbol: 'KSh' };
                 state.invoices = (data.invoices || []).map(x => ({ ...x, balance: balanceOf(x), allocate: 0, selected: false }));
                 state.walletBalance = data.customer?.wallet_balance || 0;
 
@@ -471,8 +474,14 @@
 
         function renderWallet(){
             // Always show wallet section for all customers
-            walletBalance.textContent = `KSh ${fmt(state.walletBalance || 0)}`;
+            walletBalance.textContent = `${state.currency.symbol} ${fmt(state.walletBalance || 0)}`;
             setHidden(walletSection, false);
+
+            // Update currency symbol in wallet amount input
+            const walletCurrencySymbol = document.querySelector('#walletAmountSection .input-group-text');
+            if (walletCurrencySymbol) {
+                walletCurrencySymbol.textContent = state.currency.symbol;
+            }
 
             // Enable/disable checkbox based on balance
             useWalletCheckbox.disabled = (state.walletBalance || 0) <= 0;

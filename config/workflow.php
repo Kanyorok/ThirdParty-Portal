@@ -29,6 +29,29 @@ return [
         'Submitted for Approval' => \App\Enums\ProcurementPlanStatusEnum::Submitted->value,  // 'Su'
     ],
 
+    'RequisitionId' => [
+        'Approved' => \App\Enums\Inventory\InterBranchRequisitionEnum::Approved->value,  // 'Ap'
+        'Rejected' => \App\Enums\Inventory\InterBranchRequisitionEnum::Rejected->value,  // 'Re'
+        'Submitted for Approval' => \App\Enums\Inventory\InterBranchRequisitionEnum::Pending->value,  // 'P'
+    ],
+
+    'TransferId' => [
+        'Approved' => \App\Enums\Inventory\Transfers::Approved->value,  // 'Ap'
+        'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'
+        'Pending' => \App\Enums\Inventory\Transfers::Pending->value,  // 'P'
+        'In Transit' => \App\Enums\Inventory\Transfers::InTransit->value,  // 'it'
+        'Delivered'=> \App\Enums\Inventory\Transfers::Delivered->value,  // 'de'
+        'Returned'=> \App\Enums\Inventory\Transfers::Returned->value,  // 'rt'
+
+
+    ],
+
+    'stockadjustmentId' => [
+        'Approved' => \App\Enums\Inventory\Transfers::Approved->value,  // 'Ap'
+        'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'
+        'Pending' => \App\Enums\Inventory\Transfers::Pending->value,  // 'P'
+    ],
+
     'LeaseId' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
         'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'r'
@@ -51,9 +74,9 @@ return [
     ],
 
     'tender' => [
-        'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED->value, // Will now be 'Ap'
-        'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED->value, // Will now be 'R'
-        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
+        'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED, // Will now be 'Ap'
+        'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED, // Will now be 'R'
+        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING,  // Will now be 'P'
     ],
     'LeaseTerminationId' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
@@ -75,6 +98,13 @@ return [
         'Rejected' => WorkflowStatus::Rejected->value,  // 'R'
         'Pending' => WorkflowStatus::Pending->value,    // 'P'
         'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
+    ],
+
+    'SupplierID' => [
+        'Approved' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value,  // 'A'
+        'Rejected' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Rejected->value,  // 'R'
+        'Pending' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Pending->value,    // 'P'
+        'Submitted for Approval' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Submitted->value,  // 'U'
     ],
 
     'TripId' => [

@@ -54,7 +54,7 @@ class TicketController extends Controller
                     })->orWhere(function (Builder $query) use ($actor) {
                         $query->where('t_Tickets.Owner', Team::getPrimaryKey())
                             ->whereIn('t_Tickets.OwnerID', $actor->teamUser()->select('t_TeamUser.TeamId'));
-                        // dd($actor->teams()->select('t_TeamUser.TeamId')->get('TeamId'));
+                        // dd($actor->teams()->select('t_TeamUser.TeamId')->get('TeamId'db));
                     })->orWhere('t_Tickets.CreatedBy', $actor->Id)->orWhere(function (Builder $query) use ($actor) {
                         $query->where('t_Tickets.Party', User::getPrimaryKey())->where('t_Tickets.PartyID', $actor->Id);
                     })->user($actor);

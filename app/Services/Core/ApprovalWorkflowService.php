@@ -1028,9 +1028,16 @@ abstract class ApprovalWorkflowService
             $mappings = config('workflow', []);
 
             // Try to find the mapping for this workflow source
-            if (isset($mappings[$workflowSource]) && isset($mappings[$workflowSource]['Approved'])) {
-                return $mappings[$workflowSource]['Approved'];
+          if (isset($mappings[$workflowSource]) && isset($mappings[$workflowSource]['Approved'])) {
+            $approvedValue = $mappings[$workflowSource]['Approved'];
+            
+            // If it's an enum, get its value
+            if ($approvedValue instanceof \BackedEnum) {
+                return $approvedValue->value;
             }
+            
+            return (string) $approvedValue;
+        }
 
             // Look for common status patterns in the table's code details
             $commonApprovedStatuses = ['a', 'approved', 'complete', 'completed', 'done', 'final'];

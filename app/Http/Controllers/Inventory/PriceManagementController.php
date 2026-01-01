@@ -10,6 +10,7 @@ use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Imports\PriceManagementImport;
+use App\Models\Core\Currency;
 use Maatwebsite\Excel\Facades\Excel;
 
 
@@ -25,22 +26,22 @@ class PriceManagementController extends Controller
     public function index()
     {
         $prices = $this->priceService->list();
-
         $items = ItemMasterList::with('uom')
-            ->whereNotIn('Id', function ($query) {
-                $query->select('ItemID')->from('t_Pricing');
-            })
+            ->whereNotIn('Id', PriceManagement::with('currency')->select('ItemID'))
+            ->withTrashed()
             ->get();
 
-        return view('inventory.pricemanagement.index', compact('prices', 'items'));
+        $currencies = Currency::all();    
+        return view('inventory.pricemanagement.index', compact('prices', 'items', 'currencies'));
     }
 
     public function create()
     {
         $this->authorize('create', PriceManagement::class);
         $items = ItemMasterList::all();
+        $currencies = Currency::all();
         $uoms = UnitOfMeasure::all();
-        return view('inventory.pricemanagement.create', compact('items', 'uoms'));
+        return view('inventory.pricemanagement.create', compact('items', 'currencies', 'uoms'));
     }
 
     public function store(PriceManagementRequest $request)
@@ -57,8 +58,9 @@ class PriceManagementController extends Controller
         $price = PriceManagement::findOrFail($id);
         $this->authorize('update', PriceManagement::class);
         $items = ItemMasterList::all();
+        $currencies = Currency::all();
         $uoms = UnitOfMeasure::all();
-        return view('inventory.pricemanagement.edit', compact('price', 'items', 'uoms'));
+        return view('inventory.pricemanagement.edit', compact('price', 'items', 'currencies', 'uoms'));
     }
 
     public function update(PriceManagementRequest $request, $id)

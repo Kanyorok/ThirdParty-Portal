@@ -5,7 +5,7 @@ namespace App\Models\Core\Approval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class WorkflowHistory extends Model
+class WorkflowHistory3 extends Model
 {
     use SoftDeletes;
 

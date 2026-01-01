@@ -27,6 +27,14 @@ class BancassurancePolicy extends Model
         'ModifiedBy', 'DeletedBy'
     ];
 
+    protected $casts = [
+    'Status' => InsurancePolicyStatus::class,
+    'PolicyStartDate' => 'date',
+    'PolicyEndDate'   => 'date',
+    'IssuedDate'      => 'date',
+    'ExpiryDate'      => 'date',
+    ];
+
     /**
      * Get the renewals for the policy.
      */
@@ -39,10 +47,6 @@ class BancassurancePolicy extends Model
     {
         return 'bancassurancepolicyId';
     }
-
-    protected $casts = [
-        'Status' => InsurancePolicyStatus::class,
-    ];
 
     public function customer()
     {

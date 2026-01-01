@@ -218,7 +218,9 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         // The link in the email should point to the Frontend (e.g. localhost:3000/verify-email)
         // We pass the backend signed URL as a parameter 'verify_url' so the frontend can call it.
         // NOTE: (auth) is a route group, so it does NOT appear in the URL.
-        $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
+        // We pass the backend signed URL as a parameter 'verify_url' so the frontend can call it.
+        // NOTE: (auth) is a route group, so it does NOT appear in the URL.
+        $frontendUrl = config('app.nextauth_url', 'http://localhost:3000');
         $url = $frontendUrl . '/verify-email?verify_url=' . urlencode($backendSignedUrl);
 
         $body = '<p>Please click the button below to verify your email address.</p>';
@@ -243,7 +245,9 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
     {
         // Construct the reset URL for the frontend
         // Assuming frontend runs on localhost:3000 or using config
-        $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
+        // Construct the reset URL for the frontend
+        // Assuming frontend runs on localhost:3000 or using config
+        $frontendUrl = config('app.nextauth_url', 'http://localhost:3000');
         $url = $frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
 
         $body = '<p>You are receiving this email because we received a password reset request for your account.</p>';

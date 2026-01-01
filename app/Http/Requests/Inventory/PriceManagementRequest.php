@@ -22,8 +22,8 @@ class PriceManagementRequest extends FormRequest
 
         // Otherwise (create/update price)
         $rules = [
-            'ActualPrice' => 'required|numeric|min:0',
-            'CurrencyCode' => 'required|string|max:10',
+            'ActualPrice' => ['required','numeric','min:0','max:9999999999999.99'],            
+            'CurrencyCode' => 'required|string|exists:t_Currencies,Id',
             'EffectiveFrom' => 'nullable|date',
             'EffectiveTo' => 'nullable|date|after_or_equal:EffectiveFrom',
             'IsDefault' => 'boolean',

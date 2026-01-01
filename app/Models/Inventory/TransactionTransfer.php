@@ -9,6 +9,7 @@ use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\Inventory\TransactionTransferItem;
 use App\Models\Inventory\TransactionReceipt;
+use App\Models\Workflow\CodeDetail;
 
 
 class TransactionTransfer extends Model
@@ -87,6 +88,12 @@ class TransactionTransfer extends Model
     public function toBranch()
     {
         return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
+    }
+
+    public function transferStatus()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Status', 'ID')
+            ->where('CodeID', 'TransferStatus');
     }
 
     public static function getPrimaryKey(): string
