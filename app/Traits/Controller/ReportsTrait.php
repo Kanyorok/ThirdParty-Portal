@@ -22,9 +22,10 @@ trait ReportsTrait
     public function getReports(bool $data): View|JsonResponse
     {
         $module = self::MODULE;
+
         if ($data) {
             try {
-                return Datatables::of(Report::query()->where('t_Reports.ModuleId', $module->value)->select('*'))->addIndexColumn()
+                return Datatables::of(Report::query()->accessibleToUser(auth()->user())->where('t_Reports.ModuleId', $module->value)->select('*'))->addIndexColumn()
                     ->addColumn('action', function (Report $report) use ($module) {
                         return '<a href="' . route(Str::lower($module->name) . '-reports.show', [$report->Id]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> view</a>';
                     })->editColumn('Name', function (Report $report) use ($module) {
@@ -44,7 +45,9 @@ trait ReportsTrait
         if ($report->ModuleId !== self::MODULE->value) {
             return redirect()->back()->with('fail', 'invalid report.');
         }
-        //todo check permissions
+        if ($report->PermissionName && !auth()->user()->hasPermissionTo($report->PermissionName)) {
+            return redirect()->back()->with('fail', 'unauthorized access.');
+        }
 
         if ($request->ajax()) {
             try {
@@ -111,10 +114,13 @@ trait ReportsTrait
 
     public function export(Request $request, Report $report, string $format): StreamedResponse|RedirectResponse
     {
+        if ($report->PermissionName && !auth()->user()->hasPermissionTo($report->PermissionName)) {
+            return redirect()->back()->with('fail', 'unauthorized access.');
+        }
+
         if ((int)$report->ModuleId !== self::MODULE->value) {
             return redirect()->back()->with('fail', 'invalid report.');
         }
-        //todo check permissions
 
         if (!$request->has('_key') || md5($report->Path) !== $request->get('_key')) {
             return redirect()->back()->with('fail', 'download link expired. please refresh the report page and try again..');
