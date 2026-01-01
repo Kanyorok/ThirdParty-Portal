@@ -344,4 +344,4 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
 });
 
 //api routes for workflow stages
-Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');
+Route::get('api/workflows/{id}/state', [\App\Http\Controllers\Settings\WorkFlowController::class, 'getState']);
