@@ -58,20 +58,18 @@ class FleetTripLogPolicy
     }
 
 
-      public function approve(User $user, FleetTripLog $requisition): bool
+    public function approve(User $user, FleetTripLog $requisition): bool
     {
         // Don't allow approving if already approved or rejected
         if (
-            $trip->Status === ApprovalEnum::Approved->value ||
-            $trip->Status === ApprovalEnum::Rejected->value
+            $requisition->Status === ApprovalEnum::Approved->value ||
+            $requisition->Status === ApprovalEnum::Rejected->value
         ) {
             return false;
         }
 
         // Don't allow approving your own requisition
-        // if ($requisition->CreatedBy === $user->Id) {
-        //    return false;
-        // }
+
 
         // Must have the approval permission
         return $user->can(PermissionEnum::FleetTripLogApprove->value);
@@ -82,22 +80,16 @@ class FleetTripLogPolicy
     {
         // Don't allow rejecting if already approved or rejected
         if (
-            $trip->Status === ApprovalEnum::Approved->value ||
-            $trip->Status === ApprovalEnum::Rejected->value
+            $requisition->Status === ApprovalEnum::Approved->value ||
+            $requisition->Status === ApprovalEnum::Rejected->value
         ) {
             return false;
         }
 
         // Don't allow rejecting your own requisition
-        // if ($requisition->CreatedBy === $user->Id) {
-        //    return false;
-        // }
+
 
         // Must have the rejection permission
         return $user->can(PermissionEnum::FleetTripLogReject->value);
     }
-
 }
-
-
-

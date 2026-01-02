@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
+
 use Ramsey\Uuid\Uuid;
 use Throwable;
 
@@ -70,12 +71,11 @@ class DocumentService extends PermissionsService
         $service = self::createUpload(RepositoryService::module($module), $file, $actor, false)
             ->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false)->attach($Related, $RelatedId, $actor);
 
-        //  if (empty($permissions)) {
         if (is_string($permissions)) {
             $permissions = explode(',', $permissions);
         }
         self::userPermissions($service->document, $permissions, RoleEnum::Read, $actor);
-        // }
+
         return $service;
     }
 
@@ -320,13 +320,11 @@ class DocumentService extends PermissionsService
             return $this->document->checkouts()->where('Status', DocumentCheckOutStatusEnum::CheckOut->value)->exists() ? 1 : 0;
         }
 
-        /*$checkOut =*/
+
         if ($this->document->checkouts()->where('Status', DocumentCheckOutStatusEnum::CheckOut->value)->where('t_DocumentCheckOuts.CreatedBy', $actor->Id)->exists()) {
             return 2;
         }
-        /*if ($checkOut instanceof DocumentCheckOut) {
-            return 2;
-        }*/
+
 
         return $this->isCheckedOut();
     }
@@ -461,7 +459,7 @@ class DocumentService extends PermissionsService
 
         if ($this->type->value === ExtensionsEnum::Pdf->value) {
             return '<iframe src="data:application/pdf;base64,' . $this->getFileContent() . '#toolbar=0&navpanes=0" ' . $attr . '></iframe>'; //todo fix for pdf
-            //return '<embed width="100%" height="100%" "data:application/pdf;base64,'.$this->image->Image.' type="application/pdf" />';
+
         }
 
         if ($this->type->value === ExtensionsEnum::Txt->value) {
@@ -524,22 +522,11 @@ class DocumentService extends PermissionsService
                 $query->whereIn('t_Teams.TeamID', $this->document->permissions()->where('Party', Team::getPrimaryKey())->select('PartyID'));
             });
         })->paginate(5);
-
-
-
-        /* <img src="../assets/images/user/avatar-1.jpg" alt="user-image" class="avtar">
-         <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="avtar">
-         <img src="../assets/images/user/avatar-3.jpg" alt="user-image" class="avtar">
-         <span class="avtar avtar-xs bg-light-primary text-primary">+2</span>*/
     }
 
     private function _tagsHtml(): string
     {
-        /*return  ->paginate(5)->map(function ($tag) {
-            return ($tag->Visibility->value === VisibilityEnum::Private->value)
-                ? '<span class="badge rounded-pill text-bg-danger">'.$tag->Name.'</span>'
-                : '<span class="badge rounded-pill text-bg-primary">'.$tag->Name.'</span>';
-        });*/
+
         return '';
     }
 
@@ -552,13 +539,7 @@ class DocumentService extends PermissionsService
 
     public function tags(User $user)
     {
-        return $this->document->tags()->user($user);/*->where(function (Builder $query) use ($user) {
-            $query->where('Visibility', VisibilityEnum::Public->value)
-                ->orWhere(function (Builder $query) use ($user) {
-                    $query->where('Visibility', VisibilityEnum::Private->value)
-                        ->where('t_DMSTags.CreatedBy', $user->Id);
-                });
-        });*/
+        return $this->document->tags()->user($user);
     }
 
     public function users(): Builder

@@ -60,14 +60,7 @@ class SSRSProxyController extends Controller
         // $cookieJar = new CookieJar();
         // Make the request with basic auth
         try {
-            /* Http::globalOptions([
-                'allow_redirects' => false,
-                ])->withOptions([
-                'auth' => [$username, $password, 'ntlm'],
-                'cookies' => $cookieJar,
-            ])->withHeaders([
-                'User-Agent' => $request->userAgent(),
-            ])*/
+
 
             $response = $service->getQuery()->get($metadata['Route']);
         } catch (ConnectionException $e) {
@@ -124,13 +117,7 @@ class SSRSProxyController extends Controller
 
 
         try {
-            /*$response = Http::withOptions([
-                'auth' => [$username, $password, 'ntlm'],
-            ])->withHeaders([
-                    'Accept-Language'=>'en-GB',
-                    'User-Agent' => $request->userAgent(),
-                    'Referer' => session('ssrs_report_url'),
-            ])*/
+
             $response = $service->getQuery()->{strtolower($request->method())}($assetUrl);
         } catch (ConnectionException $e) {
             return response('Failed to load asset: ' . $e->getMessage(), 500);
@@ -196,19 +183,12 @@ class SSRSProxyController extends Controller
         }
 
         // Credentials
-        /*  $username = $service->getUsername();
-          $password = $service->getPassword();*/
+
 
 
         // Make the request with basic auth
         try {
-            /*$response = Http::globalOptions([
-                'allow_redirects' => false,
-            ])->withOptions([
-                'auth' => [$username, $password, 'ntlm'],
-            ])->withHeaders([
-                'User-Agent' => $request->userAgent(),
-            ])*/
+
             $response = $service->getQuery(true)->{strtolower($request->method())}($completePath);
         } catch (ConnectionException $e) {
             Log::error($e);
@@ -227,9 +207,7 @@ class SSRSProxyController extends Controller
             $body
         );
 
-        /*    session()?->put('ssrs_report_url', $metadata['Route']);
-            session()?->put('ssrs_report_path', $path);
-            session(['ssrs_cookies' => $cookieJar]);*/
+
 
         //  dd($response);
 
