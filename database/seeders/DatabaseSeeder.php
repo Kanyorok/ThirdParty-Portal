@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
-        $this->call(CommitteeSeeder::class);
+        //$this->call(CommitteeSeeder::class);
         $this->call(DepartmentSeeder::class);
         $this->call(EmployeeSeeder::class);
         $this->call(ItemCategoriesSeeder::class);
