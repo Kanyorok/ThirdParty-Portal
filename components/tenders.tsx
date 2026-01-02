@@ -11,7 +11,7 @@ import {
     Calendar,
     Clock,
     Building,
-    DollarSign,
+    Coins,
     Users,
     Shield,
     FileText,
@@ -21,6 +21,7 @@ import {
     AlertTriangle,
     Send
 } from "lucide-react";
+// ... (lines skipped)
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { format, isPast, differenceInDays } from 'date-fns';
 import { cn } from "@/lib/utils";
@@ -159,12 +160,12 @@ const headerVariants: Variants = {
     }
 };
 
-function TenderCard({ 
-    tender, 
-    index, 
-    onViewDetails 
-}: { 
-    tender: TenderWithInvitation; 
+function TenderCard({
+    tender,
+    index,
+    onViewDetails
+}: {
+    tender: TenderWithInvitation;
     index: number;
     onViewDetails: (tender: TenderWithInvitation) => void;
 }) {
@@ -286,12 +287,18 @@ function TenderCard({
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                        {tender.estimatedValue && (
+                        {tender.estimatedValue != null && (
                             <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl flex items-center gap-2 border border-gray-200 dark:border-gray-700">
-                                <DollarSign className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+                                <Coins className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
                                 <div>
                                     <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-0.5">Est. Value</p>
-                                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{tender.currency?.symbol || '$'}{tender.estimatedValue}</p>
+                                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                                        {tender.currency ? (
+                                            `${tender.currency.symbol} ${Number(tender.estimatedValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                        ) : (
+                                            `${tender.currencyId || ''} ${Number(tender.estimatedValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                        )}
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -375,8 +382,8 @@ export default function TendersPage() {
                     }
                 }),
                 fetch('/api/tender-invitations', {
-                headers: {
-                    'Accept': 'application/json',
+                    headers: {
+                        'Accept': 'application/json',
                         'Content-Type': 'application/json',
                     }
                 })
@@ -387,7 +394,7 @@ export default function TendersPage() {
             if (tendersResponse.status === 'fulfilled' && tendersResponse.value.ok) {
                 const data = await tendersResponse.value.json();
                 tendersData = data.data || [];
-                
+
                 // Show a notice if using fallback data
                 if (data.fallback) {
                     console.info('Using mock tender data - external API not available');
@@ -480,7 +487,7 @@ export default function TendersPage() {
                             approvalStatus: invTender.approvalStatus ?? invTender.ApprovalStatus ?? 0,
                             procurementMode: undefined,
                             currency: undefined,
-                            tenderCategoryRelation: undefined,
+                            tenderCategoryRelation: invTender.tenderCategoryRelation || undefined,
                             itemCategoryRelation: undefined,
                         };
                         tendersData.push(normalized);
@@ -498,18 +505,18 @@ export default function TendersPage() {
                 const invitation = invitationsData.find(inv => {
                     // Support both Laravel field naming conventions
                     const tenderId = inv?.TenderId || inv?.tenderId;
-                    
+
                     if (!inv || tenderId == null || tender.id == null) {
                         return false;
                     }
-                    
+
                     // Convert both to integers for proper comparison
                     const tenderDbId = parseInt(tender.id.toString());
                     const invitationTenderId = parseInt(tenderId.toString());
-                    
+
                     return tenderDbId === invitationTenderId;
                 });
-                
+
                 return {
                     ...tender,
                     invitation
@@ -586,7 +593,7 @@ export default function TendersPage() {
                             Tenders
                         </h1>
                     </div>
-                    
+
                     {/* Debug UI removed for production cleanliness */}
 
                     <div className="bg-gray-50 dark:bg-gray-950 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
@@ -702,10 +709,10 @@ export default function TendersPage() {
                             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
                         >
                             {tenders.map((tender, index) => (
-                                <TenderCard 
-                                    key={tender.id || `tender-${index}`} 
-                                    tender={tender} 
-                                    index={index} 
+                                <TenderCard
+                                    key={tender.id || `tender-${index}`}
+                                    tender={tender}
+                                    index={index}
                                     onViewDetails={handleViewDetails}
                                 />
                             ))}

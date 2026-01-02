@@ -7,12 +7,12 @@ import { Textarea } from "@/components/common/textarea";
 import { Alert, AlertDescription } from "@/components/common/alert";
 import { toast } from "sonner";
 import { getBaseUrl } from "@/lib/api-base";
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Clock, 
-  Send 
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  Send
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +53,10 @@ export default function TenderResponseForm({
   const [isLoading, setIsLoading] = useState(false);
   const [responseStatus, setResponseStatus] = useState<'accepted' | 'declined' | null>(null);
   const [declineReason, setDeclineReason] = useState("");
-  
+
+  // Add optimistic status state
+  const [optimisticStatus, setOptimisticStatus] = useState<'accepted' | 'declined' | null>(null);
+
   // Component ready for production use
 
   const handleResponse = async (status: 'accepted' | 'declined') => {
@@ -79,10 +82,10 @@ export default function TenderResponseForm({
         responseStatus: status,
         declineReason: status === 'declined' ? declineReason : null,
       };
-      
+
       const invitationId = invitation?.InvitationID || invitation?.invitationID;
       const apiUrl = `${getBaseUrl()}/api/tender-invitations/${invitationId}`;
-      
+
       const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {
@@ -92,7 +95,7 @@ export default function TenderResponseForm({
       });
 
       let data: any = {};
-      
+
       // Parse response
       try {
         const responseText = await response.text();
@@ -111,15 +114,17 @@ export default function TenderResponseForm({
         else if (response.status === 404) errorMessage = 'API endpoint not found';
         else if (response.status === 422) errorMessage = 'Invalid request data';
         else if (response.status === 500) errorMessage = 'Server error - please try again';
-        
+
         throw new Error(errorMessage);
       }
 
       toast.success(
-        status === 'accepted' 
-          ? "Tender invitation accepted successfully!" 
+        status === 'accepted'
+          ? "Tender invitation accepted successfully!"
           : "Tender invitation declined successfully!"
       );
+
+      setOptimisticStatus(status);
 
       if (onUpdate) {
         onUpdate();
@@ -128,8 +133,8 @@ export default function TenderResponseForm({
     } catch (error) {
       console.error('Error updating invitation response:', error);
       toast.error(
-        error instanceof Error 
-          ? error.message 
+        error instanceof Error
+          ? error.message
           : "Failed to update invitation response"
       );
     } finally {
@@ -218,7 +223,7 @@ export default function TenderResponseForm({
     );
   }
 
-  const currentStatus = invitation?.ResponseStatus || invitation?.responseStatus || 'pending';
+  const currentStatus = optimisticStatus || invitation?.ResponseStatus || invitation?.responseStatus || 'pending';
   const isResponseSubmitted = currentStatus !== 'pending';
   const canRespond = currentStatus === 'pending' && isRestrictedTender;
 
@@ -240,7 +245,7 @@ export default function TenderResponseForm({
                 {getStatusText(currentStatus)}
               </span>
             </div>
-            
+
             {(invitation?.ResponseDate || invitation?.responseDate) && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Response Date:</span>
@@ -291,7 +296,7 @@ export default function TenderResponseForm({
                 Once you accept, you'll be able to proceed with the bidding process.
               </AlertDescription>
             </Alert>
-            
+
             <div className="space-y-4">
               <div className="flex gap-4">
                 <Button
@@ -333,7 +338,7 @@ export default function TenderResponseForm({
                   <Button
                     onClick={() => handleResponse(responseStatus)}
                     disabled={
-                      isLoading || 
+                      isLoading ||
                       (responseStatus === 'declined' && !declineReason.trim())
                     }
                     className="flex-1"
