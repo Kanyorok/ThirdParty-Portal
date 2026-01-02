@@ -115,9 +115,10 @@ RUN rm -rf database/ && \
 RUN composer dump-autoload --optimize
 
 # 8. "Bake" the Configuration
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+# 8. "Bake" the Configuration - REMOVED to allow runtime env vars
+# RUN php artisan config:cache && \
+#     php artisan route:cache && \
+#     php artisan view:cache
 
 # Expose Ports
 EXPOSE 80
