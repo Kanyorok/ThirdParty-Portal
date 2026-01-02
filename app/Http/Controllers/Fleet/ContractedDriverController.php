@@ -14,6 +14,7 @@ use App\Models\Fleet\ContractedDriver;
 use App\Models\HRM\Employee;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\ThirdParty\SupplierMaster;
 
 class ContractedDriverController extends Controller
 {
@@ -28,7 +29,7 @@ class ContractedDriverController extends Controller
     {
         $this->authorize('viewAny', ContractedDriver::class);
 
-        $drivers = ContractedDriver::with('company')->latest('Id')->get();
+        $drivers = ContractedDriver::with(['company.party'])->latest('Id')->get();
 
         return view('fleet.contracted_drivers.index', compact('drivers'));
     }
@@ -37,7 +38,9 @@ class ContractedDriverController extends Controller
     {
         $this->authorize('create', ContractedDriver::class);
 
-        $companies = ThirdParties::where('IsPrequalified', true)->get();
+        $companies = SupplierMaster::with('party')
+            ->where('IsPrequalified', true)
+            ->get();
 
         return view('fleet.contracted_drivers.create', compact('companies'));
     }
@@ -59,8 +62,10 @@ class ContractedDriverController extends Controller
     {
         $this->authorize('update', ContractedDriver::class);
 
-        $driver = ContractedDriver::findOrFail($id);
-        $companies = ThirdParties::where('IsPrequalified', true)->get();
+        $driver = ContractedDriver::with('company.party')->findOrFail($id);
+        $companies = SupplierMaster::with('party')
+            ->where('IsPrequalified', true)
+            ->get();
 
         return view('fleet.contracted_drivers.edit', compact('driver', 'companies'));
     }
@@ -107,10 +112,10 @@ class ContractedDriverController extends Controller
         $this->authorize('view', ContractedDriver::class);
 
         $driver = ContractedDriver::with([
-            'company',
-            'assignments.vehicle.vehicleType',
-            'tripLogs.vehicle',
-        ])->findOrFail($id);
+        'company.party', 
+        'assignments.vehicle.vehicleType',
+        'tripLogs.vehicle',
+    ])->findOrFail($id);
 
         $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $id)
             ->orderByDesc('IssueDate')

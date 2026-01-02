@@ -19,6 +19,9 @@ return [
         'version' => '0.0.1'
     ],
 
+    'dms' => [
+        'file_size' => 9, //in mb
+    ],
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -57,6 +60,10 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
+    'nextauth_url' => env('NEXTAUTH_URL', 'http://localhost:3000'),
 
     /*
     |--------------------------------------------------------------------------
@@ -140,5 +147,3 @@ return [
         'ZAR' => 'South African Rand',
     ],
 ];
-
-

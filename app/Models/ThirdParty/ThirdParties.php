@@ -11,8 +11,11 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\Insurance\BancassuranceCustomer;
 
 class ThirdParties extends Model
 {
@@ -40,6 +43,7 @@ class ThirdParties extends Model
         'BusinessType',
         'RegistrationNumber',
         'TaxPIN',
+        'VATNumber',
         'CountryId',
         'LocationId',
         'PhysicalAddress',
@@ -123,28 +127,104 @@ class ThirdParties extends Model
         return $this->belongsTo(CodeDetail::class, 'Status', 'Id');
     }
 
-    public function users(): HasOne
+    public function scopeSuppliers($query)
     {
-        return $this->hasOne(ThirdPartyUser::class, 'ThirdPartyId', 'Id');
+        return $query->whereHas('types', function ($q) {
+            $q->where('t_ThirdPartyType_ThirdParties.PartyType', SupplierMaster::getPrimaryKey());
+        });
     }
 
-    public function isSupplier(): bool
-    {
-        return $this->types()->wherePivot('PartyType', 'SupplierId')->exists();
-    }
+    // public function isSupplier(): bool
+    // {
+    //     return $this->types()->wherePivot('PartyType', 'SupplierId')->exists();
+    // }
 
-    public function isTenant(): bool
-    {
-        return $this->types()->where('t_ThirdPartyTypes.TypeId', 4)->exists();
-    }
+    // public function isTenant(): bool
+    // {
+    //     return $this->types()->where('t_ThirdPartyTypes.TypeId', 4)->exists();
+    // }
 
-    public function isCustomer(): bool
-    {
-        return $this->types()->where('t_ThirdPartyTypes.TypeId', 6)->exists();
-    }
+    // public function isCustomer(): bool
+    // {
+    //     return $this->types()->where('t_ThirdPartyTypes.TypeId', 6)->exists();
+    // }
 
     protected function getImageName(): string
     {
         return $this->ThirdPartyName ?? 'third-party';
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceInvoice::class, 'CustomerID', 'Id');
+    }
+
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
+    }
+
+
+    /**
+     * =======================================| TODO: Upto there the rest to be removed or moved to appropriate classes  |======================================
+     */
+
+
+    // public function categories(): BelongsToMany
+    // {
+    //     // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
+    //     //todo move to supplier master model
+    //     return $this->belongsToMany(
+    //         SupplierCategory::class,
+    //         't_ThirdParty_SupplierCategory',
+    //         'third_party_id',
+    //         'supplier_category_id'
+    //     );
+    // }
+
+
+    /**
+     * Legacy category mappings (t_ThirdPartiesCategories -> CodeDetail) used by prequalification screen.
+     */
+    public function legacyCategories()
+    {  //todo move to supplier master model
+        return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
+            ->whereNull('DeletedOn')
+            ->with('category');
+    }
+    public function isApproved(): bool
+    {
+        return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
+    }
+
+    public function isSupplier(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return (isset($type->Code) && str_starts_with($type->Code, 'SU'))
+                    || (isset($type->pivot->PartyType) && $type->pivot->PartyType === SupplierMaster::getPrimaryKey());
+            });
+        }
+        return $this->ThirdPartyType === \App\Enums\ThirdParty\ThirdPartyTypeEnum::Supplier;
+    }
+
+    public function isTenant(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return isset($type->pivot->PartyType) && $type->pivot->PartyType === PropertyNewTenant::getPrimaryKey();
+            });
+        }
+        return false;
+    }
+
+    public function isCustomer(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return isset($type->pivot->PartyType) && $type->pivot->PartyType === BancassuranceCustomer::getPrimaryKey();
+            });
+        }
+        return false;
     }
 }

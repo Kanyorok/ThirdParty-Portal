@@ -24,7 +24,7 @@ class ProcurementPlanController extends Controller
         return view('procurement.procurement_plans.create', [
             'availableItems' => $items,
             'period' =>  $procurementPeriod,
-        ]);
+        ]); 
     }
 
     public function store(Request $request, ProcurementPeriod $procurementPeriod) // Route Model Binding

@@ -29,4 +29,23 @@ class ApiCountryController extends Controller
 
         return CountryResource::collection($countries);
     }
+
+    /**
+     * Get localities for a specific country
+     *
+     * @param string $countryCode
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function localities(string $countryCode)
+    {
+        $country = Country::where('CountryCode', $countryCode)->firstOrFail();
+
+        $localities = $country->localities()
+            ->orderBy('Name')
+            ->get(['ID', 'Name']);
+
+        return response()->json([
+            'data' => $localities
+        ]);
+    }
 }

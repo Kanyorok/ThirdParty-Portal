@@ -310,80 +310,121 @@
 <!-- Modal -->
 <div class="modal fade" id="createRFQModal" tabindex="-1" aria-labelledby="createRFQModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form method="POST" action="{{ route('linecategories.store') }}" class="modal-content">
-            @csrf
-            <div class="modal-header">
-                <h5 class="modal-title" id="createRFQModalLabel">Create RFQ Line</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <div class="modal-body">
-                <!-- Requisition No (readonly) -->
-                <div class="mb-3">
-                    <label for="requisitionNo">Requisition No</label>
-                    <input type="text" class="form-control" id="requisitionNo"
-                        value="{{ $rfq->requisition->RequisitionNo ?? 'N/A' }}" readonly>
+        <div class="modal-content">
+            <form method="POST" action="{{ route('rfq-lines.store') }}">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createRFQModalLabel">Create RFQ Line</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <!-- Item Category Dropdown -->
-                <div class="mb-3">
-                    <label for="categoryDropdown">Item Category</label>
-                    <select name="ItemCategoryId" id="categoryDropdown" class="form-control" required>
-                        <option value="">-- Select Category --</option>
-                    </select>
-                </div>
-            </div>
+                <div class="modal-body">
+                    <!-- Requisition No (readonly) -->
+                    <div class="mb-3">
+                        <label for="requisitionNo">Requisition No</label>
+                        <input type="text" class="form-control" id="requisitionNo"
+                            value="{{ $rfq->requisition->RequisitionNo ?? 'N/A' }}" readonly>
+                    </div>
 
-            <input type="hidden" name="RFQId" id="rfq-number" value="{{ $rfq->Id }}">
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save RFQ Line</button>
-            </div>
-        </form>
+                    <!-- Item Category Dropdown -->
+                    <div class="mb-3">
+                        <label for="categoryDropdown">Item Category</label>
+                        <select name="ItemCategoryId" id="categoryDropdown" class="form-control" required>
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <input type="hidden" name="RFQId" id="rfq-number" value="{{ $rfq->Id }}">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save RFQ Line</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const categoryDropdown = document.getElementById('categoryDropdown');
-        const requisitionId = {
-            {
-                $rfq - > requisition - > Id
-            }
-        };
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryDropdown = document.getElementById('categoryDropdown');
+    const rfqId = {{ $rfq->Id }};
+    
+    // Get the requisition ID from the RFQ
+    const requisitionId = {{ $rfq->RequisitionId ?? 'null' }};
+    
+    console.log('RFQ ID:', rfqId);
+    console.log('Requisition ID:', requisitionId);
+    
+    if (!requisitionId) {
+        categoryDropdown.innerHTML = '<option value="">⚠️ No requisition linked to this RFQ</option>';
+        categoryDropdown.disabled = true;
+        return;
+    }
 
-        categoryDropdown.innerHTML = '<option value="">-- Select Category --</option>';
+    categoryDropdown.innerHTML = '<option value="">Loading categories...</option>';
+    categoryDropdown.disabled = true;
 
-        fetch(`/procurement/requisition/${requisitionId}/categories`)
-            .then(response => response.json())
-            .then(payload => {
-                const categories = Array.isArray(payload) ?
-                    payload :
-                    (payload && Array.isArray(payload.categories) ? payload.categories : []);
+    // Use Laravel's route helper to generate the correct URL
+    // Use Laravel's route helper to generate the correct URL
+    const url = `{{ route('rfq-lines.requisition.categories', ':requisitionId') }}`.replace(':requisitionId', requisitionId);
+    
+    console.log('Fetching categories from:', url);
 
-                if (!categories.length) {
-                    const option = document.createElement('option');
-                    option.value = "";
-                    option.textContent = "⚠️ No items available for the attached requisition.";
-                    categoryDropdown.appendChild(option);
-                } else {
-                    categories.forEach(cat => {
-                        const option = document.createElement('option');
-                        option.value = cat.Id;
-                        option.textContent = cat.Name;
-                        categoryDropdown.appendChild(option);
-                    });
-                }
-                categoryDropdown.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error loading categories:', error);
-                categoryDropdown.innerHTML = '<option value="">⚠️ Failed to load categories</option>';
-                categoryDropdown.disabled = true;
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('Error response body:', text);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
             });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Received data:', data);
+        
+        categoryDropdown.innerHTML = '<option value="">-- Select Category --</option>';
+        
+        if (!data.success) {
+            console.error('API returned success=false:', data);
+            categoryDropdown.innerHTML = '<option value="">⚠️ API Error: ' + (data.message || 'Unknown error') + '</option>';
+            categoryDropdown.disabled = true;
+            return;
+        }
+        
+        if (!data.categories || data.categories.length === 0) {
+            categoryDropdown.innerHTML = '<option value="">⚠️ No items available for this requisition</option>';
+            categoryDropdown.disabled = true;
+        } else {
+            data.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.Id;
+                option.textContent = cat.Name;
+                categoryDropdown.appendChild(option);
+            });
+            categoryDropdown.disabled = false;
+            console.log(`Successfully loaded ${data.categories.length} categories`);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        categoryDropdown.innerHTML = '<option value="">⚠️ Failed to load categories: ' + error.message + '</option>';
+        categoryDropdown.disabled = true;
     });
+});
 </script>
-
 
 <script>
     function printRFQ() {

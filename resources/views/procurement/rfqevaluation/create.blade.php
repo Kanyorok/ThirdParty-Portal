@@ -136,6 +136,19 @@
       // Custom validation for form submission
       form.addEventListener('submit', function(event) {
         let isValid = true;
+        let errorMessages = [];
+
+        // Check if user is assigned to committee
+        const committeeMember = committeeMemberInput.value.trim();
+        const userId = userIdInput.value.trim();
+
+        if (committeeMember === 'You are not assigned to the committee' || committeeMember === 'Error' || !userId) {
+          isValid = false;
+          errorMessages.push('You are not assigned to the evaluation committee for this RFQ. Please contact your administrator.');
+          committeeMemberInput.classList.add('is-invalid');
+        } else {
+          committeeMemberInput.classList.remove('is-invalid');
+        }
 
         // Check if all score inputs have values
         const scoreInputs = evaluationFormsContainer.querySelectorAll(
@@ -151,7 +164,8 @@
 
         if (!isValid) {
           event.preventDefault();
-          alert('Please fill in all required fields and ensure scores are between 1 and 10.');
+          const errorMessage = errorMessages.length > 0 ? errorMessages.join('\n') : 'Please fill in all required fields and ensure scores are between 1 and 10.';
+          alert(errorMessage);
         }
       });
 

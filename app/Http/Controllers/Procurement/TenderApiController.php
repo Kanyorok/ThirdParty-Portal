@@ -38,8 +38,10 @@ class TenderApiController extends Controller
                 $supplierIds = [];
                 if (!empty($thirdPartyId)) {
                     $supplierIds = DB::table('t_Suppliers')
-                        ->where('ThirdPartyID', (int)$thirdPartyId)
-                        ->pluck('Id')
+                        ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+                        ->where('t_SupplierMaster.ThirdPartyId', (int)$thirdPartyId)
+                        ->whereNull('t_Suppliers.DeletedOn')
+                        ->pluck('t_Suppliers.Id')
                         ->unique()
                         ->values()
                         ->all();
@@ -47,8 +49,10 @@ class TenderApiController extends Controller
                     $tpId = Auth::user()->thirdParty->Id ?? null;
                     if ($tpId) {
                         $supplierIds = DB::table('t_Suppliers')
-                            ->where('ThirdPartyID', (int)$tpId)
-                            ->pluck('Id')
+                            ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+                            ->where('t_SupplierMaster.ThirdPartyId', (int)$tpId)
+                            ->whereNull('t_Suppliers.DeletedOn')
+                            ->pluck('t_Suppliers.Id')
                             ->unique()
                             ->values()
                             ->all();
@@ -142,6 +146,41 @@ class TenderApiController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json(['message' => 'Failed to retrieve tenders. Please try again.'], 500);
+        }
+    }
+    public function index22(Request $request): JsonResponse
+    {
+        try {
+            \Log::info('Tender API called with params: ', $request->all());
+
+            $query = Tender::query();
+
+            // Test basic query first
+            $count = $query->count();
+            \Log::info("Total tenders in database: {$count}");
+
+            // Add relationships one by one
+            $query->with(['procurementMode', 'currency']);
+
+            $tenders = $query->limit(10)->get();
+
+            return response()->json([
+                'message' => 'Tenders retrieved successfully.',
+                'data' => $tenders,
+                'debug' => [
+                    'total_count' => $count,
+                    'returned' => $tenders->count()
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('TENDER API ERROR: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            return response()->json([
+                'message' => 'Failed to retrieve tenders.',
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
         }
     }
 

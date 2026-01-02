@@ -21,7 +21,7 @@ BEGIN
 
     SELECT D.OrderNo,
            D.GrvNo,
-           S.SupplierName as AccountID,
+           S.ID as AccountID,
            D.OrderDate,
            D.OrdTotExcl,
            D.OrdTotIncl,

@@ -141,13 +141,6 @@ class ReceiptPostingService
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
-
-        Log::info("Deposited excess amount to wallet", [
-            'customer_id' => $receipt->CustomerID,
-            'amount' => $excessAmount,
-            'receipt_id' => $receipt->Id,
-            'wallet_balance' => $wallet->Balance
-        ]);
     }
 
     /**

@@ -11,9 +11,12 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\ThirdParty\ThirdPartyUser;
 
 class Authenticate extends Middleware
 {
+
+
     /**
      * Handle an incoming request.
      *
@@ -30,7 +33,6 @@ class Authenticate extends Middleware
         $this->authenticate($request, $guards);
         $actor = $request->user();
 
-        //@Kimxons For API routes (like portal routes), skip branch and session checks
         if (!$request->hasSession() || in_array('sanctum', $guards)) {
             return $next($request);
         }
@@ -60,7 +62,7 @@ class Authenticate extends Middleware
         return $next($request);
     }
 
-    protected function unauthenticated($request, array $guards, User $user = null): void
+    protected function unauthenticated($request, array $guards, $user = null): void
     {
         if ($user instanceof User) {
             activity()
@@ -73,7 +75,6 @@ class Authenticate extends Middleware
             ]);
         }
 
-        //@Kimxons Only logout and invalidate session if session is available (web routes)
         if ($request->hasSession()) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();

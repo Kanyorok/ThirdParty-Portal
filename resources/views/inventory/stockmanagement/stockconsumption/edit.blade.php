@@ -3,199 +3,460 @@
 @section('title', 'Edit Stock Consumption')
 
 @section('content')
-    <div class="container">
-        <h4 class="mb-4">Edit Stock Consumption</h4>
+<div class="container">
+    <form action="{{ route('stockconsumption.update', $consumption->Id) }}" method="POST" id="consumptionForm">
+        @csrf
+        @method('PUT')
 
-        <form action="{{ route('stockconsumption.update', $consumption->Id) }}" method="POST">
-            @csrf
-            @method('PUT')
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul>@foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach</ul>
-                </div>
-            @endif
-
-            {{-- Branch --}}
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Branch</label>
-                    <input type="text" class="form-control" value="{{ $branch->Name }}" readonly>
-                    <input type="hidden" name="BranchID" value="{{ $branch->Id }}">
-                </div>
-
-                {{-- Store --}}
-                <div class="col-md-6">
-                    <label for="StoreID" class="form-label">Store</label>
-                    <select class="form-select" name="StoreID" id="StoreID" required>
-                        <option value="">Select Store</option>
-                        @foreach($stores as $store)
-                            <option value="{{ $store->Id }}"
-                                {{ old('StoreID', $consumption->StoreID) == $store->Id ? 'selected' : '' }}>
-                                {{ $store->StoreName }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Branch <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" value="{{ $branch->Name }}" readonly>
+                <input type="hidden" name="BranchID" value="{{ $branch->Id }}">
             </div>
 
-            {{-- Item, Quantity, UOM --}}
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="ItemID" class="form-label">Item</label>
-                    <select class="form-select" name="ItemID" id="ItemID" required>
-                        <option value="">Select Item</option>
-                        {{-- Items will be loaded dynamically via AJAX --}}
-                    </select>
-                </div>
+            <div class="col-md-6">
+                <label for="StoreID" class="form-label">Store <span class="text-danger">*</span></label>
+                <select class="form-select @error('StoreID') is-invalid @enderror" name="StoreID" id="StoreID" required>
+                    <option value="">Select Store</option>
+                    @foreach($stores as $store)
+                        <option value="{{ $store->Id }}" 
+                            {{ old('StoreID', $consumption->StoreID) == $store->Id ? 'selected' : '' }}>
+                            {{ $store->StoreName }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('StoreID')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
 
-                <div class="col-md-3">
-                    <label for="Quantity" class="form-label">Quantity</label>
-                    <input type="number" class="form-control"
-                           name="Quantity" id="Quantity"
-                           value="{{ old('Quantity', $consumption->Quantity) }}" required>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">Unit of Measure</label>
-                    <input type="text" id="UOM_Display" class="form-control" readonly>
-                    <input type="hidden" name="UOM" id="UOM"
-                           value="{{ old('UOM', $consumption->UOM) }}">
-                </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="ItemID" class="form-label">Item <span class="text-danger">*</span></label>
+                <select class="form-select @error('ItemID') is-invalid @enderror" name="ItemID" id="ItemID" required>
+                    <option value="">Select Item</option>
+                </select>
+                @error('ItemID')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
-            {{-- Issued To --}}
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="IssuedToType" class="form-label">Issued To Type</label>
-                    <select name="IssuedToType" id="IssuedToType" class="form-select" required>
-                        <option value="">Select Option</option>
-                        @foreach ($types as $type)
-                            <option value="{{ $type->ID }}"
-                                {{ old('IssuedToType', $consumption->IssuedToType) == $type->ID ? 'selected' : '' }}>
-                                {{ $type->Description }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label for="IssuedToID" class="form-label">Issued To</label>
-                    <select name="IssuedToID" id="IssuedToID" class="form-select" required>
-                        <option value="">Select Recipient</option>
-                        {{-- Options loaded via AJAX --}}
-                    </select>
-                </div>
+            <div class="col-md-3">
+                <label for="Quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                <input type="number" class="form-control @error('Quantity') is-invalid @enderror" 
+                       name="Quantity" id="Quantity" value="{{ old('Quantity', $consumption->Quantity) }}"
+                       step="0.01" min="0.01" required>
+                @error('Quantity')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
-            {{-- Issued By + Date --}}
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="IssuedBy" class="form-label">Issued By</label>
-                    <select name="IssuedBy" id="IssuedBy" class="form-select" required>
-                        <option value="">Select User</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->Id }}"
-                                {{ old('IssuedBy', $consumption->IssuedBy) == $user->Id ? 'selected' : '' }}>
-                                {{ $user->Name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+            <div class="col-md-3">
+                <label class="form-label">Unit of Measure <span class="text-danger">*</span></label>
+                <input type="text" id="UOM_Display" class="form-control" 
+                       value="{{ $consumption->uom->Code ?? '' }}" readonly>
+                <input type="hidden" name="UOM" id="UOM" value="{{ old('UOM', $consumption->UOM) }}">
+                @error('UOM')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
 
-                <div class="col-md-6">
-                    <label for="IssuedOn" class="form-label">Issued On</label>
-                    <input type="date" name="IssuedOn" id="IssuedOn" class="form-control"
-                           value="{{ old('IssuedOn', $consumption->IssuedOn ? \Carbon\Carbon::parse($consumption->IssuedOn)->format('Y-m-d') : now()->format('Y-m-d')) }}"
-                           required>
-                </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="IssuedToType" class="form-label">Issued To Type <span class="text-danger">*</span></label>
+                <select name="IssuedToType" id="IssuedToType" class="form-select @error('IssuedToType') is-invalid @enderror" required>
+                    <option value="">Select Option</option>
+                    @foreach ($types as $type)
+                        <option value="{{ $type->ID }}" 
+                            {{ old('IssuedToType', $consumption->IssuedToType) == $type->ID ? 'selected' : '' }}>
+                            {{ $type->Description }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('IssuedToType')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
-            {{-- Remarks --}}
-            <div class="mb-3">
-                <label for="Remarks" class="form-label">Remarks</label>
-                <textarea class="form-control" name="Remarks" id="Remarks"
-                          rows="3">{{ old('Remarks', $consumption->Remarks) }}</textarea>
+            <div class="col-md-6">
+                <label for="IssuedToID" class="form-label">Issued To <span class="text-danger">*</span></label>
+                <select name="IssuedToID" id="IssuedToID" class="form-select @error('IssuedToID') is-invalid @enderror" required>
+                    <option value="">Select based on type</option>
+                    @if($consumption->IssuedToType)
+                        @php
+                            $type = \App\Models\Core\Approval\CodeDetail::find($consumption->IssuedToType);
+                            $typeName = $type ? strtoupper($type->Description) : '';
+                        @endphp
+                        
+                        @if($typeName === 'EMPLOYEE')
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee['id'] }}" 
+                                    {{ old('IssuedToID', $consumption->IssuedToID) == $employee['id'] ? 'selected' : '' }}>
+                                    {{ $employee['name'] }}
+                                </option>
+                            @endforeach
+                        @elseif($typeName === 'DEPARTMENT')
+                            @foreach($departments as $department)
+                                <option value="{{ $department['id'] }}" 
+                                    {{ old('IssuedToID', $consumption->IssuedToID) == $department['id'] ? 'selected' : '' }}>
+                                    {{ $department['name'] }}
+                                </option>
+                            @endforeach
+                        @endif
+                    @endif
+                </select>
+                @error('IssuedToID')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                <small class="text-muted">Options will filter based on selected type</small>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="IssuedBy" class="form-label">Issued By <span class="text-danger">*</span></label>
+                <select name="IssuedBy" id="IssuedBy" class="form-select @error('IssuedBy') is-invalid @enderror" required>
+                    <option value="">Select User</option>
+                    @foreach($users as $user)
+                        <option value="{{ $user['Id'] }}" 
+                            {{ old('IssuedBy', $consumption->IssuedBy) == $user['Id'] ? 'selected' : '' }}>
+                            {{ $user['Name'] }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('IssuedBy')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
             </div>
 
-            <div class="mt-3">
-                <button type="submit" class="btn btn-success">Update</button>
-                <a href="{{ route('stockconsumption.index') }}" class="btn btn-secondary">Cancel</a>
+            <div class="col-md-6">
+                <label for="IssuedOn" class="form-label">Issued On <span class="text-danger">*</span></label>
+                <input type="date" class="form-control @error('IssuedOn') is-invalid @enderror" 
+                       name="IssuedOn" id="IssuedOn" 
+                       value="{{ old('IssuedOn', \Carbon\Carbon::parse($consumption->IssuedOn)->format('Y-m-d')) }}" 
+                       required>
+                @error('IssuedOn')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+                <small class="text-muted">Select the date when stock was issued</small>
             </div>
-        </form>
-    </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="Remarks" class="form-label">Remarks</label>
+            <textarea class="form-control @error('Remarks') is-invalid @enderror" name="Remarks" id="Remarks" rows="3">{{ old('Remarks', $consumption->Remarks) }}</textarea>
+            @error('Remarks')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Update</button>
+            <a href="{{ route('stockconsumption.index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
 @endsection
 
 @section('scripts')
-    <script>
-        $(document).ready(function () {
-            const oldItemID = '{{ old('ItemID', $consumption->ItemID) }}';
-            const oldIssuedToType = '{{ old('IssuedToType', $consumption->IssuedToType) }}';
-            const oldIssuedToID = '{{ old('IssuedToID', $consumption->IssuedToID) }}';
+<script>
+    $(document).ready(function () {
+        const currentUserId = {{ Auth::id() }};
+        const consumptionId = {{ $consumption->Id }};
+        const oldItemID = '{{ old('ItemID', $consumption->ItemID) }}';
+        const oldIssuedToType = '{{ old('IssuedToType', $consumption->IssuedToType) }}';
+        const oldIssuedToID = '{{ old('IssuedToID', $consumption->IssuedToID) }}';
+        
+        // Store the current store ID from the form
+        const currentStoreId = '{{ $consumption->StoreID }}';
+        
+        let availableQty = 0;
+        let originalQty = parseFloat('{{ $consumption->Quantity }}') || 0;
+        let originalItemId = '{{ $consumption->ItemID }}';
+        let itemsLoaded = false; // Flag to track if items have been loaded
 
-            let availableQty = 0;
-
-            function loadItems(storeId, selectedId) {
-                let itemSelect = $('#ItemID');
-                itemSelect.empty().append('<option value="">Loading...</option>');
-                $.ajax({
-                    url: '{{ route("stockconsumption.getItems") }}',
-                    type: 'GET',
-                    data: {StoreID: storeId},
-                    success: function (data) {
-                        itemSelect.empty().append('<option value="">Select Item</option>');
+        function loadItems(storeId, selectedItemId) {
+            let itemSelect = $('#ItemID');
+            itemSelect.empty().append('<option value="">Loading...</option>');
+            
+            $.ajax({
+                url: '{{ route("stockconsumption.getItems") }}',
+                type: 'GET',
+                data: {StoreID: storeId},
+                success: function (data) {
+                    itemSelect.empty().append('<option value="">Select Item</option>');
+                    
+                    // Log for debugging
+                    console.log('Loading items for store:', storeId);
+                    console.log('Selected item ID:', selectedItemId);
+                    console.log('Available items:', data);
+                    
+                    if (data && data.length > 0) {
                         data.forEach(item => {
-                            itemSelect.append(`
-                        <option value="${item.Id}"
-                                data-uom="${item.UOMCode}"
-                                data-uom-id="${item.UOM}"
-                                data-currentqty="${item.CurrentQty}"
-                                ${item.Id == selectedId ? 'selected' : ''}>
-                            ${item.ItemName}
-                        </option>`);
+                            // Check if this is the selected item
+                            const isSelected = (item.Id == selectedItemId);
+                            
+                            // Calculate available quantity
+                            let itemAvailableQty = parseFloat(item.CurrentQty) || 0;
+                            if (item.Id == originalItemId) {
+                                // If this is the original item, add back the consumed quantity
+                                itemAvailableQty = itemAvailableQty + originalQty;
+                            }
+                            
+                            // Create option element
+                            const option = new Option(
+                                item.ItemName || 'Unknown Item',
+                                item.Id,
+                                isSelected,
+                                isSelected
+                            );
+                            
+                            // Set data attributes
+                            $(option).data('uom', item.UOMCode || '');
+                            $(option).data('uom-id', item.UOM || '');
+                            $(option).data('currentqty', itemAvailableQty);
+                            
+                            itemSelect.append(option);
+                            
+                            // If this is the selected item, update UOM display
+                            if (isSelected) {
+                                availableQty = itemAvailableQty;
+                                $('#UOM_Display').val(item.UOMCode || '');
+                                $('#UOM').val(item.UOM || '');
+                                
+                                // Update quantity placeholder
+                                $('#Quantity').attr('placeholder', `Max: ${availableQty.toFixed(2)}`);
+                            }
                         });
-                        if (selectedId) $('#ItemID').trigger('change');
+                        
+                        itemsLoaded = true;
+                        
+                        // If we have a selected item but it wasn't found in the results
+                        if (selectedItemId && !itemSelect.val()) {
+                            console.warn('Selected item not found in results:', selectedItemId);
+                            // Optionally, add a placeholder option
+                            itemSelect.prepend(new Option(
+                                'Selected Item (Not Found)',
+                                selectedItemId,
+                                true,
+                                true
+                            ));
+                        }
+                    } else {
+                        itemSelect.append('<option value="">No items found</option>');
                     }
-                });
+                    
+                    // Validate quantity after items load
+                    validateQuantity();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading items:', error);
+                    itemSelect.empty().append('<option value="">Error loading items</option>');
+                    
+                    // Try to keep the selected item if possible
+                    if (selectedItemId) {
+                        itemSelect.append(new Option(
+                            'Selected Item',
+                            selectedItemId,
+                            true,
+                            true
+                        ));
+                    }
+                }
+            });
+        }
+
+        function loadIssuedToOptions(type, selectedId) {
+            const recipientSelect = $('#IssuedToID');
+            
+            if (!type) {
+                recipientSelect.empty().append('<option value="">Select based on type</option>');
+                return;
+            }
+            
+            recipientSelect.empty().append('<option value="">Loading...</option>');
+            
+            $.ajax({
+                url: '{{ route("stockconsumption.getIssuedToOptions") }}',
+                type: 'GET',
+                data: {type: type},
+                success: function (data) {
+                    recipientSelect.empty().append('<option value="">Select Recipient</option>');
+                    
+                    if (data && data.length > 0) {
+                        data.forEach(item => {
+                            const isSelected = (item.Id == selectedId);
+                            recipientSelect.append(new Option(
+                                item.Name,
+                                item.Id,
+                                isSelected,
+                                isSelected
+                            ));
+                        });
+                    } else {
+                        recipientSelect.append('<option value="">No options available</option>');
+                    }
+                    
+                    validateUsers();
+                },
+                error: function() {
+                    recipientSelect.empty().append('<option value="">Error loading options</option>');
+                }
+            });
+        }
+
+        function validateUsers() {
+            const issuedBy = $('#IssuedBy').val();
+            const issuedTo = $('#IssuedToID').val();
+            
+            // Remove any existing validation messages
+            $('#issued-to-error').remove();
+            $('#IssuedToID').removeClass('is-invalid');
+            
+            if (issuedBy && issuedTo) {
+                if (issuedBy == issuedTo) {
+                    $('#IssuedToID').addClass('is-invalid');
+                    $('#IssuedToID').after('<div id="issued-to-error" class="invalid-feedback">Issued To cannot be the same as Issued By</div>');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function validateQuantity() {
+            const currentQty = parseFloat($('#Quantity').val()) || 0;
+            const itemId = $('#ItemID').val();
+            
+            // Reset validation
+            $('#Quantity').removeClass('is-invalid');
+            $('#qty-error').remove();
+            $('button[type="submit"]').prop('disabled', false);
+
+            if (currentQty > 0 && itemId) {
+                // Get selected option's available quantity
+                const selectedOption = $('#ItemID option:selected');
+                const maxQty = parseFloat(selectedOption.data('currentqty')) || 0;
+                
+                if (currentQty > maxQty) {
+                    $('#Quantity').addClass('is-invalid');
+                    $('#Quantity').after(`<div id="qty-error" class="invalid-feedback">
+                        Quantity exceeds available stock (${maxQty.toFixed(2)}).
+                    </div>`);
+                    $('button[type="submit"]').prop('disabled', true);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Initialize with current consumption data
+        function initializeForm() {
+            console.log('Initializing form...');
+            console.log('Current store ID:', currentStoreId);
+            console.log('Selected item ID:', oldItemID);
+            
+            // Load items for the current store with the selected item
+            if (currentStoreId) {
+                loadItems(currentStoreId, oldItemID);
+            } else {
+                console.warn('No store ID found for initialization');
             }
 
-            function loadIssuedToOptions(type, selectedId) {
-                const recipientSelect = $('#IssuedToID');
-                recipientSelect.empty().append('<option value="">Loading...</option>');
-                $.ajax({
-                    url: '{{ route("stockconsumption.getIssuedToOptions") }}',
-                    type: 'GET',
-                    data: {type: type},
-                    success: function (data) {
-                        recipientSelect.empty().append('<option value="">Select Recipient</option>');
-                        data.forEach(item => {
-                            recipientSelect.append(`<option value="${item.Id}" ${item.Id == selectedId ? 'selected' : ''}>${item.Name}</option>`);
-                        });
-                    }
-                });
+            // Load issued to options for the current type
+            if (oldIssuedToType) {
+                loadIssuedToOptions(oldIssuedToType, oldIssuedToID);
             }
+            
+            // Initial validations
+            validateUsers();
+        }
 
-            $('#StoreID').on('change', function () {
-                loadItems($(this).val(), null);
-            });
-
-            $('#ItemID').on('change', function () {
-                let selectedOption = $(this).find('option:selected');
-                $('#UOM_Display').val(selectedOption.data('uom') || '');
-                $('#UOM').val(selectedOption.data('uom-id') || '');
-                availableQty = selectedOption.data('currentqty') || 0;
-            });
-
-            $('#IssuedToType').on('change', function () {
-                loadIssuedToOptions($(this).val(), null);
-            });
-
-            // Restore on load
-            loadItems($('#StoreID').val(), oldItemID);
-            if (oldIssuedToType) loadIssuedToOptions(oldIssuedToType, oldIssuedToID);
-            if (oldItemID) $('#ItemID').trigger('change');
+        $('#StoreID').on('change', function () {
+            const newStoreId = $(this).val();
+            console.log('Store changed to:', newStoreId);
+            loadItems(newStoreId, null);
         });
-    </script>
-@endsection
+
+        $('#ItemID').on('change', function () {
+            let selectedOption = $(this).find('option:selected');
+            $('#UOM_Display').val(selectedOption.data('uom') || '');
+            $('#UOM').val(selectedOption.data('uom-id') || '');
+            
+            // Get available quantity for selected item
+            availableQty = parseFloat(selectedOption.data('currentqty')) || 0;
+            
+            // Update quantity placeholder
+            $('#Quantity').attr('placeholder', `Max: ${availableQty.toFixed(2)}`);
+            
+            validateQuantity();
+        });
+
+        $('#IssuedToType').on('change', function () {
+            loadIssuedToOptions($(this).val(), null);
+        });
+
+        $('#IssuedBy, #IssuedToID').on('change', function () {
+            validateUsers();
+        });
+
+        $('#Quantity').on('input', function () {
+            validateQuantity();
+        });
+
+        // Form submission validation
+        $('#consumptionForm').on('submit', function(e) {
+            const issuedBy = $('#IssuedBy').val();
+            const issuedTo = $('#IssuedToID').val();
+            
+            // Validate Issued By vs Issued To
+            if (issuedBy == issuedTo) {
+                e.preventDefault();
+                alert('Error: Issued To cannot be the same as Issued By.');
+                $('#IssuedToID').focus();
+                return false;
+            }
+            
+            // Validate quantity
+            if (!validateQuantity()) {
+                e.preventDefault();
+                alert('Error: Please fix quantity validation errors.');
+                return false;
+            }
+            
+            // Validate item is selected
+            if (!$('#ItemID').val()) {
+                e.preventDefault();
+                alert('Error: Please select an item.');
+                $('#ItemID').focus();
+                return false;
+            }
+            
+            // Show loading state
+            $('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...');
+        });
+
+        // Initialize form immediately on page load
+        initializeForm();
+        
+        // Also initialize when the page is fully loaded as a fallback
+        $(window).on('load', function() {
+            if (!itemsLoaded) {
+                console.log('Retrying initialization after page load...');
+                initializeForm();
+            }
+        });
+    });
+</script>

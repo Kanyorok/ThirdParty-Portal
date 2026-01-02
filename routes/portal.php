@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
 use App\Http\Controllers\ThirdParty\API\ProfileController;
-use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
+use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use App\Http\Controllers\ThirdParty\API\MetadataController;
 use App\Http\Controllers\Auth\NewPasswordController;
 

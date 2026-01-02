@@ -9,10 +9,10 @@ use App\Enums\WorkflowStatus;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Core\Workflow;
+use App\Models\Core\Branch;
+use App\Models\CRM\Approval\PendingWorkflow;
+use App\Models\CRM\Approval\Workflow;
 use App\Models\CRM\MarketingPlanner;
 use App\Models\CRM\MarketingPlannerActivity;
 use App\Services\HRM\UserService;
@@ -89,7 +89,7 @@ class PlannerService
         if ($marketingManager instanceof User) {
             (new UserService($marketingManager))->sendEmail(
                 'Update on Marketing Plan Submission',
-                '<p>Hello</p><p>The marketing plan <b>' . $this->planner->PlannerID . '</b>  has NOT been approved at this time. Click the link below to review</p>
+                '<p>Hello</p><p>The marketing plan <b>' . $this->planner->PlannerID . '</b> has NOT been approved at this time. Click the link below to review</p>
             <p><a href="' . route('marketing-planner.show', [$this->planner->PlannerID]) . '">' . $this->planner->PlannerID . ' details</a></p>
             <p><b>Reason Given: </b>&nbsp;' . $reason . '</p>'
             );
@@ -103,7 +103,7 @@ class PlannerService
 
     public function canApprove(User $actor): bool
     {
-        return in_array($actor->Id, $this->planner->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true) /*|| $actor->can(PermissionEnum::MarketingPlannerApproval->value)*/ ;
+        return in_array($actor->Id, $this->planner->pendingWorkflows()->get('t_PendingWorkflows_static.UserId')->pluck('UserId')->toArray(), true) /*|| $actor->can(PermissionEnum::MarketingPlannerApproval->value)*/ ;
     }
 
     public function update(CodeDetail $Mode, string $Name, string $Notes, User $actor): static
@@ -267,9 +267,9 @@ class PlannerService
                 throw new ErroredException('marketing plan has no activities');
             }
             //add workflow to all.
-            DB::table('t_Workflows')->insert($Workflows->toArray());
+            DB::table('t_Workflows_static')->insert($Workflows->toArray());
 
-            PendingWorkflow::query()->where('t_PendingWorkflows.Source', MarketingPlanner::getPrimaryKey())->whereIn('t_PendingWorkflows.SourceID', $planIDs->toArray())->update([
+            PendingWorkflow::query()->where('t_PendingWorkflows_static.Source', MarketingPlanner::getPrimaryKey())->whereIn('t_PendingWorkflows_static.SourceID', $planIDs->toArray())->update([
                 'DeletedOn' => now(),
                 'DeletedBy' => $actor->Id,
             ]);
@@ -315,7 +315,9 @@ class PlannerService
 
     private function _notifyCeo(User $actor): void
     {
-        $users = UserService::ceos(true)->get(["Id", "UserID", "Name", "Email"]);
+        $users = UserService::ceos(true)->whereNotIn('t_Users.Id', $this->planner->workflows()
+            ->whereIn('Status', [WorkflowStatus::Submitted->value, WorkflowStatus::Accepted->value])->select('CreatedBy')
+        )->get(["Id", "UserID", "Name", "Email"]);
         foreach ($users as $user) {
             if (!$user instanceof User) {
                 continue;
@@ -500,7 +502,9 @@ class PlannerService
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
-        $marketingManagers = UserService::marketingManagers(true)->get(["Id", "UserID", "Name", "Email"]);
+        $marketingManagers = UserService::marketingManagers(true)->whereNotIn('t_Users.Id',
+            $this->planner->workflows()->whereIn('Status', [WorkflowStatus::Submitted->value, WorkflowStatus::Accepted->value])->select('CreatedBy')
+        )->get(["Id", "UserID", "Name", "Email"]);
         foreach ($marketingManagers as $marketingManager) {
             $this->planner->pendingWorkflows()->create([
                 'Stage' => PlannerStatus::MarketingManager->name,

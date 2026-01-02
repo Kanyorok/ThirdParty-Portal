@@ -215,31 +215,61 @@ class WorkFlowController extends Controller
         }
     }
 
-    public function show($id)
-    {
-        // Force fresh data from database
-        $approval = WorkFlow::findOrFail($id);
-        $approval->refresh(); // Ensure we have the latest data
-
-        $sourceOptions = array_flip(Relation::morphMap());
-        $approvalTypes = DB::table('t_WorkFlowTypes')->get();
-        $permissions = DB::table('t_Permissions')->get();
-        $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'WorkFlowStageId')->get();
-
-        // Get stages with fresh data
-        $stages = WorkflowStage::where('WorkFlowId', $id)
-            ->with(['type_name', 'workflow', 'permission.roles'])
-            ->orderBy('Order')
-            ->get();
-
-        // Force disable caching
-        return response()
-            ->view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'))
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
+   public function show($id)
+{
+    // Clear any cached data
+    \Illuminate\Support\Facades\Cache::forget("workflow_{$id}");
+    \Illuminate\Support\Facades\Cache::forget("workflow_stages_{$id}");
+    
+    // Force fresh query from database
+    $approval = WorkFlow::where('Id', $id)->first();
+    
+    if (!$approval) {
+        abort(404, 'Workflow not found');
     }
 
+    // Clear model cache
+    $approval->refresh();
+    
+    Log::info('Displaying workflow', [
+        'workflow_id' => $id,
+        'final_stage' => $approval->FinalStage,
+        'has_final' => !empty($approval->FinalStage)
+    ]);
+
+    $sourceOptions = array_flip(Relation::morphMap());
+    $approvalTypes = DB::table('t_WorkFlowTypes')->get();
+    $permissions = DB::table('t_Permissions')->get();
+    $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'WorkFlowStageId')->get();
+
+    // Get stages with fresh query - NO CACHE
+    $stages = DB::table('t_WorkflowStages')
+        ->where('WorkFlowId', $id)
+        ->whereNull('DeletedOn')
+        ->orderBy('Order')
+        ->get();
+    
+    // Convert to collection and load relationships manually
+    $stageIds = $stages->pluck('Id')->toArray();
+    
+    $stagesCollection = \App\Models\Core\Approval\WorkflowStage::whereIn('Id', $stageIds)
+        ->with(['type_name', 'workflow', 'permission.roles'])
+        ->orderBy('Order')
+        ->get();
+
+    Log::info('Loaded workflow stages', [
+        'workflow_id' => $id,
+        'stage_count' => $stagesCollection->count(),
+        'stages' => $stagesCollection->pluck('StageName')->toArray()
+    ]);
+
+    // Force no caching on response
+    return response()
+        ->view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits') +['stages' => $stagesCollection] )
+        ->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+}
     public function destroy(string $id)
     {
         DB::beginTransaction();

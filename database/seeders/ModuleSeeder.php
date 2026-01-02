@@ -21,20 +21,23 @@ class ModuleSeeder extends Seeder
             DB::table(config('permission.table_names.permissions'))->delete();
         }
 
-        $this->_seed($this->_thirdParty($fresh));
-        $this->_seed($this->_crm());
-        $this->_seed($this->_procurement($fresh));
-        $this->_seed($this->_inventory($fresh));
-        $this->_seed($this->_propertyManagement($fresh));
-        $this->_seed($this->_fleetManagement());
-        $this->_seed($this->_documentManagement());
-        $this->_seed($this->_legal($fresh));
-        $this->_seed($this->_insurance($fresh));
-        $this->_seed($this->_hrm($fresh));
-        $this->_seed($this->_finance($fresh));
-        $this->_seed($this->_settings($fresh));
-        $this->_seed($this->_myAccount($fresh));
-        $this->_seed($this->_budgetline($fresh));
+        $allModules = collect();
+        $allModules = $allModules->merge($this->_thirdParty($fresh));
+        $allModules = $allModules->merge($this->_crm());
+        $allModules = $allModules->merge($this->_procurement($fresh));
+        $allModules = $allModules->merge($this->_inventory($fresh));
+        $allModules = $allModules->merge($this->_propertyManagement($fresh));
+        $allModules = $allModules->merge($this->_fleetManagement());
+        $allModules = $allModules->merge($this->_documentManagement());
+        $allModules = $allModules->merge($this->_legal($fresh));
+        $allModules = $allModules->merge($this->_insurance($fresh));
+        $allModules = $allModules->merge($this->_hrm($fresh));
+        $allModules = $allModules->merge($this->_finance($fresh));
+        $allModules = $allModules->merge($this->_settings($fresh));
+        $allModules = $allModules->merge($this->_myAccount($fresh));
+        $allModules = $allModules->merge($this->_budgetline($fresh));
+
+        $this->_seed($allModules);
     }
 
     protected function _thirdParty(bool $fresh): Collection
@@ -64,7 +67,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 207100, 'Name' => 'Surveys', 'Icon' => '<i class="fa-regular fa-circle-check"></i>', 'Description' => '', 'ParentID' => 207000, 'Route' => 'surveys.index'],
             ['ModuleID' => 207200, 'Name' => 'Reviews', 'Icon' => '<i class="fa-regular fa-comment"></i>', 'Description' => '', 'ParentID' => 207000, 'Route' => 'reviews.index'],
 
-            ['ModuleID' => 208000, 'Name' => 'Product Development', 'Icon' => '<i class="fa-solid fa-cubes"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'product-development.index'],
+            //  ['ModuleID' => 208000, 'Name' => 'Product Development', 'Icon' => '<i class="fa-solid fa-cubes"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'product-development.index'],
 
             ['ModuleID' => 209000, 'Name' => 'Debt Collection', 'Icon' => null, 'Description' => '', 'ParentID' => 200000, 'Route' => null],
             ['ModuleID' => 209100, 'Name' => 'Notifications', 'Icon' => '<i class="fas fa-comment-dollar"></i>', 'Description' => '', 'ParentID' => 209000, 'Route' => 'debt-notification.index'],
@@ -72,14 +75,14 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 209210, 'Name' => 'Lists', 'Icon' => null, 'Description' => '', 'ParentID' => 209200, 'Route' => 'loans-list.index'],
             ['ModuleID' => 209220, 'Name' => 'Loans', 'Icon' => null, 'Description' => '', 'ParentID' => 209200, 'Route' => 'debt-collection.index'],
 
-                        // =========================================================
+            // =========================================================
             // Submenu: Policy & Training Repository
             // =========================================================
-            ['ModuleID' => 209400, 'Name' => 'Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 200000, 'Route' => null],
+            /* ['ModuleID' => 209400, 'Name' => 'Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 200000, 'Route' => null],
 
-            // ['ModuleID' => 209405, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 209400, 'Route' => 'legal.compliance.policies.index'],
-            ['ModuleID' => 209410, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 209400, 'Route' => 'legal.compliance.trainings.index'],
-            ['ModuleID' => 209415, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 209400, 'Route' => 'legal.compliance.certifications.index'],
+             // ['ModuleID' => 209405, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 209400, 'Route' => 'legal.compliance.policies.index'],
+             ['ModuleID' => 209410, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 209400, 'Route' => 'legal.compliance.trainings.index'],
+             ['ModuleID' => 209415, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 209400, 'Route' => 'legal.compliance.certifications.index'],*/
 
 
             ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'crm-reports.index'],
@@ -106,6 +109,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 302300, 'Name' => 'Priority List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisitionItem.index'],
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],
+            ['ModuleID' => 303300, 'Name' => 'Supplier Approvals', 'Icon' => null, 'Description' => 'Approve pending suppliers', 'ParentID' => 303000, 'Route' => 'suppliers-approval.index'],
             ['ModuleID' => 303200, 'Name' => 'Prequalification', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => null],
             ['ModuleID' => 303210, 'Name' => 'Prequalification Rounds', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.prequalification-rounds.index'],
             ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.applications.index'],
@@ -171,7 +175,7 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index'],
-             ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
+            ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
             ['ModuleID' => 398300, 'Name' => 'Approval Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'approval-setup.index'],
             ['ModuleID' => 398500, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'tendercommittee.index'],
             ['ModuleID' => 398600, 'Name' => 'Member Response', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'memberresponse.index'],
@@ -515,14 +519,14 @@ class ModuleSeeder extends Seeder
             // =========================================================
             ['ModuleID' => 808600, 'Name' => 'Regulatory Filings', 'Icon' => '<i class="fa fa-file-signature"></i>', 'Description' => 'Templates and submissions for regulatory filings', 'ParentID' => 808000, 'Route' => 'legal.compliance.filings.index'],
 
-                // =========================================================
-                // Submenu: Policy & Training Repository
-                // =========================================================
-                ['ModuleID' => 808700, 'Name' => 'Policy & Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 808000, 'Route' => null],
+            // =========================================================
+            // Submenu: Policy & Training Repository
+            // =========================================================
+            ['ModuleID' => 808700, 'Name' => 'Policy & Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 808000, 'Route' => null],
 
-                ['ModuleID' => 808710, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 808700, 'Route' => 'legal.compliance.policies.index'],
-                ['ModuleID' => 808720, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 808700, 'Route' => 'legal.compliance.trainings.index'],
-                ['ModuleID' => 808730, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 808700, 'Route' => 'legal.compliance.certifications.index'],
+            ['ModuleID' => 808710, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 808700, 'Route' => 'legal.compliance.policies.index'],
+            ['ModuleID' => 808720, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 808700, 'Route' => 'legal.compliance.trainings.index'],
+            ['ModuleID' => 808730, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 808700, 'Route' => 'legal.compliance.certifications.index'],
 
             // =========================================================
             // Submenu: Compliance Analytics
@@ -551,7 +555,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 901200, 'Name' => 'Referral Assignment', 'Icon' => 'fas fa-user-check', 'Description' => '', 'Route' => 'bancassurance.referrals.assign.list', 'ParentID' => 901000],
             ['ModuleID' => 901300, 'Name' => 'Referral Performance', 'Icon' => 'fas fa-chart-bar', 'Description' => 'View referral counts and conversion rates', 'Route' => 'bancassurance.referrals.performance', 'ParentID' => 901000],
             ['ModuleID' => 902000, 'Name' => 'Customers', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
-            ['ModuleID' => 902100, 'Name' => 'Customer Profile & KYC', 'Icon' => 'fas fa-user-plus', 'Description' => 'Create customer profile with KYC', 'Route' => 'bancassurance.customers.check', 'ParentID' => 902000],
+            //['ModuleID' => 902100, 'Name' => 'Customer Profile & KYC', 'Icon' => 'fas fa-user-plus', 'Description' => 'Create customer profile with KYC', 'Route' => 'bancassurance.customers.check', 'ParentID' => 902000],
             ['ModuleID' => 902300, 'Name' => 'Customer Listing', 'Icon' => 'fas fa-user-friends', 'Description' => 'Add or edit customer beneficiaries', 'Route' => 'bancassurance.customers.index', 'ParentID' => 902000],
             ['ModuleID' => 902400, 'Name' => 'Customer Communications', 'Icon' => 'fas fa-comments', 'Description' => 'Track calls, emails, visits and SMS logs', 'Route' => 'bancassurance.customers.communication.index', 'ParentID' => 902000],
             ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => null, 'Route' => null, 'ParentID' => 900000],
@@ -592,7 +596,21 @@ class ModuleSeeder extends Seeder
         $actor = SystemHelper::user();
         $dated = now()->toDateTimeString();
 
-        // Process each module individually to ensure updates happen
+        // 1. Get all ModuleIDs from the provided collection
+        $moduleIds = $modules->pluck('ModuleID')->toArray();
+
+        // 2. Soft-Delete any modules in DB that are NOT in the collection
+        // "Removed even from the database" -> Using Soft Delete (DeletedOn) for safety, 
+        // as Module model uses SoftDeletes. This effectively removes them from view.
+        DB::table('t_Modules')
+            ->whereNotIn('ModuleID', $moduleIds)
+            ->whereNull('DeletedOn') // Only update if not already deleted
+            ->update([
+                'DeletedOn' => $dated,
+                'DeletedBy' => $actor->Id,
+            ]);
+
+        // 3. Upsert modules
         foreach ($modules as $module) {
             $existing = DB::table('t_Modules')
                 ->where('ModuleID', $module['ModuleID'])
@@ -600,6 +618,7 @@ class ModuleSeeder extends Seeder
 
             if ($existing) {
                 // Update existing module (preserve CreatedBy and CreatedOn)
+                // Ensure DeletedOn is NULL to "restore" if it was deleted
                 DB::table('t_Modules')
                     ->where('ModuleID', $module['ModuleID'])
                     ->update([
@@ -610,6 +629,8 @@ class ModuleSeeder extends Seeder
                         'ParentID' => $module['ParentID'] ?? null,
                         'ModifiedBy' => $actor->Id,
                         'ModifiedOn' => $dated,
+                        'DeletedOn' => null, // Restore if deleted
+                        'DeletedBy' => null,
                     ]);
             } else {
                 // Insert new module
@@ -624,6 +645,8 @@ class ModuleSeeder extends Seeder
                     'CreatedOn' => $dated,
                     'ModifiedBy' => $actor->Id,
                     'ModifiedOn' => $dated,
+                    'DeletedOn' => null,
+                    'DeletedBy' => null,
                 ]);
             }
         }
@@ -680,9 +703,9 @@ class ModuleSeeder extends Seeder
             //  ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103050],
 
 
-            //  ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
-            //  ['ModuleID' => 1103605, 'Name' => 'Cheques', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103600],
-            //  ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600],
+              ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+              ['ModuleID' => 1103605, 'Name' => 'Cheques', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103600],
+              ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600],
 
 
             //  ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
@@ -710,11 +733,11 @@ class ModuleSeeder extends Seeder
             //            ['ModuleID' => 1107000, 'Name' => 'Period Management', 'Icon' => '<i class="fas fa-calendar-alt"></i>', 'Description' => '', 'Route' => 'periodmanagement.index', 'ParentID' => 1100000],
 
 
-                        ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
+            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
             //            ['ModuleID' => 1108100, 'Name' => 'Account Setup', 'Icon' => null, 'Description' => '', 'Route' => 'bankaccountsetup.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108200, 'Name' => 'Cash Book', 'Icon' => null, 'Description' => '', 'Route' => 'cashbook.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108300, 'Name' => 'Cash Management', 'Icon' => null, 'Description' => '', 'Route' => 'cashmanagement.index', 'ParentID' => 1108000],
-                        ['ModuleID' => 1108400, 'Name' => 'Cheque Management', 'Icon' => null, 'Description' => '', 'Route' => 'chequemanagement.index', 'ParentID' => 1108000],
+            //['ModuleID' => 1108400, 'Name' => 'Cheque Management', 'Icon' => null, 'Description' => '', 'Route' => 'chequemanagement.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108500, 'Name' => 'Vouchers', 'Icon' => null, 'Description' => '', 'Route' => 'paymentandreceiptvouchers.index', 'ParentID' => 1108000],
 
             ['ModuleID' => 1109000, 'Name' => 'Finance Settings', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],

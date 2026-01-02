@@ -20,7 +20,7 @@ use Illuminate\Support\Collection;
 
 abstract class ThirdPartiesService
 {
-    public function __construct(public ?ThirdParties $party) {}
+    public function __construct(public ThirdParties $party) {}
 
     abstract public static function getType(): ThirdPartyType;
 
@@ -83,25 +83,26 @@ abstract class ThirdPartiesService
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
-        User $actor
+        User|ThirdPartyUser $actor
     ): mixed {
+        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
         $party = ThirdParties::create([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
-            'BusinessType' => $businessType->ID,
+            'BusinessType' => $businessType->getKey(),
             'RegistrationNumber' => $registrationNumber,
             'TaxPIN' => $taxPIN,
             'VATNumber' => $vatNumber,
             'CountryId' => $locationID->CountryId,
-            'LocationId' => $locationID->ID,
+            'LocationId' => $locationID->getKey(),
             'PhysicalAddress' => $physicalAddress,
             'Email' => $email,
             'Phone' => $phone,
             'Website' => $website,
-            'Status' => $status?->ID ?? self::codeDetail(ThirdPartyStatusEnum::Active)->ID,
+            'Status' => $status?->getKey() ?? self::codeDetail(ThirdPartyStatusEnum::Active)->getKey(),
             'Extra' => $extra,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
 
         activity()->causedBy($actor)->on($party)->withProperties(['thirdParty' => $party])->log('Created thirdparty ' . $name);
@@ -133,13 +134,13 @@ abstract class ThirdPartiesService
         throw new ErroredException('Invalid Status, not set and could not create');
     }
 
-    public function setLogo(\Illuminate\Http\UploadedFile $image, User $actor): self
+    public function setLogo(\Illuminate\Http\UploadedFile $image, User|ThirdPartyUser $actor): self
     {
         $this->party->setImage($image, $actor, 'ImageId');
         return $this;
     }
 
-    public function addBank(Currency $currency, string $accountNumber, BankBranch $branch, User $actor, ?array $extra = null): static
+    public function addBank(Currency $currency, string $accountNumber, BankBranch $branch, User|ThirdPartyUser $actor, ?array $extra = null): static
     {
         $bank = ThirdPartiesBankDetails::create([
             'ThirdPartyId' => $this->party->Id,
@@ -147,8 +148,8 @@ abstract class ThirdPartiesService
             'AccountNumber' => $accountNumber,
             'BranchID' => $branch->BranchID,
             'Extra' => $extra,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
 
         activity()->causedBy($actor)->performedOn($bank)->event('create')->log("Created bank {$bank->AccountNumber} to thirdparty {$this->party->ThirdPartyName}");
@@ -165,8 +166,8 @@ abstract class ThirdPartiesService
             'ThirdPartyId' => $this->party->Id,
             'PartyType' => $partyType,
             'PartyID' => $partyId,
-            'CreatedBy' => $userId,
-            'ModifiedBy' => $userId,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
         return $this;
     }

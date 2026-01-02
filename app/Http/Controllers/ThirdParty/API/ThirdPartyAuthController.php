@@ -4,7 +4,7 @@ namespace App\Http\Controllers\ThirdParty\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
-use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
+use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

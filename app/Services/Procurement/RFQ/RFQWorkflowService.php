@@ -5,64 +5,175 @@ namespace App\Services\Procurement\RFQ;
 use App\Enums\WorkflowStatus;
 use App\Models\Auth\User;
 use App\Models\Procurement\RFQ;
-use App\Services\Core\ApprovalWorkflowService;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use BackedEnum;
 
-class RFQWorkflowService extends ApprovalWorkflowService
+class RFQWorkflowService extends ApprovalWorkflow
 {
-    protected string $codeId = 'RequisitionStatus'; // Using RequisitionStatus codes (Ap, pe, Re) for consistency
-
     /**
-     * Submit an RFQ for approval
+     * Constructor - Initialize with RFQ-specific settings
      */
-    public function submit(RFQ $rfq, User $actor, string $remarks): bool
+    public function __construct()
     {
-        $status = self::codeDetail(WorkflowStatus::Submitted, $this->codeId);
-        return $this->submittedAction(
-            $actor,
-            $status,
-            $rfq,
-            $rfq->getMorphClass(),
-            $rfq->getKey(),
-            $remarks
-        );
+        // Pass the CodeId and the status column name to parent
+        parent::__construct('RequisitionStatus', 'Status');
+        
+        Log::info('RFQWorkflowService initialized', [
+            'codeId' => 'RequisitionStatus',
+            'statusColumn' => 'Status'
+        ]);
     }
 
     /**
-     * Approve an RFQ
+     * Submit a model for approval (overriding parent with compatible signature)
+     * 
+     * @param mixed $model The model instance (must be RFQ)
+     * @param User $actor The user submitting
+     * @param BackedEnum $pendingStatus The pending status enum value
+     * @param string $remarks Optional remarks
+     * @return bool
      */
-    public function approve(RFQ $rfq, User $actor, string $remarks): bool
+    public function submit($model, User $actor, BackedEnum $pendingStatus, string $remarks = 'Submitted'): bool
     {
-        $status = self::codeDetail(WorkflowStatus::APPROVED, $this->codeId);
-        // Using 'Status' column for RFQ as per current schema, but values will be 'Ap' etc.
-        return $this->approveAction($actor, $status, $rfq->getMorphClass(), $rfq->getKey(), $remarks, 'Status');
+        // Runtime type check
+        if (!$model instanceof RFQ) {
+            throw new \InvalidArgumentException('Model must be an instance of RFQ');
+        }
+        
+        Log::info('Submitting RFQ for approval', [
+            'rfq_id' => $model->Id,
+            'rfq_number' => $model->RFQNumber,
+            'actor_id' => $actor->Id,
+            'actor_name' => $actor->Name,
+            'status' => $pendingStatus->value
+        ]);
+
+        return parent::submit($model, $actor, $pendingStatus, $remarks);
     }
 
     /**
-     * Reject an RFQ
+     * Convenience method with proper type hinting for RFQ submission
      */
-    public function reject(RFQ $rfq, User $actor, string $remarks): bool
+    public function submitRFQ(RFQ $rfq, User $actor, string $remarks = 'RFQ Submitted'): bool
     {
-        $status = self::codeDetail(WorkflowStatus::REJECTED, $this->codeId);
-        return $this->rejectAction($actor, $status, $rfq->getMorphClass(), $rfq->getKey(), $remarks, 'Status');
+        return $this->submit($rfq, $actor, WorkflowStatus::Submitted, $remarks);
+    }
+ 
+    /**
+     * Approve a model (overriding parent with compatible signature)
+     * 
+     * @param mixed $model The model instance (must be RFQ)
+     * @param User $actor The user approving
+     * @param BackedEnum $approvedStatus The approved status enum value
+     * @param string $remarks Optional remarks
+     * @param string|null $statusColumn Optional status column override
+     * @return bool
+     */
+    public function approve($model, User $actor, BackedEnum $approvedStatus, string $remarks = 'Approved', ?string $statusColumn = null): bool
+    {
+        // Runtime type check
+        if (!$model instanceof RFQ) {
+            throw new \InvalidArgumentException('Model must be an instance of RFQ');
+        }
+        
+        Log::info('Approving RFQ', [
+            'rfq_id' => $model->Id,
+            'rfq_number' => $model->RFQNumber,
+            'current_status' => $model->Status,
+            'actor_id' => $actor->Id,
+            'actor_name' => $actor->Name,
+            'status' => $approvedStatus->value
+        ]);
+
+        // Use parent's approve method with the Status column explicitly
+        $result = parent::approve($model, $actor, $approvedStatus, $remarks, $statusColumn ?? 'Status');
+        
+        // Refresh the model to get the updated status
+        $model->refresh();
+        
+        Log::info('RFQ approval completed', [
+            'rfq_id' => $model->Id,
+            'new_status' => $model->Status,
+            'result' => $result
+        ]);
+        
+        return $result;
+    }
+
+    /**
+     * Convenience method with proper type hinting for RFQ approval
+     */
+    public function approveRFQ(RFQ $rfq, User $actor, string $remarks = 'RFQ Approved'): bool
+    {
+        return $this->approve($rfq, $actor, WorkflowStatus::APPROVED, $remarks, 'Status');
+    }
+
+    /**
+     * Reject a model (overriding parent with compatible signature)
+     * 
+     * @param mixed $model The model instance (must be RFQ)
+     * @param User $actor The user rejecting
+     * @param BackedEnum $rejectedStatus The rejected status enum value
+     * @param string $remarks Optional remarks
+     * @param string|null $statusColumn The status column name override
+     * @return bool
+     */
+    public function reject($model, User $actor, BackedEnum $rejectedStatus, string $remarks = 'Rejected', ?string $statusColumn = null): bool
+    {
+        // Runtime type check
+        if (!$model instanceof RFQ) {
+            throw new \InvalidArgumentException('Model must be an instance of RFQ');
+        }
+        
+        Log::info('Rejecting RFQ', [
+            'rfq_id' => $model->Id,
+            'rfq_number' => $model->RFQNumber,
+            'actor_id' => $actor->Id,
+            'remarks' => $remarks
+        ]);
+
+        $result = parent::reject($model, $actor, $rejectedStatus, $remarks, $statusColumn ?? 'Status');
+        
+        $model->refresh();
+        
+        Log::info('RFQ rejection completed', [
+            'rfq_id' => $model->Id,
+            'new_status' => $model->Status,
+            'result' => $result
+        ]);
+        
+        return $result;
+    }
+
+    /**
+     * Convenience method with proper type hinting for RFQ rejection
+     */
+    public function rejectRFQ(RFQ $rfq, User $actor, string $remarks = 'RFQ Rejected'): bool
+    {
+        return $this->reject($rfq, $actor, WorkflowStatus::REJECTED, $remarks, 'Status');
     }
 
     /**
      * Return an RFQ for modification
      */
-    public function return(RFQ $rfq, User $actor, string $remarks): bool
+    public function returnRFQ(RFQ $rfq, User $actor, string $remarks = 'RFQ Returned'): bool
     {
-        $status = self::codeDetail(WorkflowStatus::RETURNED, $this->codeId);
-        return $this->approveAction($actor, $status, $rfq->getMorphClass(), $rfq->getKey(), $remarks, 'Status');
+        Log::info('Returning RFQ for modification', [
+            'rfq_id' => $rfq->Id,
+            'actor_id' => $actor->Id
+        ]);
+
+        return $this->approve($rfq, $actor, WorkflowStatus::RETURNED, $remarks, 'Status');
     }
 
     /**
      * Mark as under review
      */
-    public function markUnderReview(RFQ $rfq, User $actor, string $remarks): bool
+    public function markUnderReview(RFQ $rfq, User $actor, string $remarks = 'Under Review'): bool
     {
-        $status = self::codeDetail(WorkflowStatus::UnderReview, $this->codeId);
-        return $this->approveAction($actor, $status, $rfq->getMorphClass(), $rfq->getKey(), $remarks, 'Status');
+        return $this->approve($rfq, $actor, WorkflowStatus::UnderReview, $remarks, 'Status');
     }
 
     /**
@@ -70,8 +181,7 @@ class RFQWorkflowService extends ApprovalWorkflowService
      */
     public function comment(RFQ $rfq, User $actor, string $remarks): bool
     {
-        $status = self::codeDetail(WorkflowStatus::COMMENTED, $this->codeId);
-        return $this->approveAction($actor, $status, $rfq->getMorphClass(), $rfq->getKey(), $remarks, 'Status');
+        return $this->approve($rfq, $actor, WorkflowStatus::COMMENTED, $remarks, 'Status');
     }
 
     /**
@@ -79,9 +189,7 @@ class RFQWorkflowService extends ApprovalWorkflowService
      */
     public function getHistory(RFQ $rfq, int $limit = 1000)
     {
-        return $this->historyData($rfq->getMorphClass(), $limit)
-            ->where('SourceID', $rfq->getKey())
-            ->values();
+        return parent::historyForModel($rfq);
     }
 
     /**
@@ -89,14 +197,7 @@ class RFQWorkflowService extends ApprovalWorkflowService
      */
     public function canUserApprove(RFQ $rfq, User $user): bool
     {
-        // Check if user has pending workflow task
-        $pending = DB::select("
-            SELECT COUNT(*) as count 
-            FROM t_WorkFlowPending 
-            WHERE Source = ? AND SourceID = ? AND UserId = ? AND DeletedOn IS NULL
-        ", [$rfq->getTable(), $rfq->getKey(), $user->Id]);
-
-        return $pending[0]->count > 0;
+        return parent::canApproveModel($rfq, $user);
     }
 
     /**
@@ -104,7 +205,9 @@ class RFQWorkflowService extends ApprovalWorkflowService
      */
     public function getPendingApprovals(RFQ $rfq): array
     {
-        return DB::select("
+        $sourceAlias = $rfq::getPrimaryKey() ?? $rfq->getMorphClass();
+        
+        $pending = DB::select("
             SELECT 
                 p.*, 
                 ws.StageName as stage_name, 
@@ -117,7 +220,15 @@ class RFQWorkflowService extends ApprovalWorkflowService
             JOIN t_WorkFlowTypes wt ON ws.WorkFlowTypeId = wt.Id
             WHERE p.Source = ? AND p.SourceID = ? AND p.DeletedOn IS NULL
             ORDER BY ws.[Order] ASC
-        ", [$rfq->getTable(), $rfq->getKey()]);
+        ", [$sourceAlias, $rfq->getKey()]);
+
+        Log::info('Pending approvals fetched', [
+            'rfq_id' => $rfq->Id,
+            'count' => count($pending),
+            'source_alias' => $sourceAlias
+        ]);
+
+        return $pending;
     }
 
     /**
@@ -125,9 +236,11 @@ class RFQWorkflowService extends ApprovalWorkflowService
      */
     public function getAvailableStatuses(): \Illuminate\Database\Eloquent\Collection
     {
-        return \App\Models\Core\CodeDetail::where('CodeID', $this->codeId)
+        return \App\Models\Core\Approval\CodeDetail::where('CodeID', 'RequisitionStatus')
+            ->where('IsActive', 1)
+            ->whereNull('DeletedOn')
             ->orderBy('Order')
-            ->get(['ID', 'value', 'Description', 'Order']);
+            ->get(['ID', 'Value', 'Description', 'Order']);
     }
 
     /**
@@ -135,12 +248,56 @@ class RFQWorkflowService extends ApprovalWorkflowService
      */
     public function isFullyApproved(RFQ $rfq): bool
     {
-        $pendingCount = DB::select("
+        $sourceAlias = $rfq::getPrimaryKey() ?? $rfq->getMorphClass();
+        
+        $pendingCount = DB::selectOne("
             SELECT COUNT(*) as count 
             FROM t_WorkFlowPending 
             WHERE Source = ? AND SourceID = ? AND DeletedOn IS NULL
-        ", [$rfq->getTable(), $rfq->getKey()]);
+        ", [$sourceAlias, $rfq->getKey()]);
 
-        return $pendingCount[0]->count === 0;
+        return $pendingCount->count === 0;
+    }
+
+    /**
+     * Cancel an RFQ workflow
+     * Overrides parent to maintain compatibility while providing type safety
+     */
+    public function cancel($model, User $actor, string $reason = 'Cancelled'): bool
+    {
+        if (!$model instanceof RFQ) {
+            throw new \InvalidArgumentException('Model must be an instance of RFQ');
+        }
+        
+        return parent::cancel($model, $actor, $reason);
+    }
+
+    /**
+     * Convenience method with proper type hinting
+     */
+    public function cancelRFQ(RFQ $rfq, User $actor, string $reason = 'RFQ Cancelled'): bool
+    {
+        return $this->cancel($rfq, $actor, $reason);
+    }
+
+    /**
+     * Get current workflow status
+     * Overrides parent to maintain compatibility
+     */
+    public function getStatus($model): array
+    {
+        if (!$model instanceof RFQ) {
+            throw new \InvalidArgumentException('Model must be an instance of RFQ');
+        }
+        
+        return parent::getStatus($model);
+    }
+    
+    /**
+     * Convenience method with proper type hinting
+     */
+    public function getRFQWorkflowStatus(RFQ $rfq): array
+    {
+        return $this->getStatus($rfq);
     }
 }

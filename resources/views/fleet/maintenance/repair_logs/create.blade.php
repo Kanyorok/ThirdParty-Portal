@@ -77,20 +77,22 @@
                 </div>
 
                 <!-- Vendor -->
-                <div class="col-md-6">
-                    <label for="Vendor" class="form-label">Vendor<span class="text-danger">*</span></label>
-                    <select name="VendorID" class="form-select">
-                        <option value="">-- Select Vendor --</option>
-                        @foreach($vendors as $vendor)
-                            <option value="{{ $vendor->Id }}" {{ old('VendorID') == $vendor->Id ? 'selected' : '' }}>
-                                {{ $vendor->ThirdPartyName }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('VendorID')
-                    <div class="text-danger small">{{ $message }}</div>
-                    @enderror
-                </div>
+               <div class="col-md-6">
+                <label for="VendorID" class="form-label">Vendor Name<span class="text-danger">*</span></label>
+                <select name="VendorID" class="form-select @error('VendorID') is-invalid @enderror">
+                    <option value="">Select Vendor</option>
+                    @foreach($vendors as $vendor)
+                    <option value="{{ $vendor->Id }}" 
+                        {{ old('VendorID', $repair->VendorID ?? '') == $vendor->Id ? 'selected' : '' }}>
+                        {{ $vendor->party->ThirdPartyName ?? 'Unknown Vendor' }}
+                    </option>
+                    @endforeach
+                </select>
+                @error('VendorID')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+                    
                     
 
                 <!-- Cost -->

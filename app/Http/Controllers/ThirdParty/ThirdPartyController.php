@@ -4,7 +4,7 @@ namespace App\Http\Controllers\ThirdParty;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ThirdParty\NewThirdPartyRequest;
+use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\ThirdParty\ThirdParties;
@@ -17,9 +17,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Log;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 use Yajra\DataTables\DataTables;
+use App\Models\Procurement\Order;
+use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\ThirdParty\SupplierMaster;
 
 class ThirdPartyController extends Controller
 {
@@ -129,7 +132,8 @@ class ThirdPartyController extends Controller
                     $service->setLogo($logo, $actor);
                 }
 
-                return $this->succeeded("{$service->party->ThirdPartyName} created successfully");
+                Log::info('Created ThirdParty:', ['party' => $service->party, 'id' => $service->party->Id]);
+                return $this->succeeded("{$service->party->ThirdPartyName} created successfully", route('thirdparty.parties.show', $service->party->Id));
             });
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -173,11 +177,88 @@ class ThirdPartyController extends Controller
             return redirect()->back()->with('error', 'Third party not found');
         }
 
+        // --- Supplier Stats ---
+        $supplierStats = null;
+        if ($thirdParty->isSupplier()) {
+            $supplierStats = [
+                'active_orders' => Order::where('AccountID', $thirdPartyId)->whereNull('DeletedOn')->count(),
+                'total_order_value' => Order::where('AccountID', $thirdPartyId)->whereNull('DeletedOn')->sum('TotalAmount'),
+                'pending_tenders' => SupplierMaster::where('ThirdPartyId', $thirdPartyId)->first()?->prequalificationApplications()->count() ?? 0,
+            ];
+        }
+
+        // --- Tenant Stats ---
+        $tenantStats = null;
+        if ($thirdParty->isTenant()) {
+            $tenantQuery = PropertyNewLease::whereHas('tenant', fn($q) => $q->where('ThirdPartyId', $thirdPartyId));
+            $tenantStats = [
+                'active_leases' => (clone $tenantQuery)->where('Status', 'Active')->count(),
+                'monthly_rent_roll' => (clone $tenantQuery)->where('Status', 'Active')->sum('MonthlyRent'),
+                // Placeholder for pending rent until PropertyInvoice is confirmed
+                'pending_rent' => 0,
+            ];
+        }
+
+        // --- Customer Stats ---
+        $customerStats = null;
+        if ($thirdParty->isCustomer()) {
+            // Placeholder: Just verify existence for now
+            $customerStats = [
+                'active' => true
+            ];
+        }
+
         return view('thirdparty.show', [
-            'party' =>   $thirdParty,
-            'location' => ($thirdParty->location instanceof Locality) ? (new LocalityService($thirdParty->location))->getLocation() : ''
+            'party' => $thirdParty,
+            'location' => ($thirdParty->location instanceof Locality) ? (new LocalityService($thirdParty->location))->getLocation() : '',
+            'supplierStats' => $supplierStats,
+            'tenantStats' => $tenantStats,
+            'customerStats' => $customerStats,
         ])
             ->with('party', $thirdParty);
+    }
+
+    /**
+     * Handle Attrition / Deactivation
+     */
+    public function deactivate(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|min:5|max:1000'
+        ]);
+
+        try {
+            $party = ThirdParties::findOrFail($id);
+
+            DB::transaction(function () use ($party, $request) {
+                // 1. Update status to Inactive (Assuming ID 2 is Inactive, or just rely on soft delete)
+                // We'll verify status codes later, for now we rely on SoftDeletes as the primary "Deactivation"
+
+                // 2. Log the reason in Extra field
+                $extra = $party->Extra ?? [];
+                $extra['deactivation_reason'] = $request->reason;
+                $extra['deactivated_by'] = auth()->id();
+                $extra['deactivated_at'] = now()->toDateTimeString();
+                $party->update(['Extra' => $extra]);
+
+                // 3. Soft Delete the main record
+                $party->delete();
+
+                // 4. Update Pivot tables (Soft delete connections)
+                $party->types()->newPivotStatement()
+                    ->where('ThirdPartyId', $party->Id)
+                    ->update([
+                        'DeletedOn' => now(),
+                        'DeletedBy' => auth()->id()
+                    ]);
+            });
+
+            return redirect()->route('thirdparty.parties.index')
+                ->with('success', 'Third Party has been successfully deactivated (Attrited).');
+        } catch (\Exception $e) {
+            Log::error("Attrition failed for ID $id: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to process attrition. Please try again.');
+        }
     }
 
     /**
@@ -221,6 +302,78 @@ class ThirdPartyController extends Controller
                 'success' => false,
                 'message' => 'Failed to delete third party. Please try again.'
             ], 500);
+        }
+    }
+    public function searchExisting(Request $request): JsonResponse
+    {
+        $search = $request->get('q');
+        $excludeType = $request->get('type');
+        // Log::info("Search Existing Params: q={$search}, type={$excludeType}");
+
+        $query = ThirdParties::query()
+            ->select('Id', 'ThirdPartyName', 'TradingName', 'Email')
+            ->where(function ($q) use ($search) {
+                $q->where('ThirdPartyName', 'like', "%{$search}%")
+                    ->orWhere('TradingName', 'like', "%{$search}%")
+                    ->orWhere('Email', 'like', "%{$search}%");
+            });
+
+        if ($excludeType) {
+            $query->whereDoesntHave('types', function ($q) use ($excludeType) {
+                $q->where('Code', $excludeType);
+            });
+        }
+
+        $results = $query->limit(20)->get()->map(function ($party) {
+            return [
+                'id' => $party->Id,
+                'text' => $party->ThirdPartyName . ($party->TradingName ? " ({$party->TradingName})" : "") . " - {$party->Email}"
+            ];
+        });
+
+        return response()->json(['results' => $results]);
+    }
+
+    public function addRole(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'third_party_id' => 'required|exists:t_ThirdParties,Id',
+            'type' => 'required|in:SU,TN,CU',
+            'tenant_Remarks' => 'required_if:type,TN|nullable|string',
+            'customer_DateOfBirth' => 'required_if:type,CU|nullable|date',
+            'customer_Gender' => 'required_if:type,CU|nullable|exists:t_Core_Approval_CodeDetails,Value',
+            'customer_MaritalStatus' => 'required_if:type,CU|nullable|exists:t_Core_Approval_CodeDetails,Value',
+            'customer_Occupation' => 'required_if:type,CU|nullable|exists:t_Core_Approval_CodeDetails,Value',
+        ]);
+
+        $thirdParty = ThirdParties::findOrFail($validated['third_party_id']);
+        $service = new ThirdPartyService($thirdParty);
+        $actor = $request->user();
+
+        try {
+            DB::transaction(function () use ($service, $actor, $validated) {
+                match ($validated['type']) {
+                    'SU' => $service->addSupplier($actor),
+                    'TN' => $service->addTenant($actor, $validated['tenant_Remarks']),
+                    'CU' => $service->addCustomer(
+                        Referral: null,
+                        DateOfBirth: new \DateTime($validated['customer_DateOfBirth']),
+                        Gender: CodeDetail::where('Value', $validated['customer_Gender'])->firstOrFail(),
+                        MaritalStatus: CodeDetail::where('Value', $validated['customer_MaritalStatus'])->firstOrFail(),
+                        Occupation: CodeDetail::where('Value', $validated['customer_Occupation'])->firstOrFail(),
+                        actor: $actor
+                    ),
+                };
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Role added successfully',
+                'redirect' => route('thirdparty.parties.show', $thirdParty->Id)
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to add role: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }

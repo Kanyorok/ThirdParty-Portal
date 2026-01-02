@@ -23,6 +23,7 @@ class RFQService
 
     }
 
+
     public static function RFQTOPO($rfqID)
     {
         // Validate input

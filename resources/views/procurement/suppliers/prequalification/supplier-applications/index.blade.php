@@ -41,12 +41,12 @@
                         <tr>
                             <td><span class="fw-semibold text-dark">APP-{{ $application->ApplicationID }}</span></td>
                             <td><span class="fw-semibold">{{ $application->round->Title ?? 'N/A' }}</span></td>
-                            <td>{{ $application->supplier->ThirdPartyName }}</td>
-                            <td>{{ $application->supplier->Email ?? 'N/A' }}</td>
-                            <td>{{ $application->supplier->Phone ?? 'N/A' }}</td>
+                            <td>{{ $application->supplier->party->ThirdPartyName ?? 'N/A' }}</td>
+                            <td>{{ $application->supplier->party->Email ?? 'N/A' }}</td>
+                            <td>{{ $application->supplier->party->Phone ?? 'N/A' }}</td>
                             <td>
                                 @if($application->category)
-                                    <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
+                                <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
                                 @else
                                 <span class="text-muted">N/A</span>
                                 @endif
@@ -94,7 +94,9 @@
             lengthChange: false,
             ordering: true,
             autoWidth: false,
-            order: [[6, 'desc']],
+            order: [
+                [6, 'desc']
+            ],
             columnDefs: [{
                 orderable: false,
                 targets: -1

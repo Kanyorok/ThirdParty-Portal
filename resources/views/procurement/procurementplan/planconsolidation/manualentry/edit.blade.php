@@ -57,17 +57,26 @@
                     <input type="text" class="form-control" value="{{ $lineItem->item->uom->Name ?? 'N/A' }}" readonly>
                 </div>
 
-                <div class="mb-3 col-md-6">
-                    <label for="estimated_cost" class="form-label">Estimated Unit Cost</label>
-                    <input type="number" step="0.01" name="estimated_cost" id="estimated_cost" class="form-control"
-                           value="{{ $lineItem->EstimatedUnitCost }}" required>
-                </div>
+                 <div class="mb-3 col-md-6">
+    <label for="estimated_cost" class="form-label">Estimated Unit Cost</label>
+    <input type="number" step="0.01" name="estimated_cost" id="estimated_cost" class="form-control"
+           value="{{ $lineItem->EstimatedUnitCost }}" readonly>
+</div>
 
-                <div class="mb-3 col-md-6">
-                    <label for="schedule_period" class="form-label">Planned Quarter</label>
-                    <input type="text" name="schedule_period" id="schedule_period" class="form-control"
-                           value="{{ $lineItem->SchedulePeriod }}" required>
-                </div>
+                 <div class="col-md-6">
+                <label class="form-label">Planned Quarter</label>
+                <select name="schedule_period" class="form-select @error('schedule_period') is-invalid @enderror"
+                        required>
+                    <option disabled {{ old('schedule_period') ? '' : 'selected' }}>Select Quarter</option>
+                    <option value="Q1" {{ old('schedule_period') == 'Q1' ? 'selected' : '' }}>Q1</option>
+                    <option value="Q2" {{ old('schedule_period') == 'Q2' ? 'selected' : '' }}>Q2</option>
+                    <option value="Q3" {{ old('schedule_period') == 'Q3' ? 'selected' : '' }}>Q3</option>
+                    <option value="Q4" {{ old('schedule_period') == 'Q4' ? 'selected' : '' }}>Q4</option>
+                </select>
+                @error('schedule_period')
+                <div class="alert alert-danger mt-1">{{ $message }}</div>
+                @enderror
+            </div>
 
                 <div class="mb-3 col-md-6">
                     <label for="expected_delivery_date" class="form-label">Expected Delivery Date</label>

@@ -7,6 +7,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
@@ -31,7 +32,7 @@ class PropertyNewTenantService extends ThirdPartiesService
     public static function getType(): ThirdPartyType
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeTenant)->firstOr(function () {
-            $role = FinanceRole::query()->first();// todo fix your Finance role
+            $role = FinanceRole::query()->first(); // todo fix your Finance role
             if ($role instanceof FinanceRole === false) {
                 throw new RuntimeException("No finance roles found " . __CLASS__);
             }
@@ -49,15 +50,16 @@ class PropertyNewTenantService extends ThirdPartiesService
     /**
      * @throws ErroredException
      */
-    public static function createFromParty(ThirdParties $party, User $user, UploadedFile $document = null, string $Remarks = null): self
+    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $user, UploadedFile $document = null, string $Remarks = null): self
     {
         $tenant = PropertyNewTenant::create([
             'ThirdPartyId' => $party->Id,
             'TenantType' => $party->BusinessType,
             'Remarks' => $Remarks,
             'IsActive' => true,
-            'CreatedBy' => $user->Id,
-            'ModifiedBy' => $user->Id,
+            'IsActive' => true,
+            'CreatedBy' => ($user instanceof User) ? $user->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($user instanceof User) ? $user->Id : SystemHelper::user()->Id,
         ]);
 
         if ($document instanceof UploadedFile) {
@@ -76,12 +78,28 @@ class PropertyNewTenantService extends ThirdPartiesService
     }
 
     public static function create(
-        string  $name, ?string $tradingName, CodeDetail $businessType, string $registrationNumber, string $taxPIN, ?string $vatNumber, Locality $locationID, ?string $physicalAddress,
-        ?string $email, ?string $phone, ?string $website, ?CodeDetail $status, ?array $extra, User $actor, UploadedFile $document = null, string $Remarks = null): self
-    {
+        string  $name,
+        ?string $tradingName,
+        CodeDetail $businessType,
+        string $registrationNumber,
+        string $taxPIN,
+        ?string $vatNumber,
+        Locality $locationID,
+        ?string $physicalAddress,
+        ?string $email,
+        ?string $phone,
+        ?string $website,
+        ?CodeDetail $status,
+        ?array $extra,
+        User|ThirdPartyUser $actor,
+        UploadedFile $document = null,
+        string $Remarks = null
+    ): self {
         return self::createFromParty(
             party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor),
-            user: $actor, document: $document, Remarks: $Remarks
+            user: $actor,
+            document: $document,
+            Remarks: $Remarks
         );
     }
 
@@ -126,8 +144,7 @@ class PropertyNewTenantService extends ThirdPartiesService
         bool         $IsActive,
         User         $user,
         UploadedFile $document = null
-    ): self
-    {
+    ): self {
         // Update tenant details
         $propertyNewTenant->update([
             'TenantType' => $TenantType->ID,

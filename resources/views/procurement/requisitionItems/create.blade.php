@@ -233,74 +233,93 @@
             });
 
 
-            $('#Type').on('change', function() {
-                // alert('hello');
-                let type = $(this).val();
-
-                if (type !== '') {
-                    alert(type + 'eric');
-                    $.ajax({
-                        url: `procurement/requisitionItem/getItem/${type}`,
-                        type: 'GET',
-                        success: function(response) {
-                            // console.log('AJAX Response:', response);
-
-                            $('#Item').empty().append('<option value="">Select Item</option>');
-                            $.each(response.data, function(key, item) {
-                                $('#Item').append(
-                                    `<option value="${item.id}">${item.name}</option>`
-                                );
-
-                            });
-                        },
-                        error: function(response) {
-                            // alert('Failed to load items');
-                            alert(response)
-                            console.log(response)
-                        }
+         $('#Type').on('change', function() {
+    let type = $(this).val();
+    
+    if (type !== '') {
+        // Get the requisition ID from the hidden field
+        let requisitionId = $('#RequisitionID').val();
+        
+        $.ajax({
+            url: `/requisitionItem/getItem/${type}`,  // Fixed: removed 'procurement/' prefix
+            type: 'GET',
+            data: {
+                requisition_id: requisitionId  // Pass requisition ID to get plan-aware items
+            },
+            success: function(response) {
+                console.log('AJAX Response:', response);
+                
+                $('#Item').empty().append('<option value="">Select Item</option>');
+                
+                if (response.success && response.data && response.data.length > 0) {
+                    $.each(response.data, function(key, item) {
+                        $('#Item').append(
+                            `<option value="${item.id}">${item.name}</option>`
+                        );
                     });
                 } else {
-
-                    $('#Item').empty().append('<option value="">Select Item</option>')
+                    $('#Item').append('<option value="">No items available</option>');
                 }
-            })
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to load items:', xhr.responseJSON);
+                alert('Failed to load items. Please try again.');
+                $('#Item').empty().append('<option value="">Select Item</option>');
+            }
+        });
+    } else {
+        $('#Item').empty().append('<option value="">Select Item</option>');
+    }
+});
 
 
-            $('#Item').on('change', function() {
-                // alert('hello');
-                let item = $(this).val();
-
-                if (item !== '') {
-                    $.ajax({
-                        url: `/requisitionItem/getItemDetails/${item}`,
-                        type: 'GET',
-                        success: function(response) {
-                            if (response.data && response.data.length > 0) {
-                                $.each(response.data, function(key, item) {
-                                    $('#UOM').empty().append(
-                                        `<option value="${item.UOM}">${item.UOM}</option>`
-                                    );
-
-                                    // $('#Description').val(item.Description || '');
-                                    $('#EstimatedPrice').val(item.UnitPrice || '');
-                                    $('#CategoryId').val(item.CategoryId ||
-                                        ''); // Populate the hidden CategoryId field
-                                    console.log('CategoryId:', item);
-                                });
-                            }
-                        },
-                        error: function(response) {
-                            alert('Failed to load item details');
-                            console.log(response);
-                        }
+          $('#Item').on('change', function() {
+    let item = $(this).val();
+    
+    if (item !== '') {
+        // Get the requisition ID from the hidden field
+        let requisitionId = $('#RequisitionID').val();
+        
+        $.ajax({
+            url: `/requisitionItem/getItemDetails/${item}`,
+            type: 'GET',
+            data: {
+                requisition_id: requisitionId  // Pass requisition ID for plan-aware details
+            },
+            success: function(response) {
+                console.log('Item Details Response:', response);
+                
+                if (response.success && response.data && response.data.length > 0) {
+                    $.each(response.data, function(key, item) {
+                        $('#UOM').empty().append(
+                            `<option value="${item.UOM}">${item.UOM}</option>`
+                        );
+                        
+                        $('#EstimatedPrice').val(item.UnitPrice || '0');
+                        $('#CategoryId').val(item.CategoryId || '');
+                        console.log('CategoryId:', item.CategoryId);
                     });
                 } else {
+                    // Clear fields if no data
                     $('#UOM').empty().append('<option value="">Select UOM</option>');
-                    // $('#Description').val('');
-                    $('#ActualPrice').val('');
-                    $('#CategoryId').val(''); // Clear the hidden CategoryId field
+                    $('#EstimatedPrice').val('0');
+                    $('#CategoryId').val('');
                 }
-            })
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to load item details:', xhr.responseJSON);
+                alert('Failed to load item details. Please try again.');
+                $('#UOM').empty().append('<option value="">Select UOM</option>');
+                $('#EstimatedPrice').val('0');
+                $('#CategoryId').val('');
+            }
+        });
+    } else {
+        $('#UOM').empty().append('<option value="">Select UOM</option>');
+        $('#EstimatedPrice').val('0');
+        $('#CategoryId').val('');
+    }
+});
 
             $("#MarketingList").select2({
                 dropdownParent: $Modal,

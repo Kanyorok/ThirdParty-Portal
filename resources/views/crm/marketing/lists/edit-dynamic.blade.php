@@ -53,8 +53,9 @@
                     </div>
                 </div>
                 <div class="card-body pt-0">
+                    <div class="table-responsive m-1">
                     <table id="filtersTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                           class="table table-striped dataTable no-footer dtr-inline w-100">
                         <thead>
                         <tr>
                             <th>No</th>
@@ -67,6 +68,7 @@
                         </thead>
                         <tbody></tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,10 +88,11 @@
                             class="fas fa-refresh"></i></button>
                 </div>
                 <div class="card-body pt-1">
+                    <div class="table-responsive m-1">
                     @switch($list->Source)
                         @case(Client::getPrimaryKey())
                             <table id="clientsTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100">
                                 <thead>
                                 <tr>
                                     <th>MemberNo</th>
@@ -104,7 +107,7 @@
                             @break
                         @case(Lead::getPrimaryKey())
                             <table id="leadsTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100">
                                 <thead>
                                 <tr>
                                     <th></th>
@@ -122,6 +125,7 @@
                             <h3 class="my-5 fw-bold">Unknown Contacts Source</h3>
                             @break
                     @endswitch
+                    </div>
                 </div>
             </div>
         </div>

@@ -20,12 +20,12 @@ BEGIN
                                     Remarks,
                                     Nationality)
     SELECT CD.Description AS TenantType,
-           TM.TenantName,
-           TM.IDRegistrationNo,
-           TM.PhoneNumber,
-           TM.EmailAddress,
+           'TM.TenantName',
+           'TM.IDRegistrationNo',
+           'TM.PhoneNumber',
+           'TM.EmailAddress',
            TM.Remarks,
-           TM.Nationality
+           'TM.Nationality'
     FROM t_TenantMaintenance AS TM
              JOIN t_CodeDetails CD ON TM.TenantType = CD.ID
 

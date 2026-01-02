@@ -18,10 +18,7 @@ class ConsolidatedPlanWorkflowService
     {
         $this->plan = $plan;
 
-        Log::info("ConsolidatedPlanWorkflowService: Constructor", [
-            'planId' => $this->plan->PlanID,
-            'planStatus' => $this->plan->Status->value ?? 'NULL',
-        ]);
+
 
         $this->workflow = new ProcurementPlanWorkflow();
     }
@@ -31,11 +28,7 @@ class ConsolidatedPlanWorkflowService
      */
     public function submitForApproval(User $actor, string $remarks = 'Submitted for approval'): bool
     {
-        Log::info("Submitting Consolidated Procurement Plan for approval", [
-            'planId' => $this->plan->PlanID,
-            'actorId' => $actor->Id,
-            'currentStatus' => $this->plan->Status->value ?? null,
-        ]);
+
 
         if (is_null($this->plan->PlanID)) {
             throw new ErroredException('Invalid plan: PlanID is missing');
@@ -49,7 +42,7 @@ class ConsolidatedPlanWorkflowService
         if (!in_array($this->plan->Status, $allowedStatuses)) {
             throw new ErroredException(
                 'Only draft or rejected plans can be submitted for approval. Current status: ' .
-                ($this->plan->Status->value ?? 'unknown')
+                    ($this->plan->Status->value ?? 'unknown')
             );
         }
 
@@ -81,10 +74,7 @@ class ConsolidatedPlanWorkflowService
                 return $quantity * $unitCost;
             });
 
-            Log::info("Calculated total amount for workflow", [
-                'planId' => $this->plan->PlanID,
-                'totalAmount' => $totalAmount,
-            ]);
+
 
             $this->logLineItemDetails();
 
@@ -96,11 +86,7 @@ class ConsolidatedPlanWorkflowService
             $this->plan->ModifiedBy = $actor->Id;
             $this->plan->save();
 
-            Log::info("Plan status updated using config mapping", [
-                'planId' => $this->plan->PlanID,
-                'status' => $this->plan->Status->value,
-                'mappedValue' => $pendingStatusValue,
-            ]);
+
 
             // Submit to workflow
             $result = $this->workflow->submit(
@@ -118,9 +104,8 @@ class ConsolidatedPlanWorkflowService
 
             DB::commit();
 
-            Log::info("Plan submitted successfully", ['planId' => $this->plan->PlanID]);
-            return true;
 
+            return true;
         } catch (\Throwable $e) {
             DB::rollBack();
             // Log::error("Failed to submit plan for approval", [
@@ -137,10 +122,7 @@ class ConsolidatedPlanWorkflowService
      */
     public function approve(User $actor, string $remarks = 'Approved'): bool
     {
-        Log::info("Approving Consolidated Procurement Plan", [
-            'planId' => $this->plan->PlanID,
-            'actorId' => $actor->Id,
-        ]);
+
 
         // if (!$this->workflow->canApproveModel($this->plan, $actor)) {
         //     throw new ErroredException('You do not have permission to approve this plan');
@@ -170,13 +152,9 @@ class ConsolidatedPlanWorkflowService
             // Refresh to get updated status from workflow
             $this->plan->refresh();
 
-            Log::info("Plan approved successfully", [
-                'planId' => $this->plan->PlanID,
-                'finalStatus' => $this->plan->Status->value ?? null,
-            ]);
+
 
             return true;
-
         } catch (\Throwable $e) {
             DB::rollBack();
             // Log::error("Failed to approve plan", [
@@ -193,10 +171,7 @@ class ConsolidatedPlanWorkflowService
      */
     public function reject(User $actor, string $remarks = 'Rejected'): bool
     {
-        Log::info("Rejecting Consolidated Procurement Plan", [
-            'planId' => $this->plan->PlanID,
-            'actorId' => $actor->Id,
-        ]);
+
 
         if (!$this->workflow->canApproveModel($this->plan, $actor)) {
             throw new ErroredException('You do not have permission to reject this plan');
@@ -225,13 +200,9 @@ class ConsolidatedPlanWorkflowService
 
             DB::commit();
 
-            Log::info("Plan rejected successfully", [
-                'planId' => $this->plan->PlanID,
-                'status' => $this->plan->Status->value,
-            ]);
+
 
             return true;
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error("Failed to reject plan", [
@@ -247,10 +218,7 @@ class ConsolidatedPlanWorkflowService
      */
     public function cancel(User $actor, string $reason = 'Cancelled by submitter'): bool
     {
-        Log::info("Cancelling Consolidated Procurement Plan workflow", [
-            'planId' => $this->plan->PlanID,
-            'actorId' => $actor->Id,
-        ]);
+
 
         try {
             DB::beginTransaction();
@@ -273,9 +241,8 @@ class ConsolidatedPlanWorkflowService
 
             $this->plan->refresh();
 
-            Log::info("Plan workflow cancelled successfully", ['planId' => $this->plan->PlanID]);
-            return true;
 
+            return true;
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error("Failed to cancel workflow", [
@@ -292,31 +259,6 @@ class ConsolidatedPlanWorkflowService
     private function logLineItemDetails(): void
     {
         $lineItems = $this->plan->lineItems()->with(['item', 'branch', 'department'])->get();
-
-        Log::info("Plan Line Items Details", [
-            'planId' => $this->plan->PlanID,
-            'totalLineItems' => $lineItems->count(),
-            'lineItemsBreakdown' => $lineItems->map(function ($item) {
-                $quantity = $item->MergedQty ?? $item->OriginalQTY ?? 0;
-                $unitCost = ($item->AdjustedCost > 0)
-                    ? $item->AdjustedCost
-                    : ($item->EstimatedUnitCost ?? 0);
-                $lineTotal = $quantity * $unitCost;
-
-                return [
-                    'lineItemId' => $item->LineItemID,
-                    'itemId' => $item->ItemID,
-                    'itemName' => $item->item->Name ?? 'N/A',
-                    'mergedQty' => $item->MergedQty,
-                    'originalQty' => $item->OriginalQTY,
-                    'estimatedUnitCost' => $item->EstimatedUnitCost,
-                    'adjustedCost' => $item->AdjustedCost,
-                    'lineTotal' => $lineTotal,
-                    'branch' => $item->branch->Name ?? 'N/A',
-                    'department' => $item->department->Name ?? 'N/A',
-                ];
-            })->toArray()
-        ]);
     }
 
     /**
@@ -329,36 +271,11 @@ class ConsolidatedPlanWorkflowService
                 ->with(['user', 'workflowStage'])
                 ->get();
 
-            Log::info("Pending Approvers for Plan", [
-                'planId' => $this->plan->PlanID,
-                'totalPendingApprovers' => $pendingApprovals->count(),
-                'approvers' => $pendingApprovals->map(function ($pending) {
-                    return [
-                        'userId' => $pending->user->Id ?? null,
-                        'userName' => $pending->user->Name ?? 'Unknown User',
-                        'stageId' => $pending->Stage ?? null,
-                        'stageName' => $pending->workflowStage->StageName ?? 'Unknown Stage',
-                    ];
-                })->toArray()
-            ]);
+
 
             $history = $this->plan->workflowHistory()
                 ->with(['creator', 'stage'])
                 ->get();
-
-            Log::info("Workflow History for Plan", [
-                'planId' => $this->plan->PlanID,
-                'history' => $history->map(function ($h) {
-                    return [
-                        'statusId' => $h->StatusId ?? 'N/A',
-                        'userName' => $h->creator->Name ?? 'Unknown User',
-                        'stageName' => $h->stage->StageName ?? 'Unknown Stage',
-                        'remarks' => $h->Notes ?? 'N/A',
-                        'createdOn' => $h->CreatedOn?->toDateTimeString() ?? 'N/A',
-                    ];
-                })->toArray()
-            ]);
-
         } catch (\Throwable $e) {
             Log::warning("Failed to log approver details", [
                 'planId' => $this->plan->PlanID,

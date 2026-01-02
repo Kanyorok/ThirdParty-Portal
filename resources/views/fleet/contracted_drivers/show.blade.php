@@ -30,7 +30,7 @@
                     </div>
                     <div class="col-md-12">
                         <strong>Company Name:</strong>
-                        <p class="text-muted">{{ $driver->company->ThirdPartyName ?? 'N/A'}}</p>
+                        <p class="text-muted">{{ $driver->company->party->ThirdPartyName ?? 'N/A' }}</p>
                     </div>
 
                     <div class="col-md-12">

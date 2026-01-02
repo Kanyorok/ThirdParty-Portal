@@ -18,7 +18,7 @@ BEGIN
     INSERT INTO #TenderResponse
     SELECT I.InvitationId,
            T.Title        as TenderId,
-           S.SupplierName as SupplierId,
+           'S.SupplierName' as SupplierId,
            I.InvitationDate,
            I.ResponseStatus,
            I.ResponseDate,
