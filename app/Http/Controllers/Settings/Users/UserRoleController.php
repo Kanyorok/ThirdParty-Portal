@@ -68,17 +68,7 @@ class UserRoleController extends Controller
      */
     public function update(Request $request, ModelRole $modelRole)
     {
-        // Debug: log incoming request so we can diagnose routing/matching issues
-        try {
-            Log::debug('UserRoleController.update entered', [
-                'path' => $request->path(),
-                'method' => $request->method(),
-                'route' => optional($request->route())->getName(),
-                'input' => $request->all(),
-            ]);
-        } catch (Exception $e) {
-            // ignore logging failures
-        }
+
 
         try {
             $validated = $request->validate([
@@ -124,6 +114,7 @@ class UserRoleController extends Controller
 
     public function destroy(ModelRole $modelRole)
     {
+
         try {
             $modelRole->delete();
             ModuleService::clearNavbarCache(request()->user());
@@ -184,16 +175,7 @@ class UserRoleController extends Controller
      */
     public function updateByKeys(Request $request)
     {
-        // Debug: log incoming request for composite-key update
-        try {
-            Log::debug('UserRoleController.updateByKeys entered', [
-                'path' => $request->path(),
-                'method' => $request->method(),
-                'route' => optional($request->route())->getName(),
-                'input' => $request->all(),
-            ]);
-        } catch (Exception $e) {
-        }
+
 
         try {
             $validated = $request->validate([
