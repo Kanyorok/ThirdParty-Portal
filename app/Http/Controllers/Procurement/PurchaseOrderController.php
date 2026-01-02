@@ -386,6 +386,7 @@ class PurchaseOrderController extends Controller
             Log::error("Order ID {$id} not found");
             return redirect()->back()->with('error', 'Order not found.');
         }
+    }
 
     /**
      * Show the form for editing the specified purchase order
@@ -409,7 +410,7 @@ class PurchaseOrderController extends Controller
     {
         $order = $this->orderService->getOrder($id);
         $this->authorize('update', $order);
-        
+
         $this->orderService->updateOrder($id, $request->validated());
         return redirect()->route('orders.show', $id)->with('success', 'Order updated successfully.');
     }
@@ -419,12 +420,13 @@ class PurchaseOrderController extends Controller
      */
     public function destroy($id)
     {
-        $order = Order::findOrFail($id);
-        $this->authorize('delete', $order);
+        try {
+            $order = Order::findOrFail($id);
+            $this->authorize('delete', $order);
 
-        $this->orderService->deleteOrder($id);
-        return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
-    } catch (\Exception $e) {
+            $this->orderService->deleteOrder($id);
+            return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
+        } catch (\Exception $e) {
             Log::error("Failed to fetch order ID {$id}", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
