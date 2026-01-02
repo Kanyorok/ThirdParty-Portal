@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Cache configuration at runtime to pick up current environment variables
+echo "Caching configuration..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
 # Wait for database to be ready (optional but recommended)
 echo "Running migrations..."
 php artisan migrate --force
