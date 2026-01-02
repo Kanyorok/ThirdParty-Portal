@@ -101,7 +101,7 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
         Route::namespace('Users')->group(function () {
             Route::post('user_roles/branch', 'UserRoleController@storeBranch')->name('user_roles.store_branch');
             // Delete a branch role assignment (under the settings prefix)
-            Route::delete('users/branch-role/{modelRole}', 'UserRoleController                                     @destroy')
+            Route::delete('users/branch-role/{modelRole}', 'UserRoleController@destroy')
                 ->whereNumber('modelRole')
                 ->name('user_roles.delete_branch');
             // Fallback endpoints to operate on ModelRole records identified by composite keys
