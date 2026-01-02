@@ -32,7 +32,7 @@ class StartPendingTrips extends Command
         $this->info("Current time: {$now}");
 
         // Find trips that should be started
-        $trips = FleetTripLog::where('TripStatus', $approvedId)
+        $trips = FleetTripLog::where('Status', $approvedId)
             ->where(function ($query) use ($now) {
                 $query->where(function ($q) use ($now) {
                     // If both date and time are set

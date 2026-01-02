@@ -155,7 +155,7 @@ class UserService
             return false;
         }
 
-        return self::marketingManagers(true)->where('Id', $this->user->Id)->exists();
+        return self::marketingManagers(true)->where('t_Users.Id', $this->user->Id)->exists();
     }
 
     public static function marketingManagers(bool $query = false): Builder|Collection

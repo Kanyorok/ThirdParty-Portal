@@ -32,8 +32,8 @@
             </div>
 
             <div class="col-md-6">
-                <strong>Location:</strong>
-                <p>{{ $schedule->Location }}</p>
+                <strong>Vendor Name:</strong>
+                <p>{{ $schedule->vendor->party->ThirdPartyName ?? 'N/A' }}</p>
             </div>
 
             <div class="col-md-12">

@@ -77,11 +77,9 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
-                            No policies awaiting issuance.
-                        </td>
-                    </tr>
+                        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i> No policies awaiting issuance.
+                </div>
                 @endforelse
                 </tbody>
             </table>
