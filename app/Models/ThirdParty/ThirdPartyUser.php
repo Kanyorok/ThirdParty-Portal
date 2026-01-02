@@ -201,6 +201,8 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         return $this->Email;
     }
 
+    public ?string $verificationBaseUrl = null;
+
     public function sendEmailVerificationNotification()
     {
         // 1. Generate the Signed Backend URL (which verifies the signature)
@@ -215,12 +217,11 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         );
 
         // 2. Construct the Frontend URL
-        // The link in the email should point to the Frontend (e.g. localhost:3000/verify-email)
-        // We pass the backend signed URL as a parameter 'verify_url' so the frontend can call it.
-        // NOTE: (auth) is a route group, so it does NOT appear in the URL.
-        // We pass the backend signed URL as a parameter 'verify_url' so the frontend can call it.
-        // NOTE: (auth) is a route group, so it does NOT appear in the URL.
-        $frontendUrl = config('app.nextauth_url', 'http://localhost:3000');
+        // Use dynamically provided base URL if available, otherwise fallback to config
+        $frontendUrl = $this->verificationBaseUrl ?? config('app.nextauth_url', 'http://localhost:3000');
+        // Ensure no trailing slash for consistency
+        $frontendUrl = rtrim($frontendUrl, '/');
+
         $url = $frontendUrl . '/verify-email?verify_url=' . urlencode($backendSignedUrl);
 
         $body = '<p>Please click the button below to verify your email address.</p>';
