@@ -143,7 +143,10 @@ export const useRegisterForm = () => {
                 return
             }
 
-            const apiData = transformRegisterFormDataForApi(data)
+            const apiData = {
+                ...transformRegisterFormDataForApi(data),
+                verification_base_url: typeof window !== 'undefined' ? window.location.origin : ''
+            }
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/third-party-auth/register`, {
