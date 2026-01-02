@@ -114,7 +114,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
         ->name('requisition.submit');
 
     //this route is static affecting orders\create.blade.php & requisitions\show
-    Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
+    Route::get('requisitionItem/getItems', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
 
     // this route is static affecting orders\create.blade.php & requisitions\show
     Route::get('requisitionItem/getItemDetails/{item}', action: [RequisitionItemsController::class, 'getItemDetails'])->name('requisitionItem.getItemDetails');

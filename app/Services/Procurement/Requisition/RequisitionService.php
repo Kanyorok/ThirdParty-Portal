@@ -109,10 +109,6 @@ public static function addRequisition($branch, $department, $remarks, $procureme
  * Auto-populate requisition items from procurement plan
  * Uses PlanLineRef to track which items came from the plan
  */
-/**
- * Auto-populate requisition items from procurement plan
- * Uses PlanLineRef to track which items came from the plan
- */
 private static function autoPopulateItemsFromPlan($requisitionId, $planId, User $actor)
 {
     try {
