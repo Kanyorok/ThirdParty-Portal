@@ -1,5 +1,5 @@
 services:
-    laravel:
+    app:
         # 1. Use a specific image tag, not 'build'
         # In production, you do not build from source on the client's machine.
         # You run a pre-built image that you created on your machine.
