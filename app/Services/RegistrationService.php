@@ -55,6 +55,10 @@ class RegistrationService
                 'ModifiedBy' => $systemUserId ?? 1,
             ]);
 
+            if (!empty($userData['verification_base_url'])) {
+                $user->verificationBaseUrl = $userData['verification_base_url'];
+            }
+
             event(new Registered($user));
 
             return $user;
