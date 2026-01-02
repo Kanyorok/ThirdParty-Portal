@@ -51,7 +51,6 @@ class StockItemPolicy
      */
     public function edit(User $user, StockItem $stockItem): bool
     {
-        return $user->can(PermissionEnum::StockItemRestore->value);
+        return false;
     }
-
 }

@@ -723,6 +723,8 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(\App\Models\Procurement\Prequalification\PrequalificationRound::class, \App\Policies\Procurement\Prequalification\PrequalificationRoundPolicy::class);
         Gate::policy(\App\Models\ThirdParty\ThirdParties::class, \App\Policies\ThirdParty\ThirdPartyPolicy::class);
+        Gate::policy(\App\Models\Inventory\StockConsumption::class, \App\Policies\Inventory\StockConsumptionPolicy::class);
+        Gate::policy(\App\Models\Settings\WorkFlow::class, \App\Policies\WorkflowPolicy::class);
 
         // Batch 4: Settings & Setup
         Gate::policy(ApprovalGroup::class, ApprovalSetupPolicy::class);

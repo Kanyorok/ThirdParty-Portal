@@ -62,6 +62,12 @@ enum PermissionEnum: string
     case LeadDelete = 'lead-delete';
     case LeadsManager = 'leadsManager';
 
+        //Clients
+    case ClientRead = 'client-read';
+    case ClientWrite = 'client-create';
+    case ClientUpdate = 'client-update';
+    case ClientDelete = 'client-delete';
+
         //Product Development
     case ProductDevelopmentRead = 'product-development-read';
     case ProductDevelopmentWrite = 'product-development-create';
@@ -374,6 +380,11 @@ enum PermissionEnum: string
     case StockTakeCreate = 'stockTake-create';
     case StockTakeDestroy = 'stockTake-destroy';
 
+    case StockConsumptionView = 'stockConsumption-view';
+    case StockConsumptionUpdate = 'stockConsumption-update';
+    case StockConsumptionCreate = 'stockConsumption-create';
+    case StockConsumptionDestroy = 'stockConsumption-destroy';
+
     case TransactionReceiptView = 'transactionReceipt-view';
     case TransactionReceiptUpdate = 'transactionReceipt-update';
     case TransactionReceiptCreate = 'transactionReceipt-create';
@@ -401,6 +412,9 @@ enum PermissionEnum: string
     case UOMConversionUpdate = 'uomConversion-update';
     case UOMConversionCreate = 'uomConversion-create';
     case UOMConversionDestroy = 'uomConversion-destroy';
+
+    case InventoryDashboardView = 'inventoryDashboard-view';
+    case InventoryReportsView = 'inventoryReports-view';
 
         /*
      *
@@ -660,12 +674,36 @@ enum PermissionEnum: string
     case EmployeesUpdate = 'employee-update';
     case EmployeesDelete = 'employee-delete';
 
+    case HRCommitteeView = 'hrCommittee-view';
+    case HRCommitteeCreate = 'hrCommittee-create';
+    case HRCommitteeUpdate = 'hrCommittee-update';
+    case HRCommitteeDelete = 'hrCommittee-delete';
 
     /** ========================================  Budget and Analytics  ========================================*/
     case BudgetSetupView = 'budgetSetup-view';
     case BudgetSetupCreate = 'budgetSetup-create';
     case BudgetSetupUpdate = 'budgetSetup-update';
     case BudgetSetupDelete = 'budgetSetup-delete';
+
+    case BudgetProductMasterView = 'budgetProductMaster-view';
+    case BudgetProductMasterCreate = 'budgetProductMaster-create';
+    case BudgetProductMasterUpdate = 'budgetProductMaster-update';
+    case BudgetProductMasterDelete = 'budgetProductMaster-delete';
+
+    case BudgetGLMappingView = 'budgetGLMapping-view';
+    case BudgetGLMappingCreate = 'budgetGLMapping-create';
+    case BudgetGLMappingUpdate = 'budgetGLMapping-update';
+    case BudgetGLMappingDelete = 'budgetGLMapping-delete';
+
+    case BudgetLineMappingView = 'budgetLineMapping-view';
+    case BudgetLineMappingCreate = 'budgetLineMapping-create';
+    case BudgetLineMappingUpdate = 'budgetLineMapping-update';
+    case BudgetLineMappingDelete = 'budgetLineMapping-delete';
+
+    case YieldExpenseRateView = 'yieldExpenseRate-view';
+    case YieldExpenseRateCreate = 'yieldExpenseRate-create';
+    case YieldExpenseRateUpdate = 'yieldExpenseRate-update';
+    case YieldExpenseRateDelete = 'yieldExpenseRate-delete';
 
     case BudgetActivityView = 'budgetActivity-view';
     case BudgetActivityCreate = 'budgetActivity-create';
@@ -696,6 +734,7 @@ enum PermissionEnum: string
     case ApproveNewBudget = 'approveNewBudget';
     case ApproveReallocation = 'approveReallocation';
 
+    case BudgetReportsView = 'budgetReports-view';
 
     /** ======================================== Document Management System ========================================*/
 
@@ -919,6 +958,38 @@ enum PermissionEnum: string
 
 
 
+        //Compliance
+    case ComplianceSetupView = 'compliance-setup-view';
+    case ComplianceSetupCreate = 'compliance-setup-create';
+    case ComplianceSetupUpdate = 'compliance-setup-update';
+    case ComplianceSetupDelete = 'compliance-setup-delete';
+
+    case ComplianceObligationView = 'compliance-obligation-view';
+    case ComplianceObligationCreate = 'compliance-obligation-create';
+    case ComplianceObligationUpdate = 'compliance-obligation-update';
+    case ComplianceObligationDelete = 'compliance-obligation-delete';
+
+    case ComplianceCalendarView = 'compliance-calendar-view';
+    case ComplianceCalendarCreate = 'compliance-calendar-create';
+
+    case ComplianceIncidentView = 'compliance-incident-view';
+    case ComplianceIncidentCreate = 'compliance-incident-create';
+    case ComplianceIncidentUpdate = 'compliance-incident-update';
+    case ComplianceIncidentDelete = 'compliance-incident-delete';
+
+    case ComplianceFilingView = 'compliance-filing-view';
+    case ComplianceFilingCreate = 'compliance-filing-create';
+    case ComplianceFilingUpdate = 'compliance-filing-update';
+    case ComplianceFilingDelete = 'compliance-filing-delete';
+
+    case CompliancePolicyView = 'compliance-policy-view';
+    case CompliancePolicyCreate = 'compliance-policy-create';
+    case CompliancePolicyUpdate = 'compliance-policy-update';
+    case CompliancePolicyDelete = 'compliance-policy-delete';
+
+    case ComplianceGenericView = 'compliance-generic-view';
+
+
 
 
     public static function display(): Collection
@@ -929,6 +1000,7 @@ enum PermissionEnum: string
             [self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqDelete, self::RfqApproval,],
             [self::Members],
             [self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadViewAll, self::LeadsManager, self::LeadDelete,],
+            [self::ClientRead, self::ClientWrite, self::ClientUpdate, self::ClientDelete,],
             [self::EmailRead, self::EmailAssign, self::EmailDelete,],
             [self::CallRead, self::CallWrite, self::CallUpdate, self::CallDelete,],
             [self::ScheduleRead, self::ScheduleWrite, self::ScheduleDelete, self::MeetingRooms,],
@@ -1096,6 +1168,15 @@ enum PermissionEnum: string
             [self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete],
             [self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete],
 
+            // Compliance
+            [self::ComplianceSetupView, self::ComplianceSetupCreate, self::ComplianceSetupUpdate, self::ComplianceSetupDelete],
+            [self::ComplianceObligationView, self::ComplianceObligationCreate, self::ComplianceObligationUpdate, self::ComplianceObligationDelete],
+            [self::ComplianceCalendarView, self::ComplianceCalendarCreate],
+            [self::ComplianceIncidentView, self::ComplianceIncidentCreate, self::ComplianceIncidentUpdate, self::ComplianceIncidentDelete],
+            [self::ComplianceFilingView, self::ComplianceFilingCreate, self::ComplianceFilingUpdate, self::ComplianceFilingDelete],
+            [self::CompliancePolicyView, self::CompliancePolicyCreate, self::CompliancePolicyUpdate, self::CompliancePolicyDelete],
+            [self::ComplianceGenericView],
+
 
         ]);
     }
@@ -1136,6 +1217,7 @@ enum PermissionEnum: string
             self::TicketRead, self::TicketWrite, self::TicketUpdate, self::TicketDelete, self::TicketApproval,
             self::TaskCreate, self::TaskDelegate,
             self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadDelete, self::LeadViewAll, self::LeadsManager,
+            self::ClientRead, self::ClientWrite, self::ClientUpdate, self::ClientDelete,
             self::SocialRead, self::SocialWrite, self::SocialDelete,
             self::ReviewsView,
             self::DebtCollectionView, self::DebtCollectionAssignment, self::DebtCollectionAdmin,
@@ -1288,6 +1370,16 @@ enum PermissionEnum: string
             self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete,
             self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete,
             => ModulesEnum::Legal,
+
+            ////////////////////   Compliance   ////////////////////////////
+            self::ComplianceSetupView, self::ComplianceSetupCreate, self::ComplianceSetupUpdate, self::ComplianceSetupDelete,
+            self::ComplianceObligationView, self::ComplianceObligationCreate, self::ComplianceObligationUpdate, self::ComplianceObligationDelete,
+            self::ComplianceCalendarView, self::ComplianceCalendarCreate,
+            self::ComplianceIncidentView, self::ComplianceIncidentCreate, self::ComplianceIncidentUpdate, self::ComplianceIncidentDelete,
+            self::ComplianceFilingView, self::ComplianceFilingCreate, self::ComplianceFilingUpdate, self::ComplianceFilingDelete,
+            self::CompliancePolicyView, self::CompliancePolicyCreate, self::CompliancePolicyUpdate, self::CompliancePolicyDelete,
+            self::ComplianceGenericView
+            => ModulesEnum::Legal,
             default => ModulesEnum::Settings,
         };
     }
@@ -1313,6 +1405,7 @@ enum PermissionEnum: string
             self::TaskCreate, self::TaskDelegate => 'Tasks',
             self::DebtCollectionView, self::DebtCollectionAssignment, self::DebtCollectionAdmin, self::DebtNotificationView, self::DebtNotificationSend, self::DebtCollectionLists => 'Debt Collection',
             self::LeadRead, self::LeadWrite, self::LeadDelegate, self::LeadUpdate, self::LeadDelete, self::LeadViewAll, self::LeadsManager => 'Leads',
+            self::ClientRead, self::ClientWrite, self::ClientUpdate, self::ClientDelete => 'Clients',
             self::ReviewsView, self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval => 'Feedback',
             self::Competitor, self::CompetitorLLM => 'Competitor',
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions => 'Users & Roles',
@@ -1470,7 +1563,24 @@ enum PermissionEnum: string
             self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete => 'Loan Security',
             self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete => 'Intellectual Propert',
 
+            self::ComplianceSetupView, self::ComplianceSetupCreate, self::ComplianceSetupUpdate, self::ComplianceSetupDelete => 'Compliance Setup',
+            self::ComplianceObligationView, self::ComplianceObligationCreate, self::ComplianceObligationUpdate, self::ComplianceObligationDelete => 'Compliance Obligations',
+            self::ComplianceCalendarView, self::ComplianceCalendarCreate => 'Compliance Calendar',
+            self::ComplianceIncidentView, self::ComplianceIncidentCreate, self::ComplianceIncidentUpdate, self::ComplianceIncidentDelete => 'Compliance Incidents',
+            self::ComplianceFilingView, self::ComplianceFilingCreate, self::ComplianceFilingUpdate, self::ComplianceFilingDelete => 'Compliance Filings',
+            self::CompliancePolicyView, self::CompliancePolicyCreate, self::CompliancePolicyUpdate, self::CompliancePolicyDelete => 'Compliance Policies',
+            self::ComplianceGenericView => 'Compliance Analytic',
+
             default      => 'System Codes' // Fallback to System Codes or specific category if unknown, but better to be explicit.
         };
     }
+
+        /*
+     *
+     * ========================================  Workflow  ========================================
+     */
+    case WorkflowView = 'workflow-view';
+    case WorkflowCreate = 'workflow-create';
+    case WorkflowUpdate = 'workflow-update';
+    case WorkflowDelete = 'workflow-delete';
 }
