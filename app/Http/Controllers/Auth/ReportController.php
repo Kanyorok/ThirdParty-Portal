@@ -8,7 +8,7 @@ use DOMDocument;
 use DOMXPath;
 use Exception;
 use Illuminate\Support\Collection;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 //use function React\Async\await;
 
@@ -32,7 +32,7 @@ class ReportController extends Controller
         // Parse XML to Collection
         $collection = $this->parseReportXml($xmlResponse);
 
-        dd($collection);
+
 
         //dd($report);
 
@@ -172,5 +172,4 @@ dd($xmlString);
 
         return $collection;
     }*/
-
 }

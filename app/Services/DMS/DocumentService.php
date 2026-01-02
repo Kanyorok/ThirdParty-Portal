@@ -71,10 +71,10 @@ class DocumentService extends PermissionsService
             ->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false)->attach($Related, $RelatedId, $actor);
 
         //  if (empty($permissions)) {
-            if (is_string($permissions)) {
-                $permissions = explode(',', $permissions);
-            }
-            self::userPermissions($service->document, $permissions, RoleEnum::Read, $actor);
+        if (is_string($permissions)) {
+            $permissions = explode(',', $permissions);
+        }
+        self::userPermissions($service->document, $permissions, RoleEnum::Read, $actor);
         // }
         return $service;
     }
@@ -195,9 +195,18 @@ class DocumentService extends PermissionsService
      * @throws ErroredException
      */
     private static function _create(
-        Repository     $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum,
-        CategoryMaster $category = null, bool $copyPermissions = true, Collection $properties = null): DocumentService
-    {
+        Repository     $repository,
+        User $actor,
+        DisksEnum $disk,
+        string $name,
+        ExtensionsEnum $extension,
+        string $path,
+        int $sizeInBytes,
+        string $checksum,
+        CategoryMaster $category = null,
+        bool $copyPermissions = true,
+        Collection $properties = null
+    ): DocumentService {
         try {
             return DB::transaction(static function () use ($path, $checksum, $properties, $sizeInBytes, $disk, $category, $extension, $repository, $name, $actor, $copyPermissions) {
                 $document = Document::create([
@@ -223,7 +232,7 @@ class DocumentService extends PermissionsService
                 }
                 return $service->_newVersion($disk, $path, $name, $sizeInBytes, $actor, $properties, $checksum);
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error creating document: ');
             Log::error($e);
             throw new ErroredException('Saving file failed.');
@@ -377,7 +386,6 @@ class DocumentService extends PermissionsService
         $name = "Signed " . pathinfo($this->document->Name, PATHINFO_FILENAME) . '.' . $extension->value;
         unlink($filePath);
         return $this->_newVersion($disk, $path, $name, $size, $actor, checksum: base64_encode($checksum1 . '|' . $checksum2));
-
     }
 
     /**
@@ -516,7 +524,7 @@ class DocumentService extends PermissionsService
                 $query->whereIn('t_Teams.TeamID', $this->document->permissions()->where('Party', Team::getPrimaryKey())->select('PartyID'));
             });
         })->paginate(5);
-        dd($users);
+
 
 
         /* <img src="../assets/images/user/avatar-1.jpg" alt="user-image" class="avtar">
@@ -583,7 +591,7 @@ class DocumentService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($this->document)->event('update')->log('Updated file ' . $this->document->Name . ' visibility : ' . $visibility->description());
                 return $this;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update document visibility: ');
             Log::error($e);
             throw new ErroredException();
