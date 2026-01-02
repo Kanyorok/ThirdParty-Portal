@@ -762,6 +762,8 @@ enum PermissionEnum: string
     case FleetTripLogCreate = 'fleetTripLog-create';
     case FleetTripLogUpdate = 'fleetTripLog-update';
     case FleetTripLogDestroy = 'fleetTripLog-destroy';
+    case FleetTripLogApprove = 'fleetTripLog-approve';
+    case FleetTripLogReject = 'fleetTripLog-reject';
 
     case FleetRoutePlanView = 'fleetRoutePlan-view';
     case FleetRoutePlanCreate = 'fleetRoutePlan-create';
@@ -976,7 +978,7 @@ enum PermissionEnum: string
             [self::ContractedDriverView, self::ContractedDriverCreate, self::ContractedDriverUpdate, self::ContractedDriverDestroy],
             [self::FleetMaintenanceScheduleView, self::FleetMaintenanceScheduleCreate, self::FleetMaintenanceScheduleUpdate, self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel],
             [self::FleetRepairLogView, self::FleetRepairLogCreate, self::FleetRepairLogUpdate, self::FleetRepairLogDestroy],
-            [self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy],
+            [self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy, self::FleetTripLogApprove, self::FleetTripLogReject],
             [self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy],
             [self::FleetServiceAlertView, self::FleetServiceAlertAcknowledge],
             [self::VehicleInspectionView, self::VehicleInspectionCreate, self::VehicleInspectionUpdate, self::VehicleInspectionDestroy],
@@ -1119,7 +1121,7 @@ enum PermissionEnum: string
             self::ContractedDriverView, self::ContractedDriverCreate, self::ContractedDriverUpdate, self::ContractedDriverDestroy,
             self::FleetServiceAlertView, self::FleetServiceAlertAcknowledge,
             self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy,
-            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy,
+            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy, self::FleetTripLogApprove, self::FleetTripLogReject,
             self::VehicleInspectionView, self::VehicleInspectionCreate, self::VehicleInspectionUpdate, self::VehicleInspectionDestroy,
             => ModulesEnum::Fleet,
 
@@ -1287,7 +1289,7 @@ enum PermissionEnum: string
             self::FleetInsuranceTrackerView, self::FleetInsuranceTrackerCreate, self::FleetInsuranceTrackerUpdate, self::FleetInsuranceTrackerDestroy => 'Fleet Insurance Tracker',
             self::FleetInspectionScheduleView, self::FleetInspectionScheduleCreate, self::FleetInspectionScheduleUpdate, self::FleetInspectionScheduleDestroy => 'Vehicle Inspection',
             self::FleetDriverView, self::FleetDriverCreate, self::FleetDriverUpdate, self::FleetDriverDestroy => 'Fleet Driver',
-            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy => 'Fleet Trip Log',
+            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy, self::FleetTripLogApprove, self::FleetTripLogReject => 'Fleet Trip Log',
             self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy => 'Trip Route Plan',
             self::FleetVehicleRequestView, self::FleetVehicleRequestApproval, self::FleetVehicleRequestCreate, self::FleetVehicleRequestUpdate, self::FleetVehicleRequestDestroy => 'Fleet Vehicle Request',
             self::FleetMaintenanceScheduleView, self::FleetMaintenanceScheduleCreate, self::FleetMaintenanceScheduleUpdate, self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel => 'Fleet Maintenance Schedule',

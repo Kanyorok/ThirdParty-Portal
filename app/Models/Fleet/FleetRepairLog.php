@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\SupplierMaster;
 
 class FleetRepairLog extends Model
 {
@@ -56,7 +57,7 @@ class FleetRepairLog extends Model
 
     public function vendor()
     {
-        return $this->belongsTo(ThirdParties::class, 'VendorID', 'ID');
+        return $this->belongsTo(SupplierMaster::class, 'VendorID', 'Id');
     }
 
     public function schedule()
