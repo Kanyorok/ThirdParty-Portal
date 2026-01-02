@@ -470,6 +470,7 @@ class AppServiceProvider extends ServiceProvider
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             UOMConversion::getPrimaryKey() => UOMConversion::class,
             StockTake::getPrimaryKey() => StockTake::class,
+            \App\Models\Inventory\StockConsumption::getPrimaryKey() => \App\Models\Inventory\StockConsumption::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -719,6 +720,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
         Gate::policy(FleetRepairLog::class, FleetRepairLogPolicy::class);
         Gate::policy(FleetVehicleInspection::class, FleetVehicleInspectionPolicy::class);
+
+        Gate::policy(\App\Models\Procurement\Prequalification\PrequalificationRound::class, \App\Policies\Procurement\Prequalification\PrequalificationRoundPolicy::class);
+        Gate::policy(\App\Models\ThirdParty\ThirdParties::class, \App\Policies\ThirdParty\ThirdPartyPolicy::class);
 
         // Batch 4: Settings & Setup
         Gate::policy(ApprovalGroup::class, ApprovalSetupPolicy::class);

@@ -277,6 +277,20 @@ enum PermissionEnum: string
         // Plan Consolidation & Submission
     case ProcurementPlanSubmit = 'procurementplan-submit';
 
+        // Prequalification
+    case PrequalificationRoundRead = 'prequalificationround-read';
+    case PrequalificationRoundCreate = 'prequalificationround-create';
+    case PrequalificationRoundUpdate = 'prequalificationround-update';
+    case PrequalificationRoundDelete = 'prequalificationround-delete';
+    case PrequalificationRoundApproval = 'prequalificationround-approval';
+
+        // Third Party Management
+    case ThirdPartyRead = 'thirdparty-read';
+    case ThirdPartyCreate = 'thirdparty-create';
+    case ThirdPartyUpdate = 'thirdparty-update';
+    case ThirdPartyDelete = 'thirdparty-delete';
+    case ThirdPartyApprove = 'thirdparty-approve';
+
         // Procurement Settings - Approval Setup
     case ApprovalSetupRead = 'approvalsetup-read';
     case ApprovalSetupWrite = 'approvalsetup-create';
@@ -1316,7 +1330,8 @@ enum PermissionEnum: string
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete, => 'Plan Manual Input',
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete, => 'Plan amendment',
             //Requisition
-            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => 'Requisitions',
+            self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval => 'Requisitions',
+            self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => 'Requisition Lines',
 
 
             //PurchaseOrder
@@ -1334,6 +1349,9 @@ enum PermissionEnum: string
             self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Bid Submission',
             self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Invitation',
             self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Vendor Clarifications',
+
+            self::PrequalificationRoundRead, self::PrequalificationRoundCreate, self::PrequalificationRoundUpdate, self::PrequalificationRoundDelete, self::PrequalificationRoundApproval => 'Prequalification Rounds',
+            self::ThirdPartyRead, self::ThirdPartyCreate, self::ThirdPartyUpdate, self::ThirdPartyDelete, self::ThirdPartyApprove => 'Third Party Management',
 
             // Settings & Setup (Batch 4)
             self::ApprovalSetupRead, self::ApprovalSetupWrite, self::ApprovalSetupUpdate, self::ApprovalSetupDelete => 'Approval Setup',
