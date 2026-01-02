@@ -1,16 +1,14 @@
 'use client'
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import Link from "next/link"
 import {
     User,
     LogOut,
     Settings,
     ChevronDown,
-    UserPlus,
-    Shuffle,
+    ShieldCheck,
 } from "lucide-react"
-import { LucideIcon } from "lucide-react"
 import { motion, AnimatePresence, Variants } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { Button } from "@/components/common/button"
@@ -23,7 +21,6 @@ import {
 } from "@/components/common/dropdown-menu"
 import { Separator } from "@/components/common/separator"
 import { Spinner } from "@/components/common/spinner"
-import { Badge } from "@/components/common/badge"
 import { cn, getInitials } from "@/lib/utils"
 
 interface UserData {
@@ -35,7 +32,6 @@ interface UserData {
     isActive?: boolean
     imageUrl?: string | null
     image?: string | null
-    imageId?: string | number | null
 }
 
 interface UserNavProps {
@@ -47,198 +43,142 @@ interface UserNavProps {
     onOpenChange: (open: boolean) => void
 }
 
-interface NavMenuItem {
-    id: string
-    label: string
-    icon: LucideIcon
-    href: string
-}
-
-const MENU_ITEMS: NavMenuItem[] = [
+const MENU_ITEMS = [
     { id: "account", label: "My Account", icon: User, href: "/dashboard/account" },
     { id: "settings", label: "Settings", icon: Settings, href: "/dashboard/settings" },
-]
+] as const
 
 const placeholder_avatar = "/avatars/doe.png"
 
-const shimmerVariants: Variants = {
-    initial: { x: "-100%" },
-    animate: {
-        x: "100%",
-        transition: { repeat: Infinity, duration: 1.8, ease: "easeInOut" },
-    },
-}
-
 const dropdownVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.96, y: -8 },
+    hidden: { opacity: 0, scale: 0.98, y: 8, filter: "blur(4px)" },
     visible: {
         opacity: 1,
         scale: 1,
         y: 0,
-        transition: { type: "spring", stiffness: 500, damping: 35, mass: 0.8 },
+        filter: "blur(0px)",
+        transition: { type: "spring", stiffness: 400, damping: 28 },
     },
     exit: {
         opacity: 0,
-        scale: 0.96,
-        y: -8,
+        scale: 0.98,
+        y: 8,
+        filter: "blur(4px)",
         transition: { duration: 0.2, ease: "easeInOut" },
     },
 }
 
-const menuItemVariants: Variants = {
-    hidden: { opacity: 0, x: -12 },
+const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 4 },
     visible: (i: number) => ({
         opacity: 1,
-        x: 0,
-        transition: { delay: i * 0.04, type: "spring", stiffness: 600, damping: 40 },
+        y: 0,
+        transition: { delay: i * 0.04, type: "spring", stiffness: 350, damping: 25 },
     }),
 }
 
-const UserNavSkeleton = memo(() => (
-    <div className="flex items-center gap-2.5 rounded-full border border-border/40 bg-muted/30 px-2 py-1.5">
-        <div className="relative h-8 w-8 overflow-hidden rounded-full bg-muted">
-            <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent"
-                variants={shimmerVariants}
-                initial="initial"
-                animate="animate"
-            />
-        </div>
-        <div className="hidden flex-col gap-1 pr-2 sm:flex">
-            <div className="h-3 w-20 rounded bg-muted" />
-        </div>
-    </div>
-))
-UserNavSkeleton.displayName = "UserNavSkeleton"
-
 const UserAvatar = memo(({ user, size = "default" }: { user: UserData; size?: "default" | "large" }) => {
     const displayName = user.fullName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim()
-    const fallbackInitials = getInitials(displayName || user.email || "U")
-    const sizeClasses = size === "large" ? "h-10 w-10" : "h-8 w-8"
+    const initials = getInitials(displayName || user.email || "U")
+    const dimensions = size === "large" ? "size-12" : "size-8"
     const avatarSrc = user.imageUrl || user.image || placeholder_avatar
 
     return (
-        <div className="relative flex-shrink-0">
-            <Avatar className={cn(sizeClasses, "rounded-lg border border-border/50 shadow-sm transition-transform group-hover:scale-105")}>
-                <AvatarImage src={avatarSrc} alt={displayName || "User"} className="object-cover" />
-                <AvatarFallback className="rounded-lg bg-primary text-[10px] font-black text-primary-foreground">
-                    {fallbackInitials}
+        <div className="relative shrink-0">
+            <Avatar className={cn(dimensions, "rounded-xl border border-border/40 shadow-sm ring-2 ring-transparent transition-all group-hover:ring-primary/10")}>
+                <AvatarImage src={avatarSrc} alt={displayName} className="object-cover" />
+                <AvatarFallback className="rounded-xl bg-primary text-[10px] font-black text-primary-foreground">
+                    {initials}
                 </AvatarFallback>
             </Avatar>
             {user.isActive && (
-                <div className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-background bg-green-500" />
+                <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-background bg-emerald-500 shadow-sm" />
             )}
         </div>
     )
 })
-UserAvatar.displayName = "UserAvatar"
 
-const AddAccountButton = memo(() => (
-    <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-            <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-lg text-muted-foreground transition-colors hover:bg-muted"
-            >
-                <Shuffle className="size-3.5" />
-            </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-            className="w-48 rounded-xl border-border/50 bg-background/98 p-1 shadow-xl backdrop-blur-lg"
-            side="bottom"
-            align="end"
-        >
-            <DropdownMenuItem asChild>
-                <Link
-                    href="/signup"
-                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 transition-all"
-                >
-                    <UserPlus className="size-3.5 text-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-wider">New Account</span>
-                </Link>
-            </DropdownMenuItem>
-        </DropdownMenuContent>
-    </DropdownMenu>
+const UserNavSkeleton = memo(() => (
+    <div className="flex h-11 w-44 animate-pulse items-center gap-3 rounded-full border border-border/40 bg-muted/10 px-2" />
 ))
-AddAccountButton.displayName = "AddAccountButton"
 
 export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, onOpenChange }: UserNavProps) => {
-    if (isLoading) return <UserNavSkeleton />
-    if (!user) {
-        return (
-            <Button asChild size="sm" className="rounded-full px-4 font-black uppercase tracking-widest text-[10px]">
-                <Link href="/signin">Sign In</Link>
-            </Button>
-        )
-    }
+    const displayName = useMemo(() =>
+        user ? (user.fullName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim()) : "",
+        [user])
 
-    const displayName = user.fullName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim()
-    const displayEmail = user.email || ""
+    if (isLoading) return <UserNavSkeleton />
+    if (!user) return (
+        <Button asChild size="sm" className="rounded-full px-6 text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-primary/20">
+            <Link href="/signin">Sign In</Link>
+        </Button>
+    )
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={onOpenChange}>
             <DropdownMenuTrigger asChild>
                 <Button
                     variant="ghost"
-                    className={cn(
-                        "group flex h-auto items-center gap-2.5 rounded-full border border-border/40 bg-background/50 px-2 py-1.5 backdrop-blur-sm transition-all duration-200",
-                        "hover:bg-muted/50 hover:shadow-sm",
-                        "data-[state=open]:bg-muted/80",
-                        isPending && "pointer-events-none opacity-50"
-                    )}
                     disabled={isPending}
+                    className={cn(
+                        "group flex h-11 items-center gap-3 rounded-full border border-border/40 bg-background/40 pl-1.5 pr-4 transition-all duration-300",
+                        "hover:bg-muted/40 hover:border-border hover:shadow-md",
+                        "data-[state=open]:bg-muted/60 data-[state=open]:border-primary/30",
+                        isPending && "opacity-50 grayscale cursor-not-allowed"
+                    )}
                 >
                     <UserAvatar user={user} />
-                    <div className="hidden flex-col items-start pr-1 sm:flex">
-                        <span className="truncate text-[11px] font-black uppercase tracking-tight text-foreground">
+                    <div className="hidden flex-col items-start leading-none sm:flex">
+                        <span className="max-w-[110px] truncate text-[11px] font-black uppercase tracking-tight text-foreground">
                             {displayName}
                         </span>
                     </div>
-                    <ChevronDown className="hidden size-3 text-muted-foreground/60 transition-transform duration-300 group-data-[state=open]:rotate-180 sm:block" />
+                    <ChevronDown className={cn(
+                        "size-3 text-muted-foreground/30 transition-all duration-500",
+                        isOpen && "rotate-180 text-primary scale-110"
+                    )} />
                 </Button>
             </DropdownMenuTrigger>
 
             <AnimatePresence>
                 {isOpen && (
                     <DropdownMenuContent
-                        className="w-64 overflow-hidden rounded-xl border-border/50 bg-background/98 p-0 shadow-2xl backdrop-blur-xl"
-                        side="bottom"
-                        align="end"
-                        sideOffset={8}
-                        asChild
                         forceMount
+                        sideOffset={12}
+                        align="end"
+                        className="w-72 overflow-hidden rounded-[24px] border border-border/40 bg-background/90 p-0 shadow-[0_20px_50px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+                        asChild
                     >
                         <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
-                            <div className="p-3">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <UserAvatar user={user} size="large" />
-                                        <div className="flex flex-col min-w-0">
-                                            <h4 className="truncate text-[11px] font-black uppercase tracking-tight text-foreground">
+                            <div className="relative p-5">
+                                <div className="flex items-center gap-4 min-w-0">
+                                    <UserAvatar user={user} size="large" />
+                                    <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <h4 className="truncate text-[13px] font-black uppercase tracking-tight">
                                                 {displayName}
                                             </h4>
-                                            <p className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-tighter">
-                                                {displayEmail}
-                                            </p>
+                                            <ShieldCheck className="size-3.5 text-primary" />
                                         </div>
+                                        <p className="truncate text-[11px] font-medium text-muted-foreground/60 tracking-tight">
+                                            {user.email}
+                                        </p>
                                     </div>
-                                    <AddAccountButton />
                                 </div>
                             </div>
 
-                            <Separator className="bg-border/40" />
+                            <Separator className="bg-border/20" />
 
-                            <div className="p-1.5">
+                            <div className="p-2">
                                 <DropdownMenuGroup className="space-y-1">
-                                    {MENU_ITEMS.map((item, index) => (
-                                        <motion.div key={item.id} custom={index} variants={menuItemVariants} initial="hidden" animate="visible">
+                                    {MENU_ITEMS.map((item, i) => (
+                                        <motion.div key={item.id} custom={i} variants={itemVariants} initial="hidden" animate="visible">
                                             <DropdownMenuItem asChild>
-                                                <Link href={item.href} className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-muted transition-all">
-                                                    <div className="flex size-7 items-center justify-center rounded-md bg-muted group-hover:bg-background transition-colors">
-                                                        <item.icon className="size-3.5 text-muted-foreground group-hover:text-primary" />
+                                                <Link href={item.href} className="flex cursor-pointer items-center gap-3.5 rounded-2xl px-3 py-2.5 transition-all duration-200 hover:bg-muted group active:scale-[0.98]">
+                                                    <div className="flex size-8 items-center justify-center rounded-xl bg-muted group-hover:bg-background transition-colors shadow-sm group-hover:shadow-md">
+                                                        <item.icon className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                                     </div>
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80 group-hover:text-foreground">
+                                                    <span className="text-[11px] font-black uppercase tracking-widest text-foreground/70 group-hover:text-foreground">
                                                         {item.label}
                                                     </span>
                                                 </Link>
@@ -248,21 +188,21 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                                 </DropdownMenuGroup>
                             </div>
 
-                            <Separator className="bg-border/40" />
-
-                            <div className="p-1.5">
-                                <motion.div custom={MENU_ITEMS.length} variants={menuItemVariants} initial="hidden" animate="visible">
+                            <div className="bg-muted/30 p-2">
+                                <motion.div custom={MENU_ITEMS.length} variants={itemVariants} initial="hidden" animate="visible">
                                     <DropdownMenuItem
                                         onClick={onLogout}
-                                        className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-destructive/10 transition-all"
+                                        className="flex cursor-pointer items-center gap-3.5 rounded-2xl px-3 py-3 transition-all duration-300 hover:bg-destructive/10 text-destructive group active:scale-[0.98]"
                                     >
-                                        <div className="flex size-7 items-center justify-center rounded-md bg-destructive/5 group-hover:bg-destructive/10">
-                                            <LogOut className="size-3.5 text-destructive" />
+                                        <div className="flex size-8 items-center justify-center rounded-xl bg-destructive/5 group-hover:bg-destructive/10 transition-colors shadow-sm">
+                                            <LogOut className="size-4" />
                                         </div>
-                                        <span className="flex-1 text-[10px] font-black uppercase tracking-widest text-destructive">
-                                            Sign out
-                                        </span>
-                                        {isPending && <Spinner className="size-3 text-destructive" />}
+                                        <div className="flex flex-1 flex-col items-start leading-none">
+                                            <span className="text-[11px] font-black uppercase tracking-widest">
+                                                Sign out
+                                            </span>
+                                        </div>
+                                        {isPending && <Spinner className="size-3.5" />}
                                     </DropdownMenuItem>
                                 </motion.div>
                             </div>
@@ -273,4 +213,5 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
         </DropdownMenu>
     )
 })
+
 UserNavUI.displayName = "UserNavUI"

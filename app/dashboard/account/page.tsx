@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { ProfileView } from "@/components/profile/profile-view"
-import { ProfileEditForm } from "@/components/profile/profile-edit-form"
+import { ProfileView } from "@/components/thirdparty-profile/profile-view"
+import { ProfileEditForm } from "@/components/thirdparty-profile/profile-edit-form"
 import { Button } from "@/components/common/button"
 import { ArrowLeft } from "lucide-react"
 

@@ -17,14 +17,23 @@ import {
     Globe,
     Mail,
     Phone,
-    MapPin
+    MapPin,
+    UserCircle,
+    FileText
 } from 'lucide-react';
 
 import { Button } from '@/components/common/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/common/form';
 import { Input } from '@/components/common/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/select';
+
 import { useEnums } from '@/hooks/use-enums';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/common/calendar";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Country {
     id: number;
@@ -33,26 +42,36 @@ interface Country {
     iso2?: string;
 }
 
+interface Locality {
+    ID: number;
+    Name: string;
+}
+
 const formSchema = z.object({
-    ThirdPartyName: z.string()
+    Name: z.string()
         .min(2, 'Company name must be at least 2 characters')
         .max(100, 'Company name must be less than 100 characters')
         .regex(/^[a-zA-Z0-9\s&.-]+$/, 'Company name contains invalid characters'),
     TradingName: z.string()
-        .min(2, 'Trading name must be at least 2 characters')
         .max(100, 'Trading name must be less than 100 characters')
-        .regex(/^[a-zA-Z0-9\s&.-]+$/, 'Trading name contains invalid characters'),
+        .optional()
+        .or(z.literal('')),
     BusinessType: z.string().min(1, 'Please select a business type'),
     RegistrationNumber: z.string()
         .min(1, 'Registration number is required')
         .max(50, 'Registration number must be less than 50 characters'),
     TaxPIN: z.string()
-        .min(1, 'Tax PIN is required')
-        .max(20, 'Tax PIN must be less than 20 characters'),
+        .max(20, 'Tax PIN must be less than 20 characters')
+        .optional()
+        .or(z.literal('')),
     VATNumber: z.string()
         .max(20, 'VAT number must be less than 20 characters')
-        .optional(),
+        .optional()
+        .or(z.literal('')),
+    // Backend expects 'Country' as CountryCode for Phone validation, but also 'CountryId'? 
+    // NewThirdPartyRequest::getCountry() looks up by CountryCode.
     Country: z.string().min(2, 'Country is required'),
+    Location: z.string().min(1, 'Location is required'), // ID
     PhysicalAddress: z.string()
         .min(5, 'Physical address is required')
         .max(200, 'Address must be less than 200 characters'),
@@ -61,656 +80,533 @@ const formSchema = z.object({
         .max(100, 'Email must be less than 100 characters'),
     Phone: z.string()
         .min(10, 'Please enter a valid phone number')
-        .max(20, 'Phone number must be less than 20 characters')
-        .regex(/^[\+]?[0-9\s\-\(\)]+$/, 'Please enter a valid phone number'),
+        .max(20, 'Phone number must be less than 20 characters'),
     Website: z.string()
         .url('Please enter a valid URL')
         .max(100, 'Website URL must be less than 100 characters')
         .optional()
         .or(z.literal('')),
-    ThirdPartyType: z.string().min(1, 'Please select a third party type'),
+
+    // Types - Single Select
+    types: z.string().min(1, 'Please select a third party type'),
+
+    // Conditional Fields
+    tenant_Remarks: z.string().optional(),
+
+    customer_DateOfBirth: z.date().optional(),
+    customer_Gender: z.string().optional(),
+    customer_MaritalStatus: z.string().optional(),
+    customer_Occupation: z.string().optional(),
+}).superRefine((data, ctx) => {
+    // Tenant Validation
+    if (data.types === 'TN') {
+        // Remarks optional for tenant? Blade says required_if:type,TN|nullable. nullable allows empty.
+    }
+    // Customer Validation
+    if (data.types === 'CU') {
+        if (!data.customer_DateOfBirth) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Date of Birth is required for Customers",
+                path: ["customer_DateOfBirth"]
+            });
+        }
+        if (!data.customer_Gender) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Gender is required for Customers",
+                path: ["customer_Gender"]
+            });
+        }
+        if (!data.customer_MaritalStatus) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Marital Status is required for Customers",
+                path: ["customer_MaritalStatus"]
+            });
+        }
+        if (!data.customer_Occupation) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Occupation is required for Customers",
+                path: ["customer_Occupation"]
+            });
+        }
+    }
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-const businessTypes = [
-    { value: 'Sole', label: 'Sole Proprietorship' },
-    { value: 'Partnership', label: 'Partnership' },
-    { value: 'Corporation', label: 'Corporation' },
-    { value: 'LLC', label: 'Limited Liability Company' },
-    { value: 'NGO', label: 'Non-Profit Organization' },
-];
-
-// Removed hardcoded thirdPartyTypes; now fetched dynamically via useEnums("third-party-types")
-
 //animation variants
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            duration: 0.6,
-            ease: [0.22, 1, 0.36, 1],
-            staggerChildren: 0.08,
-        },
-    },
+    visible: { opacity: 1, transition: { duration: 0.6, staggerChildren: 0.08 } },
 };
-
 const itemVariants: Variants = {
     hidden: { opacity: 0, y: 24 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.5,
-            ease: [0.22, 1, 0.36, 1],
-        },
-    },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
-
-const formFieldVariants: Variants = {
-    hidden: { opacity: 0, y: 12 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.4,
-            ease: [0.22, 1, 0.36, 1],
-        },
-    },
-};
-
 const statusVariants: Variants = {
     hidden: { opacity: 0, y: -16, scale: 0.96 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        transition: {
-            duration: 0.4,
-            ease: [0.22, 1, 0.36, 1],
-        },
-    },
-    exit: {
-        opacity: 0,
-        y: -16,
-        scale: 0.96,
-        transition: {
-            duration: 0.3,
-            ease: [0.22, 1, 0.36, 1],
-        },
-    },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4 } },
+    exit: { opacity: 0, y: -16, scale: 0.96, transition: { duration: 0.3 } },
 };
-
-const formFields = [
-    {
-        name: 'ThirdPartyName' as const,
-        label: 'Company Name',
-        placeholder: 'Enter your company name',
-        required: true,
-        icon: Building2,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'TradingName' as const,
-        label: 'Trading Name',
-        placeholder: 'Enter trading name (optional)',
-        required: true,
-        icon: Building2,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'BusinessType' as const,
-        label: 'What is the business type?',
-        placeholder: 'Select business type',
-        required: true,
-        type: 'select',
-        options: businessTypes,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'RegistrationNumber' as const,
-        label: 'Registration Number',
-        placeholder: 'Enter registration number',
-        required: true,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'TaxPIN' as const,
-        label: 'Tax PIN',
-        placeholder: 'Enter tax PIN',
-        required: true,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'VATNumber' as const,
-        label: 'VAT Number',
-        placeholder: 'Enter VAT number (optional)',
-        required: false,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'Country' as const,
-        label: 'Country',
-        placeholder: 'Select country',
-        required: true,
-        type: 'select',
-        options: [], // will be populated dynamically from countries API
-        icon: MapPin,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'PhysicalAddress' as const,
-        label: 'Physical Address',
-        placeholder: 'Enter physical address',
-        required: true,
-        icon: MapPin,
-        gridSpan: 'col-span-full',
-    },
-    {
-        name: 'Email' as const,
-        label: 'Company Email',
-        placeholder: 'Enter company email',
-        required: true,
-        type: 'email',
-        icon: Mail,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'Phone' as const,
-        label: 'Company Phone',
-        placeholder: 'Enter company phone',
-        required: true,
-        type: 'tel',
-        icon: Phone,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'Website' as const,
-        label: 'Website',
-        placeholder: 'https://example.com (optional)',
-        required: false,
-        type: 'url',
-        icon: Globe,
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-    {
-        name: 'ThirdPartyType' as const,
-        label: 'Third Party Type',
-        placeholder: 'Select type',
-        required: true,
-        type: 'select',
-        // options will be injected dynamically from hook data in render
-        options: [],
-        gridSpan: 'col-span-full sm:col-span-1',
-    },
-];
 
 export default function RegisterThirdPartyDetails() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const userId = searchParams.get('user_id');
+    // searchParams and userId moved to lower scope to avoid duplication with new logic
 
-    // Fetch dynamic third party types
-    const { data: thirdPartyTypeOptions, isLoading: thirdPartyTypesLoading, error: thirdPartyTypesError, refetch: refetchThirdPartyTypes } = useEnums('third-party-types');
+
+    // Fetch Enums
+    const { data: businessTypes } = useEnums('BusinessType');
+    const { data: typeOptions } = useEnums('third-party-types');
+    const { data: genderOptions } = useEnums('Gender');
+    const { data: maritalStatusOptions } = useEnums('MaritalStatus');
+    const { data: occupationOptions } = useEnums('Occupation');
 
     const [countries, setCountries] = useState<Country[]>([]);
+    const [localities, setLocalities] = useState<Locality[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+
+    // File upload state (Step 3/4 effectively)
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
-    const [uploadedDocs, setUploadedDocs] = useState<Array<{id:number; name:string; size?:number; previewUrl?:string;}>>([]);
+    const [uploadedDocs, setUploadedDocs] = useState<Array<{ id: number; name: string; size?: number; previewUrl?: string; }>>([]);
     const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
     const [thirdPartyId, setThirdPartyId] = useState<number | null>(null);
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            ThirdPartyName: '',
+            Name: '',
             TradingName: '',
             BusinessType: '',
             RegistrationNumber: '',
             TaxPIN: '',
             VATNumber: '',
             Country: '',
+            Location: '',
             PhysicalAddress: '',
             Email: '',
             Phone: '',
             Website: '',
-            ThirdPartyType: '',
+            types: 'SU', // Default to Supplier
+            tenant_Remarks: '',
+            customer_Gender: '',
+            customer_MaritalStatus: '',
+            customer_Occupation: '',
         },
-    mode: 'onChange',
-    reValidateMode: 'onChange',
-    criteriaMode: 'all',
+        mode: 'onChange',
     });
 
-    const isFormValid = useMemo(() => {
-        return form.formState.isValid;
-    }, [form.formState.isValid]);
+    // Helper to check selected types
+    const selectedType = form.watch('types');
+    const isTenant = selectedType === 'TN';
+    const isCustomer = selectedType === 'CU';
+    const selectedCountry = form.watch('Country');
 
-    const fetchCountries = useCallback(async () => {
-        try {
-            const response = await fetch('/api/v1/countries');
-            if (!response.ok) {
-                throw new Error('Failed to fetch countries.');
-            }
-            const { data }: { data: Country[] } = await response.json();
-            setCountries(data);
-
-            // Set default country name if form doesn't have one
-            if (data.length > 0 && !form.getValues('Country')) {
-                form.setValue('Country', data[0].name, { shouldValidate: true });
-            }
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Error fetching countries.';
-            console.error('Fetch countries error:', errorMessage);
-        }
+    // Fetch Countries
+    useEffect(() => {
+        fetch('/api/v1/countries')
+            .then(res => res.json())
+            .then(data => {
+                const list = data.data || [];
+                setCountries(list.map((c: any) => ({
+                    id: c.id,
+                    name: c.name,
+                    code: c.code, // Expecting CountryCode here
+                    iso2: c.iso2
+                })));
+                if (list.length > 0) {
+                    // Default Kenya if exists or first
+                    const ke = list.find((c: any) => c.code === 'KE');
+                    if (ke) form.setValue('Country', ke.code);
+                    else form.setValue('Country', list[0].code);
+                }
+            })
+            .catch(err => console.error("Failed to fetch countries", err));
     }, [form]);
 
-    const fetchMyThirdParty = useCallback(async () => {
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/me`, {
-                headers: { 'Accept': 'application/json' },
-                credentials: 'include',
-            });
-            if (!response.ok) return;
-            const data = await response.json();
-            // backend returns { data: { Id, ... } } or direct object; support both
-            const tp = (data?.data ?? data) as { Id?: number };
-            if (tp?.Id) setThirdPartyId(tp.Id);
-    } catch {
-            // ignore silently; uploader will stay hidden if not available
-        }
-    }, []);
-
-    const handleError = useCallback((errorMessage: string) => {
-        setError(errorMessage);
-        // Auto-clear error after 10 seconds
-        setTimeout(() => setError(null), 10000);
-    }, []);
-
+    // Fetch Localities when Country changes
     useEffect(() => {
-        if (!userId) {
-            handleError('User ID is missing. Please complete step 1 first.');
-        }
-
-        // Fetch countries on component mount
-        fetchCountries();
-        // Try fetch my third party (if session is active)
-        fetchMyThirdParty();
-    }, [userId, handleError, fetchCountries, fetchMyThirdParty]);
-
-    const onSubmit = async (data: FormData) => {
-        if (!userId) {
-            handleError('User ID is missing. Cannot submit company details.');
+        if (!selectedCountry) {
+            setLocalities([]);
             return;
         }
+        // Fetch localities for country code
+        fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/v1/countries/${selectedCountry}/localities`)
+            .then(res => res.json())
+            .then(data => {
 
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
+                const list = (data.data || []).map((l: any, index: number) => ({
+                    ID: l.ID || l.id || l.iD || l.Id || index,
+                    Name: l.Name || l.name || `Locality ${index}`,
+                }));
+                setLocalities(list);
+            })
+            .catch(err => console.error("Failed to fetch localities", err));
+    }, [selectedCountry]);
 
+
+    // Capture userId from URL query params
+    const searchParams = useSearchParams();
+    const [userId, setUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const uid = searchParams.get('userId'); // Matches 'userId' from backend redirect
+        if (uid) {
+            setUserId(uid);
+
+        } else {
+            // Fallback: try reading from session/auth if logged in, or localStorage?
+            // Since we are moving to NO AUTH flow, URL param is critical.
+            // Maybe show error or redirect if missing?
+            console.warn("No User ID found in URL.");
+        }
+    }, [searchParams]);
+
+    // Check for existing party (if re-visiting) - original useEffect removed as userId is now stateful
+    // useEffect(() => {
+    //     if (userId) {
+    //         // Logic to check if user already has a party could go here,
+    //         // but usually this page is for NEW registration.
+    //     }
+    // }, [userId]);
+
+    const [isSubmitting, setIsSubmitting] = useState(false); // Added for submission state
+
+    const onSubmit = async (data: FormData) => {
+        setIsSubmitting(true);
         try {
+            if (!userId) {
+                toast.error("User identification missing. Please use the link from your email.");
+                setIsSubmitting(false);
+                return;
+            }
+
             const payload = {
                 ...data,
+                types: [data.types], // Backend expects array
                 user_id: userId,
+                // Ensure dates are strings if needed, though JSON.stringify handles Date -> ISO string
+                // Backend NewThirdPartyRequest expects 'customer_DateOfBirth' as 'date' so ISO string works.
             };
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/register-details`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(payload)
             });
 
-            const responseData = await response.json();
+            const resData = await response.json();
 
             if (!response.ok) {
-                if (response.status === 422 && responseData.errors) {
-                    const errorMessages = Object.entries(responseData.errors)
+                if (response.status === 422 && resData.errors) {
+                    const errorMessages = Object.entries(resData.errors)
                         .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
                         .join('; ');
-                    handleError(`Validation failed: ${errorMessages}`);
-                } else {
-                    handleError(responseData.message || 'Registration failed. Please try again.');
+                    throw new Error(`Validation failed: ${errorMessages}`);
                 }
-                return;
+                throw new Error(resData.message || 'Registration failed.');
             }
 
-            setSuccess(responseData.message || 'Company details registered successfully!');
+            setSuccess(resData.message || 'Details registered successfully!');
+            // Extract created party ID for file upload step if we were to stay on page
+            if (resData.third_party?.Id) setThirdPartyId(resData.third_party.Id);
 
-            // Proactively clear any lingering auth session then redirect to signin
+            // Redirect logic
             try {
                 await signOut({ redirect: false });
-            } catch {
-                // no-op: if not signed in, this is safe to ignore
-            }
-            // Auto-redirect after success
+            } catch { }
             setTimeout(() => {
                 router.replace('/signin?registrationSuccess=true');
             }, 1000);
 
-        } catch (err) {
-            console.error('Registration error:', err);
-            handleError('Network error occurred. Please check your connection and try again.');
+        } catch (err: any) {
+            setError(err.message || 'An error occurred.');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSelectedFiles(e.target.files);
-        setUploadError(null);
-    };
-
-    const uploadSupportingDocuments = async () => {
-        if (!thirdPartyId) {
-            setUploadError('Third party not ready yet. Complete details first or sign in.');
-            return;
-        }
-        if (!selectedFiles || selectedFiles.length === 0) {
-            setUploadError('Please select one or more files to upload.');
-            return;
-        }
-        setUploading(true);
-        setUploadError(null);
-        try {
-            const formData = new FormData();
-            Array.from(selectedFiles).forEach((file) => formData.append('files[]', file));
-            const resp = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/${thirdPartyId}/documents`, {
-                method: 'POST',
-                body: formData,
-                // include cookies/session for sanctum
-                credentials: 'include',
-            });
-            const payload = await resp.json();
-            if (!resp.ok) {
-                throw new Error(payload?.message || 'Upload failed');
-            }
-            const docs = (payload?.documents ?? []) as Array<{id:number; name:string; size?:number; previewUrl?:string;}>;
-            setUploadedDocs((prev) => [...docs, ...prev]);
-            setSelectedFiles(null);
-        } catch (err) {
-            const msg = err instanceof Error ? err.message : 'Upload failed';
-            setUploadError(msg);
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    if (error && error.includes('User ID is missing')) {
+    if (!userId && !success) {
         return (
-            <div className="min-h-screen  flex items-center justify-center p-4 sm:p-8">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full max-w-md"
-                >
-                    <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 text-center space-y-6">
-                        <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto">
-                            <AlertCircle className="w-8 h-8 text-red-500" />
-                        </div>
-                        <div className="space-y-3">
-                            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">Access Required</h2>
-                            <p className="text-slate-600 text-sm sm:text-base leading-relaxed">{error}</p>
-                        </div>
-                        <Button
-                            asChild
-                            className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-medium transition-all duration-200"
-                        >
-                            <Link href="/auth/signup">
-                                <ArrowLeft className="w-4 h-4 mr-2" />
-                                Return to Step 1
-                            </Link>
-                        </Button>
-                    </div>
-                </motion.div>
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-sm text-center border border-slate-100 max-w-md">
+                    <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <h2 className="text-xl font-bold mb-2">Access Required</h2>
+                    <p className="text-slate-600 mb-6">User ID is missing. Please register a user first.</p>
+                    <Button asChild className="w-full"><Link href="/signup">Go to Sign Up</Link></Button>
+                </div>
             </div>
         );
     }
 
     return (
         <div className="min-h-screen">
-            <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-                <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="space-y-8 sm:space-y-12"
-                >
-                    <motion.div variants={itemVariants} className="text-center space-y-4 sm:space-y-6">
-                        <div className="space-y-2 sm:space-y-3">
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
-                                Complete Your Setup
-                            </h1>
-                            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed px-4">
-                                Tell us about your business to unlock full platform access
-                            </p>
-                        </div>
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-12">
+                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-8">
+
+                    <motion.div variants={itemVariants} className="text-center space-y-4">
+                        <h1 className="text-3xl font-bold text-slate-900">Complete Your Profile</h1>
+                        <p className="text-slate-600 max-w-2xl mx-auto">
+                            Provide your company details and select your account types.
+                        </p>
                     </motion.div>
 
-                    <AnimatePresence mode="wait">
-                        {success && (
-                            <motion.div
-                                variants={statusVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit="exit"
-                                className="max-w-2xl mx-auto px-4"
-                            >
-                                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6">
-                                    <div className="flex items-start space-x-3 sm:space-x-4">
-                                        <div className="flex-shrink-0">
-                                            <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center">
-                                                <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 space-y-3">
-                                            <p className="text-emerald-800 font-medium text-sm sm:text-base">{success}</p>
-                                            <p className="text-emerald-700 text-xs sm:text-sm">
-                                                Redirecting to login in 3 seconds...
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                    <AnimatePresence>
+                        {error && (
+                            <motion.div variants={statusVariants} initial="hidden" animate="visible" exit="exit" className="bg-red-50 border border-red-200 p-4 rounded-xl flex gap-3 text-red-700">
+                                <AlertCircle className="w-5 h-5 shrink-0" />
+                                <p>{error}</p>
                             </motion.div>
                         )}
-
-                        {error && !success && (
-                            <motion.div
-                                variants={statusVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit="exit"
-                                className="max-w-2xl mx-auto px-4"
-                            >
-                                <div className="bg-red-50 border border-red-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6">
-                                    <div className="flex items-start space-x-3 sm:space-x-4">
-                                        <div className="flex-shrink-0">
-                                            <div className="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center">
-                                                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-red-800 font-medium text-sm sm:text-base break-words">{error}</p>
-                                        </div>
-                                    </div>
+                        {success && (
+                            <motion.div variants={statusVariants} initial="hidden" animate="visible" exit="exit" className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex gap-3 text-emerald-700">
+                                <Check className="w-5 h-5 shrink-0" />
+                                <div>
+                                    <p className="font-medium">{success}</p>
+                                    <p className="text-sm mt-1">Redirecting to login...</p>
                                 </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
 
-                    <motion.div variants={itemVariants} className="max-w-8xl mx-auto">
-                        <div className="bg-white border border-slate-50 rounded-xl overflow-hidden">
-                            <div className="p-6 sm:p-8 lg:p-10">
-                                <Form {...form}>
-                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                                        <motion.div
-                                            variants={formFieldVariants}
-                                            className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6"
-                                        >
-                                            {formFields.map((fieldConfig) => {
-                                                const isThirdPartyType = fieldConfig.name === 'ThirdPartyType';
-                                                const isCountry = fieldConfig.name === 'Country';
-                                                const dynamicOptions = isThirdPartyType
-                                                    ? thirdPartyTypeOptions
-                                                    : isCountry
-                                                    ? countries.map(country => ({ value: country.name, label: country.name }))
-                                                    : fieldConfig.options;
-                                                return (
-                                                <FormField
-                                                    key={fieldConfig.name}
-                                                    control={form.control}
-                                                    name={fieldConfig.name}
-                                                    render={({ field }) => (
-                                                        <FormItem className={`space-y-3 ${fieldConfig.gridSpan}`}>
-                                                            <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                                                                {fieldConfig.icon && (
-                                                                    <fieldConfig.icon className="w-4 h-4 text-slate-500" />
-                                                                )}
-                                                                {fieldConfig.label}
-                                                                {fieldConfig.required && (
-                                                                    <span className="text-red-500 text-xs">*</span>
-                                                                )}
-                                                            </FormLabel>
-                                                            <FormControl>
-                                                                {fieldConfig.type === 'select' ? (
-                                                                    <Select onValueChange={(value) => {
-                                                                        // Country now stores the country name (string)
-                                                                        field.onChange(value);
-                                                                    }} value={String(field.value)}>
-                                                                        <SelectTrigger className="h-12 border-slate-200 rounded-2xl focus:border-slate-400 focus:ring-0 transition-all duration-200 hover:border-slate-300">
-                                                                            <SelectValue placeholder={fieldConfig.placeholder} />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent className="rounded-2xl border-slate-200">
-                                                                            {isThirdPartyType && thirdPartyTypesLoading && (
-                                                                                <div className="px-3 py-2 text-sm text-slate-500">Loading...</div>
-                                                                            )}
-                                                                            {isThirdPartyType && thirdPartyTypesError && (
-                                                                                <div className="px-3 py-2 text-sm text-red-500 flex flex-col gap-2">
-                                                                                    <span>Failed to load options.</span>
-                                                                                    <button type="button" onClick={refetchThirdPartyTypes} className="underline text-blue-600 text-left">Retry</button>
-                                                                                </div>
-                                                                            )}
-                                                                            {!thirdPartyTypesLoading && dynamicOptions?.map((option) => (
-                                                                                <SelectItem
-                                                                                    key={option.value}
-                                                                                    value={option.value}
-                                                                                    className="rounded-xl"
-                                                                                >
-                                                                                    <div className="flex flex-col">
-                                                                                        <span className="font-medium">{option.label}</span>
-                                                                                    </div>
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                ) : (
-                                                                    <Input
-                                                                        type={fieldConfig.type || 'text'}
-                                                                        placeholder={fieldConfig.placeholder}
-                                                                        className="h-12 border-slate-200 rounded-2xl focus:border-slate-400 focus:ring-0 transition-all duration-200 hover:border-slate-300"
-                                                                        {...field}
-                                                                    />
-                                                                )}
-                                                            </FormControl>
-                                                            <FormMessage className="text-xs text-red-600" />
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                                );
-                                            })}
-                                        </motion.div>
+                    <motion.div variants={itemVariants} className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="p-8">
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-                                        {/* Submit Button */}
-                                        <motion.div
-                                            variants={formFieldVariants}
-                                            className="pt-6 border-t border-slate-100"
-                                        >
-                                            <Button
-                                                type="submit"
-                                                disabled={loading || !!success || !isFormValid}
-                                                className="w-full h-12 sm:h-14
-             bg-blue-500 hover:bg-blue-600
-             disabled:bg-blue-200 text-white
-             rounded-2xl font-medium text-sm sm:text-base
-             transition-all duration-200
-             disabled:cursor-not-allowed"
-                                            >
-                                                {loading ? (
-                                                    <>
-                                                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-3 animate-spin" />
-                                                        Processing Registration...
-                                                    </>
-                                                ) : (
-                                                    'Complete Registration'
-                                                )}
-                                            </Button>
+                                    {/* Compnay Info Section */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
+                                            <Building2 className="w-5 h-5 text-blue-600" /> Company Information
+                                        </h3>
 
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField control={form.control} name="Name" render={({ field }) => (
+                                                <FormItem className="col-span-full">
+                                                    <FormLabel>Company Name <span className="text-red-500">*</span></FormLabel>
+                                                    <FormControl><Input placeholder="Legal Company Name" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="TradingName" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Trading Name</FormLabel>
+                                                    <FormControl><Input placeholder="Optional" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="BusinessType" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Business Type <span className="text-red-500">*</span></FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            {businessTypes.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="RegistrationNumber" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Registration Number <span className="text-red-500">*</span></FormLabel>
+                                                    <FormControl><Input {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="TaxPIN" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Tax PIN</FormLabel>
+                                                    <FormControl><Input {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="VATNumber" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>VAT Number</FormLabel>
+                                                    <FormControl><Input {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                        </div>
+                                    </div>
 
-                                            {/* Form progress indicator */}
-                                            <div className="mt-4 text-center">
-                                                <p className="text-xs text-slate-500">
-                                                    Step 2 of 2 • All fields marked with * are required
-                                                </p>
-                                            </div>
-                                        </motion.div>
-                                        {/* Supporting Documents Uploader */}
-                                        {thirdPartyId && (
-                                            <motion.div variants={formFieldVariants} className="space-y-4">
-                                                <div className="border-t border-slate-100 pt-6" />
-                                                <div className="space-y-2">
-                                                    <h3 className="text-lg font-semibold text-slate-900">Supporting Documents</h3>
-                                                    <p className="text-sm text-slate-600">Upload any required certificates or supporting files. You can add multiple files.</p>
-                                                </div>
-                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                                                    <input
-                                                        type="file"
-                                                        multiple
-                                                        onChange={handleFilesChange}
-                                                        className="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                    />
-                                                    <Button type="button" onClick={uploadSupportingDocuments} disabled={uploading || !selectedFiles || selectedFiles.length === 0} className="h-10">
-                                                        {uploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/> Uploading...</> : 'Upload'}
-                                                    </Button>
-                                                </div>
-                                                {uploadError && (
-                                                    <div className="text-sm text-red-600">{uploadError}</div>
-                                                )}
-                                                {uploadedDocs.length > 0 && (
-                                                    <div className="mt-2 space-y-2">
-                                                        <h4 className="text-sm font-medium text-slate-800">Uploaded</h4>
-                                                        <ul className="space-y-1">
-                                                            {uploadedDocs.map((d) => (
-                                                                <li key={d.id} className="text-sm text-slate-700 flex items-center gap-2">
-                                                                    <span className="truncate">{d.name}</span>
-                                                                    {typeof d.size === 'number' && <span className="text-slate-400">• {(d.size/1024).toFixed(1)} KB</span>}
-                                                                    {d.previewUrl && (
-                                                                        <a className="text-blue-600 hover:underline" href={d.previewUrl} target="_blank" rel="noreferrer">Preview</a>
-                                                                    )}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
+                                    {/* Contact & Location */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
+                                            <MapPin className="w-5 h-5 text-blue-600" /> Location & Contact
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField control={form.control} name="Email" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                                                    <FormControl><Input type="email" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="Phone" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Phone <span className="text-red-500">*</span></FormLabel>
+                                                    <FormControl><Input type="tel" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="Country" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Country <span className="text-red-500">*</span></FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            {countries.map(c => <SelectItem key={c.id} value={c.code}>{c.name}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="Location" render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Location / City <span className="text-red-500">*</span></FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value} disabled={localities.length === 0}>
+                                                        <FormControl><SelectTrigger><SelectValue placeholder={localities.length === 0 ? "Select country first" : "Select location"} /></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            {localities.map((l, index) => <SelectItem key={l.ID || `loc-${index}`} value={String(l.ID)}>{l.Name}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="PhysicalAddress" render={({ field }) => (
+                                                <FormItem className="col-span-full">
+                                                    <FormLabel>Physical Address <span className="text-red-500">*</span></FormLabel>
+                                                    <FormControl><Input {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="Website" render={({ field }) => (
+                                                <FormItem className="col-span-full">
+                                                    <FormLabel>Website</FormLabel>
+                                                    <FormControl><Input placeholder="https://..." {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                        </div>
+                                    </div>
+
+                                    {/* Account Types */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
+                                            <UserCircle className="w-5 h-5 text-blue-600" /> Account Types
+                                        </h3>
+                                        <FormField control={form.control} name="types" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Account Type <span className="text-red-500">*</span></FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl><SelectTrigger><SelectValue placeholder="Select account type" /></SelectTrigger></FormControl>
+                                                    <SelectContent>
+                                                        {typeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+
+                                        {/* Tenant Fields */}
+                                        {isTenant && (
+                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-slate-50 p-6 rounded-xl space-y-4">
+                                                <h4 className="font-medium text-slate-800">Tenant Details</h4>
+                                                <FormField control={form.control} name="tenant_Remarks" render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Remarks</FormLabel>
+                                                        <FormControl><Input {...field} /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )} />
                                             </motion.div>
                                         )}
 
-                                    </form>
-                                </Form>
-                            </div>
-                        </div>
-                    </motion.div>
+                                        {/* Customer Fields */}
+                                        {isCustomer && (
+                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-slate-50 p-6 rounded-xl space-y-4">
+                                                <h4 className="font-medium text-slate-800">Customer Details</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <FormField control={form.control} name="customer_DateOfBirth" render={({ field }) => (
+                                                        <FormItem className="flex flex-col">
+                                                            <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
+                                                            <Popover>
+                                                                <PopoverTrigger asChild>
+                                                                    <FormControl>
+                                                                        <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal h-12 rounded-2xl", !field.value && "text-muted-foreground")}>
+                                                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                                        </Button>
+                                                                    </FormControl>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-auto p-0" align="start">
+                                                                    <Calendar
+                                                                        mode="single"
+                                                                        selected={field.value}
+                                                                        onSelect={field.onChange}
+                                                                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                                                                        initialFocus
+                                                                    />
+                                                                </PopoverContent>
+                                                            </Popover>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="customer_Gender" render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+                                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                                <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                                                                <SelectContent>
+                                                                    {genderOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="customer_MaritalStatus" render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Marital Status <span className="text-red-500">*</span></FormLabel>
+                                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                                <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                                                                <SelectContent>
+                                                                    {maritalStatusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="customer_Occupation" render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Occupation <span className="text-red-500">*</span></FormLabel>
+                                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                                <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                                                                <SelectContent>
+                                                                    {occupationOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )} />
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </div>
 
-                    {/* Footer */}
-                    <motion.div variants={itemVariants} className="text-center">
-                        <p className="text-xs sm:text-sm text-slate-500">
-                            Need help? Contact our support team for assistance.
-                        </p>
+                                    <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                                        {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : 'Complete Registration'}
+                                    </Button>
+
+                                </form>
+                            </Form>
+                        </div>
                     </motion.div>
                 </motion.div>
             </div>

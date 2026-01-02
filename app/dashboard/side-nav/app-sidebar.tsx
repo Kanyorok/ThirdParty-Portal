@@ -212,11 +212,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavMain items={mainNavigationSections} />
             </SidebarContent>
 
-            <SidebarFooter className="p-6 border-t border-border/40 space-y-4">
-                <NavSecondary items={bottomNavigationItems} />
-                <div className="mt-6 px-3 py-4 flex items-center justify-between opacity-40 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500 bg-muted/30 rounded-lg border border-border/40">
-                    <span className="text-[10px] font-black tracking-widest uppercase">&copy; {currentYear}</span>
-                    <span className="text-[10px] font-black tracking-widest bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-2 py-1 rounded shadow-sm">V1.0.0</span>
+            <SidebarFooter className="p-4 mt-auto border-t border-border/40 bg-gradient-to-t from-muted/20 to-transparent">
+                <div className="space-y-4">
+                    <NavSecondary items={bottomNavigationItems} />
+
+                    <div className="flex flex-col gap-3 px-1">
+                        <div className="pt-3 border-t border-border/20 flex items-center justify-between opacity-30 hover:opacity-100 transition-all duration-500 group">
+                            <span className="text-[8px] font-black tracking-widest uppercase group-hover:text-primary transition-colors">
+                                &copy; {currentYear} <br /> {CLIENT_APP_NAME_STRING}
+                            </span> 
+                            <span className="text-[8px] font-medium tracking-widest uppercase">
+                                Privacy & Terms
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </SidebarFooter>
         </Sidebar>

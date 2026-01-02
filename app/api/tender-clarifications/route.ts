@@ -79,10 +79,18 @@ export async function GET(request: NextRequest) {
               pages: Math.ceil(result.total / result.limit),
             },
           });
+        } else {
+          const errorData = await response.json();
+          return NextResponse.json(errorData, { status: response.status });
         }
       } catch (e) {
         console.error("ERP Fetch Error:", e);
       }
+    } else {
+      return NextResponse.json(
+        { error: "Configuration Error", details: "NEXT_PUBLIC_EXTERNAL_API_URL is not defined" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -103,8 +111,10 @@ export async function POST(request: NextRequest) {
     const session = await getAuthSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body: CreateClarificationRequest = await request.json();
-    const { tenderId, question, isPublic, attachments } = body;
+    const body = await request.json();
+    // Support both camelCase and snake_case
+    const tenderId = body.tenderId || body.tender_id;
+    const { question, isPublic, attachments } = body;
 
     if (!tenderId || !question?.trim()) {
       return NextResponse.json({ error: "Tender ID and question are required" }, { status: 400 });
@@ -140,6 +150,11 @@ export async function POST(request: NextRequest) {
         const data = await response.json();
         return NextResponse.json({ message: "Submitted successfully", data });
       }
+    } else {
+      return NextResponse.json(
+        { error: "Configuration Error", details: "NEXT_PUBLIC_EXTERNAL_API_URL is not defined" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });

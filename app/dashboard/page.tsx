@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/ca
 import { containerVariants, itemVariants } from '@/lib/dashboard-animations'
 import SummaryCharts from '@/components/dashboard/summary-charts'
 import { usePageTitle } from '@/hooks/use-page-title'
+import { TenantDashboard } from "@/components/dashboard/tenant-dashboard"
+
 
 type DashboardLayoutProps = {
     children: React.ReactNode
@@ -53,27 +55,60 @@ function DashboardContent() {
         session?.user?.name?.split(" ")[0] ||
         "User"
 
-    return (
-        <DashboardLayout className="bg-gradient-to-br from-background via-background to-muted/10">
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-10"
-            >
-                <motion.div variants={itemVariants}>
-                    <WelcomeHeader firstName={firstName} />
-                </motion.div>
+    if (status === "authenticated" && session?.user) {
+        const firstName =
+            session.user.thirdParty?.thirdPartyName ||
+            session.user.thirdParty?.tradingName ||
+            session.user.thirdParty?.label ||
+            session.user.firstName ||
+            session.user.email?.split("@")[0] ||
+            "User"
 
-                <motion.section
-                    variants={itemVariants}
-                    aria-labelledby="summary-heading"
-                >
-                    <Card className="shadow-none border-none bg-transparent mt-1">
-                        <CardHeader className="p-0">
-                            <CardTitle id="summary-heading">Key Metrics</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0 pt-6">
+        // Render specialized dashboard for Tenants
+        if (session.user.isTenant && !session.user.isSupplier) {
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+                    <div className="max-w-7xl mx-auto p-4 md:p-8">
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="space-y-12"
+                        >
+                            <WelcomeHeader firstName={firstName} />
+
+                            <TenantDashboard />
+                        </motion.div>
+                    </div>
+                </div>
+            )
+        }
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+                <div className="max-w-7xl mx-auto p-4 md:p-8">
+                    <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="space-y-12"
+                    >
+                        <WelcomeHeader firstName={firstName} />
+
+
+                        <motion.section
+                            variants={itemVariants}
+                            aria-labelledby="summary-heading"
+                            className="space-y-6"
+                        >
+                            <div className="flex items-center justify-between">
+                                <h2
+                                    id="summary-heading"
+                                    className="text-2xl font-semibold text-foreground"
+                                >
+                                    Request Summary
+                                </h2>
+                            </div>
                             <Suspense fallback={<DashboardSkeleton />}>
                                 <RequestSummaryCards />
                             </Suspense>
@@ -93,11 +128,15 @@ function DashboardContent() {
                             <Suspense fallback={<DashboardSkeleton />}>
                                 <SummaryCharts />
                             </Suspense>
-                        </CardContent>
-                    </Card>
-                </motion.section>
-            </motion.div>
-        </DashboardLayout>
+                        </motion.section>
+                    </motion.div>
+            </div>
+            </div >
+        )
+    }
+
+    return (
+        <ErrorState message="An unexpected error occurred. Please try refreshing the page." />
     )
 }
 

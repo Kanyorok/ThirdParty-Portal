@@ -45,9 +45,10 @@ interface ResetPasswordState {
 
 interface ResetPasswordFormProps {
     token: string
+    email: string
 }
 
-export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
+export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [state, setState] = useState<ResetPasswordState>({ type: "idle" })
@@ -121,7 +122,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             setState({ type: "loading" })
 
             try {
-                const result = await resetPassword(token, data.password)
+                const result = await resetPassword(token, data.password, email)
 
                 if (result.success) {
                     setState({

@@ -17,12 +17,13 @@ import type { RfqHeader, RfqLineItem, RfqDocumentAttachment, SupplierLineRespons
 
 type CurrencyOption = { id?: string; name: string; code: string; symbol: string; isDefault?: boolean };
 type SupplierProfile = { tradingName?: string; businessType?: string; registrationNumber?: string; taxPin?: string; email?: string; phone?: string; country?: string; physicalAddress?: string };
-type ResponseItem = { rfqLineId: string; quotedPrice?: number | null; totalPayable?: number | null; leadTimeDays?: number | null; comments?: string | null };
-type SupplierResponse = { currency?: string; durationDays?: number; items?: ResponseItem[]; submittedAt?: string };
+type ResponseItem = { rfqLineId: string; quotedPrice?: number | null; totalPayable?: number | null; comments?: string | null };
+type SupplierResponse = { currency?: string; durationDays?: number; leadTimeDays?: number; items?: ResponseItem[]; submittedAt?: string };
 
 interface RfqDetails {
     header: RfqHeader;
     lines: RfqLineItem[];
+    branding?: { name?: string; motto?: string; logo?: string; address?: string; email?: string; phone?: string };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -118,13 +119,14 @@ function normalizeDetails(data: unknown): (RfqDetails & { currencies?: CurrencyO
             // prefer the DB column names used by your backend
             quotedPrice: (it.QuotedPrice ?? it.quotedPrice ?? it.unitPrice) ?? null,
             totalPayable: (it.TotalPayable ?? it.totalPayable ?? it.totalPrice) ?? null,
-            leadTimeDays: (it.leadTimeDays ?? it.leadTime ?? null) ?? null,
+            // leadTimeDays: (it.leadTimeDays ?? it.leadTime ?? null) ?? null, // Removed per item lead time
             comments: toStringSafe(it.Comments ?? it.comments ?? it.remark ?? null) || null,
         }));
         response = {
             currency: String(responseRaw.currency ?? responseRaw.currencyCode ?? ""),
             // accept DurationDays (DB) or durationDays
             durationDays: Number.isFinite(Number(responseRaw.DurationDays ?? responseRaw.durationDays)) ? Number(responseRaw.DurationDays ?? responseRaw.durationDays) : undefined,
+            leadTimeDays: Number.isFinite(Number(responseRaw.LeadTimeDays ?? responseRaw.leadTimeDays)) ? Number(responseRaw.LeadTimeDays ?? responseRaw.leadTimeDays) : undefined,
             items,
             submittedAt: String(responseRaw.submittedAt ?? responseRaw.createdAt ?? responseRaw.created_on ?? ""),
         };
@@ -132,7 +134,8 @@ function normalizeDetails(data: unknown): (RfqDetails & { currencies?: CurrencyO
     } else if (typeof (container as any).status === "string") {
         isSubmitted = ((container as any).status || "").toUpperCase() === "SUBMITTED";
     }
-    return { header, lines, currencies, response, isSubmitted };
+    const branding = (container.branding || (rfqRaw as any)?.branding) as any;
+    return { header, lines, currencies, response, isSubmitted, branding };
 }
 
 export default function RfqDetailPage() {
@@ -147,7 +150,8 @@ export default function RfqDetailPage() {
     const [currencies, setCurrencies] = useState<CurrencyOption[]>([]);
     const [currency, setCurrency] = useState<string>("");
     const [durationDays, setDurationDays] = useState<string>("14");
-    const [lineResponses, setLineResponses] = useState<Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }>>({});
+    const [leadTimeDays, setLeadTimeDays] = useState<string>("");
+    const [lineResponses, setLineResponses] = useState<Record<string, SupplierLineResponseInput & { comments?: string | null }>>({});
     const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
     const [profile, setProfile] = useState<SupplierProfile | null>(null);
 
@@ -227,38 +231,39 @@ export default function RfqDetailPage() {
             }
             // if response present (already submitted), seed fields and lock editing
             if (normalized.response) {
-                    const responseMap: Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }> = {};
-                    const respItems = (normalized.response as SupplierResponse).items || [];
-                    normalized.lines.forEach((l, idx) => {
-                        // try to find matching item by rfqLineId
-                        let it = respItems.find((x: any) => x && String(x.rfqLineId ?? x.lineId ?? x.RFQLineID ?? "") === String(l.id));
-                        // fallback: use item at same index if available
-                        if (!it) it = respItems[idx];
+                const responseMap: Record<string, SupplierLineResponseInput & { comments?: string | null }> = {};
+                const respItems = (normalized.response as SupplierResponse).items || [];
+                normalized.lines.forEach((l, idx) => {
+                    // try to find matching item by rfqLineId
+                    let it = respItems.find((x: any) => x && String(x.rfqLineId ?? x.lineId ?? x.RFQLineID ?? "") === String(l.id));
+                    // fallback: use item at same index if available
+                    if (!it) it = respItems[idx];
 
-                        const itAny = it as any;
-                        const quoted = (itAny?.quotedPrice ?? itAny?.QuotedPrice ?? itAny?.unitPrice) ?? undefined;
-                        const total = (itAny?.totalPayable ?? itAny?.TotalPayable ?? itAny?.totalPrice) ?? (quoted != null ? Number((quoted * l.quantity).toFixed(2)) : undefined);
-                        const perItemLead = itAny?.leadTimeDays ?? itAny?.leadTime ?? undefined;
-                        const comments = (itAny?.comments ?? itAny?.Comments ?? "") || "";
+                    const itAny = it as any;
+                    const quoted = (itAny?.quotedPrice ?? itAny?.QuotedPrice ?? itAny?.unitPrice) ?? undefined;
+                    const total = (itAny?.totalPayable ?? itAny?.TotalPayable ?? itAny?.totalPrice) ?? (quoted != null ? Number((quoted * l.quantity).toFixed(2)) : undefined);
+                    const perItemLead = itAny?.leadTimeDays ?? itAny?.leadTime ?? undefined;
+                    const comments = (itAny?.comments ?? itAny?.Comments ?? "") || "";
 
-                        responseMap[l.id] = {
-                            lineItemId: l.id,
-                            unitPrice: quoted ?? undefined,
-                            totalPrice: total ?? undefined,
-                            // prefer per-item lead time, else use response.durationDays
-                            leadTimeDays: perItemLead ?? (normalized.response?.durationDays ?? undefined),
-                            comments: comments ?? "",
-                        } as any;
-                    });
+                    responseMap[l.id] = {
+                        lineItemId: l.id,
+                        unitPrice: quoted ?? undefined,
+                        totalPrice: total ?? undefined,
+                        // prefer per-item lead time, else use response.durationDays
+                        // leadTimeDays: perItemLead ?? (normalized.response?.durationDays ?? undefined), // Removed
+                        comments: comments ?? "",
+                    } as any;
+                });
                 setLineResponses(responseMap);
                 if (normalized.response.currency) setCurrency(normalized.response.currency);
                 if (normalized.response.durationDays) setDurationDays(String(normalized.response.durationDays));
+                if (normalized.response.leadTimeDays) setLeadTimeDays(String(normalized.response.leadTimeDays));
                 setIsSubmitted(Boolean(normalized.isSubmitted));
             } else {
                 // seed lineResponses (no previous submission)
-                const seed: Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }> = {};
+                const seed: Record<string, SupplierLineResponseInput & { comments?: string | null }> = {};
                 normalized.lines.forEach((l) => {
-                    seed[l.id] = { lineItemId: l.id, unitPrice: undefined, totalPrice: undefined, leadTimeDays: undefined, comments: "" } as any;
+                    seed[l.id] = { lineItemId: l.id, unitPrice: undefined, totalPrice: undefined, comments: "" } as any;
                 });
                 setLineResponses(seed);
             }
@@ -301,7 +306,7 @@ export default function RfqDetailPage() {
 
     const onChangeUnitPrice = (lineId: string, value: string) => {
         setLineResponses((prev) => {
-            const current = { ...(prev[lineId] || { lineItemId: lineId }) } as SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null };
+            const current = { ...(prev[lineId] || { lineItemId: lineId }) } as SupplierLineResponseInput & { comments?: string | null };
             const unitPrice = value ? parseFloat(value) : undefined;
             current.unitPrice = Number.isFinite(unitPrice as number) ? unitPrice : undefined;
             const line = details?.lines.find((l) => l.id === lineId);
@@ -314,14 +319,7 @@ export default function RfqDetailPage() {
 
     // Total price is auto-calculated from unit price * quantity; no direct editing handler
 
-    const onChangeLeadTime = (lineId: string, value: string) => {
-        setLineResponses((prev) => {
-            const current = { ...(prev[lineId] || { lineItemId: lineId }) } as SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null };
-            const days = value ? parseInt(value) : undefined;
-            current.leadTimeDays = Number.isFinite(days as number) ? days : undefined;
-            return { ...prev, [lineId]: current };
-        });
-    };
+    // Removed onChangeLeadTime as it is now header level
 
     const onChangeComments = (lineId: string, value: string) => {
         setLineResponses((prev) => {
@@ -338,16 +336,20 @@ export default function RfqDetailPage() {
                 rfqLineId: r.lineItemId,
                 quotedPrice: r.unitPrice ?? null,
                 totalPayable: r.totalPrice ?? null,
+                // leadTimeDays: r.leadTimeDays ?? null, // Removed
+                comments: r.comments ?? null,
             }));
         const duration = Number.parseInt(durationDays || "0", 10);
+        const leadTime = Number.parseInt(leadTimeDays || "0", 10);
         return {
             rfqId,
             currency: currency || undefined,
             durationDays: duration,
+            leadTimeDays: leadTime,
             isDraft: isDraft || undefined,
             items,
         } as Record<string, unknown>;
-    }, [rfqId, currency, durationDays, lineResponses]);
+    }, [rfqId, currency, durationDays, leadTimeDays, lineResponses]);
 
     const submitResponse = async (isDraft: boolean) => {
         try {
@@ -355,6 +357,12 @@ export default function RfqDetailPage() {
             const duration = Number.parseInt(durationDays || "0", 10);
             if (!Number.isFinite(duration) || duration < 1) {
                 setError("Offer validity (days) is required and must be at least 1");
+                setSaving(false);
+                return;
+            }
+            const leadTime = Number.parseInt(leadTimeDays || "0", 10);
+            if (!Number.isFinite(leadTime) || leadTime < 1) {
+                setError("Lead time (days) is required and must be at least 1");
                 setSaving(false);
                 return;
             }
@@ -485,6 +493,10 @@ export default function RfqDetailPage() {
                         <Label htmlFor="durationDays">Offer validity (days)</Label>
                         <Input id="durationDays" inputMode="numeric" pattern="[0-9]*" className="mt-1" value={durationDays} onChange={(e) => setDurationDays(e.target.value.replace(/[^0-9]/g, ""))} disabled={isSubmitted} />
                     </div>
+                    <div className="w-48">
+                        <Label htmlFor="leadTimeDays">Lead time (days)</Label>
+                        <Input id="leadTimeDays" inputMode="numeric" pattern="[0-9]*" className="mt-1" value={leadTimeDays} onChange={(e) => setLeadTimeDays(e.target.value.replace(/[^0-9]/g, ""))} disabled={isSubmitted} />
+                    </div>
                     <div className="ml-auto text-sm text-muted-foreground">Grand total: <span className="font-medium">{currency || ""} {grandTotal.toLocaleString()}</span></div>
                 </div>
                 <Table>
@@ -493,10 +505,9 @@ export default function RfqDetailPage() {
                             <TableHead>Description</TableHead>
                             <TableHead>Qty</TableHead>
                             <TableHead>UOM</TableHead>
-                            <TableHead>Specification / Notes</TableHead>
                             <TableHead>Unit price</TableHead>
                             <TableHead>Total price</TableHead>
-                            <TableHead>Lead time (days)</TableHead>
+                            {/* <TableHead>Lead time (days)</TableHead> */ /* Removed */}
                             <TableHead>Comments</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -510,16 +521,15 @@ export default function RfqDetailPage() {
                                     </TableCell>
                                     <TableCell>{l.quantity}</TableCell>
                                     <TableCell>{l.unitOfMeasure}</TableCell>
-                                    <TableCell className="max-w-[320px] text-muted-foreground">{l.specification || "-"}</TableCell>
                                     <TableCell className="w-40">
                                         <Input inputMode="decimal" value={r.unitPrice != null ? String(r.unitPrice) : ""} onChange={(e) => onChangeUnitPrice(l.id, e.target.value.replace(/[^0-9.]/g, ""))} disabled={isSubmitted} />
                                     </TableCell>
                                     <TableCell className="w-40">
                                         <Input inputMode="decimal" value={r.totalPrice != null ? String(r.totalPrice) : ""} readOnly />
                                     </TableCell>
-                                    <TableCell className="w-40">
+                                    {/* <TableCell className="w-40">
                                         <Input inputMode="numeric" pattern="[0-9]*" value={r.leadTimeDays != null ? String(r.leadTimeDays) : ""} onChange={(e) => onChangeLeadTime(l.id, e.target.value.replace(/[^0-9]/g, ""))} disabled={isSubmitted} />
-                                    </TableCell>
+                                    </TableCell> */ /* Removed */}
                                     <TableCell className="min-w-[240px]">
                                         <Textarea rows={2} value={r.comments || ""} onChange={(e) => onChangeComments(l.id, e.target.value)} disabled={isSubmitted} />
                                     </TableCell>
@@ -601,11 +611,25 @@ export default function RfqDetailPage() {
             </Accordion>
             {/* Print-friendly quotation view */}
             <div className="hidden print:block">
-                <div className="mb-4">
-                    <div className="text-xl font-semibold">Quotation</div>
-                    <div className="text-sm text-muted-foreground">Generated on {format(new Date(), "PPpp")}</div>
+                <div className="mb-8 flex justify-between items-start">
+                    <div>
+                        {details.branding?.logo && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={details.branding.logo} alt="Logo" className="h-16 mb-2 object-contain" />
+                        )}
+                        <div className="text-2xl font-bold text-primary">{details.branding?.name || "Organization Name"}</div>
+                        <div className="text-sm text-muted-foreground italic">{details.branding?.motto || ""}</div>
+                        <div className="text-sm mt-2">{details.branding?.address || ""}</div>
+                        <div className="text-sm">{details.branding?.email || ""} | {details.branding?.phone || ""}</div>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-3xl font-bold text-gray-800 mb-1">QUOTATION</div>
+                        <div className="text-sm text-muted-foreground">Date: {format(new Date(), "PP")}</div>
+                        <div className="text-sm text-muted-foreground">Ref: {header.referenceNumber}</div>
+                    </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
+
+                <div className="grid grid-cols-2 gap-8 mb-8 border-t border-b py-4">
                     <div>
                         <div className="font-medium">Supplier</div>
                         <div>{profile?.tradingName || ""}</div>
@@ -615,13 +639,27 @@ export default function RfqDetailPage() {
                         <div className="text-sm">Tax PIN: {profile?.taxPin || ""}</div>
                     </div>
                     <div>
-                        <div className="font-medium">RFQ</div>
-                        <div>{header.title}</div>
-                        <div className="text-sm">Ref: {header.referenceNumber}</div>
+                        <div className="font-bold uppercase text-xs text-muted-foreground mb-1">Quotation For</div>
+                        <div className="font-semibold text-lg">{header.title}</div>
+                        <div className="text-sm mt-1">Ref: {header.referenceNumber}</div>
                         {header.closingDate && <div className="text-sm">Closing: {format(new Date(header.closingDate), "PPpp")}</div>}
-                        <div className="text-sm">Currency: {currency}</div>
-                        <div className="text-sm">Offer validity: {durationDays} day(s)</div>
-                        <div className="text-sm font-medium">Grand total: {currency} {grandTotal.toLocaleString()}</div>
+                    </div>
+                </div>
+
+                <div className="mb-6">
+                    <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Currency</div>
+                            <div className="font-medium">{currency}</div>
+                        </div>
+                        <div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Offer Validity</div>
+                            <div className="font-medium">{durationDays} Days</div>
+                        </div>
+                        <div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Lead Time</div>
+                            <div className="font-medium">{leadTimeDays} Days</div>
+                        </div>
                     </div>
                 </div>
                 <table className="w-full text-sm border-collapse" style={{ borderSpacing: 0 }}>
@@ -633,7 +671,7 @@ export default function RfqDetailPage() {
                             <th className="border p-2 text-left">UOM</th>
                             <th className="border p-2 text-right">Unit price</th>
                             <th className="border p-2 text-right">Total price</th>
-                            <th className="border p-2 text-right">Lead time</th>
+                            {/* <th className="border p-2 text-right">Lead time</th> */}
                             <th className="border p-2 text-left">Comments</th>
                         </tr>
                     </thead>
@@ -649,18 +687,29 @@ export default function RfqDetailPage() {
                                     <td className="border p-2">{l.unitOfMeasure}</td>
                                     <td className="border p-2 text-right">{r.unitPrice != null ? r.unitPrice.toLocaleString() : ""}</td>
                                     <td className="border p-2 text-right">{total.toLocaleString()}</td>
-                                    <td className="border p-2 text-right">{r.leadTimeDays ?? ""}</td>
+                                    {/* <td className="border p-2 text-right">{r.leadTimeDays ?? ""}</td> */}
                                     <td className="border p-2">{r.comments || ""}</td>
                                 </tr>
                             );
                         })}
-                        <tr>
-                            <td className="border p-2" colSpan={5}></td>
-                            <td className="border p-2 text-right font-semibold">Grand total: {currency} {grandTotal.toLocaleString()}</td>
-                            <td className="border p-2" colSpan={2}></td>
+                        <tr className="bg-gray-50">
+                            <td className="border p-2 text-right font-bold" colSpan={5}>Grand Total</td>
+                            <td className="border p-2 text-right font-bold">{currency} {grandTotal.toLocaleString()}</td>
+                            <td className="border p-2" colSpan={1}></td>
                         </tr>
                     </tbody>
                 </table>
+
+                <div className="mt-12 pt-8 border-t">
+                    <div className="flex justify-between items-end">
+                        <div className="w-64 border-t border-gray-400 pt-2 text-center text-sm">
+                            Authorized Signature
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                            Generated by BR_ERP Supplier Portal
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

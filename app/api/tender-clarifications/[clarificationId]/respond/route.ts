@@ -31,7 +31,7 @@ interface TenderClarification {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -39,9 +39,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-  const url = new URL(request.url);
-  const parts = url.pathname.split("/");
-  const clarificationId = parts[parts.length - 2];
+    const url = new URL(request.url);
+    const parts = url.pathname.split("/");
+    const clarificationId = parts[parts.length - 2];
     const body: RespondClarificationRequest = await request.json();
     const { response, responseBy, publishToAll, status, attachments } = body;
 
@@ -72,7 +72,7 @@ export async function PUT(request: NextRequest) {
       try {
         // Send response to external ERP API - direct Laravel call
         const apiUrl = `${externalApiUrl}/api/tender-clarifications/${clarificationId}/respond`;
-        
+
         const apiResponse = await fetch(apiUrl, {
           method: 'PUT',
           headers: {
@@ -121,7 +121,7 @@ export async function PUT(request: NextRequest) {
       modifiedOn: new Date().toISOString(),
     };
 
-    console.log('Mock clarification response submitted:', mockUpdatedClarification);
+
 
     return NextResponse.json({
       message: "Clarification response submitted successfully (mock mode)",

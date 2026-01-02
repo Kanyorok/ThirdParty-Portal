@@ -2,7 +2,7 @@ import {
     NavSection,
     UserProfile,
     USER_TYPES,
-} from "@/types/profile-types";
+} from "@/types/profile-types"
 import {
     LayoutDashboard,
     Bell,
@@ -23,9 +23,9 @@ import {
     Settings,
     HelpCircle,
     Send,
-} from "lucide-react";
+} from "lucide-react"
 
-const allProfiles: readonly UserProfile[] = USER_TYPES.map(u => u.value);
+const allProfiles: readonly UserProfile[] = USER_TYPES.map(u => u.value)
 
 export const sidebarItems: readonly NavSection[] = [
     {
@@ -145,13 +145,12 @@ export const sidebarItems: readonly NavSection[] = [
                         url: "/dashboard/tenant/lease-actions/termination",
                         icon: XOctagon,
                         allowedProfiles: ["Tenant"],
-                        // disabled: true,
                     },
                 ],
             },
             {
-                title: "Contracts & offers",
-                url: "/dashboard/tenant/contracts",
+                title: "Invoices",
+                url: "/dashboard/tenant/invoices",
                 icon: FileText,
                 allowedProfiles: ["Tenant"],
             },
@@ -202,4 +201,4 @@ export const sidebarItems: readonly NavSection[] = [
             },
         ],
     },
-] as const;
+] as const

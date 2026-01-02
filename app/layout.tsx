@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Geist } from "next/font/google"
 import "@/styles/globals.css"
-import { NextAuthProvider } from "@/app/providers"
+import { NextAuthProvider } from "@/components/providers/providers"
 import { CLIENT_APP_NAME, CLIENT_APP_NAME_STRING } from "@/config/client-config"
 
 const geist = Geist({

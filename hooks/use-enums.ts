@@ -21,7 +21,7 @@ export const useEnums = (endpoint: string): UseEnumsResult => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchEnums = useCallback(async () => {
-        const isPublic = ['third-party-types'].includes(endpoint);
+        const isPublic = ['third-party-types', 'BusinessType', 'Gender', 'MaritalStatus', 'Occupation'].includes(endpoint);
         if (status === 'loading' && !isPublic) return;
         if (!isPublic && !session?.accessToken) {
             setIsLoading(false);
@@ -51,7 +51,7 @@ export const useEnums = (endpoint: string): UseEnumsResult => {
     }, [endpoint, session?.accessToken, status]);
 
     useEffect(() => {
-        const isPublic = ['third-party-types'].includes(endpoint);
+        const isPublic = ['third-party-types', 'BusinessType', 'Gender', 'MaritalStatus', 'Occupation'].includes(endpoint);
         if (isPublic) {
             fetchEnums();
             return;

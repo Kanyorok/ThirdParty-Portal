@@ -87,12 +87,12 @@ const NavItemExpanded = memo(
     isSubmenuOpen: (subItems?: readonly NavSubItem[]) => boolean
     onItemClick?: (item: NavMainItem | NavSubItem) => void
   }) => {
+    const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems])
+    const isOpen = useMemo(() => isSubmenuOpen(item.subItems), [isSubmenuOpen, item.subItems])
+
     const handleItemClick = useCallback(() => {
       if (!item.disabled && !item.comingSoon) onItemClick?.(item)
     }, [item, onItemClick])
-
-    const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems])
-    const isOpen = useMemo(() => isSubmenuOpen(item.subItems), [isSubmenuOpen, item.subItems])
 
     const menuButtonContent = (
       <>

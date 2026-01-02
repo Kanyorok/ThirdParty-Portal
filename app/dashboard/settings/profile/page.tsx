@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ProfileView } from "@/components/profile/profile-view";
-import { ProfileEditForm } from "@/components/profile/profile-edit-form";
-import { SupplierProfileView } from "@/components/profile/supplier-profile-view";
-import { TenantProfileView } from "@/components/profile/tenant-profile-view";
-import { CustomerProfileView } from "@/components/profile/customer-profile-view";
-import { ProfileSwitcher, type ProfileType } from "@/components/profile/profile-switcher";
+import { ProfileView } from "@/components/thirdparty-profile/profile-view";
+import { ProfileEditForm } from "@/components/thirdparty-profile/profile-edit-form";
+import { SupplierProfileView } from "@/components/thirdparty-profile/supplier-profile-view";
+import { TenantProfileView } from "@/components/thirdparty-profile/tenant-profile-view";
+import { CustomerProfileView } from "@/components/thirdparty-profile/customer-profile-view";
+import { ProfileSwitcher, type ProfileType } from "@/components/thirdparty-profile/profile-switcher";
 import { Button } from "@/components/common/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -28,11 +28,11 @@ export default function ProfilePage() {
       case 'base':
         return <ProfileView onEdit={() => setIsEditing(true)} />;
       case 'supplier':
-        return <SupplierProfileView onEdit={() => {/* TODO: Add supplier edit */}} />;
+        return <SupplierProfileView onEdit={() => {/* TODO: Add supplier edit */ }} />;
       case 'tenant':
-        return <TenantProfileView onEdit={() => {/* TODO: Add tenant edit */}} />;
+        return <TenantProfileView onEdit={() => {/* TODO: Add tenant edit */ }} />;
       case 'customer':
-        return <CustomerProfileView onEdit={() => {/* TODO: Add customer edit */}} />;
+        return <CustomerProfileView onEdit={() => {/* TODO: Add customer edit */ }} />;
       default:
         return <ProfileView onEdit={() => setIsEditing(true)} />;
     }
