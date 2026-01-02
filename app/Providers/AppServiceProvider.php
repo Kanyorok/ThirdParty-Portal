@@ -293,8 +293,8 @@ class AppServiceProvider extends ServiceProvider
             ->needs(ApprovalWorkflow::class)
             ->give(function () {
                 return new ApprovalWorkflow(
-                    'TenderStatus',      // CodeID for tender approval workflow
-                    'ApprovalStatus'     // Status column name - THIS WAS WRONG
+                    'TenderApprovalStatus',      // Correct CodeID for verification
+                    'ApprovalStatus'             // Status column name
                 );
             });
 

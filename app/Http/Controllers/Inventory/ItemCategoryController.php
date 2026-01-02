@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Services\Inventory\ItemCategoryService;
 
+use App\Models\Inventory\ItemType;
+
 class ItemCategoryController extends Controller
 {
     protected $service;
@@ -43,7 +45,7 @@ class ItemCategoryController extends Controller
         }
 
         $categories = ItemCategories::whereNull('ParentId')
-            ->with('parent', 'status')
+            ->with('parent', 'status', 'itemType.type')
             ->orderByDesc('Id')
             ->paginate($perPage);
 
@@ -62,7 +64,9 @@ class ItemCategoryController extends Controller
             ->where('Status', $activeStatusId)
             ->get();
 
-        return view('inventory.itemmaster.itemcategory.create', compact('categories'));
+        $itemTypes = ItemType::with('type')->where('Active', 1)->get();
+
+        return view('inventory.itemmaster.itemcategory.create', compact('categories', 'itemTypes'));
     }
 
     public function store(StoreItemCategoryRequest $request)
@@ -85,7 +89,7 @@ class ItemCategoryController extends Controller
 
     public function show($id)
     {
-        $category = ItemCategories::with('parent', 'children')->findOrFail($id);
+        $category = ItemCategories::with('parent', 'children', 'itemType.type')->findOrFail($id);
         $this->authorize('view', $category);
         return view('inventory.itemmaster.itemcategory.show', compact('category'));
     }
@@ -98,7 +102,9 @@ class ItemCategoryController extends Controller
         $status = CodeDetail::where('CodeID', 'CategoryStatus')
             ->orderBy('Value')
             ->get();
-        return view('inventory.itemmaster.itemcategory.edit', compact('category', 'categories', 'status'));
+        $itemTypes = ItemType::with('type')->where('Active', 1)->get();
+
+        return view('inventory.itemmaster.itemcategory.edit', compact('category', 'categories', 'status', 'itemTypes'));
     }
 
     public function update(UpdateItemCategoryRequest $request, $id)

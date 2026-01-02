@@ -1,8 +1,11 @@
 services:
-    laravel:
+    app:
         # 1. Use a specific image tag, not 'build'
         # In production, you do not build from source on the client's machine.
         # You run a pre-built image that you created on your machine.
+        build:
+            context: .
+            dockerfile: docker/Dockerfile
         image: my-app/brerp:v1.0.0 
         
         container_name: BRERP
@@ -15,6 +18,7 @@ services:
         # CRITICAL: We REMOVED "- .:/var/www"
         # We only mount directories that need to persist data.
         volumes:
+            - .:/var/www
             # Persist logs so they don't vanish on restart
             - logs:/var/www/storage/logs
             

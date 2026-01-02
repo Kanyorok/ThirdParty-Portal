@@ -31,17 +31,23 @@ class RFQResponseController extends Controller
         ->get(['Id', 'Name', 'Code', 'Symbol']);
     
     // Get suppliers with proper relationship
-    $suppliers = Supplier::with('supplierMaster.thirdParty')
-        ->whereNull('DeletedOn')
-        ->where('Active_Status', 1)
-        ->get()
-        ->map(function($supplier) {
-            return [
-                'Id' => $supplier->Id,
-                'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName 
-                    ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
-            ];
-        });
+   $suppliers = Supplier::with('supplierMaster.party')
+    ->whereNull('DeletedOn')
+    ->where('Active_Status', 1)
+    ->whereHas('supplierMaster', function($query) {
+        $query->whereNull('DeletedOn')
+              ->whereHas('party', function($q) {
+                  $q->whereNull('DeletedOn');
+              });
+    })
+    ->get()
+    ->map(function($supplier) {
+        return [
+            'Id' => $supplier->Id,
+            'SupplierName' => $supplier->supplierMaster->party->TradingName 
+                ?? $supplier->supplierMaster->party->ThirdPartyName
+        ];
+    });
     
     return view('procurement.rfqresponses.create', compact('rfqs', 'suppliers', 'currencies'));
 }
@@ -266,7 +272,7 @@ public function store(Request $request)
         ->where('rr.Status', 'FINAL')
         ->pluck('sm.ThirdPartyId');
     
-    // FIXED: Check if t_RFQ_Supplier table exists, otherwise get all suppliers
+    //  Check if t_RFQ_Supplier table exists, otherwise get all suppliers
     $hasInvitationTable = Schema::hasTable('t_RFQ_Supplier');
     
     if ($hasInvitationTable) {

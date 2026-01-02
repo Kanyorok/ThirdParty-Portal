@@ -109,99 +109,242 @@ public static function addRequisition($branch, $department, $remarks, $procureme
  * Auto-populate requisition items from procurement plan
  * Uses PlanLineRef to track which items came from the plan
  */
+/**
+ * Auto-populate requisition items from procurement plan
+ * Uses PlanLineRef to track which items came from the plan
+ */
 private static function autoPopulateItemsFromPlan($requisitionId, $planId, User $actor)
 {
     try {
-        // Get draft status ID for requisition lines
-        $draftStatusId = DB::table('t_CodeDetails')
-            ->where('CodeId', 'RequisitionStatus')
-            ->where('Description', 'Draft')
-            ->where('IsActive', 1)
+        Log::info("=== AUTO-POPULATE START ===", [
+            'requisition_id' => $requisitionId,
+            'plan_id' => $planId,
+            'user_id' => $actor->Id
+        ]);
+
+        // Check if plan exists
+        $planExists = DB::table('t_ConsolidatedProcurementPlan')
+            ->where('PlanID', $planId)
             ->whereNull('DeletedOn')
-            ->value('ID');
+            ->exists();
         
-        // Get medium urgency ID (default)
-        $mediumUrgencyId = DB::table('t_CodeDetails')
-            ->where('CodeId', 'UrgencyLevel')
-            ->where('Value', '3')
+        if (!$planExists) {
+            Log::warning("Plan does not exist", ['plan_id' => $planId]);
+            return 0;
+        }
+
+        // Check plan line items
+        $planLineCount = DB::table('t_PlanLineItem')
+            ->where('PlanID', $planId)
+            ->whereNull('DeletedOn')
+            ->count();
+        
+        Log::info("Plan line items count", ['plan_id' => $planId, 'count' => $planLineCount]);
+
+        if ($planLineCount === 0) {
+            Log::warning("No line items found in plan", ['plan_id' => $planId]);
+            return 0;
+        }
+
+        // Get a valid status for requisition lines
+        // Try multiple status codes in order of preference
+        $statusCodes = ['Su', 'PE', 'DR']; // Submitted, Pending, Draft
+        $statusId = null;
+        
+        foreach ($statusCodes as $code) {
+            $statusId = DB::table('t_CodeDetails')
+                ->where('CodeID', 'RequisitionStatus')
+                ->where('Value', $code)
+                ->where('IsActive', 1)
+                ->whereNull('DeletedOn')
+                ->value('ID');
+            
+            if ($statusId) {
+                Log::info("Found status", ['code' => $code, 'id' => $statusId]);
+                break;
+            }
+        }
+        
+        // If no status found, use NULL (will rely on default)
+        if (!$statusId) {
+            Log::warning("No suitable status found, using NULL");
+        }
+        
+        // Get urgency - if not available, use NULL
+        $urgencyId = DB::table('t_CodeDetails')
+            ->where('CodeID', 'UrgencyLevel')
             ->where('IsActive', 1)
             ->whereNull('DeletedOn')
+            ->orderBy('ID')
             ->value('ID');
 
-        // Get all line items from the procurement plan with full details
+        if (!$urgencyId) {
+            Log::info("No urgency level found - will use NULL");
+        }
+
+        // FIXED: Properly join to get item type information
         $planItems = DB::table('t_PlanLineItem as pli')
-            ->join('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
-            ->leftJoin('t_ItemTypes as it', 'itm.TypeID', '=', 'it.Id')
+            ->leftJoin('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
+            ->leftJoin('t_ItemTypes as it', 'itm.ItemType', '=', 'it.Id')
             ->where('pli.PlanID', $planId)
             ->whereNull('pli.DeletedOn')
             ->select(
                 'pli.LineItemID',
                 'pli.ItemID',
-                'itm.Name as ItemName',
-                'pli.ItemDescription as Description',
+                'pli.ItemDescription as PlanDescription',
                 'pli.Quantity as PlanQuantity',
                 'pli.UOMID',
                 'pli.UnitPrice',
-                'it.TypeName as ItemType'
+                'itm.ItemName',
+                'itm.ItemDescription as ItemDescription',
+                'itm.ItemType as ItemTypeId',
+                'it.TypeName as ItemTypeCode' // This is actually an ID reference
             )
             ->get();
 
+        Log::info("Plan items fetched", [
+            'count' => $planItems->count(),
+            'sample' => $planItems->first() ? json_encode($planItems->first()) : null
+        ]);
+
         if ($planItems->isEmpty()) {
-            Log::warning("No items found in procurement plan {$planId}");
+            Log::error("No items found in plan after join - check table structure");
+            
+            // Debug: Check what's actually in the plan
+            $rawPlanItems = DB::table('t_PlanLineItem')
+                ->where('PlanID', $planId)
+                ->whereNull('DeletedOn')
+                ->get();
+            
+            Log::info("Raw plan items (without joins)", [
+                'count' => $rawPlanItems->count(),
+                'sample' => $rawPlanItems->first() ? json_encode($rawPlanItems->first()) : null
+            ]);
+            
             return 0;
         }
 
         $itemsAdded = 0;
+        $errors = [];
         
         foreach ($planItems as $item) {
-            // Calculate remaining quantity (already used in other requisitions)
-            $usedQty = DB::table('t_RequisitionLines')
-                ->where('PlanLineRef', $item->LineItemID)
-                ->whereNull('DeletedOn')
-                ->sum('Quantity');
-            
-            $remainingQty = $item->PlanQuantity - $usedQty;
-            
-            // Only add if there's remaining quantity
-            if ($remainingQty > 0) {
-                // Get UOM name
-                $uomName = DB::table('t_UnitOfMeasurement')
-                    ->where('Id', $item->UOMID)
-                    ->value('Name');
+            try {
+                Log::info("Processing plan item", [
+                    'line_item_id' => $item->LineItemID,
+                    'item_id' => $item->ItemID,
+                    'plan_quantity' => $item->PlanQuantity
+                ]);
+
+                // Calculate remaining quantity
+                $usedQty = DB::table('t_RequisitionLines')
+                    ->where('PlanLineRef', $item->LineItemID)
+                    ->whereNull('DeletedOn')
+                    ->sum('Quantity') ?? 0;
                 
-                // Insert directly into t_RequisitionLines
-                // Note: We're NOT using the stored procedure here because we need specific control
-                DB::table('t_RequisitionLines')->insert([
-                    'Type' => $item->ItemType ?? 'General',
-                    'Item' => $item->ItemID,
-                    'Description' => $item->Description ?? $item->ItemName,
-                    'UOM' => $uomName ?? 'Unit',
-                    'Quantity' => $remainingQty,
-                    'ExpectedPrice' => $item->UnitPrice ?? 0, // Unit price, not total
-                    'UrgencyID' => $mediumUrgencyId ?? 1,
-                    'StatusID' => $draftStatusId ?? 1,
-                    'PlanLineRef' => $item->LineItemID, // Link to plan line - THIS IS KEY!
+                $remainingQty = $item->PlanQuantity - $usedQty;
+                
+                Log::info("Quantity calculation", [
+                    'plan_qty' => $item->PlanQuantity,
+                    'used_qty' => $usedQty,
+                    'remaining_qty' => $remainingQty
+                ]);
+                
+                if ($remainingQty <= 0) {
+                    Log::info("Skipping - no remaining quantity", ['line_item_id' => $item->LineItemID]);
+                    continue;
+                }
+
+                // Get UOM - try to get the actual UOM code
+                $uomName = 'Unit'; // Default
+                if (!empty($item->UOMID)) {
+                    $uom = DB::table('t_UOM')
+                        ->where('Id', $item->UOMID)
+                        ->first();
+                    
+                    if ($uom) {
+                        $uomName = $uom->Code ?? $uom->Name ?? $uomName;
+                        Log::info("UOM lookup", ['uom_id' => $item->UOMID, 'uom' => $uomName]);
+                    } else {
+                        Log::warning("UOM not found", ['uom_id' => $item->UOMID]);
+                    }
+                }
+                
+                // Prepare description - use the most descriptive available
+                $description = trim($item->PlanDescription ?? $item->ItemDescription ?? $item->ItemName ?? 'Item');
+                
+                // Prepare insert data with all required fields
+                $insertData = [
                     'RequisitionID' => $requisitionId,
+                    'Item' => $item->ItemID,
+                    'Description' => $description,
+                    'UOM' => $uomName,
+                    'Quantity' => $remainingQty,
+                    'ExpectedPrice' => $item->UnitPrice ?? 0,
+                    'PlanLineRef' => $item->LineItemID,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
                     'CreatedOn' => now(),
                     'ModifiedOn' => now(),
+                ];
+                
+                // Add optional fields only if they have values
+                if ($statusId) {
+                    $insertData['StatusID'] = $statusId;
+                }
+                
+                if ($urgencyId) {
+                    $insertData['UrgencyID'] = $urgencyId;
+                }
+                
+                if (!empty($item->ItemTypeId)) {
+                    $insertData['Type'] = $item->ItemTypeId;
+                }
+                
+                Log::info("Attempting to insert requisition line", [
+                    'data' => $insertData
                 ]);
                 
+                DB::table('t_RequisitionLines')->insert($insertData);
+                
                 $itemsAdded++;
+                
+                Log::info("Item added successfully", [
+                    'items_added' => $itemsAdded,
+                    'line_item_id' => $item->LineItemID
+                ]);
+                
+            } catch (\Exception $itemError) {
+                $errorMsg = "Failed to insert line item {$item->LineItemID}: {$itemError->getMessage()}";
+                Log::error($errorMsg, [
+                    'item' => $item,
+                    'insert_data' => $insertData ?? null,
+                    'trace' => $itemError->getTraceAsString()
+                ]);
+                $errors[] = $errorMsg;
             }
         }
+        
+        if (!empty($errors)) {
+            Log::warning("Some items failed to import", ['errors' => $errors]);
+        }
+        
+        Log::info("=== AUTO-POPULATE COMPLETE ===", [
+            'total_items_added' => $itemsAdded,
+            'total_errors' => count($errors),
+            'requisition_id' => $requisitionId,
+            'plan_id' => $planId
+        ]);
         
         return $itemsAdded;
         
     } catch (\Exception $e) {
-        Log::error("Failed to auto-populate items from plan: " . $e->getMessage(), [
+        Log::error("=== AUTO-POPULATE FAILED ===", [
             'plan_id' => $planId,
             'requisition_id' => $requisitionId,
+            'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ]);
         
-        // Don't throw - let requisition be created even if items fail
         return 0;
     }
 }
