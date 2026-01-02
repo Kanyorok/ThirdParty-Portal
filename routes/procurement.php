@@ -86,7 +86,17 @@ use App\Http\Controllers\Procurement\TimelineController;
 Route::middleware(['module:300000'])->namespace('Procurement')->group(function () {
 
     //Requisitions
+    //Requisitions
     Route::resource('requisition', 'RequisitionsController');
+
+    //this route is static affecting orders\create.blade.php & requisitions\show
+    Route::get('requisitionItem/getItems/{type?}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
+
+    // this route is static affecting orders\create.blade.php & requisitions\show
+    Route::get('requisitionItem/getItemDetails/{item}', action: [RequisitionItemsController::class, 'getItemDetails'])->name('requisitionItem.getItemDetails');
+
+    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
+
     Route::resource('requisitionItem', 'RequisitionItemsController');
     Route::post('department-needs/{NeedID}/submit', [DepartmentNeedsController::class, 'submit'])
         ->name('department-needs.submit');
@@ -113,17 +123,8 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     Route::post('requisition/{id}/submit', [RequisitionsController::class, 'submit'])
         ->name('requisition.submit');
 
-    //this route is static affecting orders\create.blade.php & requisitions\show
-    Route::get('requisitionItem/getItems', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');
-
-    // this route is static affecting orders\create.blade.php & requisitions\show
-    Route::get('requisitionItem/getItemDetails/{item}', action: [RequisitionItemsController::class, 'getItemDetails'])->name('requisitionItem.getItemDetails');
-
     Route::get('procurement/requisition/getPlanDetails/{id}', [RequisitionsController::class, 'getPlanDetails'])
         ->name('requisition.getPlanDetails');
-
-
-    Route::get('requisitionItem/create/{id}', [RequisitionItemsController::class, 'create'])->name('requisitionItems.create');
 
     Route::post('requisitionLine/{lineId}/updateQuantity', [
         \App\Http\Controllers\Procurement\RequisitionItemsController::class,
@@ -738,7 +739,7 @@ Route::get('contracts/create-from-award/{awardId}', [ContractsController::class,
 
 // Contract Legal Integration (specific routes before generic)
 Route::get('contracts/legal/integration', [ContractsController::class, 'legalIntegration'])->name('contracts.legal.index');
-Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('contracts.show');
+Route::get('contracts/{id}/view', [ContractsController::class, 'show'])->name('contracts.show');
 Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
 Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
 

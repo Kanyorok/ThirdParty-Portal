@@ -86,12 +86,45 @@
                                 <p id="RequisitionNo_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
+                            @if(!$hasPlan)
                             <div class="mb-3">
-                                <label for="Item" class="form-label">Select Item from Plan <span class="text-danger">*</span></label>
-                                <select class="form-control" name="Item" id="Item" required>
-                                    <option value="" selected disabled>Loading items from plan...</option>
+                                <label class="form-label" for="Type">Item Type <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Type" id="Type" required>
+                                    <option value="" selected disabled>Select item type</option>
+                                    @if(isset($types) && $types->count() > 0)
+                                        @foreach($types as $type)
+                                            <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
+                                        @endforeach
+                                    @else
+                                        <option value="">No item types available</option>
+                                    @endif
                                 </select>
-                                <small class="form-text text-muted">Items shown are from your procurement plan with available quantities</small>
+                                <p id="Type_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+                            @endif
+
+                            <div class="mb-3">
+                                <label for="Item" class="form-label">
+                                    @if($hasPlan)
+                                        Select Item from Plan <span class="text-danger">*</span>
+                                    @else
+                                        Select Item <span class="text-danger">*</span>
+                                    @endif
+                                </label>
+                                <select class="form-control" name="Item" id="Item" required>
+                                    @if($hasPlan)
+                                        <option value="" selected disabled>Loading items from plan...</option>
+                                    @else
+                                        <option value="" selected disabled>Select item type first</option>
+                                    @endif
+                                </select>
+                                <small class="form-text text-muted">
+                                    @if($hasPlan)
+                                        Items shown are from your procurement plan with available quantities
+                                    @else
+                                        Select an item type above to load available items
+                                    @endif
+                                </small>
                                 <p id="Item_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
@@ -180,9 +213,13 @@
         }
 
         $(function() {
-            // Open modal and load items from plan
+            // Open modal and load items
             $(document).on('click', '.modal-create-item', function() {
+                @if($hasPlan)
                 $(".modal-title").html('Add Item from Plan');
+                @else
+                $(".modal-title").html('Add Item');
+                @endif
                 
                 const requisitionId = getRequisitionIdFromUrl();
                 $('#RequisitionID').val(requisitionId);
@@ -191,7 +228,12 @@
                 // Reset form
                 $('#createRequisitionItemForm')[0].reset();
                 $('#RequisitionID').val(requisitionId);
+                @if($hasPlan)
                 $('#Item').empty().append('<option value="" selected disabled>Loading items from plan...</option>');
+                @else
+                $('#Item').empty().append('<option value="" selected disabled>Select item type first</option>');
+                $('#Type').val('');
+                @endif
                 $('#AvailableQty').val('');
                 $('#UOM_Display').val('');
                 $('#CategoryId').val('');
@@ -202,16 +244,18 @@
                 $('#createRequisitionItem').removeClass('d-none');
                 $Modal.modal('show');
                 
+                @if($hasPlan)
                 // Load items from plan immediately
-                loadPlanItems(requisitionId);
+                loadItems(requisitionId);
+                @endif
             });
 
-            // Load items from procurement plan
-            function loadPlanItems(requisitionId) {
+            // Load items (from plan or by type)
+            function loadItems(requisitionId, type = null) {
                 console.log('Loading items from plan for requisition:', requisitionId);
                 
                 $.ajax({
-                    url: `/requisitionItem/getItems`,
+                    url: type ? `/requisitionItem/getItems/${type}` : `/requisitionItem/getItems`,
                     type: 'GET',
                     data: {
                         requisition_id: requisitionId
@@ -225,7 +269,7 @@
                         $('#Item').empty();
                         
                         if (response.success && response.data && response.data.length > 0) {
-                            $('#Item').append('<option value="" selected disabled>Select an item from plan</option>');
+                            $('#Item').append('<option value="" selected disabled>Select an item</option>');
                             
                             $.each(response.data, function(index, item) {
                                 console.log('Processing item:', item);
@@ -255,35 +299,50 @@
                             // Initialize Select2
                             $('#Item').select2({
                                 dropdownParent: $Modal,
-                                placeholder: "Select an item from plan",
+                                placeholder: "Select an item",
                                 width: '100%'
                             });
                             
                             console.log('Items loaded successfully:', response.data.length);
                         } else {
-                            $('#Item').append('<option value="">No items available in plan</option>');
-                            console.log('No items found in plan');
+                            $('#Item').append('<option value="">No items available</option>');
+                            console.log('No items found');
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('Failed to load plan items:', {
+                        console.error('Failed to load items:', {
                             status: xhr.status,
                             response: xhr.responseJSON,
                             error: error
                         });
                         
-                        $('#Item').empty().append('<option value="">Error loading items from plan</option>');
+                        $('#Item').empty().append('<option value="">No items available for this type</option>');
                         
-                        let errorMsg = 'Failed to load items from plan. ';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMsg += xhr.responseJSON.message;
-                        } else {
-                            errorMsg += 'Please ensure a procurement plan is linked to this requisition.';
-                        }
-                        alert(errorMsg);
+                        // Don't show alert popup - just log and show user-friendly message
+                        console.log('No items found or error occurred. Please try a different type or contact support if the issue persists.');
                     }
                 });
             }
+
+            @if(!$hasPlan)
+            // Handle Type selection - load items
+            $('#Type').on('change', function() {
+                const typeId = $(this).val();
+                
+                console.log('Type selected:', typeId);
+                
+                if (typeId !== '' && typeId !== null) {
+                    const requisitionId = $('#RequisitionID').val();
+                    
+                    console.log('Fetching items for type ID:', typeId, 'requisition:', requisitionId);
+                    
+                    loadItems(requisitionId, typeId);
+                } else {
+                    // Clear items when no type selected
+                    $('#Item').empty().append('<option value="" selected disabled>Select item type first</option>');
+                }
+            });
+            @endif
 
             // Handle Item selection
             $('#Item').on('change', function() {

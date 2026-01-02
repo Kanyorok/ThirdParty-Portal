@@ -427,6 +427,8 @@ class AppServiceProvider extends ServiceProvider
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItem::getPrimaryKey() => PlanLineItem::class,
+            \App\Models\Procurement\TenderAward::getPrimaryKey() => \App\Models\Procurement\TenderAward::class,
+            \App\Models\Procurement\RFQAward::getPrimaryKey() => \App\Models\Procurement\RFQAward::class,
 
             //iINVENTORY
             ItemMasterList::getPrimaryKey() => ItemMasterList::class,

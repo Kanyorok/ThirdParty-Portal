@@ -235,6 +235,8 @@ enum PermissionEnum: string
         //case SchedulePlanRead = 'scheduleplan-read';
         //case SchedulePlanWrite = 'scheduleplan-create';
         //case SchedulePlanUpdate = 'scheduleplan-update';
+        
+    case ContractApprove = 'contract-approve';
         /*
     *
     * ========================================  Inventory  ========================================

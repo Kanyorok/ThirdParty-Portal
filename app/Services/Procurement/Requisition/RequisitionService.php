@@ -187,7 +187,7 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
             ->select(
                 'pli.LineItemID',
                 'pli.ItemID',
-                'pli.ItemDescription as PlanDescription',
+                // 'pli.ItemDescription as PlanDescription', // Column does not exist
                 'pli.Quantity as PlanQuantity',
                 'pli.UOMID',
                 'pli.UnitPrice',
@@ -442,7 +442,8 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                     WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
                     THEN t_ConsolidatedProcurementPlan.Title + ' - ' + t_ConsolidatedProcurementPlan.ReferenceNumber
                     ELSE NULL
-                END AS PlanTitle")
+                END AS PlanTitle"),
+                't_Requisitions.PlanRef'
             ])
             ->groupBy(
                 't_Requisitions.Id',
@@ -457,9 +458,11 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                 't_ConsolidatedProcurementPlan.PlanID',
                 't_ConsolidatedProcurementPlan.Title',
                 't_ConsolidatedProcurementPlan.ReferenceNumber',
+                't_ConsolidatedProcurementPlan.ReferenceNumber',
                 't_Requisitions.CreatedBy',
                 't_Users.Name',
-                't_Requisitions.DocStatus'
+                't_Requisitions.DocStatus',
+                't_Requisitions.PlanRef'
             )
             ->first();
     }

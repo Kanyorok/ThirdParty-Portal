@@ -28,7 +28,7 @@
                         @endif
 
                         @if($contract->ContractStatus === 'Draft Created')
-                            <a href="{{ route('contracts.edit', $contract->Id) }}" class="btn btn-primary">
+                            <a href="{{ route('contracts.edit', ['id' => $contract->Id, 'type' => $type ?? 'tender']) }}" class="btn btn-primary">
                                 <i class="fas fa-edit"></i> Edit Contract
                             </a>
                         @elseif(in_array($contract->ContractStatus, ['Approved', 'Executed']) && $contract->ContractStatus !== 'Terminated')
@@ -133,7 +133,13 @@
                                 <table class="table table-borderless">
                                     <tr>
                                         <td><strong>Winning Supplier:</strong></td>
-                                        <td>{{ $contract->winningSupplier->thirdParty->TradingName ?? ($contract->winningSupplier->thirdParty->Name ?? 'N/A') }}</td>
+                                        <td>{{ 
+                                            $contract->winningSupplier->supplierMaster->party->TradingName 
+                                            ?? $contract->winningSupplier->thirdParty->TradingName 
+                                            ?? $contract->winningSupplier->thirdParty->Name 
+                                            ?? $contract->winningSupplier->SupplierName 
+                                            ?? 'N/A' 
+                                        }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Contact Person:</strong></td>
@@ -258,7 +264,27 @@
                             <div class="mt-3">
                                 <h6 class="text-primary">⚖️ Special Conditions</h6>
                                 <div class="bg-light p-3 rounded">
-                                    {{ $contract->SpecialConditions }}
+                                    @php
+                                        $conditions = json_decode($contract->SpecialConditions, true);
+                                    @endphp
+
+                                    @if(json_last_error() === JSON_ERROR_NONE && is_array($conditions))
+                                        @foreach($conditions as $item)
+                                            @if(isset($item['type']) && $item['type'] === 'Original Special Conditions')
+                                                <div class="mb-2">
+                                                    {{ $item['content'] }}
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                        
+                                        {{-- If no original conditions found in JSON, but array exists (e.g. only files), show nothing or message --}}
+                                        @if(collect($conditions)->where('type', 'Original Special Conditions')->isEmpty())
+                                            <span class="text-muted">No text conditions specified.</span>
+                                        @endif
+                                    @else
+                                        {{-- Legacy: Display as raw string --}}
+                                        {{ $contract->SpecialConditions }}
+                                    @endif
                                 </div>
                             </div>
                         @endif
@@ -451,6 +477,7 @@
             // Create FormData
             const formData = new FormData();
             formData.append('contract_document', fileInput.files[0]);
+            formData.append('award_type', '{{ $type ?? "tender" }}');
             formData.append('_token', '{{ csrf_token() }}');
 
             // Create XMLHttpRequest for progress tracking
@@ -583,6 +610,13 @@
                 form.method = 'POST';
                 form.action = '{{ route("contracts.submitForReview", $contract->Id) }}';
 
+                // Add award_type hidden input
+                const typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'award_type';
+                typeInput.value = '{{ $type ?? "tender" }}';
+                form.appendChild(typeInput);
+
                 // Add CSRF token
                 const csrfToken = document.createElement('input');
                 csrfToken.type = 'hidden';
@@ -624,6 +658,7 @@
                             </div>
                             <form action="{{ route('contracts.addAddendum', $contract->Id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
+                                <input type="hidden" name="award_type" value="{{ $type ?? 'tender' }}">
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label">Addendum Title <span class="text-danger">*</span></label>

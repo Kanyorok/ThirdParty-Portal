@@ -32,7 +32,6 @@ class PurchaseOrderController extends Controller
     public function __construct(
         protected ItemService $itemService,
         protected OrderService $orderService,
-        protected SupplierService $supplierService,
         protected DocumentApprovalService $documentApprovalService,
         protected RFQService $rfqService,
         protected ApprovalWorkflow $workflowService  // Changed type hint
@@ -113,7 +112,7 @@ class PurchaseOrderController extends Controller
 
             $rfqResponses = $this->rfqService->fetchRFQ();
             $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
-            $suppliers = $this->supplierService->getSuppliers();
+            $suppliers = SupplierService::getSuppliers();
 
             // Fetch payment terms from t_CodeDetails
             $paymentTerms = CodeDetail::query()
@@ -589,7 +588,7 @@ class PurchaseOrderController extends Controller
     public function getSuppliers(): JsonResponse
     {
         try {
-            $suppliers = $this->supplierService->getSuppliers();
+            $suppliers = SupplierService::getSuppliers();
             return response()->json([
                 'success' => true,
                 'data' => $suppliers,
@@ -605,7 +604,7 @@ class PurchaseOrderController extends Controller
     public function getSupplierDetails($supplier): JsonResponse
     {
         try {
-            $details = $this->supplierService->getSupplierDetails($supplier);
+            $details = SupplierService::getSupplierDetails($supplier);
             $address = '';
             if ($details) {
                 if (is_array($details) && isset($details['Address'])) {

@@ -221,7 +221,7 @@ class TenderAward extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'tender_award';
     }
 
      /**

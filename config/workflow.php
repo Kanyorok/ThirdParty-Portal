@@ -116,6 +116,20 @@ return [
         'Cancelled' => \App\Enums\Core\ApprovalEnum::Cancelled->value,  // 'Ca'
     ],
 
+    'tender_award' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+    ],
+
+    'rfq_award' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+    ],
+
 
 
     /*

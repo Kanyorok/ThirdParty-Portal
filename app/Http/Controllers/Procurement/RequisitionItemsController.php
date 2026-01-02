@@ -24,14 +24,15 @@ class RequisitionItemsController extends Controller
     }
 
     /**
-     * Get items by type - returns items from plan if available, otherwise all items
+     * Get items by type - returns items from plan if available, otherwise items by type or all items
      */
-    public function getItems(Request $request): JsonResponse
+    public function getItems(Request $request, $type = null): JsonResponse
     {
         try {
             $requisitionId = $request->query('requisition_id');
             
             Log::info('getItems called', [
+                'type' => $type,
                 'requisition_id' => $requisitionId
             ]);
             
@@ -60,13 +61,19 @@ class RequisitionItemsController extends Controller
                     'plan_id' => $planRef,
                     'count' => $items->count()
                 ]);
-            }
-            
-            // Fallback to all items if no plan or no plan items available
-            if ($items->isEmpty()) {
-                Log::info('Fetching generic items (no plan items available)');
-                
-                $items = $this->getGenericItems();
+            } else {
+                // No plan, get items by type or all items
+                if ($type && $type !== 'all') {
+                    Log::info('Fetching items by type (no plan)', [
+                        'type' => $type
+                    ]);
+                    
+                    $items = $this->getGenericItemsByType($type);
+                } else {
+                    Log::info('Fetching all items (no plan, no type filter)');
+                    
+                    $items = $this->getGenericItems();
+                }
             }
             
             Log::info('Final items to return', [
@@ -81,6 +88,7 @@ class RequisitionItemsController extends Controller
             
         } catch (Exception $e) {
             Log::error('Failed to fetch items', [
+                'type' => $type,
                 'requisition_id' => $request->query('requisition_id'),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -134,6 +142,11 @@ class RequisitionItemsController extends Controller
                         'success' => true,
                         'data' => [$planDetails], // Return as array for consistency
                     ]);
+                } else {
+                    Log::warning('Plan item details not found', [
+                        'item_id' => $item,
+                        'plan_id' => $planId
+                    ]);
                 }
             }
 
@@ -173,28 +186,55 @@ class RequisitionItemsController extends Controller
     private function getPlanItemDetails($itemId, $planId)
     {
         try {
-            $details = DB::table('t_PlanLineItem as pli')
+            $planItems = DB::table('t_PlanLineItem as pli')
                 ->join('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
                 ->leftJoin('t_ItemCategories as cat', 'itm.Category', '=', 'cat.Id')
-                ->where('pli.PlanID', $planId)
+                ->leftJoin('t_UOM as uom', 'itm.UOM', '=', 'uom.Id') // Join UOM table
                 ->where('pli.ItemID', $itemId)
+                ->where('pli.PlanID', $planId)
                 ->where('pli.IsDeleted', 0)
                 ->whereNull('itm.DeletedOn')
                 ->select(
+                    'itm.Id',
+                    'itm.ItemName as Name',
+                    'pli.MergedQty as PlanQuantity',
                     'pli.UnitOfMeasure as UOM',
+                    'itm.UOM as UOMID',
                     DB::raw('CASE WHEN pli.AdjustedCost > 0 THEN pli.AdjustedCost ELSE ISNULL(pli.EstimatedUnitCost, 0) END as UnitPrice'),
                     'itm.Category as CategoryId',
                     'cat.Name as CategoryName',
                     'pli.LineItemID'
                 )
-                ->first();
+                ->get();
 
-            if ($details) {
-                return (array) $details;
+            foreach ($planItems as $item) {
+                $usedQty = DB::table('t_RequisitionLines')
+                    ->where('PlanLineRef', $item->LineItemID)
+                    ->whereNull('DeletedOn')
+                    ->sum('Quantity') ?? 0;
+
+                $remainingQty = $item->PlanQuantity - $usedQty;
+
+                if ($remainingQty > 0) {
+                    $item->UsedQuantity = $usedQty;
+                    $item->RemainingQty = $remainingQty;
+                    return (array) $item;
+                }
+            }
+
+            // If no item with remaining quantity found, return the first one (or null)
+            if ($planItems->isNotEmpty()) {
+                $item = $planItems->first();
+                $usedQty = DB::table('t_RequisitionLines')
+                    ->where('PlanLineRef', $item->LineItemID)
+                    ->whereNull('DeletedOn')
+                    ->sum('Quantity') ?? 0;
+                $item->UsedQuantity = $usedQty;
+                $item->RemainingQty = $item->PlanQuantity - $usedQty;
+                return (array) $item;
             }
 
             return null;
-
         } catch (\Exception $e) {
             Log::error('Failed to get plan item details', [
                 'item_id' => $itemId,
@@ -219,7 +259,8 @@ class RequisitionItemsController extends Controller
                 ->whereNull('itm.DeletedOn')
                 ->select(
                     DB::raw('ISNULL(uom.Code, \'Unit\') as UOM'),
-                    DB::raw('ISNULL(price.UnitPrice, 0) as UnitPrice'),
+                    'itm.UOM as UOMID',
+                    DB::raw('ISNULL(price.ActualPrice, 0) as UnitPrice'),
                     'itm.Category as CategoryId',
                     'cat.Name as CategoryName',
                     DB::raw('NULL as LineItemID')
@@ -250,19 +291,35 @@ class RequisitionItemsController extends Controller
             Log::info('Fetching plan items', [
                 'plan_id' => $planId
             ]);
+
+            // Get RFQ Procurement Method ID
+            $rfqMethodId = DB::table('t_CodeDetails')
+                ->where('CodeID', 'ProcurementMethod')
+                ->where('Value', 'R') // Assuming 'R' is for RFQ based on seeder
+                ->value('ID');
+
+            Log::info('RFQ Method ID lookup', ['id' => $rfqMethodId]);
             
             // Get all plan line items - filter availability in PHP
-            $items = DB::table('t_PlanLineItem as pli')
+            $query = DB::table('t_PlanLineItem as pli')
                 ->join('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
                 ->leftJoin('t_ItemTypes as it', 'itm.ItemType', '=', 'it.Id')
                 ->leftJoin('t_CodeDetails as cd', 'it.TypeName', '=', 'cd.ID')
                 ->leftJoin('t_ItemCategories as cat', 'itm.Category', '=', 'cat.Id')
                 ->where('pli.PlanID', $planId)
                 ->where('pli.IsDeleted', 0)
-                ->whereNull('itm.DeletedOn')
-                ->select(
+                ->whereNull('itm.DeletedOn');
+
+            // Apply RFQ filter if ID found
+            if ($rfqMethodId) {
+                $query->where('pli.ProcurementMethod', $rfqMethodId);
+            } else {
+                Log::warning('RFQ Procurement Method not found in CodeDetails');
+            }
+
+            $items = $query->select(
                     'itm.Id',
-                    DB::raw('ISNULL(itm.ItemName, ISNULL(itm.ItemDescription, \'Unknown Item\')) as Name'),
+                    DB::raw("ISNULL(itm.ItemName, ISNULL(itm.ItemDescription, 'Unknown Item')) as Name"),
                     'itm.ItemDescription as Description',
                     'itm.ItemType as TypeId',
                     'cd.Description as Type',
@@ -311,6 +368,92 @@ class RequisitionItemsController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
+            return collect([]);
+        }
+    }
+
+    /**
+     * Get all items of a specific type (not filtered by plan)
+     */
+    private function getGenericItemsByType($itemType)
+    {
+        try {
+            Log::info('Fetching generic items by type', [
+                'item_type' => $itemType,
+                'item_type_type' => gettype($itemType)
+            ]);
+
+            // First, let's check what item types exist
+            $existingTypes = DB::table('t_ItemTypes')->pluck('Id')->toArray();
+            Log::info('Existing item type IDs', ['types' => $existingTypes]);
+
+            // Check items for this type - direct query
+            $directCount = DB::table('t_Items')
+                ->where('ItemType', $itemType)
+                ->whereNull('DeletedOn')
+                ->count();
+            Log::info('Direct items count for type', [
+                'item_type' => $itemType,
+                'direct_count' => $directCount
+            ]);
+
+            // Check if the type exists
+            $typeExists = DB::table('t_ItemTypes')->where('Id', $itemType)->exists();
+            Log::info('Type exists check', [
+                'item_type' => $itemType,
+                'type_exists' => $typeExists
+            ]);
+
+            // Try a simpler query first
+            $simpleItems = DB::table('t_Items')
+                ->where('ItemType', $itemType)
+                ->whereNull('DeletedOn')
+                ->select('Id', 'ItemName', 'ItemDescription', 'ItemType')
+                ->get();
+            Log::info('Simple items query result', [
+                'item_type' => $itemType,
+                'simple_count' => $simpleItems->count(),
+                'sample' => $simpleItems->first()
+            ]);
+
+            $items = DB::table('t_Items as itm')
+                ->leftJoin('t_ItemTypes as it', 'itm.ItemType', '=', 'it.Id')
+                ->leftJoin('t_CodeDetails as cd', 'it.TypeName', '=', 'cd.ID')
+                ->leftJoin('t_UOM as uom', 'itm.UOM', '=', 'uom.Id')
+                ->leftJoin('t_ItemCategories as cat', 'itm.Category', '=', 'cat.Id')
+                ->where('itm.ItemType', $itemType)
+                ->whereNull('itm.DeletedOn')
+                ->select(
+                    'itm.Id',
+                    DB::raw('ISNULL(itm.ItemName, ISNULL(itm.ItemDescription, \'Unknown Item\')) as Name'),
+                    'itm.ItemDescription as Description',
+                    'itm.ItemType as TypeId',
+                    'cd.Description as Type',
+                    'cat.Name as Category',
+                    'itm.Category as CategoryId',
+                    DB::raw('0 as UnitPrice'),
+                    DB::raw('ISNULL(uom.Code, \'Unit\') as UOM'),
+                    DB::raw('NULL as PlanLineRef'),
+                    DB::raw('NULL as AvailableQuantity')
+                )
+                ->orderBy('itm.ItemName')
+                ->get();
+
+            Log::info('Generic items by type fetched', [
+                'item_type' => $itemType,
+                'count' => $items->count(),
+                'sample_item' => $items->first()
+            ]);
+
+            return $items;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch generic items by type', [
+                'item_type' => $itemType,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return collect([]);
         }
     }
@@ -395,7 +538,27 @@ class RequisitionItemsController extends Controller
         $this->authorize('create', RequisitionLine::class);
         try {
             $details = $this->service->getRequisitionItems();
-            return view('procurement.requisitionItems.create', compact('details'));
+            
+            // Check if requisition has a plan
+            $requisition = DB::table('t_Requisitions')->where('Id', $id)->first();
+            $hasPlan = !empty($requisition->PlanRef);
+            
+            // Get item types for manual selection
+            $types = DB::table('t_ItemTypes as it')
+                ->leftJoin('t_CodeDetails as cd', 'it.TypeName', '=', 'cd.ID')
+                ->whereNull('it.DeletedOn')
+                ->select('it.Id', DB::raw('ISNULL(cd.Description, it.TypeName) as TypeName'))
+                ->orderBy('TypeName')
+                ->get();
+            
+            Log::info('Item types loaded for view', [
+                'requisition_id' => $id,
+                'has_plan' => $hasPlan,
+                'types_count' => $types->count(),
+                'types' => $types->toArray()
+            ]);
+            
+            return view('procurement.requisitionItems.create', compact('details', 'hasPlan', 'types'));
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
