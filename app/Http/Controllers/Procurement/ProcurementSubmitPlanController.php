@@ -18,6 +18,7 @@ class ProcurementSubmitPlanController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', ConsolidatedProcurementPlan::class);
         $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         return view('procurement.procurementplan.submitplan.index', compact('draftedplans'));
     }
@@ -32,11 +33,15 @@ class ProcurementSubmitPlanController extends Controller
             'creator'
         ])->findOrFail($PlanId);
 
+        $this->authorize('submit', $plan);
+
         return view('procurement.procurementplan.submitplan.create', compact('plan'));
     }
 
     public function update(Request $request, ConsolidatedProcurementPlan $plan): RedirectResponse
     {
+        $this->authorize('submit', $plan);
+
         $lock = Cache::lock('submitted-Plan-' . $plan->PlanID, 5);
         if (!$lock->get()) {
             return redirect()
@@ -49,13 +54,12 @@ class ProcurementSubmitPlanController extends Controller
         try {
             //let the service handle transactions
             (new SubmitPlanService($plan))->submit($actor);
-            
+
             $lock->release();
-            
+
             return redirect()
                 ->route('Procurement-Plan-Submission.index')
                 ->with('success', 'Plan submitted successfully.');
-                
         } catch (ErroredException $e) {
             $lock->release();
             Log::error('Plan submission failed (business logic)', [
@@ -63,7 +67,6 @@ class ProcurementSubmitPlanController extends Controller
                 'error' => $e->getMessage(),
             ]);
             return redirect()->back()->with('error', $e->getMessage());
-            
         } catch (Exception $e) {
             $lock->release();
             Log::error('Plan submission failed (unexpected)', [

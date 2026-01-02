@@ -29,6 +29,7 @@ class LPOOriginationController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Order::class);
         try {
             // Get counts for each origination type
             $contractBasedCount = $this->getContractBasedLPOsCount();
@@ -87,6 +88,7 @@ class LPOOriginationController extends Controller
      */
     public function showContractBasedOptions()
     {
+        $this->authorize('create', Order::class);
         try {
             // Get active contracts available for LPO creation
             $activeContracts = TenderAward::where('ContractStatus', 'Executed')
@@ -348,7 +350,6 @@ class LPOOriginationController extends Controller
 
             return redirect()->route('purchaseOrder.index')
                 ->with('success', $message);
-
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Contract-based LPO creation failed: ' . $e->getMessage());

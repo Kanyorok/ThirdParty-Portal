@@ -15,6 +15,7 @@ class TenderSubmissionController extends Controller
 {
     public function index()
     {
+        $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionRead->value);
         $submissions = BidSubmission::with([
             'submissionMode',
             'createdByUser',
@@ -27,6 +28,7 @@ class TenderSubmissionController extends Controller
 
     public function create()
     {
+        $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
         $tenders = Tender::select('TenderNo', 'Title')->get();
 
         // Fix: Get supplier names from the related ThirdParty table

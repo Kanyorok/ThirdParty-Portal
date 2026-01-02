@@ -17,6 +17,7 @@ class ProcurementSetMethodController extends Controller
     //
     public function index()
     {
+        $this->authorize('viewAny', ConsolidatedProcurementPlan::class);
         $approvedPlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         $procurementModes = CodeDetail::where('CodeID', 'ProcurementMethod')->get();
         return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans', 'procurementModes'));
@@ -55,6 +56,8 @@ class ProcurementSetMethodController extends Controller
 
     public function store(Request $request, ProcurementMethodService $service)
     {
+        // Explicitly check for permission to assign methods
+        $this->authorize(\App\Enums\Core\PermissionEnum::ProcurementMethodWrite->value);
 
         $request->validate([
             'approved_plan_id' => 'required|exists:t_ConsolidatedProcurementPlan,PlanID',
@@ -76,17 +79,15 @@ class ProcurementSetMethodController extends Controller
                 if ($method && $lineItem) {
                     $lineItem->ProcurementMethod = $method;
                     $lineItem->save();
-                $service->create([
-                    'AssignedMethod' => $method,
-                    'Justification' => $justifications[$lineItemId] ?? '',
-                    'EstimatedUnitCost' => $lineItem->EstimatedUnitCost,
-                ], $user, $plan, $lineItem);
-
+                    $service->create([
+                        'AssignedMethod' => $method,
+                        'Justification' => $justifications[$lineItemId] ?? '',
+                        'EstimatedUnitCost' => $lineItem->EstimatedUnitCost,
+                    ], $user, $plan, $lineItem);
                 }
             }
         }
 
         return redirect()->back()->with('success', 'Procurement methods saved successfully.');
     }
-
 }
