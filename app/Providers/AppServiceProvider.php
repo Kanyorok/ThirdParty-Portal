@@ -310,55 +310,20 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
 
     {
-        // Default binding for Department Needs
         $this->app->bind(ApprovalWorkflow::class, function ($app) {
-            return new ApprovalWorkflow('DepartmentNeedsStatus', 'Status');
+            return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
         });
 
-        // 🔥 FIX: Bind Tender Workflow using contextual binding
-        $this->app->when(TenderController::class)
-            ->needs(ApprovalWorkflow::class)
-            ->give(function () {
-                return new ApprovalWorkflow(
-                    'TenderApprovalStatus',      // Correct CodeID for verification
-                    'ApprovalStatus'             // Status column name
-                );
-            });
+        // TODO: Profile Management repositories
+        $this->app->bind(
+            \App\Repositories\ThirdParty\Contracts\ThirdPartyRepositoryInterface::class,
+            \App\Repositories\ThirdParty\ThirdPartyRepository::class
+        );
 
-        // Bind Requisition Workflow Service
-        $this->app->singleton(RequisitionWorkflowService::class, function ($app) {
-            return new RequisitionWorkflowService();
-        });
-
-        // Bind Requisitions Workflow (generic)
-        $this->app->when(RequisitionsController::class)
-            ->needs(ApprovalWorkflow::class)
-            ->give(function () {
-                return new ApprovalWorkflow(
-                    'RequisitionStatus', // CodeID for requisition workflow
-                    'DocStatus'          // Status column name for requisitions
-                );
-            });
-
-        // Bind Awards Workflow
-        $this->app->when(AwardsController::class)
-            ->needs(ApprovalWorkflow::class)
-            ->give(function () {
-                return new ApprovalWorkflow(
-                    'TenderAwardApprovalStatus',  // CodeID for tender award approval workflow
-                    'AwardStatus'                 // Status column name
-                );
-            });
-
-        // Bind Purchase Order Workflow
-        $this->app->when(PurchaseOrderController::class)
-            ->needs(ApprovalWorkflow::class)
-            ->give(function () {
-                return new ApprovalWorkflow(
-                    'ApprovalStatus',  // CodeID for purchase order approval workflow
-                    'DocStatus'        // Status column name for orders
-                );
-            });
+        $this->app->bind(
+            \App\Repositories\ThirdParty\Contracts\SupplierRepositoryInterface::class,
+            \App\Repositories\ThirdParty\SupplierRepository::class
+        );
     }
 
     /**
@@ -537,8 +502,7 @@ class AppServiceProvider extends ServiceProvider
             // Allow resolving morph type 'ThirdParty' used by legacy data
             'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
-            \App\Models\ThirdParty\SupplierMaster::getPrimaryKey() => \App\Models\ThirdParty\SupplierMaster::class,
-            \App\Models\ThirdParty\ThirdPartyUser::getPrimaryKey() => \App\Models\ThirdParty\ThirdPartyUser::class,
+            'ThirdPartyUser' => \App\Models\ThirdParty\ThirdPartyUser::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,

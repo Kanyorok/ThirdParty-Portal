@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['*', 'api/*', 'sanctum/csrf-cookie', 'third-party-auth/*', 'third-parties/*'],
+    'paths' => ['*', 'api/*', 'sanctum/csrf-cookie', 'third-party-auth/*', 'portal', 'third-parties/*'],
 
     'allowed_methods' => ['*'],
 
@@ -19,7 +19,7 @@ return [
         'http://172.16.2.23:3307'
     ], array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', '')))),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => ['*'],
 
     'allowed_headers' => ['*'],
 

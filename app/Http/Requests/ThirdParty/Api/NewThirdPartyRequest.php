@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\ThirdParty;
+namespace App\Http\Requests\ThirdParty\Api;
 
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
@@ -47,9 +47,23 @@ class NewThirdPartyRequest extends FormRequest
 
             'user_FirstName' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
             'user_LastName' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
-            'user_Email' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
+            'user_Email' => [
+                'nullable',
+                Rule::requiredIf($this->boolean('createUser')),
+                Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(),
+                Rule::unique('t_ThirdPartyUsers', 'Email')->whereNull('DeletedOn'),
+                'max:200'
+            ],
             'user_Phone' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
             'user_Gender' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
+            'user_Password' => [
+                'nullable',
+                Rule::requiredIf($this->boolean('createUser')),
+                'string',
+                'min:8',
+                'confirmed'
+            ],
+            'user_Password_confirmation' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string'],
 
             'customer_DateOfBirth' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'date'],
             'customer_Gender' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\ThirdParty;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ThirdParty\NewThirdPartyRequest;
+use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\ThirdParty\ThirdParties;

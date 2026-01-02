@@ -20,17 +20,17 @@ class SupplierService extends ThirdPartiesService
 {
     public function __construct(public SupplierMaster $supplier)
     {
-         // Ensure relationship is loaded
-    if (!$supplier->relationLoaded('party')) {
-        $supplier->load('party');
-    }
-    
-    // Validate the relationship exists
-    if (!$supplier->party) {
-        throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
-    }
-    
-    parent::__construct($supplier->party);
+        // Ensure relationship is loaded
+        if (!$supplier->relationLoaded('party')) {
+            $supplier->load('party');
+        }
+
+        // Validate the relationship exists
+        if (!$supplier->party) {
+            throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
+        }
+
+        parent::__construct($supplier->party);
     }
 
     public static function getType(): ThirdPartyType
@@ -85,7 +85,7 @@ class SupplierService extends ThirdPartiesService
             'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
             'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
-        
+
         activity()->causedBy($actor)->performedOn($supplier)->event('create')->log("Added Supplier {$supplier->SupplierID} to thirdparty {$party->ThirdPartyName}.");
         $service = new self($supplier);
         $service->addType(self::getType(), SupplierMaster::getPrimaryKey(), $supplier->Id, $actor);
