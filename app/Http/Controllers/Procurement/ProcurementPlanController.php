@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\Procurement\ProcurementPeriod;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Procurement\Item;
+use App\Models\Inventory\ItemMasterList;
 use Illuminate\Http\Request;
 use App\enums\ProcurementPlanStatusEnum;
 
@@ -20,15 +20,17 @@ class ProcurementPlanController extends Controller
 
     public function create(ProcurementPeriod $procurementPeriod)
     {
-        $items = Item::orderBy('ItemName')->get();
+        $this->authorize('create', ProcurementPlan::class);
+        $items = ItemMasterList::orderBy('ItemName')->get();
         return view('procurement.procurement_plans.create', [
             'availableItems' => $items,
             'period' =>  $procurementPeriod,
-        ]); 
+        ]);
     }
 
     public function store(Request $request, ProcurementPeriod $procurementPeriod) // Route Model Binding
     {
+        $this->authorize('create', ProcurementPlan::class);
         $validated = $request->validate([
             'ItemId' => 'required|exists:t_Items,Id',
             'Quantity' => 'required|numeric|min:0.01',
@@ -38,7 +40,7 @@ class ProcurementPlanController extends Controller
             'ExpectedDeliveryDate' => 'nullable|date',
         ]);
 
-        $item = Item::findOrFail($validated['ItemId']);
+        $item = ItemMasterList::findOrFail($validated['ItemId']);
 
         $totalCost = ($item->UnitPrice ?? 0) * $validated['Quantity'];
 

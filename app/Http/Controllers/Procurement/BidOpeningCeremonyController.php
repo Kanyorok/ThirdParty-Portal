@@ -26,7 +26,8 @@ class BidOpeningCeremonyController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::BidSubmissionRead);
+        $this->authorize(\App\Enums\Core\PermissionEnum::BidOpeningRead->value);
+        //$this->authorize(PermissionEnum::BidSubmissionRead);
 
         // Get tenders ready for opening (past submission deadline with submitted bids)
         $tenders = Tender::whereHas('submissions', function ($query) {
@@ -54,8 +55,10 @@ class BidOpeningCeremonyController extends Controller
             }
         }
 
-        return view('procurement.tendering.bidopeningandevaluation.opening.index',
-            compact('tenders', 'selectedTender', 'submissions', 'ceremonyStatus'));
+        return view(
+            'procurement.tendering.bidopeningandevaluation.opening.index',
+            compact('tenders', 'selectedTender', 'submissions', 'ceremonyStatus')
+        );
     }
 
     /**
@@ -125,9 +128,10 @@ class BidOpeningCeremonyController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success',
-                "Bid opening ceremony started successfully. {$openedCount} bids have been opened and are now accessible.");
-
+            return redirect()->back()->with(
+                'success',
+                "Bid opening ceremony started successfully. {$openedCount} bids have been opened and are now accessible."
+            );
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to start bid opening ceremony: ' . $e->getMessage());
@@ -198,9 +202,10 @@ class BidOpeningCeremonyController extends Controller
                 ])
                 ->log("Documents accessed for bid: {$submission->SupplierName}");
 
-            return view('procurement.tendering.bidopeningandevaluation.opening.documents',
-                compact('submission', 'accessibleDocs'));
-
+            return view(
+                'procurement.tendering.bidopeningandevaluation.opening.documents',
+                compact('submission', 'accessibleDocs')
+            );
         } catch (\Exception $e) {
             Log::error('Failed to access bid documents: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to access documents: ' . $e->getMessage());
@@ -248,7 +253,6 @@ class BidOpeningCeremonyController extends Controller
                 'supplier' => $submission->SupplierName,
                 'note' => 'In production, this would decrypt and serve the actual file'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to download document: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to download document'], 500);

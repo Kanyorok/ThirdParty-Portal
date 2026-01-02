@@ -164,6 +164,16 @@ enum PermissionEnum: string
     case DepartmentNeedsUpdate = 'departmentneeds-update';
     case DepartmentNeedsDelete = 'departmentneeds-delete';
     case DepartmentNeedsApproval = 'departmentneeds-approval';
+        // Department Plan (Added for granularity if needed, otherwise maps to Needs)
+    case DepartmentPlanRead = 'departmentplan-read';
+    case DepartmentPlanWrite = 'departmentplan-create';
+
+        //Procurement Plan
+    case ProcurementPlanRead = 'procurementplan-read';
+    case ProcurementPlanWrite = 'procurementplan-create';
+    case ProcurementPlanUpdate = 'procurementplan-update';
+    case ProcurementPlanDelete = 'procurementplan-delete';
+    case ProcurementPlanApprove = 'procurementplan-approve';
 
         //Tender
     case TenderRead = 'tender-read';
@@ -194,6 +204,22 @@ enum PermissionEnum: string
     case VendorClarificationsWrite = 'VendorClarifications-create';
     case VendorClarificationsUpdate = 'VendorClarifications-update';
     case VendorClarificationsDelete = 'VendorClarifications-delete';
+
+        // Bid Opening
+    case BidOpeningRead = 'bidopening-read';
+    case BidOpeningWrite = 'bidopening-create';
+
+        // RFQ Response
+    case RFQResponseRead = 'rfqresponse-read';
+    case RFQResponseWrite = 'rfqresponse-create';
+    case RFQResponseUpdate = 'rfqresponse-update';
+
+        // Committees
+    case RFQCommitteeRead = 'rfqcommittee-read';
+    case RFQCommitteeWrite = 'rfqcommittee-create';
+
+    case TenderCommitteeRead = 'tendercommittee-read';
+    case TenderCommitteeWrite = 'tendercommittee-create';
 
         //Procument Plan- Plan Consolidation
     case PlanConsolidationRead = 'planconsolidation-read';
@@ -230,6 +256,10 @@ enum PermissionEnum: string
         //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
+    case ProcurementMethodUpdate = 'procurementmethod-update';
+
+        // Plan Consolidation & Submission
+    case ProcurementPlanSubmit = 'procurementplan-submit';
 
         //ProcurementPlan Procurement Schedule
         //case SchedulePlanRead = 'scheduleplan-read';
@@ -686,8 +716,8 @@ enum PermissionEnum: string
     case DebitNoteUpdate = 'debitNote-update';
     case DebitNoteDelete = 'debitNote-delete';
 
-    //Supplier Permissions
-    case SupplierView = 'supplier-view';     
+        //Supplier Permissions
+    case SupplierView = 'supplier-view';
     case SupplierApproval = 'supplier-approval';
 
         //Tax Setting

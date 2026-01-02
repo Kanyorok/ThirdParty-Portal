@@ -18,6 +18,7 @@ class TenderInvitationController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', TenderInvitation::class);
         // If this is an API request (has Accept: application/json header)
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->getSupplierInvitations($request);
@@ -29,6 +30,11 @@ class TenderInvitationController extends Controller
 
     public function storeResponse(Request $request)
     {
+        // Public/Supplier facing usually, but if internal:
+        // $this->authorize('create', TenderInvitation::class);
+        // Assuming this is used by the system or suppliers, we might need a specific permission or leave open if it's a public endpoint protected by other means?
+        // Checking controller logic, it seems mixed. For now, let's secure it.
+        $this->authorize('create', TenderInvitation::class);
 
         $validated = $request->validate([
             'TenderId' => 'required|integer',
