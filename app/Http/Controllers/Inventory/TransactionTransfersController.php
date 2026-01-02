@@ -90,7 +90,7 @@ class TransactionTransfersController extends Controller
     return view('inventory.transactions.transfers.create', compact('users', 'currentUser'));
 }
 
-   public function store(TransactionTransferRequest $request)
+  public function store(TransactionTransferRequest $request)
 {
     $this->authorize('create', TransactionTransfer::class);
 
@@ -99,37 +99,43 @@ class TransactionTransfersController extends Controller
     unset($validatedData['items']);
 
     try {
+        // Create transfer and items
         $transfer = $this->service->createTransfer($validatedData);
         $this->service->createTransferItems($transfer, $items);
 
-        // Check if it's an AJAX request
+        // Always return success message
+        $message = 'Transfer created successfully.';
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Transfer created successfully.',
+                'message' => $message,
                 'redirect' => route('transactionstransfers.index')
             ]);
         }
 
         return redirect()
             ->route('transactionstransfers.index')
-            ->with('success', 'Transfer created successfully.');
-            
+            ->with('success', $message);
+
     } catch (Throwable $e) {
-        // Check if it's an AJAX request
+        // Always return error message
+        $errorMessage = 'Error creating transfer: ' . $e->getMessage();
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => $errorMessage,
             ], 500);
         }
-        
+
         return redirect()
             ->back()
             ->withInput()
-            ->with('error', 'Error creating transfer: ' . $e->getMessage());
+            ->with('error', $errorMessage);
     }
 }
+
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);

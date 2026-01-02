@@ -18,7 +18,6 @@ use App\Models\Inventory\StockItem;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 class InventoryHoldReviewService
@@ -31,8 +30,6 @@ class InventoryHoldReviewService
         }
 
         $hold = InventoryHold::findOrFail($id);
-
-
 
         $hold->update([
             'Condition' => $data['Condition'],
@@ -48,11 +45,10 @@ class InventoryHoldReviewService
             $hold = InventoryHold::with('item')->findOrFail($id);
 
             if (!$hold->Reason) {
-                Log::error("Disposal blocked: Missing reason for InventoryHold ID {$id}");
                 throw new Exception("Cannot dispose item without a defect reason.");
             }
 
-            $review = InventoryHoldReview::create([
+            InventoryHoldReview::create([
                 'InventoryHoldID' => $hold->Id,
                 'ItemID' => $hold->ItemID,
                 'FromBranch' => $hold->BranchID,
@@ -67,8 +63,6 @@ class InventoryHoldReviewService
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
-
-
 
             $hold->update([
                 'Status' => Transfers::Disposed->value,
@@ -86,13 +80,11 @@ class InventoryHoldReviewService
         DB::transaction(function () use ($id, $extras) {
             $hold = InventoryHold::findOrFail($id);
 
-            // Validate source (must be a Transfer Receipt)
             $source = CodeDetail::find($hold->Source);
             if (!$source || $source->Value !== 'Tr') {
                 throw new Exception("Return is only applicable for Transfer Receipt sources.");
             }
 
-            // Locate original receipt and transfer
             $receipt = TransactionReceipt::find($hold->SourceID);
             if (!$receipt) {
                 throw new Exception("No Transaction Receipt found for InventoryHold ID {$id}");
@@ -105,8 +97,6 @@ class InventoryHoldReviewService
 
             $fromBranch = $hold->BranchID;
             $toBranch   = $transfer->FromBranch;
-
-            // Create Return Transfer
 
             $newTransfer = TransactionTransfer::create([
                 'TransferDate'    => now(),
@@ -125,15 +115,12 @@ class InventoryHoldReviewService
             $newTransfer->TransferId = 'RTR-' . now()->format('Y') . '-' . str_pad($newTransfer->Id, 4, '0', STR_PAD_LEFT);
             $newTransfer->save();
 
-
-
-            // Clone only the damaged quantity
             $receiptItems = TransactionReceiptItem::where('ReceiptId', $receipt->Id)
                 ->where('Item', $hold->ItemID)
                 ->get();
 
             foreach ($receiptItems as $item) {
-                $transferItem = TransactionTransferItem::create([
+                TransactionTransferItem::create([
                     'TransferId'     => $newTransfer->Id,
                     'Item'           => $item->Item,
                     'ApprovedQty'    => $hold->Quantity,
@@ -148,7 +135,6 @@ class InventoryHoldReviewService
                 ]);
             }
 
-            // Workflow setup
             Workflow::create([
                 'Source'     => 'TransactionTransfer',
                 'SourceID'   => $newTransfer->Id,
@@ -173,7 +159,6 @@ class InventoryHoldReviewService
                 ]
             );
 
-            // Log in InventoryHoldReview (t_Defects)
             InventoryHoldReview::create([
                 'InventoryHoldID' => $hold->Id,
                 'ItemID'          => $hold->ItemID,
@@ -190,9 +175,6 @@ class InventoryHoldReviewService
                 'ModifiedOn'      => now(),
             ]);
 
-
-
-            // Update InventoryHold
             $hold->update([
                 'FromBranch' => $fromBranch,
                 'BranchID'   => $toBranch,
@@ -201,7 +183,6 @@ class InventoryHoldReviewService
                 'ModifiedOn' => now(),
             ]);
 
-            // Create Stock Transaction entry (deduct damaged qty)
             $this->recordStockTransaction(
                 $hold->ItemID,
                 $hold->Store,
@@ -245,7 +226,6 @@ class InventoryHoldReviewService
             ->first();
 
         if (!$skuRecord) {
-            Log::warning("⚠️ No StockItem record found for ItemID {$itemId} in Branch {$branchId}, Store {$storeId}");
             return;
         }
 
@@ -263,7 +243,7 @@ class InventoryHoldReviewService
 
         $newBalance = max(0, $lastBalance - $qtyOut);
 
-        $transaction = StockTransaction::create([
+        StockTransaction::create([
             'SKUID'           => $skuId,
             'TransactionType' => $transactionType,
             'ReferenceID'     => $referenceId,
