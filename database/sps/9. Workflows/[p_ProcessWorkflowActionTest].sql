@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[p_ProcessWorkflowActionTest]
+ALTER PROCEDURE [dbo].[p_ProcessWorkflowActionTest]
     @Source NVARCHAR(255),
     @SourceID NVARCHAR(100),
     @UserID BIGINT,
@@ -23,43 +23,41 @@ BEGIN
         @UserEmail NVARCHAR(255),
         @EmailMessage NVARCHAR(MAX),
         @EmailSubject NVARCHAR(255),
-        @StatusValue NVARCHAR(50);  -- Added declaration
+        @StatusValue NVARCHAR(50),
+        @IsMakerCheckerViolation BIT = 0,
+        @ViolationReason NVARCHAR(500) = NULL,
+        @SourceIDInt INT; -- For proper type conversion
 
     BEGIN TRY
        BEGIN TRANSACTION;
 
-        -- Get current workflow info and set status ID based on action
+
+        -- 1. VALIDATE SOURCEID CONVERSION
+
+        SET @SourceIDInt = TRY_CAST(@SourceID AS INT);
+
+        IF @SourceIDInt IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, 'SourceID must be a valid integer' AS Message;
+            RETURN;
+        END
+
+
+        -- 2. GET CURRENT WORKFLOW INFO
+
         SELECT
             @StageID = p.Stage,
             @WorkFlowID = ws.WorkFlowID,
             @WorkflowStagePermission = ws.PermissionId
-        FROM dbo.t_WorkFlowPending p
-        JOIN dbo.t_WorkFlowStages ws ON p.Stage = ws.Id
+        FROM dbo.t_WorkFlowPendingtest p
+        JOIN dbo.t_WorkFlowStagestest ws ON p.Stage = ws.Id
         WHERE p.Source = @Source
           AND p.SourceID = @SourceID
           AND p.UserId = @UserID
           AND p.DeletedOn IS NULL;
 
-        -- ✅ SIMPLIFIED: Check if user has permission using new function
-        SET @UserHasPermissions = [dbo].[f_CheckUserPermission](@UserID, @WorkflowStagePermission);
-
-        -- Get status value from t_CodeDetails
-        SELECT
-            @StatusValue = Value,
-            @Description = Description
-        FROM t_CodeDetails
-        WHERE ID = @StatusID;
-
-        -- Check if there are any pending approvals for this item
-        SELECT @HasPendingApprovals = CASE WHEN EXISTS (
-            SELECT 1 FROM dbo.t_WorkFlowPending
-            WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL
-        ) THEN 1 ELSE 0 END;
-
-        -- Set current status
-        SET @CurrentStatus = CASE WHEN @HasPendingApprovals = 1 THEN 'Pending' ELSE 'Completed' END;
-
-        -- Validate action
+        -- Validate action FIRST - if no workflow found
         IF @StageID IS NULL
         BEGIN
             ROLLBACK TRANSACTION;
@@ -67,7 +65,26 @@ BEGIN
             RETURN;
         END
 
-        -- Check if user has permission
+
+        -- 3. CHECK MAKER-CHECKER VIOLATION
+
+        SELECT
+            @IsMakerCheckerViolation = IsViolation,
+            @ViolationReason = FailureReason
+        FROM dbo.f_CheckMakerCheckerViolation(@Source, @SourceIDInt, @UserID);
+
+        IF @IsMakerCheckerViolation = 1
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status,
+                   ISNULL(@ViolationReason, 'Maker-Checker violation detected') AS Message;
+            RETURN;
+        END
+
+
+        -- 4. CHECK USER PERMISSIONS
+
+        SET @UserHasPermissions = [dbo].[f_CheckUserPermission](@UserID, @WorkflowStagePermission);
         IF @UserHasPermissions = 0
         BEGIN
             ROLLBACK TRANSACTION;
@@ -75,8 +92,40 @@ BEGIN
             RETURN;
         END
 
-        -- Record action in history
-        INSERT INTO dbo.t_WorkFlowHistory (
+
+        -- 5. VALIDATE STATUS ID
+
+        IF NOT EXISTS (SELECT 1 FROM t_CodeDetails WHERE ID = @StatusID)
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status,
+                   'Status ID not found: ' + CAST(@StatusID AS NVARCHAR(20)) AS Message,
+                   NULL AS WorkflowStatus;
+            RETURN;
+        END
+
+        -- Get status values
+        SELECT
+            @StatusValue = Value,
+            @Description = Description
+        FROM t_CodeDetails
+        WHERE ID = @StatusID;
+
+
+        -- 6. CHECK FOR PENDING APPROVALS
+
+        SELECT @HasPendingApprovals = CASE WHEN EXISTS (
+            SELECT 1 FROM dbo.t_WorkFlowPendingtest
+            WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL
+        ) THEN 1 ELSE 0 END;
+
+        -- Set current status
+        SET @CurrentStatus = CASE WHEN @HasPendingApprovals = 1 THEN 'Pending' ELSE 'Completed' END;
+
+
+        -- 7. RECORD ACTION IN HISTORY
+
+        INSERT INTO dbo.t_WorkFlowHistorytest (
             Source, SourceID, Stage, Notes, StatusId,
             CreatedBy, CreatedOn, ModifiedBy, ModifiedOn, IsApproved
         )
@@ -85,22 +134,71 @@ BEGIN
             @UserID, GETDATE(), @UserID, GETDATE(), @IsApproved
         );
 
-        -- Mark approval as processed
-        UPDATE dbo.t_WorkFlowPending
+
+        -- 8. MARK APPROVAL AS PROCESSED
+
+        UPDATE dbo.t_WorkFlowPendingtest
         SET DeletedBy = @UserID,
             DeletedOn = GETDATE(),
             ModifiedBy = @UserID,
             ModifiedOn = GETDATE()
         WHERE Source = @Source AND SourceID = @SourceID AND UserId = @UserID;
 
-        -- Update source table if rejected or final approval
+
+        -- 9. UPDATE SOURCE TABLE IF REJECTED OR FINAL APPROVAL
+
         IF @HasPendingApprovals = 1
         BEGIN
             DECLARE @LastApproverColumn NVARCHAR(100) = '';
             DECLARE @UpdateSQL NVARCHAR(MAX);
             DECLARE @KeyColumn NVARCHAR(50) = 'Id';
+            DECLARE @TableName NVARCHAR(255) = PARSENAME(@Source, 1);
 
-            -- Check if LastApprover column exists
+            -- Validate the table exists
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName)
+            BEGIN
+                ROLLBACK TRANSACTION;
+                SELECT 'ERROR' AS Status, 'Source table does not exist: ' + @Source AS Message;
+                RETURN;
+            END
+
+            -- Validate StatusColumn exists
+            IF NOT EXISTS (
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = @TableName AND COLUMN_NAME = @StatusColumn
+            )
+            BEGIN
+                ROLLBACK TRANSACTION;
+                SELECT 'ERROR' AS Status,
+                       'Status column "' + @StatusColumn + '" not found in table: ' + @Source AS Message;
+                RETURN;
+            END
+
+            -- Validate ModifiedBy column exists
+            IF NOT EXISTS (
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'ModifiedBy'
+            )
+            BEGIN
+                ROLLBACK TRANSACTION;
+                SELECT 'ERROR' AS Status,
+                       'ModifiedBy column not found in table: ' + @Source AS Message;
+                RETURN;
+            END
+
+            -- Validate ModifiedOn column exists
+            IF NOT EXISTS (
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'ModifiedOn'
+            )
+            BEGIN
+                ROLLBACK TRANSACTION;
+                SELECT 'ERROR' AS Status,
+                       'ModifiedOn column not found in table: ' + @Source AS Message;
+                RETURN;
+            END
+
+            -- Check if LastApprover column exists (optional)
             IF EXISTS (
                 SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = PARSENAME(@Source, 1)
@@ -133,7 +231,9 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        -- ✅ EMAIL NOTIFICATION BLOCK
+
+        -- 10. EMAIL NOTIFICATION
+
         SELECT @UserEmail = Email FROM t_Users WHERE Id = @UserID;
 
         IF @UserEmail IS NOT NULL AND LEN(@UserEmail) > 5
@@ -154,7 +254,9 @@ BEGIN
                 @Source = @Source,
                 @SourceID = @SourceID;
         END
-        -- ✅ EMAIL NOTIFICATION BLOCK ENDS
+
+
+        -- 11. RETURN SUCCESS
 
         SELECT 'SUCCESS' AS Status,
                @Description + ' Recorded' AS Message,
@@ -169,4 +271,3 @@ BEGIN
                NULL AS WorkflowStatus;
     END CATCH
 END
-GO
