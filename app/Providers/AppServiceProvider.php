@@ -267,6 +267,15 @@ use App\Policies\Procurement\TenderSubmissionPolicy;
 use App\Policies\Procurement\TenderInvitationPolicy;
 use App\Policies\Procurement\BidOpeningPolicy;
 use App\Policies\Procurement\RFQResponsePolicy;
+use App\Policies\Procurement\ContractPolicy;
+use App\Policies\Procurement\PurchaseOrderPolicy;
+use App\Policies\Procurement\GoodsReceiptPolicy;
+use App\Models\Procurement\BidSubmission;
+use App\Models\Procurement\TenderInvitation;
+use App\Models\Procurement\RFQResponse;
+use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\Order as ProcurementOrder;
+use App\Models\Procurement\GoodsReceipt;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -662,6 +671,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BidSubmission::class, TenderSubmissionPolicy::class);
         Gate::policy(TenderInvitation::class, TenderInvitationPolicy::class);
         Gate::policy(RFQResponse::class, RFQResponsePolicy::class);
+
+        // Batch 3: Contracts & Orders
+        Gate::policy(TenderAward::class, ContractPolicy::class);
+        Gate::policy(ProcurementOrder::class, PurchaseOrderPolicy::class);
+        Gate::policy(GoodsReceipt::class, GoodsReceiptPolicy::class);
         Gate::policy(\App\Http\Controllers\Procurement\BidOpeningCeremonyController::class, BidOpeningPolicy::class); // Virtual policy binding
         Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);

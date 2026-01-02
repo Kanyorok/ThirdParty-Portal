@@ -16,7 +16,7 @@ class GoodsReceiptController extends Controller
 
     public function index()
     {
-
+        $this->authorize('viewAny', GoodsReceipt::class);
         // Get only POs not used in GoodsReceipts
 
         $goodsReceipts = GoodsReceipt::with('receiver', 'supplier')
@@ -34,6 +34,7 @@ class GoodsReceiptController extends Controller
 
     public function create()
     {
+        $this->authorize('create', GoodsReceipt::class);
         $usedOrderNos = DB::connection('sqlsrv')
             ->table('t_GoodsReceipts')
             ->distinct()
@@ -89,6 +90,7 @@ class GoodsReceiptController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', GoodsReceipt::class);
         $authUser = Auth::user();
         Log::info('Store method reached');
         Log::info('Request data:', $request->all());

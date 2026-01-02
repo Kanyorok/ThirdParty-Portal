@@ -152,11 +152,6 @@ enum PermissionEnum: string
     case RfqApproval = 'rfq-approval';
 
         //RequisitionItems
-    case PurchaseOrderRead = 'purchaseOrder-read';
-    case PurchaseOrderWrite = 'purchaseOrder-create';
-    case PurchaseOrderUpdate = 'purchaseOrder-update';
-    case PurchaseOrderDelete = 'purchaseOrder-delete';
-    case PurchaseOrderApproval = 'purchaseOrder-approval';
 
         //ProcurementPlan Department Needs
     case DepartmentNeedsRead = 'departmentneeds-read';
@@ -220,6 +215,27 @@ enum PermissionEnum: string
 
     case TenderCommitteeRead = 'tendercommittee-read';
     case TenderCommitteeWrite = 'tendercommittee-create';
+
+        // Contracts
+    case ContractView = 'contract-view';
+    case ContractCreate = 'contract-create';
+    case ContractUpdate = 'contract-update';
+    case ContractDelete = 'contract-delete';
+    case ContractApprove = 'contract-approve';
+
+        // Purchase Orders (LPO)
+    case PurchaseOrderRead = 'purchaseorder-read';
+    case PurchaseOrderWrite = 'purchaseorder-create';
+    case PurchaseOrderUpdate = 'purchaseorder-update';
+    case PurchaseOrderDelete = 'purchaseorder-delete';
+    case PurchaseOrderApprove = 'purchaseorder-approve';
+
+        // Goods Receipt (GRN)
+    case GoodsReceiptRead = 'goodsreceipt-read';
+    case GoodsReceiptWrite = 'goodsreceipt-create';
+    case GoodsReceiptUpdate = 'goodsreceipt-update';
+    case GoodsReceiptDelete = 'goodsreceipt-delete';
+    case GoodsReceiptApprove = 'goodsreceipt-approve';
 
         //Procument Plan- Plan Consolidation
     case PlanConsolidationRead = 'planconsolidation-read';
@@ -832,10 +848,6 @@ enum PermissionEnum: string
 * ========================================  Legal  ========================================
 */
         //Document Registry and Contracts Creation
-    case ContractView = 'contract-view';
-    case ContractCreate = 'contract-create';
-    case ContractUpdate = 'contract-update';
-    case ContractDelete = 'contract-delete';
 
         //Disputes and Ltigations
     case DisputeLitigationView = 'disputelitigation-view';
@@ -910,7 +922,7 @@ enum PermissionEnum: string
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
             [self::SupplierRead, self::SupplierWrite, self::SupplierUpdate, self::SupplierDelete, self::SupplierApprove],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
-            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
+            [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApprove],
 
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
@@ -1059,13 +1071,13 @@ enum PermissionEnum: string
             self::SurveyApproval,
             self::Ceo,
             self::MarketingManager,
-            self::PurchaseOrderApproval,
+            self::PurchaseOrderApprove,
             self::RequisitionApproval,
             self::RequisitionItemsApproval,
             self::DepartmentNeedsApproval,
             self::TenderApproval,
             self::SupplierApprove,
-            self::PurchaseOrderApproval,
+            self::PurchaseOrderApprove,
             self::RequisitionApproval,
             self::RequisitionItemsApproval,
             self::PropertyNewLeaseApproval
@@ -1102,7 +1114,7 @@ enum PermissionEnum: string
             //Procurement
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval,
             self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval,
-            self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
+            self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApprove,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
             self::PlanConsolidationRead, self::PlanConsolidationApproval, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
@@ -1285,7 +1297,7 @@ enum PermissionEnum: string
 
 
             //PurchaseOrder
-            self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval => 'Purchase Order',
+            self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApprove => 'Purchase Order',
 
             //Tendering
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',

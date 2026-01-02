@@ -17,6 +17,7 @@ class ContractsController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', TenderAward::class);
         $query = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->where('AwardStatus', 'Approved');
 
@@ -43,6 +44,7 @@ class ContractsController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create', TenderAward::class);
         $awardId = $request->get('award_id');
         $award = null;
 
@@ -66,6 +68,7 @@ class ContractsController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', TenderAward::class);
         $request->validate([
             'award_id' => 'required|exists:t_TenderAwards,Id',
             'contract_type' => 'required|in:procurement_managed,legal_managed',
@@ -99,7 +102,6 @@ class ContractsController extends Controller
 
                 return redirect()->route('contracts.index')
                     ->with('success', 'Contract request sent to Legal Department successfully. Reference: ' . ($legalRequest['reference'] ?? 'N/A'));
-
             } else {
                 // Create contract within procurement
                 $contractRef = $this->generateContractReference($award);
@@ -122,7 +124,6 @@ class ContractsController extends Controller
                 return redirect()->route('contracts.show', $award->Id)
                     ->with('success', 'Contract created successfully. Reference: ' . $contractRef);
             }
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -138,6 +139,7 @@ class ContractsController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->findOrFail($id);
+        $this->authorize('view', $contract);
 
         return view('procurement.contracts.contractcreation.show', compact('contract'));
     }
@@ -149,6 +151,7 @@ class ContractsController extends Controller
     {
         $award = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
+        $this->authorize('update', $award);
 
         return view('procurement.contracts.contractcreation.edit', compact('award'));
     }
@@ -168,6 +171,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
+        $this->authorize('update', $award);
 
         $award->update([
             'ContractValue' => $request->contract_value,
@@ -188,6 +192,7 @@ class ContractsController extends Controller
      */
     public function approvalQueue()
     {
+        $this->authorize(\App\Enums\Core\PermissionEnum::ContractApprove->value);
         $contracts = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->whereIn('ContractStatus', ['Draft Created', 'Under Review'])
             ->orderBy('CreatedOn', 'desc')
@@ -206,6 +211,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
+        $this->authorize('approve', $award);
 
         $award->update([
             'ContractStatus' => 'Approved',
@@ -229,6 +235,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
+        $this->authorize('approve', $award);
 
         // Set contract back to draft with rejection remarks
         $award->update([
@@ -316,6 +323,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
+        $this->authorize('update', $award);
 
         if ($award->ContractStatus !== 'Draft Created') {
             return redirect()->back()
@@ -344,6 +352,7 @@ class ContractsController extends Controller
             ]);
 
             $award = TenderAward::findOrFail($id);
+            $this->authorize('update', $award);
 
             if ($request->hasFile('contract_document')) {
                 $file = $request->file('contract_document');
@@ -423,7 +432,6 @@ class ContractsController extends Controller
             }
 
             throw new \Exception('No file was uploaded');
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::warning('Contract document upload validation failed', [
                 'award_id' => $id,
@@ -441,7 +449,6 @@ class ContractsController extends Controller
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();
-
         } catch (\Exception $e) {
             \Log::error('Contract document upload failed', [
                 'award_id' => $id,
@@ -475,6 +482,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
+        $this->authorize('update', $award);
 
         // Handle document upload if provided
         $documentPath = null;
