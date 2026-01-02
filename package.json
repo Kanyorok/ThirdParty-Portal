@@ -7,10 +7,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --no-lint",
     "start": "next start",
-    "lint": "next lint",
-    "prepare": "husky",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "lint": "next lint"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [
@@ -42,7 +39,7 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/postcss": "4.1.11",
-    "@tanstack/react-query": "^5.90.15",
+    "@tanstack/react-query": "^5.90.16",
     "@tanstack/react-table": "^8.21.3",
     "@types/country-list": "^2.1.4",
     "@types/js-cookie": "^3.0.6",
@@ -93,7 +90,6 @@
     "@types/react": "19.2.6",
     "@types/react-dom": "19.2.3",
     "autoprefixer": "^10.4.23",
-    "cypress": "^14.5.4",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.0.3",
     "jscodeshift": "^17.3.0",
@@ -102,7 +98,6 @@
   },
   "trustedDependencies": [
     "@tailwindcss/oxide",
-    "cypress",
     "sharp",
     "unrs-resolver"
   ],

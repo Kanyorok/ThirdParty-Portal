@@ -1,20 +1,15 @@
 "use client"
 
-import { Building2, Home, Users, ChevronDown, User, CheckCircle2, Sparkles } from "lucide-react"
-import { Button } from "@/components/common/button"
+import { getAvailableProfiles } from "@/lib/api/profile-management"
+import { useQuery } from "@tanstack/react-query"
+import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
 } from "@/components/common/dropdown-menu"
-import { Badge } from "@/components/common/badge"
-import { getAvailableProfiles } from "@/lib/api/profile-management"
-import { useQuery } from "@tanstack/react-query"
-import { cn } from "@/lib/utils"
-import { motion, AnimatePresence } from "framer-motion"
 
 export type ProfileType = 'base' | 'supplier' | 'tenant' | 'customer'
 
@@ -26,36 +21,28 @@ interface ProfileSwitcherProps {
 
 const profileConfig = {
   base: {
-    icon: User,
-    label: "Company Information",
-    description: "Manage your business profile",
-    color: "from-slate-500 to-slate-600",
-    bgColor: "bg-slate-50 dark:bg-slate-900/30",
-    borderColor: "border-slate-200 dark:border-slate-800",
+    label: "Party Details",
+    abbr: "PD",
+    color: "bg-blue-600",
+    glow: "shadow-blue-500/20",
   },
   supplier: {
-    icon: Building2,
     label: "Supplier Profile",
-    description: "RFQs, tenders & procurement",
-    color: "from-blue-500 to-blue-600",
-    bgColor: "bg-blue-50 dark:bg-blue-900/30",
-    borderColor: "border-blue-200 dark:border-blue-800",
+    abbr: "SP",
+    color: "bg-slate-900",
+    glow: "shadow-slate-500/20",
   },
   tenant: {
-    icon: Home,
     label: "Tenant Profile",
-    description: "Properties & lease management",
-    color: "from-purple-500 to-purple-600",
-    bgColor: "bg-purple-50 dark:bg-purple-900/30",
-    borderColor: "border-purple-200 dark:border-purple-800",
+    abbr: "TP",
+    color: "bg-indigo-600",
+    glow: "shadow-indigo-500/20",
   },
   customer: {
-    icon: Users,
     label: "Customer Profile",
-    description: "Orders, invoices & services",
-    color: "from-emerald-500 to-emerald-600",
-    bgColor: "bg-emerald-50 dark:bg-emerald-900/30",
-    borderColor: "border-emerald-200 dark:border-emerald-800",
+    abbr: "CP",
+    color: "bg-emerald-600",
+    glow: "shadow-emerald-500/20",
   },
 }
 
@@ -65,174 +52,86 @@ export function ProfileSwitcher({ currentProfile, onProfileChange, className }: 
     queryFn: getAvailableProfiles,
   })
 
-  // Build available profiles list
   const availableProfiles: ProfileType[] = ['base']
-
   if (availableProfilesData?.data?.availableProfiles) {
     availableProfilesData.data.availableProfiles.forEach((profile) => {
-      if (profile.hasProfile) {
-        availableProfiles.push(profile.type)
-      }
+      if (profile.hasProfile) availableProfiles.push(profile.type as ProfileType)
     })
   }
 
-  const currentConfig = profileConfig[currentProfile]
-  const CurrentIcon = currentConfig.icon
+  const active = profileConfig[currentProfile]
 
   if (isLoading) {
-    return (
-      <div className={cn("relative", className)}>
-        <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-muted/50 to-muted/30 border border-muted animate-pulse">
-          <div className="h-10 w-10 rounded-lg bg-muted-foreground/20" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-32 bg-muted-foreground/20 rounded" />
-            <div className="h-3 w-24 bg-muted-foreground/10 rounded" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // If only base profile exists, show simplified view
-  if (availableProfiles.length === 1) {
-    return (
-      <div className={cn("relative", className)}>
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn(
-            "flex items-center gap-3 px-4 py-3.5 rounded-xl border shadow-sm",
-            currentConfig.bgColor,
-            currentConfig.borderColor
-          )}
-        >
-          <div className={cn(
-            "flex items-center justify-center h-10 w-10 rounded-lg bg-gradient-to-br shadow-md",
-            currentConfig.color
-          )}>
-            <CurrentIcon className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-foreground">{currentConfig.label}</p>
-            <p className="text-xs text-muted-foreground">No additional profiles</p>
-          </div>
-        </motion.div>
-      </div>
-    )
+    return <div className={cn("h-12 w-48 animate-pulse rounded-full bg-neutral-100 dark:bg-neutral-800", className)} />
   }
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative inline-block", className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "relative w-full h-auto px-4 py-3.5 rounded-xl border shadow-sm transition-all duration-300",
-              "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
-              currentConfig.bgColor,
-              currentConfig.borderColor,
-              "group"
-            )}
-          >
-            <div className="flex items-center gap-3 w-full">
-              <div className={cn(
-                "flex items-center justify-center h-10 w-10 rounded-lg bg-gradient-to-br shadow-md transition-transform duration-300",
-                "group-hover:scale-110 group-hover:rotate-3",
-                currentConfig.color
-              )}>
-                <CurrentIcon className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  {currentConfig.label}
-                  <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" />
-                </p>
-                <p className="text-xs text-muted-foreground">{currentConfig.description}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs font-bold px-2 py-0.5">
-                  {availableProfiles.length - 1}
-                </Badge>
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-hover:translate-y-0.5" />
-              </div>
+          <button className="group flex items-center gap-3 rounded-full border border-neutral-200 bg-white p-1 pr-4 transition-all hover:border-neutral-300 hover:shadow-md active:scale-95 dark:border-neutral-800 dark:bg-neutral-950">
+            <div className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-full text-[10px] font-black text-white shadow-lg transition-transform group-hover:scale-110",
+              active.color,
+              active.glow
+            )}>
+              {active.abbr}
             </div>
-          </Button>
+            <span className="text-xs font-bold tracking-tight text-neutral-700 dark:text-neutral-300">
+              {active.label}
+            </span>
+            <div className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+              <div className="h-1 w-1 rounded-full bg-neutral-400" />
+            </div>
+          </button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
           align="start"
-          className="w-80 p-2 rounded-xl border shadow-xl bg-background/95 backdrop-blur-lg"
           sideOffset={8}
+          className="min-w-[220px] overflow-hidden rounded-[24px] border border-neutral-200/50 bg-white/80 p-1.5 shadow-2xl backdrop-blur-xl dark:border-neutral-800/50 dark:bg-neutral-950/80"
         >
-          <DropdownMenuLabel className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <Sparkles className="h-3 w-3" />
-            Switch Profile
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator className="my-2" />
+          <div className="space-y-1">
+            <AnimatePresence mode="popLayout">
+              {availableProfiles.map((profile) => {
+                const config = profileConfig[profile]
+                const isSelected = profile === currentProfile
 
-          <AnimatePresence mode="popLayout">
-            {availableProfiles.map((profile, index) => {
-              const config = profileConfig[profile]
-              const Icon = config.icon
-              const isActive = profile === currentProfile
-
-              return (
-                <motion.div
-                  key={profile}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ delay: index * 0.05 }}
-                >
+                return (
                   <DropdownMenuItem
+                    key={profile}
                     onClick={() => onProfileChange(profile)}
                     className={cn(
-                      "group relative px-3 py-3 rounded-lg cursor-pointer transition-all duration-200",
-                      "hover:shadow-md active:scale-[0.98]",
-                      isActive
-                        ? cn(config.bgColor, config.borderColor, "border shadow-sm")
-                        : "hover:bg-muted/50"
+                      "group relative flex items-center gap-3 rounded-full p-2 transition-all focus:bg-neutral-100 dark:focus:bg-neutral-900",
+                      isSelected && "bg-neutral-50 dark:bg-neutral-900/40"
                     )}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className={cn(
-                        "flex items-center justify-center h-9 w-9 rounded-lg shadow transition-all duration-300",
-                        isActive
-                          ? cn("bg-gradient-to-br", config.color, "scale-110")
-                          : "bg-muted group-hover:scale-105"
-                      )}>
-                        <Icon className={cn(
-                          "h-4 w-4 transition-colors",
-                          isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground"
-                        )} />
-                      </div>
-                      <div className="flex-1">
-                        <p className={cn(
-                          "text-sm font-semibold transition-colors",
-                          isActive ? "text-foreground" : "text-foreground/80 group-hover:text-foreground"
-                        )}>
-                          {config.label}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {config.description}
-                        </p>
-                      </div>
-                      {isActive && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="flex items-center justify-center"
-                        >
-                          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        </motion.div>
-                      )}
+                    <div className={cn(
+                      "flex h-7 w-7 items-center justify-center rounded-full text-[8px] font-black text-white transition-all",
+                      config.color,
+                      isSelected ? "scale-100 opacity-100" : "scale-90 opacity-40 group-hover:scale-100 group-hover:opacity-100"
+                    )}>
+                      {config.abbr}
                     </div>
+
+                    <span className={cn(
+                      "flex-1 text-xs font-semibold tracking-tight transition-colors",
+                      isSelected ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 group-hover:text-neutral-600"
+                    )}>
+                      {config.label}
+                    </span>
+
+                    {isSelected && (
+                      <motion.div
+                        layoutId="active-indicator"
+                        className="mr-2 h-1 w-1 rounded-full bg-blue-600"
+                      />
+                    )}
                   </DropdownMenuItem>
-                </motion.div>
-              )
-            })}
-          </AnimatePresence>
+                )
+              })}
+            </AnimatePresence>
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
