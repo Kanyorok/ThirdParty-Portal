@@ -84,6 +84,7 @@ class FleetVehicleAssignment extends Model
     {
         return $this->belongsTo(FleetTripLog::class, 'TripNo', 'Id');
     }
+    
 
     public function inspectionDate()
     {

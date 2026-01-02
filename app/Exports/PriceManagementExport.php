@@ -21,11 +21,8 @@ class PriceManagementExport implements FromArray, WithHeadings
                 $item->uom?->Code ?? '-',
                 $item->price->ActualPrice ?? '0.00',
                 $item->price->CurrencyCode ?? '-',
-                // $item->price->EffectiveFrom ?? '-',
-                // $item->price->EffectiveTo ?? '-',
-                $item->price->IsDefault ?? 0,
-                // $item->price->Source ?? '-',
-                
+
+
             ];
         })->toArray();
     }
@@ -39,10 +36,7 @@ class PriceManagementExport implements FromArray, WithHeadings
             'UOM',
             'ActualPrice',
             'CurrencyCode',
-            // 'EffectiveFrom',
-            // 'EffectiveTo',
-            'IsDefault',
-            // 'Source',
+
         ];
     }
 }

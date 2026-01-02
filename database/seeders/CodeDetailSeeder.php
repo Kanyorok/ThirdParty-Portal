@@ -288,6 +288,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'TenderStatus', 'Description' => 'Closed', 'Value' => 'cl'],
             ['CodeID' => 'TenderStatus', 'Description' => 'Opening In Progress', 'Value' => 'opening_in_progress'],
             ['CodeID' => 'TenderStatus', 'Description' => 'Awarded', 'Value' => 'aw'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending Approval', 'Value' => 'P'], // Added missing status
             ['CodeID' => 'TerminationReason', 'Description' => 'Relocation', 'Value' => 'R'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],
@@ -633,12 +634,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetRepairType', 'Description' => 'Emergency', 'Value' => 'EM'],
 
             //Trip Statuses
-            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'AP'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'RE'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'OG'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'CO'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'CA'],
+
+            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'Sc'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'R'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'Og'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'Co'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'Ca'],
 
             //Maintenance Status
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],

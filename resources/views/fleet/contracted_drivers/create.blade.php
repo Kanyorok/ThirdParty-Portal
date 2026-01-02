@@ -43,7 +43,7 @@
 
             <div class="col-md-6">
                 <label class="form-label">Phone<span class="text-danger">*</span></label>
-                <input type="text" name="Phone" class="form-control @error('Phone') is-invalid @enderror"
+                <input type="text" name="Phone" class="form-control @error('Phone') is-invalid @enderror" placeholder="e.g. +254700000000"
                     value="{{ old('Phone') }}">
                 @error('Phone')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -51,16 +51,21 @@
             </div>
 
 
+
             <div class="col-md-6">
                 <label for="CompanyID" class="form-label">Company Name<span class="text-danger">*</span></label>
-                <select name="CompanyID" class="form-select">
+                <select name="CompanyID" class="form-select @error('CompanyID') is-invalid @enderror">
                     <option value="">Select Company</option>
                     @foreach($companies as $company)
-                    <option value="{{ $company->Id }}" {{ old('CompanyID') == $company->Id ? 'selected' : '' }}>
-                        {{ $company->ThirdPartyName }}
+                    <option value="{{ $company->Id }}" 
+                        {{ old('CompanyID', $driver->CompanyID ?? '') == $company->Id ? 'selected' : '' }}>
+                        {{ $company->party->ThirdPartyName ?? 'Unknown Company' }}
                     </option>
                     @endforeach
                 </select>
+                @error('CompanyID')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="col-md-6">

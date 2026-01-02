@@ -69,9 +69,7 @@ class InterBranchRequisitionPolicy
         }
 
         // Don't allow approving your own requisition
-        // if ($requisition->CreatedBy === $user->Id) {
-        //    return false;
-        // }
+
 
         // Must have the approval permission
         return $user->can(PermissionEnum::InterBranchRequisitionApproval->value);

@@ -11,7 +11,7 @@
 
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label">Full Name</label>
+                <label class="form-label">Full Name<span class="text-danger">*</span></label>
                 <input type="text" name="FullName" class="form-control @error('FullName') is-invalid @enderror"
                     value="{{ old('FullName', $driver->FullName) }}" placeholder="Enter full name" required>
                 @error('FullName')
@@ -20,7 +20,7 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">National ID</label>
+                <label class="form-label">National ID<span class="text-danger">*</span></label>
                 <input type="text" name="NationalID" class="form-control @error('NationalID') is-invalid @enderror"
                     value="{{ old('NationalID', $driver->NationalID) }}" placeholder="Enter National ID"
                     required>
@@ -30,30 +30,37 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">Phone</label>
+                <label class="form-label">Phone<span class="text-danger">*</span></label>
                 <input type="text" name="Phone" class="form-control @error('Phone') is-invalid @enderror"
                     value="{{ old('Phone', $driver->Phone) }}" placeholder="Enter phone number">
                 @error('Phone')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
+                   <p class="text-muted small mb-1"> e.g. +254700000000</p>
             </div>
 
 
+
             <div class="col-md-6">
-                <label for="CompanyID" class="form-label">Company Name</label>
-                <select name="CompanyID" class="form-select">
+                <label for="CompanyID" class="form-label">Company Name<span class="text-danger">*</span></label>
+                <select name="CompanyID" class="form-select @error('CompanyID') is-invalid @enderror">
                     <option value="">Select Company</option>
                     @foreach($companies as $company)
-                    <option value="{{ $company->Id }}" {{ old('CompanyID') == $company->Id ? 'selected' : '' }}>
-                        {{ $company->ThirdPartyName }}
+                    <option value="{{ $company->Id }}" 
+                        {{ old('CompanyID', $driver->CompanyID ?? '') == $company->Id ? 'selected' : '' }}>
+                        {{ $company->party->ThirdPartyName ?? 'Unknown Company' }}
                     </option>
                     @endforeach
                 </select>
+             </p>
+                @error('CompanyID')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <!-- New Contract Start Date -->
             <div class="col-md-6">
-                <label class="form-label">Contract Start Date</label>
+                <label class="form-label">Contract Start Date<span class="text-danger">*</span></label>
                 <input type="date" name="ContractStartDate"
                     class="form-control @error('ContractStartDate') is-invalid @enderror"
                     value="{{ old('ContractStartDate', $driver->ContractStartDate ? \Carbon\Carbon::parse($driver->ContractStartDate)->format('Y-m-d') : '') }}">
@@ -64,7 +71,7 @@
 
             <!-- New Contract End Date -->
             <div class="col-md-6">
-                <label class="form-label">Contract End Date</label>
+                <label class="form-label">Contract End Date<span class="text-danger">*</span></label>
                 <input type="date" name="ContractEndDate"
                     class="form-control @error('ContractEndDate') is-invalid @enderror"
                     value="{{ old('ContractEndDate', $driver->ContractEndDate ? \Carbon\Carbon::parse($driver->ContractEndDate)->format('Y-m-d') : '') }}">

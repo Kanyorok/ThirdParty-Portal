@@ -26,12 +26,10 @@ class ModuleService
     {
         if (config('app.env') === 'local') {
             return self::buildNavbar();
-            // return self::getNavbar();
         }
 
         return Cache::remember(self::getNavbarCacheKey($user), 3600, static function () {
             return self::buildNavbar();
-            // return self::getNavbar();
         });
     }
 
@@ -215,15 +213,15 @@ class ModuleService
     {
         // Preserve original children for fallback logic
         $originalChildren = $item['children'] ?? [];
-            // Filter children by resolver (read visibility)
-            $filteredChildren = [];
-            foreach ($originalChildren as $child) {
-                $filteredChild = self::filterItemForUser($child, $user, $permSet, parentName: ($item['name'] ?? null));
-                if ($filteredChild !== null) {
-                    $filteredChildren[] = $filteredChild;
-                }
+        // Filter children by resolver (read visibility)
+        $filteredChildren = [];
+        foreach ($originalChildren as $child) {
+            $filteredChild = self::filterItemForUser($child, $user, $permSet, parentName: ($item['name'] ?? null));
+            if ($filteredChild !== null) {
+                $filteredChildren[] = $filteredChild;
             }
-            $item['children'] = $filteredChildren;
+        }
+        $item['children'] = $filteredChildren;
 
         // If this item has a route, check if user can access it
         $routeName = $item['route_name'] ?? null;
@@ -231,7 +229,7 @@ class ModuleService
         $subKey = null;
         if (is_string($routeName) && $routeName !== '') {
             $parts = explode('.', Str::lower($routeName));
-            $actions = ['index','create','store','edit','update','destroy','show','list','data'];
+            $actions = ['index', 'create', 'store', 'edit', 'update', 'destroy', 'show', 'list', 'data'];
             $candidate = end($parts) ?: null;
             if ($candidate && in_array($candidate, $actions, true) && count($parts) > 1) {
                 $candidate = prev($parts) ?: $candidate;
@@ -249,7 +247,7 @@ class ModuleService
             return $item;
         }
 
-    // No fallback: parent is visible only if it has any readable children
+        // No fallback: parent is visible only if it has any readable children
 
         return null;
     }
@@ -302,12 +300,12 @@ class ModuleService
             // Honor explicit permission middleware: if user has it, consider this route visible in the menu
             if (isset($permSet[$required])) return true;
             // Also accept common read/view suffixes if present
-            if (Str::endsWith($required, ['-read','-view']) && isset($permSet[$required])) return true;
+            if (Str::endsWith($required, ['-read', '-view']) && isset($permSet[$required])) return true;
         }
 
         // Heuristic: try multiple base candidates from dotted route names (e.g., settings.users.index → users)
         $segments = array_values(array_filter(explode('.', Str::lower($routeName))));
-        $actions = ['index','create','store','edit','update','destroy','show','list','data'];
+        $actions = ['index', 'create', 'store', 'edit', 'update', 'destroy', 'show', 'list', 'data'];
         $candidates = [];
         // Prefer segment after 'settings' if present
         $idx = array_search('settings', $segments, true);
@@ -329,7 +327,7 @@ class ModuleService
 
         foreach ($candidates as $base) {
             $baseCompressed = preg_replace('/[^a-z0-9]/', '', $base);
-            foreach (['read','view'] as $suf) {
+            foreach (['read', 'view'] as $suf) {
                 $p1 = $base . '-' . $suf;
                 if (isset($permSet[$p1])) return true;
                 $p2 = $baseCompressed . '-' . $suf;
@@ -373,7 +371,8 @@ class ModuleService
             ];
             foreach ($map as $key => $enum) {
                 if (Str::contains($moduleName, $key)) {
-                    $target = $enum; break;
+                    $target = $enum;
+                    break;
                 }
             }
         }
@@ -431,7 +430,7 @@ class ModuleService
         $base = Str::of($routeName)->before('.')->lower()->toString();
         // Generate candidate bases: keep separators and compressed
         $baseCompressed = preg_replace('/[^a-z0-9]/', '', $base);
-        $suffixes = ['read','view','create','write','update','edit','delete','destroy','approval','approve'];
+        $suffixes = ['read', 'view', 'create', 'write', 'update', 'edit', 'delete', 'destroy', 'approval', 'approve'];
         foreach ($suffixes as $suf) {
             // raw style: base(with hyphens/segments)-suffix
             $p1 = $base . '-' . $suf;
@@ -510,13 +509,13 @@ class ModuleService
         $baseKebab = Str::kebab($baseLower);
 
         $synonyms = [
-            'read' => ['read','view'],
-            'create' => ['create','write'],
-            'write' => ['create','write'],
-            'update' => ['update','edit'],
-            'delete' => ['delete','destroy'],
-            'approval' => ['approval','approve'],
-            'approve' => ['approval','approve'],
+            'read' => ['read', 'view'],
+            'create' => ['create', 'write'],
+            'write' => ['create', 'write'],
+            'update' => ['update', 'edit'],
+            'delete' => ['delete', 'destroy'],
+            'approval' => ['approval', 'approve'],
+            'approve' => ['approval', 'approve'],
         ];
         $suffixes = $synonyms[$action] ?? [$action];
 

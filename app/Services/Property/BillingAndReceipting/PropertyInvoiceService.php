@@ -143,7 +143,7 @@ class PropertyInvoiceService
                 // Finance service will internally generate RequestID
                 $result = $finance->intake($payload, true);
 
-                dd($payload);
+                //dd($payload);
                 
                 // Store only the RequestID back into t_RentInvoice
                 if (!empty($result['request_id'])) {
