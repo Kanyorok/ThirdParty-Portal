@@ -35,7 +35,7 @@ class ItemMasterListPolicy
 
     public function restore(User $user, ItemMasterList $item): bool
     {
-        return $user->can(PermissionEnum::MasterListRestore->value);
+        return false;
     }
 
     public function forceDelete(User $user, ItemMasterList $item): bool

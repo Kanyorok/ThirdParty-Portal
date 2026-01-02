@@ -20,12 +20,14 @@ class SectionController extends Controller
 
     public function index(): View
     {
+        $this->authorize('viewAny', Section::class);
         $sections = Section::with('criteria')->get();
         return view('procurement.tendering.settings.sections', compact('sections'));
     }
 
     public function create(): View
     {
+        $this->authorize('create', Section::class);
         $masterSections = Section::with('criteria')->get();
         $prequalificationRound = null;
         return view(
@@ -37,6 +39,7 @@ class SectionController extends Controller
 
     public function store(Request $request, $sectionable = null): RedirectResponse
     {
+        $this->authorize('create', Section::class);
         $validated = $request->validate([
             'SectionName' => 'required|string|max:255',
             'Description' => 'nullable|string',
@@ -92,18 +95,21 @@ class SectionController extends Controller
 
     public function edit(Section $section)
     {
+        $this->authorize('update', $section);
         $section->load('criteria');
         return view('procurement.tendering.settings.section-edit', compact('section'));
     }
 
     public function show(Section $section): View
     {
+        $this->authorize('view', $section);
         $section->load('criteria');
         return view('procurement.tendering.settings.section-show', compact('section'));
     }
 
     public function update(Request $request, Section $section): RedirectResponse
     {
+        $this->authorize('update', $section);
         $validated = $request->validate([
             'SectionName' => 'required|string|max:255',
             'Description' => 'nullable|string',
@@ -166,6 +172,7 @@ class SectionController extends Controller
 
     public function destroy(Section $section): RedirectResponse
     {
+        $this->authorize('delete', $section);
         DB::beginTransaction();
         try {
             $sectionName = $section->SectionName;

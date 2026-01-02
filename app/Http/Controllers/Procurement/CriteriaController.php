@@ -20,12 +20,14 @@ class CriteriaController extends Controller
 
     public function index(Section $section): View
     {
+        $this->authorize('viewAny', Criteria::class);
         $criterias = $section->criteria;
         return view('procurement.tendering.settings.criterias', compact('criterias', 'section'));
     }
 
     public function store(Request $request, Section $section): RedirectResponse
     {
+        $this->authorize('create', Criteria::class);
         // CORRECTED: Validation rules now match the model's fillable field names
         $validated = $request->validate([
             'CriteriaName' => 'required|string|max:255',
@@ -55,6 +57,7 @@ class CriteriaController extends Controller
 
     public function update(Request $request, Section $section, Criteria $criteria): RedirectResponse
     {
+        $this->authorize('update', $criteria);
         // CORRECTED: Validation rules now match the model's fillable field names
         $validated = $request->validate([
             'CriteriaName' => 'required|string|max:255',
@@ -89,6 +92,7 @@ class CriteriaController extends Controller
 
     public function destroy(Section $section, Criteria $criteria): RedirectResponse
     {
+        $this->authorize('delete', $criteria);
         DB::beginTransaction();
         try {
             $criteriaName = $criteria->CriteriaName;
@@ -111,6 +115,7 @@ class CriteriaController extends Controller
 
     public function fetchAll(Section $section): \Illuminate\Http\JsonResponse
     {
+        $this->authorize('viewAny', Criteria::class);
         return response()->json($section->criteria()->select('Id', 'CriteriaName', 'Description')->get());
     }
 }
