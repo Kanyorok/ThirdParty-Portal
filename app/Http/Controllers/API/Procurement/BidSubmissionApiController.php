@@ -84,7 +84,10 @@ class BidSubmissionApiController extends Controller
             $actualSupplierId = $validated['supplier_id'];
         } else {
             // Convert third_party_id to supplier_id
-            $supplier = Supplier::where('ThirdPartyID', $validated['third_party_id'])->first();
+            $supplier = Supplier::whereHas('supplierMaster', function ($query) use ($validated) {
+                $query->where('ThirdPartyId', $validated['third_party_id']);
+            })->first();
+
             if (!$supplier) {
                 return response()->json([
                     'success' => false,
@@ -124,8 +127,9 @@ class BidSubmissionApiController extends Controller
             $bid = $existingBid ?: new BidSubmission();
 
             // Get supplier name for better UX
-            $supplierName = $supplier->thirdParty->TradingName ??
-                $supplier->thirdParty->ThirdPartyName ??
+            // Get supplier name for better UX
+            $supplierName = $supplier->supplierMaster->party->TradingName ??
+                $supplier->supplierMaster->party->ThirdPartyName ??
                 'Unknown Supplier';
 
             // Calculate if bid was received on time
@@ -213,7 +217,6 @@ class BidSubmissionApiController extends Controller
                             'stored_path' => $storagePath,
                             'file_size' => $file->getSize()
                         ]);
-
                     } catch (\Exception $e) {
                         Log::error("Failed to process document", [
                             'bid_id' => $bid->Id,
@@ -283,7 +286,6 @@ class BidSubmissionApiController extends Controller
                     'submission_source' => $bid->SubmissionSource
                 ]
             ], $existingBid ? 200 : 201);
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to store bid submission: ' . $th->getMessage(), [
@@ -480,7 +482,6 @@ class BidSubmissionApiController extends Controller
                     'submission_reference' => "BID-{$tender->TenderNo}-{$supplier->Id}-" . $bidSubmission->Id,
                 ],
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollback();
 
@@ -561,7 +562,6 @@ class BidSubmissionApiController extends Controller
                 ],
                 'message' => $existingBid->BidStatus === 'draft' ? 'Draft bid found' : 'Final bid already submitted'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching existing bid', [
                 'error' => $e->getMessage(),
@@ -605,7 +605,7 @@ class BidSubmissionApiController extends Controller
 
             $submissions = BidSubmission::where('SupplierId', $supplier->Id)
                 ->with(['submissionMode', 'createdByUser'])
-                ->orderBy('ReceivedAt', 'desc')
+                ->orderBy('CreatedOn', 'desc')
                 ->get()
                 ->map(function ($submission) {
                     $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
@@ -628,7 +628,6 @@ class BidSubmissionApiController extends Controller
                 'data' => $submissions,
                 'supplier_name' => $supplier->thirdParty->TradingName ?? $supplier->thirdParty->ThirdPartyName,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching supplier bids', [
                 'error' => $e->getMessage(),
@@ -663,11 +662,15 @@ class BidSubmissionApiController extends Controller
     /**
      * Get supplier by third party ID
      */
+    /**
+     * Get supplier by third party ID
+     */
     private function getSupplierByThirdPartyId(int $thirdPartyId): ?Supplier
     {
-        return Supplier::where('ThirdPartyID', $thirdPartyId)
+        return Supplier::whereHas('supplierMaster', function ($query) use ($thirdPartyId) {
+            $query->where('ThirdPartyId', $thirdPartyId);
+        })
             ->whereNull('DeletedOn')
-            ->with('thirdParty')
             ->first();
     }
 
