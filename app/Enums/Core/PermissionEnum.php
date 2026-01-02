@@ -277,6 +277,30 @@ enum PermissionEnum: string
         // Plan Consolidation & Submission
     case ProcurementPlanSubmit = 'procurementplan-submit';
 
+        // Procurement Settings - Approval Setup
+    case ApprovalSetupRead = 'approvalsetup-read';
+    case ApprovalSetupWrite = 'approvalsetup-create';
+    case ApprovalSetupUpdate = 'approvalsetup-update';
+    case ApprovalSetupDelete = 'approvalsetup-delete';
+
+        // Procurement Settings - Evaluation Criteria
+    case EvaluationCriteriaRead = 'evaluationcriteria-read';
+    case EvaluationCriteriaWrite = 'evaluationcriteria-create';
+    case EvaluationCriteriaUpdate = 'evaluationcriteria-update';
+    case EvaluationCriteriaDelete = 'evaluationcriteria-delete';
+
+        // Procurement Settings - Sections
+    case ProcurementSectionRead = 'procurementsection-read';
+    case ProcurementSectionWrite = 'procurementsection-create';
+    case ProcurementSectionUpdate = 'procurementsection-update';
+    case ProcurementSectionDelete = 'procurementsection-delete';
+
+        // Procurement Settings - Configuration (Modes & Periods)
+    case ProcurementConfigRead = 'procurementconfig-read';
+    case ProcurementConfigWrite = 'procurementconfig-create';
+    case ProcurementConfigUpdate = 'procurementconfig-update';
+    case ProcurementConfigDelete = 'procurementconfig-delete';
+
         //ProcurementPlan Procurement Schedule
         //case SchedulePlanRead = 'scheduleplan-read';
         //case SchedulePlanWrite = 'scheduleplan-create';
@@ -1287,7 +1311,6 @@ enum PermissionEnum: string
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval => 'Department Needs',
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => 'Employees',
             self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete => 'Consolodidated Needs',
-            self::ProcurementMethodRead, self::ProcurementMethodWrite => 'Procurement Method',
             self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete, => 'Plan Line Items',
             self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval => 'Plan Maintenance',
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete, => 'Plan Manual Input',
@@ -1299,12 +1322,25 @@ enum PermissionEnum: string
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApprove => 'Purchase Order',
 
+            self::BidOpeningRead, self::BidOpeningWrite => 'Bid Opening',
+            self::RFQResponseRead, self::RFQResponseWrite, self::RFQResponseUpdate => 'RFQ Response',
+            self::RFQCommitteeRead, self::RFQCommitteeWrite, self::TenderCommitteeRead, self::TenderCommitteeWrite => 'Committees',
+            self::ProcurementMethodRead, self::ProcurementMethodWrite, self::ProcurementMethodUpdate => 'Procurement Method',
+            self::ProcurementPlanSubmit => 'Procurement Plan Submission',
+
             //Tendering
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',
             self::SupplierRead, self::SupplierWrite, self::SupplierUpdate, self::SupplierDelete, self::SupplierApprove => 'Suppliers',
             self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Bid Submission',
             self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Invitation',
             self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Vendor Clarifications',
+
+            // Settings & Setup (Batch 4)
+            self::ApprovalSetupRead, self::ApprovalSetupWrite, self::ApprovalSetupUpdate, self::ApprovalSetupDelete => 'Approval Setup',
+            self::EvaluationCriteriaRead, self::EvaluationCriteriaWrite, self::EvaluationCriteriaUpdate, self::EvaluationCriteriaDelete => 'Evaluation Criteria',
+            self::ProcurementSectionRead, self::ProcurementSectionWrite, self::ProcurementSectionUpdate, self::ProcurementSectionDelete => 'Procurement Sections',
+            self::ProcurementConfigRead, self::ProcurementConfigWrite, self::ProcurementConfigUpdate, self::ProcurementConfigDelete => 'Procurement Configuration',
+
             //Inventory
             self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
             self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',
@@ -1416,7 +1452,7 @@ enum PermissionEnum: string
             self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete => 'Loan Security',
             self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete => 'Intellectual Propert',
 
-            default      => 'Unknown Permission'
+            default      => 'System Codes' // Fallback to System Codes or specific category if unknown, but better to be explicit.
         };
     }
 }

@@ -276,6 +276,14 @@ use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\Order as ProcurementOrder;
 use App\Models\Procurement\GoodsReceipt;
+use App\Models\Core\ApprovalGroup;
+use App\Models\Procurement\Criteria;
+use App\Models\Procurement\ProcurementMode;
+use App\Models\Procurement\ProcurementPeriod;
+use App\Policies\Procurement\ApprovalSetupPolicy;
+use App\Policies\Procurement\EvaluationCriteriaPolicy;
+use App\Policies\Procurement\ProcurementSectionPolicy;
+use App\Policies\Procurement\ProcurementConfigurationPolicy;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -709,6 +717,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
         Gate::policy(FleetRepairLog::class, FleetRepairLogPolicy::class);
         Gate::policy(FleetVehicleInspection::class, FleetVehicleInspectionPolicy::class);
+
+        // Batch 4: Settings & Setup
+        Gate::policy(ApprovalGroup::class, ApprovalSetupPolicy::class);
+        Gate::policy(Criteria::class, EvaluationCriteriaPolicy::class);
+        Gate::policy(Section::class, ProcurementSectionPolicy::class);
+        Gate::policy(ProcurementMode::class, ProcurementConfigurationPolicy::class);
+        Gate::policy(ProcurementPeriod::class, ProcurementConfigurationPolicy::class);
 
         Sanctum::usePersonalAccessTokenModel(CustomPersonalAccessToken::class);
 
