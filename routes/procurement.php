@@ -57,8 +57,10 @@ use App\Http\Controllers\Procurement\RFQEvaluationController;
 use App\Http\Controllers\Procurement\RFQLinesController;
 use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQSectionController;
+use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
+use App\Http\Controllers\Procurement\SalesOrderController;
 use App\Http\Controllers\Procurement\RFQSettingController;
 use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
@@ -83,11 +85,11 @@ use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
 
 
-Route::middleware(['module:300000'])->namespace('Procurement')->group(function () {
+Route::middleware(['module:300000'])->group(function () {
 
     //Requisitions
-    Route::resource('requisition', 'RequisitionsController');
-    Route::resource('requisitionItem', 'RequisitionItemsController');
+    Route::resource('requisition', RequisitionsController::class);
+    Route::resource('requisitionItem', RequisitionItemsController::class);
     Route::post('department-needs/{NeedID}/submit', [DepartmentNeedsController::class, 'submit'])
         ->name('department-needs.submit');
 
@@ -206,7 +208,7 @@ Route::middleware(['module:300000'])->namespace('Procurement')->group(function (
     });
 
     //Sales Order
-    Route::resource('salesOrder', 'SalesOrderController');
+    Route::resource('salesOrder', SalesOrderController::class);
 
     // Procurement Modes
     Route::resource('procurement-modes', ProcurementModeController::class);

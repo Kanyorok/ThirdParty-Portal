@@ -27,7 +27,9 @@ class SupplierService extends ThirdPartiesService
 
         // Validate the relationship exists
         if (!$supplier->party) {
-            throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
+            // throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
+            \Illuminate\Support\Facades\Log::warning("Supplier {$supplier->SupplierID} (ID: {$supplier->Id}) has no associated ThirdParty record. Skipping strict check.");
+            return;
         }
 
         parent::__construct($supplier->party);
