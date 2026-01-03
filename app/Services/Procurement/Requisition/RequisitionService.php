@@ -487,11 +487,36 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
 
     public static function fetchProcurementPlan()
     {
-        return DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
+        // 1. Get the ID for 'RFQ' procurement method
+        // We look for 'RFQ' in CodeDetails where CodeID is ProcurementMethod
+        $rfqMethodId = DB::table('t_CodeDetails')
+            ->where('CodeID', 'ProcurementMethod')
+            ->where(function($q) {
+                $q->where('Value', 'RFQ')
+                  ->orWhere('Description', 'RFQ');
+            })
+            ->value('ID');
+
+        $query = DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
             ->select('PlanID', 'Title', 'ReferenceNumber')
-            ->where('Status', '=', 'Ap')
+            ->where(function($q) {
+                $q->where('Status', '=', 'Ap')
+                  ->orWhere('Status', '=', 'Approved'); // Handle both cases just to be safe
+            })
             ->whereNull('DeletedBy')
-            ->whereNull('DeletedOn')
-            ->get();
+            ->whereNull('DeletedOn');
+
+        // 2. Filter by having at least one RFQ line item
+        if ($rfqMethodId) {
+            $query->whereExists(function ($subquery) use ($rfqMethodId) {
+                $subquery->select(DB::raw(1))
+                    ->from('t_PlanLineItem')
+                    ->whereColumn('t_PlanLineItem.PlanID', 't_ConsolidatedProcurementPlan.PlanID')
+                    ->where('t_PlanLineItem.ProcurementMethod', $rfqMethodId)
+                    ->whereNull('t_PlanLineItem.DeletedOn');
+            });
+        }
+
+        return $query->get();
     }
 }

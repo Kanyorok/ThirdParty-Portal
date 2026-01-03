@@ -1011,7 +1011,7 @@ enum PermissionEnum: string
             [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
 
             ///////////////////////  Legal  ///////////////////////////////////////
-            [self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete, self::ContractApprove],
+            [self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete, self::ContractApproval],
             [self::DisputeLitigationView, self::DisputeLitigationCreate, self::DisputeLitigationUpdate, self::DisputeLitigationDelete],
             [self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete],
             [self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete],
@@ -1036,7 +1036,7 @@ enum PermissionEnum: string
             self::RequisitionItemsApproval,
             self::DepartmentNeedsApproval,
             self::TenderApproval,
-            self::ContractApprove,
+            self::ContractApproval,
             self::SupplierApprove,
 
             self::PropertyNewLeaseApproval
@@ -1202,7 +1202,7 @@ enum PermissionEnum: string
 
 
             ////////////////////   Legal   ////////////////////////////
-            self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete, self::ContractApprove,
+            self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete, self::ContractApproval,
             self::DisputeLitigationView, self::DisputeLitigationCreate, self::DisputeLitigationUpdate, self::DisputeLitigationDelete,
             self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete,
             self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete,
@@ -1368,7 +1368,7 @@ enum PermissionEnum: string
             self::FinanceJournalPosting, self::FinanceAPInvoicePosting, self::FinanceARInvoicePosting, self::FinanceCreditNotePosting, self::FinanceDebitNotePosting, self::FinanceVoucherPosting, self::FinancePaymentProcessingPosting, self::FinanceReceiptPosting => 'Transaction Postings',
 
             ////////////////////////  Legal   ///////////////////////////
-            self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete, self::ContractApprove => 'Legal Contract',
+            self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete, self::ContractApproval => 'Legal Contract',
             self::DisputeLitigationView, self::DisputeLitigationCreate, self::DisputeLitigationUpdate, self::DisputeLitigationDelete => 'Dispute Litigation',
             self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete => 'Legal Obligation',
             self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete => 'Legal Search',

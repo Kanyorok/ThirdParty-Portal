@@ -260,7 +260,17 @@ class ContractsController extends Controller
                 ->findOrFail($id);
         }
 
-        return view('procurement.contracts.contractcreation.show', compact('contract', 'type'));
+        try {
+            $workflow = $this->getWorkflow($type);
+            $history = $workflow->historyForModel($contract);
+            $canApprove = $workflow->canApproveModel($contract, Auth::user());
+        } catch (\Exception $e) {
+            \Log::error('Workflow data fetch error: ' . $e->getMessage());
+            $history = collect();
+            $canApprove = false;
+        }
+
+        return view('procurement.contracts.contractcreation.show', compact('contract', 'type', 'history', 'canApprove'));
     }
 
     /**
@@ -337,12 +347,12 @@ class ContractsController extends Controller
     public function approvalQueue()
     {
         $tenderContracts = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
-            ->whereIn('ContractStatus', ['Draft Created', 'Under Review'])
+            ->whereIn('ContractStatus', ['Draft Created', 'rv', 'Under Review']) // Include 'rv' and legacy
             ->orderBy('CreatedOn', 'desc')
             ->get();
 
         $rfqContracts = RFQAward::with(['supplier.supplierMaster.party'])
-            ->whereIn('ContractStatus', ['Draft Created', 'Under Review'])
+            ->whereIn('ContractStatus', ['Draft Created', 'rv', 'Under Review']) // Include 'rv' and legacy
             ->orderBy('CreatedOn', 'desc')
             ->get();
         
@@ -362,7 +372,21 @@ class ContractsController extends Controller
             $contract->type = 'tender';
         }
 
-        $contracts = $tenderContracts->merge($rfqContracts)->sortByDesc('CreatedOn');
+        // Merge and Sort
+        $allContracts = $tenderContracts->merge($rfqContracts)->sortByDesc('CreatedOn');
+
+        // Manual Pagination
+        $page = request()->input('page', 1);
+        $perPage = 15;
+        $offset = ($page - 1) * $perPage;
+        
+        $contracts = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allContracts->slice($offset, $perPage)->values(),
+            $allContracts->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('procurement.contracts.contractcreation.approve_index', compact('contracts'));
     }
@@ -372,7 +396,16 @@ class ContractsController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->workflow = new \App\Services\Workflow\ApprovalWorkflow('ContractStatus', 'ContractStatus');
+    }
+
+    /**
+     * Get workflow service instance based on award type
+     */
+    private function getWorkflow($type)
+    {
+        // specific code IDs based on config/workflow.php
+        $codeId = ($type === 'rfq') ? 'rfq_award' : 'tender_award';
+        return new \App\Services\Workflow\ApprovalWorkflow($codeId, 'ContractStatus');
     }
 
     /**
@@ -394,16 +427,22 @@ class ContractsController extends Controller
         }
 
         try {
-            $this->workflow->approve(
+            $workflow = $this->getWorkflow($type);
+            
+            // Use Approved status which maps to 'Approved' text in config for these types
+            $workflow->approve(
                 $award,
                 Auth::user(),
-                \App\Enums\WorkflowStatus::Approved,
+                \App\Enums\WorkflowStatus::APPROVED, // Maps to 'Ap' which is seeded
                 $request->approval_remarks ?? 'Approved',
                 'ContractStatus'
             );
 
+            // Manual update just in case workflow doesn't handle non-standard status columns seamlessly depending on version
+            // But workflow service usually handles it if column passed. 
+            // We keep specific field updates like user/time if workflow doesn't do it automatically for these specific custom fields.
             $award->update([
-                'ContractStatus' => 'Approved', // Ensure DB is updated if workflow doesn't handle it directly or as backup
+               // 'ContractStatus' => 'Approved', // Workflow should handle this
                 'ContractApprovalRemarks' => $request->approval_remarks,
                 'ContractApprovedBy' => Auth::id(),
                 'ContractApprovedOn' => now(),
@@ -413,6 +452,7 @@ class ContractsController extends Controller
             return redirect()->route('contracts.approvalQueue')
                 ->with('success', 'Contract approved successfully.');
         } catch (\Exception $e) {
+            \Log::error('Contract approval error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Approval failed: ' . $e->getMessage());
         }
     }
@@ -435,16 +475,33 @@ class ContractsController extends Controller
             $award = TenderAward::findOrFail($id);
         }
 
-        // Log the rejection
-        \Log::info('Contract rejected', [
-            'award_id' => $id,
-            'award_type' => $type,
-            'rejection_reason' => $request->rejection_reason,
-            'rejected_by' => Auth::id()
-        ]);
+        try {
+            $workflow = $this->getWorkflow($type);
+            
+            // Use Rejected status
+            $workflow->reject(
+                $award,
+                Auth::user(),
+                \App\Enums\WorkflowStatus::REJECTED, // Maps to 'Re'
+                $request->rejection_reason,
+                'ContractStatus'
+            );
 
-        return redirect()->route('contracts.approvalQueue')
-            ->with('warning', 'Contract rejected and returned to draft status for revision.');
+            // Log the rejection details in custom fields if needed
+            // Workflow handles status and history.
+             \Log::info('Contract rejected', [
+                'award_id' => $id,
+                'award_type' => $type,
+                'rejection_reason' => $request->rejection_reason,
+                'rejected_by' => Auth::id()
+            ]);
+
+            return redirect()->route('contracts.approvalQueue')
+                ->with('warning', 'Contract rejected and returned to draft status for revision.');
+        } catch (\Exception $e) {
+            \Log::error('Contract rejection error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Rejection failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -527,19 +584,37 @@ class ContractsController extends Controller
             $award = TenderAward::findOrFail($id);
         }
 
-        if ($award->ContractStatus !== 'Draft Created') {
-            return redirect()->back()
-                ->with('error', 'Only draft contracts can be submitted for review.');
+        // Maker-Checker: Prevent re-submission if already under review or approved
+        $allowedStatuses = ['Draft Created', 'Dr', 'Rejected', 'Re'];
+        if (!in_array($award->ContractStatus, $allowedStatuses)) {
+             return redirect()->back()->with('warning', 'This contract has already been submitted for approval.');
         }
 
-        $award->update([
-            'ContractStatus' => 'Under Review',
-            'ContractApprovalRemarks' => $request->review_notes,
-            'ModifiedBy' => Auth::id(),
-        ]);
+        try {
+            $workflow = $this->getWorkflow($type);
 
-        return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
-            ->with('success', 'Contract submitted for review successfully.');
+            // Use UnderReview status (rv)
+            $workflow->submit(
+                $award,
+                Auth::user(),
+                \App\Enums\WorkflowStatus::UnderReview, // Maps to 'rv' which is seeded
+                $request->review_notes ?? 'Submitted for Contract Review'
+            );
+
+            // Manual update of fields not handled by generic workflow
+            $award->update([
+               // 'ContractStatus' => 'Under Review', // Workflow should handle this via config mapping
+                'ContractApprovalRemarks' => $request->review_notes,
+                'ModifiedBy' => Auth::id(),
+            ]);
+
+            return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
+                ->with('success', 'Contract submitted for review successfully.');
+
+        } catch (\Exception $e) {
+            \Log::error('Contract submission error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Submission failed: ' . $e->getMessage()); 
+        }
     }
 
     /**

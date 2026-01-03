@@ -145,7 +145,7 @@ class RFQ extends Model
      */
    public function workflowHistory()
     {
-        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'RFQId')
+        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'Id')
             ->where('Source', 'RFQId')
             ->whereNull('DeletedOn');
             
