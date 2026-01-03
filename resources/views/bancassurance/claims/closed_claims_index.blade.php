@@ -97,12 +97,6 @@
                             </td>
                             <td>{{ \Carbon\Carbon::parse($claim->ClosureDate)->format('d M Y') }}</td>                        </tr>
                         @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                No closed claims available.
-                            </td>
-                        </tr>
                         @endforelse
                     </tbody>
                 </table>
