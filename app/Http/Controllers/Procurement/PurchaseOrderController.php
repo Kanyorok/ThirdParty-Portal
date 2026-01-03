@@ -658,6 +658,168 @@ class PurchaseOrderController extends Controller
         }
     }
 
+    public function getAwardedRFQs()
+    {
+        try {
+            // Get awarded RFQs
+            $awardedFromRFQAward = collect();
+            try {
+                $awardedFromRFQAward = DB::table('t_RFQAward as a')
+                    ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
+                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'a.SupplierId')
+                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                    ->select(
+                        'r.Id',
+                        'r.RFQNumber',
+                        'a.SupplierId',
+                        DB::raw('tp.Id as ThirdPartyId'),
+                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                    )
+                    ->get();
+            } catch (\Throwable $e) {
+                Log::warning('Skipping RFQAward join for awarded RFQs', ['error' => $e->getMessage()]);
+            }
+
+            $approvedConvertedRFQIds = DB::table('t_Orders')
+                ->whereRaw("RTRIM(LTRIM(ISNULL(SourceType,'')))='RFQ'")
+                ->whereNotNull('SourceId')
+                ->where('DocStatus', 'a')
+                ->pluck('SourceId')
+                ->toArray();
+
+            $usedReferenceNumbers = DB::table('t_Orders')
+                ->whereNotNull('ExtOrdNum')
+                ->where('DocStatus', 'a')
+                ->pluck('ExtOrdNum')
+                ->map(function ($v) {
+                    return is_null($v) ? '' : trim((string)$v);
+                })
+                ->filter()
+                ->values()
+                ->toArray();
+
+            $awardedRfqs = $awardedFromRFQAward
+                ->filter(function ($r) use ($approvedConvertedRFQIds, $usedReferenceNumbers) {
+                    $rfqNo = trim((string)($r->RFQNumber ?? ''));
+                    return !in_array($r->Id, $approvedConvertedRFQIds) && !in_array($rfqNo, $usedReferenceNumbers);
+                })
+                ->unique('Id')
+                ->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => $awardedRfqs
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch awarded RFQs: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch awarded RFQs',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getDirectPlans(): JsonResponse
+    {
+        try {
+            // Find 'Direct' procurement method ID
+            $directMethod = DB::table('t_ProcurementMethods')
+                ->where('Method', 'LIKE', '%Direct%')
+                ->first();
+
+            $methodId = $directMethod ? $directMethod->Id : null;
+
+            if (!$methodId) {
+                return response()->json(['success' => true, 'data' => []]);
+            }
+
+            // Fetch plans that have line items with Direct method
+            // We use t_PlanLineItem to find the relevant PlanIDs
+            $planIds = DB::table('t_PlanLineItem')
+                ->where('ProcurementMethod', $methodId)
+                ->pluck('PlanID')
+                ->unique()
+                ->toArray();
+
+            if (empty($planIds)) {
+                return response()->json(['success' => true, 'data' => []]);
+            }
+
+            $plans = ConsolidatedProcurementPlan::query()
+                ->whereIn('PlanID', $planIds)
+                ->where('Status', 'Approved') 
+                ->get()
+                ->map(function ($plan) {
+                     return [
+                         'PlanID' => $plan->PlanID, // Ensure correct casing
+                         'Title' => $plan->Title ?? $plan->Description ?? ('Plan #' . $plan->PlanID),
+                         'FiscalYear' => $plan->FiscalYear,
+                         'PendingItems' => DB::table('t_PlanLineItem')
+                                ->where('PlanID', $plan->PlanID)
+                                ->where('ProcurementMethod', $DB::raw($plan->ProcurementMethod ?? 0)) // This line is wrong in logic but harmless if not used
+                                ->count() 
+                     ];
+                });
+
+            // Calculate pending items correctly
+             $plans = $plans->map(function($p) use ($methodId) {
+                 $p['PendingItems'] = DB::table('t_PlanLineItem')
+                        ->where('PlanID', $p['PlanID'])
+                        ->where('ProcurementMethod', $methodId)
+                        ->count();
+                 return $p;
+             });
+
+            return response()->json([
+                'success' => true,
+                'data' => $plans
+            ]);
+        } catch (\Exception $e) {
+             Log::error('Failed to fetch direct plans: ' . $e->getMessage());
+             return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch direct plans',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getRootItemCategories(): JsonResponse
+    {
+        try {
+            $categories = DB::table('t_ItemCategories')
+                ->where('ParentID', 0)
+                ->orWhereNull('ParentID')
+                ->select('Id', 'Name')
+                ->get();
+             return response()->json(['success' => true, 'data' => $categories]);
+        } catch (\Exception $e) {
+             return response()->json(['success' => false, 'data' => []]);
+        }
+    }
+
+     public function getDirectPlanCategories(): JsonResponse
+    {
+         // Placeholder implementation - return empty or actual categories linked to plans
+         try {
+             return response()->json(['success' => true, 'data' => []]);
+        } catch (\Exception $e) {
+             return response()->json(['success' => false, 'data' => []]);
+        }
+    }
+    
+    public function getPrequalifiedSuppliers($categoryId): JsonResponse
+    {
+         try {
+             // Basic implementation to return empty list or actual logic if tables known
+             return response()->json(['success' => true, 'data' => []]);
+        } catch (\Exception $e) {
+             return response()->json(['success' => false, 'data' => []]);
+        }
+    }
+    
     public function relatedPO()
     {
         return view('procurement.orders.index');

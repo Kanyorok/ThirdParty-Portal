@@ -130,6 +130,13 @@ return [
         'Submitted for Approval' => 'Under Review',
     ],
 
+    'LegalDocumentId' => [
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,
+        'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,
+        'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,
+    ],
+
 
 
     /*
@@ -146,6 +153,7 @@ return [
         'lease_creation' => 'ApprovalStatus',
         'procurement_plan' => 'Status',
         'consolidated_procurement_plan' => 'Status',
+        'LegalDocumentId' => 'ReviewStatus',
         
         // Add more as needed
     ],
