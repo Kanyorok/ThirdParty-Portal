@@ -69,10 +69,11 @@
                            value="{{ $assignment->internalTechnician->JobTitle ?? '-' }}" readonly>
                 </div>
 
+                {{-- @dd($assignment) --}}
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Prequalified Vendor</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $assignment->prequalifiedVendor->SupplierName ?? '-' }}" readonly>
+                           value="{{ $assignment->prequalifiedVendor->party->ThirdPartyName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
