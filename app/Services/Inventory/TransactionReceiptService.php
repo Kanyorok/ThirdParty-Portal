@@ -24,84 +24,73 @@ class TransactionReceiptService
     }
 
     public function createReceipt($validatedData, $items)
-    {
-        return DB::transaction(function () use ($validatedData, $items) {
-            $userId = Auth::id();
-            if (!$userId) {
-                throw new Exception('User not authenticated. Cannot create receipt.');
-            }
+{
+    return DB::transaction(function () use ($validatedData, $items) {
+        $userId = Auth::id();
+        if (!$userId) {
+            throw new Exception('User not authenticated. Cannot create receipt.');
+        }
 
-            $transfer = TransactionTransfer::findOrFail($validatedData['TransferID']);
+        $transfer = TransactionTransfer::findOrFail($validatedData['TransferID']);
 
-            $deliveredValue = Transfers::Delivered->value;
-            $inTransitValue = Transfers::InTransit->value;
+        $deliveredValue = Transfers::Delivered->value;
+        $inTransitValue = Transfers::InTransit->value;
 
-            // Create the receipt
-            $receipt = TransactionReceipt::create([
-                'TransferId' => $validatedData['TransferID'],
-                'ReceivedBy' => $validatedData['ReceivedBy'],
-                'ReceivedDate' => $validatedData['ReceivedDate'],
-                'GeneralRemarks' => $validatedData['GeneralRemarks'] ?? null,
-                'Status' => $deliveredValue,
-                'CreatedBy' => $userId,
-                'CreatedOn' => now(),
-                'ModifiedBy' => $userId,
-                'ModifiedOn' => now(),
-            ]);
+        // Create the receipt
+        $receipt = TransactionReceipt::create([
+            'TransferId' => $validatedData['TransferID'],
+            'ReceivedBy' => $validatedData['ReceivedBy'],
+            'ReceivedDate' => $validatedData['ReceivedDate'],
+            'GeneralRemarks' => $validatedData['GeneralRemarks'] ?? null,
+            'Status' => $deliveredValue,
+            'CreatedBy' => $userId,
+            'CreatedOn' => now(),
+            'ModifiedBy' => $userId,
+            'ModifiedOn' => now(),
+        ]);
 
-            $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
-            $receipt->save();
+        $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
+        $receipt->save();
 
-            // Update transfer status to Delivered
-            if ($transfer && $transfer->Status == $inTransitValue) {
-                $transfer->Status = $deliveredValue;
-                $transfer->ModifiedBy = $userId;
-                $transfer->ModifiedOn = now();
-                $transfer->save();
+        if ($transfer && $transfer->Status == $inTransitValue) {
+            $transfer->Status = $deliveredValue;
+            $transfer->ModifiedBy = $userId;
+            $transfer->ModifiedOn = now();
+            $transfer->save();
+           
+        }
 
-                $user = Auth::user();
-                if ($user) {
-                    $this->workflow->approve(
-                        $transfer,
-                        $user,
-                        Transfers::Delivered,
-                        'Transfer received and marked as Delivered',
-                        'Status'
-                    );
-                }
-            }
+        // Create receipt items and update stock
+        $this->createReceiptItems($receipt, $items, $userId);
 
-            // Create receipt items and update stock
-            $this->createReceiptItems($receipt, $items, $userId);
+        // Update inventory holds from In Transit to Delivered
+        $sourceCodeId = CodeDetail::where('CodeID', 'Source')
+            ->where('Description', 'Transaction Transfer')
+            ->value('ID');
 
-            // Update inventory holds from In Transit to Delivered
-            $sourceCodeId = CodeDetail::where('CodeID', 'Source')
-                ->where('Description', 'Transaction Transfer')
-                ->value('ID');
+        if ($sourceCodeId) {
+            InventoryHold::where('Source', $sourceCodeId)
+                ->where('SourceID', $receipt->TransferId)
+                ->where('Status', $inTransitValue)
+                ->whereNull('DeletedOn')
+                ->update([
+                    'Status' => $deliveredValue,
+                    'ModifiedBy' => $userId,
+                    'ModifiedOn' => now(),
+                    'DeletedBy' => $userId,
+                    'DeletedOn' => now(),
+                ]);
+        }
 
-            if ($sourceCodeId) {
-                InventoryHold::where('Source', $sourceCodeId)
-                    ->where('SourceID', $receipt->TransferId)
-                    ->where('Status', $inTransitValue)
-                    ->whereNull('DeletedOn')
-                    ->update([
-                        'Status' => $deliveredValue,
-                        'ModifiedBy' => $userId,
-                        'ModifiedOn' => now(),
-                        'DeletedBy' => $userId,
-                        'DeletedOn' => now(),
-                    ]);
-            }
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($receipt)
+            ->withProperties(['attributes' => $receipt->toArray()])
+            ->log('Transaction Receipt created and marked as Delivered');
 
-            activity()
-                ->causedBy($user ?? Auth::user())
-                ->performedOn($receipt)
-                ->withProperties(['attributes' => $receipt->toArray()])
-                ->log('Transaction Receipt created and marked as Delivered');
-
-            return $receipt;
-        });
-    }
+        return $receipt;
+    });
+}
 
     public function createReceiptItems($receipt, $items, $userId = null)
     {
