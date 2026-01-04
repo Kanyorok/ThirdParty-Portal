@@ -1,96 +1,83 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { AlertCircle, ArrowLeft, CheckCircle, Clock, Loader2, Mail, Shield } from "lucide-react"
 
-import { Button } from "@/components/common/button"
-import { Input } from "@/components/common/input"
-import { Label } from "@/components/common/label"
-import { Alert, AlertDescription } from "@/components/common/alert"
-
-
-import { Mail, ArrowLeft, CheckCircle, AlertCircle, Clock, Shield, Loader2 } from "lucide-react"
-import { ContactSection } from "./common/contact-us"
-import { AuthHeader } from "./layout/auth-header"
-import { requestPasswordReset } from "@/actions/user-auth-actions"
-
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AuthHeader } from "@/components/signin/auth-header"
+import { ContactSection } from "@/components/signin/contact-section"
+import { recoverPassword } from "@/actions/auth"
 
 const forgotPasswordSchema = z.object({
-    email: z
-        .string()
-        .min(1, "Email address is required")
-        .email("Please enter a valid email address")
-        .max(100, "Email address is too long")
-        .toLowerCase()
-        .trim(),
+    email: z.string().email("Please enter a valid email address"),
 })
 
-type ForgotPasswordInputs = z.infer<typeof forgotPasswordSchema>
-
-interface ForgotPasswordState {
-    type: "idle" | "loading" | "success" | "error" | "rate_limited"
-    message?: string
-    email?: string
-}
+type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 
 export function ForgotPasswordForm() {
+    const [state, setState] = useState<{
+        type: "idle" | "success" | "error" | "rate_limited"
+        message: string
+        email?: string
+    }>({
+        type: "idle",
+        message: "",
+    })
+
     const router = useRouter()
-    const [isPending, startTransition] = useTransition()
-    const [state, setState] = useState<ForgotPasswordState>({ type: "idle" })
 
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid },
         watch,
-        setError,
-    } = useForm<ForgotPasswordInputs>({
+        formState: { errors, isSubmitting, isValid },
+    } = useForm<ForgotPasswordValues>({
         resolver: zodResolver(forgotPasswordSchema),
         mode: "onChange",
-        defaultValues: {
-            email: "",
-        },
     })
 
     const watchedEmail = watch("email")
+    const isPending = isSubmitting
 
-    const onSubmit = async (data: ForgotPasswordInputs) => {
-        startTransition(async () => {
-            setState({ type: "loading" })
+    const onSubmit = (data: ForgotPasswordValues) => {
+        setState({ type: "idle", message: "" })
 
-            try {
-                const result = await requestPasswordReset(data.email)
-
-                if (result.success) {
-                    setState({
-                        type: "success",
-                        message: result.message,
-                        email: data.email,
-                    })
-                } else {
-                    if (result.error === "RATE_LIMITED") {
-                        setState({
-                            type: "rate_limited",
-                            message: result.message,
-                        })
-                    } else if (result.error === "VALIDATION_ERROR") {
-                        setError("email", {
-                            type: "server",
-                            message: result.message || "Invalid email address",
-                        })
-                        setState({ type: "idle" })
-                    } else {
-                        setState({
-                            type: "error",
-                            message: result.message || "Something went wrong. Please try again.",
-                        })
-                    }
-                }
-            } catch (error) {
+        recoverPassword(data.email).then((result) => {
+            if (result.success) {
+                setState({
+                    type: "success",
+                    message: "Reset link sent successfully",
+                    email: data.email,
+                })
+            } else if (result.error === "RATE_LIMIT") {
+                setState({
+                    type: "rate_limited",
+                    message: result.message || "Too many attempts. Please try again later.",
+                })
+            } else {
+                setState({
+                    type: "error",
+                    message: result.message || "An error occurred. Please try again.",
+                })
+            }
+        }).catch(() => {
+            // Even on error, for security we often show the same success message or a generic error
+            // Check if it's a network error vs server error
+            if (window.navigator && !window.navigator.onLine) {
+                setState({
+                    type: "error",
+                    message: "Network error. Please check your connection and try again.",
+                })
+            } else {
+                // Fallback for unexpected errors
                 setState({
                     type: "error",
                     message: "Network error. Please check your connection and try again.",

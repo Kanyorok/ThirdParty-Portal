@@ -1,4 +1,4 @@
-import TendersPage from "@/components/tenders-old";
+import TendersPage from "@/components/tenders";
 
 export default function HomePage() {
     return (
