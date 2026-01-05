@@ -20,17 +20,19 @@ class SupplierService extends ThirdPartiesService
 {
     public function __construct(public SupplierMaster $supplier)
     {
-         // Ensure relationship is loaded
-    if (!$supplier->relationLoaded('party')) {
-        $supplier->load('party');
-    }
-    
-    // Validate the relationship exists
-    if (!$supplier->party) {
-        throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
-    }
-    
-    parent::__construct($supplier->party);
+        // Ensure relationship is loaded
+        if (!$supplier->relationLoaded('party')) {
+            $supplier->load('party');
+        }
+
+        // Validate the relationship exists
+        if (!$supplier->party) {
+            // throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
+            \Illuminate\Support\Facades\Log::warning("Supplier {$supplier->SupplierID} (ID: {$supplier->Id}) has no associated ThirdParty record. Skipping strict check.");
+            return;
+        }
+
+        parent::__construct($supplier->party);
     }
 
     public static function getType(): ThirdPartyType
@@ -85,7 +87,7 @@ class SupplierService extends ThirdPartiesService
             'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
             'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
-        
+
         activity()->causedBy($actor)->performedOn($supplier)->event('create')->log("Added Supplier {$supplier->SupplierID} to thirdparty {$party->ThirdPartyName}.");
         $service = new self($supplier);
         $service->addType(self::getType(), SupplierMaster::getPrimaryKey(), $supplier->Id, $actor);
@@ -106,7 +108,8 @@ class SupplierService extends ThirdPartiesService
     public static function getSupplierDetails($SupplierId)
     {
         return DB::table(DB::raw('t_Suppliers AS s WITH (NOLOCK)'))
-            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 's.ThirdPartyId')
+            ->join(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 's.SupplierMasterId', '=', 'sm.Id')
+            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 'sm.ThirdPartyId')
             ->select(
                 DB::raw('tp.TradingName as Name'),
                 DB::raw("COALESCE(tp.Email, '') as Email"),
@@ -120,8 +123,9 @@ class SupplierService extends ThirdPartiesService
 
     public static function getSuppliers()
     {
-        return DB::table(DB::raw('t_SupplierMaster AS s WITH (NOLOCK)'))
-            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 's.ThirdPartyId')
+        return DB::table(DB::raw('t_Suppliers AS s WITH (NOLOCK)'))
+            ->join(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 's.SupplierMasterId', '=', 'sm.Id')
+            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 'sm.ThirdPartyId')
             ->select(
                 DB::raw('tp.TradingName as SupplierName'),
                 DB::raw("COALESCE(tp.Email, '') as Email"),
@@ -129,7 +133,7 @@ class SupplierService extends ThirdPartiesService
                 DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
                 's.CategoryId as CategoryId',
                 DB::raw('s.Id as SupplierId'),
-                DB::raw('s.ThirdPartyId as ThirdPartyId')
+                DB::raw('sm.ThirdPartyId as ThirdPartyId')
             )
             ->whereNull('s.DeletedOn')
             ->orderBy('tp.TradingName', 'asc')

@@ -161,12 +161,13 @@ class TenderAward extends Model
     public function getContractStatusBadgeAttribute()
     {
         return match ($this->ContractStatus) {
-            'Draft Created' => ['text' => 'Draft', 'class' => 'bg-info'],
-            'Under Review' => ['text' => 'Under Review', 'class' => 'bg-warning text-dark'],
-            'Approved' => ['text' => 'Contract Approved', 'class' => 'bg-success'],
+            'Draft Created', 'Dr' => ['text' => 'Draft', 'class' => 'bg-info'],
+            'Under Review', 'rv' => ['text' => 'Under Review', 'class' => 'bg-warning text-dark'],
+            'Approved', 'Ap' => ['text' => 'Contract Approved', 'class' => 'bg-success'],
             'Sent to Legal' => ['text' => 'With Legal', 'class' => 'bg-primary'],
             'Executed' => ['text' => 'Executed', 'class' => 'bg-dark'],
             'Terminated' => ['text' => 'Terminated', 'class' => 'bg-danger'],
+            'Rejected', 'Re' => ['text' => 'Rejected', 'class' => 'bg-danger'],
             default => ['text' => 'Pending Contract', 'class' => 'bg-secondary'],
         };
     }
@@ -221,7 +222,7 @@ class TenderAward extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'tender_award';
     }
 
      /**

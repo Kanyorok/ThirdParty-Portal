@@ -52,7 +52,7 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('legal.cases.evidence.index', $case->Id) }}" class="btn btn-sm btn-dark" title="View Evidence">📂 Evidence</a>
+                            <a href="{{ route('legal.cases.evidence.index', $case->Id) }}" class="btn btn-sm btn-dark" title="View Case Documents">📂 Case Doc</a>
                             <a href="{{ route('legal.cases.show', $case->Id) }}" class="btn btn-sm btn-info" title="View"><i class="fas fa-eye"></i></a>
                             <a href="{{ route('legal.cases.edit', $case->Id) }}" class="btn btn-sm btn-primary" title="Edit"><i class="fas fa-edit"></i></a>
                             <button type="button"

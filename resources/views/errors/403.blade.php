@@ -6,13 +6,15 @@
     </div>
 </div>
 @php
-    request()->session()->flash('fail','action was unauthorized')
+if(request()->hasSession()){
+request()->session()->flash('fail','action was unauthorized');
+}
 @endphp
 <script>
     window.addEventListener("load", (event) => {
         setTimeout(() => {
-            window.location.replace('{{ (url()->previous())??route('home') }}');
+            window.location.replace('{{ (url()->previous())??route('
+                home ') }}');
         }, 1000);
     });
 </script>
-

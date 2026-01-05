@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Legal;
 
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Legal\LegalClause;
 use Barryvdh\DomPDF\Facade\Pdf;

@@ -36,12 +36,13 @@ class ModuleService
     public static function getNavbarCacheKey(User $user = null): string
     {
         if (!$user) {
-            $user = auth()->user();
+            $user = AuthFacade::user();
         }
         if (!$user) {
             return 'guest-navbar-modules';
         }
-        return $user->UserID . '-navbar_modules';
+        $branchId = session('LoginBranchId', 'no-branch');
+        return $user->UserID . '-' . $branchId . '-navbar_modules';
     }
 
     public static function clearNavbarCache(User $user = null): bool
@@ -191,6 +192,7 @@ class ModuleService
             'route' => $routeUrl,
             'route_name' => is_string($module->Route) ? $module->Route : null,
             'description' => $module->Description ?? '',
+            'required_permission' => $module->RequiredPermission ?? null,
             'children' => []
         ];
 
@@ -211,6 +213,14 @@ class ModuleService
      */
     private static function filterItemForUser(array $item, User $user, array $permSet, ?string $parentName): ?array
     {
+        // 1. Strict Requirement Check
+        $reqPerm = $item['required_permission'] ?? null;
+        if ($reqPerm && !empty($reqPerm)) {
+            if (!isset($permSet[Str::lower($reqPerm)])) {
+                return null;
+            }
+        }
+
         // Preserve original children for fallback logic
         $originalChildren = $item['children'] ?? [];
         // Filter children by resolver (read visibility)
@@ -223,7 +233,25 @@ class ModuleService
         }
         $item['children'] = $filteredChildren;
 
-        // If this item has a route, check if user can access it
+        // 2. If children are visible, the parent is visible (unless strict check failed above, which implies return null)
+        if (!empty($filteredChildren)) {
+            return $item;
+        }
+
+        // Strict Hiding: If item is a parent (had children) but all are hidden, and it has no actionable route, hide it.
+        // This prevents empty menu groups (e.g., Settings, Inventory) from showing up when user has no access to sub-items.
+        $hasActionableRoute = isset($item['route']) && $item['route'] !== 'javascript:void(0)' && $item['route'] !== '#';
+        if (!empty($originalChildren) && empty($filteredChildren) && !$hasActionableRoute) {
+            return null;
+        }
+
+        // 3. Fallback for Leaf Nodes (no children filtered or original)
+        // If we had a strict permission requirement and passed it (above), we are good.
+        if ($reqPerm) {
+            return $item;
+        }
+
+        // If no strict permission, check Route accessibility (Legacy/Fallback)
         $routeName = $item['route_name'] ?? null;
         // Submodule key inference: prefer route base or menu item name kebab
         $subKey = null;
@@ -239,15 +267,12 @@ class ModuleService
         if (!$subKey) {
             $subKey = Str::kebab(Str::lower((string)($item['name'] ?? '')));
         }
-        // Visibility rule: submodule is visible only if user has read on that submodule (or it is open)
+        // Visibility rule: visible if we can read the inferred submodule key
         $canAccessRoute = $subKey ? PermissionResolver::isReadable($user, $subKey) : false;
 
-        // Strict rule: keep item only if the route is accessible OR it has accessible children
-        if ($canAccessRoute || !empty($filteredChildren)) {
+        if ($canAccessRoute) {
             return $item;
         }
-
-        // No fallback: parent is visible only if it has any readable children
 
         return null;
     }

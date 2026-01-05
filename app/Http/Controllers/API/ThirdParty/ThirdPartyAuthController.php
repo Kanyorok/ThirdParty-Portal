@@ -5,11 +5,11 @@ namespace App\Http\Controllers\API\ThirdParty;
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyUserRequest;
-use App\Http\Requests\ThirdPartyAuth\LoginThirdPartyRequest;
+use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
+use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use App\Services\RegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +19,7 @@ use App\Models\ThirdParty\SupplierMaster;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use Illuminate\Support\Facades\Password;
 
 class ThirdPartyAuthController extends Controller
 {
@@ -210,5 +211,43 @@ class ThirdPartyAuthController extends Controller
     private function resolveThirdPartyUser(?string $id = null): ?ThirdPartyUser
     {
         return Auth::guard('sanctum')->user() ?? ($id ? ThirdPartyUser::where('UserID', $id)->first() : null);
+    }
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        // We use the 'thirdparties' broker defined in config/auth.php
+        $status = Password::broker('thirdparties')->sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['message' => __($status)])
+            : response()->json(['message' => __($status)], 400); // translation strings from resources/lang
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        $status = Password::broker('thirdparties')->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                // Handle custom column 'Password' and hashing
+                $user->forceFill([
+                    'Password' => Hash::make($password)
+                ])->save();
+                
+                 // Clear tokens if api setup requires it, though createsToken() handles login separately
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['message' => __($status)])
+            : response()->json(['message' => __($status)], 400);
     }
 }

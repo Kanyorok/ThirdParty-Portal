@@ -31,9 +31,16 @@
                         </select>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label for="DueDate" class="form-label">Due Date</label>
-                    <input type="date" name="DueDate" class="form-control" required>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="DueDate" class="form-label">Due Date</label>
+                        <input type="date" name="DueDate" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="ExpiryDate" class="form-label">Expiry Date</label>
+                        <input type="date" name="ExpiryDate" class="form-control">
+                    </div>
                 </div>
 
                 <div class="mb-3">
