@@ -6,10 +6,10 @@ import { Search, Loader2, X, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useDebounce } from "@/hooks/use-debounce";
 import { axiosInstance } from "@/lib/axios";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/common/badge";
+import { Button } from "@/components/common/button";
+import { Card } from "@/components/common/card";
+import { Input } from "@/components/common/input";
 import {
     Table,
     TableBody,
@@ -17,7 +17,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from "@/components/common/table";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FilterChip {
