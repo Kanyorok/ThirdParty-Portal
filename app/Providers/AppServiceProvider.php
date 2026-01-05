@@ -129,6 +129,7 @@ use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\Store;
+use App\Models\Inventory\StockTake;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Procurement\Tender;
 use App\Models\Inventory\TransactionTransfer;
@@ -219,6 +220,7 @@ use App\Policies\Inventory\ItemMasterListPolicy;
 use App\Policies\Inventory\ItemTypePolicy;
 use App\Policies\Inventory\PriceManagementPolicy;
 use App\Policies\Inventory\StockAdjustmentPolicy;
+use App\Policies\Inventory\StockTakePolicy;
 use App\Policies\Inventory\StockItemPolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\TransactionReceiptPolicy;
@@ -229,6 +231,7 @@ use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
+use App\Policies\Procurement\SupplierPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
@@ -259,6 +262,11 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Http\Controllers\Procurement\TenderController;
+use App\Http\Controllers\Procurement\RequisitionsController;
+use App\Http\Controllers\Procurement\AwardsController;
+use App\Http\Controllers\Procurement\PurchaseOrderController;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
 
@@ -372,8 +380,7 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
-
-            'tender' => Tender::class,
+            Tender::getPrimaryKey() => Tender::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
@@ -400,6 +407,7 @@ class AppServiceProvider extends ServiceProvider
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             UOMConversion::getPrimaryKey() => UOMConversion::class,
+            StockTake::getPrimaryKey() => StockTake::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -466,6 +474,7 @@ class AppServiceProvider extends ServiceProvider
             // Allow resolving morph type 'ThirdParty' used by legacy data
             'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
+            'ThirdPartyUser' => \App\Models\ThirdParty\ThirdPartyUser::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,
@@ -570,6 +579,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
         Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
         Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
+        Gate::policy(StockTake::class, StockTakePolicy::class);
         Gate::policy(ItemType::class, ItemTypePolicy::class);
         Gate::policy(StockItem::class, StockItemPolicy::class);
         Gate::policy(InventoryType::class, InventoryTypePolicy::class);
@@ -598,6 +608,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
         Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
+        Gate::policy(SupplierMaster::class, SupplierPolicy::class);
         Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
         // Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);

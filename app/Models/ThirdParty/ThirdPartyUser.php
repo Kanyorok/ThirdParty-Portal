@@ -2,7 +2,7 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Enums\Employee\GenderEnum;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Notifications\ThirdParty\VerifyThirdPartyEmail;
 use Illuminate\Auth\MustVerifyEmail;
@@ -15,10 +15,15 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Traits\Model\UserActorTrait;
 
-class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+
+class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract, CanResetPasswordContract
 {
-    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
+    // use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
+    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail, UserActorTrait, CanResetPassword;
 
     public static $snakeAttributes = false;
 
@@ -60,8 +65,9 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
+        'IsActive' => 'boolean',
         'Password' => 'hashed',
-        'Gender' => GenderEnum::class,
+        // 'Gender' => GenderEnum::class,
     ];
 
     protected static function boot(): void
@@ -196,5 +202,10 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
     public function getMorphClass(): string
     {
         return 'ThirdPartyUser';
+    }
+
+    public function genderDetail(): BelongsTo
+    {
+        return $this->belongsTo(CodeDetail::class, 'Gender', 'ID');
     }
 }

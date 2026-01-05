@@ -31,15 +31,17 @@ class DocumentTagsController extends Controller
     {
         $this->authorize('view', $document);
         $user = $request->user();
-        $data = $request->validate([
-            "DocumentTags" => "required|array",
+        $request->validate([
+            "DocumentTags" => "nullable|array",
             "DocumentTags.*" => "required|exists:t_DMSTags,TagID",
         ]);
 
+        $givenTags = $request->array('DocumentTags', []);
+
 
         try {
-            return DB::transaction(function () use ($document, $data, $user) {
-                $tags = DMSTags::whereIn('TagID', $data['DocumentTags'])->where(static function (Builder $query) use ($user) {
+            return DB::transaction(function () use ($document, $givenTags, $user) {
+                $tags = DMSTags::whereIn('TagID', $givenTags)->where(static function (Builder $query) use ($user) {
                     $query->where('Visibility', VisibilityEnum::Public->value)
                         ->orWhere(function (Builder $query) use ($user) {
                             $query->where('Visibility', VisibilityEnum::Private->value)

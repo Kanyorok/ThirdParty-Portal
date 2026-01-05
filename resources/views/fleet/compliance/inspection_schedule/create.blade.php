@@ -61,15 +61,19 @@
 
                 <div class="col-md-6">
                     <label for="Inspector" class="form-label">Inspector<span class="text-danger">*</span></label>
-
-                    <select name="Inspector" id="Inspector" class="form-select">
-                        <option value="">-- Select Inspector --</option>
-                        @foreach ($inspectors as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
+                    
+                    <!-- Hidden field for form submission -->
+                    <input type="hidden" name="Inspector" id="Inspector" 
+                           value="{{ $currentEmployee->Id ?? '' }}">
+                    
+                    <!-- Read-only display field -->
+                    <input type="text" class="form-control" 
+                           value="{{ ($currentEmployee->FirstName ?? '') . ' ' . ($currentEmployee->LastName ?? '') }} (You)"
+                           readonly
+                           placeholder="Automatically assigned to you">
+                    
+                    <small class="text-muted">Inspector is automatically set to the logged-in user</small>
                 </div>
-
 
                 <div class="col-md-6">
                     <label for="Remarks" class="form-label">Remarks<span class="text-danger">*</span></label>

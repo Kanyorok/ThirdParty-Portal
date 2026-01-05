@@ -18,15 +18,15 @@ class ItemMasterListRequest extends FormRequest
         $itemId = $this->route('Id') ?? $this->route('id');
 
         $rules = [
-            'ItemType' => 'required|exists:t_CodeDetails,ID',
+            'ItemType' => 'required|exists:t_ItemTypes,Id',
             'Category' => 'required|exists:t_ItemCategories,Id',
             'SubCategory' => 'nullable|exists:t_ItemCategories,Id',
             'UOM' => 'required|exists:t_UOM,Id',
-            'InventoryType' => 'required|exists:t_CodeDetails,ID',
+            'InventoryType' => 'required|exists:t_InventoryTypes,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'Document' => 'nullable|file|max:2048',
             'Document.*' => 'nullable|file|max:2048',
-            'ItemDescription' => 'nullable|string',
+            'ItemDescription' => 'required|string',
             'Status' => 'nullable|exists:t_CodeDetails,ID',
             'ItemPrice' => 'nullable|string',
             'remove_image' => 'nullable|boolean',

@@ -4,13 +4,13 @@ use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
-// use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
-use App\Http\Controllers\ThirdParty\ThirdPartyAuthController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 // use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
+use App\Http\Controllers\API\Enums\CodeDetailsController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 // use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
@@ -53,12 +53,14 @@ Route::post('auth/validate-token', function (Request $request) {
     ]);
 })->middleware('auth:sanctum')->name('auth.validate-token');
 
-// Route::prefix('third-party-auth')->group(function () {
-//     Route::post('login', [ThirdPartyAuthController::class, 'login']);
-//     Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
-//     Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
-//     Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
-// });
+Route::prefix('third-party-auth')->group(function () {
+    Route::post('login', [ThirdPartyAuthController::class, 'login']);
+    Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
+    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
+    Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
+    Route::post('forgot-password', [ThirdPartyAuthController::class, 'forgotPassword']);
+    Route::post('reset-password', [ThirdPartyAuthController::class, 'resetPassword']);
+});
 
 // step 2: Register company info (associated third party)
 Route::post('third-parties/register-details', [ThirdPartiesController::class, 'store']);
@@ -179,6 +181,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::put('/', [ThirdPartyProfileController::class, 'update']);
         Route::patch('/', [ThirdPartyProfileController::class, 'partialUpdate']);
         Route::delete('/', [ThirdPartyProfileController::class, 'destroy']);
+        Route::put('/roles/toggle', [ThirdPartyProfileController::class, 'toggleRole']);
         Route::put('/password', [ThirdPartyProfileController::class, 'changePassword']);
     });
 
@@ -221,11 +224,13 @@ Route::prefix('v1')->group(function () {
 // countries
 Route::prefix('v1')->group(function () {
     Route::get('countries', [\App\Http\Controllers\Settings\Codes\ApiCountryController::class, 'list']);
+    Route::get('countries/{country}/localities', [\App\Http\Controllers\Settings\Codes\ApiCountryController::class, 'localities']);
 });
 
 // enums (public)
 Route::prefix('enums')->group(function () {
     Route::get('third-party-types', [ThirdPartyTypesEnumController::class, 'index']);
+    Route::get('{codeId}', [CodeDetailsController::class, 'index']);
 });
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
@@ -240,6 +245,8 @@ Route::prefix('v1')->group(function () {
     require __DIR__ . '/integrations/crm.php';
 
     require __DIR__ . '/integrations/dms.php';
+
+    require __DIR__ . '/integrations/property.php';
 
     Route::prefix('inventory')->group(function () {
         Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);
@@ -265,7 +272,6 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
-
         // Supplier RFQ endpoints (supplier portal)
         Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
         Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
@@ -274,13 +280,14 @@ Route::prefix('procurement')->name('api.procurement.')
         Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
 
-// Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage
-Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
+// PROTECTED routes for prequalification (submitting applications) - AUTH REQUIRED
+Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
     ->prefix('prequalification')
     ->name('api.prequalification.')
     ->group(function () {
         Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
         Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+        Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
     });
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
@@ -343,4 +350,4 @@ Route::prefix('v1')->group(function () {
 });
 
 //api routes for workflow stages
-// Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');
+Route::get('api/workflows/{id}/state', [\App\Http\Controllers\Settings\WorkFlowController::class, 'getState']);

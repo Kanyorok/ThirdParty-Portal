@@ -112,7 +112,7 @@
         </div>
     @else
         <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle me-2"></i> No lease agreements registered yet.
+            <i class="bi bi-info-circle me-2"></i> No lease agreements registered yet. Kindly Ensure You Have The WORKFLOW Set Up For Lease Agreements In Settings.
         </div>
     @endif
 

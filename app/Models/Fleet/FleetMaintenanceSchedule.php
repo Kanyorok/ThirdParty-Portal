@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\SupplierMaster;
 
 class FleetMaintenanceSchedule extends Model
 {
@@ -26,7 +28,7 @@ class FleetMaintenanceSchedule extends Model
 
     protected $fillable = [
         'ScheduleID', 'VehicleID', 'MaintenanceType', 'ScheduledDate',
-        'ScheduledMileage', 'Location', 'Notes', 'Status', 'MaintenanceStatus',
+        'ScheduledMileage', 'VendorID', 'Notes', 'Status', 'MaintenanceStatus',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -44,6 +46,11 @@ class FleetMaintenanceSchedule extends Model
     public function vehicle()
     {
         return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
+    }
+
+    public function vendor()    
+    {
+        return $this->belongsTo(SupplierMaster::class, 'VendorID', 'Id');
     }
 
     public function alert()

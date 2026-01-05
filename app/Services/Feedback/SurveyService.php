@@ -17,9 +17,7 @@ use Illuminate\Support\Str;
 
 class SurveyService
 {
-    public function __construct(public Survey $survey)
-    {
-    }
+    public function __construct(public Survey $survey) {}
 
     public static function active(): ?SurveyService
     {
@@ -40,7 +38,7 @@ class SurveyService
 
     public function canApprove(User $actor): bool
     {
-        return in_array($actor->Id, $this->survey->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true) || $actor->hasPermission(PermissionEnum::SurveyApproval->value);
+        return in_array($actor->Id, $this->survey->pendingWorkflows()->get('t_PendingWorkflows_static.UserId')->pluck('UserId')->toArray(), true);
     }
 
     public function addQuestion(SurveyQuestionTypeEnum $type, string $question, User $actor, string $help): static
@@ -126,7 +124,7 @@ class SurveyService
                 if (!$user instanceof User) {
                     continue;
                 }
-                if (in_array($user->UserID, [$actor->UserID, SystemHelper::ID], true)) {//skip sys and submitter
+                if (in_array($user->UserID, [$actor->UserID, SystemHelper::ID], true)) { //skip sys and submitter
                     continue;
                 }
 
@@ -137,7 +135,7 @@ class SurveyService
                     'ModifiedBy' => $actor->Id,
                 ]);
 
-                //$this->_sendMail($user);
+
                 (new UserService($user))->sendEmail(
                     subject: 'Survey submitted for review and approval',
                     body: '<p>Hello</p><p>The survey <b>' . $this->survey->Label . '</b> has been submitted for your review. Click the link below to review</p>
@@ -146,7 +144,7 @@ class SurveyService
                 );
             }
         });
-        //event(new CampaignSubmittedEvent($this->campaign, $actor));
+
 
         activity()->causedBy($actor)->performedOn($this->survey)->event('submit')->log('Submitted ' . $this->survey->SurveyID . ' for approval.');
 

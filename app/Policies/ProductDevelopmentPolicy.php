@@ -23,12 +23,11 @@ class ProductDevelopmentPolicy
             return true;
         }
 
-        if ((new ProductDevService($productDevelopment))->commenting() && $user->can(PermissionEnum::ProductDevelopmentRead->value)) {//check if comment
+        if ((new ProductDevService($productDevelopment))->commenting() && $user->can(PermissionEnum::ProductDevelopmentRead->value)) { //check if comment
             return true;
         }
 
         return false;
-        // return $user->can(PermissionEnum::ProductDevelopmentRead->value);
     }
 
     public function create(User $user): bool

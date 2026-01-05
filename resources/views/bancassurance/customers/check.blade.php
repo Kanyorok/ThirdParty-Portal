@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
 <style>
-    /* 🧩 Table Styling */
     #customerregistry thead th {
         background-color: #f8f9fa;
         font-weight: 600;
@@ -18,8 +17,6 @@
     table.dataTable tbody tr:hover {
         background-color: #f9fbfd;
     }
-
-    /* 🎨 DataTable Inputs */
     .dataTables_wrapper .dataTables_filter input {
         border-radius: 20px;
         padding: 4px 12px;
@@ -30,8 +27,6 @@
         padding: 3px 10px;
         border: 1px solid #ced4da;
     }
-
-    /* 🎛️ Button Styling */
     .btn-group .btn {
         margin-right: 4px;
     }
@@ -41,8 +36,6 @@
     .btn i {
         vertical-align: middle;
     }
-
-    /* 🪶 Small details */
     .card-header h5 {
         font-weight: 500;
     }
@@ -52,7 +45,6 @@
 @section('content')
 <div class="container mt-4">
 
-    {{-- ✅ Header --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
         <a href="{{ route('bancassurance.customers.create') }}" 
            class="btn btn-sm btn-primary rounded-pill shadow-sm">
@@ -65,7 +57,6 @@
         The list below shows all registered customers and their details.
     </p>
 
-    {{-- ✅ Data Table --}}
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-3">
             <div class="table-responsive">
@@ -86,7 +77,7 @@
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
                                 <td>{{ $customer->thirdParty->ThirdPartyName ?? '-' }}</td>
-                                <td>{{ $customer->NationalID ?? '-' }}</td>
+                                <td>{{ $customer->thirdParty->RegistrationNumber ?? '-' }}</td>
                                 <td>{{ $customer->thirdParty->Phone ?? '-' }}</td>
                                 <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
                                 <td>{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d M Y') : '-' }}</td>

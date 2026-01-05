@@ -25,18 +25,32 @@ class FleetInspectionScheduleController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetInspectionSchedule::class);
+        
+        // Get current user's employee ID
+        $currentEmployeeId = Auth::user()->employee?->Id;
+        
+        // Show all schedules where current user is the inspector
         $schedules = FleetInspectionSchedule::with(['inspector', 'inspectionStatus', 'vehicle'])
-            ->where('CreatedBy', Auth::id())
+            ->when($currentEmployeeId, function ($query) use ($currentEmployeeId) {
+                return $query->where('Inspector', $currentEmployeeId);
+            })
             ->get();
 
         return view('fleet.compliance.inspection_schedule.index', compact('schedules'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize('create', FleetInspectionSchedule::class);
 
-        $branchId = Auth::user()->employee?->BranchId;
+        // Get current user and their employee record
+        $currentUser = $request->user();
+        $currentEmployee = $currentUser->employee;
+        
+        if (!$currentEmployee) {
+            return redirect()->back()
+                ->with('error', 'You must have an employee record to schedule inspections.');
+        }
 
         $vehicles = FleetVehicle::all();
 
@@ -44,17 +58,31 @@ class FleetInspectionScheduleController extends Controller
             ->orderBy('Value')
             ->get();
 
-        $inspectors = Employee::where('BranchId', $branchId)
-            ->select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-            ->pluck('name', 'Id');
-
-        return view('fleet.compliance.inspection_schedule.create', compact('vehicles', 'inspectionStatus', 'inspectors'));
+        // Pass current employee as the default inspector
+        return view('fleet.compliance.inspection_schedule.create', compact(
+            'vehicles', 
+            'inspectionStatus', 
+            'currentEmployee'
+        ));
     }
 
     public function store(FleetInspectionScheduleRequest $request)
     {
         $this->authorize('create', FleetInspectionSchedule::class);
+        
+        // Get current user's employee ID
+        $currentEmployeeId = Auth::user()->employee?->Id;
+        
+        if (!$currentEmployeeId) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'You must have an employee record to schedule inspections.');
+        }
+
         $validated = $request->validated();
+        
+        // Override Inspector with current employee ID
+        $validated['Inspector'] = $currentEmployeeId;
 
         $this->schedules->create($validated);
 
@@ -76,7 +104,14 @@ class FleetInspectionScheduleController extends Controller
         $this->authorize('viewAny', FleetInspectionSchedule::class);
         $schedule = FleetInspectionSchedule::findOrFail($id);
 
-        $branchId = Auth::user()->employee?->BranchId;
+        // Get current user and their employee record
+        $currentUser = Auth::user();
+        $currentEmployee = $currentUser->employee;
+        
+        if (!$currentEmployee) {
+            return redirect()->back()
+                ->with('error', 'You must have an employee record to edit inspections.');
+        }
 
         $vehicles = FleetVehicle::all();
 
@@ -84,17 +119,13 @@ class FleetInspectionScheduleController extends Controller
             ->orderBy('Value')
             ->get();
 
-        $inspectors = Employee::where('BranchId', $branchId)
-            ->orderBy('FirstName')
-            ->get(['Id', 'FirstName', 'LastName'])
-            ->map(function ($inspector) {
-                return [
-                    'id' => $inspector->Id,
-                    'name' => $inspector->FirstName . ' ' . $inspector->LastName,
-                ];
-            });
-
-        return view('fleet.compliance.inspection_schedule.edit', compact('schedule', 'vehicles', 'inspectionStatus', 'inspectors'));
+        // Pass current employee
+        return view('fleet.compliance.inspection_schedule.edit', compact(
+            'schedule', 
+            'vehicles', 
+            'inspectionStatus', 
+            'currentEmployee'
+        ));
     }
 
     public function update(FleetInspectionScheduleRequest $request, $id)

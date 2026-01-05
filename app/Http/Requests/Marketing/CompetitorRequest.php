@@ -99,6 +99,9 @@ class CompetitorRequest extends FormRequest
 
     public function getPhoneNumber(): string
     {
+        if (is_null($this->validated('Phone'))) {
+            return '';
+        }
         return (new PhoneNumber($this->validated('Phone'), $this->validated('Country')))->formatE164();
     }
 

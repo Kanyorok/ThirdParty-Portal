@@ -19,7 +19,7 @@ class TenderVendor extends Model
     }
 
     public function supplier(): BelongsTo {
-        return $this->belongsTo(Supplier::class, 'VendorID');
+        return $this->belongsTo(Supplier::class, 'SupplierID');
     }
 
 }

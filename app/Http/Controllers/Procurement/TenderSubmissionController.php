@@ -15,17 +15,24 @@ class TenderSubmissionController extends Controller
 {
     public function index()
     {
-        $submissions = BidSubmission::with('submissionMode', 'createdByUser')->get();
+        $submissions = BidSubmission::with([
+            'submissionMode',
+            'createdByUser',
+            'supplier.supplierMaster.party'
+        ])
+            ->orderBy('CreatedOn', 'desc')
+            ->get();
         return view('procurement.tendering.suppliermanagement.bidsubmission.index', compact('submissions'));
     }
 
     public function create()
     {
-        $tenders = Tender::select('TenderNo')->get();
+        $tenders = Tender::select('TenderNo', 'Title')->get();
 
         // Fix: Get supplier names from the related ThirdParty table
         $suppliers = Supplier::select('t_Suppliers.Id')
-            ->join('t_ThirdParties', 't_Suppliers.ThirdPartyID', '=', 't_ThirdParties.Id')
+            ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+            ->join('t_ThirdParties', 't_SupplierMaster.ThirdPartyId', '=', 't_ThirdParties.Id')
             ->selectRaw('t_Suppliers.Id, COALESCE(t_ThirdParties.TradingName, t_ThirdParties.ThirdPartyName) as SupplierName')
             ->whereNull('t_Suppliers.DeletedOn')
             ->get();
@@ -36,17 +43,17 @@ class TenderSubmissionController extends Controller
         return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
     }
     public function view($Id)
-{
-    $submission = BidSubmission::findOrFail($Id);
-    return view('procurement.tendering.suppliermanagement.bidsubmission.view', compact('submission'));
-}
+    {
+        $submission = BidSubmission::findOrFail($Id);
+        return view('procurement.tendering.suppliermanagement.bidsubmission.view', compact('submission'));
+    }
 
-public function edit($Id)
-{
-    $submission = BidSubmission::findOrFail($Id);
-    //return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
-}
-public function store(Request $request)
+    public function edit($Id)
+    {
+        $submission = BidSubmission::findOrFail($Id);
+        //return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
+    }
+    public function store(Request $request)
     {
         // Validate the input
         $request->validate([
@@ -70,7 +77,8 @@ public function store(Request $request)
         }
 
         // Get supplier ID from supplier name
-        $supplier = Supplier::join('t_ThirdParties', 't_Suppliers.ThirdPartyID', '=', 't_ThirdParties.Id')
+        $supplier = Supplier::join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+            ->join('t_ThirdParties', 't_SupplierMaster.ThirdPartyId', '=', 't_ThirdParties.Id')
             ->where(function ($query) use ($request) {
                 $query->where('t_ThirdParties.TradingName', $request->supplier_name)
                     ->orWhere('t_ThirdParties.ThirdPartyName', $request->supplier_name);
@@ -115,7 +123,6 @@ public function store(Request $request)
 
             return redirect()->route('tendersubmission.index')
                 ->with('success', 'Manual submission recorded successfully. Documents are encrypted and sealed until bid opening ceremony.');
-
         } catch (\Exception $e) {
             DB::rollback();
 

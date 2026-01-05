@@ -305,11 +305,6 @@ class PaymentVoucherController extends Controller
     public function show($id)
     {
         $this->authorize(PermissionEnum::PaymentVoucherView, FinanceVoucher::class);
- 
-
-        $r=numberInWords::convertToWords($voucher->TotalAmount);
-
-        $R=Number::
 
         $voucher = FinanceVoucher::with([
             'invoice.thirdParty:Id,TradingName,ThirdPartyName,Email,Phone,PhysicalAddress',
@@ -322,6 +317,9 @@ class PaymentVoucherController extends Controller
             'draft' => 'bg-warning text-dark',
             default => 'bg-secondary'
         };
+
+       // Convert Amount into words using inbuilt php function
+       //$amountInWords = number_format($voucher->TotalAmount, 2, '.', ',');
 
         $amountInWords = $this->numberToWords($voucher->TotalAmount);
         return view('finance.accountspayable.paymentvoucher.show', compact('voucher', 'amtPaidOnInvoice','statusClass', 'amountInWords'));

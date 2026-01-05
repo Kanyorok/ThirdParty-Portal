@@ -172,6 +172,13 @@ enum PermissionEnum: string
     case TenderDelete = 'tender-delete';
     case TenderApproval = 'tender-approval';
 
+        //Supplier
+    case SupplierRead = 'supplier-read';
+    case SupplierWrite = 'supplier-create';
+    case SupplierUpdate = 'supplier-update';
+    case SupplierDelete = 'supplier-delete';
+    case SupplierApprove = 'supplier-approve';
+
         //Tender Suppliers
     case BidSubmissionRead = 'BidSubmission-read';
     case BidSubmissionWrite = 'BidSubmission-create';
@@ -343,7 +350,7 @@ enum PermissionEnum: string
     case PropertyStructuralView = 'propertystructural-view';
 
 
-    //Pricing and Rates
+        //Pricing and Rates
     case PropertyRateAndPricingCreate = 'propertyrateandpricing-create';
     case PropertyRateAndPricingUpdate = 'propertyrateandpricing-update';
     case PropertyRateAndPricingDelete = 'propertyrateandpricing-delete';
@@ -376,6 +383,7 @@ enum PermissionEnum: string
     case PropertyNewLeaseUpdate = 'propertynewlease-update';
     case PropertyNewLeaseDelete = 'propertynewlease-delete';
     case PropertyNewLeaseView = 'propertynewlease-view';
+    case PropertyNewLeaseApproval = 'propertynewlease-appoval';
 
 
         //Property lease schedule
@@ -390,6 +398,8 @@ enum PermissionEnum: string
     case PropertyLeaseRenewalUpdate = 'propertyleaserenewal-update';
     case PropertyLeaseRenewalDelete = 'propertyleaserenewal-delete';
     case PropertyLeaseRenewalView = 'propertyleaserenewal-view';
+    case PropertyLeaseRenewalApproval = 'propertyleaserenewal-approval';
+
 
 
         //Property Lease Termination
@@ -397,6 +407,7 @@ enum PermissionEnum: string
     case PropertyLeaseTerminationUpdate = 'propertyleasetermination-update';
     case PropertyLeaseTerminationDelete = 'propertyleasetermination-delete';
     case PropertyLeaseTerminationView = 'propertyleasetermination-view';
+    case PropertyLeaseTerminationApproval = 'propertyleasetermination-approval';
 
         //Property Invoice
     case PropertyInvoiceCreate = 'propertyinvoice-create';
@@ -606,7 +617,6 @@ enum PermissionEnum: string
 
     case DMSView = 'dms-view';
     case DMSBulkUpload = 'dms-bulkUpload';
-
     case DMSLegalHoldCreate = 'dmsLegalHold-create';
     case DMSLegalHoldView = 'dmsLegalHold-view';
     case DMSLegalHoldRelease = 'dmsLegalHold-release';
@@ -675,6 +685,10 @@ enum PermissionEnum: string
     case DebitNoteCreate = 'debitNote-create';
     case DebitNoteUpdate = 'debitNote-update';
     case DebitNoteDelete = 'debitNote-delete';
+
+    //Supplier Permissions
+    case SupplierView = 'supplier-view';     
+    case SupplierApproval = 'supplier-approval';
 
         //Tax Setting
     case FinanceTaxSettingView = 'financeTaxSetting-view';
@@ -748,6 +762,8 @@ enum PermissionEnum: string
     case FleetTripLogCreate = 'fleetTripLog-create';
     case FleetTripLogUpdate = 'fleetTripLog-update';
     case FleetTripLogDestroy = 'fleetTripLog-destroy';
+    case FleetTripLogApprove = 'fleetTripLog-approve';
+    case FleetTripLogReject = 'fleetTripLog-reject';
 
     case FleetRoutePlanView = 'fleetRoutePlan-view';
     case FleetRoutePlanCreate = 'fleetRoutePlan-create';
@@ -862,6 +878,7 @@ enum PermissionEnum: string
 
 
             [self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete, self::Departments],
+            [self::SupplierRead, self::SupplierWrite, self::SupplierUpdate, self::SupplierDelete, self::SupplierApprove],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
             [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval],
 
@@ -919,9 +936,9 @@ enum PermissionEnum: string
             [self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete],
             [self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete],
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
-            [self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete],
-            [self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting],
-            
+            [self::FinanceCreditManagementView, self::FinanceCreditManagementCreate, self::FinanceCreditManagementUpdate, self::FinanceCreditManagementDelete],
+            [self::FinanceJournalPosting, self::FinanceAPInvoicePosting, self::FinanceARInvoicePosting, self::FinanceCreditNotePosting, self::FinanceDebitNotePosting, self::FinanceVoucherPosting, self::FinancePaymentProcessingPosting, self::FinanceReceiptPosting],
+
             ///////////////////////  Settings  /////////////////////////////////////
             // [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
 
@@ -938,16 +955,16 @@ enum PermissionEnum: string
             [self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete],
             [self::TenantMaintenanceCreate, self::TenantMaintenanceUpdate, self::TenantMaintenanceDelete, self::TenantMaintenanceView],
             [self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView],
-            [self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView],
-            [self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView],
+            [self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView, self::PropertyNewLeaseApproval],
+            [self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView, self::PropertyLeaseTerminationApproval],
             [self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView, self::PropertyLeaseSchedulePrint],
-            [self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView],
+            [self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView, self::PropertyLeaseRenewalApproval],
             [self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView],
             [self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint],
             [self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView],
             [self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView],
-            [self::PropertyRateAndPricingCreate,self::PropertyRateAndPricingUpdate,self::PropertyRateAndPricingDelete,self::PropertyRateAndPricingView],
+            [self::PropertyRateAndPricingCreate, self::PropertyRateAndPricingUpdate, self::PropertyRateAndPricingDelete, self::PropertyRateAndPricingView],
 
 
             //Fleet
@@ -961,7 +978,7 @@ enum PermissionEnum: string
             [self::ContractedDriverView, self::ContractedDriverCreate, self::ContractedDriverUpdate, self::ContractedDriverDestroy],
             [self::FleetMaintenanceScheduleView, self::FleetMaintenanceScheduleCreate, self::FleetMaintenanceScheduleUpdate, self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel],
             [self::FleetRepairLogView, self::FleetRepairLogCreate, self::FleetRepairLogUpdate, self::FleetRepairLogDestroy],
-            [self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy],
+            [self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy, self::FleetTripLogApprove, self::FleetTripLogReject],
             [self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy],
             [self::FleetServiceAlertView, self::FleetServiceAlertAcknowledge],
             [self::VehicleInspectionView, self::VehicleInspectionCreate, self::VehicleInspectionUpdate, self::VehicleInspectionDestroy],
@@ -1017,9 +1034,11 @@ enum PermissionEnum: string
             self::RequisitionItemsApproval,
             self::DepartmentNeedsApproval,
             self::TenderApproval,
+            self::SupplierApprove,
             self::PurchaseOrderApproval,
             self::RequisitionApproval,
-            self::RequisitionItemsApproval
+            self::RequisitionItemsApproval,
+            self::PropertyNewLeaseApproval
         ]);
     }
 
@@ -1056,14 +1075,15 @@ enum PermissionEnum: string
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApproval,
             self::RfqRead, self::RfqWrite, self::RfqUpdate, self::RfqApproval, self::RfqDelete,
             self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,
-            self::PlanConsolidationRead,self::PlanConsolidationApproval, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
+            self::PlanConsolidationRead, self::PlanConsolidationApproval, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete,
             self::ProcurementMethodRead, self::ProcurementMethodWrite,
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval,
+            self::SupplierRead, self::SupplierWrite, self::SupplierUpdate, self::SupplierDelete, self::SupplierApprove,
             self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete,
             self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete,
             self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete,
             self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete,
-            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete,self::PlanMaintenanceApproval,
+            self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval,
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete,
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete,
             => ModulesEnum::Procurement,
@@ -1101,7 +1121,7 @@ enum PermissionEnum: string
             self::ContractedDriverView, self::ContractedDriverCreate, self::ContractedDriverUpdate, self::ContractedDriverDestroy,
             self::FleetServiceAlertView, self::FleetServiceAlertAcknowledge,
             self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy,
-            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy,
+            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy, self::FleetTripLogApprove, self::FleetTripLogReject,
             self::VehicleInspectionView, self::VehicleInspectionCreate, self::VehicleInspectionUpdate, self::VehicleInspectionDestroy,
             => ModulesEnum::Fleet,
 
@@ -1114,16 +1134,16 @@ enum PermissionEnum: string
             self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete,
             self::TenantMaintenanceCreate, self::TenantMaintenanceUpdate, self::TenantMaintenanceDelete, self::TenantMaintenanceView,
             self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView,
-            self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView,
-            self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView,
+            self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView, self::PropertyNewLeaseApproval,
+            self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView, self::PropertyLeaseTerminationApproval,
             self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView, self::PropertyLeaseSchedulePrint,
-            self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView,
+            self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView, self::PropertyLeaseRenewalApproval,
             self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView,
             self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint,
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView,
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView,
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView,
-            self::PropertyRateAndPricingCreate,self::PropertyRateAndPricingUpdate,self::PropertyRateAndPricingDelete,self::PropertyRateAndPricingView
+            self::PropertyRateAndPricingCreate, self::PropertyRateAndPricingUpdate, self::PropertyRateAndPricingDelete, self::PropertyRateAndPricingView
             => ModulesEnum::Property,
             // default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
@@ -1188,6 +1208,7 @@ enum PermissionEnum: string
             self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete,
             self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete,
             => ModulesEnum::Legal,
+            default => ModulesEnum::Settings,
         };
     }
 
@@ -1238,6 +1259,7 @@ enum PermissionEnum: string
 
             //Tendering
             self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval => 'Tenders',
+            self::SupplierRead, self::SupplierWrite, self::SupplierUpdate, self::SupplierDelete, self::SupplierApprove => 'Suppliers',
             self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete, => 'Tender Bid Submission',
             self::TenderInvitationRead, self::TenderInvitationWrite, self::TenderInvitationUpdate, self::TenderInvitationDelete, => 'Tender Invitation',
             self::VendorClarificationsRead, self::VendorClarificationsWrite, self::VendorClarificationsUpdate, self::VendorClarificationsDelete, => 'Vendor Clarifications',
@@ -1267,7 +1289,7 @@ enum PermissionEnum: string
             self::FleetInsuranceTrackerView, self::FleetInsuranceTrackerCreate, self::FleetInsuranceTrackerUpdate, self::FleetInsuranceTrackerDestroy => 'Fleet Insurance Tracker',
             self::FleetInspectionScheduleView, self::FleetInspectionScheduleCreate, self::FleetInspectionScheduleUpdate, self::FleetInspectionScheduleDestroy => 'Vehicle Inspection',
             self::FleetDriverView, self::FleetDriverCreate, self::FleetDriverUpdate, self::FleetDriverDestroy => 'Fleet Driver',
-            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy => 'Fleet Trip Log',
+            self::FleetTripLogView, self::FleetTripLogCreate, self::FleetTripLogUpdate, self::FleetTripLogDestroy, self::FleetTripLogApprove, self::FleetTripLogReject => 'Fleet Trip Log',
             self::FleetRoutePlanView, self::FleetRoutePlanCreate, self::FleetRoutePlanUpdate, self::FleetRoutePlanDestroy => 'Trip Route Plan',
             self::FleetVehicleRequestView, self::FleetVehicleRequestApproval, self::FleetVehicleRequestCreate, self::FleetVehicleRequestUpdate, self::FleetVehicleRequestDestroy => 'Fleet Vehicle Request',
             self::FleetMaintenanceScheduleView, self::FleetMaintenanceScheduleCreate, self::FleetMaintenanceScheduleUpdate, self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel => 'Fleet Maintenance Schedule',
@@ -1295,16 +1317,16 @@ enum PermissionEnum: string
             self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete => 'Property Attachments ',
             self::TenantMaintenanceCreate, self::TenantMaintenanceUpdate, self::TenantMaintenanceDelete, self::TenantMaintenanceView => 'Tenant Maintenance',
             self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView => 'Tenant Clearance',
-            self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView => 'Property New Lease',
-            self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView => 'Lease Termination',
+            self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView, self::PropertyNewLeaseApproval => 'Property New Lease',
+            self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView, self::PropertyLeaseTerminationApproval => 'Lease Termination',
             self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView, self::PropertyLeaseSchedulePrint => 'Property Lease Schedule',
-            self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView => 'Property Lease Renewal',
+            self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView, self::PropertyLeaseRenewalApproval => 'Property Lease Renewal',
             self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView => 'Property Invoice',
             self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint => 'Property Receipt',
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
-            self::PropertyRateAndPricingCreate,self::PropertyRateAndPricingUpdate,self::PropertyRateAndPricingDelete,self::PropertyRateAndPricingView => 'Property Rate And Pricing',
+            self::PropertyRateAndPricingCreate, self::PropertyRateAndPricingUpdate, self::PropertyRateAndPricingDelete, self::PropertyRateAndPricingView => 'Property Rate And Pricing',
 
             //dms
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',

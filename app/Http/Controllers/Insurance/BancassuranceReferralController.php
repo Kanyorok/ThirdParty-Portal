@@ -9,6 +9,7 @@ use App\Http\Requests\Insurance\BancAssuranceReferralRequest;
 use App\Models\Core\Branch;
 use App\Models\Auth\User;
 use App\Models\HRM\Employee;
+use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProvider;
@@ -22,17 +23,16 @@ class BancassuranceReferralController extends Controller
 public function index()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser','customerreferral'])
-    ->orderByDesc('Id')->get();
-
+    $referrals = BancAssuranceReferral::orderByDesc('Id')->get();
     return view('bancassurance.referrals.index', compact('referrals'));
 }
 public function create()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
+    $Clients = BancassuranceCustomer::all();
     $insurers = InsuranceProvider::all();
     $users = User::with('employee')->get();
-    return view('bancassurance.referrals.create', compact('users', 'insurers'));
+    return view('bancassurance.referrals.create', compact('users', 'insurers', 'Clients'));
 }
 
 
@@ -50,6 +50,8 @@ public function store(BancAssuranceReferralRequest $request)
     $validated = $request->validated();
 
         // Handle nullable relationships safely
+        $ClientId = BancassuranceCustomer::findOrFail($validated['ClientId']);
+
         $ReferredBy = !empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
 
         $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
@@ -61,15 +63,10 @@ public function store(BancAssuranceReferralRequest $request)
         $branchId = $user->employee->BranchId ?? null;
         $BranchId = Branch::findOrFail($branchId);
 
-        // Determine status based on assignment
         $Status = $AssignedTo ? InsuranceReferralStatus::Assigned : InsuranceReferralStatus::Pending;
 
-        // Create the referral
         $assurancereferral = BancAssuranceReferralService::create(
-            $validated['ClientName'],
-            $validated['ClientIDNumber'],
-            $validated['ClientPhone'],
-            $validated['ClientEmail'],
+            $ClientId,
             $ReferredBy,
             Carbon::parse($validated['ReferralDate']),
             $InsuranceProductId,
@@ -87,14 +84,25 @@ public function store(BancAssuranceReferralRequest $request)
 
 public function edit($Id)
 {
-    $this->authorize(PermissionEnum::BancassuranceReferralUpdate, BancAssuranceReferral::class);
-    $referral = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser'])->findOrFail($Id);
-    $insuranceproducts = InsuranceProduct::all();
-    $insurers = InsuranceProvider::all();
-    $users = User::with('employee')->get();
+    $this->authorize(
+        PermissionEnum::BancassuranceReferralUpdate,
+        BancAssuranceReferral::class
+    );
 
-        return view('bancassurance.referrals.edit', compact('referral', 'users', 'insurers', 'insuranceproducts'));
-    }
+    $referral = BancAssuranceReferral::with([
+        'customerreferral.thirdParty'
+    ])->findOrFail($Id);
+
+    $Clients  = BancAssuranceCustomer::with('thirdParty')->get();
+    $insurers = InsuranceProvider::all();
+    $users    = User::with('employee')->get();
+
+    return view(
+        'bancassurance.referrals.edit',
+        compact('referral', 'Clients', 'insurers', 'users')
+    );
+}
+
 
 public function update(BancAssuranceReferralRequest $request, $Id)
 {  
@@ -104,7 +112,8 @@ public function update(BancAssuranceReferralRequest $request, $Id)
 
         $referral = BancAssuranceReferral::where('Id', $Id)->firstOrFail();
 
-        // Fetch model instances
+        $ClientId = BancassuranceCustomer::findOrFail($validated['ClientId']);
+
         $ReferredBy = !empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
 
         $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
@@ -118,13 +127,9 @@ public function update(BancAssuranceReferralRequest $request, $Id)
         $branchId = $user->employee->BranchId ?? null;
         $Branch = Branch::findOrFail($branchId);
 
-        // Pass model instances to the service (not IDs)
         $referralupdate = BancAssuranceReferralService::update(
             $referral,
-            $validated['ClientName'],
-            $validated['ClientIDNumber'],
-            $validated['ClientPhone'],
-            $validated['ClientEmail'],
+            $ClientId,
             $ReferredBy,
             Carbon::parse($validated['ReferralDate']),
             $InsuranceProductId,

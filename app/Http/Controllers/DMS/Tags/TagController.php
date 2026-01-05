@@ -6,6 +6,7 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DMS\NewTagRequest;
 use App\Models\DMS\DMSTags;
+use App\Models\DMS\DocumentTags;
 use App\Traits\Controller\DMSTagTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -66,7 +67,10 @@ class TagController extends Controller
      */
     public function show(DMSTags $dMSTags): View
     {
-        return view('dms.tags.show', ['tag' => $dMSTags->loadCount('documents')]);
+        return view('dms.tags.show', [
+            'tag' => $dMSTags,
+            'documents_count' => DocumentTags::where('TagId', $dMSTags->Id)->count()
+        ]);
     }
 
     /**

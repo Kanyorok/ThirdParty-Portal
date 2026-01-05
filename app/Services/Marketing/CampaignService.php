@@ -260,7 +260,8 @@ class CampaignService
                                    ])->save(['timestamps' => false]);
 
         //add workflow
-        $this->campaign->workflows()->create([
+        $this->campaign->workflows()->whereNotIn('t_Users.Id',
+            $this->campaign->workflows()->whereIn('Status', [WorkflowStatus::Submitted->value, WorkflowStatus::Accepted->value])->select('CreatedBy'))->create([
                                               'Stage'      => CampaignStatusEnum::Draft->name,
                                               'Status'     => WorkflowStatus::Submitted->value,
                                               'Notes'      => 'User Submitted',

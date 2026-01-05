@@ -49,14 +49,14 @@ class CheckEmailCommand extends Command
             }
             $emailConfig = $email->Configuration;
 
-            $mailbox = new Mailbox(// 993 crm@imarishasacco.co.ke SSL
-            //'{' . config('mail.incoming.host') . ':' . config('mail.incoming.port') . '/' . config('mail.incoming.transport') . '/' . config('mail.incoming.encryption') . '}' . config('mail.incoming.folder'),
+            $mailbox = new Mailbox( // 993 crm@imarishasacco.co.ke SSL
+                //'{' . config('mail.incoming.host') . ':' . config('mail.incoming.port') . '/' . config('mail.incoming.transport') . '/' . config('mail.incoming.encryption') . '}' . config('mail.incoming.folder'),
                 '{' . $emailConfig?->Incoming?->host . ':' . $emailConfig?->Incoming?->port . '/imap/' . $emailConfig?->Incoming?->encryption . '}' . $emailConfig?->Incoming?->folder,
                 $emailConfig?->Incoming?->username, // Username for the before configured mailbox
                 $emailConfig?->Incoming?->password, // Password for the before configured username
                 null,
-                "US-ASCII"//'UTF-8',
-            );//SE_UID, "US-ASCII")
+                "US-ASCII" //'UTF-8',
+            ); //SE_UID, "US-ASCII")
         } catch (ConnectionException | InvalidParameterException | Exception $e) {
             SystemHelper::notifyAdmin('Issue with fetch mail: ' . $e->getMessage());
             return;
@@ -69,7 +69,14 @@ class CheckEmailCommand extends Command
 
         // dd($mailbox->getMail(41, false));
 
-        foreach ($mailbox->searchMailbox('UNSEEN') as $emailID) {
+        try {
+            $mailIds = $mailbox->searchMailbox('UNSEEN');
+        } catch (\Throwable $e) {
+            SystemHelper::notifyAdmin('Issue with search mail: ' . $e->getMessage());
+            return;
+        }
+
+        foreach ($mailIds as $emailID) {
             try {
                 $email = $mailbox->getMail($emailID, false);
             } catch (Exception) {
@@ -98,21 +105,21 @@ class CheckEmailCommand extends Command
 
                     $crmEmail = new Email();
                     $crmEmail->fill([
-                                     'MailID'      => trim($email->messageId ?? '', '<>'),
-                                     'Type'        => EmailTypeEnum::Incoming->value,
-                                     'Status'      => EmailStatusEnum::Unread->value,
-                                     'Priority'    => $this->priority($email->priority, $email->importance)->value,
-                                     'From'        => $email->fromAddress,
-                                     'To'          => $this->_flipAddresses($email->to),
-                                     'CC'          => $this->_flipAddresses($email->cc),
-                                     'ReferenceId' => $ref,
-                                     'Subject'     => $email->subject,
-                                     'Body'        => (empty($email->textHtml)) ? $email->textPlain : $this->_parserHtml($email->textHtml),
-                                     'Text'        => Str::of($email->textPlain)->trim()->value(),
-                                     'CreatedBy'   => $actor->Id,
-                                     'ModifiedBy'  => $actor->Id,
-                                     'Dated'       => $dated,
-                                    ])->save();
+                        'MailID'      => trim($email->messageId ?? '', '<>'),
+                        'Type'        => EmailTypeEnum::Incoming->value,
+                        'Status'      => EmailStatusEnum::Unread->value,
+                        'Priority'    => $this->priority($email->priority, $email->importance)->value,
+                        'From'        => $email->fromAddress,
+                        'To'          => $this->_flipAddresses($email->to),
+                        'CC'          => $this->_flipAddresses($email->cc),
+                        'ReferenceId' => $ref,
+                        'Subject'     => $email->subject,
+                        'Body'        => (empty($email->textHtml)) ? $email->textPlain : $this->_parserHtml($email->textHtml),
+                        'Text'        => Str::of($email->textPlain)->trim()->value(),
+                        'CreatedBy'   => $actor->Id,
+                        'ModifiedBy'  => $actor->Id,
+                        'Dated'       => $dated,
+                    ])->save();
 
                     $service = (new CRMEmailService($crmEmail->refresh()))->autoAttachIncoming($dated);
                     if ($email->hasAttachments()) {

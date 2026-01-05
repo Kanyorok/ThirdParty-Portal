@@ -4,6 +4,7 @@ namespace App\Policies\FleetManagement;
 
 use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Enums\Core\ApprovalEnum;
 use App\Models\Fleet\FleetTripLog;
 use Illuminate\Auth\Access\Response;
 
@@ -56,7 +57,39 @@ class FleetTripLogPolicy
         return $user->can(PermissionEnum::FleetTripLogUpdate->value);
     }
 
+
+    public function approve(User $user, FleetTripLog $requisition): bool
+    {
+        // Don't allow approving if already approved or rejected
+        if (
+            $requisition->Status === ApprovalEnum::Approved->value ||
+            $requisition->Status === ApprovalEnum::Rejected->value
+        ) {
+            return false;
+        }
+
+        // Don't allow approving your own requisition
+
+
+        // Must have the approval permission
+        return $user->can(PermissionEnum::FleetTripLogApprove->value);
+    }
+
+
+    public function reject(User $user, FleetTripLog $requisition): bool
+    {
+        // Don't allow rejecting if already approved or rejected
+        if (
+            $requisition->Status === ApprovalEnum::Approved->value ||
+            $requisition->Status === ApprovalEnum::Rejected->value
+        ) {
+            return false;
+        }
+
+        // Don't allow rejecting your own requisition
+
+
+        // Must have the rejection permission
+        return $user->can(PermissionEnum::FleetTripLogReject->value);
+    }
 }
-
-
-

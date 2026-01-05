@@ -19,9 +19,10 @@ class DocumentCheckInRequest extends FormRequest
      */
     public function rules(): array
     {
+        $size = (int)bcmul(config('app.dms.file_size'), 1024, 0);
         return [
             'CheckInDocument' => ['required',
-                Rule::file()->types(ExtensionsEnum::getAllMimeTypes())->max(9000),//todo filesize
+                Rule::file()->types(ExtensionsEnum::getAllMimeTypes())->max($size),
             ],
             'CheckInRemark' => ['nullable', 'string', 'max:500']
         ];

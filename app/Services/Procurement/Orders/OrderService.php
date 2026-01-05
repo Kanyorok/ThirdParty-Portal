@@ -32,7 +32,7 @@ class OrderService
                     $actor->Id // use lowercase `id`, Laravel convention
                 ]);
 
-                Log::info('p_AddPurchaseOrder result', ['result' => $result]);
+
 
                 $poId = $result[0]->POID ?? null;
 
@@ -229,7 +229,7 @@ class OrderService
 
     public static function fetchOrderDetails($id)
     {
-        Log::info('OrderService.fetchOrderDetails start', ['id' => $id]);
+
         $query = DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
@@ -282,14 +282,14 @@ class OrderService
                 't_Orders.terms'
             );
         $result = $query->first();
-        Log::info('OrderService.fetchOrderDetails done', ['id' => $id, 'hasResult' => (bool)$result]);
+
         return $result;
     }
 
 
     public static function fetchOrderLineDetails($id)
     {
-        Log::info('OrderService.fetchOrderLineDetails start', ['id' => $id]);
+
         $result = DB::table(DB::raw('t_OrderLines WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_Orders WITH (NOLOCK)'), 't_OrderLines.iOrderID', '=', 't_Orders.Id')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
@@ -314,7 +314,7 @@ class OrderService
                 t_OrderLines.LineTotal
             '))
             ->get();
-        Log::info('OrderService.fetchOrderLineDetails done', ['id' => $id, 'count' => $result->count()]);
+
         return $result;
     }
 

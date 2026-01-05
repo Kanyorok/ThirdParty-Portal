@@ -5,6 +5,7 @@ namespace App\Services\Insurance;
 use App\Enums\Insurance\InsuranceReferralStatus;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
+use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProvider;
@@ -20,10 +21,7 @@ class BancAssuranceReferralService
     }
 
     public static function create(
-        string                  $ClientName,
-        string                  $ClientIDNumber,
-        string                  $ClientPhone,
-        string                  $ClientEmail,
+        BancassuranceCustomer   $ClientId,
         ?User                   $ReferredBy = null,
         ?Carbon                 $ReferralDate = null,
         ?InsuranceProduct       $InsuranceProductId = null,
@@ -36,10 +34,7 @@ class BancAssuranceReferralService
     ): self
     {
         $referral = BancAssuranceReferral::create([
-            'ClientName' => $ClientName,
-            'ClientIDNumber' => $ClientIDNumber,
-            'ClientPhone' => $ClientPhone,
-            'ClientEmail' => $ClientEmail,
+            'ClientId' => $ClientId->Id,
             'ReferredBy' => $ReferredBy->Id ?? null,
             'ReferralDate' => $ReferralDate ?? null,
             'InsuranceProductId' => $InsuranceProductId->Id ?? null,
@@ -63,10 +58,7 @@ class BancAssuranceReferralService
 
     public static function update(
         BancAssuranceReferral   $referralupdate,
-        string                  $ClientName,
-        string                  $ClientIDNumber,
-        string                  $ClientPhone,
-        string                  $ClientEmail,
+        BancassuranceCustomer   $ClientId,
         ?User                   $ReferredBy = null,
         ?Carbon                 $ReferralDate = null,
         ?InsuranceProduct       $InsuranceProductId = null,
@@ -79,10 +71,7 @@ class BancAssuranceReferralService
     ): self
     {
         $referralupdate->update([
-            'ClientName' => $ClientName,
-            'ClientIDNumber' => $ClientIDNumber,
-            'ClientPhone' => $ClientPhone,
-            'ClientEmail' => $ClientEmail,
+            'ClientId' => $ClientId->Id,
             'ReferredBy' => $ReferredBy->Id ?? null,
             'ReferralDate' => $ReferralDate ?? null,
             'InsuranceProductId' => $InsuranceProductId->Id ?? null,

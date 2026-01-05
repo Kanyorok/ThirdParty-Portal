@@ -60,7 +60,7 @@
                                 <button class="btn btn-primary my-1 survey-add-question" type="button"> Add
                                     question
                                 </button>
-                                <button class="btn btn-$holds my-1 survey-submit-approval" type="button">Submit for
+                                <button class="btn btn-success my-1 survey-submit-approval" type="button">Submit for
                                     Approval
                                 </button>
                                 <button class="btn btn-info my-1 modal-update-survey" type="button"> Update

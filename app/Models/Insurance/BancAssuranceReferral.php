@@ -20,9 +20,9 @@ class BancAssuranceReferral extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'ClientName', 'ClientIDNumber', 'ClientPhone', 'ClientEmail', 'BranchId',
+        'ClientId','BranchId',
         'ReferredBy', 'ReferralDate', 'InsuranceProductId', 'PreferredInsurerId',
-        'Remarks', 'Status', 'AssignedTo', 'ConvertedPolicyId', 'CreatedBy',
+        'Remarks', 'Status', 'AssignedTo', 'CreatedBy',
         'ModifiedBy', 'DeletedBy'
     ];
 
@@ -55,16 +55,6 @@ class BancAssuranceReferral extends Model
         return $this->belongsTo(User::class, 'ReferredBy', 'Id');
     }
 
-    public function modifiedByUser()
-    {
-        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
-    }
-
-    public function createdByUser()
-    {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
-    }
-
     public function employee()
     {
         return $this->belongsTo(user::class, 'ReferredBy', 'Id');
@@ -72,6 +62,6 @@ class BancAssuranceReferral extends Model
 
     public function customerreferral()
     {
-        return $this->hasOne(BancassuranceCustomer::class, 'ReferralID', 'Id');
+        return $this->belongsTo(BancassuranceCustomer::class, 'ClientId', 'Id');
     }
 }
