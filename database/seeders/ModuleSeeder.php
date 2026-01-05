@@ -201,8 +201,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000, 'RequiredPermission' => PermissionEnum::InterBranchRequisitionApproval->value],
 
             ['ModuleID' => 403000, 'Name' => 'Inventory Dashboard', 'Icon' => null, 'Description' => 'Inventory Dashboard', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::InventoryDashboardView->value],
-            ['ModuleID' => 403200, 'Name' => 'By Branch or Store List', 'Icon' => null, 'Description' => 'Inventory Dashboard By Branch or Store', 'Route' => 'inventorydashboard.index', 'ParentID' => 403000, 'RequiredPermission' => PermissionEnum::InventoryDashboardView->value],
-            // ['ModuleID' => 403200, 'Name' => 'Movement Dashboard', 'Icon' => null, 'Description' => 'Movement Dashboard', 'Route' => 'movementdashboard.index', 'ParentID' => 403000],
+            ['ModuleID' => 403200, 'Name' => 'Movement Dashboard', 'Icon' => null, 'Description' => 'Movement Dashboard', 'Route' => 'movementdashboard.index', 'ParentID' => 403000],
 
             ['ModuleID' => 404000, 'Name' => 'Transactions', 'Icon' => null, 'Description' => 'Inventory Transactions', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::TransactionTransferView->value],
             ['ModuleID' => 404300, 'Name' => 'Stock Transfers', 'Icon' => null, 'Description' => 'Stock Transfers', 'Route' => 'transactionstransfers.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::TransactionTransferView->value],
@@ -447,34 +446,102 @@ class ModuleSeeder extends Seeder
             // First level children
             //['ModuleID' => 801000, 'Name' => 'Document Registry',      'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.documents.index'],
             //            ['ModuleID' => 802000, 'Name' => 'Contracts',              'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => null],
-            ['ModuleID' => 802000, 'Name' => 'Document Registry', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => null, 'RequiredPermission' => PermissionEnum::ContractView->value],
-
-            // ... (Lines 451-456 omitted in diff, assume unchanged)
+            ['ModuleID' => 802000, 'Name' => 'Document Registry', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => null],
+            ['ModuleID' => 803000, 'Name' => 'Disputes & Litigation', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.cases.index'],
+            ['ModuleID' => 804000, 'Name' => 'Legal Obligations', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.obligations.index'],
+            ['ModuleID' => 805000, 'Name' => 'Legal Searches', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.search_requests.index'],
+            ['ModuleID' => 806000, 'Name' => 'Loan Security Registry', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.securities.index'],
+            ['ModuleID' => 807000, 'Name' => 'Intellectual Property', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.intellectual.index'],
 
             // Second level children under Contracts
-            ['ModuleID' => 802100, 'Name' => 'Maintenance', 'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.documents.index', 'RequiredPermission' => PermissionEnum::ContractView->value],
-            // ...
+            ['ModuleID' => 802100, 'Name' => 'Maintenance', 'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.documents.index'],
+            ['ModuleID' => 802200, 'Name' => 'Clauses Library', 'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.clauses.index'],
+            ['ModuleID' => 802300, 'Name' => 'Templates Library', 'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.templates.index'],
+
+            ['ModuleID' => 899000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal-reports.index'],
+
+
 
             // =========================================================
             // Parent Menu: Compliance Management
             // =========================================================
-            ['ModuleID' => 808000, 'Name' => 'Compliance Management', 'Icon' => '<i class="fa fa-shield-alt"></i>', 'Description' => 'Manage compliance obligations, filings, policies, breaches and analytics', 'ParentID' => 800000, 'Route' => null, 'RequiredPermission' => PermissionEnum::ComplianceGenericView->value],
+            ['ModuleID' => 808000, 'Name' => 'Compliance Management', 'Icon' => '<i class="fa fa-shield-alt"></i>', 'Description' => 'Manage compliance obligations, filings, policies, breaches and analytics', 'ParentID' => 800000, 'Route' => null],
 
             // =========================================================
             // Submenu: Setup (Masters)
             // =========================================================
-            ['ModuleID' => 808100, 'Name' => 'Setup (Masters)', 'Icon' => '<i class="fa fa-cogs"></i>', 'Description' => 'Maintain compliance master data', 'ParentID' => 808000, 'Route' => null, 'RequiredPermission' => PermissionEnum::ComplianceSetupView->value],
+            ['ModuleID' => 808100, 'Name' => 'Setup (Masters)', 'Icon' => '<i class="fa fa-cogs"></i>', 'Description' => 'Maintain compliance master data', 'ParentID' => 808000, 'Route' => null],
 
-            // ...
+            // Subsubmenu: Regulatory Bodies
+            ['ModuleID' => 808110, 'Name' => 'Regulatory Bodies', 'Icon' => '<i class="fa fa-university"></i>', 'Description' => 'List of regulators (CBK, CMA, KRA, etc.)', 'ParentID' => 808100, 'Route' => 'legal.setup.regulatory_bodies.index'],
+
+            // Subsubmenu: Compliance Areas
+            ['ModuleID' => 808120, 'Name' => 'Compliance Areas', 'Icon' => '<i class="fa fa-stream"></i>', 'Description' => 'Compliance areas and categories (AML, KYC, etc.)', 'ParentID' => 808100, 'Route' => 'legal.setup.compliance_areas.index'],
+
+            // Subsubmenu: Control Types
+            ['ModuleID' => 808130, 'Name' => 'Control Types', 'Icon' => '<i class="fa fa-tasks"></i>', 'Description' => 'Types of controls and monitoring points', 'ParentID' => 808100, 'Route' => 'legal.setup.control_types.index'],
+
+            // Subsubmenu: Incident Severity Levels
+            ['ModuleID' => 808140, 'Name' => 'Incident Severity Levels', 'Icon' => '<i class="fa fa-exclamation-triangle"></i>', 'Description' => 'Severity levels for compliance incidents', 'ParentID' => 808100, 'Route' => 'legal.setup.incident_severity_levels.index'],
+
+            // Subsubmenu: Filing Types
+            ['ModuleID' => 808150, 'Name' => 'Filing Types', 'Icon' => '<i class="fa fa-file-alt"></i>', 'Description' => 'Types of regulatory filings (CBK, AML, etc.)', 'ParentID' => 808100, 'Route' => 'legal.setup.filing_types.index'],
+
+            // Subsubmenu: File Formats
+            ['ModuleID' => 808160, 'Name' => 'File Formats', 'Icon' => '<i class="fa fa-file-code"></i>', 'Description' => 'Supported formats for filings (Excel, XML, XBRL, PDF)', 'ParentID' => 808100, 'Route' => 'legal.setup.file_formats.index'],
+
+            // Subsubmenu: Policy Categories
+            ['ModuleID' => 808170, 'Name' => 'Policy Categories', 'Icon' => '<i class="fa fa-book"></i>', 'Description' => 'Categories of compliance policies (AML, Privacy, etc.)', 'ParentID' => 808100, 'Route' => 'legal.setup.policy_categories.index'],
+
+            // Subsubmenu: Training Types
+            ['ModuleID' => 808180, 'Name' => 'Training Types', 'Icon' => '<i class="fa fa-chalkboard-teacher"></i>', 'Description' => 'Types of compliance training and certifications', 'ParentID' => 808100, 'Route' => 'legal.setup.training_types.index'],
+
+            // =========================================================
+            // Submenu: Obligations Repository
+            // =========================================================
+            ['ModuleID' => 808200, 'Name' => 'Obligations Repository', 'Icon' => '<i class="fa fa-balance-scale"></i>', 'Description' => 'Register and version control for compliance obligations', 'ParentID' => 808000, 'Route' => 'legal.compliance.obligations.index'],
+
+            // =========================================================
+            // Submenu: Compliance Calendar & Alerts
+            // =========================================================
+            ['ModuleID' => 808300, 'Name' => 'Compliance Calendar', 'Icon' => '<i class="fa fa-calendar-alt"></i>', 'Description' => 'Calendar and alerting for compliance obligations', 'ParentID' => 808000, 'Route' => 'legal.compliance.calendar.index'],
+
+            // =========================================================
+            // Submenu: Control Library
+            // =========================================================
+            ['ModuleID' => 808400, 'Name' => 'Control Library', 'Icon' => '<i class="fa fa-folder-shield"></i>', 'Description' => 'Library of compliance policies and monitoring points', 'ParentID' => 808000, 'Route' => 'legal.compliance.controls.index'],
+
+            // =========================================================
+            // Submenu: Breach & Incident Tracker
+            // =========================================================
+            ['ModuleID' => 808500, 'Name' => 'Breach & Incident Tracker', 'Icon' => '<i class="fa fa-exclamation-circle"></i>', 'Description' => 'Track compliance breaches and incidents', 'ParentID' => 808000, 'Route' => 'legal.compliance.incidents.index'],
+
+            // =========================================================
+            // Submenu: Regulatory Filings
+            // =========================================================
+            ['ModuleID' => 808600, 'Name' => 'Regulatory Filings', 'Icon' => '<i class="fa fa-file-signature"></i>', 'Description' => 'Templates and submissions for regulatory filings', 'ParentID' => 808000, 'Route' => 'legal.compliance.filings.index'],
 
             // =========================================================
             // Submenu: Policy & Training Repository
             // =========================================================
-            ['ModuleID' => 808700, 'Name' => 'Policy & Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 808000, 'Route' => null, 'RequiredPermission' => PermissionEnum::CompliancePolicyView->value],
+            ['ModuleID' => 808700, 'Name' => 'Policy & Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 808000, 'Route' => null],
 
-            // ...
+            ['ModuleID' => 808710, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 808700, 'Route' => 'legal.compliance.policies.index'],
+            ['ModuleID' => 808720, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 808700, 'Route' => 'legal.compliance.trainings.index'],
+            ['ModuleID' => 808730, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 808700, 'Route' => 'legal.compliance.certifications.index'],
 
-            ['ModuleID' => 808800, 'Name' => 'Compliance Analytics', 'Icon' => '<i class="fa fa-chart-pie"></i>', 'Description' => 'Dashboards and compliance heatmaps', 'ParentID' => 808000, 'Route' => 'legal.compliance.analytics.index', 'RequiredPermission' => PermissionEnum::ComplianceGenericView->value],
+            // =========================================================
+            // Submenu: Compliance Analytics
+            // =========================================================
+            ['ModuleID' => 808800, 'Name' => 'Compliance Analytics', 'Icon' => '<i class="fa fa-chart-pie"></i>', 'Description' => 'Dashboards and compliance heatmaps', 'ParentID' => 808000, 'Route' => 'legal.compliance.analytics.index'],
+
+            // =========================================================
+            // Submenu: Integration Points (optional)
+            // =========================================================
+            // ['ModuleID' => 808900, 'Name' => 'Integration Points', 'Icon' => '<i class="fa fa-link"></i>', 'Description' => 'Integrations with CBS, Finance, HR, and DMS', 'ParentID' => 808000, 'Route' => 'legal.compliance.integrations.index'],
+
+
+
         ]);
 
         return $values;
@@ -485,26 +552,42 @@ class ModuleSeeder extends Seeder
         $values = collect([
             // Main module - Insurance
             ['ModuleID' => 900000, 'Name' => ModulesEnum::Insurance->description(), 'Icon' => '<i data-feather="shield"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 901000, 'Name' => 'Bank Staff Workspace', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassuranceReferralView->value],
-            ['ModuleID' => 901100, 'Name' => 'Referrals & Tracking', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.referrals.index', 'ParentID' => 901000, 'RequiredPermission' => PermissionEnum::BancassuranceReferralView->value],
-            // ...
-            ['ModuleID' => 902000, 'Name' => 'Customers', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassuranceCustomersView->value],
-            // ...
-            ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => null, 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassurancePolicyView->value],
-            // ...
-            ['ModuleID' => 904000, 'Name' => 'Premium Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassurancePremiumPaymentsView->value],
-            // ...
-            ['ModuleID' => 905000, 'Name' => 'Claims Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassuranceClaimView->value],
-            // ...
-            ['ModuleID' => 906000, 'Name' => 'Medical Funds Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::MedicalFundView->value],
-            // ...
-            ['ModuleID' => 907000, 'Name' => 'Commissions', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::CommissionRuleView->value],
-            // ...
-            ['ModuleID' => 908000, 'Name' => 'Providers & Products', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::InsuranceProviderView->value],
-
-            ['ModuleID' => 908500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 908000, 'RequiredPermission' => PermissionEnum::InsurancePricingRuleView->value],
-            ['ModuleID' => 909000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::InsuranceProviderView->value],
-            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::InsuranceProviderView->value],
+            ['ModuleID' => 901000, 'Name' => 'Bank Staff Workspace', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 901100, 'Name' => 'Referrals & Tracking', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.referrals.index', 'ParentID' => 901000],
+            ['ModuleID' => 901200, 'Name' => 'Referral Assignment', 'Icon' => 'fas fa-user-check', 'Description' => '', 'Route' => 'bancassurance.referrals.assign.list', 'ParentID' => 901000],
+            ['ModuleID' => 901300, 'Name' => 'Referral Performance', 'Icon' => 'fas fa-chart-bar', 'Description' => 'View referral counts and conversion rates', 'Route' => 'bancassurance.referrals.performance', 'ParentID' => 901000],
+            ['ModuleID' => 902000, 'Name' => 'Customers', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            //['ModuleID' => 902100, 'Name' => 'Customer Profile & KYC', 'Icon' => 'fas fa-user-plus', 'Description' => 'Create customer profile with KYC', 'Route' => 'bancassurance.customers.check', 'ParentID' => 902000],
+            ['ModuleID' => 902300, 'Name' => 'Customer Listing', 'Icon' => 'fas fa-user-friends', 'Description' => 'Add or edit customer beneficiaries', 'Route' => 'bancassurance.customers.index', 'ParentID' => 902000],
+            ['ModuleID' => 902400, 'Name' => 'Customer Communications', 'Icon' => 'fas fa-comments', 'Description' => 'Track calls, emails, visits and SMS logs', 'Route' => 'bancassurance.customers.communication.index', 'ParentID' => 902000],
+            ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => null, 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 903100, 'Name' => 'Policy Proposals', 'Icon' => null, 'Description' => 'List and manage policy proposals', 'Route' => 'bancassurance.policies.index', 'ParentID' => 903000],
+            ['ModuleID' => 903200, 'Name' => 'Proposal Review', 'Icon' => null, 'Description' => 'Review policy proposals and make underwriting decisions', 'Route' => 'bancassurance.policies.reviewIndex', 'ParentID' => 903000],
+            ['ModuleID' => 903300, 'Name' => 'Underwriting Feedback', 'Icon' => null, 'Description' => 'Capture and track underwriter decisions and comments for submitted proposals', 'Route' => 'bancassurance.policies.feedback.list', 'ParentID' => 903000],
+            ['ModuleID' => 903400, 'Name' => 'Policy Issuance', 'Icon' => null, 'Description' => 'List of policies approved for issuance', 'Route' => 'bancassurance.policies.issuance.list', 'ParentID' => 903000],
+            ['ModuleID' => 903500, 'Name' => 'Policy Register', 'Icon' => null, 'Description' => 'View list of all issued policies', 'Route' => 'bancassurance.policies.register', 'ParentID' => 903000],
+            ['ModuleID' => 903600, 'Name' => 'Renewal Management', 'Icon' => null, 'Description' => 'View and manage renewable policies', 'Route' => 'bancassurance.policies.renewals.index', 'ParentID' => 903000],
+            ['ModuleID' => 904000, 'Name' => 'Premium Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 904100, 'Name' => 'Premium Payments', 'Icon' => null, 'Description' => 'View all premium payments made by customers', 'Route' => 'bancassurance.premiums.index', 'ParentID' => 904000],
+            ['ModuleID' => 905000, 'Name' => 'Claims Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 905100, 'Name' => 'Claims Register', 'Icon' => null, 'Description' => 'View all submitted claims', 'Route' => 'bancassurance.claims.index', 'ParentID' => 905000],
+            ['ModuleID' => 905200, 'Name' => 'Claims Assessment', 'Icon' => null, 'Description' => 'Assess and decide on initiated claims', 'Route' => 'bancassurance.claims.assessment_list', 'ParentID' => 905000],
+            //['ModuleID' => 905300, 'Name' => 'Claims Approval', 'Icon' => null, 'Description' => 'List claims awaiting approval', 'Route' => 'bancassurance.claims.approvalQueue', 'ParentID' => 905000],
+            ['ModuleID' => 905400, 'Name' => 'Claim Payments', 'Icon' => null, 'Description' => 'View and track settled claim payments', 'Route' => 'bancassurance.claims.payments.index', 'ParentID' => 905000],
+            ['ModuleID' => 905500, 'Name' => 'Closed Claims', 'Icon' => null, 'Description' => 'View Closed Claims', 'Route' => 'bancassurance.claims.closed', 'ParentID' => 905000],
+            ['ModuleID' => 906000, 'Name' => 'Medical Funds Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 906100, 'Name' => 'Medical Fund', 'Icon' => null, 'Description' => 'View Medical Fund', 'Route' => 'bancassurance.medicalfunds.index', 'ParentID' => 906000],
+            ['ModuleID' => 907000, 'Name' => 'Commissions', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 907100, 'Name' => 'Commission Rules', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'commissions.rules.index', 'ParentID' => 907000],
+            ['ModuleID' => 907200, 'Name' => 'Commission Earned', 'Icon' => null, 'Description' => 'View commissions earned', 'Route' => 'bancassurance.commissions.earned.index', 'ParentID' => 907000],
+            ['ModuleID' => 907300, 'Name' => 'Commission PaidOut', 'Icon' => null, 'Description' => 'View commissions Paid', 'Route' => 'bancassurance.commissions.payouts.index', 'ParentID' => 907000],
+            ['ModuleID' => 908000, 'Name' => 'Providers & Products', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 908100, 'Name' => 'Insurance Providers', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.insurers.index', 'ParentID' => 908000],
+            ['ModuleID' => 908200, 'Name' => 'Insurance Products', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.products.index', 'ParentID' => 908000],
+            ['ModuleID' => 908400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 908000],
+            ['ModuleID' => 908500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 908000],
+            ['ModuleID' => 909000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
+            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
         ]);
 
         return $values;

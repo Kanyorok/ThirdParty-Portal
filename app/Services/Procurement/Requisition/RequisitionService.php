@@ -49,11 +49,7 @@ public static function addRequisition($branch, $department, $remarks, $procureme
                         'ModifiedOn' => now()
                     ]);
                 
-                Log::info("Requisition created with Draft status", [
-                    'requisition_id' => $requisitionId,
-                    'plan_id' => $procurementPlanId,
-                    'user_id' => $actor->Id
-                ]);
+
                 
                 // Auto-populate items if procurement plan is selected
                 if ($procurementPlanId) {
@@ -63,10 +59,7 @@ public static function addRequisition($branch, $department, $remarks, $procureme
                         $actor
                     );
                     
-                    Log::info("Auto-populated {$itemsAdded} items from plan", [
-                        'requisition_id' => $requisitionId,
-                        'plan_id' => $procurementPlanId
-                    ]);
+
                 }
             }
         });
@@ -112,11 +105,7 @@ public static function addRequisition($branch, $department, $remarks, $procureme
 private static function autoPopulateItemsFromPlan($requisitionId, $planId, User $actor)
 {
     try {
-        Log::info("=== AUTO-POPULATE START ===", [
-            'requisition_id' => $requisitionId,
-            'plan_id' => $planId,
-            'user_id' => $actor->Id
-        ]);
+
 
         // Check if plan exists
         $planExists = DB::table('t_ConsolidatedProcurementPlan')
@@ -125,7 +114,7 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
             ->exists();
         
         if (!$planExists) {
-            Log::warning("Plan does not exist", ['plan_id' => $planId]);
+
             return 0;
         }
 
@@ -135,10 +124,10 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
             ->whereNull('DeletedOn')
             ->count();
         
-        Log::info("Plan line items count", ['plan_id' => $planId, 'count' => $planLineCount]);
+
 
         if ($planLineCount === 0) {
-            Log::warning("No line items found in plan", ['plan_id' => $planId]);
+
             return 0;
         }
 
@@ -156,14 +145,14 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                 ->value('ID');
             
             if ($statusId) {
-                Log::info("Found status", ['code' => $code, 'id' => $statusId]);
+
                 break;
             }
         }
         
         // If no status found, use NULL (will rely on default)
         if (!$statusId) {
-            Log::warning("No suitable status found, using NULL");
+
         }
         
         // Get urgency - if not available, use NULL
@@ -175,7 +164,7 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
             ->value('ID');
 
         if (!$urgencyId) {
-            Log::info("No urgency level found - will use NULL");
+
         }
 
         // FIXED: Properly join to get item type information
@@ -188,7 +177,7 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                 'pli.LineItemID',
                 'pli.ItemID',
                 // 'pli.ItemDescription as PlanDescription', // Column does not exist
-                'pli.Quantity as PlanQuantity',
+                'pli.MergedQty as PlanQuantity',
                 'pli.UOMID',
                 'pli.UnitPrice',
                 'itm.ItemName',
@@ -198,13 +187,10 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
             )
             ->get();
 
-        Log::info("Plan items fetched", [
-            'count' => $planItems->count(),
-            'sample' => $planItems->first() ? json_encode($planItems->first()) : null
-        ]);
+
 
         if ($planItems->isEmpty()) {
-            Log::error("No items found in plan after join - check table structure");
+
             
             // Debug: Check what's actually in the plan
             $rawPlanItems = DB::table('t_PlanLineItem')
@@ -212,10 +198,7 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                 ->whereNull('DeletedOn')
                 ->get();
             
-            Log::info("Raw plan items (without joins)", [
-                'count' => $rawPlanItems->count(),
-                'sample' => $rawPlanItems->first() ? json_encode($rawPlanItems->first()) : null
-            ]);
+
             
             return 0;
         }
@@ -225,11 +208,7 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
         
         foreach ($planItems as $item) {
             try {
-                Log::info("Processing plan item", [
-                    'line_item_id' => $item->LineItemID,
-                    'item_id' => $item->ItemID,
-                    'plan_quantity' => $item->PlanQuantity
-                ]);
+
 
                 // Calculate remaining quantity
                 $usedQty = DB::table('t_RequisitionLines')
@@ -239,14 +218,10 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                 
                 $remainingQty = $item->PlanQuantity - $usedQty;
                 
-                Log::info("Quantity calculation", [
-                    'plan_qty' => $item->PlanQuantity,
-                    'used_qty' => $usedQty,
-                    'remaining_qty' => $remainingQty
-                ]);
+
                 
                 if ($remainingQty <= 0) {
-                    Log::info("Skipping - no remaining quantity", ['line_item_id' => $item->LineItemID]);
+
                     continue;
                 }
 
@@ -259,9 +234,9 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                     
                     if ($uom) {
                         $uomName = $uom->Code ?? $uom->Name ?? $uomName;
-                        Log::info("UOM lookup", ['uom_id' => $item->UOMID, 'uom' => $uomName]);
+
                     } else {
-                        Log::warning("UOM not found", ['uom_id' => $item->UOMID]);
+
                     }
                 }
                 
@@ -296,18 +271,13 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                     $insertData['Type'] = $item->ItemTypeId;
                 }
                 
-                Log::info("Attempting to insert requisition line", [
-                    'data' => $insertData
-                ]);
+
                 
                 DB::table('t_RequisitionLines')->insert($insertData);
                 
                 $itemsAdded++;
                 
-                Log::info("Item added successfully", [
-                    'items_added' => $itemsAdded,
-                    'line_item_id' => $item->LineItemID
-                ]);
+
                 
             } catch (\Exception $itemError) {
                 $errorMsg = "Failed to insert line item {$item->LineItemID}: {$itemError->getMessage()}";
@@ -321,15 +291,10 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
         }
         
         if (!empty($errors)) {
-            Log::warning("Some items failed to import", ['errors' => $errors]);
+
         }
         
-        Log::info("=== AUTO-POPULATE COMPLETE ===", [
-            'total_items_added' => $itemsAdded,
-            'total_errors' => count($errors),
-            'requisition_id' => $requisitionId,
-            'plan_id' => $planId
-        ]);
+
         
         return $itemsAdded;
         

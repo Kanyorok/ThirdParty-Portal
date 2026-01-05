@@ -36,6 +36,10 @@ Route::middleware(['module:800000'])->prefix('legal')->group(function () {
     Route::name('legal.')->group(function () {
 
         // Legal Documents & nested dispatches/execution logs
+        // AJAX endpoint for fetching templates by document type
+        Route::get('templates/by-type', [LegalDocumentController::class, 'getTemplatesByType'])->name('templates.by-type');
+        Route::get('templates/{id}/content', [LegalDocumentController::class, 'getTemplateById'])->name('templates.get-by-id');
+        
         Route::resource('documents', LegalDocumentController::class);
         Route::resource('documents.dispatches', LegalDispatchController::class);
         Route::resource('documents.execution_logs', LegalExecutionLogController::class);

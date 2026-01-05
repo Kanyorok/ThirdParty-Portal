@@ -80,10 +80,11 @@ class LoginRequest extends FormRequest
             RateLimiter::clear($this->throttleKey());
 
             //remove other sessions
-            if (config(key: 'session.driver') === 'database') {
-                DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
-                    ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
-            }
+            //remove other sessions
+            // if (config(key: 'session.driver') === 'database') {
+            //     DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
+            //         ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
+            // }
 
             $user->fill([
                 'last_login_at' => now(),

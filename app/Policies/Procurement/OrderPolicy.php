@@ -76,6 +76,6 @@ class OrderPolicy
      */
     public function approve(User $user, Order $order): bool
     {
-        return $user->can(PermissionEnum::PurchaseOrderApproval->value);
+        return $user->can(PermissionEnum::PurchaseOrderApprove->value);
     }
 }
