@@ -3,6 +3,8 @@
 namespace App\Models\Inventory;
 
 use App\Models\Core\Branch;
+use App\Models\Core\User;
+use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,17 +17,13 @@ class StockTransaction extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-
     protected $table = 't_StockTransactions';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
+    
+    protected $dates = ['TransactionDate', 'DeletedOn'];
+    
     protected $fillable = [
-
         'SKUID',
         'TransactionType',
         'ReferenceID',
@@ -50,9 +48,36 @@ class StockTransaction extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'stocktransactionId';
+        return 'StockTransactionId';
     }
 
+    // Add these scopes for better query handling
+    public function scopeActive($query)
+    {
+        return $query->whereNull('DeletedOn');
+    }
+
+    public function scopeBranch($query, $branchId)
+    {
+        if ($branchId) {
+            return $query->where('BranchID', $branchId);
+        }
+        return $query;
+    }
+
+    public function scopeDateRange($query, $fromDate, $toDate)
+    {
+        if ($fromDate && $toDate) {
+            return $query->whereBetween('TransactionDate', [$fromDate, $toDate]);
+        } elseif ($fromDate) {
+            return $query->whereDate('TransactionDate', '>=', $fromDate);
+        } elseif ($toDate) {
+            return $query->whereDate('TransactionDate', '<=', $toDate);
+        }
+        return $query;
+    }
+
+    // Relationships - Fixed names
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
@@ -63,14 +88,9 @@ class StockTransaction extends Model
         return $this->belongsTo(Store::class, 'StoreID', 'Id');
     }
 
-    public function transactionType()
+    public function transactionTypeDetail()
     {
         return $this->belongsTo(CodeDetail::class, 'TransactionType', 'Id');
-    }
-
-    public function unitCost()
-    {
-        return $this->belongsTo(Pricing::class, 'UnitCost', 'Id');
     }
 
     public function uom()
@@ -78,7 +98,8 @@ class StockTransaction extends Model
         return $this->belongsTo(UnitOfMeasure::class, 'UOMID', 'Id');
     }
 
-    public function branchId()
+    // Fixed: This should be named 'branch' not 'branchId'
+    public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID', 'Id');
     }
@@ -102,7 +123,4 @@ class StockTransaction extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
     }
-
-
 }
-
