@@ -19,6 +19,11 @@ use Illuminate\Validation\ValidationException;
 
 class PrequalificationRoundController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(PrequalificationRound::class, 'prequalificationRound');
+    }
+
     public function index(Request $request): View
     {
         // Allow optionally including soft-deleted (archived) rounds via ?include_deleted=1

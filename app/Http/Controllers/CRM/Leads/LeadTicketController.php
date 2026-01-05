@@ -16,6 +16,7 @@ use App\Models\Communication\EmailConversation;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Ticket;
 use App\Models\DMS\Image;
+use App\Services\CRM\TicketService;
 use App\Traits\Controller\TicketsTrait;
 use Carbon\Carbon;
 use Exception;
@@ -40,7 +41,7 @@ class LeadTicketController extends Controller
      */
     public function index(Lead $lead): JsonResponse
     {
-        return $this->tickets($lead->tickets()->where('t_Tickets.StatusId', TicketStatusEnum::Active));
+        return $this->tickets($lead->tickets()->where('t_Tickets.StatusId', TicketService::codeDetail(TicketStatusEnum::Active, 'TicketStatus')->ID));
     }
 
     /**
@@ -55,7 +56,7 @@ class LeadTicketController extends Controller
         $start = $request->getStart();
         $end = ($start instanceof Carbon) ? $request->getEnd($start) : null;
         $assignee = $request->getAssignee();
-        $exists = $lead->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.Status', TicketStatusEnum::Active->value)->first();
+        $exists = $lead->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.StatusId', TicketService::codeDetail(TicketStatusEnum::Active, 'TicketStatus')->ID)->first();
         if ($exists instanceof Ticket) {
             return $this->errored('Ticket <a href="' . route('tickets.show', [$exists->TicketID]) . '" class="fw-bold text-white">' . $exists->TicketID . '</a> of the same category already exists.');
         }
@@ -72,7 +73,7 @@ class LeadTicketController extends Controller
                     ? $this->save($lead, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, Email::getPrimaryKey(), $priority, $start, $end, SourceID: $emailConversation->email->EmailID)
                     : $this->save($lead, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, $source, $priority, $start, $end);
 
-                   $service->assign($assignee);
+                $service->assign($assignee);
                 foreach ($watchers as $watcher) {
                     if ($watcher instanceof Team && $assignee instanceof Team && $watcher->TeamID === $assignee->TeamID) {
                         continue;
@@ -85,9 +86,9 @@ class LeadTicketController extends Controller
                     $service->addWatcher($watcher, RoleEnum::Read, $owner);
                 }
 
-                if (($emailConversation instanceof EmailConversation)) {//attach documents in email to ticket
+                if (($emailConversation instanceof EmailConversation)) { //attach documents in email to ticket
                     foreach ($emailConversation->email->attachments as $attachment) {
-                        if ($attachment instanceof Image) {//todo fix on migration.
+                        if ($attachment instanceof Image) { //todo fix on migration.
                             try {
                                 $extension = ExtensionsEnum::fromMimeType($attachment->MIMEType);
                             } catch (ErroredException) {
@@ -101,7 +102,7 @@ class LeadTicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating ticket ' . $e->getMessage());
             Log::error($e);
             return $this->errored('unexpected error creating ticket, try again later');

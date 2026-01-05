@@ -22,6 +22,13 @@ class WorkflowStagesController extends Controller
     {
         try {
             $validated = $request->validated();
+            $this->authorize('update', \App\Models\Settings\WorkFlow::findOrFail($validated['WorkFlowId']));
+
+            Log::info('Storing new workflow stage', [
+                'workflow_id' => $validated['WorkFlowId'],
+                'stage_name' => $validated['StageName'],
+                'is_final' => !empty($validated['IsFinalStage'])
+            ]);
 
             Log::info('Storing new workflow stage', [
                 'workflow_id' => $validated['WorkFlowId'],
@@ -62,7 +69,7 @@ class WorkflowStagesController extends Controller
                     'TypeID' => $stage->type_name->TypeID,
                     'Name' => $stage->type_name->Name,
                 ] : null,
-                'role_name' => $permission && $permission->roles ? 
+                'role_name' => $permission && $permission->roles ?
                     $permission->roles->pluck('name')->implode(', ') : '-',
             ];
 
@@ -79,7 +86,6 @@ class WorkflowStagesController extends Controller
                 'stage' => $stageData,
                 'workflow_has_final_stage' => !empty($workflow->FinalStage),
             ]);
-            
         } catch (\App\Exceptions\ErroredException $e) {
             Log::error('Failed to create workflow stage', [
                 'error' => $e->getMessage(),
@@ -90,7 +96,6 @@ class WorkflowStagesController extends Controller
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 422);
-            
         } catch (\Throwable $e) {
             Log::error('Unexpected error in workflow stage creation', [
                 'error' => $e->getMessage(),
@@ -107,6 +112,9 @@ class WorkflowStagesController extends Controller
     public function destroy(string $id): JsonResponse
     {
         try {
+            $stage = \App\Models\Core\Approval\WorkflowStage::findOrFail($id);
+            $this->authorize('update', \App\Models\Settings\WorkFlow::findOrFail($stage->WorkFlowId));
+
             Log::info('Attempting to delete workflow stage', ['stage_id' => $id]);
 
             // Get stage info before deletion for logging
@@ -142,7 +150,6 @@ class WorkflowStagesController extends Controller
                 'was_final_stage' => $result['was_final_stage'],
                 'workflow_has_final_stage' => !empty($workflow->FinalStage)
             ]);
-            
         } catch (\Throwable $e) {
             Log::error('Failed to delete workflow stage', [
                 'stage_id' => $id,
@@ -160,6 +167,9 @@ class WorkflowStagesController extends Controller
     public function update(WorkFlowStageRequest $request, string $id): JsonResponse
     {
         try {
+            $stage = \App\Models\Core\Approval\WorkflowStage::findOrFail($id);
+            $this->authorize('update', \App\Models\Settings\WorkFlow::findOrFail($stage->WorkFlowId));
+
             $validated = $request->validated();
             $stage = $this->stageService->updateStage((int) $id, $validated);
 
@@ -172,13 +182,11 @@ class WorkflowStagesController extends Controller
                 'message' => 'Workflow stage updated successfully.',
                 'stage' => $stage,
             ]);
-            
         } catch (\App\Exceptions\ErroredException $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 422);
-            
         } catch (\Throwable $e) {
             Log::error('Failed to update workflow stage', [
                 'stage_id' => $id,

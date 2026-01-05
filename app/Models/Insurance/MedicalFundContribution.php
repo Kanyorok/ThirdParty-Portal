@@ -2,6 +2,7 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -48,6 +49,6 @@ class MedicalFundContribution extends Model
      */
     public function type()
     {
-        return $this->belongsTo(\App\Models\Core\CodeDetail::class, 'ContributorType', 'ID');
+        return $this->belongsTo(CodeDetail::class, 'ContributorType', 'ID');
     }
 }

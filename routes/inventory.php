@@ -107,6 +107,8 @@ Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import']
     Route::resource('inventorydashboard', InventoryDashboardController::class);
     Route::resource('movementdashboard', StockMovementController::class);
 
+
+
     //Route::resource('stocktake', StockTakeController::class);
     Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
     Route::get('/stocktake', [StockTakeController::class, 'create'])->name('stocktake.create');

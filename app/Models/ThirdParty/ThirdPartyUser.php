@@ -16,6 +16,9 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Traits\Model\UserActorTrait;
+use App\Services\CRMEmailService;
+use App\Models\Auth\User;
+use App\Enums\EmailPriorityEnum;
 
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
@@ -144,6 +147,12 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         return $this->IsActive === true;
     }
 
+    public function isApproved(): bool
+    {
+        // Treat null as false, 1/true as true
+        return (bool) $this->IsApproved;
+    }
+
     public function isSupplier(): bool
     {
         return $this->thirdParty?->isSupplier() ?? false;
@@ -207,5 +216,46 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
     public function genderDetail(): BelongsTo
     {
         return $this->belongsTo(CodeDetail::class, 'Gender', 'ID');
+    }
+
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->Email;
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $baseUrl = config('app.nextauth_url') ?? config('app.frontend_url') ?? config('app.url');
+        $url = $baseUrl . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
+
+        $subject = 'Reset Password Notification';
+        $body = "
+            <h2>Hello {$this->FirstName},</h2>
+            <p>You are receiving this email because we received a password reset request for your account.</p>
+            <p><a href='{$url}' style='background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>Reset Password</a></p>
+            <p>If you did not request a password reset, no further action is required.</p>
+            <p>Regards,<br>" . config('app.name') . "</p>
+            <p><small>If you're having trouble clicking the \"Reset Password\" button, copy and paste the URL below into your web browser: <a href='{$url}'>{$url}</a></small></p>
+        ";
+
+        // Admin user acts as sender
+        $actor = User::find(1);
+
+        if ($actor) {
+            CRMEmailService::createRaw(
+                $actor,
+                $subject,
+                $body,
+                [['Name' => $this->Email]], // To array
+                'ThirdPartyUser',
+                (string)$this->Id,
+                [], // cc
+                [], // bcc
+                EmailPriorityEnum::Important
+            )->send(true); // Send immediately
+        } else {
+            // Fallback to default notification if admin user not found (or log error)
+            $this->notify(new \Illuminate\Auth\Notifications\ResetPassword($token));
+        }
     }
 }

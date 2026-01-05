@@ -422,7 +422,7 @@
                                     <label for="Location" class="form-label">Location <span
                                             class="text-danger">*</span></label>
                                     <select class="form-control locations" name="Location" id="Location"
-                                            required disabled>
+                                            required>
                                         <option selected
                                                 value="{{ $competitor->LocationID }}">{{ $location }}</option>
                                     </select>
@@ -619,13 +619,11 @@
                     }
                 });
             });
-            $('#Location').select2();
-
-            {{-- $('#Location').select2({
+            $('#Location').val('{{ $competitor->LocationID }}').select2({
                 placeholder: "Select a Town/City", minimumInputLength: 2,
                 dropdownParent: $Modal,
                 ajax: {
-                    url: "{{ route('locality.select2') }}?type={{ LocalityTypeEnum::City->value }}",
+                    url: "{{ route('locality.select2',['country'=>$competitor->country?->CountryCode]) }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
@@ -640,7 +638,7 @@
                     },
                     cache: true
                 }
-            }); --}}
+            });
             $("#Upload_image").change(function () {
                 $('.avatar-change').removeClass('d-none');
                 $('.avatar-changed').addClass('d-none');

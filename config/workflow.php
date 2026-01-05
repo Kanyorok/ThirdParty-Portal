@@ -1,5 +1,7 @@
 <?php
-use App\Enums\WorkflowStatus;   
+
+use App\Enums\WorkflowStatus;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -40,8 +42,8 @@ return [
         'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'
         'Pending' => \App\Enums\Inventory\Transfers::Pending->value,  // 'P'
         'In Transit' => \App\Enums\Inventory\Transfers::InTransit->value,  // 'it'
-        'Delivered'=> \App\Enums\Inventory\Transfers::Delivered->value,  // 'de'
-        'Returned'=> \App\Enums\Inventory\Transfers::Returned->value,  // 'rt'
+        'Delivered' => \App\Enums\Inventory\Transfers::Delivered->value,  // 'de'
+        'Returned' => \App\Enums\Inventory\Transfers::Returned->value,  // 'rt'
 
 
     ],
@@ -93,7 +95,7 @@ return [
     ],
 
 
-     'RFQId' => [
+    'RFQId' => [
         'Approved' => WorkflowStatus::Approved->value,  // 'A'
         'Rejected' => WorkflowStatus::Rejected->value,  // 'R'
         'Pending' => WorkflowStatus::Pending->value,    // 'P'
@@ -116,6 +118,27 @@ return [
         'Cancelled' => \App\Enums\Core\ApprovalEnum::Cancelled->value,  // 'Ca'
     ],
 
+    'tender_award' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+    ],
+
+    'rfq_award' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+    ],
+
+    'LegalDocumentId' => [
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,
+        'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,
+        'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,
+    ],
+
 
 
     /*
@@ -132,7 +155,8 @@ return [
         'lease_creation' => 'ApprovalStatus',
         'procurement_plan' => 'Status',
         'consolidated_procurement_plan' => 'Status',
-        
+        'LegalDocumentId' => 'ReviewStatus',
+
         // Add more as needed
     ],
 

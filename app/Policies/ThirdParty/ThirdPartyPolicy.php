@@ -2,93 +2,75 @@
 
 namespace App\Policies\ThirdParty;
 
-use App\Enums\ThirdParty\ThirdPartyTypeEnum;
+use App\Models\Auth\User;
 use App\Models\ThirdParty\ThirdParties;
-use App\Models\ThirdParty\ThirdPartyUser;
+use App\Enums\Core\PermissionEnum;
+use Illuminate\Auth\Access\Response;
 
 class ThirdPartyPolicy
 {
-    public function viewAny(ThirdPartyUser $user): bool
+    /**
+     * Determine whether the user can view any models.
+     */
+    public function viewAny(User $user): bool
     {
-        return $user->isActive();
+        return $user->can(PermissionEnum::ThirdPartyRead->value);
     }
 
-    public function view(ThirdPartyUser $user, ThirdParties $thirdParty): bool
+    /**
+     * Determine whether the user can view the model.
+     */
+    public function view(User $user, ThirdParties $thirdParty): bool
     {
-        return $user->ThirdPartyId === $thirdParty->Id;
+        return $user->can(PermissionEnum::ThirdPartyRead->value);
     }
 
-    public function create(ThirdPartyUser $user): bool
+    /**
+     * Determine whether the user can create models.
+     */
+    public function create(User $user): bool
     {
-        return $user->isActive() && $user->hasVerifiedEmail();
+        return $user->can(PermissionEnum::ThirdPartyCreate->value);
     }
 
-    public function createSupplierProfile(ThirdPartyUser $user): bool
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user, ThirdParties $thirdParty): bool
     {
-        if (!$this->create($user)) {
-            return false;
-        }
-
-        // Check if user already has a supplier profile
-        if ($user->hasProfile() && $user->isSupplier()) {
-            return false;
-        }
-
-        return true;
+        return $user->can(PermissionEnum::ThirdPartyUpdate->value);
     }
 
-    public function createTenantProfile(ThirdPartyUser $user): bool
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, ThirdParties $thirdParty): bool
     {
-        if (!$this->create($user)) {
-            return false;
-        }
-
-        // Check if user already has a tenant profile
-        if ($user->hasProfile() && $user->isTenant()) {
-            return false;
-        }
-
-        return true;
+        // Add specific logic here if needed (e.g. check if used in orders)
+        return $user->can(PermissionEnum::ThirdPartyDelete->value);
     }
 
-    public function createCustomerProfile(ThirdPartyUser $user): bool
+    /**
+     * Determine whether the user can restore the model.
+     */
+    public function restore(User $user, ThirdParties $thirdParty): bool
     {
-        if (!$this->create($user)) {
-            return false;
-        }
-
-        // Check if user already has a customer profile
-        if ($user->hasProfile() && $user->isCustomer()) {
-            return false;
-        }
-
-        return true;
+        return $user->can(PermissionEnum::ThirdPartyUpdate->value);
     }
 
-    public function update(ThirdPartyUser $user, ThirdParties $thirdParty): bool
+    /**
+     * Determine whether the user can permanently delete the model.
+     */
+    public function forceDelete(User $user, ThirdParties $thirdParty): bool
     {
-        return $user->ThirdPartyId === $thirdParty->Id && $user->isActive();
+        return $user->can(PermissionEnum::ThirdPartyDelete->value);
     }
 
-    public function delete(ThirdPartyUser $user, ThirdParties $thirdParty): bool
+    /**
+     * Determine whether the user can approve the model.
+     */
+    public function approve(User $user, ThirdParties $thirdParty): bool
     {
-        // Only allow deletion if no active transactions
-        return $user->ThirdPartyId === $thirdParty->Id
-            && $user->isActive()
-            && $this->canBeDeleted($thirdParty);
-    }
-
-    public function addProfileType(ThirdPartyUser $user, ThirdParties $thirdParty): bool
-    {
-        return $user->ThirdPartyId === $thirdParty->Id
-            && $user->isActive()
-            && $user->hasVerifiedEmail();
-    }
-
-    protected function canBeDeleted(ThirdParties $thirdParty): bool
-    {
-        // Add business logic to check if profile can be deleted
-        // For example: no pending orders, invoices, contracts, etc.
-        return true; // Placeholder
+        return $user->can(PermissionEnum::ThirdPartyApprove->value);
     }
 }

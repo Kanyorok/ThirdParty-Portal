@@ -39,13 +39,22 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0 ">
+                                @auth
                                 {!! auth()->user()->getImage('class="avatar-1 user-avtar wid-45 hei-45 rounded-circle"
                                 alt="user-image"') !!}
+                                @else
+                                <img src="{{ asset('assets/img/user/avatar-1.jpg') }}" class="avatar-1 user-avtar wid-45 hei-45 rounded-circle" alt="guest-image">
+                                @endauth
                             </div>
                             <div class="flex-grow-1 ms-3 me-2">
+                                @auth
                                 <h6 class="mb-0">{{ auth()->user()->UserID }}</h6>
                                 <small>{{ session('LoginRoleName')??'?' }}</small><br>
                                 <small>{{ session('LoginBranchName') ?: 'No branch ?' }}</small>
+                                @else
+                                <h6 class="mb-0">Guest</h6>
+                                <small>Visitor</small>
+                                @endauth
                             </div>
                             <a class="btn btn-icon btn-link-secondary avtar collapsed" data-bs-toggle="collapse"
                                 href="#pc_sidebar_userlink" aria-expanded="false">
@@ -148,7 +157,11 @@
                     <li class="dropdown pc-h-item">
                         <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#"
                             role="button" aria-haspopup="false" aria-expanded="false">
+                            @auth
                             {!! auth()->user()->getImage('class="avatar-1 user-avtar" alt="user-image"') !!}
+                            @else
+                            <img src="{{ asset('assets/img/user/avatar-1.jpg') }}" class="avatar-1 user-avtar" alt="guest-image">
+                            @endauth
                             <svg class="pc-icon">
                                 <use xlink:href="#custom-setting-2"></use>
                             </svg>
@@ -231,7 +244,7 @@
     @stack('scripts')
 
     <script>
-        window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() ? '/'.request()->path() : '/');
+        window.__DEFAULT_ACTIVE_ROUTE__ = @json(request() - > path() ? '/'.request() - > path() : '/');
     </script>
     <script>
         // Refresh Feather icons after partial content loads
@@ -967,6 +980,125 @@
                 });
 
             }, 100);
+        })();
+    </script>
+    <!-- Session Expiry Warning Modal -->
+    <div class="modal fade" id="sessionExpiryModal" tabindex="-1" role="dialog" aria-labelledby="sessionExpiryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sessionExpiryModalLabel">Session Expiration Warning</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Your session will expire in <span id="session-countdown" class="fw-bold text-danger">30</span> seconds.</p>
+                    <p class="mb-0">Please click "Stay Logged In" to continue your session, or you will be automatically logged out.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="window.extendSession()">Stay Logged In</button>
+                    <!-- Optional: Explicit Logout button -->
+                    <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-secondary">Logout Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Configuration: Session lifetime in minutes (default 20 if config missing)
+            const sessionLifetimeMinutes = {
+                {
+                    config('session.lifetime') ? : 20
+                }
+            };
+            const warningSeconds = 30;
+
+            const sessionLifetimeMs = sessionLifetimeMinutes * 60 * 1000;
+            const warningMs = sessionLifetimeMs - (warningSeconds * 1000);
+
+            let warningTimer, logoutTimer, countdownInterval;
+
+            function startSessionTimers() {
+                clearTimeout(warningTimer);
+                clearTimeout(logoutTimer);
+                clearInterval(countdownInterval);
+
+                // Set timer for warning (ensure > 0)
+                const safeWarningMs = warningMs > 0 ? warningMs : 1000;
+
+                warningTimer = setTimeout(showSessionWarning, safeWarningMs);
+                logoutTimer = setTimeout(forceLogout, sessionLifetimeMs);
+                console.log(`[Session] Timers started. Lifetime: ${sessionLifetimeMinutes}m. Warning in ${(safeWarningMs/1000).toFixed(1)}s.`);
+            }
+
+            function showSessionWarning() {
+                const modalEl = document.getElementById('sessionExpiryModal');
+                if (!modalEl) return;
+
+                // Show modal using Bootstrap 5 API
+                // Check if bootstrap is defined, otherwise fallback or error gracefully
+                if (typeof bootstrap !== 'undefined') {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                } else {
+                    // Fallback for older bootstrap or if global object missing (unlikely in this template)
+                    $(modalEl).modal('show');
+                }
+
+                let secondsLeft = warningSeconds;
+                const counterEl = document.getElementById('session-countdown');
+                if (counterEl) counterEl.textContent = secondsLeft;
+
+                countdownInterval = setInterval(() => {
+                    secondsLeft--;
+                    if (counterEl) counterEl.textContent = secondsLeft;
+                    if (secondsLeft <= 0) {
+                        clearInterval(countdownInterval);
+                    }
+                }, 1000);
+            }
+
+            function forceLogout() {
+                const form = document.getElementById('logout-form');
+                if (form) form.submit();
+                else window.location.href = '/login';
+            }
+
+            window.extendSession = function() {
+                const modalEl = document.getElementById('sessionExpiryModal');
+
+                // Ping to extend server session
+                fetch("{{ route('auth.heartbeat') }}", {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            // Hide modal
+                            if (typeof bootstrap !== 'undefined') {
+                                const modal = bootstrap.Modal.getInstance(modalEl);
+                                if (modal) modal.hide();
+                            } else {
+                                $(modalEl).modal('hide');
+                            }
+
+                            // Restart timers
+                            startSessionTimers();
+                        } else {
+                            forceLogout();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Session extension failed', err);
+                        // On network failure, we don't automatically logout, but timer will eventually trigger forceLogout
+                        // Or we could force it now. Let's force it if we can't verify session.
+                        forceLogout();
+                    });
+            };
+
+            // Start on load
+            startSessionTimers();
         })();
     </script>
 </body>

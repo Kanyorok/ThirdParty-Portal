@@ -23,13 +23,13 @@ class RequisitionRequest extends FormRequest
             'Remarks' => ['required', 'string'],
 
             //
-               ];
+        ];
     }
 
     public function messages(): array
     {
         return [
-            'ProcurementPlan.required' => 'Please select a Procurement Plan.',
+            // 'ProcurementPlan.required' => 'Please select a Procurement Plan.',
             'Branch.required'          => 'The Branch field is required.',
             'Department.required'      => 'The Department field is required.',
             'Remarks.required'         => 'Please provide remarks or a description.',

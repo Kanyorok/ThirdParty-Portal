@@ -52,23 +52,11 @@ class TransactionReceiptService
             $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
             $receipt->save();
 
-            // Update transfer status to Delivered
             if ($transfer && $transfer->Status == $inTransitValue) {
                 $transfer->Status = $deliveredValue;
                 $transfer->ModifiedBy = $userId;
                 $transfer->ModifiedOn = now();
                 $transfer->save();
-
-                $user = Auth::user();
-                if ($user) {
-                    $this->workflow->approve(
-                        $transfer,
-                        $user,
-                        Transfers::Delivered,
-                        'Transfer received and marked as Delivered',
-                        'Status'
-                    );
-                }
             }
 
             // Create receipt items and update stock
@@ -94,7 +82,7 @@ class TransactionReceiptService
             }
 
             activity()
-                ->causedBy($user ?? Auth::user())
+                ->causedBy(Auth::user())
                 ->performedOn($receipt)
                 ->withProperties(['attributes' => $receipt->toArray()])
                 ->log('Transaction Receipt created and marked as Delivered');
@@ -267,7 +255,7 @@ class TransactionReceiptService
         return DB::transaction(function () use ($receipt) {
             $receiptId = $receipt->Id;
             $userId = Auth::id();
-            
+
             if (!$userId) {
                 throw new Exception('User not authenticated. Cannot delete receipt.');
             }

@@ -87,6 +87,7 @@
                             <form action="{{ route('contracts.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="award_id" value="{{ $award->Id }}">
+                                <input type="hidden" name="award_type" value="{{ $awardType ?? 'tender' }}">
 
                                 <!-- Contract Type Selection -->
                                 <div class="mb-4">
