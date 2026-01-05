@@ -112,9 +112,7 @@ class RegistrationService
                 $countryId = $ct?->Id ?? 1; // Hard fallback
             }
 
-    public function registerThirdPartyDetails(ThirdPartyUser $user, array $data): ThirdParties
-    {
-        return DB::transaction(function () use ($user, $data) {
+
             $thirdParty = ThirdParties::create([
                 'ThirdPartyName' => $initialName,
                 'TradingName' => $thirdPartyData['TradingName'] ?? $initialName,
@@ -135,8 +133,8 @@ class RegistrationService
                 'ModifiedBy' => $systemUserId,
             ]);
 
-            $accountType = $data['accountType'] ?? 'supplier';
-            $this->attachAccountType($thirdParty, $accountType, $user, $data);
+            $accountType = $thirdPartyData['accountType'] ?? 'supplier';
+            $this->attachAccountType($thirdParty, $accountType, $user, $thirdPartyData);
 
             if (!empty($thirdPartyData['ThirdPartyType'])) {
                 DB::table('t_ThirdPartyType_ThirdParties')->insert([

@@ -581,7 +581,6 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // Super-admin bypass: Admin roles can perform any ability
-        /* 
         Gate::before(function ($user, string $ability = null, $arguments = null) {
             try {
                 if ($user->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) {
@@ -591,7 +590,6 @@ class AppServiceProvider extends ServiceProvider
             }
             return null;
         });
-        */
 
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
@@ -607,7 +605,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RFQ::class, RFQPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
-        Gate::policy(DepartmentNeed::class, DepartmentNeedsPolicy::class);
+
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
         Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
         Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);

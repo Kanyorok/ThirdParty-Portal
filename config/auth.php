@@ -109,7 +109,7 @@ return [
             'throttle' => 60,
         ],
         'thirdparties' => [
-            'provider' => 'thirdparties',
+            'provider' => 'thirdparty_users',
             'table' => 't_ThirdPartyPasswordResets',
             'expire' => 60,
             'throttle' => 60,

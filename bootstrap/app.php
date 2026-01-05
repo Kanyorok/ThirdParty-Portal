@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')
                 ->group(base_path('routes/portal.php'));
 
-            Route::middleware('api')
+            Route::middleware('web')
                 ->prefix('procurement')
                 ->group(base_path('routes/procurement.php'));
         },
