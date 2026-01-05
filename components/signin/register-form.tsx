@@ -93,7 +93,7 @@ export function RegisterForm() {
       <AuthHeader />
 
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(onSubmit)}
         noValidate
         aria-label="Registration form"
         className="space-y-8"
@@ -247,7 +247,7 @@ export function RegisterForm() {
               watchedFields.confirmPassword === watchedFields.password &&
               watchedFields.confirmPassword !== ""
             }
-            onPaste={(e) => e.preventDefault()}
+            onPaste={(e: React.ClipboardEvent) => e.preventDefault()}
           />
         </div>
 

@@ -108,7 +108,15 @@ function SignInForm() {
                 setError("root", { message: ERROR_MESSAGES[errorCode] || result.error })
             } else if (result?.ok) {
                 toast.success("Welcome back!", { description: "Redirecting to your dashboard..." })
-                router.push(result.url || callbackUrl)
+                
+                let redirectUrl = result.url || callbackUrl || "/dashboard"
+                
+                // Prevent redirection to "undefined" string or invalid URLs
+                if (redirectUrl === "undefined" || redirectUrl === "null" || !redirectUrl) {
+                    redirectUrl = "/dashboard"
+                }
+
+                router.push(redirectUrl)
             }
         } catch {
             setError("root", { message: ERROR_MESSAGES.SERVER_ERROR })

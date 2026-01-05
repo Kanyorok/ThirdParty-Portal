@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { RoundsTable } from "./rounds-table"
-import { RoundsToolbar } from "./rounds-toolbar"
-import { ApiCategory, RazzModule, Round } from "@/types/prequalification"
+import RoundsTable from "./rounds-table"
+import RoundsToolbar from "./rounds-toolbar"
+import { ApiCategory, ApiRound } from "@/types/prequalification-rounds-types"
+import { Round } from "@/types/types"
 import { axiosInstance } from "@/lib/axios"
 
 async function getRounds(query: Record<string, string | undefined>) {
@@ -35,7 +36,7 @@ async function getRounds(query: Record<string, string | undefined>) {
         // Ensure we handle the wrapped response format from Laravel
         // The API returns { success: true, message: "...", data: [...] }
         const responseData = response.data;
-        let rounds: RazzModule[] = [];
+        let rounds: ApiRound[] = [];
 
         if (Array.isArray(responseData)) {
             // Direct array
@@ -242,7 +243,7 @@ export default async function RoundsView({
                 pageSize={apiData.pageSize}
                 totalPages={apiData.totalPages}
                 sortBy={apiData.sortBy}
-                sortOrder={apiData.sortOrder}
+                sortOrder={apiData.sortOrder as "asc" | "desc"}
             />
         </section>
     );
