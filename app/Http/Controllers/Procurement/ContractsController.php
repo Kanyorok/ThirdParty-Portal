@@ -600,9 +600,11 @@ class ContractsController extends Controller
                 $request->review_notes ?? 'Submitted for Contract Review'
             );
 
-            // Manual update of fields not handled by generic workflow
+            // Manual update just in case workflow doesn't handle non-standard status columns seamlessly depending on version
+            // But workflow service usually handles it if column passed. 
+            // We keep specific field updates like user/time if workflow doesn't do it automatically for these specific custom fields.
             $award->update([
-               // 'ContractStatus' => 'Under Review', // Workflow should handle this via config mapping
+                'ContractStatus' => 'Under Review', // Ensure status is updated
                 'ContractApprovalRemarks' => $request->review_notes,
                 'ModifiedBy' => Auth::id(),
             ]);
@@ -613,6 +615,41 @@ class ContractsController extends Controller
         } catch (\Exception $e) {
             \Log::error('Contract submission error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Submission failed: ' . $e->getMessage()); 
+        }
+    }
+
+    /**
+     * Execute contract
+     */
+    public function execute(Request $request, $id)
+    {
+        $type = $request->input('award_type', 'tender');
+        
+        $award = null;
+        if ($type === 'rfq') {
+            $award = RFQAward::findOrFail($id);
+        } else {
+            $award = TenderAward::findOrFail($id);
+        }
+
+        // Validate current status
+        if ($award->ContractStatus !== 'Approved') {
+            return redirect()->back()->with('error', 'Only approved contracts can be executed.');
+        }
+
+        try {
+            // Update status to Executed
+            $award->update([
+                'ContractStatus' => 'Executed',
+                'ModifiedBy' => Auth::id(),
+            ]);
+
+            return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
+                ->with('success', 'Contract executed successfully. It is now active.');
+
+        } catch (\Exception $e) {
+            \Log::error('Contract execution error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Execution failed: ' . $e->getMessage());
         }
     }
 

@@ -202,7 +202,8 @@ class OrderService
                 t_Orders.OrdTotExcl,
                 t_Orders.OrdTotIncl,
                 t_Orders.OrdTotTax,
-                t_Orders.OrdDiscAmnt
+                t_Orders.OrdDiscAmnt,
+                t_Orders.DocStatus
             '))
             ->groupBy(
                 't_Orders.Id',
@@ -219,7 +220,8 @@ class OrderService
                 't_Orders.OrdTotIncl',
                 't_Orders.OrdTotTax',
                 't_Orders.OrdDiscAmnt',
-                't_RFQ.RFQNumber'
+                't_RFQ.RFQNumber',
+                't_Orders.DocStatus'
             )
             ->orderByDesc('t_Orders.CreatedOn');
 

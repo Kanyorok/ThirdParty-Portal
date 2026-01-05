@@ -156,6 +156,7 @@
                         @foreach(($contracts ?? []) as $c)
                             <option value="{{ $c->ContractRef }}"
                                     data-contract-id="{{ $c->Id }}"
+                                    data-award-type="{{ $c->AwardType ?? 'tender' }}"
                                     data-supplier-id="{{ $c->SupplierId }}"
                                     data-supplier-name="{{ $c->SupplierName ?? '' }}"
                                     data-address="{{ $c->Address }}">
@@ -512,6 +513,32 @@
                 $('.source-contract').addClass('d-none');
                 $('.direct-only').addClass('d-none');
                 $planDriver.addClass('d-none');
+                
+                // Dynamically load awarded tenders
+                const $tenderSelect = $('#tenderNo');
+                $tenderSelect.empty().append('<option selected disabled>Loading awarded tenders...</option>');
+                fetch('/procurement/purchase-order/awarded-tenders')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $tenderSelect.empty().append('<option selected disabled>Select Tender</option>');
+                        if (!success) return;
+                        (data || []).forEach(tender => {
+                            const supplierId = tender.SupplierId || '';
+                            const thirdPartyId = tender.ThirdPartyId || 0;
+                            const supplierName = tender.SupplierName || '';
+                            const address = tender.Address || '';
+                            $tenderSelect.append(`<option value="${tender.TenderNo}"
+                                                    data-tender-id="${tender.Id}"
+                                                    data-supplier-id="${supplierId}"
+                                                    data-thirdparty-id="${thirdPartyId}"
+                                                    data-supplier-name="${supplierName}"
+                                                    data-address="${address}">${tender.TenderNo}</option>`);
+                        });
+                    })
+                    .catch(() => {
+                        $tenderSelect.html('<option selected disabled>Failed to load tenders</option>');
+                    });
+                
                 // Reset to all items for Tender mode
                 updateItemOptionsForContract(allItems);
             } else if (mode === 'CONTRACT') {
@@ -699,6 +726,7 @@
         // Contract selection: auto-fill supplier and load contract tender items
         $(document).on('change', '#contractRef', function () {
             const opt = $(this).find('option:selected');
+            const awardType = opt.data('award-type') || 'tender';
             const contractId = parseInt(opt.data('contract-id'));
             const supplierId = parseInt(opt.data('supplier-id'));
             const supplierName = opt.data('supplier-name') || '';
@@ -706,8 +734,33 @@
 
             if (!isNaN(contractId)) {
                 $('#SourceId').val(contractId);
+                
+                // Set custom source type if RFQ to distinguish from Tender Contracts
+                // Default is CONTRACT (which assumed Tender). 
+                // We'll use a hidden input for SourceType override if needed or update the radio?
+                // The radio is 'CONTRACT'. Let's override SourceType field processing in backend or add hidden field.
+                let type = 'CONTRACT'; 
+                
+                // If we want to distinguish in backend, we can set SourceType overrides
+                 if ($('#hiddenSourceType').length === 0) {
+                     $('<input>').attr({type:'hidden', id:'hiddenSourceType', name:'SourceType'}).appendTo('#purchaseOrdersForm');
+                }
+                
+                // Logic: 
+                // If awardType is 'rfq', we usually save SourceType='CONTRACT' and SourceId=RFQAwardId.
+                // If awardType is 'tender', we save SourceType='CONTRACT' and SourceId=TenderAwardId.
+                // PROBLEM: T_Orders SourceId is ambiguous if both tables use auto-increment IDs.
+                // WE MUST use different SourceType. e.g. 'CONTRACT-RFQ' vs 'CONTRACT-TENDER' or just 'CONTRACT' vs 'CONTRACT-RFQ'
+                
+                if (awardType === 'rfq') {
+                     $('#hiddenSourceType').val('CONTRACT-RFQ');
+                } else {
+                     $('#hiddenSourceType').val('CONTRACT'); // or CONTRACT-TENDER
+                }
+
             } else {
                 $('#SourceId').val('');
+                if ($('#hiddenSourceType').length) $('#hiddenSourceType').val('CONTRACT');
             }
 
             if (!isNaN(supplierId)) {
@@ -722,14 +775,16 @@
 
             // Load contract tender items and update available items
             if (!isNaN(contractId)) {
-                fetch(`/procurement/purchase-order/contract-items/${contractId}`)
+                // Pass the award type (rfq or tender) to the backend
+                const typeParam = awardType ? `?type=${awardType}` : '';
+                fetch(`/procurement/purchase-order/contract-items/${contractId}${typeParam}`)
                     .then(r => r.json())
-                    .then(({items, availableItems}) => {
+                    .then(({data, availableItems}) => {
                         // Update global item options with contract-specific tender items
                         updateItemOptionsForContract(availableItems || []);
 
-                        // Populate the form with the tender items
-                        populateItems(items || []);
+                        // Populate the form with the tender/rfq items
+                        populateItems(data || []);
                         updateTotals();
                     })
                     .catch(err => {
