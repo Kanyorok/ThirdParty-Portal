@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Legal;
 
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
@@ -49,6 +50,10 @@ class LoanSecurityController extends Controller
             'RegistrationDetails' => 'required|string',
             'Locations' => 'required|exists:t_CodeDetails,Value',
             'Remarks' => 'required|string',
+            'DocumentFile' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
+        ], [
+            'DocumentFile.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
+            'DocumentFile.max' => 'File size must not exceed 5 MB.',
         ]);
 
         $duplicate = LoanSecurity::where('SecurityType', $validated['SecurityType'])
@@ -77,6 +82,16 @@ class LoanSecurityController extends Controller
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
+
+            // Upload document to DMS if file is provided
+            if ($request->hasFile('DocumentFile')) {
+                $securities->newDocument(
+                    ModulesEnum::Legal,
+                    $request->file('DocumentFile'),
+                    [PermissionEnum::LoanSecurityView],
+                    Auth::user()
+                );
+            }
 
             activity()
                 ->performedOn(new LoanSecurity())

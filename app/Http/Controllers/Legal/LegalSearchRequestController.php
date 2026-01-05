@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Legal;
 
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
@@ -205,6 +206,10 @@ class LegalSearchRequestController extends Controller
             'Status' => 'required|string|in:Approved,Rejected',
             'Findings' => 'nullable|string',
             'ApprovalReason' => 'nullable|string',
+            'DocumentFile' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
+        ], [
+            'DocumentFile.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
+            'DocumentFile.max' => 'File size must not exceed 5 MB.',
         ]);
 
         if ($validated['Status'] === 'Approved' && empty($validated['Findings'])) {
@@ -215,16 +220,43 @@ class LegalSearchRequestController extends Controller
             return back()->withErrors(['ApprovalReason' => 'Rejection reason is required when rejecting.'])->withInput();
         }
 
-        $searchRequests->update([
-            'Status' => $validated['Status'],
-            'Findings' => $validated['Findings'],
-            'ApprovalReason' => $validated['ApprovalReason'],
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('legal.search_requests.index')
-            ->with('success', 'Search request status updated.');
+            $searchRequests->update([
+                'Status' => $validated['Status'],
+                'Findings' => $validated['Findings'],
+                'ApprovalReason' => $validated['ApprovalReason'],
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            // Upload document to DMS if file is provided
+            if ($request->hasFile('DocumentFile')) {
+                $searchRequests->newDocument(
+                    ModulesEnum::Legal,
+                    $request->file('DocumentFile'),
+                    [PermissionEnum::LegalSearchView],
+                    Auth::user()
+                );
+
+                activity()
+                    ->performedOn($searchRequests)
+                    ->causedBy(Auth::user())
+                    ->withProperties(['action' => 'upload_document'])
+                    ->log('Uploaded document with findings approval');
+            }
+
+            DB::commit();
+
+            return redirect()->route('legal.search_requests.index')
+                ->with('success', 'Search request status updated.');
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to update search request status: ' . $th->getMessage());
+            return back()->with('error', 'An error occurred. Please try again.');
+        }
     }
 
 }

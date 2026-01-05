@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Legal;
 
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
@@ -45,6 +46,10 @@ class LegalIntellectualPropertyController extends Controller
             'Remarks' => 'required|string',
             'IsDisputed' => 'boolean',
             'DisputeReason' => 'nullable|string',
+            'DocumentFile' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
+        ], [
+            'DocumentFile.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
+            'DocumentFile.max' => 'File size must not exceed 5 MB.',
         ]);
 
         $duplicates = LegalIntellectualProperty::where('Title', $validated['Title'])
@@ -58,7 +63,7 @@ class LegalIntellectualPropertyController extends Controller
         try {
             DB::beginTransaction();
 
-            LegalIntellectualProperty::create([
+            $ip = LegalIntellectualProperty::create([
                 'IPType' => $validated['IPType'],
                 'Title' => $validated['Title'],
                 'Owner' => $validated['Owner'],
@@ -72,6 +77,16 @@ class LegalIntellectualPropertyController extends Controller
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
             ]);
+
+            // Upload document to DMS if file is provided
+            if ($request->hasFile('DocumentFile')) {
+                $ip->newDocument(
+                    ModulesEnum::Legal,
+                    $request->file('DocumentFile'),
+                    [PermissionEnum::IntellectualPropertyView],
+                    Auth::user()
+                );
+            }
 
             activity()
                 ->performedOn(new LegalIntellectualProperty())

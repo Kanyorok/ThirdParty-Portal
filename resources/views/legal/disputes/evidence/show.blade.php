@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Evidence Details')
+@section('title', 'Document Details')
 
 @section('content')
 <div class="container">
@@ -8,27 +8,27 @@
             <div class="row">
                 <div class="col">
                     <h5 class="text-info mb-0">
-                        <i class="fas fa-file-alt"></i> Evidence Details for Case: {{ $evidence->case->CaseTitle }}
+                        <i class="fas fa-file-alt"></i> Document Details for Case: {{ $evidence->case->CaseTitle }}
                     </h5>
                 </div>
                 <div class="col text-end">
                     <a href="{{ route('legal.cases.evidence.index', $evidence->case->Id) }}"
                         class="btn btn-outline-secondary">
-                        <i class="fas fa-long-arrow-alt-left"></i> Back to Evidence List
+                        <i class="fas fa-long-arrow-alt-left"></i> Back to Document List
                     </a>
                 </div>
             </div>
         </div>
         <div class="card-body">
             <p class="text-muted">
-                Below are the details for this evidence linked to
+                Below are the details for this document linked to
                 <strong class="text-dark">{{ $evidence->case->CaseTitle }}</strong>.
             </p>
 
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="p-2 bg-light rounded-3">
-                        <strong class="text-info">Evidence Title:</strong>
+                        <strong class="text-info">Document Title:</strong>
                         <p>{{ $evidence->EvidenceTitle }}</p>
                     </div>
                 </div>

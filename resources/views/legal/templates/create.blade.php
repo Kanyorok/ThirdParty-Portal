@@ -294,14 +294,28 @@
             </div>
           </div>
           <div class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-primary insert-btn" title="Insert into body"><i class="fa-solid fa-download"></i></button>
-            <button class="btn btn-sm btn-outline-success attach-btn" title="Attach to template"><i class="fa-solid fa-plus"></i></button>
+            <button class="btn btn-sm btn-outline-primary insert-btn" title="Insert into body and attach to template"><i class="fa-solid fa-download"></i></button>
+            <!-- Removed: Add button - now insert automatically tracks the clause -->
+            <!-- <button class="btn btn-sm btn-outline-success attach-btn" title="Attach to template"><i class="fa-solid fa-plus"></i></button> -->
           </div>
         </div>
         <div class="small text-muted mt-2">${escapeHtml(snippet)}</div>
       `;
 
-            item.querySelector('.insert-btn').addEventListener('click', () => insertAtCursor(clause.Content || ''));
+            // Updated: Insert button now also adds to selected list automatically
+            item.querySelector('.insert-btn').addEventListener('click', () => {
+                // Add to selected clauses list
+                addToSelected({
+                    id: String(clause.Id),
+                    title: clause.Title || 'Untitled',
+                    type: clause.ClauseType || '',
+                    text: clause.Content || ''
+                });
+                // Insert into editor
+                insertAtCursor(clause.Content || '');
+            });
+            
+            /* Commented out: Old separate attach button handler
             item.querySelector('.attach-btn').addEventListener('click', () => {
                 addToSelected({
                     id: String(clause.Id),
@@ -310,6 +324,7 @@
                     text: clause.Content || ''
                 });
             });
+            */
 
             resultsDiv.appendChild(item);
         });

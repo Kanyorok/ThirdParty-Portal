@@ -35,6 +35,8 @@ class LegalDocument extends Model
         'ReviewedBy',
         'ReviewedOn',
         'Remarks',
+        'DueDate',
+        'ExpiryDate',
         'CreatedBy',
         'CreatedOn',
         'ModifiedOn',
