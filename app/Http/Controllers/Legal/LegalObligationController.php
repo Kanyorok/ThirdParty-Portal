@@ -46,6 +46,7 @@ class LegalObligationController extends Controller
             'Title' => 'required|string|max:255',
             'SourceType' => 'required|exists:t_CodeDetails,Value',
             'DueDate' => 'required|date',
+            'ExpiryDate' => 'nullable|date|after_or_equal:DueDate',
             'Description' => 'required|string',
         ]);
 
@@ -64,6 +65,7 @@ class LegalObligationController extends Controller
                 'Title' => $validated['Title'],
                 'SourceType' => $validated['SourceType'],
                 'DueDate' => $validated['DueDate'],
+                'ExpiryDate' => $validated['ExpiryDate'] ?? null,
                 'Status' => $validated['Status'] ?? 'Pending',
                 'Description' => $validated['Description'],
                 'CreatedBy' => Auth::id(),
@@ -111,6 +113,7 @@ class LegalObligationController extends Controller
             'Title' => 'required|string|max:255',
             'SourceType' => 'required|in:Contract,Case',
             'DueDate' => 'required|date',
+            'ExpiryDate' => 'nullable|date|after_or_equal:DueDate',
             'Status' => 'required|string',
             'Description' => 'required|string',
         ]);
