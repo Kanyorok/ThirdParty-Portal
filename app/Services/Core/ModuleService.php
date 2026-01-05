@@ -41,7 +41,8 @@ class ModuleService
         if (!$user) {
             return 'guest-navbar-modules';
         }
-        return $user->UserID . '-navbar_modules';
+        $branchId = session('LoginBranchId', 'no-branch');
+        return $user->UserID . '-' . $branchId . '-navbar_modules';
     }
 
     public static function clearNavbarCache(User $user = null): bool

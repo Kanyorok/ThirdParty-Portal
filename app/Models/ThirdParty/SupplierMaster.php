@@ -35,6 +35,7 @@ class SupplierMaster extends Model
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
+        'ApprovalStatus' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::class,
     ];
 
     public static function getPrimaryKey(): string
@@ -59,6 +60,22 @@ class SupplierMaster extends Model
             't_ThirdParty_SupplierCategory',
             'third_party_id',
             'supplier_category_id'
+        );
+    }
+
+    public function suppliers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\ThirdParies\Supplier::class, 'SupplierMasterId', 'Id');
+    }
+
+    public function workflowHistory(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(
+            \App\Models\Core\Approval\WorkflowHistory::class,
+            'source',
+            'Source',
+            'SourceID',
+            'Id'
         );
     }
 
