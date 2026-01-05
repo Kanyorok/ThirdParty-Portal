@@ -4,28 +4,24 @@ namespace App\Http\Controllers\Procurement\ThirdParties;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Http\Requests\ThirdPartyAuth\RegisterThirdPartyUserRequest;
-use App\Http\Requests\ThirdPartyAuth\LoginThirdPartyRequest;
+use App\Http\Requests\ThirdParty\RegisterThirdPartyUserRequest;
+use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use App\Http\Resources\ThirdParty\ThirdPartyResource;
+use App\Http\Resources\ThirdParty\Api\ThirdPartyResource;
 use App\Services\RegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Log;
 use App\Models\ThirdParty\ThirdParties;
-use Illuminate\Support\Str;
-use App\Enums\ThirdParty\ThirdPartyTypeEnum;
-use Illuminate\Support\Facades\Password;
-use App\Models\ThirdParty\SupplierMaster;
-use App\Models\PropertyManagement\PropertyNewTenant;
-use App\Models\Insurance\BancassuranceCustomer;
-use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
-use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
+use App\Models\Procurement\Suppliers\SupplierMaster;
+use App\Models\Property\PropertyNewTenant;
 
-// @Kimxons
+use App\Models\Bancassurance\BancassuranceCustomer;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+
 class ThirdPartyAuthController extends Controller
 {
     protected RegistrationService $registrationService;
@@ -40,7 +36,6 @@ class ThirdPartyAuthController extends Controller
         try {
             $user = $this->registrationService->registerThirdParty($request->validated());
 
-            // Auto-login: Create token for the new user
             $token = $user->createToken('api-thirdparty')->plainTextToken;
 
             return response()->json([
@@ -86,7 +81,6 @@ class ThirdPartyAuthController extends Controller
                 ]);
             }
 
-            // Enforce account status BEFORE creating token
             if (!$user->isActive()) {
                 return response()->json(['message' => __('auth.account_inactive')], 403);
             }
@@ -94,9 +88,7 @@ class ThirdPartyAuthController extends Controller
                 return response()->json(['message' => __('auth.acc_not_approved')], 403);
             }
 
-            // profile_type validation
-            $profileType = $request->input('profile_type');
-            $isAuthorized = false;
+            // $thirdParty = ThirdParties::find($user->ThirdPartyId);
 
             // Allow login for users who haven't completed setup (No ThirdPartyId)
             // They will be redirected to the setup page by the frontend
@@ -129,7 +121,8 @@ class ThirdPartyAuthController extends Controller
             }
 
             $user->tokens()->delete();
-            $token = $user->createToken('api-thirdparty')->plainTextToken;
+            $tokenName = "api-generic-thirdparty";
+            $token = $user->createToken($tokenName)->plainTextToken;
 
             // Load relations for resource
             $user->load(['thirdParty.types']);

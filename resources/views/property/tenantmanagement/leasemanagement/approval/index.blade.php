@@ -253,7 +253,6 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="11">No leases found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -371,9 +370,6 @@
                         </tr>
 
                         @empty
-                        <tr>
-                            <td colspan="11">No lease renewals pending approval.</td>
-                        </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -483,7 +479,6 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="9">No lease terminations found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

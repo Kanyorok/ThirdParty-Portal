@@ -15,6 +15,7 @@ class ContractsLifecycleController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', TenderAward::class);
         // Load signed/executed contracts
         $contracts = TenderAward::with(['tender', 'winningSupplier'])
             ->whereIn('ContractStatus', ['Approved', 'Executed'])
@@ -31,6 +32,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
+        $this->authorize('view', $contract);
 
         return view('procurement.contracts.contractlifecycle.view', compact('contract'));
     }
@@ -42,6 +44,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
+        $this->authorize('view', $contract);
 
         return view('procurement.contracts.contractlifecycle.execution', compact('contract'));
     }
@@ -53,6 +56,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
+        $this->authorize('update', $contract);
 
         return view('procurement.contracts.contractlifecycle.amend', compact('contract'));
     }
@@ -70,6 +74,7 @@ class ContractsLifecycleController extends Controller
         ]);
 
         $contract = TenderAward::findOrFail($id);
+        $this->authorize('update', $contract);
 
         // TODO: Create amendment record and update contract
         // For now, just redirect with success message
@@ -85,6 +90,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
+        $this->authorize('update', $contract);
 
         return view('procurement.contracts.contractlifecycle.terminate', compact('contract'));
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\ThirdParty;
+namespace App\Http\Resources\ThirdParty\Api;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -14,21 +14,18 @@ class ThirdPartyUserResource extends JsonResource
             'userId' => $this->UserID,
             'firstName' => $this->FirstName,
             'lastName' => $this->LastName,
-            'fullName' => $this->FirstName . ' ' . $this->LastName,
+            'fullName' => "{$this->FirstName} {$this->LastName}",
             'email' => $this->Email,
             'phone' => $this->Phone,
             'imageId' => $this->ImageId,
-            'gender' => $this->Gender?->value,
             'thirdPartyId' => $this->ThirdPartyId,
             'isActive' => (bool)$this->IsActive,
-            'isApproved' => $this->isApproved(),
-            'isPrequalified' => $this->whenLoaded('thirdParty', fn() => (bool)($this->thirdParty ? $this->thirdParty->IsPrequalified : false)),
             'isSupplier' => $this->isSupplier(),
             'isTenant' => $this->isTenant(),
             'isCustomer' => $this->isCustomer(),
-            'emailVerifiedOn' => optional($this->EmailVerifiedOn)->format('Y-m-d H:i:s'),
-            'createdOn' => optional($this->CreatedOn)->format('Y-m-d H:i:s'),
-            'modifiedOn' => optional($this->ModifiedOn)->format('Y-m-d H:i:s'),
+            'emailVerifiedOn' => $this->EmailVerifiedOn?->toDateTimeString(),
+            'createdOn' => $this->CreatedOn?->toDateTimeString(),
+            'modifiedOn' => $this->ModifiedOn?->toDateTimeString(),
             'thirdParty' => new ThirdPartyResource($this->whenLoaded('thirdParty')),
         ];
     }

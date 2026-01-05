@@ -5,7 +5,7 @@ namespace App\Models\PropertyManagement;
 use App\Enums\Core\PostingEnum;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\HRM\Employee;
-use App\Models\ThirdParies\Supplier;
+use App\Models\ThirdParty\SupplierMaster;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -58,7 +58,7 @@ class PropertyMaintenanceAssign extends Model
     }
     public function prequalifiedVendor()
     {
-        return $this->belongsTo(Supplier::class, 'PrequalifiedVendor', 'Id');
+        return $this->belongsTo(SupplierMaster::class, 'PrequalifiedVendor', 'Id');
     }
     public function priorityLevel()
     {

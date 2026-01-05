@@ -76,6 +76,12 @@ class UserRoleController extends Controller
                 'BranchId' => ['required', 'exists:t_Branches,Id'],
             ]);
 
+        try {
+            $validated = $request->validate([
+                'role_id' => ['required', 'string'],
+                'BranchId' => ['required', 'exists:t_Branches,Id'],
+            ]);
+
             $role = Role::query()->where('id', $validated['role_id'])->first();
             $branch = Branch::query()->where('Id', $validated['BranchId'])->first();
 
@@ -176,6 +182,14 @@ class UserRoleController extends Controller
     public function updateByKeys(Request $request)
     {
 
+
+        try {
+            $validated = $request->validate([
+                'model_id' => ['required'],
+                'model_type' => ['required', 'string'],
+                'BranchId' => ['required', 'integer'],
+                'role_id' => ['required', 'integer'],
+            ]);
 
         try {
             $validated = $request->validate([

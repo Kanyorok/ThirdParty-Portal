@@ -117,6 +117,7 @@ class ContractsController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create', TenderAward::class);
         $awardId = $request->get('award_id');
         $awardType = $request->get('award_type', 'tender');
         $award = null;
@@ -203,7 +204,6 @@ class ContractsController extends Controller
 
                 return redirect()->route('contracts.index')
                     ->with('success', 'Contract request sent to Legal Department successfully. Reference: ' . ($legalRequest['reference'] ?? 'N/A'));
-
             } else {
                 // Create contract within procurement
                 $contractRef = $this->generateContractReference($award);
@@ -226,7 +226,6 @@ class ContractsController extends Controller
                 return redirect()->route('contracts.show', ['id' => $award->Id, 'type' => $type])
                     ->with('success', 'Contract created successfully. Reference: ' . $contractRef);
             }
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -716,7 +715,6 @@ class ContractsController extends Controller
             }
 
             throw new \Exception('No file was uploaded');
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::warning('Contract document upload validation failed', [
                 'award_id' => $id,
@@ -734,7 +732,6 @@ class ContractsController extends Controller
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();
-
         } catch (\Exception $e) {
             \Log::error('Contract document upload failed', [
                 'award_id' => $id,
