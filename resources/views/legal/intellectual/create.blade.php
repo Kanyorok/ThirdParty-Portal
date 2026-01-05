@@ -9,7 +9,7 @@
             Fill in all relevant information to ensure proper legal documentation and tracking.
         </p>
 
-        <form method="POST" action="{{ route('legal.intellectual.store') }}">
+        <form method="POST" action="{{ route('legal.intellectual.store') }}" enctype="multipart/form-data">
             @csrf
 
             <div class="row mb-3">
@@ -30,7 +30,7 @@
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label class="form-label">Owner</label>
+                    <label class="form-label">Registration Body</label>
                     <input type="text" name="Owner" class="form-control" placeholder="Name of the owner or organization"
                         required>
                 </div>
@@ -51,6 +51,13 @@
                     <label class="form-label">Expiry Date</label>
                     <input type="date" name="ExpiryDate" class="form-control" placeholder="Select expiry date" required>
                 </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Upload Document (Optional)</label>
+                <input type="file" name="DocumentFile" class="form-control"
+                    accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,application/pdf,image/jpeg,image/jpg,image/png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <small class="form-text text-muted">Accepted formats: PDF, JPG, JPEG, PNG, DOCX, XLSX (Max: 5MB)</small>
             </div>
 
             <div class="mb-3">

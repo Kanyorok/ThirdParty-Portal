@@ -27,7 +27,7 @@
                     <tr>
                         <th>Document Title</th>
                         <th>Description</th>
-                        <th>DMS Doc ID</th>
+                        <!-- <th>DMS Doc ID</th> -->
                         <th>External Link</th>
                         <th>Uploaded On</th>
                         <td>Is Active</td>
@@ -40,7 +40,7 @@
                     <tr>
                         <td>{{ $item->EvidenceTitle }}</td>
                         <td>{{ $item->Description }}</td>
-                        <td>{{ $item->DMSDocumentID ?? '-' }}</td>
+                        <!-- <td>{{ $item->DMSDocumentID ?? '-' }}</td> -->
                         <td>
                             @if($item->ExternalLink)
                             <a href="{{ $item->ExternalLink }}" target="_blank">View</a>
