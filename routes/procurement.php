@@ -84,7 +84,7 @@ use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
 
-use App\Http\Controllers\Procurement\SalesOrderController;
+
 
 Route::middleware(['module:300000'])->group(function () {
 
