@@ -926,10 +926,7 @@ enum PermissionEnum: string
 * ========================================  Legal  ========================================
 */
         //Document Registry and Contracts Creation
-    case ContractView = 'contract-view';
-    case ContractCreate = 'contract-create';
-    case ContractUpdate = 'contract-update';
-    case ContractDelete = 'contract-delete';
+
     case ContractApproval = 'contract-approval';
 
         //Disputes and Ltigations
