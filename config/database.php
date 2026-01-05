@@ -45,9 +45,13 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'options' => [
-                // PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60,//s
-                
+                PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60,//s
+                // Force UTF-8 encoding for SQL Server
+                PDO::SQLSRV_ATTR_ENCODING => PDO::SQLSRV_ENCODING_UTF8,
+                // Handle large data
+                PDO::SQLSRV_ATTR_FETCHES_NUMERIC_TYPE => true,
             ],
+
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', true),
         ],
