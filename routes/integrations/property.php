@@ -11,5 +11,5 @@ use App\Http\Controllers\API\Property\PropertyViewController;
 
 Route::get('property/rentable-properties', [PropertyViewController::class, 'index']);
 Route::get('property/leases', [PropertyLeaseController::class, 'index']);
-Route::get('invoices', [PropertyInvoiceController::class, 'index']);
-Route::get('invoices/{id}', [PropertyInvoiceController::class, 'show']);
+Route::get('property/invoices', [PropertyInvoiceController::class, 'index']);
+Route::get('property/invoices/{id}', [PropertyInvoiceController::class, 'show']);
