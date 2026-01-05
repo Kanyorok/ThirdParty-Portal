@@ -4,7 +4,7 @@ namespace App\Http\Controllers\ThirdParty;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ThirdParty\NewThirdPartyRequest;
+use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\ThirdParty\ThirdParties;
@@ -31,6 +31,7 @@ class ThirdPartyController extends Controller
      */
     public function index(Request $request): View|JsonResponse
     {
+        $this->authorize('viewAny', ThirdParties::class);
         if ($request->ajax()) {
             try {
                 $query = ThirdParties::query()
@@ -59,6 +60,7 @@ class ThirdPartyController extends Controller
      */
     public function store(NewThirdPartyRequest $request)
     {
+        $this->authorize('create', ThirdParties::class);
         $actor = $request->user();
         $country = $request->getCountry();
         $businessType = $request->getBusinessType();
@@ -149,6 +151,7 @@ class ThirdPartyController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', ThirdParties::class);
         return view('thirdparty.create', [
             'types' => ThirdPartyType::query()->get(['Code', 'Description']),
             'countries' => Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get(),
@@ -176,6 +179,8 @@ class ThirdPartyController extends Controller
         if (!$thirdParty instanceof ThirdParties) {
             return redirect()->back()->with('error', 'Third party not found');
         }
+
+        $this->authorize('view', $thirdParty);
 
         // --- Supplier Stats ---
         $supplierStats = null;
@@ -229,6 +234,7 @@ class ThirdPartyController extends Controller
 
         try {
             $party = ThirdParties::findOrFail($id);
+            $this->authorize('delete', $party);
 
             DB::transaction(function () use ($party, $request) {
                 // 1. Update status to Inactive (Assuming ID 2 is Inactive, or just rely on soft delete)
@@ -284,6 +290,7 @@ class ThirdPartyController extends Controller
     {
         try {
             $thirdParty = ThirdParties::findOrFail($thirdPartyId);
+            $this->authorize('delete', $thirdParty);
             $thirdPartyName = $thirdParty->ThirdPartyName;
             $thirdParty->delete();
 
@@ -306,6 +313,7 @@ class ThirdPartyController extends Controller
     }
     public function searchExisting(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', ThirdParties::class);
         $search = $request->get('q');
         $excludeType = $request->get('type');
         // Log::info("Search Existing Params: q={$search}, type={$excludeType}");
@@ -347,6 +355,7 @@ class ThirdPartyController extends Controller
         ]);
 
         $thirdParty = ThirdParties::findOrFail($validated['third_party_id']);
+        $this->authorize('update', $thirdParty);
         $service = new ThirdPartyService($thirdParty);
         $actor = $request->user();
 

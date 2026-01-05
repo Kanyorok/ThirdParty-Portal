@@ -60,7 +60,7 @@ use App\Http\Controllers\Procurement\RFQSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\RFQSettingController;
-use App\Http\Controllers\Procurement\RFQSettingSectionController;
+use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
 
@@ -304,14 +304,14 @@ Route::middleware(['module:300000'])->group(function () {
         ->name('rfqs.publish');
 
     // RFQLines Routes
- Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
+    Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');
 
-// Fix this route to match what the JavaScript is expecting
-Route::get('/rfq-lines/requisition/{requisitionId}/categories', [RFQLinesController::class, 'getRequisitionCategories'])
-    ->name('rfq-lines.requisition.categories');
+    // Fix this route to match what the JavaScript is expecting
+    Route::get('/rfq-lines/requisition/{requisitionId}/categories', [RFQLinesController::class, 'getRequisitionCategories'])
+        ->name('rfq-lines.requisition.categories');
 
-Route::post('/rfq-lines/store', [RFQLinesController::class, 'store'])
-    ->name('rfq-lines.store');
+    Route::post('/rfq-lines/store', [RFQLinesController::class, 'store'])
+        ->name('rfq-lines.store');
 
     // RFQ Response routes
     Route::get('/rfqresponses', [RFQResponseController::class, 'index'])->name('rfqresponses.index');

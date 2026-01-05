@@ -16,7 +16,7 @@ use App\Services\Workflow\ApprovalWorkflow;  // Changed from PurchaseOrderWorkfl
 use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Orders\OrderService;
-use App\Services\ThirdParties\SupplierService;  
+use App\Services\ThirdParties\SupplierService;
 use App\Services\Procurement\RFQ\RFQService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -556,6 +556,47 @@ class PurchaseOrderController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error("Order ID {$id} not found");
             return redirect()->back()->with('error', 'Order not found.');
+        }
+    }
+
+    /**
+     * Show the form for editing the specified purchase order
+     */
+    public function edit($id)
+    {
+        $order = $this->orderService->getOrder($id);
+        $this->authorize('update', $order);
+
+        if (!$order) {
+            return redirect()->back()->with('error', 'Order not found.');
+        }
+        $suppliers = $this->supplierService->getSuppliers();
+        return view('procurement.orders.edit', compact('order', 'suppliers'));
+    }
+
+    /**
+     * Update the specified purchase order in storage
+     */
+    public function update(PurchaseOrderRequest $request, $id)
+    {
+        $order = $this->orderService->getOrder($id);
+        $this->authorize('update', $order);
+
+        $this->orderService->updateOrder($id, $request->validated());
+        return redirect()->route('orders.show', $id)->with('success', 'Order updated successfully.');
+    }
+
+    /**
+     * Remove the specified purchase order from storage
+     */
+    public function destroy($id)
+    {
+        try {
+            $order = Order::findOrFail($id);
+            $this->authorize('delete', $order);
+
+            $this->orderService->deleteOrder($id);
+            return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
         } catch (\Exception $e) {
             Log::error("Failed to fetch order ID {$id}", [
                 'error' => $e->getMessage(),

@@ -47,16 +47,8 @@ class SupplierController extends Controller
                 $query->whereHas('party', function ($q) use ($searchValue) {
                     $q->where('ThirdPartyName', 'like', "%{$searchValue}%")
                         ->orWhere('TradingName', 'like', "%{$searchValue}%")
-                        ->orWhere('Email', 'like', "%{$searchValue}%")
-                        ->orWhere('Phone', 'like', "%{$searchValue}%");
+                        ->orWhere('Email', 'like', "%{$searchValue}%");
                 });
-            }
-
-            if ($request->filled('status')) {
-                $statusValue = $request->input('status');
-                if ($statusValue !== '') {
-                    $query->where('ApprovalStatus', $statusValue);
-                }
             }
 
             return DataTables::of($query)
@@ -93,13 +85,10 @@ class SupplierController extends Controller
                         $itemCats = $cat->itemCategories ?? collect();
                         $count = $itemCats->count();
                         $badge = $count > 0 ? " <span class=\"badge bg-secondary ms-1\">{$count}</span>" : '';
-                        $itemList = $count > 0
-                            ? e($itemCats->pluck('Name')->filter()->unique()->implode(', '))
-                            : 'No specific items';
+                        $itemList = $count > 0 ? e($itemCats->pluck('Name')->filter()->unique()->implode(', ')) : 'No specific items';
                         $html .= "<dt class=\"fw-semibold\">{$catName}{$badge}</dt><dd class=\"mb-1\">{$itemList}</dd>";
                     }
-                    $html .= '</dl>';
-                    return $html;
+                    return $html . '</dl>';
                 })
                 ->addColumn('PrimaryContact', function (SupplierMaster $supplier) {
                     $full = trim(($supplier->PrimaryFirstName ?? '') . ' ' . ($supplier->PrimaryLastName ?? ''));
@@ -157,7 +146,6 @@ class SupplierController extends Controller
             } catch (\Exception $e) {
                 // Log error but allow creation to succeed, specific error handling dependent on requirements
                 \Log::error('Failed to submit supplier for approval: ' . $e->getMessage());
-
             }
         }
 

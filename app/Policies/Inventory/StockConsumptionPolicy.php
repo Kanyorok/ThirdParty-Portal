@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Policies\Inventory;
+
+use App\Enums\Core\PermissionEnum;
+use App\Models\Inventory\StockConsumption;
+use App\Models\Auth\User;
+
+class StockConsumptionPolicy
+{
+    public function viewAny(User $user): bool
+    {
+        return $user->can(PermissionEnum::StockConsumptionView->value);
+    }
+
+    public function view(User $user, StockConsumption $model): bool
+    {
+        return $user->can(PermissionEnum::StockConsumptionView->value);
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->can(PermissionEnum::StockConsumptionCreate->value);
+    }
+
+    public function update(User $user, StockConsumption $model): bool
+    {
+        return $user->can(PermissionEnum::StockConsumptionUpdate->value);
+    }
+
+    public function delete(User $user, StockConsumption $model): bool
+    {
+        return $user->can(PermissionEnum::StockConsumptionDestroy->value);
+    }
+}
