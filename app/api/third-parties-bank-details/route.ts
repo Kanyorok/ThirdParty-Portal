@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const EXTERNAL_API_BASE_URL = process.env.EXTERNAL_API_URL;
-
 interface FrontendBankDetailPayload {
     thirdPartyId: number;
     bankName: string;
@@ -51,7 +49,7 @@ export async function GET(req: NextRequest) {
     const thirdPartyId = session.user.thirdParty.id; // Use thirdPartyId from session for security
 
     try {
-        const res = await fetch(`${EXTERNAL_API_BASE_URL}/api/third-parties-bank-details?ThirdPartyId=${thirdPartyId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details?ThirdPartyId=${thirdPartyId}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -85,7 +83,7 @@ export async function POST(req: NextRequest) {
 
         const backendBody = transformToPascalCase(frontendBody);
 
-        const res = await fetch(`${EXTERNAL_API_BASE_URL}/api/third-parties-bank-details`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

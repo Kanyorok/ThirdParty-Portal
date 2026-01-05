@@ -41,7 +41,7 @@ interface TenderInvitationResponse {
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -53,11 +53,11 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'all';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
-    
-    // Get thirdPartyId from session (logged in user's profile)
-    const thirdPartyId = session.user.thirdPartyId;
-    
-    if (!thirdPartyId) {
+
+    // Get third_party_id from session (logged in user's profile)
+    const third_party_id = session.user.third_party_id;
+
+    if (!third_party_id) {
       return NextResponse.json(
         { error: "Third Party ID not found in session" },
         { status: 400 }
@@ -66,11 +66,11 @@ export async function GET(request: NextRequest) {
 
     // Build query parameters for external API
     // The external API should handle the multi-table lookup:
-    // 1. Get supplierID from t_Suppliers where ThirdPartyID = thirdPartyId
+    // 1. Get supplierID from t_Suppliers where third_party_id = third_party_id
     // 2. Get active RoundID from t_PrequalificationRounds where status = 'O'
     // 3. Fetch invitations from t_TenderInvitations for that supplierID
     const queryParams = new URLSearchParams({
-      third_party_id: thirdPartyId.toString(), // Pass thirdPartyId instead of supplierId
+      third_party_id: third_party_id.toString(), // Pass third_party_id instead of supplierId
       page: page.toString(),
       limit: limit.toString(),
     });
@@ -81,11 +81,11 @@ export async function GET(request: NextRequest) {
 
     // Try to fetch from external API first
     const externalApiUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-    
+
     if (externalApiUrl) {
       try {
         const apiUrl = `${externalApiUrl}/api/tender-invitations?${queryParams}`;
-        
+
         const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${session.accessToken}`,
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
             supplierInfo?: {
               supplierId: number;
               activeRoundId: number;
-              thirdPartyId: number;
+              third_party_id: number;
             };
           } = await response.json();
 
@@ -125,10 +125,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Fallback to mock data if external API is unavailable
-  const mockInvitations: TenderInvitation[] = [
+    const mockInvitations: TenderInvitation[] = [
       {
         InvitationID: 1,
-    TenderId: "1",
+        TenderId: "1",
         SupplierId: 1,
         InvitationDate: "2024-11-15T08:00:00.000Z",
         ResponseStatus: "pending",
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
       },
       {
         InvitationID: 2,
-  TenderId: "2",
+        TenderId: "2",
         SupplierId: 1,
         InvitationDate: "2024-11-10T10:00:00.000Z",
         ResponseStatus: "accepted",
@@ -167,22 +167,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Create mock response data
-  const mockResponseData: TenderInvitationResponse[] = filteredInvitations.map(invitation => ({
+    const mockResponseData: TenderInvitationResponse[] = filteredInvitations.map(invitation => ({
       invitation,
-        tender: {
-          id: invitation.TenderId,
-      tenderNo: invitation.TenderId === "1" ? "TENDER/2024/001" : "TENDER/2024/002",
-      title: invitation.TenderId === "1" ? "Supply and Installation of Office Equipment" : "Construction of Drainage System",
-      tenderType: invitation.TenderId === "1" ? "op" : "rs",
-      submissionDeadline: invitation.TenderId === "1" ? "2024-12-01T23:59:00.000Z" : "2024-11-30T17:00:00.000Z",
-      openingDate: invitation.TenderId === "1" ? "2024-12-02T10:00:00.000Z" : "2024-12-01T14:00:00.000Z",
-          status: "pb",
-          estimatedValue: invitation.TenderId === "1" ? "2500000" : "15000000",
-          currency: {
-            code: "KES",
-            symbol: "KSh"
-          }
+      tender: {
+        id: invitation.TenderId,
+        tenderNo: invitation.TenderId === "1" ? "TENDER/2024/001" : "TENDER/2024/002",
+        title: invitation.TenderId === "1" ? "Supply and Installation of Office Equipment" : "Construction of Drainage System",
+        tenderType: invitation.TenderId === "1" ? "op" : "rs",
+        submissionDeadline: invitation.TenderId === "1" ? "2024-12-01T23:59:00.000Z" : "2024-11-30T17:00:00.000Z",
+        openingDate: invitation.TenderId === "1" ? "2024-12-02T10:00:00.000Z" : "2024-12-01T14:00:00.000Z",
+        status: "pb",
+        estimatedValue: invitation.TenderId === "1" ? "2500000" : "15000000",
+        currency: {
+          code: "KES",
+          symbol: "KSh"
         }
+      }
     }));
 
     // Apply pagination
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
       supplierInfo: {
         supplierId: 1,
         activeRoundId: 1,
-        thirdPartyId: thirdPartyId,
+        third_party_id: third_party_id,
       },
       fallback: true, // Indicates this is mock data
     });
@@ -209,7 +209,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Failed to fetch tender invitations:', error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to fetch tender invitations",
         message: error instanceof Error ? error.message : "Unknown error"
       },
@@ -221,7 +221,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -230,11 +230,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { 
-      invitationId, 
-      responseStatus, 
+    const {
+      invitationId,
+      responseStatus,
       declineReason,
-      confirmationAttachment 
+      confirmationAttachment
     } = body;
 
     // Validate required fields
@@ -261,7 +261,7 @@ export async function PUT(request: NextRequest) {
 
     // Send to external API
     const apiUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/tender-invitations/${invitationId}`;
-    
+
     const response = await fetch(apiUrl, {
       method: 'PUT',
       headers: {
@@ -287,7 +287,7 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Failed to update tender invitation:', error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to update tender invitation",
         message: error instanceof Error ? error.message : "Unknown error"
       },

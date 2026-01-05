@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-const SUPPLIER_PORTAL_API_KEY = process.env.SUPPLIER_PORTAL_API_KEY;
+const SUPPLIER_PORTAL_API_KEY = process.env.EXTERNAL_API_URL;
 
-// Temporary in-memory store (replace with DB integration)
 const rfqAwards = new Map<string, { rfqId: number; supplierId: number; status: string; awardedOn: string; comments?: string }>();
 
 export async function GET(request: NextRequest) {
@@ -15,7 +13,7 @@ export async function GET(request: NextRequest) {
 	}
 
 	const search = request.nextUrl.searchParams.toString();
-	const targetUrl = `${EXTERNAL_API_BASE}/api/procurement/rfq-suppliers${search ? `?${search}` : ""}`;
+	const targetUrl = `${process.env.NEXTAUTH_URL}/api/procurement/rfq-suppliers${search ? `?${search}` : ""}`;
 
 	try {
 		const res = await fetch(targetUrl, {

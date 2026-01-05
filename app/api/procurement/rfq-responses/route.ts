@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken) {
@@ -18,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const res = await fetch(`${EXTERNAL_API_BASE}/api/procurement/rfq-responses`, {
+        const res = await fetch(`${process.env.NEXTAUTH_URL}/api/procurement/rfq-responses`, {
             method: "POST",
             headers: {
                 "Accept": "application/json",

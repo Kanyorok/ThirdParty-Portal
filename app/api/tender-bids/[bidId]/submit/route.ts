@@ -10,7 +10,7 @@ interface SubmitBidRequest {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  const url = new URL(request.url);
-  const parts = url.pathname.split("/");
-  const bidId = parts[parts.length - 2];
+    const url = new URL(request.url);
+    const parts = url.pathname.split("/");
+    const bidId = parts[parts.length - 2];
     const body: SubmitBidRequest = await request.json();
 
     if (!body.confirmSubmission) {
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supplierId = session.user.thirdPartyId;
-    
+
     if (!supplierId) {
       return NextResponse.json(
         { error: "Supplier ID not found" },
@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Send to external API
-    const apiUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/tender-bids/${bidId}/submit`;
-    
+    const apiUrl = `${process.env.EXTERNAL_API_URL}/api/tender-bids/${bidId}/submit`;
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to submit tender bid:', error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to submit tender bid",
         message: error instanceof Error ? error.message : "Unknown error"
       },

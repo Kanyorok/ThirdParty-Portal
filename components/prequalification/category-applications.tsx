@@ -4,7 +4,6 @@ import { useState } from "react"
 import { RoundCategory, Round } from "@/types/types"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
-import { Progress } from "@/components/common/progress"
 import { 
     Dialog, 
     DialogContent, 

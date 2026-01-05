@@ -1,19 +1,69 @@
-import CredentialsProvider from "next-auth/providers/credentials"
-import type { NextAuthOptions, User, Session } from "next-auth"
-import type { JWT } from "next-auth/jwt"
-import type { BaseUser, ThirdParty, ThirdPartyTypeEntry } from "@/types/next-auth"
+import CredentialsProvider from "next-auth/providers/credentials";
+import type { NextAuthOptions, User, Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
+import type { BaseUser } from "@/types/next-auth";
 
-const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || ""
-const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || ""
-
-type ApiUser = BaseUser & { thirdParty?: ThirdParty | null; types?: ThirdPartyTypeEntry[] }
+type BackendUser = {
+  id: number;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  imageId: string | null;
+  gender: string | null;
+  thirdPartyId: string | null;
+  isActive: boolean;
+  isPrequalified: boolean;
+  approvalStatus: string;
+  isSupplier: boolean;
+  isTenant: boolean;
+  isCustomer: boolean;
+  hasProfile: boolean;
+  emailVerified: boolean;
+  emailVerifiedOn: string | null;
+  createdOn: string;
+  modifiedOn: string | null;
+  thirdParty?: {
+    id: number;
+    profileCompletion: number;
+    thirdPartyDetails: {
+      thirdPartyName: string;
+      tradingName: string | null;
+      businessType: string | null;
+      registrationNumber: string;
+      taxPIN: string;
+      physicalAddress: string;
+      website: string | null;
+      countryId: string;
+    };
+    isPrequalified: boolean;
+    supplierId: string | null;
+    approvalStatus: string;
+    types?: Array<{
+      id: number;
+      code: string;
+      label: string;
+    }>;
+    createdOn: string;
+  } | null;
+};
 
 type AuthResponse = {
-  success: boolean
-  message?: string
-  user: ApiUser
-  token: string
-  errors?: Record<string, string[]>
+  success: boolean;
+  message: string;
+  user: BackendUser;
+  token: string;
+};
+
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://127.0.0.1:8000";
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
+
+if (!baseUrl && typeof window === "undefined") {
+  console.warn(
+    "Connection not set!"
+  );
 }
 
 export const authOptions: NextAuthOptions = {
@@ -26,190 +76,129 @@ export const authOptions: NextAuthOptions = {
         profile_type: { label: "Profile Type", type: "text" },
       },
       async authorize(credentials): Promise<User | null> {
-        if (!credentials?.email || !credentials?.password || !credentials?.profile_type) {
-          throw new Error("MISSING_FIELDS: Email, password, and profile type are required")
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("MISSING_FIELDS");
         }
 
-        if (!baseUrl) {
-          throw new Error("CONFIG: Config error.")
-        }
+        const res = await fetch(`${baseUrl}/api/v1/portal/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+            profile_type: credentials.profile_type,
+          }),
+        });
 
-        let res: Response
-        let text = ""
-
+        const text = await res.text();
+        let data: Partial<AuthResponse> | null = null;
         try {
-          res = await fetch(`${baseUrl}/api/third-party-auth/login`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-              profile_type: credentials.profile_type,
-            }),
-          })
-          text = await res.text()
+          data = text ? JSON.parse(text) : null;
         } catch {
-          throw new Error("NETWORK: Unable to reach authentication service")
+          throw new Error("SERVER_ERROR");
         }
 
-        const data = (text ? JSON.parse(text) : null) as Partial<AuthResponse> | null
-        const message = data?.message
-        if (res.status === 422) throw new Error(`VALIDATION: ${message || "Validation failed"}`)
-        if (res.status === 403) throw new Error(`ACCOUNT_NOT_APPROVED: ${message || "Account pending approval"}`)
-        if (res.status === 401) throw new Error(`INVALID_CREDENTIALS: ${message || "Invalid email or password"}`)
-        if (!res.ok) throw new Error(`SERVER_ERROR: ${message || `Login failed (${res.status})`}`)
-        if (!data?.user || !data?.token) throw new Error("SERVER_ERROR: Malformed login response")
+        if (!res.ok || !data?.success || !data?.user || !data?.token) {
+          throw new Error(data?.message || "AUTH_FAILURE");
+        }
 
-        const rawUser = data.user as ApiUser
-        const rawTypes = Array.isArray(rawUser.types) ? rawUser.types : []
-        const types: ThirdPartyTypeEntry[] = rawTypes.map((t) => ({ 
-          id: t.id, 
-          code: t.code, 
-          categoryId: t.categoryId ?? null,
-          isActive: t.isActive ?? true,
-          pivotId: t.pivotId ?? t.id,
-        }))
-        const isSupplier = !!rawUser.isSupplier || types.some((t) => t.code?.startsWith("SU-"))
+        const u = data.user;
 
-        const loggedIn: User = {
-          id: String(rawUser.id),
-          userId: rawUser.userId,
-          firstName: rawUser.firstName,
-          lastName: rawUser.lastName,
-          fullName: rawUser.fullName,
-          email: rawUser.email,
-          phone: rawUser.phone ?? null,
-          imageId: rawUser.imageId ?? null,
-          gender: rawUser.gender ?? null,
-          thirdPartyId: rawUser.thirdPartyId,
-          isActive: rawUser.isActive,
-          isApproved: rawUser.isApproved,
-          isSupplier,
-          isTenant: !!rawUser.isTenant,
-          isCustomer: !!rawUser.isCustomer,
-          types,
-          emailVerifiedOn: rawUser.emailVerifiedOn ?? null,
-          createdOn: rawUser.createdOn,
-          modifiedOn: rawUser.modifiedOn,
-          thirdParty: rawUser.thirdParty,
-          accessToken: data.token!,
-        } as unknown as User
-
-        return loggedIn
+        return {
+          id: String(u.id),
+          user_id: u.id,
+          third_party_id: u.thirdPartyId ? Number(u.thirdPartyId) : null,
+          first_name: u.firstName,
+          last_name: u.lastName,
+          full_name: u.fullName,
+          email: u.email,
+          phone: u.phone,
+          email_verified: u.emailVerified,
+          is_active: u.isActive,
+          has_profile: u.hasProfile,
+          is_approved: u.approvalStatus === 'Approved' || u.approvalStatus === 'Active',
+          is_supplier: u.isSupplier,
+          is_tenant: u.isTenant,
+          is_customer: u.isCustomer,
+          approval_status: u.approvalStatus,
+          profile: u.thirdParty ? {
+            name: u.thirdParty.thirdPartyDetails.thirdPartyName,
+            trading_name: u.thirdParty.thirdPartyDetails.tradingName,
+            approval_status: u.thirdParty.approvalStatus,
+          } : null,
+          accessToken: data.token,
+        } as unknown as User;
       },
     }),
   ],
-  session: {
-    strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60,
-  },
-  jwt: {
-    secret: NEXTAUTH_SECRET,
+  session: { strategy: "jwt", maxAge: 23 * 60 * 60 },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production' ? (process.env.NEXTAUTH_URL?.startsWith('https') ?? false) : false,
+      },
+    },
   },
   callbacks: {
     async jwt({ token, user }): Promise<JWT> {
       if (user) {
-        return { ...token, ...user } as unknown as JWT
+        const u = user as unknown as BaseUser & { accessToken: string };
+        return {
+          ...token,
+          user_id: u.user_id,
+          third_party_id: u.third_party_id,
+          first_name: u.first_name,
+          last_name: u.last_name,
+          full_name: u.full_name,
+          email: u.email,
+          phone: u.phone,
+          email_verified: u.email_verified,
+          is_active: u.is_active,
+          has_profile: u.has_profile,
+          is_approved: u.is_approved,
+          is_supplier: u.is_supplier,
+          is_tenant: u.is_tenant,
+          is_customer: u.is_customer,
+          approval_status: u.approval_status,
+          profile: u.profile,
+          accessToken: u.accessToken,
+        };
       }
-      return token as JWT
+      return token;
     },
     async session({ session, token }): Promise<Session> {
-      const t = token as unknown as BaseUser & { accessToken?: string }
-
+      const t = token as any;
       session.user = {
-        id: t.id,
-        userId: t.userId,
-        firstName: t.firstName,
-        lastName: t.lastName,
-        fullName: t.fullName,
-        email: t.email ?? "",
+        id: String(t.user_id),
+        name: t.full_name,
+        email: t.email,
+        image: null,
+        user_id: t.user_id,
+        third_party_id: t.third_party_id,
+        first_name: t.first_name,
+        last_name: t.last_name,
+        full_name: t.full_name,
         phone: t.phone,
-        imageId: t.imageId,
-        gender: t.gender,
-        thirdPartyId: t.thirdPartyId,
-        isActive: t.isActive,
-        isApproved: t.isApproved,
-        isSupplier: t.isSupplier,
-        isTenant: t.isTenant,
-        isCustomer: t.isCustomer,
-        types: t.types,
-        emailVerifiedOn: t.emailVerifiedOn,
-        createdOn: t.createdOn,
-        modifiedOn: t.modifiedOn,
-        thirdParty: t.thirdParty,
-      }
-        ; (session as unknown as { accessToken?: string }).accessToken = t.accessToken
-      return session
+        email_verified: t.email_verified,
+        is_active: t.is_active,
+        has_profile: t.has_profile,
+        is_approved: t.is_approved,
+        is_supplier: t.is_supplier,
+        is_tenant: t.is_tenant,
+        is_customer: t.is_customer,
+        approval_status: t.approval_status,
+        profile: t.profile,
+      } as any;
+
+      session.accessToken = t.accessToken;
+      return session;
     },
   },
-  pages: {
-    signIn: "/signin",
-    error: "/signin",
-  },
+  pages: { signIn: "/signin", error: "/signin" },
   secret: NEXTAUTH_SECRET,
-}
-
-function parseResponse(text: string): Partial<AuthResponse> | null {
-  try {
-    return text ? JSON.parse(text) : null
-  } catch {
-    return null
-  }
-}
-
-function handleErrorResponses(res: Response, data: Partial<AuthResponse> | null): void {
-  const message = data?.message
-
-  if (res.status === 422) {
-    throw new Error(`VALIDATION: ${message || "Validation failed"}`)
-  }
-
-  if (res.status === 403) {
-    throw new Error(`EMAIL_NOT_VERIFIED: ${message || "Please verify your email address"}`)
-  }
-
-  if (res.status === 401) {
-    throw new Error(`INVALID_CREDENTIALS: ${message || "Invalid email or password"}`)
-  }
-
-  if (!res.ok) {
-    throw new Error(`SERVER_ERROR: ${message || `Login failed (${res.status})`}`)
-  }
-}
-
-function transformApiUser(rawUser: ApiUser, token: string): User {
-  const types: ThirdPartyTypeEntry[] = (rawUser.types ?? []).map((t) => ({
-    id: t.id,
-    code: t.code,
-    categoryId: t.categoryId ?? null,
-    isActive: t.isActive ?? true,
-    pivotId: t.pivotId ?? t.id,
-  }))
-
-  const isSupplier = rawUser.isSupplier || types.some((t) => t.code?.startsWith("SU"))
-
-  return {
-    id: String(rawUser.id),
-    userId: rawUser.userId,
-    firstName: rawUser.firstName,
-    lastName: rawUser.lastName,
-    fullName: rawUser.fullName,
-    email: rawUser.email,
-    phone: rawUser.phone ?? null,
-    imageId: rawUser.imageId ?? null,
-    gender: rawUser.gender ?? null,
-    thirdPartyId: rawUser.thirdPartyId,
-    isActive: rawUser.isActive,
-    isApproved: rawUser.isApproved,
-    isSupplier,
-    types,
-    emailVerifiedOn: rawUser.emailVerifiedOn ?? null,
-    createdOn: rawUser.createdOn,
-    modifiedOn: rawUser.modifiedOn,
-    thirdParty: rawUser.thirdParty ?? null,
-    accessToken: token,
-  } as unknown as User
-}
+  debug: process.env.NODE_ENV === "development",
+};

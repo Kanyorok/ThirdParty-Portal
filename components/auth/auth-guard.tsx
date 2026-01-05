@@ -1,88 +1,78 @@
-"use client"
+// import { useEffect, ReactNode } from "react"
+// import { Loader2 } from "lucide-react"
 
-import { useEffect, ReactNode } from "react"
-import { useSession, signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+// interface CustomUser {
+//     isActive: boolean
+//     isApproved: boolean
+//     [key: string]: any
+// }
 
-interface AuthGuardProps {
-    children: ReactNode
-    fallback?: ReactNode
-}
+// interface CustomSession {
+//     user?: CustomUser
+//     accessToken?: string
+//     expires: string
+// }
 
-export function AuthGuard({ children, fallback }: AuthGuardProps) {
-    const { data: session, status } = useSession()
-    const router = useRouter()
+// const useSession = () => ({ data: null, status: "loading" as const })
+// const signOut = (options?: { callbackUrl?: string }) => { }
+// const useRouter = () => ({ replace: (url: string) => { } })
 
-    useEffect(() => {
-        // If session is loading, wait
-        if (status === "loading") return
+// interface AuthGuardProps {
+//     children: ReactNode
+//     fallback?: ReactNode
+// }
 
-        // If no session, redirect to signin
-        if (status === "unauthenticated" || !session) {
+// export function AuthGuard({ children, fallback }: AuthGuardProps) {
+//     const { data: session, status } = useSession() as { data: CustomSession | null, status: "loading" | "authenticated" | "unauthenticated" }
+//     const router = useRouter()
 
-            router.replace('/signin?error=SessionRequired')
-            return
-        }
+//     useEffect(() => {
+//         if (status === "loading") {
+//             return
+//         }
 
-        // If session exists but user is not active/approved, sign out and redirect
-        if (session.user && (!session.user.isActive || !session.user.isApproved)) {
+//         if (status === "unauthenticated" || !session) {
+//             router.replace("/signin?error=SessionRequired")
+//             return
+//         }
 
-            signOut({ callbackUrl: '/signin?error=AccountNotApproved' })
-            return
-        }
+//         const { user, accessToken } = session
 
-        // If no access token, sign out
-        if (!session.accessToken) {
+//         if (!accessToken) {
+//             signOut({ callbackUrl: "/signin?error=NoAccessToken" })
+//             return
+//         }
 
-            signOut({ callbackUrl: '/signin?error=NoAccessToken' })
-            return
-        }
+//         if (user && (!user.isActive || !user.isApproved)) {
+//             signOut({ callbackUrl: "/signin?error=AccountNotApproved" })
+//             return
+//         }
+//     }, [session, status, router])
 
-    }, [session, status, router])
+//     if (status === "loading") {
+//         return fallback || (
+//             <div className="flex min-h-screen items-center justify-center bg-gray-50">
+//                 <div className="flex items-center space-x-3 p-6 bg-white shadow-xl rounded-xl border border-gray-200">
+//                     <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+//                     <p className="text-base font-medium text-gray-700 font-sans">Authenticating Session...</p>
+//                 </div>
+//             </div>
+//         )
+//     }
 
-    // Show loading while session is being fetched
-    if (status === "loading") {
-        return (
-            fallback || (
-                <div className="flex min-h-screen items-center justify-center">
-                    <div className="flex items-center space-x-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm text-muted-foreground">Loading...</span>
-                    </div>
-                </div>
-            )
-        )
-    }
+//     if (status === "unauthenticated" || !session || !session.accessToken || !session.user?.isActive || !session.user?.isApproved) {
+//         return null
+//     }
 
-    // If not authenticated, show nothing (redirect happening)
-    if (status === "unauthenticated" || !session) {
-        return null
-    }
+//     return <>{children}</>
+// }
 
-    // If user not active/approved, show nothing (sign out happening)
-    if (!session.user?.isActive || !session.user?.isApproved) {
-        return null
-    }
-
-    // If no access token, show nothing (sign out happening)
-    if (!session.accessToken) {
-        return null
-    }
-
-    // All checks passed, render children
-    return <>{children}</>
-}
-
-// Higher-order component version
-export function withAuth<P extends object>(Component: React.ComponentType<P>) {
-    return function AuthenticatedComponent(props: P) {
-        return (
-            <AuthGuard>
-                <Component {...props} />
-            </AuthGuard>
-        )
-    }
-}
-
-
+// export function withAuth<P extends object>(Component: React.ComponentType<P>) {
+//     return function AuthenticatedComponent(props: P) {
+//         return (
+//             <AuthGuard>
+//                 <Component {...props} />
+//             </AuthGuard>
+//         )
+//     }
+// }

@@ -1,55 +1,68 @@
-"use client"
-
-import { useState, useCallback, useMemo } from "react"
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
+import * as z from "zod"
 
-import type { ApiResponse } from "@/lib/api-types"
-import {
-    getFieldStatus,
-    transformRegisterFormDataForApi,
-    mapRegisterServerErrorsToFormFields,
-} from "@/lib/form-utils"
-import { RegisterFormInputs, registerSchema } from "@/lib/validation"
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || ""
-
-interface RegisterApiResponse {
-    success: boolean
-    message: string
-    data?: {
-        user: {
-            id: number
-            userId: string
-            firstName: string
-            lastName: string
-            email: string
-            phone: string
-        }
+const registerSchema = z.object({
+    Name: z.string().min(2, "Company name required"),
+    TradingName: z.string().optional(),
+    BusinessType: z.string().min(1, "Required"),
+    RegistrationNumber: z.string().min(2, "Reg number required"),
+    TaxPIN: z.string().min(2, "Tax PIN required"),
+    VATNumber: z.string().optional(),
+    Country: z.string().min(1, "Country code required"),
+    Location: z.string().min(1, "Location required"),
+    Email: z.string().email("Invalid email").or(z.literal("")),
+    Phone: z.string().min(10, "Invalid phone"),
+    PhysicalAddress: z.string().optional(),
+    Website: z.string().url("Invalid URL").optional().or(z.literal("")),
+    types: z.array(z.string()).min(1, "Select at least one type"),
+    createUser: z.boolean(),
+    user_FirstName: z.string().optional(),
+    user_LastName: z.string().optional(),
+    user_Email: z.string().email().optional(),
+    user_Phone: z.string().optional(),
+    user_Gender: z.string().optional(),
+}).refine((data) => {
+    if (data.createUser) {
+        return !!data.user_FirstName && !!data.user_LastName && !!data.user_Email;
     }
-    errors?: Record<string, string[]>
-}
+    return true;
+}, {
+    message: "User details are required when creating an account",
+    path: ["user_FirstName"],
+})
+
+export type RegisterFormValues = z.infer<typeof registerSchema>
 
 export const useRegisterForm = () => {
-    const router = useRouter()
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-    const form = useForm<RegisterFormInputs>({
+    const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
-        mode: "onChange",
+        mode: "onTouched",
         defaultValues: {
-            firstName: "",
-            lastName: "",
-            email: "",
-            phone: "",
-            password: "",
-            confirmPassword: "",
-        },
+            Name: "",
+            TradingName: "",
+            BusinessType: "",
+            RegistrationNumber: "",
+            TaxPIN: "",
+            VATNumber: "",
+            Country: "",
+            Location: "",
+            Email: "",
+            Phone: "",
+            PhysicalAddress: "",
+            Website: "",
+            types: ["Supplier"],
+            createUser: true,
+            user_FirstName: "",
+            user_LastName: "",
+            user_Email: "",
+            user_Phone: "",
+            user_Gender: ""
+        }
     })
 
+<<<<<<< HEAD
+=======
     const { setError, reset, formState, watch } = form
     const { errors, isSubmitting, touchedFields, isValid } = formState
     const watchedFields = watch()
@@ -177,18 +190,11 @@ export const useRegisterForm = () => {
         [handleRegistrationSuccess, handleRegistrationError, setError]
     )
 
+>>>>>>> dev
     return {
         form,
-        showPassword,
-        setShowPassword,
-        showConfirmPassword,
-        setShowConfirmPassword,
-        onSubmit,
-        fieldStatuses,
-        isSubmitting,
-        isValid,
-        errors,
-        watchedFields,
-        touchedFields,
+        triggerFields: (fields: any) => form.trigger(fields),
+        isValid: form.formState.isValid,
+        errors: form.formState.errors
     }
 }

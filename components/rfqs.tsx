@@ -1,193 +1,128 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { Input } from "@/components/common/input";
-import { Button } from "@/components/common/button";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/common/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table";
-import { Badge } from "@/components/common/badge";
-import { Card } from "@/components/common/card";
-import { ClipboardList, Search, X, Loader2, ExternalLink } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect } from "react";
 import { format } from "date-fns";
+import { Search, Loader2, X, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { useDebounce } from "@/hooks/use-debounce";
+import { axiosInstance } from "@/lib/axios";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { motion, AnimatePresence } from "framer-motion";
 
-function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
+interface FilterChip {
+    label: string;
+    value: string;
+    type: "status" | "date";
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
-function pick(obj: Record<string, unknown>, keys: readonly string[]): unknown {
-    for (const k of keys) {
-        const v = obj[k];
-        if (v !== undefined && v !== null && v !== "") return v;
+// Helper to safely pick properties from an object (similar to lodash pick/get)
+function pick(obj: any, keys: string[]) {
+    for (const key of keys) {
+        if (obj && Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined && obj[key] !== null) {
+            return obj[key];
+        }
     }
     return undefined;
 }
 
+// Type guard
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+}
+
 export function RfqsFilter() {
     const [searchTerm, setSearchTerm] = useState("");
-    const [status, setStatus] = useState("all");
-    const [openType, setOpenType] = useState("openToAll");
+    const [invitations, setInvitations] = useState<any[]>([]);
+    const [activeFilterChips, setActiveFilterChips] = useState<FilterChip[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [resultCount, setResultCount] = useState<number | null>(null);
-    const [invitations, setInvitations] = useState<unknown[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const debouncedSearch = useDebounce(searchTerm, 300);
+
+    const fetchInvitations = useCallback(async () => {
+        setIsSearching(true);
+        setError(null);
+        try {
+            // Build query params
+            const params = new URLSearchParams();
+            if (debouncedSearch) params.append("q", debouncedSearch);
+            
+            // Add other filters from chips if implemented
+            const statusFilter = activeFilterChips.find(c => c.type === 'status');
+            if (statusFilter) params.append("status", statusFilter.value);
+
+            const response = await axiosInstance.get(`/supplier/rfq-invitations?${params.toString()}`);
+            
+            // Handle Laravel API response structure
+            let data = [];
+            if (Array.isArray(response.data)) {
+                data = response.data;
+            } else if (response.data && Array.isArray(response.data.data)) {
+                data = response.data.data;
+            } else if (response.data && typeof response.data === 'object') {
+                 // Try to find the array if it's wrapped differently
+                 data = response.data.data || [];
+            }
+            
+            console.log("RFQ Invitations fetched:", data);
+            setInvitations(data);
+        } catch (err) {
+            console.error("Failed to fetch RFQ invitations:", err);
+            setError("Failed to load RFQs. Please try again.");
+            setInvitations([]);
+        } finally {
+            setIsSearching(false);
+        }
+    }, [debouncedSearch, activeFilterChips]);
 
     useEffect(() => {
-        const controller = new AbortController();
-        const fetchInvitations = async () => {
-            try {
-                setIsSearching(true);
-                setError(null);
-                const params = new URLSearchParams();
-                if (debouncedSearchTerm) params.set("q", debouncedSearchTerm);
-                if (status && status !== "all") params.set("status", status);
-                const url = `/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`;
-                const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
-                const contentType = res.headers.get("content-type") || "";
-                const data = contentType.includes("application/json") ? await res.json() : await res.text();
-                if (!res.ok) {
-                    throw new Error((data && (data as any).message) || "Failed to load RFQs");
-                }
-                let list: unknown[] = [];
-                if (isRecord(data) && Array.isArray((data as Record<string, unknown>)["data"])) {
-                    list = (data as Record<string, unknown>)["data"] as unknown[];
-                } else if (Array.isArray(data)) {
-                    list = data as unknown[];
-                }
-                setInvitations(list);
-                setResultCount(list.length);
-            } catch (e: unknown) {
-                if (isRecord(e) && typeof (e as { name?: unknown }).name === "string" && (e as { name: string }).name === "AbortError") return;
-                setError(isRecord(e) && typeof (e as { message?: unknown }).message === "string" ? String((e as { message: string }).message) : "Unable to load RFQs");
-                setInvitations([]);
-                setResultCount(0);
-            } finally {
-                setIsSearching(false);
-            }
-        };
         fetchInvitations();
-        return () => controller.abort();
-    }, [debouncedSearchTerm, status, openType]);
+    }, [fetchInvitations]);
 
-    const getActiveFilters = useCallback(() => {
-        const filters: { label: string; value: string; type: string }[] = [];
-        if (searchTerm)
-            filters.push({ label: `"${searchTerm}"`, value: searchTerm, type: "search" });
-        if (status !== "all") {
-            const statusLabel =
-                status === "ongoing"
-                    ? "Ongoing"
-                    : status === "drafts"
-                        ? "Drafts"
-                        : "Cancelled";
-            filters.push({ label: statusLabel, value: status, type: "status" });
-        }
-        if (openType !== "openToAll") {
-            const openTypeLabel = openType === "directInvites" ? "Direct Invites" : "";
-            filters.push({ label: openTypeLabel, value: openType, type: "openType" });
-        }
-        return filters;
-    }, [searchTerm, status, openType]);
-
-    const activeFilterChips = getActiveFilters();
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
 
     const handleClearAllFilters = () => {
         setSearchTerm("");
-        setStatus("all");
-        setOpenType("openToAll");
-        setResultCount(null);
+        setActiveFilterChips([]);
     };
 
-    const handleRemoveFilter = (type: string) => {
-        if (type === "search") setSearchTerm("");
-        if (type === "status") setStatus("all");
-        if (type === "openType") setOpenType("openToAll");
+    const handleRemoveFilter = (filterType: string) => {
+        setActiveFilterChips((prev) => prev.filter((chip) => chip.type !== filterType));
     };
+
+    const resultCount = invitations.length;
 
     return (
-        <div className="bg-card text-card-foreground rounded-lg border border-border p-6 md:p-8 transition-colors duration-300">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <ClipboardList className="h-6 w-6 text-primary" /> RFQs
-            </h2>
+        <div className="space-y-4 p-1">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-2xl font-semibold tracking-tight">RFQ Invitations</h1>
+                <p className="text-muted-foreground">
+                    View and manage your Request for Quotation invitations.
+                </p>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6 items-end">
-                <div className="col-span-full md:col-span-2 lg:col-span-2">
-                    <label htmlFor="search-rfqs" className="sr-only">
-                        Search RFQs...
-                    </label>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input
-                            id="search-rfqs"
-                            placeholder="Search RFQs..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 w-full border border-input focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 bg-background text-foreground"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label htmlFor="status-select" className="text-sm font-medium sr-only">
-                        Status
-                    </label>
-                    <Select value={status} onValueChange={setStatus}>
-                        <SelectTrigger
-                            id="status-select"
-                            className="w-full bg-background text-foreground border border-input focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
-                        >
-                            <SelectValue placeholder="All Statuses" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover text-popover-foreground">
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="ongoing">Ongoing</SelectItem>
-                            <SelectItem value="drafts">Drafts</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div>
-                    <label htmlFor="open-type-select" className="text-sm font-medium sr-only">
-                        Open To
-                    </label>
-                    <Select value={openType} onValueChange={setOpenType}>
-                        <SelectTrigger
-                            id="open-type-select"
-                            className="w-full bg-background text-foreground border border-input focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
-                        >
-                            <SelectValue placeholder="Open to all" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover text-popover-foreground">
-                            <SelectItem value="openToAll">Open to all</SelectItem>
-                            <SelectItem value="directInvites">Direct Invites</SelectItem>
-                        </SelectContent>
-                    </Select>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pt-4">
+                <div className="col-span-full md:col-span-5 lg:col-span-4 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search by title or reference..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="pl-9 bg-background"
+                    />
                 </div>
 
                 <div className="col-span-full md:col-span-1 lg:col-span-1 flex justify-end md:justify-start">

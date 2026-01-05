@@ -1,21 +1,29 @@
-import type { Metadata } from "next"
-import { Roboto } from "next/font/google"
+import type { Metadata, Viewport } from "next"
+import { Geist } from "next/font/google"
 import "@/styles/globals.css"
-import { NextAuthProvider } from "@/app/providers"
+import { NextAuthProvider } from "@/components/providers/providers"
 import { CLIENT_APP_NAME, CLIENT_APP_NAME_STRING } from "@/config/client-config"
 
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-roboto",
+const geist = Geist({
+  weight: ['100', '400', '900'],
+  style: ['normal'],
+  variable: "--font-geist",
   subsets: ["latin", "latin-ext"],
   display: "swap",
   preload: true,
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: false,
 })
 
-const appTitleWithVersion = `${CLIENT_APP_NAME_STRING} v${CLIENT_APP_NAME.version}`
+const appVersion = CLIENT_APP_NAME?.version ?? "0.1.0"
+const appTitleWithVersion = `${CLIENT_APP_NAME_STRING} v${appVersion}`
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+}
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://portal.com"),
   title: {
     default: appTitleWithVersion,
     template: `%s | ${appTitleWithVersion}`,
@@ -25,16 +33,28 @@ export const metadata: Metadata = {
   keywords: [
     "third parties portal",
     "self service",
-    "vendor management",
+    "supplier management",
     "BR Portal",
     "partners",
+    "third party",
+    "tenant",
   ],
   authors: [{ name: "Craft Silicon" }],
-  generator: "Next.js",
+  generator: "@Craft",
   openGraph: {
     title: appTitleWithVersion,
     description: CLIENT_APP_NAME.meta.description,
     siteName: CLIENT_APP_NAME.name,
+    type: "website",
+    locale: "en_US",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: CLIENT_APP_NAME.name,
+      },
+    ],
   },
 }
 
@@ -45,8 +65,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${roboto.variable} smooth-scroll antialiased`}>
-        <NextAuthProvider attribute="class" enableSystem disableTransitionOnChange>
+      <body
+        suppressHydrationWarning
+        className={`${geist.variable} smooth-scroll antialiased min-h-screen`}
+      >
+        <NextAuthProvider
+          attribute="class"
+          enableSystem
+          disableTransitionOnChange
+        >
           {children}
         </NextAuthProvider>
       </body>

@@ -1,119 +1,106 @@
-import type { DefaultSession, DefaultUser } from "next-auth"
-import type { DefaultJWT } from "next-auth/jwt"
-
-interface UserProfile {
-    id: number;
-    thirdPartyUser: {
-        firstName: string | null;
-        lastName: string | null;
-        fullName: string;
-        email: string;
-        phone: string | null;
-    };
-    approvalStatusCode: string | null;
-    status: string | null;
-    thirdPartyDetails: {
-        id: number;
-        thirdPartyName: string | null;
-        tradingName: string | null;
-        businessType: string | null;
-        registrationNumber: string | null;
-        taxPIN: string | null;
-        vatNumber: string | null;
-        physicalAddress: string | null;
-        website: string | null;
-        countryId: number | null;
-        countryInfo?: {
-            id: number;
-            name: string;
-            code: string;
-            iso3: string;
-            phoneCode: string;
-            flag: string;
-        };
-        approvalStatus: string | null;
-        statusCode: string | null;
-        isPrequalified: boolean;
-        thirdPartyTypeCode: string | null;
-        types?: ThirdPartyTypeEntry[];
-        categories: any[];
-        createdOn: string;
-        modifiedOn: string;
-        createdBy: number | null;
-    };
-    image?: string | null; // For helper compatibility
-    imageUrl?: string | null; // From API
-}
-
-interface ThirdParty {
-    id: number;
-    thirdPartyName: string | null;
-    tradingName: string;
-    label: string;
-    businessType: string;
-    registrationNumber: string;
-    taxPin: string | null;
-    vatNumber: string | null;
-    country: string | null;
-    physicalAddress: string | null;
-    email: string;
-    phone: string;
-    website: string | null;
-    approvalStatus: string;
-    status: string;
-    thirdPartyType: string;
-    createdOn: string;
-    modifiedOn: string;
-    createdBy: number;
-    isActive: boolean | null;
-}
-
-export interface BaseUser {
-    id: string;
-    userId: string;
-    firstName: string;
-    lastName: string;
-    fullName: string;
-    email: string;
-    phone?: string | null;
-    imageId?: string | null;
-    gender?: string | null;
-    thirdPartyId: number;
-    isActive: boolean;
-    isApproved: boolean;
-    isSupplier: boolean;
-    isTenant: boolean;
-    isCustomer: boolean;
-    types?: ThirdPartyTypeEntry[];
-    emailVerifiedOn?: string | null;
-    createdOn: string;
-    isDeleted?: boolean | null;
-    modifiedOn: string;
-    thirdParty?: ThirdParty | null;
-}
-
 export interface ThirdPartyTypeEntry {
     id: number;
     code: string;
     categoryId: number | null;
-    isActive: boolean;
-    pivotId: number;
-    label?: string; // Optional label added dynamically
 }
 
-declare module "next-auth" {
-    interface User extends BaseUser {
-        accessToken: string
-    }
+type RegistrationStep = 'form' | 'accountType' | 'profile' | 'success'
 
-    interface Session extends DefaultSession {
-        user: BaseUser
-        accessToken?: string
-    }
+export interface RegistrationData {
+    Name: string
+    TradingName?: string
+    BusinessType: string
+    RegistrationNumber: string
+    Country: string
+    Location: string
+    TaxPIN?: string
+    VATNumber?: string | null
+    Email?: string
+    Phone: string
+    PhysicalAddress?: string
+    Website?: string
+    types: string[]
+    createUser: boolean
+    user_FirstName?: string
+    user_LastName?: string
+    user_Email?: string
+    user_Phone?: string
+    user_Gender?: string
+    logo?: File | null
 }
 
-declare module "next-auth/jwt" {
-    interface JWT extends DefaultJWT, BaseUser {
-        accessToken?: string
-    }
+export interface AuthState {
+    step: RegistrationStep
+    isSubmitting: boolean
+    data: Partial<RegistrationData>
+    setStep: (step: RegistrationStep) => void
+    setIsSubmitting: (loading: boolean) => void
+    updateData: (newData: Partial<RegistrationData>) => void
+    resetRegistration: () => void
+}
+
+// export interface ThirdPartyProfile {
+//     third_party_id: number;
+//     third_party_name: string | null;
+//     trading_name: string | null;
+//     registration_number: string | null;
+//     tax_pin: string | null;
+//     email: string | null;
+//     phone: string | null;
+//     physical_address: string | null;
+//     website: string | null;
+//     country_id: number | null;
+//     location_id: number | null;
+//     image_id: number | null;
+//     status: string;
+//     is_active: boolean;
+//     is_supplier: boolean;
+//     is_tenant: boolean;
+//     is_customer: boolean;
+//     approval_status: string | null;
+//     is_prequalified: boolean;
+//     created_at: string | null;
+//     updated_at: string | null;
+// }
+
+export interface BaseUser {
+    user_id: number;
+    third_party_id: number | null;
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    email: string;
+    phone: string | null;
+    email_verified: boolean;
+    is_active: boolean;
+    has_profile: boolean;
+    is_approved: boolean;
+    is_supplier?: boolean;
+    is_tenant?: boolean;
+    is_customer?: boolean;
+    approval_status?: string;
+    profile: {
+        name: string | null;
+        trading_name: string | null;
+        approval_status: string | null;
+    } | null;
+}
+
+export interface BackendProfileRes {
+    success: boolean;
+    profiles: ThirdPartyProfile[];
+}
+
+export interface BackendUser {
+    id: string;
+    email: string;
+    name: string;
+    is_active: boolean;
+    has_profile: boolean;
+    email_verified: boolean;
+}
+
+export interface TokenValidationResponse {
+    valid: boolean;
+    user: BackendUser;
 }

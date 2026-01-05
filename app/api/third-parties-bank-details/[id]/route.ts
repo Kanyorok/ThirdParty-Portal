@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const EXTERNAL_API_BASE_URL = process.env.EXTERNAL_API_URL;
-
 interface FrontendBankDetailPayload {
     bankName?: string;
     branch?: string;
@@ -40,7 +38,10 @@ function transformToPascalCase(payload: FrontendBankDetailPayload): BackendBankD
     return transformed;
 }
 
-export async function PUT(req: NextRequest) {
+export async function PUT(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken || !session.user?.thirdParty?.id) {
         return NextResponse.json(
@@ -49,9 +50,7 @@ export async function PUT(req: NextRequest) {
         );
     }
 
-    const url = new URL(req.url);
-    const parts = url.pathname.split("/");
-    const id = parts[parts.length - 2];
+    const id = params.id;
 
     try {
         const frontendBody: FrontendBankDetailPayload = await req.json();
@@ -59,7 +58,9 @@ export async function PUT(req: NextRequest) {
 
         const backendBody = transformToPascalCase(frontendBody);
 
-        const res = await fetch(`${EXTERNAL_API_BASE_URL}/api/third-parties-bank-details/${id}`, {
+        console.log('PUT Request to backend:', `${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details/${id}`, backendBody);
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -72,27 +73,30 @@ export async function PUT(req: NextRequest) {
         const data: BankDetailResponse = await res.json();
 
         if (!res.ok) {
+            console.error('Backend error (PUT):', data);
             return NextResponse.json(data, { status: res.status });
         }
 
         return NextResponse.json(data);
     } catch (error) {
+        console.error('API Route Error (PUT bank details):', error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(
+    _req: NextRequest,
+    { params }: { params: { id: string } }
+) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const url = new URL(req.url);
-    const parts = url.pathname.split("/");
-    const id = parts[parts.length - 2];
+    const id = params.id;
 
     try {
-        const res = await fetch(`${EXTERNAL_API_BASE_URL}/api/third-parties-bank-details/${id}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details/${id}`, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
@@ -102,11 +106,13 @@ export async function DELETE(req: NextRequest) {
 
         if (!res.ok) {
             const data: BankDetailResponse = await res.json();
+            console.error('Backend error (DELETE):', data);
             return NextResponse.json(data, { status: res.status });
         }
 
         return new NextResponse(null, { status: 204 });
-    } catch {
+    } catch (error) {
+        console.error('API Route Error (DELETE bank details):', error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }

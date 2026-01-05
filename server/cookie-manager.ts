@@ -82,7 +82,7 @@ async function performAutoRevalidation(key: string): Promise<void> {
     }
 
     for (const tag of revalidationConfig.tags) {
-      revalidateTag(tag)
+      revalidateTag(tag, '') // TODO: add the second param here asp next 16
     }
   } catch (error) {
     console.warn(`Warning: Auto-revalidation failed for key "${key}":`, error)
@@ -177,7 +177,7 @@ export async function setCookieValue(
     }
 
     if (options.revalidateTags?.length) {
-      options.revalidateTags.forEach((tag) => revalidateTag(tag))
+      options.revalidateTags.forEach((tag) => revalidateTag(tag, ''))
     }
 
     await performAutoRevalidation(key)

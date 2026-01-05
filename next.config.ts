@@ -1,22 +1,10 @@
 import type { NextConfig } from "next";
-import path from "path";
-
-// Minimal type to avoid bringing in webpack types
-type WebpackConfigLike = {
-  resolve?: {
-    alias?: Record<string, string>;
-  } & Record<string, unknown>;
-  [key: string]: unknown;
-};
 
 const nextConfig: NextConfig = {
-  // Produce standalone output for Docker multi-stage COPY (.next/standalone)
   output: "standalone",
-  // Skip ESLint during production builds
-  eslint: {
-    ignoreDuringBuilds: true,
+  cacheComponents: true,
+  experimental: {
   },
-  // Skip TypeScript type checking during production builds
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -25,56 +13,21 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "assets.example.com", // TODO: replace with actual
-        port: "",
-        pathname: "/logos/**", // TODO: To update in future with correct path
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com" // TODO: Update with actual image storage location
-      },
-    ],
+    remotePatterns: [],
   },
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff", // Prevents the browser from MIME-sniffing a response away from the declared content-type.
-          },
-          {
-            key: "X-Frame-Options",
-            value: "SAMEORIGIN", // Prevents clickjacking attacks by blocking the page from being rendered in a <frame>, <iframe>, <embed> or <object> on other sites.
-          },
-          {
-            key: "X-XSS-Protection",
-            value: "1; mode=block", // Enables the Cross-Site Scripting (XSS) filter built into most recent web browsers.
-          },
-          {
-            key: "Referrer-Policy",
-            value: "origin-when-cross-origin", // Controls how much referrer information is sent with requests.
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()', // Explicitly disables features that are not needed.
-          },
-        ]
-      }
-    ]
-  },
-  // Ensure path alias '@' resolves reliably across environments (Windows/CI)
-  webpack: (config: WebpackConfigLike) => {
-    config.resolve = config.resolve || {};
-    config.resolve.alias = {
-      ...(config.resolve?.alias || {}),
-      "@": path.resolve(__dirname, "."),
-    };
-    return config as any;
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
+        ],
+      },
+    ];
   },
 };
 

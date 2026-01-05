@@ -1,134 +1,194 @@
-"use client";
+"use client"
 
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
+import React, { useEffect, useState, useMemo, memo } from "react"
+import { motion, Variants } from "framer-motion"
+import {
+  BarChart,
+  Clock,
+  CheckCircle,
+  XCircle,
+  ChevronRight,
+  Activity,
+  Mail,
+  AlertCircle
+} from "lucide-react"
+import { Skeleton } from "@/components/common/skeleton"
+import { cn } from "@/lib/utils"
 
-type PreqBreakdown = {
-  approved: number;
-  submitted: number;
-  under_review: number;
-  rejected: number;
-  not_applied: number;
-};
-
-type InvBreakdown = {
-  pending: number;
-  accepted: number;
-  declined: number;
-  submitted: number;
-};
+type PreqBreakdown = { approved: number; submitted: number; under_review: number; rejected: number; not_applied: number; };
+type InvBreakdown = { pending: number; accepted: number; declined: number; submitted: number; };
 
 interface SummaryData {
   breakdowns: {
-    prequalification: PreqBreakdown;
-    invitations: InvBreakdown;
-  };
+    prequalification: PreqBreakdown
+    invitations: InvBreakdown
+  }
 }
 
-function Bar({ value, color }: { value: number; color: string }) {
-  return (
-    <div className="h-2 rounded" style={{ width: `${Math.max(0, Math.min(100, value))}%`, backgroundColor: color }} />
-  );
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+  }
 }
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.4, ease: "easeOut" }
+  }
+}
+
+const StatusListItem = memo(({ value, total, label, color, icon: Icon }: {
+  value: number; total: number; label: string; color: string; icon: React.ElementType
+}) => {
+  const percentage = total > 0 ? (value / total) * 100 : 0;
+  const iconColor = color.replace('bg-', 'text-');
+
+  return (
+    <motion.div
+      variants={itemVariants}
+      className="group relative flex flex-col gap-3 p-3.5 rounded-2xl transition-colors hover:bg-muted/50"
+    >
+      <div className="flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-background border border-border/60 shadow-sm group-hover:border-primary/20 transition-colors">
+            <Icon className={cn("h-4.5 w-4.5", iconColor)} />
+          </div>
+          <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+            {label}
+          </span>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <span className="text-lg font-bold tabular-nums tracking-tight">
+            {value.toLocaleString()}
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+        </div>
+      </div>
+
+      <div className="relative h-1.5 w-full bg-muted/80 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          className={cn("absolute h-full rounded-full", color)}
+        />
+      </div>
+    </motion.div>
+  );
+});
+
+StatusListItem.displayName = "StatusListItem";
+
+const SectionHeader = ({ title, icon: Icon, total }: { title: string; icon: any; total: number }) => (
+  <div className="flex items-center justify-between mb-8 px-1">
+    <div className="flex items-center gap-3.5">
+      <div className="p-2.5 bg-primary/10 rounded-2xl ring-1 ring-primary/20">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <h3 className="text-xl font-bold tracking-tight">{title}</h3>
+    </div>
+    <div className="inline-flex items-center px-3 py-1 rounded-lg bg-secondary/50 text-[11px] font-bold uppercase tracking-wider text-secondary-foreground border border-border/50">
+      {total.toLocaleString()} Total
+    </div>
+  </div>
+)
 
 export default function SummaryCharts() {
-  const [data, setData] = useState<SummaryData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<SummaryData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     let isMounted = true;
-    (async () => {
+    const load = async () => {
       try {
-        const res = await fetch('/api/dashboard/summary', { cache: 'no-store' });
-        if (res.ok) {
-          const json = (await res.json()) as SummaryData;
-          if (isMounted) setData(json);
-        }
+        const res = await fetch('/api/dashboard/summary', {
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        if (!res.ok) throw new Error()
+        const json = await res.json()
+        if (isMounted) setData(json)
+      } catch {
+        if (isMounted) setError(true)
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) setLoading(false)
       }
-    })();
-    return () => { isMounted = false };
-  }, []);
+    }
+    load()
+    return () => { isMounted = false }
+  }, [])
 
-  const preq = data?.breakdowns?.prequalification;
-  const inv = data?.breakdowns?.invitations;
+  const preqTotal = useMemo(() =>
+    Object.values(data?.breakdowns?.prequalification || {}).reduce((a, b) => a + b, 0), [data])
 
-  const preqTotal = (preq?.approved ?? 0) + (preq?.submitted ?? 0) + (preq?.under_review ?? 0) + (preq?.rejected ?? 0) + (preq?.not_applied ?? 0);
-  const invTotal = (inv?.pending ?? 0) + (inv?.accepted ?? 0) + (inv?.declined ?? 0) + (inv?.submitted ?? 0);
+  const invTotal = useMemo(() =>
+    Object.values(data?.breakdowns?.invitations || {}).reduce((a, b) => a + b, 0), [data])
+
+  if (loading) return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {[1, 2].map(i => (
+        <div key={i} className="p-8 rounded-[2.5rem] bg-card border border-border/50 space-y-6">
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-10 w-48 rounded-xl" />
+            <Skeleton className="h-6 w-20 rounded-lg" />
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map(j => <Skeleton key={j} className="h-20 w-full rounded-2xl" />)}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
+  if (error) return (
+    <div className="flex flex-col items-center justify-center p-12 rounded-[2.5rem] bg-card border border-dashed border-border/60">
+      <AlertCircle className="h-10 w-10 text-muted-foreground mb-4" />
+      <p className="text-muted-foreground font-medium text-center">Failed to load summary data</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="mt-4 text-sm font-bold text-primary hover:underline"
+      >
+        Try Again
+      </button>
+    </div>
+  )
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Prequalification Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-sm text-muted-foreground">Loading…</div>
-          ) : preqTotal === 0 ? (
-            <div className="text-sm text-muted-foreground">No prequalification activity.</div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Approved</span><span>{preq?.approved ?? 0}</span></div>
-                <Bar value={((preq?.approved ?? 0) / preqTotal) * 100} color="#16a34a" />
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Submitted</span><span>{preq?.submitted ?? 0}</span></div>
-                <Bar value={((preq?.submitted ?? 0) / preqTotal) * 100} color="#2563eb" />
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Under Review</span><span>{preq?.under_review ?? 0}</span></div>
-                <Bar value={((preq?.under_review ?? 0) / preqTotal) * 100} color="#f97316" />
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Rejected</span><span>{preq?.rejected ?? 0}</span></div>
-                <Bar value={((preq?.rejected ?? 0) / preqTotal) * 100} color="#dc2626" />
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Not Applied</span><span>{preq?.not_applied ?? 0}</span></div>
-                <Bar value={((preq?.not_applied ?? 0) / preqTotal) * 100} color="#6b7280" />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <motion.section
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="group p-6 md:p-8 rounded-[2.5rem] bg-card border border-border/40 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
+      >
+        <SectionHeader title="Prequalification" icon={Activity} total={preqTotal} />
+        <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-1">
+          <StatusListItem value={data?.breakdowns?.prequalification.approved || 0} total={preqTotal} label="Approved" color="bg-emerald-500" icon={CheckCircle} />
+          <StatusListItem value={data?.breakdowns?.prequalification.under_review || 0} total={preqTotal} label="In Review" color="bg-amber-500" icon={Clock} />
+          <StatusListItem value={data?.breakdowns?.prequalification.submitted || 0} total={preqTotal} label="Applications" color="bg-blue-600" icon={BarChart} />
+          <StatusListItem value={data?.breakdowns?.prequalification.rejected || 0} total={preqTotal} label="Rejected" color="bg-rose-500" icon={XCircle} />
+        </motion.div>
+      </motion.section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tender Invitations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-sm text-muted-foreground">Loading…</div>
-          ) : invTotal === 0 ? (
-            <div className="text-sm text-muted-foreground">No invitations.</div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Pending</span><span>{inv?.pending ?? 0}</span></div>
-                <Bar value={((inv?.pending ?? 0) / invTotal) * 100} color="#6b7280" />
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Accepted</span><span>{inv?.accepted ?? 0}</span></div>
-                <Bar value={((inv?.accepted ?? 0) / invTotal) * 100} color="#16a34a" />
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Submitted</span><span>{inv?.submitted ?? 0}</span></div>
-                <Bar value={((inv?.submitted ?? 0) / invTotal) * 100} color="#2563eb" />
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1"><span>Declined</span><span>{inv?.declined ?? 0}</span></div>
-                <Bar value={((inv?.declined ?? 0) / invTotal) * 100} color="#dc2626" />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <motion.section
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="group p-6 md:p-8 rounded-[2.5rem] bg-card border border-border/40 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
+      >
+        <SectionHeader title="Tender Invitations" icon={Mail} total={invTotal} />
+        <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-1">
+          <StatusListItem value={data?.breakdowns?.invitations.accepted || 0} total={invTotal} label="Accepted" color="bg-emerald-500" icon={CheckCircle} />
+          <StatusListItem value={data?.breakdowns?.invitations.pending || 0} total={invTotal} label="Pending" color="bg-amber-500" icon={Clock} />
+          <StatusListItem value={data?.breakdowns?.invitations.submitted || 0} total={invTotal} label="Responses" color="bg-blue-600" icon={BarChart} />
+          <StatusListItem value={data?.breakdowns?.invitations.declined || 0} total={invTotal} label="Declined" color="bg-rose-500" icon={XCircle} />
+        </motion.div>
+      </motion.section>
     </div>
-  );
+  )
 }
-
-
-

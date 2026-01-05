@@ -1,65 +1,62 @@
 'use client'
 
-import React from 'react'
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { User, ChevronRight } from 'lucide-react'
-import { itemVariants, fadeSlideVariants } from '@/lib/dashboard-animations'
 
-interface WelcomeHeaderProps {
-    firstName: string
-}
-
-export function WelcomeHeader({ firstName }: WelcomeHeaderProps) {
-    const currentHour = new Date().getHours()
-    const greeting = currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening'
+export function WelcomeHeader({ firstName }: { firstName: string }) {
+    const greeting = useMemo(() => {
+        const hour = new Date().getHours()
+        if (hour < 12) return "Good Morning"
+        if (hour < 17) return "Good Afternoon"
+        return "Good Evening"
+    }, [])
 
     return (
-        <div>
-            <div className="mb-8 text-sm text-gray-500 dark:text-gray-400">
-                Dashboard <ChevronRight className="inline-block h-3 w-3 mx-1" /> <span className="font-semibold text-gray-700 dark:text-gray-200">Home</span>
-            </div>
-            <motion.header
-                variants={itemVariants}
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-primary/3 to-transparent p-8 border border-border/50 backdrop-blur-sm"
-            >
-                <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-
-                <div className="relative flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <motion.div
-                            className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-sm"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                        >
-                            <User className="h-8 w-8 text-primary" />
-                            <motion.div
-                                className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.5, type: 'spring', stiffness: 500 }}
-                            >
-                                <div className="w-2 h-2 rounded-full bg-white" />
-                            </motion.div>
-                        </motion.div>
-
-                        <div className="space-y-2">
-                            <motion.p
-                                variants={fadeSlideVariants}
-                                className="text-sm font-medium text-muted-foreground"
-                            >
-                                {greeting}
-                            </motion.p>
-                            <motion.h1
-                                variants={fadeSlideVariants}
-                                className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent"
-                            >
-                                Welcome back, {firstName}!
-                            </motion.h1>
-                        </div>
+        <header className="relative w-full mb-12 px-0">
+            <div className="flex flex-col gap-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col gap-2"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div className="h-1 w-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/40">
+                            Live Dashboard
+                        </span>
                     </div>
-                </div>
-            </motion.header>
-        </div>
+
+                    {/* <div className="flex flex-col">
+                        <motion.span
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2, duration: 0.8 }}
+                            className="text-sm font-medium text-primary/60 tracking-tight"
+                        >
+                            {greeting},
+                        </motion.span>
+                        <motion.h1
+                            initial={{ opacity: 0, filter: "blur(4px)" }}
+                            animate={{ opacity: 1, filter: "blur(0px)" }}
+                            transition={{ delay: 0.3, duration: 0.8 }}
+                            className="text-4xl md:text-5xl font-bold tracking-tighter text-foreground leading-none"
+                        >
+                            {firstName || 'User'}.
+                        </motion.h1>
+                    </div> */}
+                </motion.div>
+
+                <motion.div
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 0.5, duration: 1, ease: "circOut" }}
+                    className="h-px w-full max-w-md bg-gradient-to-r from-border/60 via-border/20 to-transparent"
+                />
+            </div>
+
+            <div className="absolute -top-10 -left-10 -z-10 h-64 w-64 rounded-full bg-primary/[0.03] blur-[80px]" />
+            <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-blue-500/[0.02] blur-[120px]" />
+        </header>
     )
 }

@@ -1,142 +1,81 @@
-"use client";
+"use client"
 
-import { useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
+import { useState, useCallback } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { registerSchema, type RegisterFormInputs } from "@/lib/validation"
 
-import type { ApiResponse } from "@/lib/api-types";
-import { getFieldStatus, transformThirdPartyDetailsForApi, mapThirdPartyServerErrorsToFormFields } from "@/lib/form-utils";
-import { ThirdPartyDetailsFormInputs, thirdPartyDetailsSchema } from "@/lib/validation";
+export function useRegisterForm() {
+    const [pwdShown, setPwdShown] = useState(false)
+    const [confirmShown, setConfirmShown] = useState(false)
 
-export const useThirdPartyRegisterDetailsForm = (p0: { userId: string | null; onSuccess: (thirdPartyId: number) => void; }) => {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const userId = searchParams.get('user_id');
-
-    const form = useForm<ThirdPartyDetailsFormInputs>({
-        resolver: zodResolver(thirdPartyDetailsSchema),
-        mode: "onChange",
+    const form = useForm<RegisterFormInputs>({
+        resolver: zodResolver(registerSchema),
+        mode: "onTouched",
         defaultValues: {
-            thirdPartyName: "",
-            tradingName: "",
-            businessType: "",
-            registrationNumber: "",
-            taxPIN: "",
-            vatNumber: "",
-            country: "",
-            physicalAddress: "",
+            firstName: "",
+            lastName: "",
             email: "",
             phone: "",
-            website: "",
-            thirdPartyType: "",
+            password: "",
+            confirmPassword: "",
+            thirdPartyName: "",
+            tradingName: "",
+            registrationNumber: "",
+            taxPIN: "",
+            businessType: 0,
+            countryId: 0,
+            thirdPartyType: "Supplier",
+            physicalAddress: "",
+            website: ""
         },
-    });
+    })
 
-    const { setError, reset, formState, watch } = form;
-    const { errors, isSubmitting, isValid } = formState;
-    const watchedFields = watch();
+    const togglePwd = useCallback(() => setPwdShown((v) => !v), [])
+    const toggleConfirm = useCallback(() => setConfirmShown((v) => !v), [])
 
-    const fieldStatuses = useMemo(() => {
-        const fields: (keyof ThirdPartyDetailsFormInputs)[] = [
-            "thirdPartyName", "tradingName", "businessType", "registrationNumber",
-            "taxPIN", "vatNumber", "country", "physicalAddress", "email",
-            "phone", "website", "thirdPartyType",
-        ];
-        return fields.reduce(
-            (acc, field) => {
-                acc[field] = getFieldStatus(field, errors, formState.touchedFields, watchedFields);
-                return acc;
-            },
-            {} as Record<keyof ThirdPartyDetailsFormInputs, string>,
-        );
-    }, [errors, formState.touchedFields, watchedFields]);
+    const handleSubmitAsync = useCallback(
+        async (step: "form" | "profile", submitFn: (payload: any) => Promise<void>) => {
+            const values = form.getValues()
 
-    const handleSubmitSuccess = useCallback(
-        async (result: ApiResponse) => {
-            if (result.status === "success") {
-                toast.success(result.message || "Third-party details submitted successfully! Your account is pending approval.");
-                reset();
-                setTimeout(() => {
-                    router.push("/registration-pending");
-                }, 2000);
-            }
-        },
-        [router, reset],
-    );
-
-    const handleSubmitError = useCallback(
-        (result: ApiResponse) => {
-            if (result.status === "error" && result.errors) {
-                const mappedErrors = mapThirdPartyServerErrorsToFormFields(result.errors);
-
-                Object.entries(mappedErrors).forEach(([field, messages]) => {
-                    setError(field as keyof ThirdPartyDetailsFormInputs, {
-                        type: "server",
-                        message: messages.join(", "),
-                    });
-                });
-                toast.error(result.message || "Submission failed due to validation errors.");
-            } else {
-                setError("root", {
-                    type: "server",
-                    message: result.message || "Submission failed. Please try again.",
-                });
-                toast.error(result.message || "An unexpected error occurred during submission.");
-            }
-        },
-        [setError],
-    );
-
-    const onSubmit = useCallback(
-        async (data: ThirdPartyDetailsFormInputs) => {
-            if (!userId) {
-                toast.error("User ID is missing. Please restart the registration process.");
-                router.push("/register");
-                return;
-            }
-
-            const apiData = {
-                ...transformThirdPartyDetailsForApi(data),
-                user_id: userId,
-            };
-
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/register-details`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Requested-With": "XMLHttpRequest",
-                    },
-                    body: JSON.stringify(apiData),
-                });
-
-                const result: ApiResponse = await response.json();
-
-                if (response.ok) {
-                    await handleSubmitSuccess(result);
-                } else {
-                    handleSubmitError(result);
+            if (step === "form") {
+                const stepOnePayload = {
+                    FirstName: values.firstName,
+                    LastName: values.lastName,
+                    Email: values.email,
+                    Phone: values.phone,
+                    Password: values.password,
+                    Password_confirmation: values.confirmPassword,
                 }
-            } catch (error) {
-                setError("root", {
-                    type: "manual",
-                    message: "Network error. Please check your connection and try again.",
-                });
-                toast.error("Network error. Please check your connection and try again.");
+                await submitFn(stepOnePayload)
+            } else {
+                const stepTwoPayload = {
+                    companyName: values.thirdPartyName,
+                    tradingName: values.tradingName || values.thirdPartyName,
+                    businessType: Number(values.businessType),
+                    registrationNumber: values.registrationNumber,
+                    taxPIN: values.taxPIN,
+                    countryId: Number(values.countryId),
+                    physicalAddress: values.physicalAddress,
+                    companyEmail: values.email,
+                    companyPhone: values.phone,
+                    website: values.website || null,
+                    accountType: values.thirdPartyType.toLowerCase(),
+                    supplierCategories: [],
+                }
+                await submitFn(stepTwoPayload)
             }
         },
-        [userId, handleSubmitSuccess, handleSubmitError, setError, router],
-    );
+        [form]
+    )
 
     return {
         form,
-        onSubmit,
-        fieldStatuses,
-        isSubmitting,
-        isValid,
-        errors,
-        watchedFields,
-    };
-};
+        pwdShown,
+        confirmShown,
+        togglePwd,
+        toggleConfirm,
+        handleSubmitAsync,
+        triggerFields: form.trigger,
+    }
+}

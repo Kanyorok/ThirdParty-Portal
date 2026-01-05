@@ -1,131 +1,111 @@
-import { getServerSession } from "next-auth/next";
-import RoundsTable from "./rounds-table";
-import RoundsToolbar from "./rounds-toolbar";
-import { Round } from "@/types/types";
-import { authOptions } from "@/lib/auth-options";
+"use client"
 
-type ApiRound = {
-    id?: string;
-    roundID?: number | string;
-    roundId?: string;
-    title?: string;
-    name?: string;
-    status?: "O" | "CL" | string | { value: string; label?: string };
-    startDate?: string;
-    endDate?: string;
-    maxVendors?: number;
-    applicationId?: string | number;
-    hasApplied?: boolean;
-    applicationProgress?: { stage?: string; percent?: number; updatedOn?: string; label?: string };
-};
+import { useState } from "react"
+import { useSearchParams } from "next/navigation"
+import RoundsTable from "./rounds-table"
+import RoundsToolbar from "./rounds-toolbar"
+import { ApiCategory, ApiRound } from "@/types/prequalification-rounds-types"
+import { Round } from "@/types/types"
+import { axiosInstance } from "@/lib/axios"
 
-type ApiCategory = {
-    id?: number | string;
-    category_id?: number;
-    categoryId?: number;
-    SupplierCategoryID?: number;
-    name?: string;
-    CategoryName?: string;
-    category_name?: string;
-    description?: string;
-    has_applied?: boolean;
-    hasApplied?: boolean;
-    application_id?: string | number;
-    applicationId?: string | number;
-    application_date?: string;
-    applicationDate?: string;
-    progress_percent?: number;
-    progressPercent?: number;
-    stage?: string;
-    stage_label?: string;
-    stageLabel?: string;
-    updated_on?: string;
-    updatedOn?: string;
-    decision_date?: string;
-    decisionDate?: string;
-    rejection_reason?: string;
-    rejectionReason?: string;
-};
-
-type ApiResponse = {
-    data: ApiRound[];
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-    sortBy: string;
-    sortOrder: "asc" | "desc";
-    filters: Record<string, string | undefined>;
-};
-
-async function getRounds(query: Record<string, string | undefined>): Promise<ApiResponse> {
-    // Get session for authentication
-    const session = await getServerSession(authOptions);
-
-    if (!session?.accessToken) {
-        console.error("No valid session found for rounds data");
-        return {
-            data: [],
-            page: 1,
-            pageSize: 10,
-            total: 0,
-            totalPages: 1,
-            sortBy: "startDate",
-            sortOrder: "desc",
-            filters: {}
-        };
-    }
-
-    // Call Laravel backend directly from server component (skip Next.js API route)
-    const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-
-    // Construct query parameters
-    const params = new URLSearchParams();
-    if (query.page) params.set("page", String(query.page));
-    if (query.pageSize) params.set("pageSize", String(query.pageSize));
-    if (query.sortBy) params.set("sortBy", String(query.sortBy));
-    if (query.sortOrder) params.set("sortOrder", String(query.sortOrder));
-    if (query.status && query.status !== "all") params.set("status", String(query.status));
-    if (query.q) params.set("q", String(query.q));
-
-    const backendUrl = `${EXTERNAL_API_BASE}/api/prequalification/rounds?${params.toString()}`;
+async function getRounds(query: Record<string, string | undefined>) {
+    const page = Number(query.page || 1);
+    const pageSize = Number(query.pageSize || 10);
+    const sortBy = query.sortBy || "startDate"; // Default sortBy
+    const sortOrder = query.sortOrder || "desc"; // Default sortOrder
+    const statusValue = query.status === "all" ? "" : (query.status === "open" ? "O" : "CL");
+    const q = query.q || "";
 
     try {
-        const res = await fetch(backendUrl, {
-            cache: "no-store",
+        // Fetch User ID
+        const sessionRes = await axiosInstance.get('/auth/session');
+        const userId = sessionRes.data.user.id || sessionRes.data.user.UserID;
+
+        if (!userId) {
+            throw new Error("Unable to identify current user");
+        }
+
+        // Fetch Rounds
+        const authHeader = `Basic ${Buffer.from(`${process.env.NEXT_PUBLIC_API_USERNAME}:${process.env.NEXT_PUBLIC_API_PASSWORD}`).toString('base64')}`;
+        const response = await axiosInstance.get(`/supplier/${userId}/prequalification/rounds`, {
             headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${session.accessToken}`,
+                'Authorization': authHeader
             }
         });
 
-        const backendData = await res.json().catch(() => null);
+        // Ensure we handle the wrapped response format from Laravel
+        // The API returns { success: true, message: "...", data: [...] }
+        const responseData = response.data;
+        let rounds: ApiRound[] = [];
 
-        if (!res.ok) {
-            console.error(`Failed to load rounds: ${res.status} ${res.statusText}`, backendData);
-            return {
-                data: [],
-                page: 1,
-                pageSize: 10,
-                total: 0,
-                totalPages: 1,
-                sortBy: "startDate",
-                sortOrder: "desc",
-                filters: {}
-            };
+        if (Array.isArray(responseData)) {
+            // Direct array
+            rounds = responseData;
+        } else if (responseData && Array.isArray(responseData.data)) {
+            // Wrapped in data property
+            rounds = responseData.data;
+        } else if (responseData && typeof responseData === 'object') {
+            // Might be keyed by ID or some other structure, but usually it's in data
+            // If it's the specific "data" wrapper from Laravel Resources:
+            rounds = responseData.data || [];
         }
 
-        // Return backend data directly as it is already filtered, sorted, and paginated
+        // Apply filters
+        if (q) {
+            const lowerQ = q.toLowerCase();
+            rounds = rounds.filter((r: any) =>
+                (r.title || "").toLowerCase().includes(lowerQ) ||
+                (r.roundID || "").toString().toLowerCase().includes(lowerQ)
+            );
+        }
+
+        if (statusValue) {
+            rounds = rounds.filter((round: any) => {
+                const roundStatus = typeof round.status === "object" ? round.status.value : round.status;
+                return roundStatus === statusValue;
+            });
+        }
+
+        // Apply sorting
+        rounds.sort((a: any, b: any) => {
+            let aValue, bValue;
+            
+            if (sortBy === "title") {
+                aValue = a.title || "";
+                bValue = b.title || "";
+            } else if (sortBy === "startDate") {
+                aValue = new Date(a.startDate || 0).getTime();
+                bValue = new Date(b.startDate || 0).getTime();
+            } else if (sortBy === "endDate") {
+                aValue = new Date(a.endDate || 0).getTime();
+                bValue = new Date(b.endDate || 0).getTime();
+            } else {
+                aValue = a.startDate || "";
+                bValue = b.startDate || "";
+            }
+
+            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+        });
+
+        // Apply pagination
+        const total = rounds.length;
+        const totalPages = Math.ceil(total / pageSize);
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedRounds = rounds.slice(startIndex, endIndex);
+
+    // Return data in expected format
         return {
-            data: backendData.data || [],
-            page: backendData.page || 1,
-            pageSize: backendData.pageSize || 10,
-            total: backendData.total || 0,
-            totalPages: backendData.totalPages || 1,
-            sortBy: backendData.sortBy || "startDate",
-            sortOrder: backendData.sortOrder || "desc",
-            filters: backendData.filters || {}
+            data: paginatedRounds,
+            page,
+            pageSize,
+            total,
+            totalPages,
+            sortBy,
+            sortOrder,
+            filters: { status, q }
         };
     } catch (error) {
         console.error(`Error fetching rounds from Laravel backend:`, error);
@@ -136,7 +116,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
             total: 0,
             totalPages: 1,
             sortBy: "startDate",
-            sortOrder: "desc",
+            sortOrder: "asc",
             filters: {}
         };
     }
@@ -181,7 +161,7 @@ export default async function RoundsView({
             const v = (rawStatus ?? r.status)
             status = v === 'O' || v === 'CL' ? v : (v === 'Open' ? 'O' : 'CL')
         }
-        // Map categories with their application status
+    // Map categories with their application status
         const rawCats = (r as unknown as { categories?: ApiCategory[] }).categories || [];
         const categories = rawCats.map((cat) => ({
             category_id: Number(cat.category_id ?? cat.categoryId ?? cat.SupplierCategoryID ?? cat.id),
@@ -199,11 +179,11 @@ export default async function RoundsView({
             rejection_reason: cat.rejection_reason ?? cat.rejectionReason,
         }));
 
-        // Calculate summary from categories
+    // Calculate summary from categories
         const appliedCategories = categories.filter((cat: any) => cat.has_applied);
         const approvedCategories = categories.filter((cat: any) => cat.status === 'APPROVED');
         const rejectedCategories = categories.filter((cat: any) => cat.status === 'REJECTED');
-        const pendingCategories = categories.filter((cat: any) =>
+        const pendingCategories = categories.filter((cat: any) => 
             ['SUBMITTED', 'UNDER_REVIEW'].includes(cat.status)
         );
 
@@ -231,7 +211,7 @@ export default async function RoundsView({
                 approved_categories: approvedCategories.length,
                 rejected_categories: rejectedCategories.length,
                 pending_categories: pendingCategories.length,
-                overall_progress: categories.length > 0 ?
+                overall_progress: categories.length > 0 ? 
                     Math.round(categories.reduce((sum: number, cat) => sum + (Number(cat.progress_percent) || 0), 0) / categories.length) : 0
             } : undefined,
         };
@@ -263,7 +243,7 @@ export default async function RoundsView({
                 pageSize={apiData.pageSize}
                 totalPages={apiData.totalPages}
                 sortBy={apiData.sortBy}
-                sortOrder={apiData.sortOrder}
+                sortOrder={apiData.sortOrder as "asc" | "desc"}
             />
         </section>
     );

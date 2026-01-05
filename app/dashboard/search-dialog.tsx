@@ -1,9 +1,9 @@
 "use client"
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { memo, useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { Clock, Command as CmdIcon, Eraser, Search, Sparkles } from "lucide-react"
+import { Clock, Command as CmdIcon, Eraser, Search, Sparkles, File, AlertCircle } from "lucide-react"
 
 import {
     CommandDialog,
@@ -12,13 +12,11 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-    CommandSeparator,
 } from "@/components/common/command"
 import { Button } from "@/components/common/button"
-import { Separator } from "@/components/common/separator"
+import { Spinner } from "@/components/common/spinner"
 import { cn } from "@/lib/utils"
 import { getFlatNavItems } from "@/utils/navigation"
-import { FileText, FileSearch, FileQuestion, FileCheck2, FileCog, FileSymlink, File } from "lucide-react"
 
 type NavItem = {
     href: string
@@ -28,19 +26,45 @@ type NavItem = {
     description?: string
     keywords?: string[]
 }
+type RemoteResult = {
+    id: string | number
+    type: string
+    title: string
+    description?: string
+    href?: string
+}
 type GroupedItems = { group: string; items: NavItem[] }
 
 const SEARCH_SHORTCUT = { key: "j", display: "⌘J" } as const
 const SEARCH_CONFIG = {
-    placeholder: "Search pages, actions, and more…",
-    emptyMessage: "No results. Try different keywords.",
-    debounceMs: 120,
-    recentLimit: 8,
-    queryHistoryLimit: 6,
+    placeholder: "SEARCH PAGES, ACTIONS, OR DOCUMENTS...",
+    emptyMessage: "No matching records found.",
+    debounceMs: 150,
+    recentLimit: 6,
+    queryHistoryLimit: 5,
 } as const
 
 const RECENT_ITEMS_KEY = "search:recent-items"
 const RECENT_QUERIES_KEY = "search:recent-queries"
+
+function SearchSkeleton() {
+    return (
+        <div className="space-y-4 p-2">
+            <div className="space-y-2">
+                <div className="h-3 w-24 rounded bg-primary/10 mx-2 mb-3" />
+                {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-lg p-2.5 bg-muted/20 border border-transparent">
+                        <div className="size-8 shrink-0 rounded-md bg-muted/40 animate-pulse" />
+                        <div className="flex flex-col gap-2 flex-1 min-w-0">
+                            <div className="h-2.5 w-1/3 rounded bg-muted/60 animate-pulse" />
+                            <div className="h-2 w-2/3 rounded bg-muted/30 animate-pulse" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
 
 function scoreItem(q: string, item: NavItem): number {
     if (!q) return 0
@@ -51,7 +75,6 @@ function scoreItem(q: string, item: NavItem): number {
     if (label.startsWith(query)) score += 30
     if (label.includes(query)) score += 20
     if (hay.includes(query)) score += 10
-    score += Math.max(0, 8 - Math.abs(label.length - query.length))
     return score
 }
 
@@ -65,40 +88,23 @@ function useDebounced<T>(value: T, delay = 120) {
 }
 
 function useLocalStorageList(key: string, limit: number) {
-    const read = useCallback((): string[] => {
-        try {
-            const raw = localStorage.getItem(key)
-            return raw ? (JSON.parse(raw) as string[]) : []
-        } catch {
-            return []
-        }
+    const [list, setList] = useState<string[]>([])
+    useEffect(() => {
+        const raw = localStorage.getItem(key)
+        if (raw) setList(JSON.parse(raw))
     }, [key])
-
-    const write = useCallback(
-        (items: string[]) => {
-            try {
-                localStorage.setItem(key, JSON.stringify(items.slice(0, limit)))
-            } catch { }
-        },
-        [key, limit]
-    )
-
-    const add = useCallback(
-        (value: string) => {
-            const cur = read()
-            const next = [value, ...cur.filter((v) => v !== value)].slice(0, limit)
-            write(next)
-        },
-        [limit, read, write]
-    )
-
+    const add = useCallback((value: string) => {
+        setList(prev => {
+            const next = [value, ...prev.filter((v) => v !== value)].slice(0, limit)
+            localStorage.setItem(key, JSON.stringify(next))
+            return next
+        })
+    }, [key, limit])
     const clear = useCallback(() => {
-        try {
-            localStorage.removeItem(key)
-        } catch { }
+        localStorage.removeItem(key)
+        setList([])
     }, [key])
-
-    return { read, write, add, clear }
+    return { list, add, clear }
 }
 
 function Highlight({ text, query }: { text: string; query: string }) {
@@ -106,330 +112,246 @@ function Highlight({ text, query }: { text: string; query: string }) {
     const q = query.toLowerCase()
     const idx = text.toLowerCase().indexOf(q)
     if (idx === -1) return <>{text}</>
-    const before = text.slice(0, idx)
     const match = text.slice(idx, idx + q.length)
-    const after = text.slice(idx + q.length)
     return (
         <>
-            <span className="text-foreground/80">{before}</span>
-            <mark className="rounded bg-primary/10 px-0.5 text-primary">{match}</mark>
-            <span className="text-foreground/80">{after}</span>
+            {text.slice(0, idx)}
+            <mark className="bg-primary/20 text-primary rounded-sm px-0.5">{match}</mark>
+            {text.slice(idx + q.length)}
         </>
     )
 }
 
-export function SearchButton({
-    onClick,
-    className,
-}: {
-    onClick?: () => void
-    className?: string
-}) {
-    return (
-        <Button
-            type="button"
-            variant="outline"
-            className={cn(
-                "h-8 w-full gap-2 border-dashed bg-transparent text-muted-foreground hover:text-foreground sm:w-[220px]",
-                className
-            )}
-            onClick={onClick}
-            aria-label="Open search dialog"
-        >
-            <Search className="size-4" aria-hidden />
-            <span className="hidden sm:inline">Search</span>
-            <kbd className="ml-auto hidden items-center gap-1 rounded bg-muted px-1.5 text-[10px] font-medium sm:inline-flex">
-                <span aria-hidden>⌘</span>
-                <span>J</span>
-            </kbd>
-        </Button>
-    )
-}
+export const SearchButton = memo(({ onClick, className }: { onClick?: () => void; className?: string }) => (
+    <Button
+        variant="outline"
+        className={cn(
+            "h-9 w-full justify-start gap-3 rounded-full border-border/40 bg-background/50 px-3 text-muted-foreground transition-all hover:bg-accent/50 hover:text-foreground sm:w-64",
+            className
+        )}
+        onClick={onClick}
+    >
+        <Search className="size-3.5" />
+        <span className="text-[10px] font-black uppercase tracking-widest">Search...</span>
+        <kbd className="ml-auto hidden items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[9px] font-black sm:inline-flex">
+            {SEARCH_SHORTCUT.display}
+        </kbd>
+    </Button>
+))
+SearchButton.displayName = "SearchButton"
 
-export const SearchDialog = memo(function SearchDialog() {
+export const SearchDialog = memo(() => {
     const router = useRouter()
     const [open, setOpen] = useState(false)
     const [rawQuery, setRawQuery] = useState("")
     const debouncedQuery = useDebounced(rawQuery, SEARCH_CONFIG.debounceMs)
     const [isPending, startTransition] = useTransition()
 
-    const recentItemsStore = useLocalStorageList(RECENT_ITEMS_KEY, SEARCH_CONFIG.recentLimit)
-    const recentQueriesStore = useLocalStorageList(
-        RECENT_QUERIES_KEY,
-        SEARCH_CONFIG.queryHistoryLimit
-    )
+    const [remoteResults, setRemoteResults] = useState<RemoteResult[] | null>(null)
+    const [remoteLoading, setRemoteLoading] = useState(false)
+    const [isError, setIsError] = useState(false)
 
-    const items = useMemo<NavItem[]>(() => {
-        try {
-            return getFlatNavItems() || []
-        } catch (err) {
-            console.error("Failed to load navigation items:", err)
-            return []
-        }
-    }, [])
+    const { list: recentHrefs, add: addRecentItem } = useLocalStorageList(RECENT_ITEMS_KEY, SEARCH_CONFIG.recentLimit)
+    const { list: recentQueries, add: addRecentQuery, clear: clearQueries } = useLocalStorageList(RECENT_QUERIES_KEY, SEARCH_CONFIG.queryHistoryLimit)
+
+    const items = useMemo(() => getFlatNavItems() || [], [])
 
     useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === SEARCH_SHORTCUT.key) {
+        const down = (e: KeyboardEvent) => {
+            if (e.key === SEARCH_SHORTCUT.key && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault()
                 setOpen((o) => !o)
             }
-            if (e.key === "Escape") setOpen(false)
         }
-        document.addEventListener("keydown", onKey)
-        return () => document.removeEventListener("keydown", onKey)
+        document.addEventListener("keydown", down)
+        return () => document.removeEventListener("keydown", down)
     }, [])
-
-    useEffect(() => {
-        if (!open) setRawQuery("")
-    }, [open])
-
-    const groups = useMemo(() => {
-        const grouped = new Map<string, NavItem[]>()
-        for (const item of items) {
-            const key = item.group || "General"
-            if (!grouped.has(key)) grouped.set(key, [])
-            grouped.get(key)!.push(item)
-        }
-        for (const [key, arr] of grouped) {
-            grouped.set(
-                key,
-                [...arr].sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }))
-            )
-        }
-        return grouped
-    }, [items])
-
-    const recentHrefs = useMemo(() => recentItemsStore.read(), [recentItemsStore])
-    const recentItems = useMemo(
-        () => recentHrefs.map((href) => items.find((i) => i.href === href)).filter(Boolean) as NavItem[],
-        [items, recentHrefs]
-    )
-
-    const [remoteResults, setRemoteResults] = useState<{ id: string | number; type: string; title: string; description?: string; href?: string }[] | null>(null)
-    const [remoteLoading, setRemoteLoading] = useState(false)
 
     useEffect(() => {
         const q = debouncedQuery.trim()
         if (!q) {
             setRemoteResults(null)
+            setIsError(false)
             return
         }
         let cancelled = false
         setRemoteLoading(true)
-        fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`, { cache: 'no-store' })
-            .then(async (r) => {
-                if (!r.ok) throw new Error('search failed')
-                const data = await r.json()
-                if (!cancelled) setRemoteResults(Array.isArray(data?.data) ? data.data : [])
+        setIsError(false)
+
+        fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`)
+            .then(async (res) => {
+                if (!res.ok) throw new Error()
+                const data = await res.json()
+                if (!cancelled) setRemoteResults(data?.data || [])
             })
-            .catch(() => { if (!cancelled) setRemoteResults([]) })
-            .finally(() => { if (!cancelled) setRemoteLoading(false) })
+            .catch(() => {
+                if (!cancelled) setIsError(true)
+            })
+            .finally(() => {
+                if (!cancelled) setRemoteLoading(false)
+            })
         return () => { cancelled = true }
     }, [debouncedQuery])
 
-    const filteredGroups: GroupedItems[] = useMemo(() => {
+    const filteredGroups = useMemo(() => {
         const q = debouncedQuery.trim()
         if (!q) {
-            const groupsArr: GroupedItems[] = []
-            if (recentItems.length) groupsArr.push({ group: "Recent", items: recentItems })
-            for (const [group, gi] of groups) groupsArr.push({ group, items: gi })
-            return groupsArr
+            const initial: GroupedItems[] = []
+            const recents = recentHrefs.map(h => items.find(i => i.href === h)).filter(Boolean) as NavItem[]
+            if (recents.length) initial.push({ group: "Recent Activity", items: recents })
+            return initial
         }
         const scored = items
-            .map((item) => ({ item, score: scoreItem(q, item) }))
-            .filter(({ score }) => score > 0)
+            .map(item => ({ item, score: scoreItem(q, item) }))
+            .filter(res => res.score > 0)
             .sort((a, b) => b.score - a.score)
-            .map((r) => r.item)
+            .map(res => res.item)
 
-        const byGroup = new Map<string, NavItem[]>()
-        for (const item of scored) {
-            const key = item.group || "General"
-            if (!byGroup.has(key)) byGroup.set(key, [])
-            byGroup.get(key)!.push(item)
-        }
-        const navGroups = Array.from(byGroup.entries()).map(([group, gi]) => ({ group, items: gi }))
-        return navGroups
-    }, [debouncedQuery, groups, items, recentItems])
+        const grouped = new Map<string, NavItem[]>()
+        scored.forEach(item => {
+            const g = item.group || "General"
+            if (!grouped.has(g)) grouped.set(g, [])
+            grouped.get(g)!.push(item)
+        })
+        return Array.from(grouped.entries()).map(([group, items]) => ({ group, items }))
+    }, [debouncedQuery, items, recentHrefs])
 
-    const navigate = useCallback(
-        (href: string, q: string) => {
-            setOpen(false)
-            recentItemsStore.add(href)
-            if (q.trim()) recentQueriesStore.add(q.trim())
-            startTransition(() => router.push(href))
-        },
-        [recentItemsStore, recentQueriesStore, router]
-    )
-
-    const openDialog = useCallback(() => setOpen(true), [])
+    const onSelect = useCallback((href: string) => {
+        setOpen(false)
+        addRecentItem(href)
+        if (rawQuery.trim()) addRecentQuery(rawQuery.trim())
+        startTransition(() => router.push(href))
+    }, [router, rawQuery, addRecentItem, addRecentQuery])
 
     return (
         <>
-            <SearchButton className="w-full sm:w-[240px]" onClick={openDialog} />
+            <SearchButton onClick={() => setOpen(true)} />
 
-            <CommandDialog open={open} onOpenChange={setOpen} className="sm:rounded-xl">
-                <div className="w-[92vw] max-w-2xl p-0">
-                    <div className="flex items-center gap-2 px-3 pt-3">
-                        <CmdIcon className="size-4 text-muted-foreground" aria-hidden />
+            <CommandDialog open={open} onOpenChange={setOpen}>
+                <div className="overflow-hidden bg-background">
+                    <div className="flex items-center border-b border-border/40 px-4">
+                        <Search className="mr-3 size-4 text-muted-foreground/50" />
                         <CommandInput
                             placeholder={SEARCH_CONFIG.placeholder}
                             value={rawQuery}
                             onValueChange={setRawQuery}
-                            className="h-10 border-0 bg-transparent text-sm focus:ring-0"
+                            className="h-12 w-full bg-transparent text-[11px] font-bold uppercase tracking-wide placeholder:text-muted-foreground/40 focus:outline-none"
                         />
+                        {(isPending || remoteLoading) && <Spinner className="size-3" />}
                     </div>
-                    <Separator className="my-2" />
 
-                    {!debouncedQuery && (
-                        <QueryHistory
-                            getHistory={recentQueriesStore.read}
-                            onClear={recentQueriesStore.clear}
-                            onApply={(val) => setRawQuery(val)}
-                        />
-                    )}
+                    <CommandList className="max-h-[400px] p-2">
+                        <CommandEmpty className="py-6 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            {SEARCH_CONFIG.emptyMessage}
+                        </CommandEmpty>
 
-                    {/* Results */}
-                    <CommandList className="max-h-[60vh] overflow-auto">
-                        <CommandEmpty>{SEARCH_CONFIG.emptyMessage}</CommandEmpty>
+                        {isError && (
+                            <div className="mx-2 mb-4 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5">
+                                <AlertCircle className="size-3.5 text-destructive" />
+                                <span className="text-[9px] font-black uppercase tracking-widest text-destructive/80">
+                                    System Sync Interrupted — Some records may be missing
+                                </span>
+                            </div>
+                        )}
 
-                        <AnimatePresence initial={false} mode="popLayout">
-                            {/* Remote results group */}
-                            {remoteResults && (
-                                <motion.div
-                                    key="remote"
-                                    initial={{ opacity: 0, y: 6 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -6 }}
-                                    transition={{ duration: 0.15 }}
-                                >
-                                    <CommandGroup heading={remoteLoading ? "Searching…" : "Results"}>
-                                        {remoteResults.length === 0 && !remoteLoading ? (
-                                            <div className="px-3 py-2 text-xs text-muted-foreground">No matching tenders, RFQs, or documents.</div>
-                                        ) : (
-                                            remoteResults.map((r) => (
-                                                <CommandItem
-                                                    key={`${r.type}:${r.id}`}
-                                                    value={`${r.title} ${r.description || ''}`}
-                                                    onSelect={() => {
-                                                        setOpen(false)
-                                                        if (r.href) {
-                                                            startTransition(() => router.push(r.href!))
-                                                        }
-                                                    }}
-                                                    className="cursor-pointer px-3 py-2 aria-selected:bg-accent aria-selected:text-accent-foreground"
-                                                    disabled={isPending}
-                                                >
-                                                    <div className="flex w-full min-w-0 items-center gap-2">
-                                                        <File className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="truncate text-sm font-medium">
-                                                                <Highlight text={r.title} query={debouncedQuery} />
-                                                            </div>
-                                                            {r.description ? (
-                                                                <div className="truncate text-xs text-muted-foreground">
-                                                                    <Highlight text={r.description} query={debouncedQuery} />
-                                                                </div>
-                                                            ) : null}
-                                                        </div>
-                                                    </div>
-                                                </CommandItem>
-                                            ))
-                                        )}
+                        {!rawQuery && recentQueries.length > 0 && (
+                            <div className="mb-4 px-2 pt-2">
+                                <div className="mb-2 flex items-center justify-between">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Recent Searches</span>
+                                    <Button variant="ghost" size="sm" onClick={clearQueries} className="h-6 px-2 text-[9px] font-black uppercase text-destructive hover:bg-destructive/10">
+                                        <Eraser className="mr-1 size-3" /> Clear
+                                    </Button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {recentQueries.map((q) => (
+                                        <button
+                                            key={q}
+                                            onClick={() => setRawQuery(q)}
+                                            className="flex items-center gap-1.5 rounded-md border border-border/40 bg-muted/30 px-2 py-1 text-[10px] font-bold transition-colors hover:bg-muted"
+                                        >
+                                            <Clock className="size-3 text-muted-foreground" />
+                                            {q}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <AnimatePresence mode="popLayout">
+                            {remoteLoading && (
+                                <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                    <SearchSkeleton />
+                                </motion.div>
+                            )}
+
+                            {!remoteLoading && remoteResults && remoteResults.length > 0 && (
+                                <motion.div key="remote" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                    <CommandGroup heading={<span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/70">Database Records</span>}>
+                                        {remoteResults.map((r) => (
+                                            <CommandItem
+                                                key={`${r.type}-${r.id}`}
+                                                onSelect={() => r.href && onSelect(r.href)}
+                                                className="group flex cursor-pointer items-center gap-3 rounded-lg p-2.5 aria-selected:bg-accent"
+                                            >
+                                                <div className="flex size-8 items-center justify-center rounded-md bg-muted transition-colors group-aria-selected:bg-background">
+                                                    <File className="size-3.5 text-muted-foreground group-aria-selected:text-primary" />
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[11px] font-black uppercase tracking-tight text-foreground">
+                                                        <Highlight text={r.title} query={rawQuery} />
+                                                    </span>
+                                                    {r.description && <span className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-tighter">{r.description}</span>}
+                                                </div>
+                                            </CommandItem>
+                                        ))}
                                     </CommandGroup>
                                 </motion.div>
                             )}
 
-                            {filteredGroups.map(({ group, items }, gi) => (
+                            {filteredGroups.map(({ group, items }, idx) => (
                                 <motion.div
                                     key={group}
-                                    initial={{ opacity: 0, y: 6 }}
+                                    initial={{ opacity: 0, y: 5 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -6 }}
-                                    transition={{ duration: 0.15 }}
+                                    transition={{ delay: idx * 0.05 }}
                                 >
-                                    {gi > 0 && <CommandSeparator />}
-                                    <CommandGroup heading={group}>
-                                        {items.map((item) => {
-                                            const Icon = item.icon
-                                            return (
-                                                <CommandItem
-                                                    key={item.href}
-                                                    value={`${item.label} ${item.description || ""} ${item.keywords?.join(" ") || ""}`}
-                                                    onSelect={() => navigate(item.href, debouncedQuery)}
-                                                    className="cursor-pointer px-3 py-2 aria-selected:bg-accent aria-selected:text-accent-foreground"
-                                                    disabled={isPending}
-                                                >
-                                                    <div className="flex w-full min-w-0 items-center gap-2">
-                                                        {Icon ? (
-                                                            <Icon className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
-                                                        ) : (
-                                                            <Sparkles className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
-                                                        )}
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="truncate text-sm font-medium">
-                                                                <Highlight text={item.label} query={debouncedQuery} />
-                                                            </div>
-                                                            {item.description ? (
-                                                                <div className="truncate text-xs text-muted-foreground">
-                                                                    <Highlight text={item.description} query={debouncedQuery} />
-                                                                </div>
-                                                            ) : null}
-                                                        </div>
-                                                        <kbd className="ml-2 hidden items-center gap-1 rounded bg-muted px-1.5 text-[10px] font-medium sm:inline-flex">
-                                                            ↵
-                                                        </kbd>
-                                                    </div>
-                                                </CommandItem>
-                                            )
-                                        })}
+                                    <CommandGroup heading={<span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/70">{group}</span>} className="mb-2">
+                                        {items.map((item) => (
+                                            <CommandItem
+                                                key={item.href}
+                                                onSelect={() => onSelect(item.href)}
+                                                className="group flex cursor-pointer items-center gap-3 rounded-lg p-2.5 aria-selected:bg-accent"
+                                            >
+                                                <div className="flex size-8 items-center justify-center rounded-md bg-muted transition-colors group-aria-selected:bg-background">
+                                                    {item.icon ? <item.icon className="size-3.5 text-muted-foreground group-aria-selected:text-primary" /> : <File className="size-3.5" />}
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[11px] font-black uppercase tracking-tight text-foreground">
+                                                        <Highlight text={item.label} query={rawQuery} />
+                                                    </span>
+                                                    {item.description && <span className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-tighter">{item.description}</span>}
+                                                </div>
+                                                <kbd className="ml-auto hidden text-[9px] font-black text-muted-foreground/30 group-aria-selected:block">ENTER ↵</kbd>
+                                            </CommandItem>
+                                        ))}
                                     </CommandGroup>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
                     </CommandList>
+
+                    <div className="flex items-center justify-between border-t border-border/40 bg-muted/20 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                        <div className="flex gap-4">
+                            <span className="flex items-center gap-1"><kbd className="rounded bg-muted px-1 py-0.5">↑↓</kbd> Navigate</span>
+                            <span className="flex items-center gap-1"><kbd className="rounded bg-muted px-1 py-0.5">↵</kbd> Select</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Sparkles className="size-3" /> Quick Action System
+                        </div>
+                    </div>
                 </div>
             </CommandDialog>
         </>
     )
 })
-
-function QueryHistory({
-    getHistory,
-    onClear,
-    onApply,
-}: {
-    getHistory: () => string[]
-    onClear: () => void
-    onApply: (q: string) => void
-}) {
-    const history = getHistory()
-    if (!history.length) return null
-    return (
-        <div className="flex flex-wrap items-center gap-2 px-3 pb-2">
-            <span className="text-xs text-muted-foreground">Recent searches:</span>
-            <div className="flex flex-wrap items-center gap-2">
-                {history.map((q) => (
-                    <button
-                        key={q}
-                        type="button"
-                        onClick={() => onApply(q)}
-                        className="rounded-full border bg-muted/60 px-2.5 py-1 text-xs text-foreground/90 transition-colors hover:bg-muted"
-                    >
-                        <Clock className="mr-1 inline size-3.5 text-muted-foreground" />
-                        {q}
-                    </button>
-                ))}
-                <button
-                    type="button"
-                    onClick={onClear}
-                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted"
-                    aria-label="Clear recent searches"
-                >
-                    <Eraser className="size-3.5" />
-                    Clear
-                </button>
-            </div>
-        </div>
-    )
-}
+SearchDialog.displayName = "SearchDialog"

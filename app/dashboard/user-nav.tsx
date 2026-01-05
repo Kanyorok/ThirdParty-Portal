@@ -1,30 +1,30 @@
-"use client";
+"use client"
 
-import { useState, useTransition, useCallback } from "react";
-import { signOut, useSession } from "next-auth/react";
-import { UserNavUI } from "@/app/dashboard/side-nav/user-menu"
+import { useState, useTransition, useCallback } from "react"
+import { signOut, useSession } from "next-auth/react"
+import { UserNavUI } from "./side-nav/user-nav-ui"
 
 export const UserNav = () => {
-    const { data: session, status } = useSession();
-    const [isPending, startTransition] = useTransition();
-    const [isOpen, setIsOpen] = useState(false);
+    const { data: session, status } = useSession()
+    const [isPending, startTransition] = useTransition()
+    const [isOpen, setIsOpen] = useState(false)
 
     const handleLogout = useCallback(() => {
-        startTransition(() => {
-            signOut();
-        });
-    }, []);
+        startTransition(async () => {
+            await signOut({ callbackUrl: "/signin" })
+        })
+    }, [])
 
-    const isLoading = status === 'loading';
+    const isLoading = status === 'loading'
 
     return (
         <UserNavUI
-            user={session?.user}
+            user={session?.user as any}
             isLoading={isLoading}
             isPending={isPending}
             isOpen={isOpen}
             onLogout={handleLogout}
             onOpenChange={setIsOpen}
         />
-    );
-};
+    )
+}

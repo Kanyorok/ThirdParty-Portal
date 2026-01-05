@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || "";
-
 export async function GET(request: NextRequest) {
     try {
         // Get session for authentication
@@ -18,7 +16,7 @@ export async function GET(request: NextRequest) {
     const roundId = parts[parts.indexOf("applications") + 1];
 
         // Call Laravel backend to get application progress
-        const res = await fetch(`${EXTERNAL_API_BASE}/api/v1/prequalification/applications/${roundId}/progress`, {
+        const res = await fetch(`${process.env.NEXTAUTH_URL}/api/v1/prequalification/applications/${roundId}/progress`, {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",

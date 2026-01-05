@@ -1,5 +1,10 @@
 import { FieldErrors, FieldValues, DeepRequired } from "react-hook-form";
-import { RegisterFormInputs, ThirdPartyDetailsFormInputs } from "@/lib/validation";
+import {
+    RegisterFormInputs,
+    ThirdPartyDetailsFormInputs,
+    mapUserTypeToApi,
+    USER_TYPE_MAP
+} from "@/lib/validation";
 
 type TouchedFields<T> = {
     [K in keyof T]?: T[K] extends object ? TouchedFields<T[K]> : boolean;
@@ -11,113 +16,110 @@ export const getFieldStatus = <T extends FieldValues>(
     touchedFields: TouchedFields<DeepRequired<T>>,
     watchedFields: T
 ): string => {
-    if (errors[fieldName] && touchedFields[fieldName]) {
-        return "error";
-    }
-    if (touchedFields[fieldName] && watchedFields[fieldName] !== "" && watchedFields[fieldName] !== null && watchedFields[fieldName] !== undefined && !errors[fieldName]) {
-        return "success";
-    }
+    const hasError = errors[fieldName] && touchedFields[fieldName];
+    const hasValue = watchedFields[fieldName] !== "" &&
+        watchedFields[fieldName] !== null &&
+        watchedFields[fieldName] !== undefined;
+    const isValid = touchedFields[fieldName] && hasValue && !errors[fieldName];
+
+    if (hasError) return "error";
+    if (isValid) return "success";
     return "default";
 };
 
-const normalizeToE164 = (input: string): string => {
+const E164_MIN_LENGTH = 8;
+const E164_MAX_LENGTH = 15;
+
+export const normalizeToE164 = (input: string): string => {
     if (!input) return input;
+
     const digits = input.replace(/\D+/g, "");
-    if (digits.length >= 8 && digits.length <= 15) return `+${digits}`;
-    return input; // fallback; server will still validate
+
+    if (digits.length >= E164_MIN_LENGTH && digits.length <= E164_MAX_LENGTH) {
+        return `+${digits}`;
+    }
+
+    return input;
 };
 
 export const transformRegisterFormDataForApi = (formData: RegisterFormInputs) => {
-    const { firstName, lastName, email, phone, password, confirmPassword } = formData;
     return {
-        FirstName: firstName,
-        LastName: lastName,
-        Email: email,
-        Phone: normalizeToE164(phone),
-        Password: password,
-        Password_confirmation: confirmPassword,
+        ThirdPartyType: mapUserTypeToApi(formData.userType),
+        FirstName: formData.firstName,
+        LastName: formData.lastName,
+        Email: formData.email,
+        Phone: normalizeToE164(formData.phone),
+        Password: formData.password,
+        Password_confirmation: formData.confirmPassword,
     };
 };
 
 export const transformThirdPartyDetailsForApi = (formData: ThirdPartyDetailsFormInputs) => {
-    const {
-        thirdPartyName, tradingName, businessType, registrationNumber,
-        taxPIN, vatNumber, country, physicalAddress, email,
-        phone, website, thirdPartyType,
-    } = formData;
-
-    const mappedThirdPartyType = (() => {
-        switch (thirdPartyType) {
-            case "S": return "S";
-            case "T": return "T";
-            default: return "";
-        }
-    })();
-
     return {
-        ThirdPartyName: thirdPartyName,
-        TradingName: tradingName,
-        BusinessType: businessType,
-        RegistrationNumber: registrationNumber,
-        TaxPIN: taxPIN,
-        VATNumber: vatNumber,
-        Country: country,
-        PhysicalAddress: physicalAddress,
-        Email: email,
-        Phone: normalizeToE164(phone),
-        Website: website,
-        ThirdPartyType: mappedThirdPartyType,
+        ThirdPartyName: formData.thirdPartyName,
+        TradingName: formData.tradingName,
+        BusinessType: formData.businessType,
+        RegistrationNumber: formData.registrationNumber,
+        TaxPIN: formData.taxPIN,
+        VATNumber: formData.vatNumber,
+        Country: formData.country,
+        PhysicalAddress: formData.physicalAddress,
+        Email: formData.email,
+        Phone: normalizeToE164(formData.phone),
+        Website: formData.website,
+        ThirdPartyType: mapUserTypeToApi(formData.userType),
     };
 };
 
-export const mapRegisterServerErrorsToFormFields = (serverErrors: Record<string, string[]>): Record<keyof RegisterFormInputs, string[]> => {
-    const mappedErrors: Record<keyof RegisterFormInputs, string[]> = {} as Record<keyof RegisterFormInputs, string[]>;
+type ServerErrorMap<T> = {
+    [key: string]: keyof T;
+};
 
-    const fieldMap: { [key: string]: keyof RegisterFormInputs } = {
-        FirstName: "firstName",
-        LastName: "lastName",
-        Email: "email",
-        Phone: "phone",
-        Password: "password",
-        Password_confirmation: "confirmPassword",
-    };
+const createErrorMapper = <T extends Record<string, any>>(
+    fieldMap: ServerErrorMap<T>
+) => {
+    return (serverErrors: Record<string, string[]>): Partial<Record<keyof T, string[]>> => {
+        const mappedErrors: Partial<Record<keyof T, string[]>> = {};
 
-    for (const serverField in serverErrors) {
-        if (Object.prototype.hasOwnProperty.call(serverErrors, serverField)) {
+        for (const serverField in serverErrors) {
+            if (!Object.prototype.hasOwnProperty.call(serverErrors, serverField)) {
+                continue;
+            }
+
             const clientField = fieldMap[serverField];
             if (clientField) {
                 mappedErrors[clientField] = serverErrors[serverField];
             }
         }
-    }
-    return mappedErrors;
-};
 
-export const mapThirdPartyServerErrorsToFormFields = (serverErrors: Record<string, string[]>): Record<keyof ThirdPartyDetailsFormInputs, string[]> => {
-    const mappedErrors: Record<keyof ThirdPartyDetailsFormInputs, string[]> = {} as Record<keyof ThirdPartyDetailsFormInputs, string[]>;
-
-    const fieldMap: { [key: string]: keyof ThirdPartyDetailsFormInputs } = {
-        ThirdPartyName: "thirdPartyName",
-        TradingName: "tradingName",
-        BusinessType: "businessType",
-        RegistrationNumber: "registrationNumber",
-        TaxPIN: "taxPIN",
-        VATNumber: "vatNumber",
-        Country: "country",
-        PhysicalAddress: "physicalAddress",
-        Email: "email",
-        Phone: "phone",
-        Website: "website",
-        ThirdPartyType: "thirdPartyType",
+        return mappedErrors;
     };
-
-    for (const serverField in serverErrors) {
-        if (Object.prototype.hasOwnProperty.call(serverErrors, serverField)) {
-            const clientField = fieldMap[serverField];
-            if (clientField) {
-                mappedErrors[clientField] = serverErrors[serverField];
-            }
-        }
-    }
-    return mappedErrors;
 };
+
+const registerFieldMap: ServerErrorMap<RegisterFormInputs> = {
+    FirstName: "firstName",
+    LastName: "lastName",
+    Email: "email",
+    Phone: "phone",
+    Password: "password",
+    Password_confirmation: "confirmPassword",
+    ThirdPartyType: "userType",
+};
+
+const thirdPartyFieldMap: ServerErrorMap<ThirdPartyDetailsFormInputs> = {
+    ThirdPartyName: "thirdPartyName",
+    TradingName: "tradingName",
+    BusinessType: "businessType",
+    RegistrationNumber: "registrationNumber",
+    TaxPIN: "taxPIN",
+    VATNumber: "vatNumber",
+    Country: "country",
+    PhysicalAddress: "physicalAddress",
+    Email: "email",
+    Phone: "phone",
+    Website: "website",
+    ThirdPartyType: "userType",
+};
+
+export const mapRegisterServerErrorsToFormFields = createErrorMapper<RegisterFormInputs>(registerFieldMap);
+export const mapThirdPartyServerErrorsToFormFields = createErrorMapper<ThirdPartyDetailsFormInputs>(thirdPartyFieldMap);

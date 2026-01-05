@@ -1,48 +1,99 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { AlertCircle, Loader2 } from "lucide-react"
-import { useRegisterForm } from "@/hooks/use-register"
-import { FormField } from "@/components/signin/form-fields/login-fields"
-import { Input } from "@/components/common/input"
-import { Button } from "@/components/common/button"
-import { PasswordField } from "@/components/signin/form-fields/pwd"
-// import { ContactSection } from "@/components/common/contact-us"
-import { AuthHeader } from "@/components/layout/auth-header"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { FormField } from "@/components/signin/form-field"
+import { PasswordField } from "@/components/signin/password-field"
+import { AuthHeader } from "@/components/signin/auth-header"
+// import { ContactSection } from "@/components/signin/contact-section"
+import { registerUser } from "@/actions/auth"
+
+const registerSchema = z
+  .object({
+    firstName: z.string().min(2, "First name is required"),
+    lastName: z.string().min(2, "Last name is required"),
+    email: z.string().email("Please enter a valid email address"),
+    phone: z.string().min(10, "Phone number is required"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Must mention one uppercase letter")
+      .regex(/[a-z]/, "Must mention one lowercase letter")
+      .regex(/[0-9]/, "Must mention one number"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+
+type RegisterValues = z.infer<typeof registerSchema>
 
 export function RegisterForm() {
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   const {
-    form,
-    showPassword,
-    setShowPassword,
-    showConfirmPassword,
-    setShowConfirmPassword,
-    onSubmit,
-    fieldStatuses,
-    isSubmitting,
-    isValid,
-    errors,
-    watchedFields,
-    touchedFields,
-  } = useRegisterForm()
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting, isValid, touchedFields },
+  } = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    mode: "onChange",
+  })
 
-  const { register } = form
+  // Watch fields for dynamic styling
+  const watchedFields = watch()
 
-  const inputBaseStyles =
-    "w-full py-4 px-4 text-base border rounded-lg transition-all duration-200 focus:ring-2 focus:outline-none"
+  // Helper to determine field status
+  const getFieldStatus = (fieldName: keyof RegisterValues) => {
+    if (errors[fieldName]) return "error"
+    if (touchedFields[fieldName] && !errors[fieldName] && watchedFields[fieldName]) return "success"
+    return "default"
+  }
 
-  const resolveInputStyles = (field: keyof typeof fieldStatuses, hasError?: boolean) => {
-    if (hasError) return `${inputBaseStyles} border-red-300 bg-red-50 focus:ring-red-400`
-    if (fieldStatuses[field] === "success") return `${inputBaseStyles} border-green-300 bg-green-50 focus:ring-green-400`
-    return `${inputBaseStyles} border-gray-200 hover:border-gray-300 focus:ring-blue-600 focus:border-blue-600`
+  const fieldStatuses = {
+    firstName: getFieldStatus("firstName"),
+    lastName: getFieldStatus("lastName"),
+    email: getFieldStatus("email"),
+    phone: getFieldStatus("phone"),
+    password: getFieldStatus("password"),
+    confirmPassword: getFieldStatus("confirmPassword"),
+  }
+
+  const onSubmit = async (data: RegisterValues) => {
+    // try {
+    await registerUser(data)
+    // } catch (error) {
+    //   // Error is handled by the action which throws
+    //   console.error(error)
+    // }
+  }
+
+  const resolveInputStyles = (fieldName: keyof RegisterValues, hasError: boolean) => {
+    if (hasError) {
+      return "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50"
+    }
+    if (touchedFields[fieldName] && !errors[fieldName] && watchedFields[fieldName]) {
+      return "border-green-300 focus:border-green-500 focus:ring-green-500/20 bg-green-50"
+    }
+    return "border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 sm:p-10">
+    <div className="w-full max-w-2xl mx-auto bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100 dark:border-zinc-800 p-8">
       <AuthHeader />
 
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(onSubmit)}
         noValidate
         aria-label="Registration form"
         className="space-y-8"
@@ -116,48 +167,40 @@ export function RegisterForm() {
                 if (data && /\D/.test(data)) {
                   e.preventDefault()
                 }
-                  // Prevent input if already at max length
-                  const target = e.target as HTMLInputElement
-                  if (target && target.value.length >= 15) {
-                    e.preventDefault()
-                  }
               }
 
               const handlePaste = (e: any) => {
                 const pasted = e?.clipboardData?.getData?.("text") || (window as any).clipboardData?.getData?.("Text") || ""
                 if (!pasted) return
-                  let cleaned = pasted.replace(/\D/g, "")
-                  if (cleaned.length > 15) cleaned = cleaned.slice(0, 15)
-                  if (cleaned === pasted && cleaned.length <= 15) return // no invalid chars and within limit
-                  e.preventDefault()
-                  const target = e.target as HTMLInputElement
-                  const start = target.selectionStart ?? target.value.length
-                  const end = target.selectionEnd ?? start
-                  let newVal = target.value.slice(0, start) + cleaned + target.value.slice(end)
-                  if (newVal.length > 15) newVal = newVal.slice(0, 15)
-                  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
-                  if (nativeSetter) {
-                    nativeSetter.call(target, newVal)
-                  } else {
-                    target.value = newVal
-                  }
-                  const ev = new Event("input", { bubbles: true })
-                  target.dispatchEvent(ev)
-                  // let react-hook-form know about the change
-                  if (phoneReg.onChange) phoneReg.onChange({ target } as any)
+                const cleaned = pasted.replace(/\D/g, "")
+                if (cleaned === pasted) return // no invalid chars
+                e.preventDefault()
+                const target = e.target as HTMLInputElement
+                const start = target.selectionStart ?? target.value.length
+                const end = target.selectionEnd ?? start
+                const newVal = target.value.slice(0, start) + cleaned + target.value.slice(end)
+                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+                if (nativeSetter) {
+                  nativeSetter.call(target, newVal)
+                } else {
+                  target.value = newVal
+                }
+                const ev = new Event("input", { bubbles: true })
+                target.dispatchEvent(ev)
+                // let react-hook-form know about the change
+                if (phoneReg.onChange) phoneReg.onChange({ target } as any)
               }
 
               const handleChange = (e: any) => {
-                  let cleaned = (e.target.value || "").replace(/\D/g, "")
-                  if (cleaned.length > 15) cleaned = cleaned.slice(0, 15)
-                  if (cleaned !== e.target.value) {
-                    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
-                    if (nativeSetter) nativeSetter.call(e.target, cleaned)
-                    else e.target.value = cleaned
-                    const ev = new Event("input", { bubbles: true })
-                    e.target.dispatchEvent(ev)
-                  }
-                  if (phoneReg.onChange) phoneReg.onChange(e)
+                const cleaned = (e.target.value || "").replace(/\D/g, "")
+                if (cleaned !== e.target.value) {
+                  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+                  if (nativeSetter) nativeSetter.call(e.target, cleaned)
+                  else e.target.value = cleaned
+                  const ev = new Event("input", { bubbles: true })
+                  e.target.dispatchEvent(ev)
+                }
+                if (phoneReg.onChange) phoneReg.onChange(e)
               }
 
               return (
@@ -171,7 +214,6 @@ export function RegisterForm() {
                   onBeforeInput={handleBeforeInput}
                   onPaste={handlePaste}
                   onChange={handleChange}
-                    maxLength={15}
                   className={resolveInputStyles("phone", !!errors.phone)}
                 />
               )
@@ -205,7 +247,7 @@ export function RegisterForm() {
               watchedFields.confirmPassword === watchedFields.password &&
               watchedFields.confirmPassword !== ""
             }
-            onPaste={(e) => e.preventDefault()}
+            onPaste={(e: React.ClipboardEvent) => e.preventDefault()}
           />
         </div>
 
