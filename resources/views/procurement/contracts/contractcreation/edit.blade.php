@@ -1,84 +1,158 @@
 @extends('layouts.app')
-@section('title', 'Create Contract')
+@section('title', 'Edit Contract')
 
 @section('content')
     <div class="container mt-4">
-        <h4>➕ New Contract</h4>
-
-        <form>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Award Reference</label>
-                    <select class="form-select">
-                        <option>AWRD/2025/004 – OfficePro Suppliers</option>
-                    </select>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4>✏️ Edit Contract Draft</h4>
+                        @if($award)
+                            <p class="text-muted mb-0">
+                                Editing contract for: <strong>{{ $award->tender->TenderNo ?? 'N/A' }}</strong>
+                            </p>
+                        @endif
+                    </div>
+                    <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Contracts
+                    </a>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Contract Reference</label>
-                    <input type="text" class="form-control" value="CONTRACT/PROC/2025/009">
-                </div>
-            </div>
 
-            <div class="mb-3">
-                <label class="form-label">Contract Title</label>
-                <input type="text" class="form-control" value="Supply of Office Furniture">
-            </div>
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Start Date</label>
-                    <input type="date" class="form-control" value="2025-07-01">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">End Date</label>
-                    <input type="date" class="form-control" value="2025-12-31">
-                </div>
-            </div>
+                @if($award)
+                    <!-- Award Information Card -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">🏆 Award Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <td><strong>Tender Reference:</strong></td>
+                                            <td>{{ $award->tender->TenderNo ?? 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Tender Title:</strong></td>
+                                            <td>{{ $award->tender->Title ?? 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Winning Supplier:</strong></td>
+                                            <td>{{ 
+                                                $award->winningSupplier->supplierMaster->party->TradingName 
+                                                ?? $award->winningSupplier->thirdParty->TradingName 
+                                                ?? $award->winningSupplier->thirdParty->Name 
+                                                ?? $award->winningSupplier->SupplierName 
+                                                ?? 'N/A' 
+                                            }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <td><strong>Contract Reference:</strong></td>
+                                            <td>{{ $award->ContractRef ?? 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Award Date:</strong></td>
+                                            <td>{{ $award->AwardDate ? $award->AwardDate->format('Y-m-d') : 'N/A' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="mb-3">
-                <label class="form-label">Upload Contract (PDF)</label>
-                <input type="file" class="form-control">
-            </div>
+                    <!-- Contract Edit Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">📋 Contract Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ route('contracts.update', $award->Id) }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="award_type" value="{{ $type ?? 'tender' }}">
 
-            <div class="mb-3">
-                <label class="form-label">Notes</label>
-                <textarea class="form-control"
-                          rows="3">Standard 6-month delivery agreement with phased supply.</textarea>
-            </div>
+                                <!-- Contract Basic Information -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Contract Value <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" name="contract_value" class="form-control"
+                                                   value="{{ old('contract_value', $award->ContractValue ?? $award->AwardedAmount ?? '') }}"
+                                                   step="0.01" min="0" placeholder="0.00">
+                                            <span class="input-group-text">{{ is_object($award->tender->Currency) ? $award->tender->Currency->Code : ($award->tender->Currency ?? 'KES') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-            <!-- 🧩 Contract Items Breakdown -->
-            <h5 class="mt-4">📦 Contract Items Breakdown</h5>
-            <table class="table table-bordered">
-                <thead class="table-light">
-                <tr>
-                    <th>Item Description</th>
-                    <th>Qty</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
-                    <th>Delivery Timeline</th>
-                    <th>Milestone</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td><input type="text" class="form-control" value="Office Desk – Executive"></td>
-                    <td><input type="number" class="form-control" value="50"></td>
-                    <td><input type="number" class="form-control" value="15000"></td>
-                    <td><input type="text" class="form-control" value="750000" readonly></td>
-                    <td><input type="text" class="form-control" value="Within 30 days"></td>
-                    <td><input type="text" class="form-control" value="Phase 1 Delivery"></td>
-                </tr>
-                <!-- more rows -->
-                </tbody>
-            </table>
+                                <!-- Contract Duration -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Contract Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="start_date" class="form-control"
+                                               value="{{ old('start_date', $award->ContractStartDate ? $award->ContractStartDate->format('Y-m-d') : '') }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Contract End Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="end_date" class="form-control"
+                                               value="{{ old('end_date', $award->ContractEndDate ? $award->ContractEndDate->format('Y-m-d') : '') }}">
+                                    </div>
+                                </div>
 
-            <div class="text-end mt-2">
-                <button type="button" class="btn btn-outline-secondary btn-sm">➕ Add Item</button>
-            </div>
+                                <!-- Terms and Conditions -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Payment Terms <span class="text-danger">*</span></label>
+                                        <textarea name="payment_terms" class="form-control" rows="3"
+                                                  placeholder="Specify payment schedule, milestones, and conditions">{{ old('payment_terms', $award->PaymentTerms ?? '') }}</textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Delivery Terms</label>
+                                        <textarea name="delivery_terms" class="form-control" rows="3"
+                                                  placeholder="Specify delivery timeline, locations, and acceptance criteria">{{ old('delivery_terms', $award->DeliveryTerms ?? '') }}</textarea>
+                                    </div>
+                                </div>
 
-            <div class="mt-4 text-end">
-                <button class="btn btn-primary">💾 Save Contract</button>
+                                <div class="mb-3">
+                                    <label class="form-label">Special Conditions</label>
+                                    <textarea name="special_conditions" class="form-control" rows="3"
+                                              placeholder="Any special conditions, penalties, or additional requirements">{{ old('special_conditions', $award->SpecialConditions ?? '') }}</textarea>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="row">
+                                    <div class="col-md-12 text-end">
+                                        <a href="{{ route('contracts.show', ['id' => $award->Id, 'type' => $type ?? 'tender']) }}" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Update Contract
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    <div class="alert alert-warning">
+                        Award not found.
+                    </div>
+                @endif
             </div>
-        </form>
+        </div>
     </div>
 @endsection

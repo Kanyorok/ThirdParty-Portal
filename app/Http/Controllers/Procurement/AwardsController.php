@@ -7,6 +7,7 @@ use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\RFQEvaluation;
+use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\TenderSupplier;
 use App\Models\Procurement\TenderCommitteeEvaluation;
@@ -36,7 +37,7 @@ class AwardsController extends Controller
         $search = $request->get('search');
 
         // Build Tender entries with workflow status
-        $tenderAwards = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
+        $tenderAwards = TenderAward::with(['tender', 'winningSupplier.supplierMaster.party'])
             ->get()
             ->map(function ($award) {
                 $status = $award->AwardStatus;
@@ -54,7 +55,7 @@ class AwardsController extends Controller
                     'title' => $award->tender->Title ?? 'N/A',
                     'status' => $status,
                     'status_class' => $statusClass,
-                    'winning_bidder' => $award->winningSupplier->thirdParty->TradingName ?? '--',
+                    'winning_bidder' => $award->winningSupplier->supplierMaster->party->TradingName ?? '--',
                     'award_date' => optional($award->AwardDate)->format('Y-m-d') ?? ($award->CreatedOn?->format('Y-m-d') ?? '--'),
                     'tender_id' => $award->tender->Id ?? $award->TenderID,
                     'award_id' => $award->Id,
@@ -91,7 +92,7 @@ class AwardsController extends Controller
             ->toBase();
 
         // RFQ awarded entries
-        $rfqAwards = RFQAward::with(['rfq', 'supplier.thirdParty'])
+        $rfqAwards = RFQAward::with(['rfq', 'supplier.supplierMaster.party'])
             ->get()
             ->map(function ($award) {
                 return [
@@ -104,7 +105,7 @@ class AwardsController extends Controller
                     ],
                     'status' => 'Awarded',
                     'status_class' => 'bg-success',
-                    'winning_bidder' => $award->supplier->thirdParty->TradingName ?? '--',
+                    'winning_bidder' => $award->supplier->supplierMaster->party->TradingName ?? '--',
                     'award_date' => ($award->CreatedOn?->format('Y-m-d')) ?? '--',
                     'rfq_id' => $award->RFQId ?? ($award->rfq->Id ?? null),
                     'award_id' => $award->Id,
@@ -202,12 +203,29 @@ class AwardsController extends Controller
      */
     public function showUnifiedAward($id, $type = null)
     {
-        $tender = Tender::findOrFail($id);
-        
-        // Get most recent award
-        $existingAward = TenderAward::where('TenderID', $id)
-            ->orderByDesc('Id')
-            ->first();
+        $tender = null;
+        $existingAward = null;
+
+        if ($type === 'rfq') {
+            $rfq = RFQ::findOrFail($id);
+            // Map RFQ to Tender-like structure for the view
+            $rfq->TenderNo = $rfq->RFQNumber;
+            $rfq->Title = $rfq->Subject ?? ($rfq->Comments ?? 'RFQ Award');
+            $tender = $rfq;
+
+            $existingAward = RFQAward::where('RFQId', $id)
+                ->with(['supplier.supplierMaster.party'])
+                ->orderByDesc('Id')
+                ->first();
+        } else {
+            $tender = Tender::findOrFail($id);
+            
+            // Get most recent award
+            $existingAward = TenderAward::where('TenderID', $id)
+                ->with(['winningSupplier.supplierMaster.party'])
+                ->orderByDesc('Id')
+                ->first();
+        }
 
         // Check if user can approve
         $canApprove = false;
@@ -218,7 +236,13 @@ class AwardsController extends Controller
             $isSubmitter = $existingAward->CreatedBy == Auth::id();
             
             // Only check approval permissions if award is pending
-            if ($existingAward->AwardStatus === 'Pending') {
+            // Note: RFQAward doesn't have AwardStatus column by default in some versions, 
+            // but if it does or if we treat existence as awarded, we need to be careful.
+            // Assuming standard workflow for TenderAward. For RFQAward, it's usually created as approved/final in this system.
+            
+            $status = $existingAward->AwardStatus ?? 'Approved'; // Default to Approved for RFQ if column missing
+
+            if ($status === 'Pending') {
                 $canApprove = $this->workflow->canApproveModel($existingAward, Auth::user());
                 
                 // User who submitted cannot approve their own award
@@ -230,15 +254,15 @@ class AwardsController extends Controller
             }
         }
 
-        // Determine type if not specified
-        if (!$type) {
+        // Determine type if not specified (fallback for Tenders)
+        if (!$type && $tender instanceof Tender) {
             $type = $this->determineTenderType($tender);
         }
 
         // Get evaluation data
         $evaluationData = [];
         if ($type === 'rfq') {
-            $evaluationData = $this->getResponsiveSuppliers($id);
+            $evaluationData = $this->getResponsiveRFQSuppliers($id);
         } else {
             $evaluationData = $this->getConsolidatedScores($id);
         }
@@ -1022,6 +1046,27 @@ public function approve(Request $request)
                     'is_responsive' => $tenderSupplier->bidResponsiveness->IsResponsive ?? false,
                 ];
             });
+    }
+
+    /**
+     * Get responsive suppliers for RFQ
+     */
+    protected function getResponsiveRFQSuppliers($rfqId)
+    {
+        return RFQResponse::where('RFQId', $rfqId)
+            ->get()
+            ->map(function ($response) {
+                return [
+                    'id' => $response->SupplierId,
+                    'name' => $response->SupplierName ?? 'Unknown Supplier',
+                    'quoted_amount' => $response->TotalPayable ?? 0,
+                    'delivery_time' => $response->DurationDays . ' Days',
+                    'payment_terms' => 'N/A', // Not in RFQResponse directly
+                    'is_responsive' => true, // Assuming responsive if response exists for now
+                ];
+            })
+            ->unique('id')
+            ->values();
     }
 
     /**

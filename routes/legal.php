@@ -42,6 +42,9 @@ Route::middleware(['module:800000'])->prefix('legal')->group(function () {
 
         // Contracts
         Route::resource('maintenance', LegalContractController::class);
+        Route::patch('maintenance/{id}/submit', [LegalContractController::class, 'submitForApproval'])->name('maintenance.submit');
+        Route::patch('maintenance/{id}/approve', [LegalContractController::class, 'approve'])->name('maintenance.approve');
+        Route::patch('maintenance/{id}/reject', [LegalContractController::class, 'reject'])->name('maintenance.reject');
 
         // Clauses
         Route::resource('clauses', LegalClauseController::class);

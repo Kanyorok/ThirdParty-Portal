@@ -108,7 +108,8 @@ class SupplierService extends ThirdPartiesService
     public static function getSupplierDetails($SupplierId)
     {
         return DB::table(DB::raw('t_Suppliers AS s WITH (NOLOCK)'))
-            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 's.ThirdPartyId')
+            ->join(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 's.SupplierMasterId', '=', 'sm.Id')
+            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 'sm.ThirdPartyId')
             ->select(
                 DB::raw('tp.TradingName as Name'),
                 DB::raw("COALESCE(tp.Email, '') as Email"),
@@ -122,8 +123,9 @@ class SupplierService extends ThirdPartiesService
 
     public static function getSuppliers()
     {
-        return DB::table(DB::raw('t_SupplierMaster AS s WITH (NOLOCK)'))
-            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 's.ThirdPartyId')
+        return DB::table(DB::raw('t_Suppliers AS s WITH (NOLOCK)'))
+            ->join(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 's.SupplierMasterId', '=', 'sm.Id')
+            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 'sm.ThirdPartyId')
             ->select(
                 DB::raw('tp.TradingName as SupplierName'),
                 DB::raw("COALESCE(tp.Email, '') as Email"),
@@ -131,7 +133,7 @@ class SupplierService extends ThirdPartiesService
                 DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
                 's.CategoryId as CategoryId',
                 DB::raw('s.Id as SupplierId'),
-                DB::raw('s.ThirdPartyId as ThirdPartyId')
+                DB::raw('sm.ThirdPartyId as ThirdPartyId')
             )
             ->whereNull('s.DeletedOn')
             ->orderBy('tp.TradingName', 'asc')
