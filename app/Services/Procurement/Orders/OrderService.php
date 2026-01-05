@@ -234,7 +234,8 @@ class OrderService
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_Orders.AccountID', '=', 't_Suppliers.Id')
-            ->leftJoin(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', DB::raw('t_Suppliers.ThirdPartyID'))
+            ->leftJoin(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 't_Suppliers.SupplierMasterId', '=', 'sm.Id')
+            ->leftJoin(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'sm.ThirdPartyId', '=', 'tp.Id')
             ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), function ($join) {
                 $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))

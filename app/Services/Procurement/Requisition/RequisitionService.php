@@ -109,10 +109,6 @@ public static function addRequisition($branch, $department, $remarks, $procureme
  * Auto-populate requisition items from procurement plan
  * Uses PlanLineRef to track which items came from the plan
  */
-/**
- * Auto-populate requisition items from procurement plan
- * Uses PlanLineRef to track which items came from the plan
- */
 private static function autoPopulateItemsFromPlan($requisitionId, $planId, User $actor)
 {
     try {
@@ -191,7 +187,7 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
             ->select(
                 'pli.LineItemID',
                 'pli.ItemID',
-                'pli.ItemDescription as PlanDescription',
+                // 'pli.ItemDescription as PlanDescription', // Column does not exist
                 'pli.Quantity as PlanQuantity',
                 'pli.UOMID',
                 'pli.UnitPrice',
@@ -446,7 +442,8 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                     WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
                     THEN t_ConsolidatedProcurementPlan.Title + ' - ' + t_ConsolidatedProcurementPlan.ReferenceNumber
                     ELSE NULL
-                END AS PlanTitle")
+                END AS PlanTitle"),
+                't_Requisitions.PlanRef'
             ])
             ->groupBy(
                 't_Requisitions.Id',
@@ -461,9 +458,11 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                 't_ConsolidatedProcurementPlan.PlanID',
                 't_ConsolidatedProcurementPlan.Title',
                 't_ConsolidatedProcurementPlan.ReferenceNumber',
+                't_ConsolidatedProcurementPlan.ReferenceNumber',
                 't_Requisitions.CreatedBy',
                 't_Users.Name',
-                't_Requisitions.DocStatus'
+                't_Requisitions.DocStatus',
+                't_Requisitions.PlanRef'
             )
             ->first();
     }
@@ -488,11 +487,36 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
 
     public static function fetchProcurementPlan()
     {
-        return DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
+        // 1. Get the ID for 'RFQ' procurement method
+        // We look for 'RFQ' in CodeDetails where CodeID is ProcurementMethod
+        $rfqMethodId = DB::table('t_CodeDetails')
+            ->where('CodeID', 'ProcurementMethod')
+            ->where(function($q) {
+                $q->where('Value', 'RFQ')
+                  ->orWhere('Description', 'RFQ');
+            })
+            ->value('ID');
+
+        $query = DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
             ->select('PlanID', 'Title', 'ReferenceNumber')
-            ->where('Status', '=', 'Ap')
+            ->where(function($q) {
+                $q->where('Status', '=', 'Ap')
+                  ->orWhere('Status', '=', 'Approved'); // Handle both cases just to be safe
+            })
             ->whereNull('DeletedBy')
-            ->whereNull('DeletedOn')
-            ->get();
+            ->whereNull('DeletedOn');
+
+        // 2. Filter by having at least one RFQ line item
+        if ($rfqMethodId) {
+            $query->whereExists(function ($subquery) use ($rfqMethodId) {
+                $subquery->select(DB::raw(1))
+                    ->from('t_PlanLineItem')
+                    ->whereColumn('t_PlanLineItem.PlanID', 't_ConsolidatedProcurementPlan.PlanID')
+                    ->where('t_PlanLineItem.ProcurementMethod', $rfqMethodId)
+                    ->whereNull('t_PlanLineItem.DeletedOn');
+            });
+        }
+
+        return $query->get();
     }
 }

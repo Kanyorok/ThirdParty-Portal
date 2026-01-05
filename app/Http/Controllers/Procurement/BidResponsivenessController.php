@@ -383,11 +383,18 @@ class BidResponsivenessController extends Controller
             DB::commit();
             
             $message = "Bulk responsiveness check completed: {$responsiveCount} responsive, {$nonResponsiveCount} non-responsive";
-            return redirect()->back()->with('success', $message);
+            
+            return response()->json([
+                'success' => true,
+                'message' => $message
+            ]);
             
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to perform bulk check: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to perform bulk check: ' . $e->getMessage()
+            ], 500);
         }
     }
 

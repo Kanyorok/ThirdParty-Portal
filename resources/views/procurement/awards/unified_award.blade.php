@@ -61,10 +61,14 @@
         <div class="alert alert-info alert-dismissible fade show">
             <i class="fas fa-info-circle"></i> 
             This {{ $type === 'rfq' ? 'RFQ' : 'tender' }} has already been awarded to 
-            <strong>{{ $existingAward->winningSupplier->thirdParty->ThirdPartyName
+            <strong>{{ 
+                $existingAward->winningSupplier->supplierMaster->party->TradingName 
+                ?? $existingAward->supplier->supplierMaster->party->TradingName 
+                ?? $existingAward->winningSupplier->thirdParty->ThirdPartyName
                 ?? $existingAward->winningSupplier->thirdParty->TradingName
                 ?? $existingAward->winningSupplier->SupplierName
-                ?? ('Supplier #'.$existingAward->WinningSupplierID) }}</strong> 
+                ?? ('Supplier #'.($existingAward->WinningSupplierID ?? $existingAward->SupplierId)) 
+            }}</strong> 
             on {{ optional($existingAward->AwardDate)->format('d/m/Y') ?? optional($existingAward->CreatedOn)->format('d/m/Y') }}.
             @if(method_exists($existingAward,'status_badge') || isset($existingAward->status_badge))
             Status: <span class="badge {{ $existingAward->status_badge['class'] ?? 'bg-warning text-dark' }}">{{ $existingAward->status_badge['text'] ?? $existingAward->AwardStatus }}</span>
@@ -166,37 +170,59 @@
                             </div>
 
                             <!-- Action Buttons -->
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <a href="{{ route('procawards.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left"></i> Back to Awards List
-                        </a>
-                        @if($type === 'tender')
-                            <a href="{{ route('bidscores.index') }}?tender_id={{ $tender->Id }}" class="btn btn-outline-info ms-2">
-                                <i class="fas fa-chart-bar"></i> View Score Details
-                            </a>
-                        @endif
-                    </div>
-                    <div>
-                        @if($existingAward && ($existingAward->AwardStatus === \App\Models\Procurement\TenderAward::STATUS_PENDING))
-                            <form action="{{ route('awards.cancel', $existingAward->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this pending award and re-open for re-award?');">
-                                @csrf
-                                <input type="hidden" name="cancel_reason" value="Cancelled to re-award">
-                                <button type="submit" class="btn btn-outline-danger me-2">
-                                    <i class="fas fa-times"></i> Cancel Award
-                                </button>
-                            </form>
-                        @endif
-                        <button type="button" class="btn btn-info me-2" onclick="previewAward()">
-                            <i class="fas fa-eye"></i> Preview
-                        </button>
-                        <button type="submit" class="btn {{ $type === 'rfq' ? 'btn-success' : 'btn-primary' }}">
-                            <i class="fas fa-check"></i> Create Award (Pending Approval)
-                        </button>
-                    </div>
-                </div>
                         </div>
                     @endif
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <div>
+                            <a href="{{ route('procawards.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Awards List
+                            </a>
+                            @if($type === 'tender')
+                                <a href="{{ route('bidscores.index') }}?tender_id={{ $tender->Id }}" class="btn btn-outline-info ms-2">
+                                    <i class="fas fa-chart-bar"></i> View Score Details
+                                </a>
+                            @endif
+                        </div>
+                        <div>
+                            @if($existingAward && ($existingAward->AwardStatus === \App\Models\Procurement\TenderAward::STATUS_PENDING))
+                                <form action="{{ route('awards.cancel', $existingAward->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this pending award and re-open for re-award?');">
+                                    @csrf
+                                    <input type="hidden" name="cancel_reason" value="Cancelled to re-award">
+                                    <button type="submit" class="btn btn-outline-danger me-2">
+                                        <i class="fas fa-times"></i> Cancel Award
+                                    </button>
+                                </form>
+                            @endif
+
+                            {{-- Contract Creation Button --}}
+                            @if($existingAward && ($existingAward->AwardStatus === 'Approved' || $type === 'rfq'))
+                                @if(empty($existingAward->ContractStatus))
+                                    <a href="{{ route('contracts.createFromAward', ['awardId' => $existingAward->Id, 'type' => $type]) }}" class="btn btn-success me-2">
+                                        <i class="fas fa-file-contract"></i> Create Contract
+                                    </a>
+                                @elseif($existingAward->ContractStatus === 'Draft Created')
+                                    <a href="{{ route('contracts.edit', ['id' => $existingAward->Id, 'type' => $type]) }}" class="btn btn-warning me-2">
+                                        <i class="fas fa-file-signature"></i> Continue Contract Draft
+                                    </a>
+                                @else
+                                    <a href="{{ route('contracts.show', ['id' => $existingAward->Id, 'type' => $type]) }}" class="btn btn-primary me-2">
+                                        <i class="fas fa-file-alt"></i> View Contract
+                                    </a>
+                                @endif
+                            @endif
+
+                            <button type="button" class="btn btn-info me-2" onclick="previewAward()">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                            @if(!$existingAward)
+                                <button type="submit" class="btn {{ $type === 'rfq' ? 'btn-success' : 'btn-primary' }}">
+                                    <i class="fas fa-check"></i> Create Award (Pending Approval)
+                                </button>
+                            @endif
+                        </div>
+                    </div>
                 </form>
             @endif
         </div>

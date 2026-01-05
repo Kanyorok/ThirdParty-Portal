@@ -28,7 +28,7 @@
                         @endif
 
                         @if($contract->ContractStatus === 'Draft Created')
-                            <a href="{{ route('contracts.edit', $contract->Id) }}" class="btn btn-primary">
+                            <a href="{{ route('contracts.edit', ['id' => $contract->Id, 'type' => $type ?? 'tender']) }}" class="btn btn-primary">
                                 <i class="fas fa-edit"></i> Edit Contract
                             </a>
                         @elseif(in_array($contract->ContractStatus, ['Approved', 'Executed']) && $contract->ContractStatus !== 'Terminated')
@@ -133,7 +133,13 @@
                                 <table class="table table-borderless">
                                     <tr>
                                         <td><strong>Winning Supplier:</strong></td>
-                                        <td>{{ $contract->winningSupplier->thirdParty->TradingName ?? ($contract->winningSupplier->thirdParty->Name ?? 'N/A') }}</td>
+                                        <td>{{ 
+                                            $contract->winningSupplier->supplierMaster->party->TradingName 
+                                            ?? $contract->winningSupplier->thirdParty->TradingName 
+                                            ?? $contract->winningSupplier->thirdParty->Name 
+                                            ?? $contract->winningSupplier->SupplierName 
+                                            ?? 'N/A' 
+                                        }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Contact Person:</strong></td>
@@ -258,7 +264,27 @@
                             <div class="mt-3">
                                 <h6 class="text-primary">⚖️ Special Conditions</h6>
                                 <div class="bg-light p-3 rounded">
-                                    {{ $contract->SpecialConditions }}
+                                    @php
+                                        $conditions = json_decode($contract->SpecialConditions, true);
+                                    @endphp
+
+                                    @if(json_last_error() === JSON_ERROR_NONE && is_array($conditions))
+                                        @foreach($conditions as $item)
+                                            @if(isset($item['type']) && $item['type'] === 'Original Special Conditions')
+                                                <div class="mb-2">
+                                                    {{ $item['content'] }}
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                        
+                                        {{-- If no original conditions found in JSON, but array exists (e.g. only files), show nothing or message --}}
+                                        @if(collect($conditions)->where('type', 'Original Special Conditions')->isEmpty())
+                                            <span class="text-muted">No text conditions specified.</span>
+                                        @endif
+                                    @else
+                                        {{-- Legacy: Display as raw string --}}
+                                        {{ $contract->SpecialConditions }}
+                                    @endif
                                 </div>
                             </div>
                         @endif
@@ -322,56 +348,66 @@
                     </div>
                 @endif
 
-                <!-- Contract History/Timeline -->
-                <div class="card mt-4">
-                    <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">📊 Contract Timeline</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="timeline">
-                            <div class="timeline-item">
-                                <div class="timeline-marker bg-success"></div>
-                                <div class="timeline-content">
-                                    <h6 class="timeline-title">Award Approved</h6>
-                                    <p class="timeline-description">
-                                        Tender awarded
-                                        to {{ $contract->winningSupplier->thirdParty->TradingName ?? ($contract->winningSupplier->thirdParty->Name ?? 'N/A') }}
-                                    </p>
-                                    <small
-                                        class="text-muted">{{ $contract->ApprovedOn ? $contract->ApprovedOn->format('M d, Y H:i') : 'N/A' }}</small>
+                <!-- Approval Actions -->
+                @if($canApprove)
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">✨ Approval Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ route('contracts.approve', $contract->Id) }}" method="POST" id="approvalForm">
+                                @csrf
+                                <input type="hidden" name="award_type" value="{{ $type ?? 'tender' }}">
+                                <div class="mb-3">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea name="approval_remarks" class="form-control" rows="3" placeholder="Enter remarks (optional)"></textarea>
                                 </div>
-                            </div>
-
-                            @if($contract->hasContract())
-                                <div class="timeline-item">
-                                    <div class="timeline-marker bg-info"></div>
-                                    <div class="timeline-content">
-                                        <h6 class="timeline-title">Contract Created</h6>
-                                        <p class="timeline-description">
-                                            Contract {{ $contract->ContractRef }} created
-                                        </p>
-                                        <small
-                                            class="text-muted">{{ $contract->ModifiedOn ? $contract->ModifiedOn->format('M d, Y H:i') : 'N/A' }}</small>
-                                    </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success flex-grow-1">
+                                        <i class="fas fa-check-circle"></i> Approve Contract
+                                    </button>
+                                    <button type="button" class="btn btn-danger flex-grow-1" onclick="rejectContract()">
+                                        <i class="fas fa-times-circle"></i> Reject
+                                    </button>
                                 </div>
-                            @endif
-
-                            @if($contract->ContractApprovedOn)
-                                <div class="timeline-item">
-                                    <div class="timeline-marker bg-primary"></div>
-                                    <div class="timeline-content">
-                                        <h6 class="timeline-title">Contract Approved</h6>
-                                        <p class="timeline-description">
-                                            Contract approved and ready for execution
-                                        </p>
-                                        <small
-                                            class="text-muted">{{ $contract->ContractApprovedOn->format('M d, Y H:i') }}</small>
-                                    </div>
-                                </div>
-                            @endif
+                            </form>
                         </div>
                     </div>
+                @endif
+
+                <!-- Workflow History -->
+                <div class="card mt-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">📊 Workflow History</h5>
+                    </div>
+                    <div class="card-body">
+                        @if($history && $history->count() > 0)
+                            <div class="timeline">
+                                @foreach($history as $log)
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker {{ $log->Action === 'Approved' ? 'bg-success' : ($log->Action === 'Rejected' ? 'bg-danger' : 'bg-info') }}"></div>
+                                        <div class="timeline-content">
+                                            <h6 class="timeline-title">{{ $log->Action }}</h6>
+                                            <p class="timeline-description">
+                                                <strong>{{ $log->user->name ?? 'System' }}</strong>: {{ $log->Comment ?? 'No comments' }}
+                                            </p>
+                                            <small class="text-muted">
+                                                {{ \Carbon\Carbon::parse($log->CreatedOn)->format('M d, Y H:i') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center text-muted py-3">
+                                No workflow history available.
+                            </div>
+                        @endif
+                    </div>
                 </div>
+
+                <!-- Legacy Timeline (Hidden or Removed if replaced) -->
+                <!-- You can keep the old one below or remove it. I will replace it with the new dynamic history for clarity -->
             </div>
         </div>
     </div>
@@ -451,6 +487,7 @@
             // Create FormData
             const formData = new FormData();
             formData.append('contract_document', fileInput.files[0]);
+            formData.append('award_type', '{{ $type ?? "tender" }}');
             formData.append('_token', '{{ csrf_token() }}');
 
             // Create XMLHttpRequest for progress tracking
@@ -583,6 +620,13 @@
                 form.method = 'POST';
                 form.action = '{{ route("contracts.submitForReview", $contract->Id) }}';
 
+                // Add award_type hidden input
+                const typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'award_type';
+                typeInput.value = '{{ $type ?? "tender" }}';
+                form.appendChild(typeInput);
+
                 // Add CSRF token
                 const csrfToken = document.createElement('input');
                 csrfToken.type = 'hidden';
@@ -624,6 +668,7 @@
                             </div>
                             <form action="{{ route('contracts.addAddendum', $contract->Id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
+                                <input type="hidden" name="award_type" value="{{ $type ?? 'tender' }}">
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label">Addendum Title <span class="text-danger">*</span></label>
@@ -665,6 +710,25 @@
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             const modal = new bootstrap.Modal(document.getElementById('addendumModal'));
             modal.show();
+        }
+        function rejectContract() {
+             // Create a modal or prompt for rejection reason if more detail needed, 
+             // but for now we use the main form.
+             // We need to change the action to reject route. 
+             // Ideally, separate forms are cleaner, but we can reuse the form with JS.
+             
+             const form = document.getElementById('approvalForm');
+             const remarks = form.querySelector('textarea[name="approval_remarks"]').value;
+             
+             if (!remarks.trim()) {
+                 alert('Please provide remarks for rejection.');
+                 return;
+             }
+             
+             if (confirm('Are you sure you want to REJECT this contract?')) {
+                 form.action = '{{ route("contracts.reject", $contract->Id) }}';
+                 form.submit();
+             }
         }
     </script>
 @endsection

@@ -152,7 +152,7 @@ class PrequalificationApplicationController extends Controller
                 if ($supplierId) {
                     $supplierCats = DB::table('t_ThirdParty_SupplierCategory as tpsc')
                         ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'tpsc.supplier_category_id')
-                        ->where('tpsc.third_party_id', $supplierId)
+                        ->where('tpsc.third_party_id', $supplierMaster->ThirdPartyId)
                         ->whereNull('sc.DeletedOn')
                         ->where(function ($q) {
                             $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive');

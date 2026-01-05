@@ -211,9 +211,8 @@ class Order extends Model
      */
     public function workflowHistory()
     {
-        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'OrderID')
-            ->where('Source', 'OrderID')
-            ->orderBy('CreatedOn', 'desc');
+        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'Id')
+            ->where('Source', 'OrderID');
     }
 
      /**
