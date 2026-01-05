@@ -39,27 +39,17 @@ class GoodsReceiptController extends Controller
             ->distinct()
             ->pluck('POID');
 
-        // Fetch candidate POs not yet used in GRNs, include totals for approval check
+        // Fetch approved POs not yet used in GRNs
         $Orders = DB::connection('sqlsrv')
             ->table('t_Orders')
             ->whereNotIn('OrderNo', $usedOrderNos)
+            ->where(function($query) {
+                $query->where('DocStatus', 'A')  // Approved
+                      ->orWhere('DocStatus', 'a'); // Handle case variations
+            })
             ->select('Id', 'OrderNo', 'ExtOrdNum', 'AccountID', 'OrdTotIncl')
             ->orderByDesc('CreatedOn')
             ->get();
-
-        // Keep only fully approved POs using the centralized ApprovalService
-        try {
-            $approvalService = app(\App\Services\Core\ApprovalService::class);
-            $Orders = $Orders->filter(function ($order) use ($approvalService) {
-                $poId = (int)($order->Id ?? 0);
-                $amount = (float)($order->OrdTotIncl ?? 0);
-                return $poId > 0 && $approvalService->isFullyApproved('purchase_order', $poId, $amount);
-            })->values();
-        } catch (\Throwable $e) {
-            // If approval check fails, fall back to showing none rather than unapproved POs
-            Log::error('GRN create: approval filter failed', ['error' => $e->getMessage()]);
-            $Orders = collect();
-        }
 
         $OrderLines = DB::connection('sqlsrv')->table('t_OrderLines as ol')
             ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
@@ -79,11 +69,26 @@ class GoodsReceiptController extends Controller
 
 
         $linesGrouped = $OrderLines->groupBy('iOrderID');
+        
+        Log::info('GRN Create Debug', [
+            'total_orders' => $Orders->count(),
+            'total_lines' => $OrderLines->count(),
+            'grouped_keys' => $linesGrouped->keys()->toArray()
+        ]);
+        
         foreach ($Orders as $order) {
             $order->OrderLines = $linesGrouped[$order->Id] ?? collect();
+            Log::info('Order Lines Attached', [
+                'order_id' => $order->Id,
+                'order_no' => $order->OrderNo,
+                'lines_count' => $order->OrderLines->count()
+            ]);
         }
+        
+        // Fetch all active stores
+        $stores = DB::connection('sqlsrv')->table('t_Stores')->select('Id', 'StoreName')->get();
 
-        return view('procurement.goodreceipts.create', compact('Orders'));
+        return view('procurement.goodreceipts.create', compact('Orders', 'stores'));
     }
 
 
@@ -100,6 +105,12 @@ class GoodsReceiptController extends Controller
             'SupplierID' => 'required',
         ]);
 
+        // Get a valid default store
+        $defaultStoreId = DB::connection('sqlsrv')->table('t_Stores')->where('Id', 1)->exists() ? 1 : DB::connection('sqlsrv')->table('t_Stores')->value('Id');
+        
+        // If no stores exist, this is critical, but we'll fallback to 1 to attempt save (or handle error upstream)
+        $defaultStoreId = $defaultStoreId ?? 1;
+
         DB::beginTransaction();
         try {
             foreach ($request->items as $item) {
@@ -111,7 +122,7 @@ class GoodsReceiptController extends Controller
                     'POID'             => $request->POID,
                     'SupplierId'       => $request->SupplierID,
                     'ItemNo'           => $item['ItemNo'],
-                    'StoreID'          => $item['StoreID'] ?? '2',
+                    'StoreID'          => $item['StoreID'] ?? $defaultStoreId,
                     'TransferTo'       => $item['TransferTo'] ?? null,
                     'TransferStatus'   => $item['TransferTo'] ?? null,
                     'POQTY'            => $item['POQTY'] ?? 0,
@@ -140,7 +151,7 @@ class GoodsReceiptController extends Controller
                         'UOM'          => optional($grn->item)->UOM,
                         'UnitCost'     => optional($grn->item)->UnitCost ?? 0,
                         'Store'        => $grn->StoreID,
-                        'Branch'       => $grn->TransferTo ?? $authUser->BranchId ?? null,
+                        'Branch'       => $authUser->BranchId ?? null,
                         'CurrentQty'   => (int) $grn->ReceivedQTY,
                         'Min'          => 0,
                         'Reorder'      => 0,

@@ -348,32 +348,7 @@
                     </div>
                 @endif
 
-                <!-- Approval Actions -->
-                @if($canApprove)
-                    <div class="card mb-4 border-primary">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">✨ Approval Actions</h5>
-                        </div>
-                        <div class="card-body">
-                            <form action="{{ route('contracts.approve', $contract->Id) }}" method="POST" id="approvalForm">
-                                @csrf
-                                <input type="hidden" name="award_type" value="{{ $type ?? 'tender' }}">
-                                <div class="mb-3">
-                                    <label class="form-label">Remarks</label>
-                                    <textarea name="approval_remarks" class="form-control" rows="3" placeholder="Enter remarks (optional)"></textarea>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-success flex-grow-1">
-                                        <i class="fas fa-check-circle"></i> Approve Contract
-                                    </button>
-                                    <button type="button" class="btn btn-danger flex-grow-1" onclick="rejectContract()">
-                                        <i class="fas fa-times-circle"></i> Reject
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                @endif
+                  {{-- Approval Actions removed as per request --}}
 
                 <!-- Workflow History -->
                 <div class="card mt-4">
@@ -650,9 +625,28 @@
         }
 
         function executeContract() {
-            if (confirm('Execute this contract? This will mark the contract as active and binding.')) {
-                // TODO: Implement contract execution
-                alert('Feature coming soon: Contract execution workflow');
+            if (confirm('Are you sure you want to EXECUTE this contract? This will make it active.')) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route("contracts.execute", $contract->Id) }}';
+
+                // Add award_type hidden input
+                const typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'award_type';
+                typeInput.value = '{{ $type ?? "tender" }}';
+                form.appendChild(typeInput);
+
+                // Add CSRF token
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+
+                document.body.appendChild(form);
+                form.submit();
             }
         }
 

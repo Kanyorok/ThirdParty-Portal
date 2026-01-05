@@ -83,31 +83,25 @@
                     <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d/m/Y H:i') }}</td>
                     <td>
                       @php
-                        // Authoritative status resolution using approvals workflow
-                        $docType = 'purchase_order';
-                        $orderId = (int)($item->Id ?? 0);
-                        $orderTotal = (float)($item->OrdTotIncl ?? 0);
-
-                        // 1) Explicit rejection check
-                        $rejected = \Illuminate\Support\Facades\DB::table('t_Approvals')
-                            ->where('DocType', $docType)
-                            ->where('DocumentId', $orderId)
-                            ->where('Status', 'rejected')
-                            ->exists();
-
-                        // 2) Full approval check via ApprovalService
-                        $approved = false;
-                        if (!$rejected && $orderId > 0) {
-                            try {
-                                $approved = app(\App\Services\Core\ApprovalService::class)
-                                    ->isFullyApproved($docType, $orderId, $orderTotal);
-                            } catch (\Throwable $e) {
-                                $approved = false; // default to pending on errors
-                            }
-                        }
-
-                        $statusText = $approved ? 'Approved' : ($rejected ? 'Rejected' : 'Pending');
-                        $badgeClass = $approved ? 'badge bg-success' : ($rejected ? 'badge bg-danger' : 'badge bg-warning text-dark');
+                          // Use DocStatus field directly from database (trim to remove any whitespace)
+                          $docStatus = trim($item->DocStatus ?? 'P');
+                          
+                          // Map status codes to display text and badge classes (matching ApprovalEnum)
+                          $statusMap = [
+                              'A' => ['text' => 'Approved', 'class' => 'badge bg-success'],
+                              'R' => ['text' => 'Rejected', 'class' => 'badge bg-danger'],
+                              'S' => ['text' => 'Submitted', 'class' => 'badge bg-warning'],
+                              'P' => ['text' => 'Pending', 'class' => 'badge bg-info'],
+                              'Ca' => ['text' => 'Cancelled', 'class' => 'badge bg-secondary'],
+                              'Co' => ['text' => 'Completed', 'class' => 'badge bg-primary'],
+                              '' => ['text' => 'Pending', 'class' => 'badge bg-info'],
+                          ];
+                          
+                          $status = $statusMap[$docStatus] ?? ['text' => "Unknown ($docStatus)", 'class' => 'badge bg-secondary'];
+                          $statusText = $status['text'];
+                          $badgeClass = $status['class'];
+                          $approved = ($docStatus === 'A');
+                          $rejected = ($docStatus === 'R');
                       @endphp
                       <span class="{{ $badgeClass }}">{{ $statusText }}</span>
                     </td>

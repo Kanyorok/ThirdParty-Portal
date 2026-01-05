@@ -332,8 +332,8 @@
                         });
                     })
                     .catch(error => {
+                        // Log error silently without showing to user
                         console.error('Error fetching plan details:', error);
-                        alert('Failed to fetch plan details');
                     });
             });
         });

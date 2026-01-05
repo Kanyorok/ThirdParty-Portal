@@ -755,6 +755,7 @@ Route::post('contracts/{id}/add-addendum', [ContractsController::class, 'addAdde
 // Contracts - Approval Queue (specific routes before generic)
 Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approvalQueue');
 Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
+Route::post('contracts/{id}/execute', [ContractsController::class, 'execute'])->name('contracts.execute');
 Route::post('contracts/{id}/reject', [ContractsController::class, 'rejectContract'])->name('contracts.reject');
 
 // Contract Creation from Awards (specific routes before generic)
