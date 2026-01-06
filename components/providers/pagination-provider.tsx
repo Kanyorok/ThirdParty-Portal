@@ -1,14 +1,22 @@
 "use client"
 
 import React, { createContext, useContext, useTransition } from "react"
+<<<<<<< Updated upstream
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { PaginatedResponse } from "@/types/property"
+=======
+import { PaginationLink } from "@/types/property"
+>>>>>>> Stashed changes
 
 interface PaginationContextType {
     currentPage: number
     lastPage: number
     total: number
+<<<<<<< Updated upstream
     links: PaginatedResponse<any>["meta"]["links"]
+=======
+    links: PaginationLink[]
+>>>>>>> Stashed changes
     isPending: boolean
     onPageChange: (page: number) => void
 }
@@ -18,6 +26,7 @@ const PaginationContext = createContext<PaginationContextType | undefined>(undef
 export function PaginationProvider({
     children,
     meta,
+<<<<<<< Updated upstream
 }: {
     children: React.ReactNode
     meta: PaginatedResponse<any>["meta"]
@@ -33,6 +42,23 @@ export function PaginationProvider({
 
         startTransition(() => {
             router.push(`${pathname}?${params.toString()}`)
+=======
+    onPageChange,
+}: {
+    children: React.ReactNode
+    meta: any
+    onPageChange: (page: number) => void
+}) {
+    const [isPending, startTransition] = useTransition()
+
+    const handlePageChange = (url: string | null) => {
+        if (!url) return
+        const urlParams = new URLSearchParams(url.split("?")[1])
+        const page = parseInt(urlParams.get("page") || "1")
+
+        startTransition(() => {
+            onPageChange(page)
+>>>>>>> Stashed changes
         })
     }
 
@@ -44,7 +70,11 @@ export function PaginationProvider({
                 total: meta.total,
                 links: meta.links,
                 isPending,
+<<<<<<< Updated upstream
                 onPageChange: handlePageChange,
+=======
+                onPageChange: (page) => startTransition(() => onPageChange(page)),
+>>>>>>> Stashed changes
             }}
         >
             {children}

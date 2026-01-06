@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { getRentableProperties } from "@/lib/api/properties"
+<<<<<<< Updated upstream
 import { RentablePropertiesList } from "@/components/dashboard/property/property-listing"
 import { PaginationProvider } from "@/components/providers/pagination-provider"
 import { SharedPagination } from "@/components/common/shared-pagination"
@@ -16,12 +17,25 @@ export default function PropertyRegistry() {
     const [searchQuery, setSearchQuery] = useState("")
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
+=======
+import { RentablePropertiesList } from "@/components/dashboard/property-listing"
+import { PaginationProvider } from "@/components/providers/pagination-provider"
+import { SharedPagination } from "@/components/common/shared-pagination"
+import { Skeleton } from "@/components/common/skeleton"
+
+export default function PropertyRegistry() {
+    const [page, setPage] = useState(1)
+    const [searchQuery, setSearchQuery] = useState("")
+
+    const { data, isLoading, isError } = useQuery({
+>>>>>>> Stashed changes
         queryKey: ['rentable-properties', page],
         queryFn: () => getRentableProperties(page),
         placeholderData: (previousData) => previousData,
     })
 
     if (isError) return (
+<<<<<<< Updated upstream
         <div className="flex flex-col items-center justify-center min-h-[450px] space-y-6 bg-destructive/[0.01] rounded-[3rem] border-2 border-dashed border-destructive/10">
             <div className="h-20 w-20 bg-destructive/10 rounded-[2rem] flex items-center justify-center text-destructive animate-pulse">
                 <AlertCircle className="h-10 w-10" />
@@ -92,6 +106,36 @@ export default function PropertyRegistry() {
                     <h3 className="text-lg font-black text-foreground uppercase tracking-widest">Registry Empty</h3>
                     <p className="text-sm text-muted-foreground/60 mt-2 font-medium">No properties are currently cataloged here.</p>
                 </div>
+=======
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-destructive text-xs font-mono bg-destructive/5 px-4 py-2 rounded-full border border-destructive/10">
+                Registry Synchronization Error
+            </div>
+        </div>
+    )
+
+    return (
+        <div className="space-y-6">
+            {isLoading && !data ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-8">
+                    {[...Array(6)].map((_, i) => (
+                        <Skeleton key={i} className="h-64 w-full rounded-3xl" />
+                    ))}
+                </div>
+            ) : (
+                <PaginationProvider
+                    meta={data?.meta}
+                    onPageChange={(newPage) => setPage(newPage)}
+                >
+                    <div className="space-y-8">
+                        <RentablePropertiesList initialData={data} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+
+                        <div className="px-8 pb-12 border-t border-border/40 mt-10">
+                            <SharedPagination />
+                        </div>
+                    </div>
+                </PaginationProvider>
+>>>>>>> Stashed changes
             )}
         </div>
     )
