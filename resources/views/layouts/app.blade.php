@@ -242,10 +242,6 @@
     <script src="{{ asset('js/partial-forms.js') }}" defer></script>
 
     @stack('scripts')
-
-    <script>
-        window.__DEFAULT_ACTIVE_ROUTE__ = @json(request() - > path() ? '/'.request() - > path() : '/');
-    </script>
     <script>
         // Refresh Feather icons after partial content loads
         document.addEventListener('partial:loaded', function() {

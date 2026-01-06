@@ -210,7 +210,7 @@ class TenderAward extends Model
             'ModifiedBy' => $user->Id,
         ]);
     }
-   
+
     public function cancel(User $user, string $reason)
     {
         $this->update([
@@ -225,21 +225,7 @@ class TenderAward extends Model
         return 'tender_award';
     }
 
-     /**
-     * Workflow history relationship
-     */
-    public function workflowHistory()
-    {
-        return $this->morphMany(
-            WorkflowHistory::class,
-            'source',
-            'Source',
-            'SourceID',
-            'Id'
-        );
-    }
-
-     /**
+    /**
      * Workflow history relationship
      */
     public function workflowHistory()
