@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: "Invalid RFQ id" }, { status: 400 });
     }
     const search = request.nextUrl.searchParams.toString();
-    const targetUrl = `${process.env.NEXTAUTH_URL}/api/procurement/rfq-suppliers/${encodeURIComponent(rfqId)}${search ? `?${search}` : ""}`;
+    const targetUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/procurement/rfq-suppliers/${encodeURIComponent(rfqId)}${search ? `?${search}` : ""}`;
 
     try {
         const res = await fetch(targetUrl, {

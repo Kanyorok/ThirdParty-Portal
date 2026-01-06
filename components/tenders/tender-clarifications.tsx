@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
 import { Badge } from "@/components/common/badge";
 import { ScrollArea } from "@/components/common/scroll-area";
-import { Alert, AlertDescription } from "@/components/common/alert";
 import { toast } from "sonner";
 import {
   MessageSquare,
@@ -17,10 +16,7 @@ import {
   User,
   AlertCircle,
   Plus,
-  Paperclip,
   RefreshCw,
-  Globe,
-  Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";

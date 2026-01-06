@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-// Types based on your t_TenderInvitations table structure
 interface TenderInvitation {
   InvitationID: number;
   TenderId: string;
   SupplierId: number;
   InvitationDate: string;
-  ResponseStatus: 'pending' | 'accepted' | 'declined' | 'submitted';
+  ResponseStatus: "pending" | "accepted" | "declined" | "submitted";
   ResponseDate?: string;
   DeclineReason?: string;
   ConfirmationAttachment?: string;
@@ -16,8 +15,6 @@ interface TenderInvitation {
   CreatedOn: string;
   ModifiedBy?: string;
   ModifiedOn?: string;
-  DeletedBy?: string;
-  DeletedOn?: string;
 }
 
 interface TenderInvitationResponse {
@@ -38,25 +35,27 @@ interface TenderInvitationResponse {
   };
 }
 
+interface ExternalApiResponse {
+  data: TenderInvitationResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  supplierInfo?: {
+    supplierId: number;
+    activeRoundId: number;
+    third_party_id: number;
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!session?.user || !session.accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status') || 'all';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-
-    // Get third_party_id from session (logged in user's profile)
     const third_party_id = session.user.third_party_id;
-
     if (!third_party_id) {
       return NextResponse.json(
         { error: "Third Party ID not found in session" },
@@ -64,154 +63,63 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build query parameters for external API
-    // The external API should handle the multi-table lookup:
-    // 1. Get supplierID from t_Suppliers where third_party_id = third_party_id
-    // 2. Get active RoundID from t_PrequalificationRounds where status = 'O'
-    // 3. Fetch invitations from t_TenderInvitations for that supplierID
+    const searchParams = request.nextUrl.searchParams;
     const queryParams = new URLSearchParams({
-      third_party_id: third_party_id.toString(), // Pass third_party_id instead of supplierId
-      page: page.toString(),
-      limit: limit.toString(),
+      third_party_id: third_party_id.toString(),
+      page: searchParams.get("page") || "1",
+      limit: searchParams.get("limit") || "10",
     });
 
-    if (status !== 'all') {
-      queryParams.append('status', status);
+    const status = searchParams.get("status");
+    if (status && status !== "all") {
+      queryParams.append("status", status);
     }
 
-    // Try to fetch from external API first
-    const externalApiUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-
-    if (externalApiUrl) {
-      try {
-        const apiUrl = `${externalApiUrl}/api/tender-invitations?${queryParams}`;
-
-        const response = await fetch(apiUrl, {
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          signal: AbortSignal.timeout(10000) // 10 seconds timeout
-        });
-
-        if (response.ok) {
-          const data: {
-            data: TenderInvitationResponse[];
-            total: number;
-            page: number;
-            limit: number;
-            supplierInfo?: {
-              supplierId: number;
-              activeRoundId: number;
-              third_party_id: number;
-            };
-          } = await response.json();
-
-          return NextResponse.json({
-            data: data.data,
-            pagination: {
-              total: data.total,
-              page: data.page,
-              limit: data.limit,
-              pages: Math.ceil(data.total / data.limit),
-            },
-            supplierInfo: data.supplierInfo,
-          });
-        }
-      } catch (error) {
-        console.warn('External API not available for tender invitations, using mock data:', error);
-      }
+    const externalApiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!externalApiUrl) {
+      return NextResponse.json(
+        { error: "API configuration missing" },
+        { status: 500 }
+      );
     }
 
-    // Fallback to mock data if external API is unavailable
-    const mockInvitations: TenderInvitation[] = [
+    const response = await fetch(
+      `${externalApiUrl}/api/tender-invitations?${queryParams}`,
       {
-        InvitationID: 1,
-        TenderId: "1",
-        SupplierId: 1,
-        InvitationDate: "2024-11-15T08:00:00.000Z",
-        ResponseStatus: "pending",
-        ResponseDate: undefined,
-        DeclineReason: undefined,
-        ConfirmationAttachment: undefined,
-        CreatedBy: "system",
-        CreatedOn: "2024-11-15T08:00:00.000Z",
-        ModifiedBy: undefined,
-        ModifiedOn: undefined,
-        DeletedBy: undefined,
-        DeletedOn: undefined,
-      },
-      {
-        InvitationID: 2,
-        TenderId: "2",
-        SupplierId: 1,
-        InvitationDate: "2024-11-10T10:00:00.000Z",
-        ResponseStatus: "accepted",
-        ResponseDate: "2024-11-12T14:30:00.000Z",
-        DeclineReason: undefined,
-        ConfirmationAttachment: undefined,
-        CreatedBy: "system",
-        CreatedOn: "2024-11-10T10:00:00.000Z",
-        ModifiedBy: "user",
-        ModifiedOn: "2024-11-12T14:30:00.000Z",
-        DeletedBy: undefined,
-        DeletedOn: undefined,
-      },
-    ];
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        signal: AbortSignal.timeout(10000),
+      }
+    );
 
-    // Filter mock data based on status if specified
-    let filteredInvitations = [...mockInvitations];
-    if (status !== 'all') {
-      filteredInvitations = filteredInvitations.filter(inv => inv.ResponseStatus === status);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: errorData.message || "External API error" },
+        { status: response.status }
+      );
     }
 
-    // Create mock response data
-    const mockResponseData: TenderInvitationResponse[] = filteredInvitations.map(invitation => ({
-      invitation,
-      tender: {
-        id: invitation.TenderId,
-        tenderNo: invitation.TenderId === "1" ? "TENDER/2024/001" : "TENDER/2024/002",
-        title: invitation.TenderId === "1" ? "Supply and Installation of Office Equipment" : "Construction of Drainage System",
-        tenderType: invitation.TenderId === "1" ? "op" : "rs",
-        submissionDeadline: invitation.TenderId === "1" ? "2024-12-01T23:59:00.000Z" : "2024-11-30T17:00:00.000Z",
-        openingDate: invitation.TenderId === "1" ? "2024-12-02T10:00:00.000Z" : "2024-12-01T14:00:00.000Z",
-        status: "pb",
-        estimatedValue: invitation.TenderId === "1" ? "2500000" : "15000000",
-        currency: {
-          code: "KES",
-          symbol: "KSh"
-        }
-      }
-    }));
-
-    // Apply pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = mockResponseData.slice(startIndex, endIndex);
+    const data: ExternalApiResponse = await response.json();
 
     return NextResponse.json({
-      data: paginatedData,
+      data: data.data,
       pagination: {
-        total: mockResponseData.length,
-        page,
-        limit,
-        pages: Math.ceil(mockResponseData.length / limit),
+        total: data.total,
+        page: data.page,
+        limit: data.limit,
+        pages: Math.ceil(data.total / data.limit),
       },
-      supplierInfo: {
-        supplierId: 1,
-        activeRoundId: 1,
-        third_party_id: third_party_id,
-      },
-      fallback: true, // Indicates this is mock data
+      supplierInfo: data.supplierInfo,
     });
-
   } catch (error) {
-    console.error('Failed to fetch tender invitations:', error);
     return NextResponse.json(
       {
         error: "Failed to fetch tender invitations",
-        message: error instanceof Error ? error.message : "Unknown error"
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -222,22 +130,13 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!session?.user || !session.accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const {
-      invitationId,
-      responseStatus,
-      declineReason,
-      confirmationAttachment
-    } = body;
+    const { invitationId, responseStatus, declineReason } = body;
 
-    // Validate required fields
     if (!invitationId || !responseStatus) {
       return NextResponse.json(
         { error: "InvitationID and ResponseStatus are required" },
@@ -245,51 +144,48 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Validate decline reason if status is declined
-    if (responseStatus === 'declined' && !declineReason) {
+    if (responseStatus === "declined" && !declineReason) {
       return NextResponse.json(
-        { error: "Decline reason is required when declining an invitation" },
+        { error: "Decline reason is required" },
         { status: 400 }
       );
     }
 
-    // Prepare payload for external API (match backend field names)
-    const updatePayload = {
-      responseStatus,
-      declineReason: declineReason || null,
-    } as const;
-
-    // Send to external API
-    const apiUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/tender-invitations/${invitationId}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updatePayload),
-    });
+    const externalApiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const response = await fetch(
+      `${externalApiUrl}/api/tender-invitations/${invitationId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          responseStatus,
+          declineReason: declineReason || null,
+        }),
+      }
+    );
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `API responded with status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: errorData.message || "Failed to update invitation" },
+        { status: response.status }
+      );
     }
 
-    const updatedInvitation = await response.json();
-
+    const result = await response.json();
     return NextResponse.json({
-      message: "Tender invitation response updated successfully",
-      data: updatedInvitation,
+      message: "Tender invitation updated successfully",
+      data: result,
     });
-
   } catch (error) {
-    console.error('Failed to update tender invitation:', error);
     return NextResponse.json(
       {
-        error: "Failed to update tender invitation",
-        message: error instanceof Error ? error.message : "Unknown error"
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

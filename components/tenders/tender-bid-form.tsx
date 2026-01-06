@@ -6,11 +6,11 @@ import { Button } from "@/components/common/button";
 import { Input } from "@/components/common/input";
 import { Textarea } from "@/components/common/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select";
-import { Badge } from "@/components/common/badge";
+// import { Badge } from "@/components/common/badge";
 import { Alert, AlertDescription } from "@/components/common/alert";
 import { Separator } from "@/components/common/separator";
 import { toast } from "sonner";
-import { 
+import {
   Upload,
   File,
   X,
@@ -59,7 +59,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
     deliveryPeriod: "30",
     paymentTerms: "",
   });
-  
+
   const [documents, setDocuments] = useState<DocumentUpload[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitType, setSubmitType] = useState<'draft' | 'final' | null>(null);
@@ -90,10 +90,10 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
       try {
         const response = await fetch(`/api/tender-bids?checkExisting=true&tenderId=${tender.id}`);
         const data = await response.json();
-        
+
         if (data.success && data.hasExistingBid && data.existingBid) {
           const existing = data.existingBid;
-          
+
           // Pre-populate form with existing bid data
           const populatedData = {
             bidAmount: existing.bidAmount?.toString() || existing.BidAmount?.toString() || "",
@@ -102,19 +102,19 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
             deliveryPeriod: existing.deliveryPeriod?.toString() || existing.DeliveryPeriod?.toString() || "30",
             paymentTerms: existing.paymentTerms || existing.PaymentTerms || "",
           };
-          
+
           setBidData(populatedData);
-          
+
           setExistingBidId(existing.id || existing.Id);
           setIsEditingDraft((existing.status || existing.Status) === 'draft');
-          
+
           if ((existing.status || existing.Status) === 'draft') {
             toast.info(`📝 Draft bid loaded from ${new Date(existing.modifiedOn || existing.ModifiedOn).toLocaleDateString()}. You can edit and resubmit.`);
           } else {
             toast.success(`✅ Final bid already submitted on ${new Date(existing.createdOn || existing.CreatedOn).toLocaleDateString()}`);
           }
         }
-  } catch {
+      } catch {
         // Silent fail for existing bid check
         // Don't show error to user - just proceed with empty form
       } finally {
@@ -172,7 +172,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     processFiles(files);
-    
+
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -195,7 +195,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     const files = e.dataTransfer.files;
     processFiles(files);
   };
@@ -209,8 +209,8 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
   };
 
   const updateDocumentType = (id: string, type: string) => {
-    setDocuments(prev => 
-      prev.map(doc => 
+    setDocuments(prev =>
+      prev.map(doc =>
         doc.id === id ? { ...doc, documentType: type } : doc
       )
     );
@@ -259,7 +259,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
     // Check for required document types
     const hasFinancial = documents.some(doc => doc.documentType === "financial");
     const hasTechnical = documents.some(doc => doc.documentType === "technical");
-    
+
     if (!hasFinancial) {
       toast.error("Financial proposal document is required");
       return false;
@@ -279,7 +279,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
       toast.error("You have already submitted a final bid for this tender. No further changes are allowed.");
       return;
     }
-    
+
     // Basic validation for both draft and final
     if (!tender.id) {
       toast.error("Tender ID is missing");
@@ -297,7 +297,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
         toast.warning("⚠️ Saving draft without documents. You can add documents later.");
       }
     }
-    
+
     // For final: require full validation
     if (type === 'final' && !validateBid()) {
       return;
@@ -308,9 +308,9 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
 
     try {
       const formData = new FormData();
-      
+
       // Build form data
-      
+
       formData.append('tenderId', String(tender.id));
       formData.append('bidAmount', String(bidData.bidAmount));
       formData.append('currency', String(bidData.currency));
@@ -320,7 +320,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
       formData.append('status', type === 'draft' ? 'draft' : 'submitted');
 
       // Add documents
-  documents.forEach((doc) => {
+      documents.forEach((doc) => {
         formData.append('documents', doc.file);
         formData.append('documentTypes', doc.documentType);
       });
@@ -336,20 +336,20 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
         if (response.status === 422 && data.errors) {
           // Handle validation errors from ERP
           const errorMessages = [];
-          
+
           if (data.errors.tender_id) errorMessages.push(`Tender: ${data.errors.tender_id[0]}`);
           if (data.errors.bid_amount) errorMessages.push(`Bid Amount: ${data.errors.bid_amount[0]}`);
           if (data.errors.third_party_id) errorMessages.push(`Supplier: ${data.errors.third_party_id[0]}`);
           if (data.errors.bid_documents) errorMessages.push(`Documents: ${data.errors.bid_documents[0]}`);
-          
-          const errorMessage = errorMessages.length > 0 
-            ? errorMessages.join(', ') 
+
+          const errorMessage = errorMessages.length > 0
+            ? errorMessages.join(', ')
             : data.message || 'Validation failed';
-            
+
           throw new Error(errorMessage);
         } else if (response.status === 403) {
           // Handle business logic errors from ERP (like expired deadlines)
-          
+
           if (data.submission_deadline) {
             const deadline = new Date(data.submission_deadline).toLocaleString();
             throw new Error(`${data.message || 'Submission not allowed'} (Deadline was: ${deadline})`);
@@ -365,16 +365,16 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
       }
 
       // Show appropriate success message based on whether fallback was used
-      const message = data.fallback ? 
-        (type === 'draft' 
-          ? "Bid saved as draft successfully! (Mock mode - ERP not connected)" 
+      const message = data.fallback ?
+        (type === 'draft'
+          ? "Bid saved as draft successfully! (Mock mode - ERP not connected)"
           : "Bid submitted successfully! (Mock mode - ERP not connected)"
-        ) : 
-        (type === 'draft' 
-          ? "✅ Bid saved as draft successfully in ERP!" 
+        ) :
+        (type === 'draft'
+          ? "✅ Bid saved as draft successfully in ERP!"
           : "🎉 Bid submitted successfully to ERP! Your documents have been encrypted and stored securely."
         );
-        
+
       toast.success(message);
 
       // Reset form if final submission
@@ -393,9 +393,9 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
         // Trigger external success handler (e.g., close modal / collapse dialog)
         if (onFinalSubmitSuccess) {
           // Slight delay to let toast render before closing
-            setTimeout(() => {
-              onFinalSubmitSuccess();
-            }, 400);
+          setTimeout(() => {
+            onFinalSubmitSuccess();
+          }, 400);
         }
       } else if (type === 'draft') {
         // For draft saves, update the existing bid ID if we got one back
@@ -405,8 +405,8 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
 
     } catch (err) {
       toast.error(
-        err instanceof Error 
-          ? err.message 
+        err instanceof Error
+          ? err.message
           : "Failed to submit bid"
       );
     } finally {
@@ -432,7 +432,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
         <Alert className="border-yellow-200 bg-yellow-50">
           <FileText className="h-4 w-4" />
           <AlertDescription>
-            <strong>Editing Draft Bid:</strong> You are editing a previously saved draft. 
+            <strong>Editing Draft Bid:</strong> You are editing a previously saved draft.
             You can update the details and save again or submit as final.
           </AlertDescription>
         </Alert>
@@ -443,7 +443,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
         <Alert className="border-green-200 bg-green-50">
           <CheckCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Bid Already Submitted:</strong> You have already submitted a final bid for this tender. 
+            <strong>Bid Already Submitted:</strong> You have already submitted a final bid for this tender.
             No further changes are allowed.
           </AlertDescription>
         </Alert>
@@ -453,8 +453,8 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
       <Alert className="border-blue-200 bg-blue-50">
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          <strong>Secure Bidding Process:</strong> All uploaded documents will be encrypted at rest and 
-          remain secure until the tender opening ceremony when decryption keys will be made available 
+          <strong>Secure Bidding Process:</strong> All uploaded documents will be encrypted at rest and
+          remain secure until the tender opening ceremony when decryption keys will be made available
           to the evaluation committee.
         </AlertDescription>
       </Alert>
@@ -472,8 +472,8 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
             <div className="space-y-2">
               <label className="text-sm font-medium">Bid Amount *</label>
               <div className="flex">
-                <Select 
-                  value={bidData.currency} 
+                <Select
+                  value={bidData.currency}
                   onValueChange={(value) => setBidData(prev => ({ ...prev, currency: value }))}
                 >
                   <SelectTrigger className="w-[100px]">
@@ -543,11 +543,11 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div 
+          <div
             className={cn(
               "border-2 border-dashed rounded-lg p-8 transition-all duration-200 cursor-pointer",
-              isDragging 
-                ? "border-blue-500 bg-blue-50" 
+              isDragging
+                ? "border-blue-500 bg-blue-50"
                 : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
             )}
             onDragOver={handleDragOver}
@@ -590,7 +590,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
           <Alert>
             <Lock className="h-4 w-4" />
             <AlertDescription className="text-xs">
-              <strong>Required Documents:</strong> Financial Proposal, Technical Proposal. 
+              <strong>Required Documents:</strong> Financial Proposal, Technical Proposal.
               <strong> Supported formats:</strong> PDF, Word, Excel, Images, ZIP (Max 50MB per file)
             </AlertDescription>
           </Alert>
@@ -610,8 +610,8 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
                         {formatFileSize(doc.file.size)} • {doc.file.type}
                       </p>
                     </div>
-                    <Select 
-                      value={doc.documentType} 
+                    <Select
+                      value={doc.documentType}
                       onValueChange={(value) => updateDocumentType(doc.id, value)}
                     >
                       <SelectTrigger className="w-[160px]">
@@ -664,7 +664,7 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
                 </>
               )}
             </Button>
-            
+
             <Button
               onClick={() => handleSubmit('final')}
               disabled={isSubmitting || isLoadingExisting}
@@ -683,11 +683,11 @@ export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBi
               )}
             </Button>
           </div>
-          
+
           <Alert className="mt-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="text-xs">
-              <strong>Important:</strong> Once you submit your final bid, it cannot be modified. 
+              <strong>Important:</strong> Once you submit your final bid, it cannot be modified.
               You can save as draft to continue working on it later.
             </AlertDescription>
           </Alert>

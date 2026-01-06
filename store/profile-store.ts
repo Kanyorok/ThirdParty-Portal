@@ -3,20 +3,18 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { UserProfile } from '@/types/profile-types'
 
 interface ProfileState {
-    activeProfile: UserProfile
-    availableProfiles: UserProfile[]
-    setActiveProfile: (profile: UserProfile) => void
-    setAvailableProfiles: (profiles: UserProfile[]) => void
-    initializeProfiles: (profiles: UserProfile[]) => void
+    activeProfile: UserProfile | "General"
+    availableProfiles: (UserProfile | "General")[]
+    setActiveProfile: (profile: UserProfile | "General") => void
+    setAvailableProfiles: (profiles: (UserProfile | "General")[]) => void
+    initializeProfiles: (profiles: (UserProfile | "General")[]) => void
 }
-
-const DEFAULT_PROFILE: UserProfile = "Customer"
 
 export const useProfileStore = create<ProfileState>()(
     persist(
         (set, get) => ({
-            activeProfile: DEFAULT_PROFILE,
-            availableProfiles: [],
+            activeProfile: "General",
+            availableProfiles: ["General"],
 
             setActiveProfile: (profile) => set({ activeProfile: profile }),
 
@@ -26,24 +24,20 @@ export const useProfileStore = create<ProfileState>()(
                 const state = get()
                 const currentActive = state.activeProfile
 
-                if (profiles.length === 0) {
+                if (!profiles || profiles.length === 0) {
                     set({
-                        availableProfiles: [DEFAULT_PROFILE],
-                        activeProfile: DEFAULT_PROFILE
+                        availableProfiles: ["General"],
+                        activeProfile: "General"
                     })
                     return
                 }
 
-                const update: Partial<ProfileState> = { availableProfiles: profiles }
-
                 const isCurrentlyValid = profiles.includes(currentActive)
-                const isStillDefault = currentActive === DEFAULT_PROFILE
 
-                if (!isCurrentlyValid || isStillDefault) {
-                    update.activeProfile = profiles[0]
-                }
-
-                set(update)
+                set({
+                    availableProfiles: profiles,
+                    activeProfile: isCurrentlyValid ? currentActive : profiles[0]
+                })
             },
         }),
         {

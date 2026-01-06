@@ -56,7 +56,7 @@ export function RfqsFilter() {
                 if (debouncedSearchTerm) params.set("q", debouncedSearchTerm)
                 if (status && status !== "all") params.set("status", status)
 
-                const url = `${process.env.NEXTAUTH_URL}/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`
+                const url = `/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`;
                 const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } })
                 const data = await res.json().catch(() => null)
 

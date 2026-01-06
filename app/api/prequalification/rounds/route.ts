@@ -1,29 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const BASE_URL = process.env.NEXTAUTH_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function GET(request: NextRequest) {
-    // Get session for authentication
-    const session = await getServerSession(authOptions);
-    if (!session?.accessToken) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const url = new URL(request.url);
-    const searchParams = url.searchParams;
-
-    // Extract frontend query parameters for client-side filtering/sorting
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "10");
-    const sortBy = searchParams.get("sortBy") || "startDate";
-    const sortOrder = searchParams.get("sortOrder") || "asc";
-    const status = searchParams.get("status") || "all";
-    const q = searchParams.get("q") || "";
-
     try {
-        // Backend doesn't support query parameters, so call it without any
+        const session = await getServerSession(authOptions);
+
+        if (!session?.accessToken) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get("page") || "1");
+        const pageSize = parseInt(searchParams.get("pageSize") || "10");
+        const sortBy = searchParams.get("sortBy") || "startDate";
+        const sortOrder = searchParams.get("sortOrder") || "asc";
+        const status = searchParams.get("status") || "all";
+        const q = searchParams.get("q") || "";
+
         const res = await fetch(`${BASE_URL}/api/prequalification/rounds`, {
             headers: {
                 Accept: "application/json",
@@ -33,89 +29,76 @@ export async function GET(request: NextRequest) {
             next: { revalidate: 30 },
         });
 
-        const backendData = await res.json().catch(() => null);
-
         if (!res.ok) {
-            return new NextResponse(JSON.stringify(backendData || { message: "Failed to fetch rounds" }), {
-                status: res.status,
-                headers: { "Content-Type": "application/json" },
-            });
-        }
-
-        // Process the data from backend and apply frontend filtering/sorting
-        let rounds = backendData?.data || [];
-
-        // Apply search filter
-        if (q.trim()) {
-            const searchTerm = q.toLowerCase();
-            rounds = rounds.filter((round: any) =>
-                round.title?.toLowerCase().includes(searchTerm) ||
-                round.description?.toLowerCase().includes(searchTerm)
+            const errorData = await res.json().catch(() => ({}));
+            return NextResponse.json(
+                { message: errorData.message || "Failed to fetch rounds" },
+                { status: res.status }
             );
         }
 
-        // Apply status filter
+        const backendData = await res.json();
+        let rounds = backendData?.data || [];
+
+        if (q.trim()) {
+            const searchTerm = q.toLowerCase();
+            rounds = rounds.filter(
+                (round: any) =>
+                    round.title?.toLowerCase().includes(searchTerm) ||
+                    round.description?.toLowerCase().includes(searchTerm)
+            );
+        }
+
         if (status !== "all") {
             const statusValue = status === "open" ? "O" : "CL";
             rounds = rounds.filter((round: any) => {
-                const roundStatus = typeof round.status === "object" ? round.status.value : round.status;
-                return roundStatus === statusValue;
+                const val = typeof round.status === "object" ? round.status.value : round.status;
+                return val === statusValue;
             });
         }
 
-        // Apply sorting
         rounds.sort((a: any, b: any) => {
-            let aValue, bValue;
-
-            if (sortBy === "title") {
-                aValue = a.title || "";
-                bValue = b.title || "";
-            } else if (sortBy === "startDate") {
-                aValue = new Date(a.startDate || 0).getTime();
-                bValue = new Date(b.startDate || 0).getTime();
-            } else if (sortBy === "endDate") {
-                aValue = new Date(a.endDate || 0).getTime();
-                bValue = new Date(b.endDate || 0).getTime();
-            } else {
-                aValue = a.startDate || "";
-                bValue = b.startDate || "";
+            let aVal, bVal;
+            switch (sortBy) {
+                case "title":
+                    aVal = a.title || "";
+                    bVal = b.title || "";
+                    break;
+                case "startDate":
+                case "endDate":
+                    aVal = new Date(a[sortBy] || 0).getTime();
+                    bVal = new Date(b[sortBy] || 0).getTime();
+                    break;
+                default:
+                    aVal = a.startDate || "";
+                    bVal = b.startDate || "";
             }
 
-            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-            return 0;
+            const modifier = sortOrder === "asc" ? 1 : -1;
+            return aVal < bVal ? -1 * modifier : aVal > bVal ? 1 * modifier : 0;
         });
 
-        // Apply pagination
         const total = rounds.length;
-        const totalPages = Math.ceil(total / pageSize);
         const startIndex = (page - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const paginatedRounds = rounds.slice(startIndex, endIndex);
+        const paginatedRounds = rounds.slice(startIndex, startIndex + pageSize);
 
-        // Return data in expected format
-        const responseData = {
+        return NextResponse.json({
             data: paginatedRounds,
             page,
             pageSize,
             total,
-            totalPages,
+            totalPages: Math.ceil(total / pageSize),
             sortBy,
             sortOrder,
-            filters: { status, q }
-        };
-
-        return NextResponse.json(responseData, {
-            status: 200,
-            headers: { "Cache-Control": "no-store" }
+            filters: { status, q },
         });
-
-    } catch (err: any) {
+    } catch (err) {
         return NextResponse.json(
-            { message: "Failed to fetch rounds", error: err?.message || String(err) },
+            {
+                message: "Internal server error",
+                error: err instanceof Error ? err.message : "Unknown error",
+            },
             { status: 500 }
         );
     }
 }
-
-

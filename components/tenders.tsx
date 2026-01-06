@@ -1,97 +1,97 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import React, { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { format } from "date-fns"
 import {
     Search, Loader2, SlidersHorizontal, ArrowUpRight,
-    Inbox, X, Hash, Calendar, Shield
-} from "lucide-react";
+    Inbox, X, Hash, Calendar
+} from "lucide-react"
 
-import { Input } from "@/components/common/input";
-import { Button } from "@/components/common/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table";
-import { Badge } from "@/components/common/badge";
-import TenderDetailModal from "./tenders/tender-detail-modal";
-import { getBaseUrl } from "@/lib/api-base";
+import { Input } from "@/components/common/input"
+import { Button } from "@/components/common/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
+import { Badge } from "@/components/common/badge"
+import TenderDetailModal from "./tenders/tender-detail-modal"
+import { getBaseUrl } from "@/lib/api-base"
 
 function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    const [debouncedValue, setDebouncedValue] = useState<T>(value)
     useEffect(() => {
-        const handler = setTimeout(() => setDebouncedValue(value), delay);
-        return () => clearTimeout(handler);
-    }, [value, delay]);
-    return debouncedValue;
+        const handler = setTimeout(() => setDebouncedValue(value), delay)
+        return () => clearTimeout(handler)
+    }, [value, delay])
+    return debouncedValue
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-    return !!value && typeof value === "object" && !Array.isArray(value);
+    return !!value && typeof value === "object" && !Array.isArray(value)
 }
 
 function pick(obj: Record<string, unknown>, keys: readonly string[]): unknown {
     for (const k of keys) {
-        const v = obj[k];
-        if (v !== undefined && v !== null && v !== "") return v;
+        const v = obj[k]
+        if (v !== undefined && v !== null && v !== "") return v
     }
-    return undefined;
+    return undefined
 }
 
 export default function TendersFilter() {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [status, setStatus] = useState("all");
-    const [isSearching, setIsSearching] = useState(false);
-    const [tenders, setTenders] = useState<unknown[] | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("")
+    const [status, setStatus] = useState("all")
+    const [isSearching, setIsSearching] = useState(false)
+    const [tenders, setTenders] = useState<unknown[] | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
-    const [selectedTender, setSelectedTender] = useState<any | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedTender, setSelectedTender] = useState<any | null>(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
 
-    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
     const fetchTenders = async (signal?: AbortSignal) => {
         try {
-            setIsSearching(true);
-            setError(null);
-            const params = new URLSearchParams();
-            if (debouncedSearchTerm) params.set("search", debouncedSearchTerm);
+            setIsSearching(true)
+            setError(null)
+            const params = new URLSearchParams()
+            if (debouncedSearchTerm) params.set("search", debouncedSearchTerm)
             if (status && status !== "all") {
-                const map: Record<string, string> = { ongoing: "pb", drafts: "dr", closed: "cl" };
-                params.set("status", map[status] || status);
+                const map: Record<string, string> = { ongoing: "pb", drafts: "dr", closed: "cl" }
+                params.set("status", map[status] || status)
             }
 
-            const url = `${getBaseUrl()}/api/tenders${params.toString() ? `?${params.toString()}` : ""}`;
-            const res = await fetch(url, { signal, headers: { Accept: "application/json" } });
-            const data = await res.json().catch(() => null);
+            const url = `${getBaseUrl()}/api/tenders${params.toString() ? `?${params.toString()}` : ""}`
+            const res = await fetch(url, { signal, headers: { Accept: "application/json" } })
+            const data = await res.json().catch(() => null)
 
-            if (!res.ok) throw new Error(data?.message || "Failed to load tenders");
+            if (!res.ok) throw new Error(data?.message || "Failed to load tenders")
 
-            let list: unknown[] = [];
+            let list: unknown[] = []
             if (isRecord(data) && Array.isArray(data["data"])) {
-                list = data["data"] as unknown[];
+                list = data["data"] as unknown[]
             } else if (Array.isArray(data)) {
-                list = data as unknown[];
+                list = data as unknown[]
             }
-            setTenders(list);
+            setTenders(list)
         } catch (e: any) {
-            if (e.name === "AbortError") return;
-            setError(e.message || "Unable to load tenders");
-            setTenders([]);
+            if (e.name === "AbortError") return
+            setError(e.message || "Unable to load tenders")
+            setTenders([])
         } finally {
-            setIsSearching(false);
+            setIsSearching(false)
         }
-    };
+    }
 
     useEffect(() => {
-        const controller = new AbortController();
-        fetchTenders(controller.signal);
-        return () => controller.abort();
-    }, [debouncedSearchTerm, status]);
+        const controller = new AbortController()
+        fetchTenders(controller.signal)
+        return () => controller.abort()
+    }, [debouncedSearchTerm, status])
 
     const handleOpenTender = (tender: any) => {
-        setSelectedTender(tender);
-        setIsModalOpen(true);
-    };
+        setSelectedTender(tender)
+        setIsModalOpen(true)
+    }
 
     return (
         <div className="w-full space-y-10 py-4">
@@ -147,7 +147,7 @@ export default function TendersFilter() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => { setSearchTerm(""); setStatus("all"); }}
+                        onClick={() => { setSearchTerm(""); setStatus("all") }}
                         className="h-9 w-9 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-muted"
                     >
                         <X className="h-4 w-4" />
@@ -174,12 +174,12 @@ export default function TendersFilter() {
                         <TableBody>
                             <AnimatePresence mode="popLayout">
                                 {tenders?.map((tender) => {
-                                    const obj = isRecord(tender) ? tender : {};
-                                    const id = pick(obj, ["id", "tenderId", "TenderID"]);
-                                    const title = pick(obj, ["title", "name", "TenderTitle"]) ?? "Untitled Tender";
-                                    const ref = pick(obj, ["tenderNo", "reference", "TenderRef"]) ?? "-";
-                                    const deadline = pick(obj, ["submissionDeadline", "closingDate", "deadline"]);
-                                    const rawStatus = String(pick(obj, ["status", "state"]) ?? "").toLowerCase();
+                                    const obj = isRecord(tender) ? tender : {}
+                                    const id = pick(obj, ["id", "tenderId", "TenderID"])
+                                    const title = pick(obj, ["title", "name", "TenderTitle"]) ?? "Untitled Tender"
+                                    const ref = pick(obj, ["tenderNo", "reference", "TenderRef"]) ?? "-"
+                                    const deadline = pick(obj, ["submissionDeadline", "closingDate", "deadline"])
+                                    const rawStatus = String(pick(obj, ["status", "state"]) ?? "").toLowerCase()
 
                                     return (
                                         <motion.tr
@@ -218,7 +218,7 @@ export default function TendersFilter() {
                                                 </Button>
                                             </TableCell>
                                         </motion.tr>
-                                    );
+                                    )
                                 })}
                             </AnimatePresence>
                         </TableBody>
@@ -256,5 +256,5 @@ export default function TendersFilter() {
                 onInvitationUpdate={() => fetchTenders()}
             />
         </div>
-    );
+    )
 }

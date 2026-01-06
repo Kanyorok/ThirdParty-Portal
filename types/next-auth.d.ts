@@ -1,10 +1,7 @@
-export interface ThirdPartyTypeEntry {
-    id: number;
-    code: string;
-    categoryId: number | null;
-}
+import NextAuth, { DefaultSession } from "next-auth"
+import { JWT } from "next-auth/jwt"
 
-type RegistrationStep = 'form' | 'accountType' | 'profile' | 'success'
+export type RegistrationStep = 'form' | 'accountType' | 'profile' | 'success'
 
 export interface RegistrationData {
     Name: string
@@ -39,30 +36,6 @@ export interface AuthState {
     resetRegistration: () => void
 }
 
-// export interface ThirdPartyProfile {
-//     third_party_id: number;
-//     third_party_name: string | null;
-//     trading_name: string | null;
-//     registration_number: string | null;
-//     tax_pin: string | null;
-//     email: string | null;
-//     phone: string | null;
-//     physical_address: string | null;
-//     website: string | null;
-//     country_id: number | null;
-//     location_id: number | null;
-//     image_id: number | null;
-//     status: string;
-//     is_active: boolean;
-//     is_supplier: boolean;
-//     is_tenant: boolean;
-//     is_customer: boolean;
-//     approval_status: string | null;
-//     is_prequalified: boolean;
-//     created_at: string | null;
-//     updated_at: string | null;
-// }
-
 export interface BaseUser {
     user_id: number;
     third_party_id: number | null;
@@ -86,21 +59,18 @@ export interface BaseUser {
     } | null;
 }
 
-export interface BackendProfileRes {
-    success: boolean;
-    profiles: ThirdPartyProfile[];
+declare module "next-auth" {
+    interface Session {
+        accessToken?: string;
+        user: BaseUser & DefaultSession["user"];
+    }
+    interface User extends BaseUser {
+        accessToken: string;
+    }
 }
 
-export interface BackendUser {
-    id: string;
-    email: string;
-    name: string;
-    is_active: boolean;
-    has_profile: boolean;
-    email_verified: boolean;
-}
-
-export interface TokenValidationResponse {
-    valid: boolean;
-    user: BackendUser;
+declare module "next-auth/jwt" {
+    interface JWT extends BaseUser {
+        accessToken: string;
+    }
 }

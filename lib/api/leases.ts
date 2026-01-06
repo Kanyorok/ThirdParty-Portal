@@ -1,34 +1,60 @@
-import { PaginatedResponse } from "@/types/property";
+import { PaginatedResponse } from "@/types/property"
 
 export interface Lease {
-    id: string | number;
-    lease_number: string;
-    property_name: string;
-    tenant_name: string;
-    start_date: string;
-    end_date: string;
-    status: 'active' | 'expired' | 'pending' | 'terminated';
-    monthly_rent: number;
+    id: number;
+    leaseNumber: string;
+    status: string;
+    approval: string;
+    isActive: boolean;
+    dates: {
+        start: string;
+        end: string;
+        dueDay: number;
+    };
+    financials: {
+        currency: string | null;
+        monthlyRent: number;
+        deposit: number;
+        serviceCharge: number;
+        parkingFee: number;
+        otherCharges: number;
+    };
+    property: {
+        id: number;
+        name: string;
+    };
+    unit: {
+        id: number;
+        code: string;
+        size: number;
+    };
+}
+
+export interface LeasesResponse {
+    data: Lease[];
+    meta: {
+        total: number;
+        currentPage: number;
+        lastPage: number;
+    };
 }
 
 export async function getLeases(page: number = 1): Promise<PaginatedResponse<Lease>> {
-    const url = `${process.env.NEXTAUTH_URL}/api/v1/property/leases?page=${page}`;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    const url = `${baseUrl}/api/v1/property/leases?page=${page}`;
 
     const res = await fetch(url, {
         method: 'GET',
-        next: {
-            tags: ['leases'],
-            revalidate: 30
-        },
+        cache: 'no-store',
         headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
         },
     });
 
     if (!res.ok) {
-        throw new Error(`Lease fetch failed: ${res.status}`);
+        throw new Error(`Fetch failed: ${res.status}`);
     }
 
-    return res.json();
+    return await res.json();
 }

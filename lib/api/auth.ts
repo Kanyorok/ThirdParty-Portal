@@ -1,8 +1,3 @@
-/**
- * Authentication API Service
- * Handles all authentication-related API calls
- */
-
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 interface ApiResponse<T = any> {
@@ -10,6 +5,7 @@ interface ApiResponse<T = any> {
   message: string;
   data?: T;
   user?: T;
+  token?: string;
 }
 
 interface LoginRequest {
@@ -65,10 +61,11 @@ const request = async <T = any>(
   token?: string
 ): Promise<T> => {
   const url = `${BASE_URL}${endpoint}`;
-  const headers: HeadersInit = {
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
 
   if (token) {
@@ -90,9 +87,6 @@ const request = async <T = any>(
 };
 
 export const authService = {
-  /**
-   * Login user with email and password
-   */
   login: async (credentials: LoginRequest): Promise<{ user: UserData; token: string }> => {
     const response = await request<ApiResponse<UserData>>('/api/v1/portal/auth/login', {
       method: 'POST',
@@ -101,13 +95,10 @@ export const authService = {
 
     return {
       user: response.user!,
-      token: response.data as any || '',
+      token: response.token || (response.data as any) || '',
     };
   },
 
-  /**
-   * Register new user account (Step 1)
-   */
   register: async (data: RegisterRequest): Promise<{ user: UserData; token: string }> => {
     const response = await request<ApiResponse<UserData>>('/api/v1/portal/auth/register', {
       method: 'POST',
@@ -116,13 +107,10 @@ export const authService = {
 
     return {
       user: response.user!,
-      token: response.data as any || '',
+      token: response.token || (response.data as any) || '',
     };
   },
 
-  /**
-   * Complete user profile (Step 2)
-   */
   completeProfile: async (
     data: CompleteProfileRequest,
     token: string
@@ -141,9 +129,6 @@ export const authService = {
     };
   },
 
-  /**
-   * Get current user data
-   */
   me: async (token: string): Promise<UserData> => {
     const response = await request<ApiResponse<UserData>>(
       '/api/v1/portal/auth/me',
@@ -156,9 +141,6 @@ export const authService = {
     return response.user!;
   },
 
-  /**
-   * Logout user
-   */
   logout: async (token: string): Promise<void> => {
     await request(
       '/api/v1/portal/auth/logout',
@@ -169,9 +151,6 @@ export const authService = {
     );
   },
 
-  /**
-   * Resend email verification
-   */
   resendVerificationEmail: async (token: string): Promise<{ message: string }> => {
     return await request(
       '/api/v1/portal/auth/email/verification-notification',
@@ -182,9 +161,6 @@ export const authService = {
     );
   },
 
-  /**
-   * Request password reset
-   */
   forgotPassword: async (email: string): Promise<{ message: string }> => {
     return await request('/api/v1/portal/auth/password/forgot', {
       method: 'POST',
@@ -192,9 +168,6 @@ export const authService = {
     });
   },
 
-  /**
-   * Reset password with token
-   */
   resetPassword: async (data: {
     email: string;
     password: string;
@@ -207,9 +180,6 @@ export const authService = {
     });
   },
 
-  /**
-   * Validate token
-   */
   validateToken: async (token: string): Promise<{ valid: boolean; user: UserData }> => {
     return await request(
       '/api/v1/portal/auth/validate-token',

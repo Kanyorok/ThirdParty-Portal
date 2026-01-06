@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 
-const EXTERNAL_API_BASE_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL
-
 async function proxy(request: NextRequest, method: string) {
     const session = await getServerSession(authOptions)
     const accessToken = (session as any)?.accessToken as string | undefined
@@ -27,7 +25,7 @@ async function proxy(request: NextRequest, method: string) {
             init.body = JSON.stringify(body)
         }
 
-        const res = await fetch(`${EXTERNAL_API_BASE_URL}/api/third-party-profile`, init)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-party-profile`, init)
         const body = await res.json().catch(() => null)
 
         if (!res.ok) {
@@ -62,7 +60,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-        const res = await fetch(`${EXTERNAL_API_BASE_URL}/api/third-party-profile`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-party-profile`, {
             method: "DELETE",
             headers: {
                 Accept: "application/json",

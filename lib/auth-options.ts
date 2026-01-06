@@ -12,7 +12,7 @@ type BackendUser = {
   email: string;
   phone: string | null;
   imageId: string | null;
-  gender: string | null;
+  gender: string;
   thirdPartyId: string | null;
   isActive: boolean;
   isPrequalified: boolean;

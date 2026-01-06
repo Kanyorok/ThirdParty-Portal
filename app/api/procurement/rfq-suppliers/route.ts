@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const SUPPLIER_PORTAL_API_KEY = process.env.EXTERNAL_API_URL;
-
 const rfqAwards = new Map<string, { rfqId: number; supplierId: number; status: string; awardedOn: string; comments?: string }>();
 
 export async function GET(request: NextRequest) {
@@ -13,9 +11,10 @@ export async function GET(request: NextRequest) {
 	}
 
 	const search = request.nextUrl.searchParams.toString();
-	const targetUrl = `${process.env.NEXTAUTH_URL}/api/procurement/rfq-suppliers${search ? `?${search}` : ""}`;
+	const targetUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/procurement/rfq-suppliers${search ? `?${search}` : ""}`;
 
 	try {
+		console.log("Attempting to fetch from:", targetUrl);
 		const res = await fetch(targetUrl, {
 			method: "GET",
 			headers: {
@@ -42,9 +41,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
 	const apiKey = request.headers.get("x-api-key") || request.headers.get("X-API-Key");
-	if (!SUPPLIER_PORTAL_API_KEY || apiKey !== SUPPLIER_PORTAL_API_KEY) {
-		return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-	}
+	// if (!SUPPLIER_PORTAL_API_KEY || apiKey !== SUPPLIER_PORTAL_API_KEY) {
+	// 	return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+	// }
 	let payload: unknown;
 	try {
 		payload = await request.json();
