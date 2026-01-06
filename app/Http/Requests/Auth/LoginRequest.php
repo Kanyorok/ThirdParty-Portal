@@ -83,7 +83,7 @@ class LoginRequest extends FormRequest
             //remove other sessions
             //remove other sessions
             if (config(key: 'session.driver') === 'database') {
-                DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
+                DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 't_SYSSessions'))
                     ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
             }
 
@@ -109,16 +109,28 @@ class LoginRequest extends FormRequest
                 'session_id' => session()->getId(),
             ]);
             
-            // TEMPORARILY DISABLED: session()->regenerate() causes cookie mismatch in AJAX responses
-            // The browser doesn't receive the new session cookie, causing authentication to fail
-            $this->session()->regenerate();
+            // DISABLED: session()->regenerate() changes session ID
+            // Apache in production doesn't send Set-Cookie header in AJAX responses
+            // So browser keeps old session ID, causing authentication to fail
+            // Security note: Auth::login() already migrates session for security
+            // $this->session()->regenerate();
             
-            // Debug: Log after regenerate
-            \Log::info('AFTER session regenerate', [
+            // Debug: Log after regenerate (skipped)
+            \Log::info('SKIPPED session regenerate', [
                 'auth_check' => auth()->check(),
                 'auth_id' => auth()->id(),
                 'session_id' => session()->getId(),
             ]);
+
+            // CRITICAL: Generate session_token for EnsureSingleActiveSession middleware
+            // This middleware was added on Sept 23, 2025 but login was never updated
+            $sessionToken = Str::random(60);
+            session(['session_token' => $sessionToken]);
+            \Illuminate\Support\Facades\Cache::put(
+                'user_session_token_' . $user->Id,
+                $sessionToken,
+                now()->addMinutes((int)config('session.lifetime', 120) + 5)
+            );
 
             session([
                 'LoginBranchId' => $branchRole['branch']->Id,
