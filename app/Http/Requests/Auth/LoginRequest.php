@@ -109,7 +109,9 @@ class LoginRequest extends FormRequest
                 'session_id' => session()->getId(),
             ]);
             
-            $this->session()->regenerate();
+            // TEMPORARILY DISABLED: session()->regenerate() causes cookie mismatch in AJAX responses
+            // The browser doesn't receive the new session cookie, causing authentication to fail
+            // $this->session()->regenerate();
             
             // Debug: Log after regenerate
             \Log::info('AFTER session regenerate', [
