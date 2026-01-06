@@ -66,15 +66,15 @@
                     </div>
 
                     {{-- Form Actions --}}
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="submit"
-                                class="btn btn-success"
-                                onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">
-                            <i class="bi bi-check-circle"></i> Update Block
-                        </button>
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <a href="{{ route('addblock.index') }}" class="btn btn-secondary">
                             <i class="bi bi-x-circle"></i> Cancel
                         </a>
+                        <button type="submit"
+                                class="btn btn-success"
+                                onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">
+                            <i class="bi bi-check-circle"></i> Update Property
+                        </button>
                     </div>
                 </form>
             </div>

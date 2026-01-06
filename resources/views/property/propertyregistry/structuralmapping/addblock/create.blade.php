@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Block to Property')
+@section('title', 'http://127.0.0.1:8000/property/propertyaddblock/edit/1')
 @section('content')
 
     @if ($errors->any())
@@ -38,10 +38,12 @@
         <label class="form-label">Block Description</label>
         <textarea class="form-control" rows="2" name="Description" placeholder="Optional description"></textarea>
       </div>
+      <div class="d-flex justify-content-between">
+        <a href="{{ route('addblock.index') }}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-success"
                 onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Block
         </button>
-        <a href="{{ route('addblock.index') }}" class="btn btn-secondary">Cancel</a>
+      </div>
 </form>
       </div>
     </div>
