@@ -57,7 +57,7 @@ type AuthResponse = {
   token: string;
 };
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://127.0.0.1:8000";
 const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
 
 if (!baseUrl && typeof window === "undefined") {
@@ -86,6 +86,7 @@ export const authOptions: NextAuthOptions = {
           body: JSON.stringify({
             email: credentials.email,
             password: credentials.password,
+            profile_type: credentials.profile_type,
           }),
         });
 
@@ -131,6 +132,17 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: { strategy: "jwt", maxAge: 23 * 60 * 60 },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production' ? (process.env.NEXTAUTH_URL?.startsWith('https') ?? false) : false,
+      },
+    },
+  },
   callbacks: {
     async jwt({ token, user }): Promise<JWT> {
       if (user) {

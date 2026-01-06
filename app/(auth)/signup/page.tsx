@@ -1,11 +1,16 @@
-import SignUpPage from "@/components/signin/register-form";
+import { ThemeToggle } from "@/app/dashboard/theme-toggle"
+import { RegisterForm } from "@/components/signin/register-form"
 
-export default function Page() {
+export default function UserRegister() {
   return (
-    <main className="min-h-screen w-full bg-white dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto py-16 px-6">
-        <SignUpPage />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100 dark:bg-zinc-950 relative">
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
       </div>
-    </main>
+
+      <div className="w-full max-w-xl">
+        <RegisterForm />
+      </div>
+    </div>
   )
 }

@@ -1,238 +1,263 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
-import { format } from "date-fns"
+import { useState, useCallback, useEffect } from "react";
+import { format } from "date-fns";
+import { Search, Loader2, X, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { useDebounce } from "@/hooks/use-debounce";
+import { axiosInstance } from "@/lib/axios";
+import { Badge } from "@/components/common/badge";
+import { Button } from "@/components/common/button";
+import { Card } from "@/components/common/card";
+import { Input } from "@/components/common/input";
 import {
-    Search, Loader2,
-    SlidersHorizontal, ArrowUpRight, Inbox,
-    X, Hash, Calendar
-} from "lucide-react"
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/common/table";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { Input } from "@/components/common/input"
-import { Button } from "@/components/common/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
-import { Badge } from "@/components/common/badge"
-
-function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value)
-    useEffect(() => {
-        const handler = setTimeout(() => setDebouncedValue(value), delay)
-        return () => clearTimeout(handler)
-    }, [value, delay])
-    return debouncedValue
+interface FilterChip {
+    label: string;
+    value: string;
+    type: "status" | "date";
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return !!value && typeof value === "object" && !Array.isArray(value)
-}
-
-function pick(obj: Record<string, unknown>, keys: readonly string[]): unknown {
-    for (const k of keys) {
-        const v = obj[k]
-        if (v !== undefined && v !== null && v !== "") return v
+// Helper to safely pick properties from an object (similar to lodash pick/get)
+function pick(obj: any, keys: string[]) {
+    for (const key of keys) {
+        if (obj && Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined && obj[key] !== null) {
+            return obj[key];
+        }
     }
-    return undefined
+    return undefined;
+}
+
+// Type guard
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
 }
 
 export function RfqsFilter() {
-    const [searchTerm, setSearchTerm] = useState("")
-    const [status, setStatus] = useState("all")
-    const [isSearching, setIsSearching] = useState(false)
-    const [invitations, setInvitations] = useState<unknown[] | null>(null)
-    const [error, setError] = useState<string | null>(null)
+    const [searchTerm, setSearchTerm] = useState("");
+    const [invitations, setInvitations] = useState<any[]>([]);
+    const [activeFilterChips, setActiveFilterChips] = useState<FilterChip[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const debouncedSearchTerm = useDebounce(searchTerm, 500)
+    const debouncedSearch = useDebounce(searchTerm, 300);
+
+    const fetchInvitations = useCallback(async () => {
+        setIsSearching(true);
+        setError(null);
+        try {
+            // Build query params
+            const params = new URLSearchParams();
+            if (debouncedSearch) params.append("q", debouncedSearch);
+
+            // Add other filters from chips if implemented
+            const statusFilter = activeFilterChips.find(c => c.type === 'status');
+            if (statusFilter) params.append("status", statusFilter.value);
+
+            const response = await axiosInstance.get(`/supplier/rfq-invitations?${params.toString()}`);
+
+            // Handle Laravel API response structure
+            let data = [];
+            if (Array.isArray(response.data)) {
+                data = response.data;
+            } else if (response.data && Array.isArray(response.data.data)) {
+                data = response.data.data;
+            } else if (response.data && typeof response.data === 'object') {
+                // Try to find the array if it's wrapped differently
+                data = response.data.data || [];
+            }
+
+            console.log("RFQ Invitations fetched:", data);
+            setInvitations(data);
+        } catch (err) {
+            console.error("Failed to fetch RFQ invitations:", err);
+            setError("Failed to load RFQs. Please try again.");
+            setInvitations([]);
+        } finally {
+            setIsSearching(false);
+        }
+    }, [debouncedSearch, activeFilterChips]);
 
     useEffect(() => {
-        const controller = new AbortController()
-        const fetchInvitations = async () => {
-            try {
-                setIsSearching(true)
-                setError(null)
-                const params = new URLSearchParams()
-                if (debouncedSearchTerm) params.set("q", debouncedSearchTerm)
-                if (status && status !== "all") params.set("status", status)
+        fetchInvitations();
+    }, [fetchInvitations]);
 
-                const url = `/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`;
-                const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } })
-                const data = await res.json().catch(() => null)
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
 
-                if (!res.ok) throw new Error(data?.message || "Failed to load RFQs")
+    const handleClearAllFilters = () => {
+        setSearchTerm("");
+        setActiveFilterChips([]);
+    };
 
-                let list: unknown[] = []
-                if (isRecord(data) && Array.isArray(data["data"])) {
-                    list = data["data"] as unknown[]
-                } else if (Array.isArray(data)) {
-                    list = data as unknown[]
-                }
-                setInvitations(list)
-            } catch (e: any) {
-                if (e.name === "AbortError") return
-                setError(e.message || "Unable to load RFQs")
-                setInvitations([])
-            } finally {
-                setIsSearching(false)
-            }
-        }
-        fetchInvitations()
-        return () => controller.abort()
-    }, [debouncedSearchTerm, status])
+    const handleRemoveFilter = (filterType: string) => {
+        setActiveFilterChips((prev) => prev.filter((chip) => chip.type !== filterType));
+    };
+
+    const resultCount = invitations.length;
 
     return (
-        <div className="w-full space-y-10 py-4">
-            <header className="flex items-center justify-between px-1">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-1 bg-primary rounded-full" />
-                        <h2 className="text-2xl font-bold tracking-tight text-foreground">Quotations</h2>
-                    </div>
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-[0.15em] ml-3.5">
-                        Procurement | RFQs
-                    </p>
-                </div>
-
-                <div className="hidden md:flex items-center gap-6 text-sm">
-                    <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none mb-1.5">Invitations</span>
-                        <div className="flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-lg font-black tracking-tighter tabular-nums">{invitations?.length || 0}</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div className="flex items-center gap-4 p-1.5 pl-4 rounded-[1.25rem] bg-card border border-border/60 shadow-sm focus-within:border-primary/30 transition-all duration-300">
-                <Search className="h-4 w-4 text-muted-foreground/40" />
-                <Input
-                    placeholder="Search by ID, Title, or Reference..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 border-none shadow-none focus-visible:ring-0 text-[13px] h-10 bg-transparent"
-                />
-
-                <div className="h-6 w-px bg-border/60" />
-
-                <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger className="w-[140px] border-none shadow-none bg-transparent h-10 text-[13px] font-medium focus:ring-0">
-                        <div className="flex items-center gap-2">
-                            <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/60" />
-                            <SelectValue placeholder="All Status" />
-                        </div>
-                    </SelectTrigger>
-                    <SelectContent align="end" className="rounded-xl border-border/60">
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="ongoing">Ongoing</SelectItem>
-                        <SelectItem value="drafts">Drafts</SelectItem>
-                    </SelectContent>
-                </Select>
-
-                {(searchTerm || status !== "all") && (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => { setSearchTerm(""); setStatus("all") }}
-                        className="h-9 w-9 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-muted"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                )}
+        <div className="space-y-4 p-1">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-2xl font-semibold tracking-tight">RFQ Invitations</h1>
+                <p className="text-muted-foreground">
+                    View and manage your Request for Quotation invitations.
+                </p>
             </div>
 
-            <div className="relative overflow-hidden">
-                <div className="rounded-[1.5rem] border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pt-4">
+                <div className="col-span-full md:col-span-5 lg:col-span-4 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search by title or reference..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="pl-9 bg-background"
+                    />
+                </div>
+
+                <div className="col-span-full md:col-span-1 lg:col-span-1 flex justify-end md:justify-start">
+                    <Button
+                        variant="ghost"
+                        onClick={handleClearAllFilters}
+                        className="text-muted-foreground hover:text-foreground hover:bg-transparent px-0 transition-colors duration-200"
+                        disabled={activeFilterChips.length === 0 && !searchTerm}
+                    >
+                        Clear filters
+                    </Button>
+                </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+                {isSearching ? (
+                    <motion.div
+                        key="loading"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 text-sm text-muted-foreground"
+                    >
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Searching...</span>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="results"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+                    >
+                        {resultCount !== null && (
+                            <span>
+                                {resultCount} {resultCount === 1 ? "result" : "results"}{" "}
+                                {activeFilterChips.length > 0 && "for"}
+                            </span>
+                        )}
+                        <AnimatePresence>
+                            {activeFilterChips.map((filter) => (
+                                <motion.div
+                                    key={`${filter.type}-${filter.value}`}
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    className="inline-flex items-center rounded-full bg-primary/10 text-primary-foreground px-3 py-1 text-xs font-medium dark:bg-primary/20"
+                                >
+                                    {filter.label}
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleRemoveFilter(filter.type)}
+                                        className="ml-1 -mr-1 h-4 w-4 rounded-full p-0.5 text-primary-foreground hover:bg-primary/20 dark:hover:bg-primary/30"
+                                    >
+                                        <X className="h-3 w-3" />
+                                        <span className="sr-only">Remove {filter.label} filter</span>
+                                    </Button>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                        {resultCount === 0 && activeFilterChips.length === 0 && !searchTerm && (
+                            <span className="text-muted-foreground">No filters applied.</span>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <div className="mt-6">
+                {error && (
+                    <div className="text-destructive text-sm mb-4">{error}</div>
+                )}
+                <Card className="p-0 overflow-hidden">
                     <Table>
-                        <TableHeader className="bg-muted/30 border-b border-border/40">
-                            <TableRow className="hover:bg-transparent border-none">
-                                <TableHead className="h-14 pl-8 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">Details</TableHead>
-                                <TableHead className="h-14 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
-                                    <div className="flex items-center gap-1.5"><Hash className="h-3 w-3" /> Reference</div>
-                                </TableHead>
-                                <TableHead className="h-14 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
-                                    <div className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Deadline</div>
-                                </TableHead>
-                                <TableHead className="h-14 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 text-center">Status</TableHead>
-                                <TableHead className="h-14 text-right pr-8 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">Action</TableHead>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Title</TableHead>
+                                <TableHead>Reference</TableHead>
+                                <TableHead>Closing date</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <AnimatePresence mode="popLayout">
-                                {invitations?.map((rfq) => {
-                                    const obj = isRecord(rfq) ? rfq : {}
-                                    const id = pick(obj, ["id", "rfqId", "RFQID", "rfq_id"])
-                                    const title = pick(obj, ["comments", "title", "RFQTitle", "name"]) ?? "Untitled RFQ"
-                                    const ref = pick(obj, ["number", "reference", "RFQRef", "ref"]) ?? "-"
-                                    const closing = pick(obj, ["submissionDeadline", "closingDate", "deadline"])
-                                    const rfqStatus = String(pick(obj, ["status", "state"]) ?? "").toUpperCase()
-
-                                    return (
-                                        <motion.tr
-                                            key={String(id)}
-                                            initial={{ opacity: 0, y: 5 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="group border-border/30 hover:bg-accent/20 transition-all duration-200"
-                                        >
-                                            <TableCell className="py-5 pl-8">
-                                                <div className="font-bold text-[14px] text-foreground/90 tracking-tight leading-none group-hover:text-primary transition-colors">{String(title)}</div>
-                                                <div className="text-[10px] font-bold text-muted-foreground/30 mt-2 flex items-center gap-1.5 uppercase tracking-tighter">
-                                                    UUID <span className="h-1 w-1 rounded-full bg-border" /> {String(id).slice(0, 12)}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-[13px] font-medium text-muted-foreground/70 tabular-nums">
-                                                {String(ref)}
-                                            </TableCell>
-                                            <TableCell className="text-[13px] font-medium text-muted-foreground/70 tabular-nums">
-                                                {closing ? format(new Date(String(closing)), "dd MMM, yyyy") : "—"}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge className={`
-                                                    rounded-md px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest border-none
-                                                    ${rfqStatus === "OPEN" ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20" : "bg-muted text-muted-foreground"}
-                                                `}>
-                                                    {rfqStatus || "N/A"}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right pr-8">
-                                                <Button asChild variant="ghost" className="h-9 w-9 p-0 rounded-full hover:bg-primary hover:text-primary-foreground group/btn shadow-none">
-                                                    <Link href={`/dashboard/rfqs/${encodeURIComponent(String(id))}`}>
-                                                        <ArrowUpRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                            {(invitations || []).map((rfq: unknown) => {
+                                const obj = isRecord(rfq) ? rfq : {};
+                                const id = pick(obj, ["id", "rfqId", "RFQID", "rfq_id"]);
+                                // Title: show comments when available
+                                const title = pick(obj, ["comments", "title", "RFQTitle", "name", "referenceName"]) ?? "Untitled RFQ";
+                                // Reference should use 'number' per API
+                                const ref = pick(obj, ["number", "referenceNumber", "reference", "RFQRef", "ref_no", "ref"]) ?? "-";
+                                // Closing date should use 'submissionDeadline' per API
+                                const closing = pick(obj, ["submissionDeadline", "closingDate", "closeDate", "closing_date", "deadline", "endDate"]);
+                                const status = String(pick(obj, ["status", "invitationStatus", "state"]) ?? "").toUpperCase();
+                                return (
+                                    <TableRow key={String(id)}>
+                                        <TableCell className="max-w-[320px]">
+                                            <div className="font-medium text-foreground line-clamp-2">{String(title)}</div>
+                                            <div className="text-xs text-muted-foreground">ID: {String(id)}</div>
+                                        </TableCell>
+                                        <TableCell>{String(ref)}</TableCell>
+                                        <TableCell>{closing ? format(new Date(String(closing)), "MMM d, yyyy HH:mm") : "-"}</TableCell>
+                                        <TableCell>
+                                            {status ? (
+                                                <Badge variant={status === "OPEN" ? "default" : status === "CLOSED" ? "secondary" : "outline"}>{status}</Badge>
+                                            ) : (
+                                                <span className="text-muted-foreground">-</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {id ? (
+                                                <Button asChild size="sm">
+                                                    <Link href={`/dashboard/rfqs/${encodeURIComponent(String(id))}`} className="inline-flex items-center gap-1">
+                                                        View & Respond <ExternalLink className="h-4 w-4" />
                                                     </Link>
                                                 </Button>
-                                            </TableCell>
-                                        </motion.tr>
-                                    )
-                                })}
-                            </AnimatePresence>
+                                            ) : (
+                                                <span className="text-muted-foreground">N/A</span>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                            {!isSearching && invitations && invitations.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                                        No RFQ invitations found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
-
-                    {isSearching && (
-                        <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-10">
-                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        </div>
-                    )}
-
-                    {!isSearching && invitations?.length === 0 && (
-                        <div className="py-24 flex flex-col items-center justify-center text-center">
-                            <div className="h-16 w-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-                                <Inbox className="h-6 w-6 text-muted-foreground/20" />
-                            </div>
-                            <h3 className="text-sm font-bold text-foreground tracking-tight uppercase">No records found</h3>
-                            <p className="text-xs text-muted-foreground/50 mt-1 max-w-[240px]">We couldn't find any RFQs matching your current filter criteria.</p>
-                        </div>
-                    )}
-                </div>
+                </Card>
             </div>
-
-            {error && (
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/5 border border-destructive/10">
-                    <div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
-                    <p className="text-[11px] font-bold text-destructive uppercase tracking-widest">Connection Error: {error}</p>
-                </div>
-            )}
         </div>
-    )
+    );
 }

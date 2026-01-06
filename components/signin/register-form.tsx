@@ -1,432 +1,308 @@
 "use client"
 
-import * as React from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-import {
-  UserPlus, Loader2, AlertCircle,
-  CheckCircle2, ChevronDown
-} from "lucide-react"
+import { z } from "zod"
+import { AlertCircle, Loader2 } from "lucide-react"
 
-import { Button } from "@/components/common/button"
-import { Input } from "@/components/common/input"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { FormField } from "@/components/signin/form-field"
+import { PasswordField } from "@/components/signin/password-field"
+import { AuthHeader } from "@/components/signin/auth-header"
+// import { ContactSection } from "@/components/signin/contact-section"
+import { registerUser } from "@/actions/auth"
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-
-const registerSchema = z.object({
-  Name: z.string().min(2, "Company name is required"),
-  TradingName: z.string().optional(),
-  BusinessType: z.string().min(1, "Business type is required"),
-  RegistrationNumber: z.string().min(2, "Registration number is required"),
-  TaxPIN: z.string().min(2, "Tax PIN is required"),
-  VATNumber: z.string().optional(),
-  Country: z.string().min(1, "Country is required"),
-  Location: z.string().min(1, "Location is required"),
-  Email: z.string().optional().or(z.literal("")).refine(val => !val || z.string().email().safeParse(val).success, "Invalid email address"),
-  Phone: z.string().min(10, "Invalid phone number").refine(
-    (val) => /^\+?\d{10,15}$/.test(val.replace(/\s/g, '')),
-    "Phone must be in format +254700000000"
-  ),
-  PhysicalAddress: z.string().optional(),
-  Website: z.string().optional().or(z.literal("")).refine(val => !val || z.string().url().safeParse(val).success, "Invalid URL"),
-  types: z.array(z.string()).min(1, "Select at least one account type"),
-  createUser: z.boolean(),
-  user_FirstName: z.string().optional(),
-  user_LastName: z.string().optional(),
-  user_Email: z.string().optional().refine(val => !val || z.string().email().safeParse(val).success, "Invalid email address"),
-  user_Phone: z.string().optional(),
-  user_Gender: z.string().optional(),
-  user_Password: z.string().optional(),
-  user_Password_confirmation: z.string().optional(),
-  supplier_category: z.string().optional(),
-}).refine((data) => {
-  if (data.createUser) {
-    return !!data.user_FirstName && !!data.user_LastName && !!data.user_Email && !!data.user_Password && !!data.user_Password_confirmation
-  }
-  return true
-}, {
-  message: "Admin details are required",
-  path: ["user_FirstName"],
-}).refine((data) => {
-  if (data.createUser && data.user_Password && data.user_Password_confirmation) {
-    return data.user_Password === data.user_Password_confirmation
-  }
-  return true
-}, {
-  message: "Passwords must match",
-  path: ["user_Password_confirmation"],
-})
-
-type FormValues = z.infer<typeof registerSchema>
-
-export default function SignUpPage() {
-  const router = useRouter()
-  const [authError, setAuthError] = React.useState<string | null>(null)
-  const [success, setSuccess] = React.useState(false)
-  const [metadata, setMetadata] = React.useState({
-    countries: [],
-    businessTypes: [],
-    supplierCategories: [],
-    localities: []
+const registerSchema = z
+  .object({
+    firstName: z.string().min(2, "First name is required"),
+    lastName: z.string().min(2, "Last name is required"),
+    email: z.string().email("Please enter a valid email address"),
+    phone: z.string().min(10, "Phone number is required"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Must mention one uppercase letter")
+      .regex(/[a-z]/, "Must mention one lowercase letter")
+      .regex(/[0-9]/, "Must mention one number"),
+    confirmPassword: z.string(),
   })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+
+type RegisterValues = z.infer<typeof registerSchema>
+
+export function RegisterForm() {
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+    formState: { errors, isSubmitting, isValid, touchedFields },
+  } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    mode: "onBlur",
-    defaultValues: {
-      Name: "",
-      TradingName: "",
-      BusinessType: "",
-      RegistrationNumber: "",
-      TaxPIN: "",
-      VATNumber: "",
-      Country: "",
-      Location: "",
-      Email: "",
-      Phone: "",
-      PhysicalAddress: "",
-      Website: "",
-      types: [],
-      createUser: true,
-      user_FirstName: "",
-      user_LastName: "",
-      user_Email: "",
-      user_Phone: "",
-      user_Gender: "",
-      user_Password: "",
-      user_Password_confirmation: "",
-      supplier_category: ""
-    }
+    mode: "onChange",
   })
 
-  const accountTypes = watch("types") || []
-  const isSupplier = accountTypes.includes("Supplier")
-  const createUser = watch("createUser")
-  const selectedCountry = watch("Country")
+  // Watch fields for dynamic styling
+  const watchedFields = watch()
 
-  const fetchMetadata = React.useCallback(async () => {
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
-      const endpoints = [
-        { key: 'countries', url: `${baseUrl}/api/v1/portal/auth/metadata/countries` },
-        { key: 'businessTypes', url: `${baseUrl}/api/v1/portal/auth/metadata/business-types` }
-      ]
-      if (isSupplier) endpoints.push({ key: 'supplierCategories', url: `${baseUrl}/api/v1/portal/auth/metadata/supplier-categories` })
-
-      const results = await Promise.all(endpoints.map(e => fetch(e.url).then(res => res.json())))
-      const newMetadata: any = {}
-      endpoints.forEach((e, i) => {
-        newMetadata[e.key] = results[i].data || []
-      })
-      setMetadata(prev => ({ ...prev, ...newMetadata }))
-    } catch (err) {
-      console.error(err)
-    }
-  }, [isSupplier])
-
-  React.useEffect(() => { fetchMetadata() }, [fetchMetadata])
-
-  React.useEffect(() => {
-    const fetchLocalities = async () => {
-      if (!selectedCountry) {
-        setMetadata(prev => ({ ...prev, localities: [] }))
-        setValue("Location", "")
-        return
-      }
-
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
-        const country = metadata.countries.find((c: any) => c.code === selectedCountry || c.name === selectedCountry)
-        if (!country) return
-
-        const response = await fetch(`${baseUrl}/api/v1/portal/auth/metadata/localities/${(country as any).id}`)
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-        const result = await response.json()
-        setMetadata(prev => ({ ...prev, localities: result.data || [] }))
-      } catch (err) {
-        setMetadata(prev => ({ ...prev, localities: [] }))
-      }
-    }
-
-    fetchLocalities()
-  }, [selectedCountry, metadata.countries, setValue])
-
-  const onSubmit = async (data: FormValues) => {
-    setAuthError(null)
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
-
-      const formatPhone = (phone: string) => {
-        if (!phone) return phone
-        let cleaned = phone.replace(/[\s\-\(\)\.\+]/g, '')
-        return '+' + cleaned
-      }
-
-      const payload: any = {
-        Name: data.Name,
-        TradingName: data.TradingName || data.Name,
-        BusinessType: data.BusinessType,
-        RegistrationNumber: data.RegistrationNumber,
-        TaxPIN: data.TaxPIN,
-        Country: data.Country,
-        Location: data.Location,
-        Phone: formatPhone(data.Phone),
-        types: data.types,
-        createUser: data.createUser
-      }
-
-      if (data.VATNumber) payload.VATNumber = data.VATNumber
-      if (data.Email) payload.Email = data.Email
-      if (data.PhysicalAddress) payload.PhysicalAddress = data.PhysicalAddress
-      if (data.Website) payload.Website = data.Website
-
-      if (data.createUser) {
-        payload.user_FirstName = data.user_FirstName
-        payload.user_LastName = data.user_LastName
-        payload.user_Email = data.user_Email
-        payload.user_Password = data.user_Password
-        payload.user_Password_confirmation = data.user_Password_confirmation
-        if (data.user_Phone) payload.user_Phone = formatPhone(data.user_Phone)
-        if (data.user_Gender) payload.user_Gender = data.user_Gender
-      }
-
-      if (data.supplier_category && data.types.includes("Supplier")) {
-        payload.supplier_category = data.supplier_category
-      }
-
-      const response = await fetch(`${baseUrl}/api/v1/portal/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(payload)
-      })
-
-      const result = await response.json()
-      if (!response.ok) {
-        // Handle validation errors from backend
-        if (result.errors) {
-          const errorMessages = Object.values(result.errors).flat() as string[]
-          throw new Error(result.message || errorMessages.join(', '))
-        }
-        throw new Error(result.message || result.error || "Registration failed")
-      }
-      setSuccess(true)
-    } catch (err: any) {
-      setAuthError(err.message || "Registration failed. Please try again.")
-    }
+  // Helper to determine field status
+  const getFieldStatus = (fieldName: keyof RegisterValues) => {
+    if (errors[fieldName]) return "error"
+    if (touchedFields[fieldName] && !errors[fieldName] && watchedFields[fieldName]) return "success"
+    return "default"
   }
 
-  const onError = (errors: any) => {
-    const firstError = Object.values(errors)[0] as any
-    setAuthError(firstError?.message || "Please fill in all required fields correctly")
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+  const fieldStatuses = {
+    firstName: getFieldStatus("firstName"),
+    lastName: getFieldStatus("lastName"),
+    email: getFieldStatus("email"),
+    phone: getFieldStatus("phone"),
+    password: getFieldStatus("password"),
+    confirmPassword: getFieldStatus("confirmPassword"),
   }
 
-  const fieldBase = "h-12 w-full rounded-lg border border-slate-200 bg-transparent px-4 text-sm transition-all outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-slate-900 placeholder:text-slate-400"
-  const labelBase = "text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block ml-1"
+  const onSubmit = async (data: RegisterValues) => {
+    // try {
+    await registerUser(data)
+    // } catch (error) {
+    //   // Error is handled by the action which throws
+    //   console.error(error)
+    // }
+  }
 
-  if (success) return (
-    <div className="flex min-h-screen items-center justify-center p-6 text-center">
-      <div className="max-w-sm space-y-6">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/5">
-          <CheckCircle2 className="h-10 w-10 text-primary" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-slate-900">Application Sent</h2>
-          <p className="text-slate-500 text-sm leading-relaxed">We are reviewing your organization details. Check your email for an activation link shortly.</p>
-        </div>
-        <Button onClick={() => router.push("/signin")} className="w-full rounded-full h-12">Return to Login</Button>
-      </div>
-    </div>
-  )
+  const resolveInputStyles = (fieldName: keyof RegisterValues, hasError: boolean) => {
+    if (hasError) {
+      return "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50"
+    }
+    if (touchedFields[fieldName] && !errors[fieldName] && watchedFields[fieldName]) {
+      return "border-green-300 focus:border-green-500 focus:ring-green-500/20 bg-green-50"
+    }
+    return "border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+  }
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col items-center py-12 px-6">
-      <div className="w-full max-w-[480px] space-y-10">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Third Party Registration</h1>
-          <p className="text-slate-500 text-sm">Enter your details to create account.</p>
+    <div className="w-full max-w-2xl mx-auto bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100 dark:border-zinc-800 p-8">
+      <AuthHeader />
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        aria-label="Registration form"
+        className="space-y-8"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            status={fieldStatuses.firstName}
+            label="First Name"
+            required
+            error={errors.firstName?.message}
+            id="firstName"
+          >
+            <Input
+              id="firstName"
+              type="text"
+              placeholder="e.g. Mary"
+              {...register("firstName")}
+              aria-invalid={!!errors.firstName}
+              className={resolveInputStyles("firstName", !!errors.firstName)}
+            />
+          </FormField>
+
+          <FormField
+            status={fieldStatuses.lastName}
+            label="Last Name"
+            required
+            error={errors.lastName?.message}
+            id="lastName"
+          >
+            <Input
+              id="lastName"
+              type="text"
+              placeholder="e.g. Ochieng"
+              {...register("lastName")}
+              aria-invalid={!!errors.lastName}
+              className={resolveInputStyles("lastName", !!errors.lastName)}
+            />
+          </FormField>
+
+          <FormField
+            status={fieldStatuses.email}
+            label="Email Address"
+            required
+            error={errors.email?.message}
+            id="email"
+          >
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              autoComplete="email"
+              {...register("email")}
+              aria-invalid={!!errors.email}
+              className={resolveInputStyles("email", !!errors.email)}
+            />
+          </FormField>
+
+          <FormField
+            status={fieldStatuses.phone}
+            label="Phone Number"
+            required
+            error={errors.phone?.message}
+            id="phoneNumber"
+          >
+            {(() => {
+              const phoneReg = register("phone")
+
+              const handleBeforeInput = (e: any) => {
+                // Prevent typing any non-digit characters
+                const data = e?.data
+                if (data && /\D/.test(data)) {
+                  e.preventDefault()
+                }
+              }
+
+              const handlePaste = (e: any) => {
+                const pasted = e?.clipboardData?.getData?.("text") || (window as any).clipboardData?.getData?.("Text") || ""
+                if (!pasted) return
+                const cleaned = pasted.replace(/\D/g, "")
+                if (cleaned === pasted) return // no invalid chars
+                e.preventDefault()
+                const target = e.target as HTMLInputElement
+                const start = target.selectionStart ?? target.value.length
+                const end = target.selectionEnd ?? start
+                const newVal = target.value.slice(0, start) + cleaned + target.value.slice(end)
+                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+                if (nativeSetter) {
+                  nativeSetter.call(target, newVal)
+                } else {
+                  target.value = newVal
+                }
+                const ev = new Event("input", { bubbles: true })
+                target.dispatchEvent(ev)
+                // let react-hook-form know about the change
+                if (phoneReg.onChange) phoneReg.onChange({ target } as any)
+              }
+
+              const handleChange = (e: any) => {
+                const cleaned = (e.target.value || "").replace(/\D/g, "")
+                if (cleaned !== e.target.value) {
+                  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+                  if (nativeSetter) nativeSetter.call(e.target, cleaned)
+                  else e.target.value = cleaned
+                  const ev = new Event("input", { bubbles: true })
+                  e.target.dispatchEvent(ev)
+                }
+                if (phoneReg.onChange) phoneReg.onChange(e)
+              }
+
+              return (
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="254712345678"
+                  autoComplete="tel"
+                  {...phoneReg}
+                  aria-invalid={!!errors.phone}
+                  onBeforeInput={handleBeforeInput}
+                  onPaste={handlePaste}
+                  onChange={handleChange}
+                  className={resolveInputStyles("phone", !!errors.phone)}
+                />
+              )
+            })()}
+          </FormField>
+
+          <PasswordField
+            id="password"
+            label="Password"
+            placeholder="Enter your password"
+            value={watchedFields.password}
+            error={errors.password?.message}
+            status={fieldStatuses.password}
+            showPassword={showPassword}
+            onTogglePassword={() => setShowPassword(!showPassword)}
+            register={register("password")}
+          />
+
+          <PasswordField
+            id="confirmPassword"
+            label="Confirm Password"
+            placeholder="Confirm your password"
+            value={watchedFields.confirmPassword}
+            error={errors.confirmPassword?.message}
+            status={fieldStatuses.confirmPassword}
+            showPassword={showConfirmPassword}
+            onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
+            register={register("confirmPassword")}
+            showMatchIndicator={touchedFields.confirmPassword}
+            passwordsMatch={
+              watchedFields.confirmPassword === watchedFields.password &&
+              watchedFields.confirmPassword !== ""
+            }
+            onPaste={(e: React.ClipboardEvent) => e.preventDefault()}
+          />
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-6">
-          {authError && (
-            <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-xs font-medium text-red-600 border border-red-100">
-              <AlertCircle className="h-4 w-4" /> {authError}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Organization Details</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className={labelBase}>Legal Company Name</label>
-                <Input {...register("Name")} placeholder="e.g. Acme Corp" className={fieldBase} />
-              </div>
-              <div>
-                <label className={labelBase}>Business Type</label>
-                <div className="relative">
-                  <select {...register("BusinessType")} className={cn(fieldBase, "appearance-none")}>
-                    <option value="" className="bg-white text-slate-900">Select...</option>
-                    {metadata.businessTypes.map((t: any) => (
-                      <option key={t.id} value={t.value || t.id} className="bg-white text-slate-900">{t.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-              <div>
-                <label className={labelBase}>Country</label>
-                <div className="relative">
-                  <select {...register("Country")} className={cn(fieldBase, "appearance-none")}>
-                    <option value="" className="bg-white text-slate-900">Select...</option>
-                    {metadata.countries.map((c: any) => (
-                      <option key={c.id} value={c.code || c.name} className="bg-white text-slate-900">
-                        {c.flag} {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelBase}>Location / City</label>
-                <div className="relative">
-                  <select {...register("Location")} className={cn(fieldBase, "appearance-none")} disabled={!selectedCountry || metadata.localities.length === 0}>
-                    <option value="" className="bg-white text-slate-900">
-                      {!selectedCountry ? "Select country first..." : metadata.localities.length === 0 ? "Loading localities..." : "Select location..."}
-                    </option>
-                    {metadata.localities.map((l: any) => (
-                      <option key={l.id} value={l.id} className="bg-white text-slate-900">{l.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-            {isSupplier && (
-              <div className="animate-in fade-in duration-300">
-                <label className={labelBase}>Supplier Category</label>
-                <div className="relative">
-                  <select {...register("supplier_category")} className={cn(fieldBase, "appearance-none border-primary/40")}>
-                    <option value="" className="bg-white text-slate-900">Select Category...</option>
-                    {metadata.supplierCategories.map((s: any) => (
-                      <option key={s.id} value={s.id} className="bg-white text-slate-900">{s.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-primary/50 pointer-events-none" />
-                </div>
-              </div>
-            )}
+        {errors.root?.message && (
+          <div
+            className="p-4 bg-red-50 border border-red-200 rounded-lg"
+            role="alert"
+            aria-live="polite"
+          >
+            <p className="text-red-600 text-sm flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              {errors.root.message}
+            </p>
           </div>
+        )}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2"><h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Identification & Contact</h3></div>
-            <div>
-              <label className={labelBase}>Reg Number</label>
-              <Input {...register("RegistrationNumber")} placeholder="RC123456" className={fieldBase} />
-            </div>
-            <div>
-              <label className={labelBase}>Tax PIN / ID</label>
-              <Input {...register("TaxPIN")} placeholder="A0012345" className={fieldBase} />
-            </div>
-            <div className="sm:col-span-2">
-              <label className={labelBase}>Company Phone</label>
-              <Input {...register("Phone")} placeholder="+254700000000" className={fieldBase} />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className={labelBase}>Applying as</label>
-            <div className="flex flex-wrap gap-2">
-              {['Supplier', 'Tenant', 'Customer'].map((type) => {
-                const active = accountTypes.includes(type)
-                return (
-                  <label key={type} className={cn(
-                    "flex-1 min-w-[100px] cursor-pointer rounded-lg border px-4 py-3 text-center transition-all",
-                    active ? "border-primary bg-primary/5 text-primary" : "border-slate-200 text-slate-500 hover:border-slate-300"
-                  )}>
-                    <input type="checkbox" value={type} {...register("types")} className="hidden" />
-                    <span className="text-xs font-bold">{type}</span>
-                  </label>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-100 p-4 space-y-4 bg-slate-50/30">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4 text-slate-400" />
-                <span className="text-sm font-bold text-slate-900">Admin Account</span>
-              </div>
-              <input type="checkbox" {...register("createUser")} className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary" />
-            </div>
-
-            {createUser && (
-              <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-300">
-                <Input {...register("user_FirstName")} placeholder="First Name" className={fieldBase} />
-                <Input {...register("user_LastName")} placeholder="Last Name" className={fieldBase} />
-                <div className="col-span-2">
-                  <Input {...register("user_Email")} placeholder="Admin Work Email" type="email" className={fieldBase} />
-                </div>
-                <Input {...register("user_Phone")} placeholder="Phone (optional)" className={fieldBase} />
-                <div className="relative">
-                  <select {...register("user_Gender")} className={cn(fieldBase, "appearance-none")}>
-                    <option value="" className="bg-white text-slate-900">Gender</option>
-                    <option value="m" className="bg-white text-slate-900">Male</option>
-                    <option value="f" className="bg-white text-slate-900">Female</option>
-                    <option value="o" className="bg-white text-slate-900">Other</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
-                </div>
-                <div className="col-span-2">
-                  <Input {...register("user_Password")} placeholder="Password" type="password" className={fieldBase} />
-                  {errors.user_Password && (
-                    <p className="text-xs text-red-500 mt-1 ml-1">{errors.user_Password.message}</p>
-                  )}
-                </div>
-                <div className="col-span-2">
-                  <Input {...register("user_Password_confirmation")} placeholder="Confirm Password" type="password" className={fieldBase} />
-                  {errors.user_Password_confirmation && (
-                    <p className="text-xs text-red-500 mt-1 ml-1">{errors.user_Password_confirmation.message}</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="pt-6 flex flex-col sm:flex-row gap-4 w-full">
+          <Link
+            href="/signin"
+            className="flex-1 inline-flex items-center justify-center min-h-[56px] px-6 text-base font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 transition-all text-center"
+          >
+            Back to Login
+          </Link>
 
           <Button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full h-12 rounded-lg bg-slate-900 hover:bg-black text-white font-bold transition-all disabled:opacity-50"
+            disabled={isSubmitting || !isValid}
+            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[56px] px-6 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all text-center"
+            aria-describedby={isSubmitting ? "submit-status" : undefined}
           >
-            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Complete Registration"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span id="submit-status">Creating Account...</span>
+              </>
+            ) : (
+              "Create Account"
+            )}
           </Button>
+        </div>
 
-          <div className="text-center">
-            <p className="text-sm text-slate-500">
-              Already registered? <Link href="/signin" className="text-primary font-bold hover:underline">Sign In</Link>
-            </p>
-          </div>
-        </form>
-      </div>
+        <div className="text-center pt-4 text-base text-gray-600">
+          Already have an account?{" "}
+          <Link
+            href="/signin"
+            className="text-blue-600 hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+          >
+            Sign in
+          </Link>
+        </div>
+
+        {/* <div className="mt-10">
+          <ContactSection />
+        </div> */}
+      </form>
     </div>
   )
 }
