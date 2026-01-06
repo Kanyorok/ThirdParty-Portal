@@ -77,7 +77,8 @@ const request = async <T = any>(
     headers,
   });
 
-  const data = await response.json();
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
 
   if (!response.ok) {
     throw new Error(data.message || `Request failed with status ${response.status}`);
@@ -95,7 +96,7 @@ export const authService = {
 
     return {
       user: response.user!,
-      token: response.token || (response.data as any) || '',
+      token: response.token || (response.data as any)?.token || '',
     };
   },
 
@@ -107,7 +108,7 @@ export const authService = {
 
     return {
       user: response.user!,
-      token: response.token || (response.data as any) || '',
+      token: response.token || (response.data as any)?.token || '',
     };
   },
 
@@ -125,7 +126,7 @@ export const authService = {
     );
 
     return {
-      user: response.data!,
+      user: response.data || response.user!,
     };
   },
 
@@ -138,7 +139,7 @@ export const authService = {
       token
     );
 
-    return response.user!;
+    return response.user || response.data!;
   },
 
   logout: async (token: string): Promise<void> => {

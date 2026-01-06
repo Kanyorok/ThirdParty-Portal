@@ -1,16 +1,33 @@
-import { ThemeToggle } from "@/app/dashboard/theme-toggle"
-import { RegisterForm } from "@/components/signin/register-form"
+import { Metadata } from "next";
+import RegisterForm from "@/components/signin/register-form";
+import Link from "next/link";
 
-export default function UserRegister() {
+export const metadata: Metadata = {
+  title: "Register | Portal",
+  description: "Join the ecosystem.",
+};
+
+export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100 dark:bg-zinc-950 relative">
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
+    <main className="min-h-screen bg-white flex flex-col items-center justify-center py-12">
+      <div className="w-full max-w-2xl px-6">
+        <div className="border border-slate-100 bg-white mb-8">
+          <div className="p-8 sm:p-16">
+            <RegisterForm />
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-sm text-slate-400 font-medium tracking-tight">
+                Already have an account?
+              </span>
+              <Link
+                href="/signin"
+                className="text-sm font-bold text-slate-900 border-b-2 border-slate-900 pb-0.5 hover:text-slate-500 hover:border-slate-500 transition-all"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div className="w-full max-w-xl">
-        <RegisterForm />
-      </div>
-    </div>
-  )
+    </main>
+  );
 }

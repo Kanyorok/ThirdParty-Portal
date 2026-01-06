@@ -37,6 +37,7 @@ export interface AuthState {
 }
 
 export interface BaseUser {
+    id: string;
     user_id: number;
     third_party_id: number | null;
     first_name: string;
