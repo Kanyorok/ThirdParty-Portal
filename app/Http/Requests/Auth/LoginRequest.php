@@ -92,7 +92,8 @@ class LoginRequest extends FormRequest
             ])->save();
 
             //new session
-            Auth::login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
+            //new session
+            Auth::guard('web')->login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
             $this->session()->regenerate();
 
             session([
@@ -105,6 +106,9 @@ class LoginRequest extends FormRequest
             activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $this->getClientIp() . ' as ' . $branchRole['role']->name . ' at ' . $branchRole['branch']->Name);
 
             ModuleService::clearNavbarCache($user);
+            
+            // Force save session to DB immediately
+            $this->session()->save();
             return;
         }
 
