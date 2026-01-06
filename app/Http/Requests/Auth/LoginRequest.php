@@ -82,10 +82,10 @@ class LoginRequest extends FormRequest
 
             //remove other sessions
             //remove other sessions
-            // if (config(key: 'session.driver') === 'database') {
-            //     DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
-            //         ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
-            // }
+            if (config(key: 'session.driver') === 'database') {
+                DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
+                    ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
+            }
 
             $user->fill([
                 'last_login_at' => now(),
@@ -111,7 +111,7 @@ class LoginRequest extends FormRequest
             
             // TEMPORARILY DISABLED: session()->regenerate() causes cookie mismatch in AJAX responses
             // The browser doesn't receive the new session cookie, causing authentication to fail
-            // $this->session()->regenerate();
+            $this->session()->regenerate();
             
             // Debug: Log after regenerate
             \Log::info('AFTER session regenerate', [
