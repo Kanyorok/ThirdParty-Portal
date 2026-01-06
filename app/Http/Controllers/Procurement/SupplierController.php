@@ -42,16 +42,21 @@ class SupplierController extends Controller
                         ->limit(1),
                 ]);
 
-            if ($request->filled('search.value')) {
-                $searchValue = $request->input('search.value');
-                $query->whereHas('party', function ($q) use ($searchValue) {
-                    $q->where('ThirdPartyName', 'like', "%{$searchValue}%")
-                        ->orWhere('TradingName', 'like', "%{$searchValue}%")
-                        ->orWhere('Email', 'like', "%{$searchValue}%");
-                });
-            }
+
 
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if ($request->filled('search.value')) {
+                        $searchValue = $request->input('search.value');
+                        $query->whereHas('party', function ($q) use ($searchValue) {
+                            $q->where(function ($subQ) use ($searchValue) {
+                                $subQ->where('ThirdPartyName', 'like', "%{$searchValue}%")
+                                    ->orWhere('TradingName', 'like', "%{$searchValue}%")
+                                    ->orWhere('Email', 'like', "%{$searchValue}%");
+                            });
+                        });
+                    }
+                })
                 ->addColumn('ThirdPartyName', function (SupplierMaster $supplier) {
                     return $supplier->party->ThirdPartyName ?? 'N/A';
                 })
