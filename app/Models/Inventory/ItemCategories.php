@@ -31,6 +31,7 @@ class ItemCategories extends Model
         'Description',
         'ParentId',
         'Status',
+        'ItemTypeId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -44,12 +45,18 @@ class ItemCategories extends Model
         'Description'   => 'string',
         'ParentId'      => 'integer',
         'Status' => 'integer',
+        'ItemTypeId' => 'integer',
         'CreatedBy'     => 'integer',
         'ModifiedBy'    => 'integer',
         'DeletedBy'     => 'integer',
         'CreatedOn'     => 'datetime',
         'ModifiedOn'    => 'datetime',
     ];
+
+    public function itemType()
+    {
+        return $this->belongsTo(ItemType::class, 'ItemTypeId', 'Id');
+    }
 
     public function creator()
     {

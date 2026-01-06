@@ -79,3 +79,7 @@
   </form>
 </div>
 @endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
+@endsection

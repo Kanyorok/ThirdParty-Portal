@@ -211,9 +211,10 @@ class Order extends Model
      */
     public function workflowHistory()
     {
-        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'OrderID')
-            ->where('Source', 'OrderID')
-            ->orderBy('CreatedOn', 'desc');
+        // ApprovalWorkflowService uses the table name (t_Orders) as Source, not the morph alias
+        return $this->hasMany(\App\Models\Core\Approval\WorkflowHistory::class, 'SourceID', 'Id')
+            ->where('Source', $this->getTable())
+            ->whereNull('DeletedOn');
     }
 
      /**

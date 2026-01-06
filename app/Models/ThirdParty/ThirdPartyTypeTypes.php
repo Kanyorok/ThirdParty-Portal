@@ -15,11 +15,18 @@ class ThirdPartyTypeTypes extends Model
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
+
     protected $table = 't_ThirdPartyType_ThirdParties';
     protected $primaryKey = 'Id';
+
     protected $fillable = [
-        'TypeId', 'ThirdPartyId', 'PartyType', 'PartyID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'TypeId',
+        'ThirdPartyId',
+        'PartyType',
+        'PartyID',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy'
     ];
 
     public static function getPrimaryKey(): string

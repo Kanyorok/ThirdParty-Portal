@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -80,6 +81,7 @@ class LoginRequest extends FormRequest
             RateLimiter::clear($this->throttleKey());
 
             //remove other sessions
+            //remove other sessions
             if (config(key: 'session.driver') === 'database') {
                 DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
                     ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
@@ -90,9 +92,33 @@ class LoginRequest extends FormRequest
                 'BranchId' => $branchRole['branch']->Id,
             ])->save();
 
+            // Debug: Log before login
+            \Log::info('BEFORE Auth::login', [
+                'user_id' => $user->Id,
+                'session_id' => session()->getId(),
+                'auth_check' => auth()->check(),
+            ]);
+
             //new session
-            Auth::login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
+            Auth::guard('web')->login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
+            
+            // Debug: Log immediately after login
+            \Log::info('AFTER Auth::login', [
+                'auth_check' => auth()->check(),
+                'auth_id' => auth()->id(),
+                'session_id' => session()->getId(),
+            ]);
+            
+            // TEMPORARILY DISABLED: session()->regenerate() causes cookie mismatch in AJAX responses
+            // The browser doesn't receive the new session cookie, causing authentication to fail
             $this->session()->regenerate();
+            
+            // Debug: Log after regenerate
+            \Log::info('AFTER session regenerate', [
+                'auth_check' => auth()->check(),
+                'auth_id' => auth()->id(),
+                'session_id' => session()->getId(),
+            ]);
 
             session([
                 'LoginBranchId' => $branchRole['branch']->Id,
@@ -104,6 +130,21 @@ class LoginRequest extends FormRequest
             activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $this->getClientIp() . ' as ' . $branchRole['role']->name . ' at ' . $branchRole['branch']->Name);
 
             ModuleService::clearNavbarCache($user);
+            
+            // Force save session to DB immediately
+            $this->session()->save();
+            
+            // Debug: Check DB immediately after save
+            $dbSession = DB::table(config('session.table', 't_SYSSessions'))
+                ->where('id', session()->getId())
+                ->first();
+            \Log::info('AFTER session save', [
+                'session_id' => session()->getId(),
+                'db_found' => (bool)$dbSession,
+                'db_user_id' => $dbSession ? $dbSession->user_id : null,
+                'auth_check' => auth()->check(),
+            ]);
+            
             return;
         }
 

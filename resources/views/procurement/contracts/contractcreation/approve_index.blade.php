@@ -147,10 +147,16 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($contract->winningSupplier && $contract->winningSupplier->thirdParty)
+                                            @if($contract->winningSupplier)
                                                 <div>
-                                                    <strong>{{ $contract->winningSupplier->thirdParty->TradingName ?? $contract->winningSupplier->thirdParty->Name }}</strong>
-                                                    @if($contract->winningSupplier->thirdParty->ContactPerson)
+                                                    <strong>{{ 
+                                                        $contract->winningSupplier->supplierMaster->party->TradingName 
+                                                        ?? $contract->winningSupplier->thirdParty->TradingName 
+                                                        ?? $contract->winningSupplier->thirdParty->Name 
+                                                        ?? $contract->winningSupplier->SupplierName 
+                                                        ?? 'N/A' 
+                                                    }}</strong>
+                                                    @if(isset($contract->winningSupplier->thirdParty->ContactPerson))
                                                         <div class="text-muted small">
                                                             {{ $contract->winningSupplier->thirdParty->ContactPerson }}
                                                         </div>
@@ -191,26 +197,26 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
-                                                <a href="{{ route('contracts.show', $contract->Id) }}"
+                                                <a href="{{ route('contracts.show', ['id' => $contract->Id, 'type' => $contract->type ?? 'tender']) }}"
                                                    class="btn btn-sm btn-outline-info" title="View Contract">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
 
                                                 @if($contract->ContractStatus === 'Under Review')
                                                     <button type="button" class="btn btn-sm btn-success"
-                                                            onclick="approveContract({{ $contract->Id }})"
+                                                            onclick="approveContract({{ $contract->Id }}, '{{ $contract->type ?? 'tender' }}')"
                                                             title="Approve Contract">
                                                         <i class="fas fa-check"></i> Approve
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-danger"
-                                                            onclick="rejectContract({{ $contract->Id }})"
+                                                            onclick="rejectContract({{ $contract->Id }}, '{{ $contract->type ?? 'tender' }}')"
                                                             title="Reject Contract">
                                                         <i class="fas fa-times"></i> Reject
                                                     </button>
                                                 @elseif($contract->ContractStatus === 'Draft Created')
                                                     <span class="badge bg-secondary">Awaiting Review</span>
                                                     <button type="button" class="btn btn-sm btn-outline-primary"
-                                                            onclick="reviewContract({{ $contract->Id }})"
+                                                            onclick="reviewContract({{ $contract->Id }}, '{{ $contract->type ?? 'tender' }}')"
                                                             title="View Details">
                                                         <i class="fas fa-eye"></i> View
                                                     </button>
@@ -309,20 +315,42 @@
     </div>
 
     <script>
-        function approveContract(contractId) {
+        function approveContract(contractId, type) {
             const form = document.getElementById('approveForm');
             form.action = `{{ url('/procurement/contracts') }}/${contractId}/approve`;
+            
+            // Add award_type hidden input if not exists
+            let typeInput = form.querySelector('input[name="award_type"]');
+            if (!typeInput) {
+                typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'award_type';
+                form.appendChild(typeInput);
+            }
+            typeInput.value = type;
+
             new bootstrap.Modal(document.getElementById('approveModal')).show();
         }
 
-        function rejectContract(contractId) {
+        function rejectContract(contractId, type) {
             const form = document.getElementById('rejectForm');
             form.action = `{{ url('/procurement/contracts') }}/${contractId}/reject`;
+
+            // Add award_type hidden input if not exists
+            let typeInput = form.querySelector('input[name="award_type"]');
+            if (!typeInput) {
+                typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'award_type';
+                form.appendChild(typeInput);
+            }
+            typeInput.value = type;
+
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
 
-        function reviewContract(contractId) {
-            window.location.href = `{{ url('/procurement/contracts') }}/${contractId}`;
+        function reviewContract(contractId, type) {
+            window.location.href = `{{ url('/procurement/contracts') }}/${contractId}?type=${type}`;
         }
     </script>
 @endsection

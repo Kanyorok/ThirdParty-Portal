@@ -9,6 +9,7 @@ use App\Models\HRM\Employee;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Models\ThirdParies\Supplier;
+use App\Models\ThirdParty\SupplierMaster;
 use DateTime;
 
 class PropertyMaintenanceAssignService
@@ -28,7 +29,7 @@ class PropertyMaintenanceAssignService
         DateTime $assignmentDate,
         CodeDetail $assignmentType,
         ?Employee $internalTechnician,
-        ?Supplier $prequalifiedVendor,
+        ?SupplierMaster $prequalifiedVendor,
         DateTime $expectedStartDate,
         DateTime $expectedCompletion,
         CodeDetail $priorityLevel,
@@ -63,7 +64,7 @@ class PropertyMaintenanceAssignService
     DateTime $assignmentDate,
     CodeDetail $assignmentType,
     ?Employee $internalTechnician,
-    ?Supplier $prequalifiedVendor,
+    ?SupplierMaster $prequalifiedVendor,
     DateTime $expectedStartDate,
     DateTime $expectedCompletion,
     CodeDetail $priorityLevel,

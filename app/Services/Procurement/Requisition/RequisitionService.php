@@ -49,11 +49,7 @@ public static function addRequisition($branch, $department, $remarks, $procureme
                         'ModifiedOn' => now()
                     ]);
                 
-                Log::info("Requisition created with Draft status", [
-                    'requisition_id' => $requisitionId,
-                    'plan_id' => $procurementPlanId,
-                    'user_id' => $actor->Id
-                ]);
+
                 
                 // Auto-populate items if procurement plan is selected
                 if ($procurementPlanId) {
@@ -63,10 +59,7 @@ public static function addRequisition($branch, $department, $remarks, $procureme
                         $actor
                     );
                     
-                    Log::info("Auto-populated {$itemsAdded} items from plan", [
-                        'requisition_id' => $requisitionId,
-                        'plan_id' => $procurementPlanId
-                    ]);
+
                 }
             }
         });
@@ -112,96 +105,207 @@ public static function addRequisition($branch, $department, $remarks, $procureme
 private static function autoPopulateItemsFromPlan($requisitionId, $planId, User $actor)
 {
     try {
-        // Get draft status ID for requisition lines
-        $draftStatusId = DB::table('t_CodeDetails')
-            ->where('CodeId', 'RequisitionStatus')
-            ->where('Description', 'Draft')
-            ->where('IsActive', 1)
+
+
+        // Check if plan exists
+        $planExists = DB::table('t_ConsolidatedProcurementPlan')
+            ->where('PlanID', $planId)
             ->whereNull('DeletedOn')
-            ->value('ID');
+            ->exists();
         
-        // Get medium urgency ID (default)
-        $mediumUrgencyId = DB::table('t_CodeDetails')
-            ->where('CodeId', 'UrgencyLevel')
-            ->where('Value', '3')
+        if (!$planExists) {
+
+            return 0;
+        }
+
+        // Check plan line items
+        $planLineCount = DB::table('t_PlanLineItem')
+            ->where('PlanID', $planId)
+            ->whereNull('DeletedOn')
+            ->count();
+        
+
+
+        if ($planLineCount === 0) {
+
+            return 0;
+        }
+
+        // Get a valid status for requisition lines
+        // Try multiple status codes in order of preference
+        $statusCodes = ['Su', 'PE', 'DR']; // Submitted, Pending, Draft
+        $statusId = null;
+        
+        foreach ($statusCodes as $code) {
+            $statusId = DB::table('t_CodeDetails')
+                ->where('CodeID', 'RequisitionStatus')
+                ->where('Value', $code)
+                ->where('IsActive', 1)
+                ->whereNull('DeletedOn')
+                ->value('ID');
+            
+            if ($statusId) {
+
+                break;
+            }
+        }
+        
+        // If no status found, use NULL (will rely on default)
+        if (!$statusId) {
+
+        }
+        
+        // Get urgency - if not available, use NULL
+        $urgencyId = DB::table('t_CodeDetails')
+            ->where('CodeID', 'UrgencyLevel')
             ->where('IsActive', 1)
             ->whereNull('DeletedOn')
+            ->orderBy('ID')
             ->value('ID');
 
-        // Get all line items from the procurement plan with full details
+        if (!$urgencyId) {
+
+        }
+
+        // FIXED: Properly join to get item type information
         $planItems = DB::table('t_PlanLineItem as pli')
-            ->join('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
-            ->leftJoin('t_ItemTypes as it', 'itm.TypeID', '=', 'it.Id')
+            ->leftJoin('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
+            ->leftJoin('t_ItemTypes as it', 'itm.ItemType', '=', 'it.Id')
             ->where('pli.PlanID', $planId)
             ->whereNull('pli.DeletedOn')
             ->select(
                 'pli.LineItemID',
                 'pli.ItemID',
-                'itm.Name as ItemName',
-                'pli.ItemDescription as Description',
-                'pli.Quantity as PlanQuantity',
+                // 'pli.ItemDescription as PlanDescription', // Column does not exist
+                'pli.MergedQty as PlanQuantity',
                 'pli.UOMID',
                 'pli.UnitPrice',
-                'it.TypeName as ItemType'
+                'itm.ItemName',
+                'itm.ItemDescription as ItemDescription',
+                'itm.ItemType as ItemTypeId',
+                'it.TypeName as ItemTypeCode' // This is actually an ID reference
             )
             ->get();
 
+
+
         if ($planItems->isEmpty()) {
-            Log::warning("No items found in procurement plan {$planId}");
+
+            
+            // Debug: Check what's actually in the plan
+            $rawPlanItems = DB::table('t_PlanLineItem')
+                ->where('PlanID', $planId)
+                ->whereNull('DeletedOn')
+                ->get();
+            
+
+            
             return 0;
         }
 
         $itemsAdded = 0;
+        $errors = [];
         
         foreach ($planItems as $item) {
-            // Calculate remaining quantity (already used in other requisitions)
-            $usedQty = DB::table('t_RequisitionLines')
-                ->where('PlanLineRef', $item->LineItemID)
-                ->whereNull('DeletedOn')
-                ->sum('Quantity');
-            
-            $remainingQty = $item->PlanQuantity - $usedQty;
-            
-            // Only add if there's remaining quantity
-            if ($remainingQty > 0) {
-                // Get UOM name
-                $uomName = DB::table('t_UnitOfMeasurement')
-                    ->where('Id', $item->UOMID)
-                    ->value('Name');
+            try {
+
+
+                // Calculate remaining quantity
+                $usedQty = DB::table('t_RequisitionLines')
+                    ->where('PlanLineRef', $item->LineItemID)
+                    ->whereNull('DeletedOn')
+                    ->sum('Quantity') ?? 0;
                 
-                // Insert directly into t_RequisitionLines
-                // Note: We're NOT using the stored procedure here because we need specific control
-                DB::table('t_RequisitionLines')->insert([
-                    'Type' => $item->ItemType ?? 'General',
-                    'Item' => $item->ItemID,
-                    'Description' => $item->Description ?? $item->ItemName,
-                    'UOM' => $uomName ?? 'Unit',
-                    'Quantity' => $remainingQty,
-                    'ExpectedPrice' => $item->UnitPrice ?? 0, // Unit price, not total
-                    'UrgencyID' => $mediumUrgencyId ?? 1,
-                    'StatusID' => $draftStatusId ?? 1,
-                    'PlanLineRef' => $item->LineItemID, // Link to plan line - THIS IS KEY!
+                $remainingQty = $item->PlanQuantity - $usedQty;
+                
+
+                
+                if ($remainingQty <= 0) {
+
+                    continue;
+                }
+
+                // Get UOM - try to get the actual UOM code
+                $uomName = 'Unit'; // Default
+                if (!empty($item->UOMID)) {
+                    $uom = DB::table('t_UOM')
+                        ->where('Id', $item->UOMID)
+                        ->first();
+                    
+                    if ($uom) {
+                        $uomName = $uom->Code ?? $uom->Name ?? $uomName;
+
+                    } else {
+
+                    }
+                }
+                
+                // Prepare description - use the most descriptive available
+                $description = trim($item->PlanDescription ?? $item->ItemDescription ?? $item->ItemName ?? 'Item');
+                
+                // Prepare insert data with all required fields
+                $insertData = [
                     'RequisitionID' => $requisitionId,
+                    'Item' => $item->ItemID,
+                    'Description' => $description,
+                    'UOM' => $uomName,
+                    'Quantity' => $remainingQty,
+                    'ExpectedPrice' => $item->UnitPrice ?? 0,
+                    'PlanLineRef' => $item->LineItemID,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
                     'CreatedOn' => now(),
                     'ModifiedOn' => now(),
-                ]);
+                ];
+                
+                // Add optional fields only if they have values
+                if ($statusId) {
+                    $insertData['StatusID'] = $statusId;
+                }
+                
+                if ($urgencyId) {
+                    $insertData['UrgencyID'] = $urgencyId;
+                }
+                
+                if (!empty($item->ItemTypeId)) {
+                    $insertData['Type'] = $item->ItemTypeId;
+                }
+                
+
+                
+                DB::table('t_RequisitionLines')->insert($insertData);
                 
                 $itemsAdded++;
+                
+
+                
+            } catch (\Exception $itemError) {
+                $errorMsg = "Failed to insert line item {$item->LineItemID}: {$itemError->getMessage()}";
+                Log::error($errorMsg, [
+                    'item' => $item,
+                    'insert_data' => $insertData ?? null,
+                    'trace' => $itemError->getTraceAsString()
+                ]);
+                $errors[] = $errorMsg;
             }
         }
+        
+        if (!empty($errors)) {
+
+        }
+        
+
         
         return $itemsAdded;
         
     } catch (\Exception $e) {
-        Log::error("Failed to auto-populate items from plan: " . $e->getMessage(), [
+        Log::error("=== AUTO-POPULATE FAILED ===", [
             'plan_id' => $planId,
             'requisition_id' => $requisitionId,
+            'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ]);
         
-        // Don't throw - let requisition be created even if items fail
         return 0;
     }
 }
@@ -303,7 +407,8 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                     WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
                     THEN t_ConsolidatedProcurementPlan.Title + ' - ' + t_ConsolidatedProcurementPlan.ReferenceNumber
                     ELSE NULL
-                END AS PlanTitle")
+                END AS PlanTitle"),
+                't_Requisitions.PlanRef'
             ])
             ->groupBy(
                 't_Requisitions.Id',
@@ -318,9 +423,11 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
                 't_ConsolidatedProcurementPlan.PlanID',
                 't_ConsolidatedProcurementPlan.Title',
                 't_ConsolidatedProcurementPlan.ReferenceNumber',
+                't_ConsolidatedProcurementPlan.ReferenceNumber',
                 't_Requisitions.CreatedBy',
                 't_Users.Name',
-                't_Requisitions.DocStatus'
+                't_Requisitions.DocStatus',
+                't_Requisitions.PlanRef'
             )
             ->first();
     }
@@ -345,11 +452,36 @@ private static function autoPopulateItemsFromPlan($requisitionId, $planId, User 
 
     public static function fetchProcurementPlan()
     {
-        return DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
+        // 1. Get the ID for 'RFQ' procurement method
+        // We look for 'RFQ' in CodeDetails where CodeID is ProcurementMethod
+        $rfqMethodId = DB::table('t_CodeDetails')
+            ->where('CodeID', 'ProcurementMethod')
+            ->where(function($q) {
+                $q->where('Value', 'RFQ')
+                  ->orWhere('Description', 'RFQ');
+            })
+            ->value('ID');
+
+        $query = DB::table(DB::raw('t_ConsolidatedProcurementPlan WITH (NOLOCK)'))
             ->select('PlanID', 'Title', 'ReferenceNumber')
-            ->where('Status', '=', 'Ap')
+            ->where(function($q) {
+                $q->where('Status', '=', 'Ap')
+                  ->orWhere('Status', '=', 'Approved'); // Handle both cases just to be safe
+            })
             ->whereNull('DeletedBy')
-            ->whereNull('DeletedOn')
-            ->get();
+            ->whereNull('DeletedOn');
+
+        // 2. Filter by having at least one RFQ line item
+        if ($rfqMethodId) {
+            $query->whereExists(function ($subquery) use ($rfqMethodId) {
+                $subquery->select(DB::raw(1))
+                    ->from('t_PlanLineItem')
+                    ->whereColumn('t_PlanLineItem.PlanID', 't_ConsolidatedProcurementPlan.PlanID')
+                    ->where('t_PlanLineItem.ProcurementMethod', $rfqMethodId)
+                    ->whereNull('t_PlanLineItem.DeletedOn');
+            });
+        }
+
+        return $query->get();
     }
 }

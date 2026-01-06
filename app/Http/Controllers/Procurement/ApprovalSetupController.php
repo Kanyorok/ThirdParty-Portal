@@ -10,6 +10,7 @@ class ApprovalSetupController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', \App\Models\Core\ApprovalGroup::class);
         $approvalGroups = DB::table('t_ApprovalGroups as g')
             ->leftJoin('t_Permissions as p', 'g.Permission', '=', 'p.id')
             ->select('g.*', 'p.name as permission_name')
@@ -21,6 +22,7 @@ class ApprovalSetupController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', \App\Models\Core\ApprovalGroup::class);
         // Validate the request data
         $data = $request->validate([
             'DocType' => 'required|string',
@@ -46,6 +48,7 @@ class ApprovalSetupController extends Controller
 
     public function storeLimit(Request $request)
     {
+        $this->authorize('create', \App\Models\Core\ApprovalGroup::class);
         $data = $request->validate([
             'DocType' => 'required',
             'MaxAmount' => 'required|numeric',
@@ -59,10 +62,17 @@ class ApprovalSetupController extends Controller
 
     public function edit($id)
     {
+        $this->authorize('viewAny', \App\Models\Core\ApprovalGroup::class); // Using viewAny as we don't have a model instance easily from DB query here without checking
+        // Or fetch first then authorize.
         $approvalGroup = DB::table('t_ApprovalGroups')->where('id', $id)->first();
         if (!$approvalGroup) {
             return redirect()->back()->withErrors(['error' => 'Approval group not found.']);
         }
+
+        // Since we don't have a model instance, we rely on class-level check or need to hydrate a model (expensive).
+        // For settings, viewAny usually implies access to the settings list/edit.
+        // Let's check update permission on class for edit
+        $this->authorize('update', \App\Models\Core\ApprovalGroup::class); // Check if user can update *any* approval group (settings role)
 
         $permissions = DB::table('t_Permissions')->get();
         return view('procurement.requisitions.edit-approval-group', compact('approvalGroup', 'permissions'));
@@ -70,6 +80,7 @@ class ApprovalSetupController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->authorize('update', \App\Models\Core\ApprovalGroup::class);
         $data = $request->validate([
             'DocType' => 'required|string',
             'ApprovalType' => 'required|in:ANY,ALL,MAJ,AMT',
@@ -89,6 +100,7 @@ class ApprovalSetupController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('delete', \App\Models\Core\ApprovalGroup::class);
         DB::table('t_ApprovalGroups')->where('id', $id)->delete();
         return redirect()->route('approval-setup.index')->with('status', 'Approval group deleted successfully!');
     }

@@ -24,13 +24,28 @@ class AuthenticatedSessionController extends Controller
             ->with('branches', Branch::query()->orderBy('Name')->get(['BranchID', 'Name']));
     }
 
-    public function store(LoginRequest $request): JsonResponse
+    public function store(LoginRequest $request): JsonResponse|RedirectResponse
     {
         // Authenticate
         $request->authenticate();
 
-        return $this->succeeded(message: 'Logged in successfully.', route: route('home'));
+        // CRITICAL FIX: Return HTTP redirect instead of JSON to ensure cookie propagation
+        // AJAX can't reliably propagate Set-Cookie headers in all environments (Docker, reverse proxy)
+        // A full HTTP redirect forces the browser to set the new session cookie
+        if ($request->ajax() || $request->expectsJson()) {
+            // Return JSON with meta instruction to redirect
+            return response()->json([
+                'success' => true,
+                'message' => 'Logged in successfully.',
+                'redirect' => route('home'),
+                'meta' => [
+                    'action' => 'reload', // Signal JS to do full page reload, not AJAX navigation
+                ],
+            ]);
+        }
 
+        // Standard form submission redirect
+        return redirect()->route('home');
     }
 
     public function destroy(Request $request): RedirectResponse

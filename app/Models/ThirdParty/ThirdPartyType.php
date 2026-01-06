@@ -15,14 +15,19 @@ class ThirdPartyType extends Model
 
     protected $table = 't_ThirdPartyTypes';
     protected $primaryKey = 'TypeId';
+
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
 
     protected $fillable = [
-        'FinanceRole', 'Code', 'Description',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'FinanceRole',
+        'Code',
+        'Description',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [

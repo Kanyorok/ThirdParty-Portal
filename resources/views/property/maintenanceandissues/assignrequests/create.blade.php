@@ -101,7 +101,7 @@
                         <select class="form-select" name="PrequalifiedVendor" id="vendorSelect" disabled>
                             <option value="">--Select--</option>
                             @foreach ($suppliers as $sup)
-                                <option value="{{ $sup->Id }}">{{ $sup->thirdParty->ThirdPartyName }}</option>
+                                <option value="{{ $sup->Id }}">{{ $sup->party->ThirdPartyName ?? 'Name'}}</option>
                             @endforeach
                         </select>
                         @error('PrequalifiedVendor') <small class="text-danger">{{ $message }}</small> @enderror

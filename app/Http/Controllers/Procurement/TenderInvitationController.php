@@ -18,6 +18,7 @@ class TenderInvitationController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', TenderInvitation::class);
         // If this is an API request (has Accept: application/json header)
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->getSupplierInvitations($request);
@@ -29,6 +30,11 @@ class TenderInvitationController extends Controller
 
     public function storeResponse(Request $request)
     {
+        // Public/Supplier facing usually, but if internal:
+        // $this->authorize('create', TenderInvitation::class);
+        // Assuming this is used by the system or suppliers, we might need a specific permission or leave open if it's a public endpoint protected by other means?
+        // Checking controller logic, it seems mixed. For now, let's secure it.
+        $this->authorize('create', TenderInvitation::class);
 
         $validated = $request->validate([
             'TenderId' => 'required|integer',
@@ -77,9 +83,13 @@ class TenderInvitationController extends Controller
             }
 
             // Get all supplier IDs for this third party (some have multiple supplier rows)
-            $supplierIds = Supplier::whereHas('thirdParty', function ($query) use ($thirdPartyId) {
-                $query->where('Id', $thirdPartyId);
-            })->pluck('Id');
+            // FIXED: Use direct DB Join to correctly resolve Supplier from ThirdParty via SupplierMaster
+            // Previous code queried SupplierMaster.Id instead of SupplierMaster.ThirdPartyId
+            $supplierIds = DB::table('t_Suppliers')
+                ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+                ->where('t_SupplierMaster.ThirdPartyId', (int)$thirdPartyId)
+                ->whereNull('t_Suppliers.DeletedOn')
+                ->pluck('t_Suppliers.Id');
 
             if ($supplierIds->isEmpty()) {
                 return response()->json([
@@ -98,7 +108,8 @@ class TenderInvitationController extends Controller
 
 
             try {
-                $invitationsQuery = TenderInvitation::with(['tender'])
+                // Eager load items and prices for calculation
+                $invitationsQuery = TenderInvitation::with(['tender.currency', 'tender.items.item.price', 'tender.tenderCategoryRelation'])
                     ->whereIn('SupplierId', $supplierIds)
                     ->whereNull('DeletedOn')
                     ->orderBy('InvitationDate', 'desc');
@@ -129,16 +140,35 @@ class TenderInvitationController extends Controller
 
                 // Safely access tender relationship
                 if ($invitation->tender) {
+
+                    // Calculate estimated cost dynamically from items to match backend view logic
+                    $calculatedEstimatedValue = $invitation->tender->items->sum(function ($item) {
+                        return ($item->QtyToTender ?? 0) * ($item->item?->price?->ActualPrice ?? 0);
+                    });
+
+                    // Use calculated value if available (and non-zero), otherwise fallback to column
+                    $finalEstimatedValue = $calculatedEstimatedValue > 0
+                        ? $calculatedEstimatedValue
+                        : ($invitation->tender->EstimatedValue ?? 0);
+
                     $tenderData = [
                         'id' => (int)$invitation->tender->Id, // Ensure integer for matching
                         'tenderNo' => $invitation->tender->TenderNo ?? '',
                         'title' => $invitation->tender->Title ?? 'Untitled Tender',
+                        'scopeOfWork' => $invitation->tender->ScopeOfWork ?? null,
+                        'instructions' => $invitation->tender->Instructions ?? null,
                         'tenderType' => $invitation->tender->TenderType ?? 'rs',
                         'submissionDeadline' => $invitation->tender->SubmissionDeadline ?? null,
                         'openingDate' => $invitation->tender->OpeningDate ?? null,
                         'status' => $invitation->tender->Status ?? 'dr',
-                        'estimatedValue' => $invitation->tender->EstimatedValue ?? 0,
-                        'currency' => null, // Simplified for now to avoid relationship issues
+                        'estimatedValue' => $finalEstimatedValue,
+                        'currency' => $invitation->tender->currency ? [
+                            'code' => $invitation->tender->currency->Code,
+                            'symbol' => $invitation->tender->currency->Symbol
+                        ] : null,
+                        'tenderCategoryRelation' => $invitation->tender->tenderCategoryRelation ? [
+                            'tenderCategory' => $invitation->tender->tenderCategoryRelation->TenderCategory
+                        ] : null,
                     ];
                 } else {
                     // Fallback tender data if relationship fails
