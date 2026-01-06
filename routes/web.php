@@ -7,13 +7,16 @@ use App\Http\Controllers\Settings\WorkFlowController;
 use Illuminate\Support\Facades\Route;
 
 // Added for debugging authentication in production
-Route::get('/debug/auth', function () {
+// Added for debugging authentication in production
+Route::get('/debug/auth', function (Illuminate\Http\Request $request) {
     return response()->json([
         'auth_check' => auth()->check(),
         'user_id' => auth()->id(),
         'session_id' => session()->getId(),
         'session_driver' => config('session.driver'),
-        'session_cookie' => config('session.cookie'),
+        'session_cookie_name' => config('session.cookie'),
+        'incoming_cookie' => $request->cookie(config('session.cookie')),
+        'all_cookies' => $request->cookie(),
         'session_domain' => config('session.domain'),
         'secure_cookie' => config('session.secure'),
         'same_site' => config('session.same_site'),
