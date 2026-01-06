@@ -9,18 +9,31 @@ use Illuminate\Support\Facades\Route;
 // Added for debugging authentication in production
 // Added for debugging authentication in production
 Route::get('/debug/auth', function (Illuminate\Http\Request $request) {
+    $sessionId = session()->getId();
+    $tableName = config('session.table', 't_SYSSessions');
+    
+    $sessionEntry = \Illuminate\Support\Facades\DB::table($tableName)
+        ->where('id', $sessionId)
+        ->first();
+
     return response()->json([
         'auth_check' => auth()->check(),
         'user_id' => auth()->id(),
-        'session_id' => session()->getId(),
-        'session_driver' => config('session.driver'),
-        'session_cookie_name' => config('session.cookie'),
-        'incoming_cookie' => $request->cookie(config('session.cookie')),
-        'all_cookies' => $request->cookie(),
-        'session_domain' => config('session.domain'),
-        'secure_cookie' => config('session.secure'),
-        'same_site' => config('session.same_site'),
-        'app_url' => config('app.url'),
+        'session_id' => $sessionId,
+        'session_table' => $tableName,
+        'db_session_found' => (bool) $sessionEntry,
+        'db_user_id' => $sessionEntry ? $sessionEntry->user_id : null,
+        'db_last_activity' => $sessionEntry ? $sessionEntry->last_activity : null,
+        'session_config' => [
+            'driver' => config('session.driver'),
+            'cookie' => config('session.cookie'),
+            'domain' => config('session.domain'),
+            'secure' => config('session.secure'),
+        ],
+        'cookies_received' => [
+            'value' => $request->cookie(config('session.cookie')),
+            'matches_current' => $request->cookie(config('session.cookie')) === $sessionId,
+        ],
     ]);
 });
 
