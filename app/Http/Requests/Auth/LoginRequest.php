@@ -120,6 +120,16 @@ class LoginRequest extends FormRequest
                 'session_id' => session()->getId(),
             ]);
 
+            // CRITICAL: Generate session_token for EnsureSingleActiveSession middleware
+            // This middleware was added on Sept 23, 2025 but login was never updated
+            $sessionToken = Str::random(60);
+            session(['session_token' => $sessionToken]);
+            \Illuminate\Support\Facades\Cache::put(
+                'user_session_token_' . $user->Id,
+                $sessionToken,
+                now()->addMinutes((int)config('session.lifetime', 120) + 5)
+            );
+
             session([
                 'LoginBranchId' => $branchRole['branch']->Id,
                 'LoginBranchName' => $branchRole['branch']->Name,
