@@ -29,8 +29,27 @@ class AuthenticatedSessionController extends Controller
         // Authenticate
         $request->authenticate();
 
-        return $this->succeeded(message: 'Logged in successfully.', route: route('home'));
-
+        // Get the session cookie name and value
+        $cookieName = config('session.cookie');
+        $cookieValue = $request->session()->getId();
+        
+        // Create response with explicit cookie
+        $response = $this->succeeded(message: 'Logged in successfully.', route: route('home'));
+        
+        // Force set the session cookie explicitly
+        $cookie = cookie(
+            $cookieName,
+            $cookieValue,
+            config('session.lifetime'),
+            config('session.path'),
+            config('session.domain'),
+            config('session.secure'),
+            config('session.http_only'),
+            false,
+            config('session.same_site')
+        );
+        
+        return $response->withCookie($cookie);
     }
 
     public function destroy(Request $request): RedirectResponse
