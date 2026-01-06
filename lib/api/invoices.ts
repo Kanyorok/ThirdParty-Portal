@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import { PaginatedResponse } from "@/types/property"
 
 export interface Invoice {
@@ -26,25 +25,6 @@ export async function getInvoices(page: number = 1, id?: number): Promise<Pagina
     });
 
     const res = await fetch(`${baseUrl}?${params.toString()}`, {
-=======
-import { PaginatedResponse } from "@/types/property";
-
-export interface Invoice {
-    id: string | number;
-    invoice_number: string;
-    property_name: string;
-    amount: number;
-    currency: string;
-    status: 'paid' | 'pending' | 'overdue' | 'cancelled';
-    due_date: string;
-    issued_date: string;
-}
-
-export async function getInvoices(page: number = 1): Promise<PaginatedResponse<Invoice>> {
-    const url = `${process.env.NEXTAUTH_URL}/api/v1/tenant/invoices?page=${page}`;
-
-    const res = await fetch(url, {
->>>>>>> Stashed changes
         method: 'GET',
         next: {
             tags: ['invoices'],
@@ -61,12 +41,9 @@ export async function getInvoices(page: number = 1): Promise<PaginatedResponse<I
     }
 
     return res.json();
-<<<<<<< Updated upstream
 }
 
 export async function downloadInvoicePdf(id: number): Promise<void> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/?id=${id}`;
     window.open(url, '_blank');
-=======
->>>>>>> Stashed changes
 }

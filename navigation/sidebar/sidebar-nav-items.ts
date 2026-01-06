@@ -1,6 +1,5 @@
 import { USER_TYPES, UserProfile, NavSection, NavMainItem } from "@/types/profile-types"
 import {
-<<<<<<< Updated upstream
     LayoutDashboard, Receipt, FileText,
     ClipboardList, FolderOpen, ShieldCheck, Home, BookOpen,
     Wallet, Settings, HelpCircle, Send
@@ -22,35 +21,6 @@ function withProfiles(item: NavMainItem, sectionProfiles?: readonly UserProfile[
         subItems
     }
 }
-=======
-    NavSection,
-    UserProfile,
-    USER_TYPES,
-} from "@/types/profile-types"
-import {
-    LayoutDashboard,
-    Bell,
-    ShoppingBag,
-    Receipt,
-    Shield,
-    FileText,
-    ClipboardList,
-    FolderOpen,
-    ShieldCheck,
-    Home,
-    Wrench,
-    BookOpen,
-    RotateCw,
-    XOctagon,
-    Wallet,
-    CreditCard,
-    Settings,
-    HelpCircle,
-    Send,
-} from "lucide-react"
-
-const allProfiles: readonly UserProfile[] = USER_TYPES.map(u => u.value)
->>>>>>> Stashed changes
 
 export const sidebarItems: readonly NavSection[] = [
     {
@@ -77,70 +47,9 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Property",
         allowedProfiles: ["Tenant"],
         items: [
-<<<<<<< Updated upstream
             withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: Home, allowedProfiles: ["Tenant"] }),
             withProfiles({ title: "Leases", url: "/dashboard/tenant/leases", icon: BookOpen, allowedProfiles: ["Tenant"] }),
             withProfiles({ title: "Invoices", url: "/dashboard/tenant/invoices", icon: Receipt, allowedProfiles: ["Tenant"] }),
-=======
-            {
-                title: "My Properties",
-                url: "/dashboard/tenant/properties",
-                icon: Home,
-                allowedProfiles: ["Tenant"],
-            },
-            {
-                title: "Maintenance Requests",
-                url: "/dashboard/tenant/maintenance",
-                icon: Wrench,
-                allowedProfiles: ["Tenant"],
-            },
-            {
-                title: "Lease Actions",
-                url: "/dashboard/tenant/lease-actions",
-                icon: BookOpen,
-                allowedProfiles: ["Tenant"],
-                subItems: [
-                    {
-                        title: "Renewal",
-                        url: "/dashboard/tenant/lease-actions/renewal",
-                        icon: RotateCw,
-                        allowedProfiles: ["Tenant"],
-                    },
-                    {
-                        title: "Termination",
-                        url: "/dashboard/tenant/lease-actions/termination",
-                        icon: XOctagon,
-                        allowedProfiles: ["Tenant"],
-                    },
-                ],
-            },
-            {
-                title: "Invoices",
-                url: "/dashboard/tenant/invoices",
-                icon: FileText,
-                allowedProfiles: ["Tenant"],
-            },
-            {
-                title: "Finances",
-                url: "/dashboard/tenant/finances",
-                icon: Wallet,
-                allowedProfiles: ["Tenant"],
-                subItems: [
-                    {
-                        title: "Invoices & Receipts",
-                        url: "/dashboard/tenant/invoices-receipts",
-                        icon: Receipt,
-                        allowedProfiles: ["Tenant"],
-                    },
-                    {
-                        title: "Direct Payments",
-                        url: "/dashboard/tenant/payments",
-                        icon: CreditCard,
-                        allowedProfiles: ["Tenant"],
-                    },
-                ],
-            },
->>>>>>> Stashed changes
         ],
     },
     {
