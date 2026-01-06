@@ -83,7 +83,7 @@ class LoginRequest extends FormRequest
             //remove other sessions
             //remove other sessions
             if (config(key: 'session.driver') === 'database') {
-                DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
+                DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 't_SYSSessions'))
                     ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
             }
 
