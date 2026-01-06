@@ -97,9 +97,11 @@
                       name="Remarks">{{ old('Remarks', $leaserenewal->Remarks) }}</textarea>
         </div>
 
-        <a href="{{ route('renewlease.index') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-success"
-                onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Lease Renewal
-        </button>
+        <div class="d-flex justify-content-between">
+            <a href="{{ route('renewlease.index') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success"
+                    onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Lease Renewal
+            </button>
+        </div>
     </form>
 @endsection

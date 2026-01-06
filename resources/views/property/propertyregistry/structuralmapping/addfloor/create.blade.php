@@ -45,10 +45,12 @@
                     <textarea class="form-control" rows="2" placeholder="Optional floor notes"
                               name="FloorNotes"></textarea>
                 </div>
-                <button type="submit" class="btn btn-success"
-                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Floor
-                </button>
-                <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
+                <div class="d-flex justify-content-between gap-2">
+                    <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Floor
+                    </button>
+                </div>
     </form>
 </div>
 
