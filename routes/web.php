@@ -6,6 +6,21 @@ use App\Http\Controllers\Settings\WorflowLimitController;
 use App\Http\Controllers\Settings\WorkFlowController;
 use Illuminate\Support\Facades\Route;
 
+// Added for debugging authentication in production
+Route::get('/debug/auth', function () {
+    return response()->json([
+        'auth_check' => auth()->check(),
+        'user_id' => auth()->id(),
+        'session_id' => session()->getId(),
+        'session_driver' => config('session.driver'),
+        'session_cookie' => config('session.cookie'),
+        'session_domain' => config('session.domain'),
+        'secure_cookie' => config('session.secure'),
+        'same_site' => config('session.same_site'),
+        'app_url' => config('app.url'),
+    ]);
+});
+
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/auth/heartbeat', function () {
         return response()->noContent();
