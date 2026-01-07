@@ -124,86 +124,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fallback to mock data if external API is unavailable
-  const mockInvitations: TenderInvitation[] = [
-      {
-        InvitationID: 1,
-    TenderId: "1",
-        SupplierId: 1,
-        InvitationDate: "2024-11-15T08:00:00.000Z",
-        ResponseStatus: "pending",
-        ResponseDate: undefined,
-        DeclineReason: undefined,
-        ConfirmationAttachment: undefined,
-        CreatedBy: "system",
-        CreatedOn: "2024-11-15T08:00:00.000Z",
-        ModifiedBy: undefined,
-        ModifiedOn: undefined,
-        DeletedBy: undefined,
-        DeletedOn: undefined,
-      },
-      {
-        InvitationID: 2,
-  TenderId: "2",
-        SupplierId: 1,
-        InvitationDate: "2024-11-10T10:00:00.000Z",
-        ResponseStatus: "accepted",
-        ResponseDate: "2024-11-12T14:30:00.000Z",
-        DeclineReason: undefined,
-        ConfirmationAttachment: undefined,
-        CreatedBy: "system",
-        CreatedOn: "2024-11-10T10:00:00.000Z",
-        ModifiedBy: "user",
-        ModifiedOn: "2024-11-12T14:30:00.000Z",
-        DeletedBy: undefined,
-        DeletedOn: undefined,
-      },
-    ];
-
-    // Filter mock data based on status if specified
-    let filteredInvitations = [...mockInvitations];
-    if (status !== 'all') {
-      filteredInvitations = filteredInvitations.filter(inv => inv.ResponseStatus === status);
-    }
-
-    // Create mock response data
-  const mockResponseData: TenderInvitationResponse[] = filteredInvitations.map(invitation => ({
-      invitation,
-        tender: {
-          id: invitation.TenderId,
-      tenderNo: invitation.TenderId === "1" ? "TENDER/2024/001" : "TENDER/2024/002",
-      title: invitation.TenderId === "1" ? "Supply and Installation of Office Equipment" : "Construction of Drainage System",
-      tenderType: invitation.TenderId === "1" ? "op" : "rs",
-      submissionDeadline: invitation.TenderId === "1" ? "2024-12-01T23:59:00.000Z" : "2024-11-30T17:00:00.000Z",
-      openingDate: invitation.TenderId === "1" ? "2024-12-02T10:00:00.000Z" : "2024-12-01T14:00:00.000Z",
-          status: "pb",
-          estimatedValue: invitation.TenderId === "1" ? "2500000" : "15000000",
-          currency: {
-            code: "KES",
-            symbol: "KSh"
-          }
-        }
-    }));
-
-    // Apply pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = mockResponseData.slice(startIndex, endIndex);
-
+    // If ERP call failed and we reached here, return empty data
     return NextResponse.json({
-      data: paginatedData,
+      data: [],
       pagination: {
-        total: mockResponseData.length,
+        total: 0,
         page,
         limit,
-        pages: Math.ceil(mockResponseData.length / limit),
+        pages: 0,
       },
       supplierInfo: {
-        supplierId: 1,
-        activeRoundId: 1,
+        supplierId: 0,
+        activeRoundId: 0,
         thirdPartyId: thirdPartyId,
       },
-      fallback: true, // Indicates this is mock data
+      fallback: false,
     });
 
   } catch (error) {
