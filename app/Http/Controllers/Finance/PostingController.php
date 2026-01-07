@@ -124,12 +124,22 @@ class PostingController extends Controller
         try {
             $journal = FinanceJournalEntry::findOrFail($journalId);
 
-            return $this->workflowService->submit(
+            $result = $this->workflowService->submit(
                 $journal,
                 Auth::user(),
-                ApprovalEnum::Pending,
+                ApprovalEnum::Submitted,
                 $remarks
             );
+
+            if ($result) {
+                // Update the document status for UI/state tracking
+                $journal->update([
+                    'ApprovalStatus' => 'pending',
+                    'ApprovalReason' => $remarks,
+                ]);
+            }
+
+            return (bool) $result;
         } catch (\Throwable $e) {
             Log::error('Journal submission failed', [
                 'journal_id' => $journalId,

@@ -522,7 +522,7 @@
                         </button>
                     </div>
                  @endif
-                @if($journalEntry->ApprovalStatus=='pending')
+                @if($journalEntry->ApprovalStatus=='pending' && $canApprove)
                     <div class="mt-4 d-flex justify-content-end gap-3 no-print">
                         <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
                             <i class="fas fa-times-circle me-1"></i> Reject
@@ -583,7 +583,7 @@
 
 
     @if($canApprove)
-    @if($journalEntry->ApprovalStatus==='draft')
+    @if($journalEntry->ApprovalStatus==='pending')
         {{-- Approve Modal --}}
         <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel"
              aria-hidden="true">
