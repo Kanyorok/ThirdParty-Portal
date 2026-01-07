@@ -28,7 +28,7 @@
             <div class="col-md-6">
                 <label class="form-label">Tenant</label>
                 <input type="text" class="form-control" readonly
-                       value="{{ old('TenantName', $leaserenewal->lease->tenant->ThirdPartyName ?? '-') }}">
+                       value="{{ old('TenantName', $leaserenewal->lease->tenant->thirdParty->ThirdPartyName ?? '-') }}">
                 <input type="hidden" name="TenantId"
                        value="{{ old('TenantId', $leaserenewal->lease->tenant->Id ?? '-') }}">
             </div>
@@ -71,22 +71,30 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label">New Monthly Rent</label>
-                <input type="number" class="form-control" name="NewMonthlyRent"
+                <input type="text" class="form-control" id="newMonthlyRentDisplay"
+                       value="{{ old('NewMonthlyRent', number_format($leaserenewal->NewMonthlyRent, 2)) }}">
+                <input type="hidden" name="NewMonthlyRent" id="newMonthlyRentHidden"
                        value="{{ old('NewMonthlyRent', $leaserenewal->NewMonthlyRent) }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Service Charge</label>
-                <input type="number" class="form-control" name="ServiceCharge"
+                <input type="text" class="form-control formatted-number" id="serviceChargeDisplay"
+                       value="{{ old('ServiceCharge', number_format($leaserenewal->ServiceCharge, 2)) }}">
+                <input type="hidden" name="ServiceCharge" id="serviceChargeHidden"
                        value="{{ old('ServiceCharge', $leaserenewal->ServiceCharge) }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Parking Fee</label>
-                <input type="number" class="form-control" name="ParkingFee"
+                <input type="text" class="form-control formatted-number" id="parkingFeeDisplay"
+                       value="{{ old('ParkingFee', number_format($leaserenewal->ParkingFee, 2)) }}">
+                <input type="hidden" name="ParkingFee" id="parkingFeeHidden"
                        value="{{ old('ParkingFee', $leaserenewal->ParkingFee) }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Other Charges</label>
-                <input type="number" class="form-control" name="OtherCharges"
+                <input type="text" class="form-control formatted-number" id="otherChargesDisplay"
+                       value="{{ old('OtherCharges', number_format($leaserenewal->OtherCharges, 2)) }}">
+                <input type="hidden" name="OtherCharges" id="otherChargesHidden"
                        value="{{ old('OtherCharges', $leaserenewal->OtherCharges) }}">
             </div>
         </div>
@@ -105,3 +113,48 @@
         </div>
     </form>
 @endsection
+
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fields = [
+            { display: 'newMonthlyRentDisplay', hidden: 'newMonthlyRentHidden' },
+            { display: 'serviceChargeDisplay', hidden: 'serviceChargeHidden' },
+            { display: 'parkingFeeDisplay', hidden: 'parkingFeeHidden' },
+            { display: 'otherChargesDisplay', hidden: 'otherChargesHidden' }
+        ];
+
+        function formatNumber(value) {
+            const number = parseFloat(value.replace(/,/g, ''));
+            if (isNaN(number)) return '';
+            return number.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        fields.forEach(field => {
+            const displayInput = document.getElementById(field.display);
+            const hiddenInput = document.getElementById(field.hidden);
+
+            if (displayInput && hiddenInput) {
+                displayInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/,/g, '');
+                    if (value === '' || isNaN(value)) {
+                        hiddenInput.value = '';
+                        return;
+                    }
+                    hiddenInput.value = value;
+                    e.target.value = formatNumber(value);
+                });
+
+                displayInput.addEventListener('blur', function(e) {
+                    if (e.target.value && !isNaN(e.target.value.replace(/,/g, ''))) {
+                        e.target.value = formatNumber(e.target.value);
+                    }
+                });
+</script>
+@endsection
+
+
