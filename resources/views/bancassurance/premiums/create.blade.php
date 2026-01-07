@@ -103,8 +103,8 @@
                 </div>
 
                 {{-- Actions --}}
-                <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ url()->previous() }}" class="btn btn-outline-secondary me-2 px-4">
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="{{ url()->previous() }}" class="btn btn-outline-secondary px-4">
                         <i class="bi bi-arrow-left-circle me-1"></i> Back
                     </a>
                     <button type="submit" class="btn btn-success px-4">
