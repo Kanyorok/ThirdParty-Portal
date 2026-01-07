@@ -38,7 +38,7 @@ export default function VerifyEmailPage() {
 
                 if (res.ok) {
                     setStatus('success');
-                    setMessage(data.message || 'Email verified successfully!');
+                    setMessage('Your email has been verified! Redirecting you to complete your profile...');
 
                     // Extract User ID from response
                     const userId = data.user?.id;

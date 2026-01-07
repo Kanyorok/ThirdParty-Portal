@@ -386,12 +386,7 @@ export default function TendersPage() {
             let tendersData: Tender[] = [];
             if (tendersResponse.status === 'fulfilled' && tendersResponse.value.ok) {
                 const data = await tendersResponse.value.json();
-                tendersData = data.data || [];
-                
-                // Show a notice if using fallback data
-                if (data.fallback) {
-                    console.info('Using mock tender data - external API not available');
-                }
+                tendersData = data.data || data || [];
             } else if (tendersResponse.status === 'fulfilled') {
                 try {
                     const errorData = await tendersResponse.value.json();
