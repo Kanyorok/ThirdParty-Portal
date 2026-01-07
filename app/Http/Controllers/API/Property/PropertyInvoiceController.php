@@ -9,7 +9,7 @@ use App\Models\PropertyManagement\PropertyInvoice;
 
 class PropertyInvoiceController extends Controller
 {
-    public function index()
+    public function index(): PropertyInvoiceCollection
     {
         $invoices = PropertyInvoice::with([
             'lease',
@@ -19,12 +19,12 @@ class PropertyInvoiceController extends Controller
             'modifiedByUser'
         ])
         ->latest('Id')
-        ->paginate(10); // pagination supported
+        ->paginate(10);
 
-        return PropertyInvoiceCollection::collection($invoices);
+        return new PropertyInvoiceCollection($invoices);
     }
 
-    public function show($id)
+    public function show($id): PropertyInvoiceResource
     {
         $invoice = PropertyInvoice::with([
             'lease',
