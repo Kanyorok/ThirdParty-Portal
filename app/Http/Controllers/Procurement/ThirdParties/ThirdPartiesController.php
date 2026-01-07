@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Procurement\ThirdParties;
 
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ThirdParty\NewThirdPartyRequest;
-use App\Http\Resources\ThirdParty\ThirdPartyResource;
+use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
+use App\Http\Resources\ThirdParty\Api\ThirdPartyResource;
 use App\Models\ThirdParty\ThirdParties;
 use App\Services\ThirdParties\ThirdPartyService;
 use Illuminate\Http\JsonResponse;

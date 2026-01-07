@@ -56,7 +56,9 @@ Route::post('auth/validate-token', function (Request $request) {
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
     Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
-    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
+    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])
+        ->name('verification.verify')
+        ->middleware('signed');
     Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
     Route::post('forgot-password', [ThirdPartyAuthController::class, 'forgotPassword']);
     Route::post('reset-password', [ThirdPartyAuthController::class, 'resetPassword']);
