@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2">
         <div class="d-flex gap-2">
             <a href="{{ route('bancassurance.medicalfunds.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-1"></i> New Fund
