@@ -219,17 +219,6 @@
                 </div>
                 <div class="col-auto my-1 d-flex align-items-center gap-3">
                     <span id="footer-datetime" class="text-muted small"></span>
-                    {{-- <ul class="list-inline footer-link mb-0">
-                          <li class="list-inline-item"><a
-                                  href="../../external.html?link=https://ableproadmin.com/index.html">Home</a></li>
-                          <li class="list-inline-item"><a
-                                  href="../../external.html?link=https://phoenixcoded.gitbook.io/able-pro/"
-                                  target="_blank">Documentation</a></li>
-                          <li class="list-inline-item"><a
-                                  href="../../external.html?link=https://phoenixcoded.authordesk.app/"
-                                  target="_blank">Support</a></li>
-                      </ul> --}}
-
                 </div>
             </div>
         </div>
@@ -242,6 +231,10 @@
     <script src="{{ asset('js/partial-forms.js') }}" defer></script>
 
     @stack('scripts')
+
+    <script>
+        window.__DEFAULT_ACTIVE_ROUTE__ = @json(request() - > path() ? '/'.request() - > path() : '/');
+    </script>
     <script>
         // Refresh Feather icons after partial content loads
         document.addEventListener('partial:loaded', function() {
@@ -320,7 +313,6 @@
                     const res = await fetch(url, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            // Custom header to indicate we want the content fragment (not a DataTables/ajax payload)
                             'X-Partial': '1'
                         }
                     });
@@ -333,7 +325,6 @@
                     const doc = parser.parseFromString(text, 'text/html');
                     const newContent = doc.getElementById(contentId);
                     if (!newContent) {
-                        // fallback to full navigation
                         window.location.href = url;
                         return;
                     }
@@ -342,23 +333,17 @@
                         window.location.href = url;
                         return;
                     }
-                    // replace inner HTML
                     target.innerHTML = newContent.innerHTML;
-                    // update title if available
                     const newTitle = doc.querySelector('title');
                     if (newTitle) document.title = newTitle.innerText;
-                    // update breadcrumbs etc by letting server-rendered HTML take effect
                     if (addToHistory) history.pushState({
                         url: url
                     }, '', url);
                     window.scrollTo(0, 0);
-                    // execute any scripts inside the loaded fragment
                     runScripts(target);
-                    // Persist active route (using current pathname after pushState)
                     try {
                         sessionStorage.setItem('activeSidebarRoute', new URL(url, location.href).pathname);
                     } catch (e) {}
-                    // dispatch a helpful event for page-specific init
                     document.dispatchEvent(new CustomEvent('partial:loaded', {
                         detail: {
                             url
@@ -374,26 +359,20 @@
                 sidebar.addEventListener('click', function(ev) {
                     const a = ev.target.closest && ev.target.closest('a');
                     if (!a) return;
-                    // ignore links that should not be handled
                     const href = a.getAttribute('href');
                     if (!href) return;
                     if (href.startsWith('#') || href.startsWith('javascript:')) return;
                     if (a.target && a.target !== '_self') return;
-                    // Only intercept links explicitly marked for ajax or links coming from generated navbar
                     const isAjaxMarked = a.hasAttribute('data-ajax') && a.getAttribute('data-ajax') === '1';
                     const inGeneratedNavbar = !!a.closest('.pc-navbar');
                     if (!isAjaxMarked && !inGeneratedNavbar) return;
                     if (a.hasAttribute('data-no-ajax')) return;
-                    if (a.getAttribute('onclick')) return; // e.g., logout
-                    // logout link often submits a form; don't intercept
+                    if (a.getAttribute('onclick')) return;
                     if (a.getAttribute('href') && a.getAttribute('href').includes('/logout')) return;
-                    // ensure same origin
                     if (!sameOrigin(href)) return;
-                    // Only intercept GET
                     if ((ev.button && ev.button !== 0) || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
 
                     ev.preventDefault();
-                    // Pre-store intended active route in case of fast navigation or failure
                     try {
                         sessionStorage.setItem('activeSidebarRoute', new URL(href, location.href).pathname);
                     } catch (e) {}
@@ -402,13 +381,11 @@
             }
 
             window.addEventListener('popstate', function(ev) {
-                const url = location.href;
-                // do not push history here
-                ajaxNavigate(url, false);
+                ajaxNavigate(location.href, false);
             });
         })();
 
-        // Highlight and scroll active sidebar item on load and after partial navigation
+        // Highlight and scroll active sidebar item
         (function() {
             function normalizePath(p) {
                 try {
@@ -422,33 +399,18 @@
                 const sidebar = document.querySelector('nav.pc-sidebar');
                 if (!sidebar) return;
                 const navRoot = sidebar.querySelector('.pc-navbar') || sidebar;
-                // Backfill any pc-link anchors missing data-route (e.g. stale cached navbar)
                 navRoot.querySelectorAll('a.pc-link:not([data-route])').forEach(a => {
                     try {
                         a.setAttribute('data-route', new URL(a.getAttribute('href'), location.href).pathname);
                     } catch (e) {}
                 });
-                // collect anchors with route info
                 const anchors = Array.from(navRoot.querySelectorAll('a[data-route]'));
-                if (!anchors.length) {
-                    // emergency fallback collect pc-link anchors
-                    navRoot.querySelectorAll('a.pc-link').forEach(a => {
-                        if (!a.dataset.route) {
-                            try {
-                                a.dataset.route = new URL(a.href, location.href).pathname;
-                            } catch (e) {}
-                        }
-                    });
-                }
                 const current = normalizePath(location.pathname);
-
-                // Attempt using data-route exact match
                 let match = anchors.find(a => normalizePath(a.dataset.route) === current);
 
-                // Longest prefix fallback
                 if (!match) {
-                    let best = null;
-                    let bestLen = 0;
+                    let best = null,
+                        bestLen = 0;
                     anchors.forEach(a => {
                         const p = normalizePath(a.dataset.route);
                         if (current.startsWith(p) && p.length > bestLen && p !== '/') {
@@ -459,72 +421,23 @@
                     match = best;
                 }
 
-                // sessionStorage fallback (e.g. internal partial nav without URL change affecting pathname)
                 if (!match) {
                     const stored = sessionStorage.getItem('activeSidebarRoute');
-                    if (stored) {
-                        match = anchors.find(a => normalizePath(a.dataset.route) === normalizePath(stored));
-                    }
-                }
-
-                // Strategy:
-                // 1. Exact match
-                // 2. Longest prefix match (deepest path) excluding '/'
-                // 3. If still none, try ignoring trailing segments (walk up)
-                let exact = null;
-                let bestPrefix = null;
-                for (const a of anchors) {
-                    let p;
-                    try {
-                        p = normalizePath(a.href);
-                    } catch (e) {
-                        continue;
-                    }
-                    if (p === current) {
-                        exact = a;
-                        break;
-                    }
-                    if (current.startsWith(p) && p !== '/') {
-                        if (!bestPrefix || p.length > normalizePath(bestPrefix.href).length) {
-                            bestPrefix = a;
-                        }
-                    }
-                }
-                // existing variable name adjustments removed
-
-                // If still no match, progressively trim current path
-                if (!match) {
-                    const segments = current.split('/').filter(Boolean);
-                    while (segments.length > 1 && !match) {
-                        segments.pop();
-                        const candidate = '/' + segments.join('/');
-                        match = anchors.find(a => {
-                            try {
-                                return normalizePath(a.href) === candidate;
-                            } catch (e) {
-                                return false;
-                            }
-                        });
-                    }
+                    if (stored) match = anchors.find(a => normalizePath(a.dataset.route) === normalizePath(stored));
                 }
 
                 if (!match) return;
 
                 match.classList.add('active');
-                sessionStorage.setItem('activeSidebarRoute', match.dataset.route || '');
-                // Walk up and activate ancestors
                 let el = match.closest('.pc-item') || match.parentElement;
                 while (el && el !== navRoot) {
                     if (el.classList && el.classList.contains('pc-item')) {
                         el.classList.add('active');
-                        if (el.classList.contains('pc-hasmenu')) {
-                            el.classList.add('pc-trigger'); // ensure its submenu is expanded
-                        }
+                        if (el.classList.contains('pc-hasmenu')) el.classList.add('pc-trigger');
                     }
                     el = el.parentElement;
                 }
 
-                // Scroll only if not already visible
                 try {
                     const rect = match.getBoundingClientRect();
                     const vpH = window.innerHeight || document.documentElement.clientHeight;
@@ -536,448 +449,57 @@
                     }
                 } catch (e) {}
             }
-
-            // SidebarState handles highlighting/expansion now.
-        })();
-    </script>
-    <script>
-        // Global DataTable Protection - IMPROVED VERSION
-        (function() {
-                'use strict';
-
-                // Wait for jQuery to be available
-                var checkJQuery = setInterval(function() {
-                            if (typeof jQuery === 'undefined') return;
-
-                            clearInterval(checkJQuery);
-
-                            var $ = jQuery;
-
-                            // Single global observer for all DataTables
-                            function setupDataTableObserver() {
-                                // Watch for sidebar state changes
-                                var sidebar = document.querySelector('.pc-sidebar');
-                                var sidebarToggleButtons = document.querySelectorAll('#sidebar-hide, #mobile-collapse');
-
-                                if (sidebarToggleButtons.length) {
-                                    sidebarToggleButtons.forEach(function(btn) {
-                                        btn.addEventListener('click', function() {
-                                            console.log('[Global DT] Sidebar toggled');
-
-                                            // Wait for sidebar animation
-                                            setTimeout(function() {
-                                                // Adjust all DataTables on the page
-                                                if ($.fn.DataTable) {
-                                                    $.fn.DataTable.tables({
-                                                        visible: true,
-                                                        api: true
-                                                    }).columns.adjust();
-                                                    console.log('[Global DT] All tables adjusted');
-                                                }
-                                            }, 400);
-                                        });
-                                    });
-                                }
-
-                                // Handle window resize for all tables
-                                var resizeTimer;
-                                $(window).on('resize', function() {
-                                    clearTimeout(resizeTimer);
-                                    resizeTimer = setTimeout(function() {
-                                        if ($.fn.DataTable) {
-                                            $.fn.DataTable.tables({
-                                                visible: true,
-                                                api: true
-                                            }).columns.adjust();
-                                            console.log('[Global DT] Tables adjusted on resize');
-                                        }
-                                    }, 250);
-                                });
-                            }
-
-                            // Initialize on page load
-                            $(document).ready(function() {
-                                setupDataTableObserver();
-                                console.log('[Global DT] Protection initialized');
-                            });
-
-                            // Reinitialize after partial navigation
-                            document.addEventListener('partial:loaded', function() {
-                                if (window.feather && typeof window.feather.replace === 'function') {
-                                    try {
-                                        window.feather.replace();
-                                    } catch (e) {}
-                                }
-                            });
-    </script>
-    <script type="module">
-        import {
-            SidebarState
-        } from '/js/sidebarState.js';
-
-        SidebarState.init({
-            rootSelector: 'nav.pc-sidebar',
-            itemSelector: 'li.pc-item',
-            linkSelector: 'a.pc-link',
-            submenuSelector: '.pc-submenu',
-            activeItemClass: 'active',
-            expandedItemClass: 'pc-trigger',
-            userKey: '{{ auth()->id() ?? "guest" }}'
-        });
-        document.addEventListener('partial:loaded', () => SidebarState.restore());
-    </script>
-
-    <script>
-        // Footer DateTime (user timezone in browser)
-        (function updateFooterDateTime() {
-            const el = document.getElementById('footer-datetime');
-            if (!el) return;
-            const now = new Date();
-            // Format: YYYY-MM-DD HH:MM:SS (24h)
-            const pad = n => n.toString().padStart(2, '0');
-            const formatted = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-            el.textContent = `System Time: ${formatted}`;
-            setTimeout(updateFooterDateTime, 1000);
+            highlightAndScrollActive();
+            document.addEventListener('partial:loaded', highlightAndScrollActive);
         })();
 
-        // Keep sidebar static: load only #mainBodyContent for internal sidebar navigation
-        (function() {
-            const sidebar = document.querySelector('nav.pc-sidebar');
-            const contentId = 'mainBodyContent';
-
-            function sameOrigin(url) {
-                try {
-                    const u = new URL(url, location.href);
-                    return u.origin === location.origin;
-                } catch (e) {
-                    return false;
-                }
-            }
-
-            function runScripts(container) {
-                if (!container) return;
-                // Execute inline and external scripts found inside the new content
-                const scripts = Array.from(container.querySelectorAll('script'));
-                scripts.forEach(old => {
-                    const s = document.createElement('script');
-                    if (old.src) {
-                        s.src = old.src;
-                        // preserve execution order for external scripts
-                        s.async = false;
-                    } else {
-                        s.textContent = old.textContent;
-                    }
-                    document.body.appendChild(s);
-                    // remove the original to avoid duplication
-                    old.parentNode && old.parentNode.removeChild(old);
-                });
-            }
-
-            async function ajaxNavigate(url, addToHistory = true) {
-                try {
-                    const res = await fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            // Custom header to indicate we want the content fragment (not a DataTables/ajax payload)
-                            'X-Partial': '1'
-                        }
-                    });
-                    if (!res.ok) {
-                        window.location.href = url;
-                        return;
-                    }
-                    const text = await res.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(text, 'text/html');
-                    const newContent = doc.getElementById(contentId);
-                    if (!newContent) {
-                        // fallback to full navigation
-                        window.location.href = url;
-                        return;
-                    }
-                    const target = document.getElementById(contentId);
-                    if (!target) {
-                        window.location.href = url;
-                        return;
-                    }
-                    // replace inner HTML
-                    target.innerHTML = newContent.innerHTML;
-                    // update title if available
-                    const newTitle = doc.querySelector('title');
-                    if (newTitle) document.title = newTitle.innerText;
-                    // update breadcrumbs etc by letting server-rendered HTML take effect
-                    if (addToHistory) history.pushState({
-                        url: url
-                    }, '', url);
-                    window.scrollTo(0, 0);
-                    // execute any scripts inside the loaded fragment
-                    runScripts(target);
-                    // Persist active route (using current pathname after pushState)
-                    try {
-                        sessionStorage.setItem('activeSidebarRoute', new URL(url, location.href).pathname);
-                    } catch (e) {}
-                    // dispatch a helpful event for page-specific init
-                    document.dispatchEvent(new CustomEvent('partial:loaded', {
-                        detail: {
-                            url
-                        }
-                    }));
-                } catch (err) {
-                    console.error('AJAX navigate failed, falling back', err);
-                    window.location.href = url;
-                }
-            }
-
-            if (sidebar) {
-                sidebar.addEventListener('click', function(ev) {
-                    const a = ev.target.closest && ev.target.closest('a');
-                    if (!a) return;
-                    // ignore links that should not be handled
-                    const href = a.getAttribute('href');
-                    if (!href) return;
-                    if (href.startsWith('#') || href.startsWith('javascript:')) return;
-                    if (a.target && a.target !== '_self') return;
-                    // Only intercept links explicitly marked for ajax or links coming from generated navbar
-                    const isAjaxMarked = a.hasAttribute('data-ajax') && a.getAttribute('data-ajax') === '1';
-                    const inGeneratedNavbar = !!a.closest('.pc-navbar');
-                    if (!isAjaxMarked && !inGeneratedNavbar) return;
-                    if (a.hasAttribute('data-no-ajax')) return;
-                    if (a.getAttribute('onclick')) return; // e.g., logout
-                    // logout link often submits a form; don't intercept
-                    if (a.getAttribute('href') && a.getAttribute('href').includes('/logout')) return;
-                    // ensure same origin
-                    if (!sameOrigin(href)) return;
-                    // Only intercept GET
-                    if ((ev.button && ev.button !== 0) || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
-
-                    ev.preventDefault();
-                    // Pre-store intended active route in case of fast navigation or failure
-                    try {
-                        sessionStorage.setItem('activeSidebarRoute', new URL(href, location.href).pathname);
-                    } catch (e) {}
-                    ajaxNavigate(href);
-                });
-            }
-
-            window.addEventListener('popstate', function(ev) {
-                const url = location.href;
-                // do not push history here
-                ajaxNavigate(url, false);
-            });
-        })();
-
-        // Highlight and scroll active sidebar item on load and after partial navigation
-        (function() {
-            function normalizePath(p) {
-                try {
-                    return new URL(p, location.href).pathname.replace(/\/+$|^\/+/g, '/');
-                } catch (e) {
-                    return ('' + p).replace(/\/+$/, '');
-                }
-            }
-
-            function highlightAndScrollActive() {
-                const sidebar = document.querySelector('nav.pc-sidebar');
-                if (!sidebar) return;
-                const navRoot = sidebar.querySelector('.pc-navbar') || sidebar;
-                // Backfill any pc-link anchors missing data-route (e.g. stale cached navbar)
-                navRoot.querySelectorAll('a.pc-link:not([data-route])').forEach(a => {
-                    try {
-                        a.setAttribute('data-route', new URL(a.getAttribute('href'), location.href).pathname);
-                    } catch (e) {}
-                });
-                // collect anchors with route info
-                const anchors = Array.from(navRoot.querySelectorAll('a[data-route]'));
-                if (!anchors.length) {
-                    // emergency fallback collect pc-link anchors
-                    navRoot.querySelectorAll('a.pc-link').forEach(a => {
-                        if (!a.dataset.route) {
-                            try {
-                                a.dataset.route = new URL(a.href, location.href).pathname;
-                            } catch (e) {}
-                        }
-                    });
-                }
-                const current = normalizePath(location.pathname);
-
-                // Attempt using data-route exact match
-                let match = anchors.find(a => normalizePath(a.dataset.route) === current);
-
-                // Longest prefix fallback
-                if (!match) {
-                    let best = null;
-                    let bestLen = 0;
-                    anchors.forEach(a => {
-                        const p = normalizePath(a.dataset.route);
-                        if (current.startsWith(p) && p.length > bestLen && p !== '/') {
-                            best = a;
-                            bestLen = p.length;
-                        }
-                    });
-                    match = best;
-                }
-
-                // sessionStorage fallback (e.g. internal partial nav without URL change affecting pathname)
-                if (!match) {
-                    const stored = sessionStorage.getItem('activeSidebarRoute');
-                    if (stored) {
-                        match = anchors.find(a => normalizePath(a.dataset.route) === normalizePath(stored));
-                    }
-                }
-
-                // Strategy:
-                // 1. Exact match
-                // 2. Longest prefix match (deepest path) excluding '/'
-                // 3. If still none, try ignoring trailing segments (walk up)
-                let exact = null;
-                let bestPrefix = null;
-                for (const a of anchors) {
-                    let p;
-                    try {
-                        p = normalizePath(a.href);
-                    } catch (e) {
-                        continue;
-                    }
-                    if (p === current) {
-                        exact = a;
-                        break;
-                    }
-                    if (current.startsWith(p) && p !== '/') {
-                        if (!bestPrefix || p.length > normalizePath(bestPrefix.href).length) {
-                            bestPrefix = a;
-                        }
-                    }
-                }
-                // existing variable name adjustments removed
-
-                // If still no match, progressively trim current path
-                if (!match) {
-                    const segments = current.split('/').filter(Boolean);
-                    while (segments.length > 1 && !match) {
-                        segments.pop();
-                        const candidate = '/' + segments.join('/');
-                        match = anchors.find(a => {
-                            try {
-                                return normalizePath(a.href) === candidate;
-                            } catch (e) {
-                                return false;
-                            }
-                        });
-                    }
-                }
-
-                if (!match) return;
-
-                match.classList.add('active');
-                sessionStorage.setItem('activeSidebarRoute', match.dataset.route || '');
-                // Walk up and activate ancestors
-                let el = match.closest('.pc-item') || match.parentElement;
-                while (el && el !== navRoot) {
-                    if (el.classList && el.classList.contains('pc-item')) {
-                        el.classList.add('active');
-                        if (el.classList.contains('pc-hasmenu')) {
-                            el.classList.add('pc-trigger'); // ensure its submenu is expanded
-                        }
-                    }
-                    el = el.parentElement;
-                }
-
-                // Scroll only if not already visible
-                try {
-                    const rect = match.getBoundingClientRect();
-                    const vpH = window.innerHeight || document.documentElement.clientHeight;
-                    if (rect.top < 80 || rect.bottom > vpH - 40) {
-                        match.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }
-                } catch (e) {}
-            }
-
-            // SidebarState handles highlighting/expansion now.
-        })();
-    </script>
-    <script>
-        // Global DataTable Protection - IMPROVED VERSION
+        // Global DataTable Protection
         (function() {
             'use strict';
-
-            // Wait for jQuery to be available
             var checkJQuery = setInterval(function() {
                 if (typeof jQuery === 'undefined') return;
-
                 clearInterval(checkJQuery);
-
                 var $ = jQuery;
 
-                // Single global observer for all DataTables
                 function setupDataTableObserver() {
-                    // Watch for sidebar state changes
-                    var sidebar = document.querySelector('.pc-sidebar');
                     var sidebarToggleButtons = document.querySelectorAll('#sidebar-hide, #mobile-collapse');
-
                     if (sidebarToggleButtons.length) {
                         sidebarToggleButtons.forEach(function(btn) {
                             btn.addEventListener('click', function() {
-                                console.log('[Global DT] Sidebar toggled');
-
-                                // Wait for sidebar animation
                                 setTimeout(function() {
-                                    // Adjust all DataTables on the page
-                                    if ($.fn.DataTable) {
-                                        $.fn.DataTable.tables({
-                                            visible: true,
-                                            api: true
-                                        }).columns.adjust();
-                                        console.log('[Global DT] All tables adjusted');
-                                    }
+                                    if ($.fn.DataTable) $.fn.DataTable.tables({
+                                        visible: true,
+                                        api: true
+                                    }).columns.adjust();
                                 }, 400);
                             });
                         });
                     }
-
-                    // Handle window resize for all tables
                     var resizeTimer;
                     $(window).on('resize', function() {
                         clearTimeout(resizeTimer);
                         resizeTimer = setTimeout(function() {
-                            if ($.fn.DataTable) {
-                                $.fn.DataTable.tables({
-                                    visible: true,
-                                    api: true
-                                }).columns.adjust();
-                                console.log('[Global DT] Tables adjusted on resize');
-                            }
-                        }, 250);
-                    });
-                }
-
-                // Initialize on page load
-                $(document).ready(function() {
-                    setupDataTableObserver();
-                    console.log('[Global DT] Protection initialized');
-                });
-
-                // Reinitialize after partial navigation
-                document.addEventListener('partial:loaded', function() {
-                    console.log('[Global DT] Partial loaded, reinitializing');
-                    setTimeout(setupDataTableObserver, 100);
-
-                    // Adjust any existing tables
-                    setTimeout(function() {
-                        if ($.fn.DataTable) {
-                            $.fn.DataTable.tables({
+                            if ($.fn.DataTable) $.fn.DataTable.tables({
                                 visible: true,
                                 api: true
                             }).columns.adjust();
-                        }
+                        }, 250);
+                    });
+                }
+                $(document).ready(setupDataTableObserver);
+                document.addEventListener('partial:loaded', function() {
+                    setTimeout(setupDataTableObserver, 100);
+                    setTimeout(function() {
+                        if ($.fn.DataTable) $.fn.DataTable.tables({
+                            visible: true,
+                            api: true
+                        }).columns.adjust();
                     }, 500);
                 });
-
             }, 100);
         })();
     </script>
+
     <!-- Session Expiry Warning Modal -->
     <div class="modal fade" id="sessionExpiryModal" tabindex="-1" role="dialog" aria-labelledby="sessionExpiryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -991,7 +513,6 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" onclick="window.extendSession()">Stay Logged In</button>
-                    <!-- Optional: Explicit Logout button -->
                     <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-secondary">Logout Now</a>
                 </div>
             </div>
@@ -1000,56 +521,41 @@
 
     <script>
         (function() {
-            // Configuration: Session lifetime in minutes (default 20 if config missing)
             const sessionLifetimeMinutes = {
                 {
                     config('session.lifetime') ? : 20
                 }
             };
             const warningSeconds = 30;
-
             const sessionLifetimeMs = sessionLifetimeMinutes * 60 * 1000;
             const warningMs = sessionLifetimeMs - (warningSeconds * 1000);
-
             let warningTimer, logoutTimer, countdownInterval;
 
             function startSessionTimers() {
                 clearTimeout(warningTimer);
                 clearTimeout(logoutTimer);
                 clearInterval(countdownInterval);
-
-                // Set timer for warning (ensure > 0)
                 const safeWarningMs = warningMs > 0 ? warningMs : 1000;
-
                 warningTimer = setTimeout(showSessionWarning, safeWarningMs);
                 logoutTimer = setTimeout(forceLogout, sessionLifetimeMs);
-                console.log(`[Session] Timers started. Lifetime: ${sessionLifetimeMinutes}m. Warning in ${(safeWarningMs/1000).toFixed(1)}s.`);
             }
 
             function showSessionWarning() {
                 const modalEl = document.getElementById('sessionExpiryModal');
                 if (!modalEl) return;
-
-                // Show modal using Bootstrap 5 API
-                // Check if bootstrap is defined, otherwise fallback or error gracefully
                 if (typeof bootstrap !== 'undefined') {
                     const modal = new bootstrap.Modal(modalEl);
                     modal.show();
-                } else {
-                    // Fallback for older bootstrap or if global object missing (unlikely in this template)
+                } else if (typeof $ !== 'undefined') {
                     $(modalEl).modal('show');
                 }
-
                 let secondsLeft = warningSeconds;
                 const counterEl = document.getElementById('session-countdown');
                 if (counterEl) counterEl.textContent = secondsLeft;
-
                 countdownInterval = setInterval(() => {
                     secondsLeft--;
                     if (counterEl) counterEl.textContent = secondsLeft;
-                    if (secondsLeft <= 0) {
-                        clearInterval(countdownInterval);
-                    }
+                    if (secondsLeft <= 0) clearInterval(countdownInterval);
                 }, 1000);
             }
 
@@ -1061,8 +567,6 @@
 
             window.extendSession = function() {
                 const modalEl = document.getElementById('sessionExpiryModal');
-
-                // Ping to extend server session
                 fetch("{{ route('auth.heartbeat') }}", {
                         method: 'GET',
                         headers: {
@@ -1071,29 +575,20 @@
                     })
                     .then(res => {
                         if (res.ok) {
-                            // Hide modal
                             if (typeof bootstrap !== 'undefined') {
                                 const modal = bootstrap.Modal.getInstance(modalEl);
                                 if (modal) modal.hide();
-                            } else {
+                            } else if (typeof $ !== 'undefined') {
                                 $(modalEl).modal('hide');
                             }
-
-                            // Restart timers
                             startSessionTimers();
-                        } else {
-                            forceLogout();
-                        }
+                        } else forceLogout();
                     })
                     .catch(err => {
                         console.error('Session extension failed', err);
-                        // On network failure, we don't automatically logout, but timer will eventually trigger forceLogout
-                        // Or we could force it now. Let's force it if we can't verify session.
                         forceLogout();
                     });
             };
-
-            // Start on load
             startSessionTimers();
         })();
     </script>

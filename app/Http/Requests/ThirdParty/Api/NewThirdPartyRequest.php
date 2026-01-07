@@ -51,7 +51,7 @@ class NewThirdPartyRequest extends FormRequest
                 'nullable',
                 Rule::email()->rfcCompliant()->validateMxRecord()->preventSpoofing(),
                 Rule::unique('t_ThirdPartyUsers', 'Email')->whereNull('DeletedOn'),
-                'max:200'
+                'max:250',
             ],
             'user_Phone' => [Rule::requiredIf($isUser), 'nullable', 'string', 'max:200'],
             'user_Gender' => [Rule::requiredIf($isUser), 'nullable', 'string', 'max:200'],

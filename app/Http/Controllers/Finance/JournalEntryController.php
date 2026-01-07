@@ -9,6 +9,7 @@ use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\HRM\Department;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,13 @@ use Illuminate\Validation\ValidationException;
 
 class JournalEntryController extends Controller
 {
+    protected $workflowService;
     //
+    public function __construct(ApprovalWorkflow $workflowService)
+    {
+        $this->workflowService = $workflowService;
+    }
+
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
@@ -178,7 +185,20 @@ class JournalEntryController extends Controller
                 $query->with('journalEntry.createdBy:Id,Name');
             }
         ])->findOrFail($id);
-        return view('finance.generalledger.journalentry.show', compact('journalEntry'));
+            // Check if user can approve
+            try {
+                $canApprove = $this->workflowService->canApproveModel($journalEntry, Auth::user());
+                Log::info("Can approve check completed", ['journal_entry_id' => $id, 'can_approve' => $canApprove]);
+            } catch (\Exception $e) {
+                Log::warning("Failed to check approval permission", [
+                    'journal_entry_id' => $id,
+                    'error' => $e->getMessage()
+                ]);
+                $canApprove = false;
+            }
+
+
+        return view('finance.generalledger.journalentry.show', compact('journalEntry', 'canApprove'));
     }
 
     public function edit($id)

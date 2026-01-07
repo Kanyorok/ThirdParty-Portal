@@ -80,6 +80,11 @@ class SupplierMaster extends Model
         );
     }
 
+    public function prequalificationApplications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Procurement\Prequalification\PrequalificationApplication::class, 'SupplierID', 'Id');
+    }
+
     // Note: ApprovalStatus is a string enum (e.g., 'P', 'A', 'R'), not a foreign key
     // Commenting out incorrect relationship to prevent SQL errors
     // public function status(): BelongsTo
