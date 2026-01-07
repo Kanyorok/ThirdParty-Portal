@@ -18,37 +18,77 @@
     </div>
 </div>
 <div class="card-body">
-    {{-- autologin when you visit reports urls.
-<iframe frameborder="0" seamless="seamless" class="viewer" title="Report Viewer" src="http://172.16.2.13:7092/ReportServer/Pages/ReportViewer.aspx?%2FBRERP%2FAdmin%2FUsers&amp;rc:showbackbutton=true"></iframe>
-
---}}
-    {{--   <iframe id="reportIframe" width="100%" height="600px" frameborder="0"
-      /*dd(route('auth.ssrs.proxy', [$report->Id]))*/{{ route('ssrs.proxy.report', ['report'.$report->Path,'rs:embed'=>'true']) }}
-               src="http://172.16.2.13:7092/reports/report/BRERP/Admin/Permissions?rs:embed=true"></iframe>--}}
-    <!--http://brerp.localhost/reports/report/BRERP/Inventory/ItemCatalogue?rs:embed=true-->
-
-    {{-- <iframe id="reportIframe" width="100%" height="600px" frameborder="0"
-             src="{{ url('ReportServer/Pages/ReportViewer.aspx?/BRERP/Inventory/ItemCatalogue&rs:embed=true') }}"></iframe>--}}
-    @if($data->isEmpty())
+    @if($data['error'] || empty($data['data']))
         @include('snippets.errors')
     @else
+        @if(!empty($data['header']))
+            <div class="mb-3 text-center">
+                @foreach($data['header'] as $key=>$value)
+                    @if($loop->first ||  (array_key_exists('name',array_change_key_case($data['header'] , CASE_LOWER)) && \Illuminate\Support\Str::of($key)->lower()->contains('name')))
+                        <h2>{{ $value }}</h2>
+                    @else
+                        <span class="h5">{{ $value }}&nbsp;</span>  &nbsp;
+                    @endif
+                @endforeach
+            </div>
+        @endif
         <div class="table-responsive">
-            <table class="table table-bordered  w-100" id="reports-table">
+            <table class="table table-bordered w-100" id="reports-table">
                 <thead>
                 <tr>
-                    @foreach(array_keys( $data->sortByDesc(function ($item) {return count($item);})->first()) as $key)
-                        <th>{{ ucfirst($key) }}</th>
+                    @if($data['isGrouped'] && $data['groupKeyAttribute'])
+                        <th>{{ ucfirst($data['groupKeyAttribute']) }}</th>
+                    @endif
+                    @php
+                        // Get columns based on grouped or ungrouped data
+                        if ($data['isGrouped']) {
+                            $firstGroup = collect($data['data'])->first();
+                            $firstRow = is_array($firstGroup) ? collect($firstGroup)->first() : [];
+                        } else {
+                            $firstRow = collect($data['data'])->first() ?? [];
+                        }
+                        $columns = is_array($firstRow) ? array_keys($firstRow) : [];
+                    @endphp
+                    @foreach($columns as $column)
+                        <th>{{ ucfirst($column) }}</th>
                     @endforeach
                 </tr>
                 </thead>
                 <tbody>
-                @foreach($data as $user)
-                    <tr>
-                        @foreach($user as $value)
-                            <td>{{ $value }}</td>
+                @if($data['isGrouped'])
+                    {{-- Grouped Report with Rowspan --}}
+                    @forelse($data['data'] as $groupName => $rows)
+                        @foreach($rows as $index => $row)
+                            <tr>
+                                @if($index === 0)
+                                    <td rowspan="{{ count($rows) }}" class="align-middle fw-bold">
+                                        {{ $groupName }}
+                                    </td>
+                                @endif
+                                @foreach($row as $value)
+                                    <td>{{ $value }}</td>
+                                @endforeach
+                            </tr>
                         @endforeach
-                    </tr>
-                @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="100%" class="text-center">No data available</td>
+                        </tr>
+                    @endforelse
+                @else
+                    {{-- Ungrouped Report - Simple Table --}}
+                    @forelse($data['data'] as $row)
+                        <tr>
+                            @foreach($row as $value)
+                                <td>{{ $value }}</td>
+                            @endforeach
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="100%" class="text-center">No data available</td>
+                        </tr>
+                    @endforelse
+                @endif
                 </tbody>
             </table>
         </div>
@@ -59,7 +99,8 @@
         $.fn.dataTable.ext.errMode = 'none';
         $('#reports-table').DataTable({
             dom: '<"row"<"col-12 mb-2"tr><"col-5 text-center"i><"col-7"p>>',
+            paging: false,
+            ordering: false
         });
     });
-
 </script>
