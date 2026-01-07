@@ -12,6 +12,7 @@ use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 
 class TenantService extends ThirdPartiesService
 {
@@ -21,14 +22,14 @@ class TenantService extends ThirdPartiesService
             $tenant->load('thirdParty');
         }
 
-        parent::__construct($tenant->thirdParty ?? null);
+        parent::__construct($tenant->thirdParty);
     }
 
     public static function getType(): ThirdPartyType
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeTenant)->firstOr(function () {
             $role = FinanceRole::query()->first();
-            if ($role instanceof FinanceRole === false) {
+            if (!$role instanceof FinanceRole) {
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();
@@ -43,7 +44,7 @@ class TenantService extends ThirdPartiesService
     }
 
     public static function create(
-        string  $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
@@ -57,15 +58,21 @@ class TenantService extends ThirdPartiesService
         ?CodeDetail $status,
         ?array $extra,
         User|ThirdPartyUser $actor,
-        ?int $tenantType = null,
-        ?string $remarks = null
-    ): self {
-        return self::createFromParty(
-            party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor),
-            actor: $actor,
-            tenantType: $tenantType,
-            remarks: $remarks
-        );
+        array $data = []
+    ): ThirdParties {
+        return DB::transaction(function () use ($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor, $data) {
+
+            $party = parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor, $data);
+
+            self::createFromParty(
+                $party,
+                $actor,
+                $data['tenant_type'] ?? $data['tenantType'] ?? null,
+                $data['tenant_remarks'] ?? $data['remarks'] ?? null
+            );
+
+            return $party;
+        });
     }
 
     public static function createFromParty(
@@ -73,31 +80,32 @@ class TenantService extends ThirdPartiesService
         User|ThirdPartyUser $actor,
         ?int $tenantType = null,
         ?string $remarks = null,
-        UploadedFile $document = null
+        ?UploadedFile $document = null
     ): self {
-        // Default to Individual tenant type (ID: 80) if not specified
-        if ($tenantType === null) {
-            $tenantType = 80; // Individual
-        }
-
-        // Default remarks if not provided
-        if ($remarks === null) {
-            $remarks = 'Tenant profile created via portal';
-        }
+        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
 
         $tenant = PropertyNewTenant::create([
             'ThirdPartyId' => $party->Id,
-            'TenantType' => $tenantType,
-            'Remarks' => $remarks,
+            'TenantType' => $tenantType ?? 80,
+            'Remarks' => $remarks ?? 'Tenant profile created via portal',
             'IsActive' => true,
-            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
-            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'CreatedBy' => $auditId,
+            'ModifiedBy' => $auditId,
         ]);
 
-        activity()->causedBy($actor)->performedOn($tenant)->event('create')->log("Added Tenant to thirdparty {$party->ThirdPartyName}.");
+        activity()
+            ->causedBy($actor)
+            ->performedOn($tenant)
+            ->event('create')
+            ->log("Added Tenant profile for {$party->ThirdPartyName}");
 
         $service = new self($tenant);
-        $service->addType(self::getType(), 'ThirdPartyId', $party->Id, $actor);
+        $service->addType(
+            type: self::getType(),
+            partyType: PropertyNewTenant::class,
+            partyId: $tenant->getKey(),
+            actor: $actor
+        );
 
         return $service;
     }

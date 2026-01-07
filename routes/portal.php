@@ -7,7 +7,7 @@ use App\Http\Controllers\ThirdParty\API\ProfileController;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use App\Http\Controllers\ThirdParty\API\MetadataController;
 use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
+use  App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\ThirdParty\API\LookupController;
 use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
 

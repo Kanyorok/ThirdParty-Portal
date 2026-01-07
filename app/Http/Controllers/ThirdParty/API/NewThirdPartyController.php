@@ -8,6 +8,7 @@ use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Services\ThirdParties\ThirdPartyService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use DateTime;
 
 class NewThirdPartyController extends Controller
 {
@@ -23,11 +24,20 @@ class NewThirdPartyController extends Controller
                 Str::slug($request->validated('RegistrationNumber')) . '@noreply.local';
 
             $data = $request->validated();
+            $types = $request->validated('types');
 
-            if (in_array(ThirdPartyService::TypeCustomer, $request->validated('types'))) {
-                $data['customer_Gender_model'] = $request->getGender('customer_Gender');
-                $data['customer_MaritalStatus_model'] = $request->getMaritalStatus();
-                $data['customer_Occupation_model'] = $request->getOccupation();
+            if (in_array(ThirdPartyService::TypeTenant, $types)) {
+                $data['tenantType'] = $data['tenantType'] ?? 80;
+                $data['user_Remarks'] = $data['user_Remarks'] ?? 'Tenant profile created via portal';
+            }
+
+            if (in_array(ThirdPartyService::TypeCustomer, $types)) {
+                $data['user_Gender'] = $request->getGender('user_Gender');
+                $data['user_MaritalStatus'] = $request->getMaritalStatus('user_MaritalStatus');
+                $data['user_Occupation'] = $request->getOccupation('user_Occupation');
+
+                $dob = $request->validated('user_DateOfBirth');
+                $data['user_DateOfBirth'] = $dob ? new DateTime($dob) : null;
             }
 
             $party = ThirdPartyService::create(
@@ -55,13 +65,12 @@ class NewThirdPartyController extends Controller
             }
 
             if ($request->boolean('createUser')) {
-                $gender = $request->getGender('user_Gender');
                 $partyService->addUser(
                     firstName: $request->validated('user_FirstName'),
                     lastName: $request->validated('user_LastName'),
                     email: $request->validated('user_Email'),
                     phone: $request->getPhoneNumber($country, 'user_Phone'),
-                    gender: $gender,
+                    gender: $request->getGender('user_Gender'),
                     actor: $actor,
                     password: $request->validated('user_Password'),
                     sendVerification: true
@@ -72,10 +81,12 @@ class NewThirdPartyController extends Controller
                 'success' => true,
                 'message' => $request->boolean('createUser')
                     ? 'Registration successful! Please check your email to verify your account.'
-                    : 'Third party created successfully.',
+                    : 'Profile created successfully.',
                 'data' => [
                     'id' => $party->Id,
-                    'name' => $party->ThirdPartyName
+                    'name' => $party->ThirdPartyName,
+                    'isTenant' => in_array(ThirdPartyService::TypeTenant, $types),
+                    'isCustomer' => in_array(ThirdPartyService::TypeCustomer, $types)
                 ]
             ], 201);
         });

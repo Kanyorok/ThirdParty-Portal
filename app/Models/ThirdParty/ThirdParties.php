@@ -211,20 +211,22 @@ class ThirdParties extends Model
     public function isTenant(): bool
     {
         if ($this->relationLoaded('types')) {
-            return $this->types->contains(function ($type) {
-                return isset($type->pivot->PartyType) && $type->pivot->PartyType === PropertyNewTenant::getPrimaryKey();
-            });
+            return $this->types->contains(
+                fn($type) =>
+                $type->pivot->PartyType === (new PropertyNewTenant())->getMorphClass()
+            );
         }
-        return false;
+        return $this->tenantProfile()->exists();
     }
 
     public function isCustomer(): bool
     {
         if ($this->relationLoaded('types')) {
-            return $this->types->contains(function ($type) {
-                return isset($type->pivot->PartyType) && $type->pivot->PartyType === BancassuranceCustomer::getPrimaryKey();
-            });
+            return $this->types->contains(
+                fn($type) =>
+                $type->pivot->PartyType === (new BancassuranceCustomer())->getMorphClass()
+            );
         }
-        return false;
+        return $this->customerProfile()->exists();
     }
 }

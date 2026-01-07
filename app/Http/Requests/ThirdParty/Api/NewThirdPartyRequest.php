@@ -21,7 +21,10 @@ class NewThirdPartyRequest extends FormRequest
     public function rules(): array
     {
         $isUser = $this->boolean('createUser');
-        $types = $this->array('types');
+        $types = $this->input('types', []);
+        $isCustomer = in_array(ThirdPartyService::TypeCustomer, $types, true);
+        $isTenant = in_array(ThirdPartyService::TypeTenant, $types, true);
+        $isSupplier = in_array(ThirdPartyService::TypeSupplier, $types, true);
 
         return [
             'Name' => ['required', 'string', 'max:255'],
@@ -33,11 +36,7 @@ class NewThirdPartyRequest extends FormRequest
             'Location' => ['required'],
             'TaxPIN' => ['nullable', 'string', 'max:200'],
             'VATNumber' => ['nullable', 'string', 'max:200'],
-            'Email' => [
-                'nullable',
-                Rule::email()->rfcCompliant()->validateMxRecord()->preventSpoofing(),
-                'max:250',
-            ],
+            'Email' => ['nullable', 'email', 'max:250'],
             'Phone' => ['required', (new Phone)->countryField('Country')],
             'PhysicalAddress' => ['nullable', 'string', 'max:200'],
             'types' => ['required', 'array', 'min:1'],
@@ -49,12 +48,12 @@ class NewThirdPartyRequest extends FormRequest
             'user_Email' => [
                 Rule::requiredIf($isUser),
                 'nullable',
-                Rule::email()->rfcCompliant()->validateMxRecord()->preventSpoofing(),
+                'email',
                 Rule::unique('t_ThirdPartyUsers', 'Email')->whereNull('DeletedOn'),
                 'max:250',
             ],
-            'user_Phone' => [Rule::requiredIf($isUser), 'nullable', 'string', 'max:200'],
-            'user_Gender' => [Rule::requiredIf($isUser), 'nullable', 'string', 'max:200'],
+            'user_Phone' => [Rule::requiredIf($isUser), 'nullable', 'string'],
+            'user_Gender' => [Rule::requiredIf($isUser || $isCustomer), 'nullable', 'string'],
             'user_Password' => [
                 Rule::requiredIf($isUser),
                 'nullable',
@@ -62,20 +61,17 @@ class NewThirdPartyRequest extends FormRequest
                 'min:8',
                 'confirmed'
             ],
-            'user_Password_confirmation' => [Rule::requiredIf($isUser), 'nullable', 'string'],
 
             'supplier_category_id' => [
                 'nullable',
-                Rule::requiredIf(in_array(ThirdPartyService::TypeSupplier, $types, true)),
+                Rule::requiredIf($isSupplier),
                 Rule::exists('t_SupplierCategories', 'SupplierCategoryID')
             ],
 
-            'customer_DateOfBirth' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $types, true)), 'date'],
-            'customer_Gender' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $types, true)), 'string', 'max:200'],
-            'customer_MaritalStatus' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $types, true)), 'string', 'max:200'],
-            'customer_Occupation' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $types, true)), 'string', 'max:200'],
-
-            'tenant_Remarks' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeTenant, $types, true)), 'string', 'max:200'],
+            'user_DateOfBirth' => ['nullable', Rule::requiredIf($isCustomer), 'date'],
+            'user_MaritalStatus' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
+            'user_Occupation' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
+            'user_Remarks' => ['nullable', Rule::requiredIf($isTenant), 'string', 'max:500'],
         ];
     }
 
@@ -89,26 +85,14 @@ class NewThirdPartyRequest extends FormRequest
         return $this->getCodeDetail('Gender', $field);
     }
 
-    public function getMaritalStatus(): CodeDetail
+    public function getMaritalStatus(string $field): CodeDetail
     {
-        return $this->getCodeDetail('MaritalStatus', 'customer_MaritalStatus');
+        return $this->getCodeDetail('MaritalStatus', $field);
     }
 
-    public function getOccupation(): CodeDetail
+    public function getOccupation(string $field): CodeDetail
     {
-        return $this->getCodeDetail('Occupation', 'customer_Occupation');
-    }
-
-    public function getSupplierData(): array
-    {
-        return [
-            'category_id' => $this->validated('supplier_category_id'),
-        ];
-    }
-
-    public function getLogo(): ?UploadedFile
-    {
-        return $this->file('logo');
+        return $this->getCodeDetail('Occupation', $field);
     }
 
     public function getCountry(): Country
@@ -121,7 +105,7 @@ class NewThirdPartyRequest extends FormRequest
         $location = $country->localities()->find($this->validated('Location'));
 
         if (!$location) {
-            throw ValidationException::withMessages(['Location' => 'Location is not a valid location.']);
+            throw ValidationException::withMessages(['Location' => 'Location is not a valid location for the selected country.']);
         }
 
         return $location;
@@ -129,13 +113,23 @@ class NewThirdPartyRequest extends FormRequest
 
     public function getPhoneNumber(Country $country, string $field): string
     {
-        $phoneNumber = new PhoneNumber($this->str($field)->trim()->toString(), $country->CountryCode);
-
-        if ($phoneNumber->isValid()) {
-            return $phoneNumber->formatE164();
+        try {
+            return (string) (new PhoneNumber($this->input($field), $country->CountryCode))->formatE164();
+        } catch (\Exception $e) {
+            throw ValidationException::withMessages([$field => 'The provided phone number is invalid.']);
         }
+    }
 
-        throw ValidationException::withMessages([$field => 'invalid phone number provided.']);
+    public function getSupplierData(): array
+    {
+        return [
+            'category_id' => $this->validated('supplier_category_id'),
+        ];
+    }
+
+    public function getLogo(): ?UploadedFile
+    {
+        return $this->file('logo');
     }
 
     public function messages(): array

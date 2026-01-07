@@ -20,11 +20,28 @@ class ThirdPartyResource extends JsonResource
                 'taxPIN'             => $this->TaxPIN,
                 'physicalAddress'    => $this->PhysicalAddress,
                 'website'            => $this->Website,
+                'email'              => $this->Email,
+                'phone'              => $this->Phone,
                 'countryId'          => (string) $this->CountryId,
             ],
-            'isPrequalified' => (bool) ($this->supplierMaster?->IsPrequalified ?? false),
-            'supplierId'     => $this->supplierMaster?->SupplierID,
-            'approvalStatus' => $this->supplierMaster?->ApprovalStatus,
+
+            'profiles' => [
+                'supplier' => $this->when($this->supplierMaster, [
+                    'supplierId'     => $this->supplierMaster?->SupplierID,
+                    'isPrequalified' => (bool) ($this->supplierMaster?->IsPrequalified ?? false),
+                    'approvalStatus' => $this->supplierMaster?->ApprovalStatus,
+                    'categoryId'     => $this->supplierMaster?->SupplierCategoryId,
+                ]),
+
+                'customer' => $this->whenLoaded('customerProfile', function () {
+                    return new CustomerProfileResource($this->customerProfile);
+                }),
+
+                'tenant' => $this->whenLoaded('tenantProfile', function () {
+                    return new TenantProfileResource($this->tenantProfile);
+                }),
+            ],
+
             'types' => $this->whenLoaded('types', function () {
                 return $this->types->map(fn($t) => [
                     'id'    => $t->Id,
@@ -32,6 +49,7 @@ class ThirdPartyResource extends JsonResource
                     'label' => $t->TypeName,
                 ]);
             }, []),
+
             'createdOn' => $this->CreatedOn?->toDateTimeString(),
         ];
     }
