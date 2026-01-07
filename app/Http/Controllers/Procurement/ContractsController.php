@@ -83,11 +83,11 @@ class ContractsController extends Controller
         if ($request->filled('search')) {
             $search = strtolower($request->search);
             $allContracts = $allContracts->filter(function ($contract) use ($search) {
-                $ref = strtolower($contract->tender->TenderNo ?? '');
-                $title = strtolower($contract->tender->Title ?? '');
+                $ref = strtolower($contract->tender?->TenderNo ?? '');
+                $title = strtolower($contract->tender?->Title ?? '');
                 $supplier = strtolower(
-                    $contract->winningSupplier->thirdParty->TradingName 
-                    ?? $contract->winningSupplier->supplierMaster->party->TradingName 
+                    $contract->winningSupplier?->thirdParty?->TradingName 
+                    ?? $contract->winningSupplier?->supplierMaster?->party?->TradingName 
                     ?? ''
                 );
                 
