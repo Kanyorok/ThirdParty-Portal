@@ -73,7 +73,7 @@
                         <button type="submit"
                                 class="btn btn-success"
                                 onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">
-                            <i class="bi bi-check-circle"></i> Update Property
+                            <i class="bi bi-check-circle"></i> Update Block
                         </button>
                     </div>
                 </form>
