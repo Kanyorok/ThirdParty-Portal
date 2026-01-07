@@ -513,6 +513,17 @@
                 {{-- Action Buttons --}}
                 @if($journalEntry->ApprovalStatus=='draft')
                     <div class="mt-4 d-flex justify-content-end gap-3 no-print">
+                        {{-- <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
+                            <i class="fas fa-times-circle me-1"></i> Reject
+                        </button> --}}
+                        <button class="btn btn-outline-success" data-bs-toggle="modal"
+                                data-bs-target="#submitForApprovalModal" data-action="submitForApproval">
+                            <i class="fas fa-paper-plane me-1"></i> Submit for Approval
+                        </button>
+                    </div>
+                 @endif
+                @if($journalEntry->ApprovalStatus=='pending')
+                    <div class="mt-4 d-flex justify-content-end gap-3 no-print">
                         <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
                             <i class="fas fa-times-circle me-1"></i> Reject
                         </button>
@@ -533,6 +544,45 @@
     </div>
 
 
+    {{-- Submit for Approval Modal --}}
+    <div class="modal fade" id="submitForApprovalModal" tabindex="-1" aria-labelledby="actionModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ route('journalApproval', $journalEntry->Id) }}">
+                @csrf
+                @method('Post')
+                <input type="hidden" name="action_type" value="submitForApproval" id="actionType">
+                <input type="hidden" name="journalID" value="{{ $journalEntry->Id}}" id="actionType">
+                <div class="modal-content rounded-4 shadow">
+                    <div class="modal-header bg-light border-0">
+                        <h5 class="modal-title text-success" id="actionModalLabel">Confirm Submission for Approval</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason</label>
+
+                            <textarea class="form-control" name="Reason" id="reason" rows="3" required
+                                      placeholder="Enter reason here..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-success" id="postBtn" type="submit"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+
+                                Submit for Approval
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {{-- End Submit for Approval Modal --}}
+
+
+    @if($canApprove)
     @if($journalEntry->ApprovalStatus==='draft')
         {{-- Approve Modal --}}
         <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel"
@@ -600,5 +650,5 @@
             </div>
         </div>
     @endif
-
+    @endif
 @endsection

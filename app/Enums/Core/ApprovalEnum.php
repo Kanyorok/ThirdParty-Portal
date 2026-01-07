@@ -16,6 +16,10 @@ enum ApprovalEnum: string
 
     case Submitted = 'S';
 
+    case Draft='dr';
+
+    case Posted='ps';
+
 
     public function label(): string
     {
@@ -24,6 +28,8 @@ enum ApprovalEnum: string
             self::Rejected => 'Rejected',
             self::Pending => 'Pending',
             self::Submitted => 'Submitted for Approval',
+            self::Draft=>'Draft',
+            self::Posted=>'Posted',
         };
     }
 
@@ -34,6 +40,8 @@ enum ApprovalEnum: string
             self::Pending => 'info',
             self::Rejected => 'danger',
             self::Submitted => 'warning',
+            self::Draft=>'secondary',
+            self::Posted=>'success',
         };
     }
 }

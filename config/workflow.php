@@ -1,5 +1,5 @@
 <?php
-use App\Enums\WorkflowStatus;   
+use App\Enums\WorkflowStatus;
 return [
     /*
     |--------------------------------------------------------------------------

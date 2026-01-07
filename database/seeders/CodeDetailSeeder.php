@@ -535,7 +535,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
 
 
-            
+
             ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'P'],
             ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'it'],
             ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'de'],
@@ -725,6 +725,16 @@ class CodeDetailSeeder extends Seeder
             //Cheque Party Type
             ['CodeID' => 'ChequePartyType', 'Description' => 'Vendor', 'Value' => 'V', 'DisplayOrder' => 1],
             ['CodeID' => 'ChequePartyType', 'Description' => 'Tenant', 'Value' => 'T', 'DisplayOrder' => 2],
+
+
+            //Finance Approval Status
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Draft', 'Value' => 'dr','DisplayOrder' => 1],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Pending', 'Value' => 'pe', 'DisplayOrder' => 2],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Approved', 'Value' => 'ap', 'DisplayOrder' => 3],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Posting', 'Value' => 'ps', 'DisplayOrder' => 4],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
+
+
 
         ];
 
