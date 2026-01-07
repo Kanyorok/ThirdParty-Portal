@@ -2,12 +2,14 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
 use App\Http\Controllers\ThirdParty\API\ProfileController;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use App\Http\Controllers\ThirdParty\API\MetadataController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
+use App\Http\Controllers\ThirdParty\API\LookupController;
+use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
 
 Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::post('register', [NewThirdPartyController::class, 'store'])
@@ -17,6 +19,11 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login'])
         ->name('login')
         ->middleware(['throttle:10,1']);
+
+    Route::prefix('lookups')->name('lookups.')->group(function () {
+        Route::get('bulk', [LookupController::class, 'bulk'])->name('bulk');
+        Route::get('{codeId}', [LookupController::class, '__invoke'])->name('show');
+    });
 
     Route::get('metadata/countries', [MetadataController::class, 'getCountries']);
     Route::get('metadata/business-types', [MetadataController::class, 'getBusinessTypes']);
@@ -40,29 +47,19 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
             ->middleware(['throttle:3,1']);
     });
 
-    // Profile management routes
     Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->middleware(['auth.thirdparty'])->group(function () {
-        // Base company profile
         Route::get('/', 'show')->name('show');
         Route::put('/', 'updateProfile')->name('update');
-
-        // Get available profiles for user
         Route::get('/available', 'getAvailableProfiles')->name('available');
-
-        // Supplier profile
         Route::get('/supplier', 'getSupplierProfile')->name('supplier.show');
         Route::put('/supplier', 'updateSupplierProfile')->name('supplier.update');
-
-        // Tenant profile
         Route::get('/tenant', 'getTenantProfile')->name('tenant.show');
         Route::put('/tenant', 'updateTenantProfile')->name('tenant.update');
-
-        // Customer profile
         Route::get('/customer', 'getCustomerProfile')->name('customer.show');
         Route::put('/customer', 'updateCustomerProfile')->name('customer.update');
     });
 
-    Route::middleware(['verified'])->group(function () {
+    Route::middleware(['auth.thirdparty', 'verified'])->group(function () {
         Route::get('validate-token', function (Request $request) {
             $user = $request->user()->load([
                 'thirdParty.types',
@@ -77,5 +74,12 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
                 'user' => new ThirdPartyUserResource($user),
             ]);
         })->name('validate_token');
+
+        Route::prefix('prequalification')->name('prequalification.')->group(function () {
+            Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+            Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+            Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+            Route::get('my-applications', [PrequalificationApplicationController::class, 'index'])->name('applications.history');
+        });
     });
 });

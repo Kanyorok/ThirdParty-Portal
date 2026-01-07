@@ -22,146 +22,152 @@ class ThirdPartyService extends ThirdPartiesService
     public const string TypeCustomer = 'CU';
 
     public static function create(
-        string   $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
         Locality $locationID,
-        ?string  $physicalAddress,
+        ?string $physicalAddress,
         ?string $email,
         ?string $phone,
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
         User|ThirdPartyUser $actor,
-        array|string $types = null,
-        DateTime $CustomerDateOfBirth = null,
-        CodeDetail $CustomerGender = null,
-        CodeDetail $CustomerMaritalStatus = null,
-        CodeDetail $CustomerOccupation = null,
-        string   $Tenant_Remarks = null
-    ): self {
+        array $data = []
+    ): ThirdParties {
+        $types = $data['types'] ?? null;
         $partyTypes = self::getTypes($types);
-        
-        // Create the parent ThirdParty and check if it was created successfully
+
         $parentParty = parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor);
-        
+
         if (!$parentParty) {
             throw new ErroredException('Failed to create ThirdParty record');
         }
-        
+
         $partyService = new self($parentParty);
 
         foreach ($partyTypes as $type) {
-            if ($type->Code === 'CU' && ($CustomerDateOfBirth === null || $CustomerGender === null || $CustomerMaritalStatus === null || $CustomerOccupation === null)) {
-                throw new ErroredException('DateOfBirth, Gender, MaritalStatus and Occupation are required for Customer');
-            }
-            
             match ($type->Code) {
-                self::TypeTenant => $partyService->addTenant($actor, $Tenant_Remarks),
-                self::TypeSupplier => $partyService->addSupplier($actor),
-                self::TypeCustomer => $partyService->addCustomer(Referral: null, DateOfBirth: $CustomerDateOfBirth, Gender: $CustomerGender, MaritalStatus: $CustomerMaritalStatus, Occupation: $CustomerOccupation, actor: $actor),
-                default => throw new ErroredException('Invalid party type'),
+                self::TypeTenant => $partyService->addTenant($actor, $data['tenant_Remarks'] ?? null),
+
+                self::TypeSupplier => $partyService->addSupplier($actor, $data),
+
+                self::TypeCustomer => $partyService->addCustomer(
+                    Referral: $data['Referral'] ?? null,
+                    DateOfBirth: $data['customer_DateOfBirth'] ?? null,
+                    Gender: $data['customer_Gender_model'] ?? null,
+                    MaritalStatus: $data['customer_MaritalStatus_model'] ?? null,
+                    Occupation: $data['customer_Occupation_model'] ?? null,
+                    actor: $actor
+                ),
+
+                default => throw new ErroredException("Handler for type {$type->Code} not implemented"),
             };
         }
-        
-        return $partyService;
+
+        return $parentParty;
     }
 
     public static function update(
         ThirdParties $party,
-        string   $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
         Locality $locationID,
-        ?string  $physicalAddress,
+        ?string $physicalAddress,
         ?string $email,
         ?string $phone,
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
         User|ThirdPartyUser $actor,
-        array|string $types = null,
-        DateTime $CustomerDateOfBirth = null,
-        CodeDetail $CustomerGender = null,
-        CodeDetail $CustomerMaritalStatus = null,
-        CodeDetail $CustomerOccupation = null,
-        string   $Tenant_Remarks = null
-    ): self {
-        // Check if the party exists before proceeding
-        if (!$party) {
-            throw new ErroredException('ThirdParty not found');
-        }
-        
+        array $data = []
+    ): ThirdParties {
         $party->update([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
-            'BusinessType' => $businessType->ID,
+            'BusinessType' => $businessType->getKey(),
             'RegistrationNumber' => $registrationNumber,
             'TaxPIN' => $taxPIN,
             'VATNumber' => $vatNumber,
             'CountryId' => $locationID->CountryId,
-            'LocationId' => $locationID->ID,
+            'LocationId' => $locationID->getKey(),
             'PhysicalAddress' => $physicalAddress,
             'Email' => $email,
             'Phone' => $phone,
             'Website' => $website,
-            'Status' => $status?->ID ?? $party->Status,
+            'Status' => $status?->getKey() ?? $party->Status,
             'Extra' => $extra,
             'ModifiedBy' => $actor->Id,
         ]);
 
         $partyService = new self($party);
+        $types = $data['types'] ?? null;
 
         if ($types) {
             $partyTypes = self::getTypes($types);
             foreach ($partyTypes as $type) {
-                if ($type->Code === 'CU' && ($CustomerDateOfBirth === null || $CustomerGender === null || $CustomerMaritalStatus === null || $CustomerOccupation === null)) {
-                    throw new ErroredException('DateOfBirth, Gender, MaritalStatus and Occupation are required for Customer');
-                }
-
-                // Check if type already exists to avoid duplication
-                $exists = $party->types()->where('TypeId', $type->TypeId)->exists();
-
-                if (!$exists) {
+                if (!$party->types()->where('TypeId', $type->TypeId)->exists()) {
                     match ($type->Code) {
-                        self::TypeTenant => $partyService->addTenant($actor, $Tenant_Remarks),
-                        self::TypeSupplier => $partyService->addSupplier($actor),
-                        self::TypeCustomer => $partyService->addCustomer(Referral: null, DateOfBirth: $CustomerDateOfBirth, Gender: $CustomerGender, MaritalStatus: $CustomerMaritalStatus, Occupation: $CustomerOccupation, actor: $actor),
-                        default => throw new ErroredException('Invalid party type'),
+                        self::TypeTenant => $partyService->addTenant($actor, $data['tenant_Remarks'] ?? null),
+                        self::TypeSupplier => $partyService->addSupplier($actor, $data),
+                        self::TypeCustomer => $partyService->addCustomer(
+                            Referral: null,
+                            DateOfBirth: $data['customer_DateOfBirth'],
+                            Gender: $data['customer_Gender_model'],
+                            MaritalStatus: $data['customer_MaritalStatus_model'],
+                            Occupation: $data['customer_Occupation_model'],
+                            actor: $actor
+                        ),
+                        default => null
                     };
                 }
             }
         }
 
-        return $partyService;
+        return $party;
     }
 
-    /**
-     * @throws ErroredException
-     */
     public function addTenant(User|ThirdPartyUser $actor, ?string $Remarks): PropertyNewTenantService
     {
         return PropertyNewTenantService::createFromParty($this->party, $actor, Remarks: $Remarks);
     }
 
-    public function addSupplier(User|ThirdPartyUser $actor): SupplierService
+    public function addSupplier(User|ThirdPartyUser $actor, array $data = []): SupplierService
     {
-        return SupplierService::createFromParty($this->party, $actor);
+        return SupplierService::createFromParty($this->party, $actor, $data);
     }
 
-    public function addCustomer(?BancAssuranceReferral $Referral, DateTime $DateOfBirth, CodeDetail $Gender, CodeDetail $MaritalStatus, CodeDetail $Occupation, User|ThirdPartyUser $actor): BancassuranceCustomersService
-    {
-        return BancassuranceCustomersService::createFromParty($this->party, Referral: $Referral, DateOfBirth: $DateOfBirth, Gender: $Gender, MaritalStatus: $MaritalStatus, Occupation: $Occupation, user: $actor);
+    public function addCustomer(
+        ?BancAssuranceReferral $Referral,
+        ?DateTime $DateOfBirth,
+        ?CodeDetail $Gender,
+        ?CodeDetail $MaritalStatus,
+        ?CodeDetail $Occupation,
+        User|ThirdPartyUser $actor
+    ): BancassuranceCustomersService {
+        if (!$DateOfBirth || !$Gender || !$MaritalStatus || !$Occupation) {
+            throw new ErroredException('Missing required details for Customer registration');
+        }
+        return BancassuranceCustomersService::createFromParty(
+            $this->party,
+            Referral: $Referral,
+            DateOfBirth: $DateOfBirth,
+            Gender: $Gender,
+            MaritalStatus: $MaritalStatus,
+            Occupation: $Occupation,
+            user: $actor
+        );
     }
 
     public static function getType(): ThirdPartyType
     {
-        throw new RuntimeException('Not implemented');
+        throw new RuntimeException('Generic ThirdPartyService does not have a single type. Use addType() on instances.');
     }
 }

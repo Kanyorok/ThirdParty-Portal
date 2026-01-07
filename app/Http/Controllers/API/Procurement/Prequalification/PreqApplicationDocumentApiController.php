@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\Procurement\Prequalification;
 use App\Enums\Core\ModulesEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StoreApplicationDocumentRequest;
-use App\Models\DMS\Repository;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationApplicationDocument;
 use App\Services\DMS\DocumentService;
@@ -13,7 +12,6 @@ use App\Services\DMS\RepositoryService;
 use App\Helpers\SystemHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PreqApplicationDocumentApiController extends Controller

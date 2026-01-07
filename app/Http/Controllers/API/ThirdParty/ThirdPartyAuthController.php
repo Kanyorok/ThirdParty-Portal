@@ -41,15 +41,10 @@ class ThirdPartyAuthController extends Controller
                 'redirectUrl' => '/register/third-party-details?user_id=' . $userData->UserID,
             ], 201);
         } catch (\Exception $e) {
-            // Force-write to single channel so it goes to storage/logs/laravel.log
             Log::channel('single')->error('Third-party registration failed', [
                 'error' => $e->getMessage(),
                 'exception' => get_class($e),
                 'ip' => $request->ip(),
-                'forwarded_for' => $request->header('X-Forwarded-For'),
-                'user_agent' => $request->userAgent(),
-                'url' => $request->fullUrl(),
-                'route' => optional($request->route())->getName(),
                 'payload' => $request->except(['Password', 'Password_confirmation']),
             ]);
             return response()->json([
@@ -61,10 +56,8 @@ class ThirdPartyAuthController extends Controller
 
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
-
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
-
 
             if (! $user || ! Hash::check($request->password, $user->Password)) {
                 throw ValidationException::withMessages([
@@ -72,7 +65,6 @@ class ThirdPartyAuthController extends Controller
                 ]);
             }
 
-            // Enforce account status BEFORE creating token
             if (!$user->isActive()) {
                 return response()->json(['message' => __('auth.account_inactive')], 403);
             }
@@ -80,13 +72,12 @@ class ThirdPartyAuthController extends Controller
                 return response()->json(['message' => __('auth.acc_not_approved')], 403);
             }
 
-            // profile_type validation
             $profileType = $request->input('profile_type');
             $isAuthorized = false;
 
             if ($profileType === 'Supplier') {
                 $isAuthorized = SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
-                    ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value) // Use value explicit
+                    ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value)
                     ->exists();
             } elseif ($profileType === 'Tenant') {
                 $isAuthorized = PropertyNewTenant::where('ThirdPartyId', $user->ThirdPartyId)
@@ -95,36 +86,26 @@ class ThirdPartyAuthController extends Controller
             } elseif ($profileType === 'Customer') {
                 $isAuthorized = BancassuranceCustomer::where('ThirdPartyId', $user->ThirdPartyId)->exists();
             } else {
-                // If no profile type provided or unknown, fail safe or allow if strict check not required?
-                // Request says: "we now need to specify when authenticating what type is logging in"
-                // So strict check seems appropriate.
                 return response()->json(['message' => 'Profile type is required and must be valid.'], 403);
             }
-
-
 
             if (!$isAuthorized) {
                 return response()->json(['message' => 'Your account is not authorized for the selected profile type.'], 403);
             }
 
-            // Optional: single-session behavior
             $user->tokens()->delete();
 
             $token = $user->createToken('api')->plainTextToken;
 
-            $responseData = [
+            return response()->json([
                 'user' => (new ThirdPartyUserResource($user->load(['thirdParty.types'])))->resolve(),
                 'token' => $token,
                 'token_type' => 'Bearer',
-            ];
-
-
-
-            return response()->json($responseData);
+            ]);
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Login Exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Login Exception', ['message' => $e->getMessage()]);
             return response()->json([
                 'message' => __('auth.login_failed'),
                 'error' => config('app.debug') ? $e->getMessage() : null,
@@ -132,7 +113,6 @@ class ThirdPartyAuthController extends Controller
         }
     }
 
-    // Token validation for SPA
     public function validateToken(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -162,7 +142,6 @@ class ThirdPartyAuthController extends Controller
                 $request->user()->currentAccessToken()->delete();
                 return response()->json(['message' => __('auth.logout_successful')]);
             }
-
             return response()->json(['message' => __('auth.not_authenticated')], 401);
         } catch (\Exception $e) {
             return response()->json([
@@ -212,18 +191,18 @@ class ThirdPartyAuthController extends Controller
     {
         return Auth::guard('sanctum')->user() ?? ($id ? ThirdPartyUser::where('UserID', $id)->first() : null);
     }
+
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate(['email' => 'required|email']);
 
-        // We use the 'thirdparties' broker defined in config/auth.php
         $status = Password::broker('thirdparties')->sendResetLink(
             $request->only('email')
         );
 
         return $status === Password::RESET_LINK_SENT
             ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 400); // translation strings from resources/lang
+            : response()->json(['message' => __($status)], 400);
     }
 
     public function resetPassword(Request $request): JsonResponse
@@ -237,12 +216,9 @@ class ThirdPartyAuthController extends Controller
         $status = Password::broker('thirdparties')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
-                // Handle custom column 'Password' and hashing
                 $user->forceFill([
                     'Password' => Hash::make($password)
                 ])->save();
-
-                // Clear tokens if api setup requires it, though createsToken() handles login separately
             }
         );
 

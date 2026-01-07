@@ -16,7 +16,7 @@ use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\ThirdParty\ThirdPartyTypeTypes;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Support\Collection;
-
+use Illuminate\Support\Facades\Hash;
 
 abstract class ThirdPartiesService
 {
@@ -24,10 +24,6 @@ abstract class ThirdPartiesService
 
     abstract public static function getType(): ThirdPartyType;
 
-
-    /**
-     * @throws ErroredException
-     */
     public static function getTypes(array|null|string $types): Collection
     {
         if ($types === null) {
@@ -41,34 +37,36 @@ abstract class ThirdPartiesService
         return $partyTypes;
     }
 
-    public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User $actor, ?string $password = null, bool $sendVerification = true): static
+    public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User|ThirdPartyUser $actor, ?string $password = null, bool $sendVerification = true): static
     {
+        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
         $user = ThirdPartyUser::create([
             'FirstName' => $firstName,
             'LastName' => $lastName,
             'Email' => $email,
             'Phone' => $phone,
-            // 'Gender' => $gender->ID,
-            'Gender'   => $gender->getAttribute('ID') ?? $gender->ID,
+            'Gender' => $gender->getAttribute('ID') ?? $gender->ID,
             'ThirdPartyId' => $this->party->Id,
-            'Password' => $password ? \Illuminate\Support\Facades\Hash::make($password) : 'NON SET',
-            'IsActive' => $password ? true : false, // Only activate if password is set
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
+            'Password' => $password ? Hash::make($password) : 'NOT SET',
+            'IsActive' => (bool)$password,
+            'CreatedBy' => $auditId,
+            'ModifiedBy' => $auditId,
         ]);
 
-        // Send email verification notification if password is set
         if ($password && $sendVerification) {
             $user->sendEmailVerificationNotification();
         }
 
-        activity()->causedBy($actor)->performedOn($user)->event('create')->log("Created user {$user->FirstName} {$user->LastName} to thirdparty {$this->party->ThirdPartyName}");
+        activity()
+            ->causedBy($actor)
+            ->performedOn($user)
+            ->event('create')
+            ->log("Created user {$user->FirstName} {$user->LastName} for thirdparty {$this->party->ThirdPartyName}");
+
         return $this;
     }
 
-    /**
-     * @throws ErroredException
-     */
     public static function create(
         string  $name,
         ?string $tradingName,
@@ -83,9 +81,11 @@ abstract class ThirdPartiesService
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
-        User|ThirdPartyUser $actor
-    ): mixed {
+        User|ThirdPartyUser $actor,
+        array $data = []
+    ): ThirdParties {
         $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
         $party = ThirdParties::create([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
@@ -101,24 +101,30 @@ abstract class ThirdPartiesService
             'Website' => $website,
             'Status' => $status?->getKey() ?? self::codeDetail(ThirdPartyStatusEnum::Active)->getKey(),
             'Extra' => $extra,
-            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
-            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'CreatedBy' => $auditId,
+            'ModifiedBy' => $auditId,
         ]);
 
-        activity()->causedBy($actor)->on($party)->withProperties(['thirdParty' => $party])->log('Created thirdparty ' . $name);
+        activity()
+            ->causedBy($actor)
+            ->performedOn($party)
+            ->withProperties(['thirdParty' => $party])
+            ->log('Created thirdparty ' . $name);
 
         return $party;
     }
 
-    /**
-     * @throws ErroredException
-     */
     public static function codeDetail(ThirdPartyStatusEnum $status, bool $create = false): CodeDetail
     {
-        $code = CodeDetail::query()->where('CodeID', 'ThirdPartyStatus')->where('Value', $status->value)->first();
+        $code = CodeDetail::query()
+            ->where('CodeID', 'ThirdPartyStatus')
+            ->where('Value', $status->value)
+            ->first();
+
         if ($code instanceof CodeDetail) {
             return $code;
         }
+
         if ($create) {
             $actor = SystemHelper::user();
             return CodeDetail::create([
@@ -126,7 +132,7 @@ abstract class ThirdPartiesService
                 'Value' => $status->value,
                 'Description' => $status->label(),
                 'DisplayOrder' => CodeDetail::query()->where('CodeID', 'ThirdPartyStatus')->count() + 1,
-                'IsActive' => false,
+                'IsActive' => true,
                 'CreatedBy' => $actor->Id,
                 'ModifiedBy' => $actor->Id,
             ]);
@@ -142,33 +148,40 @@ abstract class ThirdPartiesService
 
     public function addBank(Currency $currency, string $accountNumber, BankBranch $branch, User|ThirdPartyUser $actor, ?array $extra = null): static
     {
+        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
         $bank = ThirdPartiesBankDetails::create([
             'ThirdPartyId' => $this->party->Id,
             'CurrencyId' => $currency->Id,
             'AccountNumber' => $accountNumber,
             'BranchID' => $branch->BranchID,
             'Extra' => $extra,
-            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
-            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'CreatedBy' => $auditId,
+            'ModifiedBy' => $auditId,
         ]);
 
-        activity()->causedBy($actor)->performedOn($bank)->event('create')->log("Created bank {$bank->AccountNumber} to thirdparty {$this->party->ThirdPartyName}");
+        activity()
+            ->causedBy($actor)
+            ->performedOn($bank)
+            ->event('create')
+            ->log("Created bank {$bank->AccountNumber} for thirdparty {$this->party->ThirdPartyName}");
 
         return $this;
     }
 
     final protected function addType(ThirdPartyType $type, string $partyType, string|int $partyId, User|ThirdPartyUser $actor): static
     {
-        $userId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
 
         ThirdPartyTypeTypes::create([
             'TypeId' => $type->TypeId,
             'ThirdPartyId' => $this->party->Id,
             'PartyType' => $partyType,
             'PartyID' => $partyId,
-            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
-            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'CreatedBy' => $auditId,
+            'ModifiedBy' => $auditId,
         ]);
+
         return $this;
     }
 }

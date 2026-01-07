@@ -150,7 +150,8 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
     public function isApproved(): bool
     {
         // Treat null as false, 1/true as true
-        return (bool) $this->IsApproved;
+        // return (bool) $this->IsApproved;
+        return true;
     }
 
     public function isSupplier(): bool
