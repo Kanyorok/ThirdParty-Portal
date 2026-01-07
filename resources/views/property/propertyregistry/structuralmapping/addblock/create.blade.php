@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'http://127.0.0.1:8000/property/propertyaddblock/edit/1')
+@section('title', 'Add Block to Property')
 @section('content')
 
     @if ($errors->any())
