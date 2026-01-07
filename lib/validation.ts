@@ -19,70 +19,44 @@ const REVERSE_USER_TYPE_MAP: Record<UserTypeApiValue, UserTypeValue> = {
     C: "customer",
 } as const;
 
-export const userTypeSchema = z.enum(USER_TYPE_VALUES, {
-    required_error: "Select whether you are a tenant or supplier",
-    invalid_type_error: "Select a valid user type",
-});
-
-export const userTypeApiSchema = z.enum(USER_TYPE_API_VALUES, {
-    required_error: "User type is required",
-    invalid_type_error: "Invalid user type",
-});
-
-// export const registerSchema = z.object({
-//     userType: userTypeSchema,
-//     firstName: z.string().min(1, "First Name is required"),
-//     lastName: z.string().min(1, "Last Name is required"),
-//     email: z.string().email("Invalid email address").min(1, "Email is required"),
-//     phone: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number cannot exceed 15 digits"),
-//     password: z
-//         .string()
-//         .min(8, "Password must be at least 8 characters")
-//         .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-//         .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-//         .regex(/[0-9]/, "Password must contain at least one number")
-//         .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
-//     confirmPassword: z.string().min(1, "Confirm Password is required"),
-// }).refine((data) => data.password === data.confirmPassword, {
-//     message: "Passwords do not match",
-//     path: ["confirmPassword"],
+// export const userTypeSchema = z.enum(USER_TYPE_VALUES, {
+//     required_error: "Select whether you are a tenant or supplier",
+//     invalid_type_error: "Select a valid user type",
 // });
 
+// export const userTypeApiSchema = z.enum(USER_TYPE_API_VALUES, {
+//     required_error: "User type is required",
+//     invalid_type_error: "Invalid user type",
+// });
 
 export const registerSchema = z.object({
-    firstName: z.string()
-        .min(2, "First name is too short")
-        .max(50, "First name is too long"),
-    lastName: z.string()
-        .min(2, "Last name is too short")
-        .max(50, "Last name is too long"),
-    email: z.string()
-        .email("Please enter a valid email address")
-        .toLowerCase()
-        .trim(),
-    phone: z.string()
-        .min(7, "Phone number is too short")
-        .max(20, "Phone number is too long"),
-    password: z.string()
-        .min(8, "Password must be at least 8 characters")
-        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-        .regex(/[0-9]/, "Password must contain at least one number"),
-    confirmPassword: z.string(),
-    thirdPartyName: z.string().min(1, "Company name is required"),
-    tradingName: z.string().optional(),
-    taxPIN: z.string().min(1, "Tax PIN is required"),
-    businessType: z.coerce.number().min(1, "Business type is required"),
-    registrationNumber: z.string().min(1, "Enter Registration number"),
-    countryId: z.coerce.number().min(1, "Select Country"),
-    thirdPartyType: z.enum(["Supplier", "Tenant", "Customer"]).default("Supplier"),
-    supplierCategories: z.array(z.number()).default([]),
-    physicalAddress: z.string().min(1, "Physical address is required"),
-    website: z.string().url("Enter a valid URL").optional().or(z.literal("")),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-});
+    Name: z.string().min(2, "Company name required"),
+    TradingName: z.string().optional(),
+    BusinessType: z.string().min(1, "Required"),
+    RegistrationNumber: z.string().min(2, "Required"),
+    TaxPIN: z.string().min(2, "Required"),
+    VATNumber: z.string().optional(),
+    Country: z.string().min(1, "Required"),
+    Location: z.coerce.number().min(1, "Required"),
+    Email: z.string().email("Invalid email"),
+    Phone: z.string().min(10, "Invalid phone"),
+    PhysicalAddress: z.string().optional(),
+    Website: z.string().url().optional().or(z.literal("")),
+    types: z.array(z.string()).min(1, "Selection required"),
+    supplier_category_id: z.coerce.number().optional(),
+    tenant_Remarks: z.string().optional(),
+    createUser: z.boolean(),
+    user_FirstName: z.string().min(2, "Required"),
+    user_LastName: z.string().min(2, "Required"),
+    user_Email: z.string().email("Invalid email"),
+    user_Phone: z.string().min(10, "Required"),
+    user_Gender: z.string().min(1, "Required"),
+    user_Password: z.string().min(8, "Min 8 chars"),
+    user_Password_confirmation: z.string()
+}).refine((data) => data.user_Password === data.user_Password_confirmation, {
+    message: "Passwords mismatch",
+    path: ["user_Password_confirmation"],
+})
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>;
 // export type RegisterFormInputs = z.infer<typeof registerSchema>;
@@ -102,20 +76,20 @@ export type ThirdPartyDetailsFormInputs = {
     userType: UserTypeValue;
 };
 
-export const thirdPartyDetailsSchema = z.object({
-    thirdPartyName: z.string().min(1, "Company Name is required"),
-    tradingName: z.string().optional(),
-    businessType: z.string().min(1, "Business Type is required"),
-    registrationNumber: z.string().min(1, "Registration Number is required"),
-    taxPIN: z.string().min(1, "Tax PIN is required"),
-    vatNumber: z.string().optional(),
-    country: z.string().min(1, "Country is required"),
-    physicalAddress: z.string().min(1, "Physical Address is required"),
-    email: z.string().email("Invalid email address").min(1, "Email is required"),
-    phone: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number cannot exceed 15 digits"),
-    website: z.string().url("Invalid URL format").optional().or(z.literal('')),
-    userType: userTypeSchema,
-}) satisfies z.ZodType<ThirdPartyDetailsFormInputs>;
+// export const thirdPartyDetailsSchema = z.object({
+//     thirdPartyName: z.string().min(1, "Company Name is required"),
+//     tradingName: z.string().optional(),
+//     businessType: z.string().min(1, "Business Type is required"),
+//     registrationNumber: z.string().min(1, "Registration Number is required"),
+//     taxPIN: z.string().min(1, "Tax PIN is required"),
+//     vatNumber: z.string().optional(),
+//     country: z.string().min(1, "Country is required"),
+//     physicalAddress: z.string().min(1, "Physical Address is required"),
+//     email: z.string().email("Invalid email address").min(1, "Email is required"),
+//     phone: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number cannot exceed 15 digits"),
+//     website: z.string().url("Invalid URL format").optional().or(z.literal('')),
+//     userType: userTypeSchema,
+// }) satisfies z.ZodType<ThirdPartyDetailsFormInputs>;
 
 export type LoginFormInputs = {
     email: string;
@@ -127,12 +101,12 @@ export const loginSchema = z.object({
     password: z.string().min(1, "Password is required"),
 });
 
-export type UserProfileUpdateInputs = {
-    firstName: string;
-    lastName: string;
-    phone: string;
-    gender?: string;
-};
+// export type UserProfileUpdateInputs = {
+//     firstName: string;
+//     lastName: string;
+//     phone: string;
+//     gender?: string;
+// };
 
 export const userProfileUpdateSchema = z.object({
     firstName: z.string().min(1, "First Name is required"),
@@ -158,22 +132,22 @@ export type CompanyDetailsUpdateInputs = {
     approvalStatus: string;
 };
 
-export const companyDetailsUpdateSchema = z.object({
-    thirdPartyName: z.string().min(1, "Company Name is required"),
-    tradingName: z.string().optional(),
-    businessType: z.string().min(1, "Business Type is required"),
-    registrationNumber: z.string().min(1, "Registration Number is required"),
-    taxPIN: z.string().min(1, "Tax PIN is required"),
-    vatNumber: z.string().optional(),
-    country: z.string().min(1, "Country is required"),
-    physicalAddress: z.string().min(1, "Physical Address is required"),
-    companyEmail: z.string().email("Invalid email address").min(1, "Email is required"),
-    companyPhone: z.string().min(1, "Phone Number is required").regex(/^\+?\d{10,15}$/, "Invalid phone number format"),
-    website: z.string().url("Invalid URL format").optional().or(z.literal('')),
-    userType: userTypeSchema,
-    status: z.string().min(1, "Status is required"),
-    approvalStatus: z.string().min(1, "Approval Status is required"),
-});
+// export const companyDetailsUpdateSchema = z.object({
+//     thirdPartyName: z.string().min(1, "Company Name is required"),
+//     tradingName: z.string().optional(),
+//     businessType: z.string().min(1, "Business Type is required"),
+//     registrationNumber: z.string().min(1, "Registration Number is required"),
+//     taxPIN: z.string().min(1, "Tax PIN is required"),
+//     vatNumber: z.string().optional(),
+//     country: z.string().min(1, "Country is required"),
+//     physicalAddress: z.string().min(1, "Physical Address is required"),
+//     companyEmail: z.string().email("Invalid email address").min(1, "Email is required"),
+//     companyPhone: z.string().min(1, "Phone Number is required").regex(/^\+?\d{10,15}$/, "Invalid phone number format"),
+//     website: z.string().url("Invalid URL format").optional().or(z.literal('')),
+//     userType: userTypeSchema,
+//     status: z.string().min(1, "Status is required"),
+//     approvalStatus: z.string().min(1, "Approval Status is required"),
+// });
 
 type TouchedFields<T> = {
     [K in keyof T]?: T[K] extends object ? TouchedFields<T[K]> : boolean;
