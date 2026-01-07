@@ -3,8 +3,8 @@
 namespace App\Models\CRM;
 
 use App\Enums\Feedback\SurveyStatusEnum;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Core\Workflow;
+use App\Models\CRM\Approval\PendingWorkflow;
+use App\Models\CRM\Approval\Workflow;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,9 +16,9 @@ class Survey extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Surveys';
     protected $primaryKey = 'Id';
@@ -27,23 +27,16 @@ class Survey extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-                           'SurveyID',
-                           'Label',
-                           'Notes',
-                           'StartOn',
-                           'EndOn',
-                           'Status',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'SurveyID', 'Label', 'Notes', 'StartOn', 'EndOn', 'Status',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+    ];
 
     protected $casts = [
-                        'StartOn'   => 'datetime',
-                        'EndOn'     => 'datetime',
-                        'CreatedBy' => 'integer',
-                        'Status'    => SurveyStatusEnum::class,
-                       ];
+        'StartOn' => 'datetime',
+        'EndOn' => 'datetime',
+        'CreatedBy' => 'integer',
+        'Status' => SurveyStatusEnum::class,
+    ];
 
     public function getRouteKeyName(): string
     {

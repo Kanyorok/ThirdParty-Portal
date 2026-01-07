@@ -140,9 +140,9 @@ class CodeDetailSeeder extends Seeder
                 'DisplayOrder' => $index + 1,
             ]);
         }
-        foreach (TenderApprovalStatusEnum::cases() as $index => $TenderApprovalStatusEnum){
+        foreach (TenderApprovalStatusEnum::cases() as $index => $TenderApprovalStatusEnum) {
             $entries->push([
-                'CodeID' => 'TenderStatus',
+                'CodeID' => 'TenderApprovalStatus',
                 'Value' => $TenderApprovalStatusEnum->value,
                 'Description' => $TenderApprovalStatusEnum->name,
                 'DisplayOrder' => $index + 1,
@@ -288,6 +288,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'TenderStatus', 'Description' => 'Closed', 'Value' => 'cl'],
             ['CodeID' => 'TenderStatus', 'Description' => 'Opening In Progress', 'Value' => 'opening_in_progress'],
             ['CodeID' => 'TenderStatus', 'Description' => 'Awarded', 'Value' => 'aw'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending Approval', 'Value' => 'P'], // Added missing status
             ['CodeID' => 'TerminationReason', 'Description' => 'Relocation', 'Value' => 'R'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],
@@ -301,8 +302,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
-            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PR', 'Description' => 'Requisition'],
-            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PO', 'Description' => 'Purchase Order'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PO', 'Description' => 'Purchase Order'],
 
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
@@ -406,13 +407,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimType', 'Description' => 'Other', 'Value' => 'O'],
 
             //Insurance Cover Type
-            ['CodeID' => 'CoverType','Description' => 'Comprehensive', 'Value' => 'C'],
-            ['CodeID' => 'CoverType','Description' => 'InPatient', 'Value' => 'I'],
-            ['CodeID' => 'CoverType','Description' => 'OutPatient', 'Value' => 'O'],
+            ['CodeID' => 'CoverType', 'Description' => 'Comprehensive', 'Value' => 'C'],
+            ['CodeID' => 'CoverType', 'Description' => 'InPatient', 'Value' => 'I'],
+            ['CodeID' => 'CoverType', 'Description' => 'OutPatient', 'Value' => 'O'],
 
             //Insurance Contributor Types
-            ['CodeID' => 'ContributorType','Description' => 'Employee', 'Value' => 'I'],
-            ['CodeID' => 'ContributorType','Description' => 'Employer', 'Value' => 'C'],
+            ['CodeID' => 'ContributorType', 'Description' => 'Employee', 'Value' => 'I'],
+            ['CodeID' => 'ContributorType', 'Description' => 'Employer', 'Value' => 'C'],
 
             //Insurance Claim Status
             ['CodeID' => 'ClaimStatus', 'Description' => 'Initiated', 'Value' => 'I'],
@@ -422,10 +423,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimStatus', 'Description' => 'Paid', 'Value' => 'P'],
 
             //MedicalContributorStatus
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Active', 'Value' => 'A'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Inactive', 'Value' => 'I'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Pending', 'Value' => 'P'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Suspended', 'Value' => 'S'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Active', 'Value' => 'A'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Inactive', 'Value' => 'I'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Suspended', 'Value' => 'S'],
 
             // Beneficiary Relationship
             ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Spouse', 'Value' => 'S'],
@@ -633,12 +634,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetRepairType', 'Description' => 'Emergency', 'Value' => 'EM'],
 
             //Trip Statuses
-            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'AP'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'RE'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'OG'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'CO'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'CA'],
+
+            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'Sc'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'R'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'Og'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'Co'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'Ca'],
 
             //Maintenance Status
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
@@ -759,6 +761,4 @@ class CodeDetailSeeder extends Seeder
             }
         }
     }
-
-
 }

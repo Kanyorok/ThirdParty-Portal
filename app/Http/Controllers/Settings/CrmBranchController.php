@@ -59,6 +59,7 @@ class CrmBranchController extends Controller
      */
     public function store(BranchRequest $request): JsonResponse
     {
+        $this->authorize('create', Branch::class);
         $userID = $request->getManager()?->Id ?? null;
         $Operation = $request->getOperation()?->Id ?? null;
         $branchID = $request->getBranchID();
@@ -81,9 +82,8 @@ class CrmBranchController extends Controller
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmBranch->refresh())->event('create')->log('created a branch ' . $crmBranch->BranchID);
-
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -93,6 +93,7 @@ class CrmBranchController extends Controller
 
     public function update(BranchRequest $request, Branch $crmBranch): JsonResponse
     {
+        $this->authorize('update', $crmBranch);
         $userID = $request->getManager()?->Id ?? null;
         $Operation = $request->getOperation()?->Id ?? null;
         $actor = $request->user();
@@ -111,9 +112,8 @@ class CrmBranchController extends Controller
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmBranch)->event('update')->log('updated branch ' . $crmBranch->BranchID);
-
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error updating branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -123,6 +123,7 @@ class CrmBranchController extends Controller
 
     public function destroy(Request $request, Branch $crmBranch): JsonResponse
     {
+        $this->authorize('delete', $crmBranch);
         try {
             DB::transaction(static function () use ($request, $crmBranch) {
                 $crmBranch->forceFill([
@@ -130,7 +131,7 @@ class CrmBranchController extends Controller
                     'DeletedBy' => $request->user()->Id,
                 ])->save();
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error trashing branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

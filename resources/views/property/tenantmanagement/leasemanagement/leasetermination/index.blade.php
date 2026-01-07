@@ -75,7 +75,7 @@
         </div>
     @else
         <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle me-2"></i> No lease terminations have been registered yet.
+            <i class="bi bi-info-circle me-2"></i> No lease terminations have been registered yet. Kindly Ensure You Have The WORKFLOW Set Up For Lease Termination In Settings.
         </div>
     @endif
 

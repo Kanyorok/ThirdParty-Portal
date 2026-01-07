@@ -107,6 +107,37 @@ return [
         'Submitted for Approval' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Submitted->value,  // 'U'
     ],
 
+    'TripId' => [
+        'Scheduled' => \App\Enums\Core\ApprovalEnum::Scheduled->value,  // 'Sc'
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'A'
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,  // 'R'
+        'Ongoing' => \App\Enums\Core\ApprovalEnum::Ongoing->value,  // 'Og'
+        'Completed' => \App\Enums\Core\ApprovalEnum::Completed->value,  // 'Co'
+        'Cancelled' => \App\Enums\Core\ApprovalEnum::Cancelled->value,  // 'Ca'
+    ],
+
+    'tender_award' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+    ],
+
+    'rfq_award' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+    ],
+
+    'LegalDocumentId' => [
+        'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,
+        'Rejected' => \App\Enums\Core\ApprovalEnum::Rejected->value,
+        'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,
+        'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,
+    ],
+
+
 
     /*
     |--------------------------------------------------------------------------
@@ -122,6 +153,8 @@ return [
         'lease_creation' => 'ApprovalStatus',
         'procurement_plan' => 'Status',
         'consolidated_procurement_plan' => 'Status',
+        'LegalDocumentId' => 'ReviewStatus',
+        
         // Add more as needed
     ],
 

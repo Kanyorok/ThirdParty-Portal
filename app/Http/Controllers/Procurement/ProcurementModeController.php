@@ -10,17 +10,20 @@ class ProcurementModeController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', ProcurementMode::class);
         $modes = ProcurementMode::orderBy('CreatedOn', 'desc')->get();
         return view('procurement.procurement_modes.index', compact('modes'));
     }
 
     public function create()
     {
+        $this->authorize('create', ProcurementMode::class);
         return view('procurement.procurement_modes.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', ProcurementMode::class);
         $request->validate([
             'name' => 'required|unique:t_ProcurementModes,Name',
             'description' => 'nullable|string',
@@ -51,6 +54,7 @@ class ProcurementModeController extends Controller
 
     public function show(ProcurementMode $procurement_mode)
     {
+        $this->authorize('view', $procurement_mode);
         return view('procurement.procurement_modes.show', [
             'procurement_mode' => $procurement_mode->load('timelines'),
         ]);
@@ -58,11 +62,13 @@ class ProcurementModeController extends Controller
 
     public function edit(ProcurementMode $procurement_mode)
     {
+        $this->authorize('update', $procurement_mode);
         return view('procurement.procurement_modes.edit', compact('procurement_mode'));
     }
 
     public function update(Request $request, ProcurementMode $procurement_mode)
     {
+        $this->authorize('update', $procurement_mode);
         $request->validate([
             'name' => 'required|unique:t_ProcurementModes,Name,' . $procurement_mode->Id . ',Id',
             'description' => 'nullable|string',
@@ -80,6 +86,7 @@ class ProcurementModeController extends Controller
 
     public function destroy(ProcurementMode $procurement_mode)
     {
+        $this->authorize('delete', $procurement_mode);
         $procurement_mode->delete();
 
         return redirect()->route('procurement-modes.index')->with('success', 'Procurement mode deleted successfully.');

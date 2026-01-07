@@ -301,23 +301,64 @@ public function publish(Request $request, $id)
 
     $request->validate([
         'suppliers' => 'required|array|min:1',
-        'suppliers.*' => 'exists:t_Suppliers,Id',
+        'suppliers.*' => 'exists:t_SupplierMaster,Id', // Validate against SupplierMaster
     ], [
         'suppliers.required' => 'Please select at least one supplier.',
         'suppliers.min' => 'Please select at least one supplier.',
     ]);
 
-    $supplierIds = collect($request->suppliers)
+    $supplierMasterIds = collect($request->suppliers)
         ->map(fn($v) => (int)$v)
         ->unique()
         ->values()
         ->all();
 
-    Log::info('Publishing to suppliers', [
+    Log::info('Publishing to suppliers (Master IDs)', [
         'rfq_id' => $rfq->Id,
-        'supplier_count' => count($supplierIds),
-        'supplier_ids' => $supplierIds
+        'supplier_master_ids' => $supplierMasterIds
     ]);
+
+    $supplierIds = [];
+    foreach ($supplierMasterIds as $masterId) {
+        // Check if supplier exists in t_Suppliers (for this RFQ context, we might need a specific category, 
+        // but for now we just ensure a record exists to link to)
+        // We'll try to find an existing active supplier record for this master ID
+        $supplier = DB::table('t_Suppliers')
+            ->where('SupplierMasterId', $masterId)
+            ->whereNull('DeletedOn')
+            ->first();
+
+        if (!$supplier) {
+            // Create a new supplier record if one doesn't exist
+            // We need a default category or logic here. For now, we'll try to use the RFQ's category if possible,
+            // or a default one. Since we removed strict category filtering, we just need A record.
+            
+            // Get a valid category ID (try RFQ's category, or first available)
+            $categoryId = $rfq->ItemCategoryId ?? DB::table('t_ItemCategories')->value('Id');
+            
+            // Get a valid Supplier Category ID (try to find one linked to the item category, or just the first one)
+            $supplierCategoryId = DB::table('t_SupplierCategory_ItemCategory')
+                ->where('ItemCategoryID', $categoryId)
+                ->value('SupplierCategoryID') 
+                ?? DB::table('t_SupplierCategories')->value('SupplierCategoryID');
+
+            $newSupplierId = DB::table('t_Suppliers')->insertGetId([
+                'SupplierMasterId' => $masterId,
+                'CategoryId' => $supplierCategoryId, // This is actually SupplierCategoryID in some contexts, but schema says CategoryId
+                'SupplierCategoryID' => $supplierCategoryId,
+                'Active_Status' => 1,
+                'CreatedBy' => Auth::user()->Id,
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::user()->Id,
+                'ModifiedOn' => now(),
+            ]);
+            
+            $supplierIds[] = $newSupplierId;
+            Log::info('Created new t_Suppliers record', ['master_id' => $masterId, 'new_id' => $newSupplierId]);
+        } else {
+            $supplierIds[] = $supplier->Id;
+        }
+    }
 
     // Update supplier statuses in the pivot table
     $rfq->suppliers()->syncWithPivotValues($supplierIds, ['Status' => 'Approved']);
@@ -548,35 +589,23 @@ public function reject(Request $request, $id)
         ->whereNull('tpu.DeletedOn')
         ->groupBy('tpu.ThirdPartyId');
 
-    // FIXED: Select suppliers using correct join path through SupplierMaster
-    $suppliers = DB::table('t_Suppliers as s')
-        ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+    // FIXED: Select suppliers from SupplierMaster directly
+    $suppliers = DB::table('t_SupplierMaster as sm')
         ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
         ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
             $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
         })
-        ->whereNull('s.DeletedOn')
         ->whereNull('sm.DeletedOn')
         ->whereNull('tp.DeletedOn')
-        ->where('s.Active_Status', 1)
-        ->whereExists(function ($q) use ($allCategoryIds) {
-            $q->select(DB::raw(1))
-                ->from('t_SupplierCategory_ItemCategory as scic')
-                ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
-                ->whereNull('sc.DeletedOn')
-                ->whereNull('scic.DeletedOn')
-                ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                ->whereColumn('sc.SupplierCategoryID', 's.CategoryId');
-        })
-        ->groupBy('sm.ThirdPartyId', 'tp.TradingName', 'tp.BusinessType')
+        ->where('sm.ApprovalStatus', 'A') // Only approved suppliers
         ->select(
-            DB::raw('MIN(s.Id) as Id'),
-            DB::raw('MIN(s.CategoryId) as SupplierCategoryId'),
+            'sm.Id', // Use SupplierMaster Id
             'sm.ThirdPartyId',
             'tp.TradingName as SupplierName',
             'tp.BusinessType',
-            DB::raw('MIN(tpu.Email) as Email')
+            DB::raw('tpu.Email as Email')
         )
+        ->orderBy('tp.TradingName')
         ->get();
 
     Log::info('Suppliers fetched for RFQ', [

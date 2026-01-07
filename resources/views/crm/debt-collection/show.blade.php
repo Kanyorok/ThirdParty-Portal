@@ -469,16 +469,15 @@
                 e.preventDefault();
                 let response = await saveForm($(this), $('#messageToGuarantorsBtn'), false, true, true);
                 if (response) {
+                    $Modal.modal('hide');
                     if (typeof response.activity === "object") {
                         appendAct($('#activitiesMain'), response.activity.html, true);
                     }
                     if (typeof response.activities === "object") {
                         $.map(response.activities, function (activity) {
-                            appendAct($('#activitiesMain'), activity.Content.html, true);
+                            appendAct($('#activitiesMain'), activity.html, true);
                         });
                     }
-
-                    $Modal.modal('hide');
                 }
             });
             @endif

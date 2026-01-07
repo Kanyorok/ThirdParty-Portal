@@ -88,8 +88,8 @@
                             <option value="">-- Select Vendor --</option>
                             @foreach ($vendors as $supplier)
                                 <option value="{{ $supplier->Id }}"
-                                    {{ (string) old('PrequalifiedVendor', $assignment->PrequalifiedVendor) === (string) $supplier->Id ? 'selected' : '' }}>
-                                    {{ $supplier->SupplierName }}
+                                    {{ (string) old('PrequalifiedVendor', $assignment->PrequalifiedVendor->party->ThirdPartyName ?? '') === (string) $supplier->Id ? 'selected' : '' }}>
+                                    {{ $supplier->party->ThirdPartyName ?? 'Name' }}
                                 </option>
                             @endforeach
                         </select>

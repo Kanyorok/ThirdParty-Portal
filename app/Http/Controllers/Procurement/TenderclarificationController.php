@@ -60,8 +60,10 @@ class TenderclarificationController extends Controller
             ->take(20)
             ->get();
 
-        return view('procurement.tendering.suppliermanagement.clarificationhandling.index',
-            compact('clarifications', 'stats', 'tenders', 'status'));
+        return view(
+            'procurement.tendering.suppliermanagement.clarificationhandling.index',
+            compact('clarifications', 'stats', 'tenders', 'status')
+        );
     }
 
     /**
@@ -78,17 +80,19 @@ class TenderclarificationController extends Controller
         // Add supplier names
         $pendingClarifications->getCollection()->transform(function ($clarification) {
             $supplierName = 'Unknown Supplier';
-            if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-                $supplierName = $clarification->vendorID->thirdParty->TradingName
-                    ?? $clarification->vendorID->thirdParty->ThirdPartyName;
+            if ($clarification->vendorID && $clarification->vendorID->supplierMaster && $clarification->vendorID->supplierMaster->party) {
+                $supplierName = $clarification->vendorID->supplierMaster->party->TradingName
+                    ?? $clarification->vendorID->supplierMaster->party->ThirdPartyName;
             }
             $clarification->supplierName = $supplierName;
             $clarification->daysPending = now()->diffInDays($clarification->QuestionDate);
             return $clarification;
         });
 
-        return view('procurement.tendering.suppliermanagement.clarificationhandling.pending',
-            compact('pendingClarifications'));
+        return view(
+            'procurement.tendering.suppliermanagement.clarificationhandling.pending',
+            compact('pendingClarifications')
+        );
     }
 
     /**
@@ -101,14 +105,16 @@ class TenderclarificationController extends Controller
 
         // Get supplier name
         $supplierName = 'Unknown Supplier';
-        if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-            $supplierName = $clarification->vendorID->thirdParty->TradingName
-                ?? $clarification->vendorID->thirdParty->ThirdPartyName;
+        if ($clarification->vendorID && $clarification->vendorID->supplierMaster && $clarification->vendorID->supplierMaster->party) {
+            $supplierName = $clarification->vendorID->supplierMaster->party->TradingName
+                ?? $clarification->vendorID->supplierMaster->party->ThirdPartyName;
         }
         $clarification->supplierName = $supplierName;
 
-        return view('procurement.tendering.suppliermanagement.clarificationhandling.create',
-            compact('clarification'));
+        return view(
+            'procurement.tendering.suppliermanagement.clarificationhandling.create',
+            compact('clarification')
+        );
     }
 
     /**
@@ -175,14 +181,16 @@ class TenderclarificationController extends Controller
 
         // Get supplier name
         $supplierName = 'Unknown Supplier';
-        if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-            $supplierName = $clarification->vendorID->thirdParty->TradingName
-                ?? $clarification->vendorID->thirdParty->ThirdPartyName;
+        if ($clarification->vendorID && $clarification->vendorID->supplierMaster && $clarification->vendorID->supplierMaster->party) {
+            $supplierName = $clarification->vendorID->supplierMaster->party->TradingName
+                ?? $clarification->vendorID->supplierMaster->party->ThirdPartyName;
         }
         $clarification->supplierName = $supplierName;
 
-        return view('procurement.tendering.suppliermanagement.clarificationhandling.edit',
-            compact('clarification'));
+        return view(
+            'procurement.tendering.suppliermanagement.clarificationhandling.edit',
+            compact('clarification')
+        );
     }
 
     /**

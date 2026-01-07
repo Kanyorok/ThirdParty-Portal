@@ -33,7 +33,7 @@
                     <ul class="mb-0">
                         <li><strong>Pre-Trip ID:</strong> {{ $parentInspection->InspectionID }}</li>
                         <li><strong>Vehicle:</strong> {{ $parentInspection->vehicle?->RegistrationNo }}</li>
-                        <li><strong>Fuel Type:</strong> {{ $parentInspection->fuel?->FuelName }}</li>
+                        {{-- <li><strong>Fuel Type:</strong> {{ $parentInspection->fuel?->FuelName }}</li> --}}
                         <li><strong>Inspection Type:</strong> {{ $parentInspection->inspectionType?->Description }}</li>
                     </ul>
                 </div>
@@ -91,7 +91,7 @@
                             $driverType = 'No driver assigned';
                             
                             if ($parentInspection->DriverID) {
-                                $driverName = $parentInspection->driver->DriverName ?? 'Driver not found';
+                                $driverName = $parentInspection->driver->FullName ?? 'Driver not found';
                                 $driverType = 'Fleet Driver';
                             } elseif ($parentInspection->ContractedDriverID) {
                                 $driverName = $parentInspection->contractedDriver->FullName ?? 'Contracted driver not found';

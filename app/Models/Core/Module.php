@@ -22,8 +22,16 @@ class Module extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'ModuleID', 'Name', 'Description', 'ParentID',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'ModuleID',
+        'Name',
+        'Description',
+        'ParentID',
+        'Icon',
+        'Route',
+        'RequiredPermission',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy'
     ];
 
 
@@ -41,6 +49,4 @@ class Module extends Model
     {
         return $this->hasMany(__CLASS__, 'ParentID', 'ModuleID');
     }
-
-
 }

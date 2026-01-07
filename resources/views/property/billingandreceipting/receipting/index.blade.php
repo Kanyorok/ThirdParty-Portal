@@ -1,112 +1,234 @@
 @extends('layouts.app')
 
-@section('title', 'Tenant Payments')
-
-@section('styles')
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-  <style>
-    .action-buttons {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 0.4rem;
-        align-items: center;
-    }
-  </style>
-@endsection
+@section('title', 'Rent Invoice Receipts')
 
 @section('content')
-<div class="container mt-4">
+<div class="container-fluid mt-4">
 
-  <!-- Header -->
-  <div class="d-flex justify-content-end align-items-center mb-3">
-    <a href="{{ route('rentreceipt.create') }}" class="btn btn-primary">
-      <i class="bi bi-receipt me-1"></i> New Receipt
-    </a>
-  </div>
+    {{-- ================= FILTERS ================= --}}
+    <form method="GET" class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
 
-  <p class="text-muted">
-    <small>This table lists all tenant payments and receipts recorded in the system.</small>
-  </p>
+                <div class="col-md-4">
+                    <label class="form-label">Invoice Number</label>
+                    <input type="text"
+                           name="invoice_number"
+                           value="{{ request('invoice_number') }}"
+                           class="form-control"
+                           placeholder="Invoice Number">
+                </div>
 
-  @if ($receipts->count())
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <table id="RentReceipt" class="table table-bordered table-striped table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th style="width: 5%">#</th>
-              <th>Invoice No.</th>
-              <th>Tenant</th>
-              <th>Billing Month</th>
-              <th>Payment Date</th>
-              <th class="text-end">Total Due</th>
-              <th class="text-end">Amount Paid</th>
-              <th style="width: 20%">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach ($receipts as $receipt)
-              <tr>
-                <td>{{ $loop->iteration ?? '-' }}</td>
-                <td>{{ $receipt->invoice->InvoiceNumber ?? '-' }}</td>
-                <td>{{ $receipt->invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
-                <td>{{ $receipt->BillingMonth ?? '-' }}</td>
-                <td>{{ $receipt->PaymentDate ? \Carbon\Carbon::parse($receipt->PaymentDate)->format('d M Y') : '-' }}</td>
-                <td class="text-end">{{ number_format($receipt->Balance, 2) ?? '-' }}</td>
-                <td class="text-end">{{ number_format($receipt->AmountPaidNow, 2) ?? '-' }}</td>
-                <td>
-                  <div class="action-buttons">
-                    <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}"
-                       target="_blank"
-                       class="btn btn-sm btn-outline-secondary"
-                       title="Print Receipt">
-                      <i class="bi bi-printer"></i>
-                    </a>
+                <div class="col-md-4">
+                    <label class="form-label">Lease</label>
+                    <input type="text"
+                           name="lease"
+                           value="{{ request('lease') }}"
+                           class="form-control"
+                           placeholder="Lease">
+                </div>
 
-                    <a href="{{ route('rentreceipt.show', $receipt->Id) }}"
-                       class="btn btn-sm btn-info text-white"
-                       title="View Receipt">
-                      <i class="bi bi-eye"></i>
-                    </a>
+                <div class="col-md-4 d-flex gap-2">
+                    <button class="btn btn-primary">Filter</button>
 
-                    <form action="{{ route('rentreceipt.destroy', $receipt->Id) }}"
-                          method="POST"
-                          class="d-inline"
-                          onsubmit="return confirm('Are you sure you want to return this payment?');">
-                      @csrf
-                      @method('DELETE')
-                      <button type="submit" class="btn btn-sm btn-danger" title="Reverse Payment">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
+                    <a href="{{ route(request()->route()->getName()) }}"
+                       class="btn btn-secondary">Reset</a>
+
+                    <button type="button"
+                            onclick="printPage()"
+                            class="btn btn-outline-dark">
+                        🖨️ Print
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+    {{-- ================= TABLE ================= --}}
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Rent Invoice Receipts</h5>
+        </div>
+
+        <div class="card-body">
+
+            @php
+                $groupedReceipts = $receipts->groupBy('InvoiceNumber');
+            @endphp
+
+            @if ($groupedReceipts->isEmpty())
+                <div class="alert alert-info">
+                    No posted receipts found.
+                </div>
+            @else
+            <div class="table-responsive" id="print-area">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th></th>
+                            <th>Invoice Number</th>
+                            <th>Lease</th>
+                            <th>Invoice Amount</th>
+                            <th>Total Received</th>
+                            <th>Balance</th>
+                            <th>Print</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    @foreach ($groupedReceipts as $invoiceNumber => $items)
+
+                        @php
+                            $invoiceAmount  = $items->first()->InvoiceAmount ?? 0;
+                            $totalReceived = $items->sum('AmountReceived');
+                            $balance       = $invoiceAmount - $totalReceived;
+                            $collapseId    = 'inv_' . md5($invoiceNumber);
+                        @endphp
+
+                        {{-- ================= INVOICE ROW ================= --}}
+                        <tr class="table-primary">
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-dark"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#{{ $collapseId }}">
+                                    +
+                                </button>
+                            </td>
+
+                            <td class="fw-semibold">
+                                {{ $invoiceNumber }}
+                            </td>
+
+                            <td>
+                                {{ $items->first()->Lease }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ number_format($invoiceAmount, 2) }}
+                            </td>
+
+                            <td class="text-end text-success fw-semibold">
+                                {{ number_format($totalReceived, 2) }}
+                            </td>
+
+                            <td class="text-end fw-semibold">
+                                {{ number_format($balance, 2) }}
+                            </td>
+
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        onclick="printInvoice('{{ $collapseId }}')">
+                                    🖨️
+                                </button>
+                            </td>
+                        </tr>
+
+                        {{-- ================= RECEIPTS ================= --}}
+                        <tr class="collapse bg-light" id="{{ $collapseId }}">
+                            <td colspan="7" class="p-0">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Receipt Number</th>
+                                            <th>Amount Received</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($items as $i => $receipt)
+                                            <tr>
+                                                <td>{{ $i + 1 }}</td>
+                                                <td>
+                                                    <span class="badge bg-info text-dark">
+                                                        {{ $receipt->ReceiptNumber }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end">
+                                                    {{ number_format($receipt->AmountReceived, 2) }}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-success">
+                                                        Posted
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+
+        </div>
     </div>
-  @else
-    <div class="alert alert-info mt-3">
-      <i class="bi bi-info-circle me-2"></i> No tenant payments have been recorded yet.
-    </div>
-  @endif
-
 </div>
 @endsection
+@push('scripts')
+<script>
+function printPage() {
+    window.print();
+}
 
-@section('scripts')
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script>
-    $(document).ready(function() {
-      $('#RentReceipt').DataTable({
-        pageLength: 10,
-        ordering: true,
-        searching: true,
-        lengthChange: true
-      });
-    });
-  </script>
-@endsection
+function printInvoice(collapseId) {
+    const row = document.getElementById(collapseId);
+    const invoiceNumber = row.closest('tr').previousElementSibling.querySelector('td.fw-semibold').innerText;
+    const lease = row.closest('tr').previousElementSibling.querySelectorAll('td')[2].innerText;
+
+    const content = row.innerHTML;
+    const win = window.open('', '', 'width=900,height=700');
+
+    win.document.write(`
+        <html>
+            <head>
+                <title>Invoice Receipts - ${invoiceNumber}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
+                    h2, h4 { margin: 0; padding: 0; }
+                    .header { margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+                    th { background-color: #f0f0f0; }
+                    .text-end { text-align: right; }
+                    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
+                    .bg-info { background-color: #17a2b8; color: #fff; }
+                    .bg-success { background-color: #28a745; color: #fff; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>Rent Invoice Receipts</h2>
+                    <h4>Invoice Number: ${invoiceNumber}</h4>
+                    <h4>Lease: ${lease}</h4>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Receipt Number</th>
+                            <th>Amount Received</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${content}
+                    </tbody>
+                </table>
+            </body>
+        </html>
+    `);
+
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
+}
+</script>
+@endpush
+

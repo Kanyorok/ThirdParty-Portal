@@ -156,6 +156,7 @@
                         @foreach(($contracts ?? []) as $c)
                             <option value="{{ $c->ContractRef }}"
                                     data-contract-id="{{ $c->Id }}"
+                                    data-award-type="{{ $c->AwardType ?? 'tender' }}"
                                     data-supplier-id="{{ $c->SupplierId }}"
                                     data-supplier-name="{{ $c->SupplierName ?? '' }}"
                                     data-address="{{ $c->Address }}">
@@ -512,6 +513,32 @@
                 $('.source-contract').addClass('d-none');
                 $('.direct-only').addClass('d-none');
                 $planDriver.addClass('d-none');
+                
+                // Dynamically load awarded tenders
+                const $tenderSelect = $('#tenderNo');
+                $tenderSelect.empty().append('<option selected disabled>Loading awarded tenders...</option>');
+                fetch('/procurement/purchase-order/awarded-tenders')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $tenderSelect.empty().append('<option selected disabled>Select Tender</option>');
+                        if (!success) return;
+                        (data || []).forEach(tender => {
+                            const supplierId = tender.SupplierId || '';
+                            const thirdPartyId = tender.ThirdPartyId || 0;
+                            const supplierName = tender.SupplierName || '';
+                            const address = tender.Address || '';
+                            $tenderSelect.append(`<option value="${tender.TenderNo}"
+                                                    data-tender-id="${tender.Id}"
+                                                    data-supplier-id="${supplierId}"
+                                                    data-thirdparty-id="${thirdPartyId}"
+                                                    data-supplier-name="${supplierName}"
+                                                    data-address="${address}">${tender.TenderNo}</option>`);
+                        });
+                    })
+                    .catch(() => {
+                        $tenderSelect.html('<option selected disabled>Failed to load tenders</option>');
+                    });
+                
                 // Reset to all items for Tender mode
                 updateItemOptionsForContract(allItems);
             } else if (mode === 'CONTRACT') {
@@ -556,6 +583,44 @@
         $(document).on('change', 'input[name="SourceType"]', applySourceMode);
         applySourceMode();
 
+    // Direct Plan selection: load categories for this plan
+        $(document).on('change', '#directPlanSelect', function() {
+            const val = $(this).val();
+            if (!val) {
+                // Plan cleared
+                populateItems([]);
+                // Hide again when plan cleared
+                $('.direct-only').addClass('d-none');
+                $('#itemCategory').empty().append('<option value="" selected>-- None --</option>');
+                $('#preqSupplier').empty().append('<option value="" selected>-- None --</option>');
+                return;
+            }
+            
+            // Now reveal the Item Category and supplier helpers for further narrowing
+            $('.direct-only').removeClass('d-none');
+            
+            // Load categories tied to this plan
+            const $cat = $('#itemCategory');
+            $cat.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
+            fetch(`{{ url('procurement/purchaseOrder/plan') }}/${val}/categories`)
+                .then(r => r.json())
+                .then(({success, data}) => {
+                    if (!success || !data || data.length === 0) {
+                        $cat.append('<option disabled>No categories found</option>');
+                        $cat.prop('disabled', false);
+                        return;
+                    }
+                    data.forEach(row => {
+                        $cat.append(`<option value="${row.Id}">${row.Name}</option>`);
+                    });
+                    $cat.prop('disabled', false);
+                })
+                .catch(() => {
+                    $cat.html('<option value="" selected>-- None --</option>');
+                    $cat.prop('disabled', false);
+                });
+        });
+
     // RFQ selection: auto-fill hidden supplier and items
         $(document).on('change', '#refNo', function () {
             const selectedRFQNo = $(this).val();
@@ -564,6 +629,9 @@
             const supplierLegacyId = parseInt(rfqOption.data('supplier-legacy-id')); // t_Suppliers.Id for posting
             const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id')); // t_ThirdParties.Id for lookups/items
             const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : NaN;
+            
+            console.log('RFQ Selected:', {selectedRFQNo, rfqId, supplierLegacyId, awardedThirdPartyId, matchThirdPartyId});
+            
             if (!isNaN(rfqId)) {
                 $('#SourceId').val(rfqId);
                         } else {
@@ -585,16 +653,40 @@
 
                 // Fetch RFQ items for this supplier (use ThirdPartyId as rr.SupplierId in t_RFQResponse)
                 if (!isNaN(rfqId) && Number.isFinite(matchThirdPartyId)) {
-                    fetch(`/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${matchThirdPartyId}`)
-                .then(r => r.json())
-                        .then(({items}) => { populateItems(items || []); updateTotals(); })
-                        .catch(() => populateItems([]));
+                    const url = `/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${matchThirdPartyId}`;
+                    console.log('Fetching RFQ items from:', url);
+                    fetch(url)
+                        .then(r => {
+                            console.log('RFQ items response status:', r.status);
+                            return r.json();
+                        })
+                        .then(({success, data}) => {
+                            console.log('RFQ items received:', {success, count: data?.length, data});
+                            populateItems(data || []);
+                            updateTotals();
+                        })
+                        .catch((err) => {
+                            console.error('Error loading RFQ items:', err);
+                            populateItems([]);
+                        });
                 } else if (!isNaN(rfqId)) {
                     // fallback without supplier filter
-                    fetch(`/procurement/purchase-order/rfq-items/${rfqId}`)
-                        .then(r => r.json())
-                        .then(({items}) => { populateItems(items || []); updateTotals(); })
-                        .catch(() => populateItems([]));
+                    const url = `/procurement/purchase-order/rfq-items/${rfqId}`;
+                    console.log('Fetching RFQ items (no supplier filter) from:', url);
+                    fetch(url)
+                        .then(r => {
+                            console.log('RFQ items response status:', r.status);
+                            return r.json();
+                        })
+                        .then(({success, data}) => {
+                            console.log('RFQ items received:', {success, count: data?.length, data});
+                            populateItems(data || []);
+                            updateTotals();
+                        })
+                        .catch((err) => {
+                            console.error('Error loading RFQ items:', err);
+                            populateItems([]);
+                        });
                 }
             }
         });
@@ -626,7 +718,7 @@
             if (!isNaN(tenderId)) {
                 fetch(`/procurement/purchase-order/tender-items/${tenderId}`)
                     .then(r => r.json())
-                    .then(({items}) => { populateItems(items || []); updateTotals(); })
+                    .then(({data}) => { populateItems(data || []); updateTotals(); })
                     .catch(() => populateItems([]));
             }
         });
@@ -634,6 +726,7 @@
         // Contract selection: auto-fill supplier and load contract tender items
         $(document).on('change', '#contractRef', function () {
             const opt = $(this).find('option:selected');
+            const awardType = opt.data('award-type') || 'tender';
             const contractId = parseInt(opt.data('contract-id'));
             const supplierId = parseInt(opt.data('supplier-id'));
             const supplierName = opt.data('supplier-name') || '';
@@ -641,8 +734,33 @@
 
             if (!isNaN(contractId)) {
                 $('#SourceId').val(contractId);
+                
+                // Set custom source type if RFQ to distinguish from Tender Contracts
+                // Default is CONTRACT (which assumed Tender). 
+                // We'll use a hidden input for SourceType override if needed or update the radio?
+                // The radio is 'CONTRACT'. Let's override SourceType field processing in backend or add hidden field.
+                let type = 'CONTRACT'; 
+                
+                // If we want to distinguish in backend, we can set SourceType overrides
+                 if ($('#hiddenSourceType').length === 0) {
+                     $('<input>').attr({type:'hidden', id:'hiddenSourceType', name:'SourceType'}).appendTo('#purchaseOrdersForm');
+                }
+                
+                // Logic: 
+                // If awardType is 'rfq', we usually save SourceType='CONTRACT' and SourceId=RFQAwardId.
+                // If awardType is 'tender', we save SourceType='CONTRACT' and SourceId=TenderAwardId.
+                // PROBLEM: T_Orders SourceId is ambiguous if both tables use auto-increment IDs.
+                // WE MUST use different SourceType. e.g. 'CONTRACT-RFQ' vs 'CONTRACT-TENDER' or just 'CONTRACT' vs 'CONTRACT-RFQ'
+                
+                if (awardType === 'rfq') {
+                     $('#hiddenSourceType').val('CONTRACT-RFQ');
+                } else {
+                     $('#hiddenSourceType').val('CONTRACT'); // or CONTRACT-TENDER
+                }
+
             } else {
                 $('#SourceId').val('');
+                if ($('#hiddenSourceType').length) $('#hiddenSourceType').val('CONTRACT');
             }
 
             if (!isNaN(supplierId)) {
@@ -657,14 +775,16 @@
 
             // Load contract tender items and update available items
             if (!isNaN(contractId)) {
-                fetch(`/procurement/purchase-order/contract-items/${contractId}`)
+                // Pass the award type (rfq or tender) to the backend
+                const typeParam = awardType ? `?type=${awardType}` : '';
+                fetch(`/procurement/purchase-order/contract-items/${contractId}${typeParam}`)
                     .then(r => r.json())
-                    .then(({items, availableItems}) => {
+                    .then(({data, availableItems}) => {
                         // Update global item options with contract-specific tender items
                         updateItemOptionsForContract(availableItems || []);
 
-                        // Populate the form with the tender items
-                        populateItems(items || []);
+                        // Populate the form with the tender/rfq items
+                        populateItems(data || []);
                         updateTotals();
                     })
                     .catch(err => {
@@ -801,41 +921,57 @@
         $('#itemCategory').on('change', function(){
             const catId = $(this).val() ? parseInt($(this).val(),10) : 0;
             const planId = $('#directPlanSelect').val() ? parseInt($('#directPlanSelect').val(),10) : 0;
-            if(!(catId>0) || !(planId>0)){
-                return;
-            }
-            // 1) Populate prequalified supplier dropdown for this category
-            const $preqSupplier = $('#preqSupplier');
-            $preqSupplier.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
-            // Clear hidden supplier and address until user selects one for this category
-            const $hiddenSup = $("input[name='supplier']");
-            if ($hiddenSup.length) { $hiddenSup.val(''); }
-            $('input[name="address"]').val('');
-            fetch(`{{ url('procurement/purchase-order/prequalified-suppliers') }}/${catId}`)
-                .then(r=>r.json()).then(({data})=>{
-                    (data||[]).forEach(row=>{
-                        const supplierId = row.SupplierId || row.SupplierID || '';
-                        const display = row.SupplierName || (supplierId ? `Supplier #${supplierId}` : `ThirdParty #${row.ThirdPartyId || ''}`);
-                        const address = row.Address || '';
-                        const value = String(supplierId).length ? supplierId : (row.ThirdPartyId || '');
-                        $preqSupplier.append(`<option value="${value}" data-supplier-id="${supplierId || ''}" data-address="${address}">${display}</option>`);
+            
+            console.log('Category changed:', {catId, planId});
+            
+            // Always load suppliers if we have a plan, even without category
+            if(planId > 0){
+                // 1) Populate prequalified supplier dropdown for this category
+                const $preqSupplier = $('#preqSupplier');
+                $preqSupplier.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
+                // Clear hidden supplier and address until user selects one for this category
+                const $hiddenSup = $("input[name='supplier']");
+                if ($hiddenSup.length) { $hiddenSup.val(''); }
+                // Load ALL prequalified suppliers (ignoring category)
+                console.log('Fetching suppliers from:', `{{ url('procurement/purchase-order/prequalified-suppliers/0') }}`);
+                fetch(`{{ url('procurement/purchase-order/prequalified-suppliers/0') }}`)
+                    .then(r=>{
+                        console.log('Supplier response status:', r.status);
+                        return r.json();
+                    })
+                    .then(({success, data})=>{
+                        console.log('Supplier data received:', {success, count: data?.length, data});
+                        (data||[]).forEach(row=>{
+                            const supplierId = row.SupplierId || row.SupplierID || '';
+                            const display = row.SupplierName || (supplierId ? `Supplier #${supplierId}` : `ThirdParty #${row.ThirdPartyId || ''}`);
+                            const address = row.Address || '';
+                            const value = String(supplierId).length ? supplierId : (row.ThirdPartyId || '');
+                            $preqSupplier.append(`<option value="${value}" data-supplier-id="${supplierId || ''}" data-address="${address}">${display}</option>`);
+                        });
+                        $preqSupplier.prop('disabled', false);
+                        console.log('Suppliers populated:', $preqSupplier.find('option').length - 1, 'options');
+                    })
+                    .catch((err)=>{
+                        console.error('Error loading suppliers:', err);
+                        $preqSupplier.prop('disabled', false);
                     });
-                    $preqSupplier.prop('disabled', false);
-                }).catch(()=>{});
+            }
 
-            // 2) Load plan items filtered by category and populate the grid
-            fetch(`{{ url('procurement/purchase-order/plan') }}/${planId}/category/${catId}/items`)
-                .then(r=>r.json())
-                .then((resp)=>{
-                    const items = (resp && (resp.data || resp.items)) ? (resp.data || resp.items) : [];
-                    populateItems(Array.isArray(items) ? items : []);
-                    updateTotals();
-                    if (!items || items.length === 0) {
-                        // Give a hint if category has no pending Direct items in this plan
-                        // alert('No items found for the selected category in this plan.'); // optional
-                    }
-                })
-                .catch(()=>{});
+            // 2) Load plan items filtered by category (only if category selected)
+            if(catId > 0 && planId > 0){
+                fetch(`{{ url('procurement/purchase-order/plan') }}/${planId}/category/${catId}/items`)
+                    .then(r=>r.json())
+                    .then((resp)=>{
+                        const items = (resp && (resp.data || resp.items)) ? (resp.data || resp.items) : [];
+                        populateItems(Array.isArray(items) ? items : []);
+                        updateTotals();
+                        if (!items || items.length === 0) {
+                            // Give a hint if category has no pending Direct items in this plan
+                            // alert('No items found for the selected category in this plan.'); // optional
+                        }
+                    })
+                    .catch(()=>{});
+            }
         });
 
     // Selecting a prequalified supplier should set the hidden supplier input and address
@@ -952,7 +1088,7 @@
             populateItems([]);
             const $planSel = $(this);
             $planSel.prop('disabled', true);
-            fetch(`/procurement/purchase-order/direct-plan-items/${val}`)
+            fetch(`{{ url('procurement/purchase-order/direct-plan-items') }}/${val}`)
                 .then(r => r.json())
                 .then(({success, data, items}) => {
                     const rows = data || items || [];

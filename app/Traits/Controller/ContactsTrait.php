@@ -86,11 +86,11 @@ trait ContactsTrait
                  }*/
                 return  $contact->Phone;
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
-                                                                                                  'dbl_click_url' => function (Contact $contact) {
-                                                                                                    return route('contacts.show', [$contact->ContactID]);
-                                                                                                  },
-                                                                                                  'summary_title' => 'contact details',
-                                                                                                 ])->rawColumns(['action', 'Email', 'Phone'])->make();
+                'dbl_click_url' => function (Contact $contact) {
+                    return route('contacts.show', [$contact->ContactID]);
+                },
+                'summary_title' => 'contact details',
+            ])->rawColumns(['action', 'Email', 'Phone'])->make();
     }
 
     /**
@@ -102,7 +102,6 @@ trait ContactsTrait
             $contact->fill($data)->save();
 
             activity()->causedBy(auth()->user())->performedOn($contact)->event('update')->log('updated contact details');
-            //return ActivityService::task($task, $actor->Id . ' added a note.', $actor);
         });
     }
 
@@ -113,18 +112,14 @@ trait ContactsTrait
     {
         DB::transaction(static function () use ($data, $query) {
             $query->create($data);
-
-            //  return ActivityService::task($contact, $actor->Id . ' added a task.', $actor);
         });
     }
 
     public function trash(Contact $contact, User $actor): void
     {
         $contact->forceFill([
-                             'DeletedOn' => now(),
-                             'DeletedBy' => $actor->Id,
-                            ])->save(['timestamps' => false]);
-
-        //return ActivityService::task($task, $actor->Id . ' canceled task', $actor);
+            'DeletedOn' => now(),
+            'DeletedBy' => $actor->Id,
+        ])->save(['timestamps' => false]);
     }
 }
