@@ -14,6 +14,12 @@
     </div>
 @endif
 
+<div class="container mt-5" style="max-width: 850px;">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4 py-3">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-puzzle me-2"></i>Rider & Add-On Information
+            </h5>
 {{-- ================= COMPACT STYLES ================= --}}
 <style>
     fieldset {
@@ -36,6 +42,7 @@
         <div class="card-header bg-info text-white py-2">
             <h6 class="mb-0">Add Rider</h6>
         </div>
+        <div class="card-body p-4">
 
         <div class="card-body py-3">
             <form method="POST" action="{{ route('bancassurance.riders.store') }}">
@@ -138,6 +145,18 @@
                             </div>
                         </div>
 
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="IsActive" value="1" 
+                                    id="IsActive" checked style="cursor: pointer;">
+                                <label class="form-check-label fw-semibold" for="IsActive" style="cursor: pointer;">
+                                    Active Rider
+                                    <small class="text-muted d-block">Enable this rider for selection</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                         <div class="col-md-5">
                             <label>Description</label>
                             <textarea name="Description"
@@ -147,6 +166,10 @@
                     </div>
                 </fieldset>
 
+                {{-- Actions --}}
+                <div class="d-flex justify-content-between align-items-center gap-3 mt-4 pt-3 border-top">
+                    <a href="{{ route('bancassurance.riders.index') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
                 {{-- ================= ACTIONS ================= --}}
                 <div class="text-end">
                     <a href="{{ route('bancassurance.riders.index') }}"

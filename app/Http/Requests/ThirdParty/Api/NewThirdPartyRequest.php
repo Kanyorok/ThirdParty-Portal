@@ -28,7 +28,7 @@ class NewThirdPartyRequest extends FormRequest
             'TradingName' => ['nullable', 'string', 'max:255'],
             'BusinessType' => ['required', 'string', 'max:255'],
             'RegistrationNumber' => ['required', 'string', 'max:200'],
-            'Website' => ['nullable', 'string', 'url:https', 'max:200'],
+            'Website' => ['nullable', 'string', 'url', 'max:200'],
 
             'Country' => ['required', Rule::exists('t_Countries', 'CountryCode'), 'max:200'],
             'Location' => ['required'],
@@ -37,7 +37,7 @@ class NewThirdPartyRequest extends FormRequest
 
             'Email' => [
                 'nullable',
-                Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(),
+                Rule::email()->rfcCompliant(strict: false)->preventSpoofing(),
                 'max:250',
             ],
             'Phone' => ['required', (new Phone)->countryField('Country')],
@@ -50,20 +50,20 @@ class NewThirdPartyRequest extends FormRequest
             'user_Email' => [
                 'nullable',
                 Rule::requiredIf($this->boolean('createUser')),
-                Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(),
+                Rule::email()->rfcCompliant(strict: false)->preventSpoofing(),
                 Rule::unique('t_ThirdPartyUsers', 'Email')->whereNull('DeletedOn'),
-                'max:200'
+                'max:250',
             ],
             'user_Phone' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
             'user_Gender' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
             'user_Password' => [
                 'nullable',
-                Rule::requiredIf($this->boolean('createUser')),
+                Rule::requiredIf($this->boolean('createUser') && !$this->user()),
                 'string',
                 'min:8',
                 'confirmed'
             ],
-            'user_Password_confirmation' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string'],
+            'user_Password_confirmation' => ['nullable', Rule::requiredIf($this->boolean('createUser') && !$this->user()), 'string'],
 
             'customer_DateOfBirth' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'date'],
             'customer_Gender' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],

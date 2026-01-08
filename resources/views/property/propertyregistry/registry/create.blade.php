@@ -124,14 +124,15 @@
                 </div>
 
                 {{-- ================= ACTIONS ================= --}}
-                <button type="submit" class="btn btn-success"
-                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-                    Save Property
-                </button>
-
-                <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">
-                    Cancel
-                </a>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                        Save Property
+                    </button>
+                </div>
 
             </div>
         </div>

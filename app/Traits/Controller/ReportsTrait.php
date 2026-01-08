@@ -76,7 +76,7 @@ trait ReportsTrait
                     Log::error($e);
                     return view('snippets.errors')->with('message', 'cannot connect to the report server.');
                 } catch (ConnectionException $e) {
-                    return view('snippets.errors')->with('message', $e->getMessage() ?? 'cannot retrieve report data.');
+                    return view('snippets.errors')->with('message', 'cannot reach the report server.');
                 }
                 return view('reports.table', compact('report'))->with('data', collect())->with('params', SSRSService::queryParams($parameters->put('_key', md5($report->Path))->toArray()))
                     ->with('module', Str::lower(self::MODULE->name))->with('message', 'Cannot generate preview, try export');

@@ -38,10 +38,12 @@
         <label class="form-label">Block Description</label>
         <textarea class="form-control" rows="2" name="Description" placeholder="Optional description"></textarea>
       </div>
+      <div class="d-flex justify-content-between">
+        <a href="{{ route('addblock.index') }}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-success"
                 onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Block
         </button>
-        <a href="{{ route('addblock.index') }}" class="btn btn-secondary">Cancel</a>
+      </div>
 </form>
       </div>
     </div>

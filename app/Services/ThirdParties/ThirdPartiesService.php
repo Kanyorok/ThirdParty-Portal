@@ -48,8 +48,7 @@ abstract class ThirdPartiesService
             'LastName' => $lastName,
             'Email' => $email,
             'Phone' => $phone,
-            // 'Gender' => $gender->ID,
-            'Gender' => $gender->Id,
+            'Gender' => $gender->getKey(),
             'ThirdPartyId' => $this->party->Id,
             'Password' => $password ? \Illuminate\Support\Facades\Hash::make($password) : 'NON SET',
             'IsActive' => $password ? true : false, // Only activate if password is set

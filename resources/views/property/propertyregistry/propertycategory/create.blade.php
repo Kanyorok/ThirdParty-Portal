@@ -44,6 +44,7 @@
                   name="Description"
                   class="form-control @error('Description') is-invalid @enderror"
                   rows="3"
+                  required
               >{{ old('Description') }}</textarea>
               @error('Description')
               <div class="invalid-feedback">{{ $message }}</div>

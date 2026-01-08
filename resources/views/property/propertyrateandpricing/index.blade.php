@@ -5,7 +5,7 @@
 
 <div class="container mt-4">
 
-    <div class="d-flex justify-content-between mb-3">
+    <div class="d-flex justify-content-end mb-3">
 
         <a href="{{ route('propertyrateandpricing.create') }}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Add Pricing

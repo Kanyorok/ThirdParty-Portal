@@ -126,7 +126,8 @@ class ThirdPartyController extends Controller
                         email: $userDetails['Email'],
                         phone: $userDetails['Phone'],
                         gender: $userDetails['Gender'],
-                        actor: $actor
+                        actor: $actor,
+                        password: $request->get('user_Password') ?? 'password@123'
                     );
                 }
 

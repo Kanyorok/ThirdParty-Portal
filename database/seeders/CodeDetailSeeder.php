@@ -728,6 +728,16 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ChequePartyType', 'Description' => 'Vendor', 'Value' => 'V', 'DisplayOrder' => 1],
             ['CodeID' => 'ChequePartyType', 'Description' => 'Tenant', 'Value' => 'T', 'DisplayOrder' => 2],
 
+
+            //Finance Approval Status
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Draft', 'Value' => 'dr','DisplayOrder' => 1],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Pending', 'Value' => 'pe', 'DisplayOrder' => 2],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Approved', 'Value' => 'ap', 'DisplayOrder' => 3],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Posting', 'Value' => 'ps', 'DisplayOrder' => 4],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
+
+
+
         ];
 
         foreach ($static as $index => $item) {
