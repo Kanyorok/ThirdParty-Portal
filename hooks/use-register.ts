@@ -5,21 +5,23 @@ import { z } from "zod"
 
 const registerSchema = z.object({
     Name: z.string().min(2, "Company name required"),
-    TradingName: z.string().optional(),
+    TradingName: z.string().nullable().optional(),
     BusinessType: z.string().min(1, "Required"),
     RegistrationNumber: z.string().min(2, "Required"),
     TaxPIN: z.string().min(2, "Required"),
-    VATNumber: z.string().optional(),
+    VATNumber: z.string().nullable().optional(),
     Country: z.string().min(1, "Required"),
     Location: z.coerce.number().min(1, "Required"),
     Email: z.string().email("Invalid email"),
     Phone: z.string().min(10, "Invalid phone"),
-    PhysicalAddress: z.string().optional(),
-    Website: z.string().url().optional().or(z.literal("")),
+    PhysicalAddress: z.string().nullable().optional(),
+    Website: z.string().url().optional().or(z.literal("")).nullable(),
     types: z.array(z.string()).min(1, "Selection required"),
-    supplier_category_id: z.coerce.number().optional(),
-    tenant_Remarks: z.string().optional(),
-    customer_PreferredPaymentMethod: z.string().optional(),
+    user_SupplierCategoryId: z.preprocess((val) => val === "" ? null : val, z.coerce.number().nullable().optional()),
+    user_Remarks: z.preprocess((val) => val === "" ? null : val, z.string().nullable().optional()),
+    user_DateOfBirth: z.string().nullable().optional(),
+    user_MaritalStatus: z.string().nullable().optional(),
+    user_Occupation: z.string().nullable().optional(),
     createUser: z.boolean(),
     user_FirstName: z.string().min(2, "Required"),
     user_LastName: z.string().min(2, "Required"),
@@ -31,99 +33,32 @@ const registerSchema = z.object({
 }).refine((data) => data.user_Password === data.user_Password_confirmation, {
     message: "Passwords mismatch",
     path: ["user_Password_confirmation"],
-}).refine((data) => {
-    if (data.types.includes("SU")) {
-        return !!data.supplier_category_id && data.supplier_category_id > 0
-    }
-    return true
-}, {
-    message: "Supplier category is required",
-    path: ["supplier_category_id"],
-}).refine((data) => {
-    if (data.types.includes("TN")) {
-        return !!data.tenant_Remarks && data.tenant_Remarks.trim().length > 0
-    }
-    return true
-}, {
-    message: "Tenant remarks are required",
-    path: ["tenant_Remarks"],
 })
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>
 
-interface LookupItem {
-    value: string
-    description: string
-}
-
-interface Country {
-    id: number
-    code: string
-    name: string
-}
-
-interface Locality {
-    id: number
-    name: string
-}
-
-interface SupplierCategory {
-    id: number
-    name: string
-}
-
-interface LookupsData {
-    businessType: LookupItem[]
-    gender: LookupItem[]
-}
-
-interface MetadataState {
-    countries: Country[]
-    businessTypes: LookupItem[]
-    supplierCategories: SupplierCategory[]
-    localities: Locality[]
-    genders: LookupItem[]
-}
-
 export const useRegisterForm = () => {
-    const [metadata, setMetadata] = useState<MetadataState>({
-        countries: [],
-        businessTypes: [],
-        supplierCategories: [],
-        localities: [],
-        genders: [],
+    const [metadata, setMetadata] = useState({
+        countries: [] as any[],
+        businessTypes: [] as any[],
+        supplierCategories: [] as any[],
+        localities: [] as any[],
+        genders: [] as any[],
+        maritalStatuses: [] as any[],
+        occupations: [] as any[]
     })
     const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
     const [metadataError, setMetadataError] = useState<string | null>(null)
 
     const form = useForm<RegisterFormInputs>({
-        resolver: zodResolver(registerSchema),
+        resolver: zodResolver(registerSchema) as any,
         mode: "onBlur",
         defaultValues: {
-            Name: "",
-            TradingName: "",
-            BusinessType: "Sole",
-            RegistrationNumber: "",
-            TaxPIN: "",
-            VATNumber: "",
-            Country: "KE",
-            Location: 0,
-            Email: "",
-            Phone: "",
-            PhysicalAddress: "",
-            Website: "",
-            types: [],
-            supplier_category_id: undefined,
-            tenant_Remarks: "",
-            customer_PreferredPaymentMethod: "",
-            createUser: true,
-            user_FirstName: "",
-            user_LastName: "",
-            user_Email: "",
-            user_Phone: "",
-            user_Gender: "M",
-            user_Password: "",
-            user_Password_confirmation: ""
+            Name: "", TradingName: null, BusinessType: "", RegistrationNumber: "", TaxPIN: "", VATNumber: null,
+            Country: "KE", Location: 0, Email: "", Phone: "", PhysicalAddress: null, Website: "", types: [],
+            user_SupplierCategoryId: null, user_Remarks: null, user_DateOfBirth: null, user_MaritalStatus: null,
+            user_Occupation: null, createUser: true, user_FirstName: "", user_LastName: "", user_Email: "",
+            user_Phone: "", user_Gender: "", user_Password: "", user_Password_confirmation: ""
         }
     })
 
@@ -132,166 +67,71 @@ export const useRegisterForm = () => {
 
     const fetchInitialMetadata = useCallback(async () => {
         setIsLoadingMetadata(true)
-        setMetadataError(null)
-
         try {
             const [countriesRes, categoriesRes, lookupsRes] = await Promise.all([
                 fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/countries`),
                 fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/supplier-categories`),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,ThirdPartyType`)
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`)
             ])
+            const countries = await countriesRes.json()
+            const categories = await categoriesRes.json()
+            const lookups = await lookupsRes.json()
 
-            if (!countriesRes.ok || !categoriesRes.ok || !lookupsRes.ok) {
-                throw new Error("Failed to load registration data")
-            }
-
-            const [countries, categories, lookups] = await Promise.all([
-                countriesRes.json(),
-                categoriesRes.json(),
-                lookupsRes.json()
-            ])
-
-            const lookupsData: LookupsData = lookups.data || {}
-
-            setMetadata({
+            const lData = lookups.data || {}
+            setMetadata(prev => ({
+                ...prev,
                 countries: countries.data || countries,
                 supplierCategories: categories.data || categories,
-                businessTypes: lookupsData.businessType || [],
-                genders: lookupsData.gender || [],
-                localities: []
-            })
+                businessTypes: lData.businessType || [],
+                genders: lData.gender || [],
+                maritalStatuses: lData.maritalStatus || [],
+                occupations: lData.occupation || [],
+            }))
         } catch (error) {
-            console.error("Failed to fetch metadata:", error)
-            setMetadataError("Unable to load registration data. Please refresh the page.")
+            setMetadataError("Unable to load registration data.")
         } finally {
             setIsLoadingMetadata(false)
         }
     }, [])
 
     const fetchLocalities = useCallback(async (countryCode: string) => {
-        if (!countryCode) return
-
         const country = metadata.countries.find(c => c.code === countryCode)
         if (!country?.id) return
-
         try {
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/localities/${country.id}`
-            )
-
-            if (!res.ok) throw new Error("Failed to load cities")
-
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/localities/${country.id}`)
             const result = await res.json()
-            setMetadata(prev => ({
-                ...prev,
-                localities: result.data || result || []
-            }))
-        } catch (error) {
-            console.error("Failed to fetch localities:", error)
-        }
+            setMetadata(prev => ({ ...prev, localities: result.data || result || [] }))
+        } catch (error) { console.error(error) }
     }, [metadata.countries])
 
-    useEffect(() => {
-        fetchInitialMetadata()
-    }, [fetchInitialMetadata])
+    useEffect(() => { fetchInitialMetadata() }, [fetchInitialMetadata])
+    useEffect(() => { if (selectedCountryCode) fetchLocalities(selectedCountryCode) }, [selectedCountryCode, fetchLocalities])
 
-    useEffect(() => {
-        if (selectedCountryCode && metadata.countries.length > 0) {
-            fetchLocalities(selectedCountryCode)
-        }
-    }, [selectedCountryCode, metadata.countries, fetchLocalities])
-
-    useEffect(() => {
-        if (!selectedTypes?.includes("SU")) {
-            form.setValue("supplier_category_id", undefined)
-        }
-        if (!selectedTypes?.includes("TN")) {
-            form.setValue("tenant_Remarks", "")
-        }
-        if (!selectedTypes?.includes("CU")) {
-            form.setValue("customer_PreferredPaymentMethod", "")
-        }
-    }, [selectedTypes, form])
-
-    const onSubmit = async (data: RegisterFormInputs) => {
-        if (!data.types || data.types.length === 0) {
-            form.setError("types", {
-                type: "manual",
-                message: "Please select at least one business role"
-            })
-            return
-        }
-
-        try {
-            const payload = {
-                ...data,
-                types: data.types.filter(Boolean)
-            }
-
-            console.log("Registration payload:", payload)
-
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/register`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                }
-            )
-
-            const result = await response.json()
-
-            if (!response.ok) {
-                if (result.errors) {
-                    Object.keys(result.errors).forEach((key) => {
-                        form.setError(key as any, {
-                            type: "manual",
-                            message: Array.isArray(result.errors[key])
-                                ? result.errors[key][0]
-                                : result.errors[key]
-                        })
-                    })
-
-                    const firstError = Object.values(result.errors)[0]
-                    throw new Error(
-                        Array.isArray(firstError) ? firstError[0] : String(firstError)
-                    )
-                }
-                throw new Error(
-                    result.message || "Registration failed. Please check your information and try again."
-                )
-            }
-
-            return result
-        } catch (error: any) {
-            console.error("Registration error:", error)
-            throw error
-        }
-    }
-
-    const toggleType = (type: string) => {
-        const current = form.getValues("types") || []
-        const updated = current.includes(type)
-            ? current.filter(t => t !== type)
-            : [...current, type]
-        form.setValue("types", updated, { shouldValidate: true })
+    const onSubmitHandler = async (values: RegisterFormInputs) => {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify(values)
+        })
+        const result = await response.json()
+        if (!response.ok) throw new Error(result.message || "Registration failed")
+        return result
     }
 
     return {
         form,
+        errors: form.formState.errors,
         metadata,
         isLoadingMetadata,
         metadataError,
-        onSubmit: form.handleSubmit(onSubmit),
+        onSubmit: form.handleSubmit(onSubmitHandler as any),
         isSubmitting: form.formState.isSubmitting,
-        isValid: form.formState.isValid,
-        errors: form.formState.errors,
-        toggleType,
+        toggleType: (type: string) => {
+            const current = form.getValues("types") || []
+            const updated = current.includes(type) ? current.filter(t => t !== type) : [...current, type]
+            form.setValue("types", updated, { shouldValidate: true })
+        },
         selectedTypes,
-        selectedCountryCode,
         isSupplier: selectedTypes?.includes("SU"),
         isTenant: selectedTypes?.includes("TN"),
         isCustomer: selectedTypes?.includes("CU")

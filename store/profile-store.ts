@@ -2,19 +2,21 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { UserProfile } from '@/types/profile-types'
 
+export type ProfileType = UserProfile | "base"
+
 interface ProfileState {
-    activeProfile: UserProfile | "General"
-    availableProfiles: (UserProfile | "General")[]
-    setActiveProfile: (profile: UserProfile | "General") => void
-    setAvailableProfiles: (profiles: (UserProfile | "General")[]) => void
-    initializeProfiles: (profiles: (UserProfile | "General")[]) => void
+    activeProfile: ProfileType
+    availableProfiles: ProfileType[]
+    setActiveProfile: (profile: ProfileType) => void
+    setAvailableProfiles: (profiles: ProfileType[]) => void
+    initializeProfiles: (profiles: ProfileType[]) => void
 }
 
 export const useProfileStore = create<ProfileState>()(
     persist(
         (set, get) => ({
-            activeProfile: "General",
-            availableProfiles: ["General"],
+            activeProfile: "base",
+            availableProfiles: ["base"],
 
             setActiveProfile: (profile) => set({ activeProfile: profile }),
 
@@ -26,8 +28,8 @@ export const useProfileStore = create<ProfileState>()(
 
                 if (!profiles || profiles.length === 0) {
                     set({
-                        availableProfiles: ["General"],
-                        activeProfile: "General"
+                        availableProfiles: ["base"],
+                        activeProfile: "base"
                     })
                     return
                 }

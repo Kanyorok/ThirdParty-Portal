@@ -1,15 +1,11 @@
 "use client"
 
-<<<<<<< Updated upstream
 import { memo, useMemo, useEffect } from "react"
 import { useProfileStore, ProfileType } from "@/store/profile-store"
-=======
-import { memo, useMemo } from "react"
->>>>>>> Stashed changes
 import { getAvailableProfiles } from "@/lib/api/profile-management"
 import { useQuery } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
-import { Shuffle, ShieldCheck, Loader2, AlertCircle, RefreshCw } from "lucide-react"
+import { Shuffle, ShieldCheck, Loader2, AlertCircle, RefreshCw, Building2, User, ShoppingCart } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,43 +13,37 @@ import {
   DropdownMenuTrigger,
 } from "@/components/common/dropdown-menu"
 
-<<<<<<< Updated upstream
-=======
-export type ProfileType = 'base' | 'supplier' | 'tenant' | 'customer'
-
->>>>>>> Stashed changes
 const profileConfig = {
-  base: { label: "Business Information", color: "bg-blue-600" },
-  supplier: { label: "Supplier Profile", color: "bg-slate-950" },
-  tenant: { label: "Tenant Profile", color: "bg-indigo-600" },
-  customer: { label: "Customer Profile", color: "bg-emerald-600" },
+  base: {
+    label: "Business Information",
+    color: "bg-blue-600",
+    icon: Building2
+  },
+  supplier: {
+    label: "Supplier Profile",
+    color: "bg-slate-900",
+    icon: Building2
+  },
+  tenant: {
+    label: "Tenant Profile",
+    color: "bg-indigo-600",
+    icon: User
+  },
+  customer: {
+    label: "Customer Profile",
+    color: "bg-emerald-600",
+    icon: ShoppingCart
+  },
 } as const
 
-<<<<<<< Updated upstream
 export const ProfileSwitcher = memo(() => {
   const { activeProfile, setActiveProfile, initializeProfiles } = useProfileStore()
 
   const { data, isPending, isError, refetch } = useQuery({
-=======
-export const ProfileSwitcher = memo(({
-  currentProfile,
-  onProfileChange
-}: {
-  currentProfile: ProfileType,
-  onProfileChange: (p: ProfileType) => void
-}) => {
-  const {
-    data: availableProfilesData,
-    isPending,
-    isError,
-    refetch
-  } = useQuery({
->>>>>>> Stashed changes
     queryKey: ['available-profiles'],
     queryFn: getAvailableProfiles,
   })
 
-<<<<<<< Updated upstream
   useEffect(() => {
     if (data?.success && data?.data?.availableProfiles) {
       const validTypes = Object.keys(profileConfig) as ProfileType[]
@@ -61,30 +51,25 @@ export const ProfileSwitcher = memo(({
         .filter((p: any) => p.hasProfile && validTypes.includes(p.type))
         .map((p: any) => p.type as ProfileType)
 
-      initializeProfiles(activeTypes)
+      if (activeTypes.length > 0) {
+        initializeProfiles(activeTypes)
+      }
     }
   }, [data, initializeProfiles])
 
   const profiles = useMemo(() => {
     const rawData = data?.data?.availableProfiles
-    if (!Array.isArray(rawData)) return [activeProfile]
+    if (!Array.isArray(rawData)) return ["base" as ProfileType]
 
     const validTypes = Object.keys(profileConfig) as ProfileType[]
     const available = rawData
       .filter((p: any) => p.hasProfile && validTypes.includes(p.type))
       .map((p: any) => p.type as ProfileType)
 
-    return available.length > 0 ? available : [activeProfile]
-  }, [data, activeProfile])
-=======
-  const profiles = useMemo(() => {
-    const list: ProfileType[] = []
-    availableProfilesData?.data?.availableProfiles?.forEach((p: any) => {
-      if (p.hasProfile) list.push(p.type as ProfileType)
-    })
-    return Array.from(new Set(list))
-  }, [availableProfilesData])
->>>>>>> Stashed changes
+    return available.length > 0 ? available : ["base" as ProfileType]
+  }, [data])
+
+  const activeConfig = profileConfig[activeProfile as keyof typeof profileConfig] || profileConfig.base
 
   return (
     <DropdownMenu>
@@ -92,129 +77,124 @@ export const ProfileSwitcher = memo(({
         <button
           disabled={isPending}
           className={cn(
-<<<<<<< Updated upstream
-            "group relative flex size-10 items-center justify-center rounded-xl border border-border/40 bg-background/50 transition-all hover:bg-muted active:scale-95 disabled:opacity-50",
-=======
-            "group relative flex size-9 items-center justify-center rounded-xl border border-border/40 bg-background/50 transition-all hover:bg-muted hover:border-primary/30 active:scale-90 disabled:opacity-50",
->>>>>>> Stashed changes
-            isError && "border-destructive/50"
+            "group relative flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm",
+            isError && "border-red-200 bg-red-50"
           )}
         >
           {isPending ? (
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            <Loader2 className="size-4 animate-spin text-slate-400" />
           ) : (
-            <Shuffle className={cn("size-4 text-muted-foreground transition-colors group-hover:text-primary", isError && "text-destructive")} />
+            <div className="relative">
+              <div className={cn("size-8 rounded-lg flex items-center justify-center transition-all", activeConfig.color)}>
+                <activeConfig.icon className="size-4 text-white" />
+              </div>
+              <span className={cn(
+                "absolute -right-1 -top-1 size-2.5 rounded-full border-2 border-white shadow-sm",
+                activeConfig.color
+              )} />
+            </div>
           )}
-          <span className={cn(
-<<<<<<< Updated upstream
-            "absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-background shadow-sm",
-            profileConfig[activeProfile as keyof typeof profileConfig]?.color || "bg-gray-400",
-=======
-            "absolute -right-0.5 -top-0.5 size-2 rounded-full border border-background shadow-sm",
-            profileConfig[currentProfile]?.color || "bg-gray-400",
->>>>>>> Stashed changes
-            isPending && "animate-pulse"
+
+          <div className="flex flex-col items-start">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              Active Profile
+            </span>
+            <span className="text-sm font-bold text-slate-900">
+              {isPending ? "Loading..." : activeConfig.label}
+            </span>
+          </div>
+
+          <Shuffle className={cn(
+            "size-4 text-slate-400 transition-transform group-hover:rotate-180 ml-2",
+            isError && "text-red-500"
           )} />
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-<<<<<<< Updated upstream
         align="start"
-        sideOffset={12}
-        className="w-60 overflow-hidden rounded-2xl border-border/40 bg-background/95 p-1.5 shadow-2xl backdrop-blur-xl"
+        sideOffset={8}
+        className="w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
       >
-        <div className="px-3 py-2 border-b border-border/10 mb-1">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-            {isPending ? "Syncing Profiles..." : "Switch Context"}
+        <div className="px-3 py-2.5 border-b border-slate-100 mb-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            {isPending ? "Syncing Profiles..." : "Switch Active Profile"}
           </span>
+          {!isPending && profiles.length > 1 && (
+            <p className="text-xs text-slate-400 mt-1">
+              {profiles.length} profile{profiles.length > 1 ? 's' : ''} available
+            </p>
+          )}
         </div>
 
         <div className="space-y-1">
           {isError ? (
             <button
               onClick={() => refetch()}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-destructive hover:bg-destructive/5"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-red-600 hover:bg-red-50 transition-colors"
             >
-              <AlertCircle className="size-4" />
-              <span className="flex-1 text-left text-xs font-bold">Retry Connection</span>
-=======
-        align="end"
-        sideOffset={10}
-        className="w-56 overflow-hidden rounded-2xl border-border/40 bg-background/95 p-1.5 shadow-2xl backdrop-blur-xl"
-      >
-        <div className="px-3 py-2">
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
-            {isPending ? "Refreshing..." : isError ? "Error Loading" : "Switch Profile"}
-          </span>
-        </div>
-
-        <div className="space-y-0.5">
-          {isPending ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 className="size-4 animate-spin text-primary/20" />
-            </div>
-          ) : isError ? (
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                refetch()
-              }}
-              className="flex w-full items-center gap-2 rounded-xl px-2 py-3 text-destructive transition-colors hover:bg-destructive/5"
-            >
-              <AlertCircle className="size-4 shrink-0" />
-              <span className="flex-1 text-left text-[11px] font-bold uppercase">Retry Connection</span>
->>>>>>> Stashed changes
-              <RefreshCw className="size-3" />
+              <div className="size-8 rounded-lg bg-red-100 flex items-center justify-center">
+                <AlertCircle className="size-4 text-red-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <span className="block text-sm font-bold">Connection Failed</span>
+                <span className="text-xs text-red-500">Click to retry</span>
+              </div>
+              <RefreshCw className="size-4" />
             </button>
           ) : (
             profiles.map((profile) => {
-<<<<<<< Updated upstream
               const isSelected = profile === activeProfile
-              const config = profileConfig[profile as keyof typeof profileConfig] || { label: profile, color: "bg-gray-400" }
-=======
-              const isSelected = profile === currentProfile
-              const config = profileConfig[profile]
->>>>>>> Stashed changes
+              const config = profileConfig[profile as keyof typeof profileConfig] || profileConfig.base
+              const Icon = config.icon
 
               return (
                 <DropdownMenuItem
                   key={profile}
-<<<<<<< Updated upstream
-                  onClick={() => setActiveProfile(profile as ProfileType)}
+                  onClick={() => setActiveProfile(profile)}
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all",
-                    isSelected ? "bg-primary/10" : "hover:bg-muted"
+                    "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 transition-all focus:bg-slate-50",
+                    isSelected ? "bg-blue-50 border border-blue-100" : "hover:bg-slate-50 border border-transparent"
                   )}
                 >
-                  <div className={cn("size-2.5 rounded-full shrink-0", config.color, !isSelected && "opacity-30")} />
-                  <span className={cn(
-                    "flex-1 text-xs font-semibold",
-=======
-                  onClick={() => onProfileChange(profile)}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 transition-all",
-                    isSelected ? "bg-primary/5" : "hover:bg-muted"
-                  )}
-                >
-                  <div className={cn("size-2 rounded-full shrink-0", config.color, !isSelected && "opacity-40")} />
-                  <span className={cn(
-                    "flex-1 text-[11px] font-bold uppercase tracking-tight",
->>>>>>> Stashed changes
-                    isSelected ? "text-foreground" : "text-muted-foreground"
+                  <div className={cn(
+                    "size-9 rounded-lg flex items-center justify-center transition-all",
+                    config.color,
+                    !isSelected && "opacity-60"
                   )}>
-                    {config.label}
-                  </span>
-<<<<<<< Updated upstream
-                  {isSelected && <ShieldCheck className="size-4 text-primary" />}
-=======
-                  {isSelected && <ShieldCheck className="size-3 text-primary" />}
->>>>>>> Stashed changes
+                    <Icon className="size-4 text-white" />
+                  </div>
+
+                  <div className="flex-1">
+                    <span className={cn(
+                      "block text-sm font-bold",
+                      isSelected ? "text-slate-900" : "text-slate-600"
+                    )}>
+                      {config.label}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {isSelected ? "Currently active" : "Click to switch"}
+                    </span>
+                  </div>
+
+                  {isSelected && (
+                    <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <ShieldCheck className="size-4 text-blue-600" />
+                    </div>
+                  )}
                 </DropdownMenuItem>
               )
             })
           )}
         </div>
+
+        {!isError && profiles.length === 1 && (
+          <div className="mt-2 px-3 py-2 text-center">
+            <p className="text-xs text-slate-400">
+              Complete your profile setup to unlock more options
+            </p>
+          </div>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
