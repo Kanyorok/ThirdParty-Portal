@@ -144,10 +144,13 @@
                     </div>
 
                     {{-- Submit --}}
-                    <button type="submit" class="btn btn-success"
-                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-                        Renew Lease
-                    </button>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ route('renewlease.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success"
+                                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                            Renew Lease
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>

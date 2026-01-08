@@ -30,12 +30,18 @@
               <td class="text-end">{{ number_format((float)$p->Premium,2) }}</td>
               <td>{!! $p->IsCompulsory ? '<span class="badge bg-warning text-dark">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
               <td class="text-end">
-                <div class="btn-group">
-                   <a href="{{ route('bancassurance.packages.show', $p->Id) }}" class="btn btn-sm btn-outline-secondary">View</a>
-                  <a href="{{ route('bancassurance.packages.edit', $p->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                  <form action="{{ route('bancassurance.packages.destroy', $p->Id) }}" method="POST" onsubmit="return confirm('Archive this package?');">
+                <div class="d-flex gap-2 justify-content-end">
+                   <a href="{{ route('bancassurance.packages.show', $p->Id) }}" class="btn btn-sm btn-info">
+                     <i class="bi bi-eye me-1"></i>View
+                  </a>
+                  <a href="{{ route('bancassurance.packages.edit', $p->Id) }}" class="btn btn-sm btn-primary">
+                     <i class="bi bi-pencil me-1"></i>Edit
+                  </a>
+                  <form action="{{ route('bancassurance.packages.destroy', $p->Id) }}" method="POST" onsubmit="return confirm('Archive this package?');" class="d-inline">
                     @csrf @method('DELETE')
-                    <button class="btn btn-sm btn-outline-danger">Archive</button>
+                    <button class="btn btn-sm btn-danger" type="submit">
+                      <i class="bi bi-archive me-1"></i>Archive
+                    </button>
                   </form>
                 </div>
               </td>

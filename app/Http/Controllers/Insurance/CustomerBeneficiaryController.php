@@ -11,20 +11,25 @@ use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Services\Insurance\Customers\BancassuranceCustomersBeneficiariesService;
 use App\Http\Requests\Insurance\Customers\BancassuranceCustomersBeneficiariesRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class CustomerBeneficiaryController extends Controller
 {
     /**
      * Show form to create a beneficiary for a customer.
      */
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersBeneficiariesView, BancassuranceBeneficiaries::class);
         $customers = BancassuranceCustomer::all();
         $policies = BancassurancePolicy::all();
         $relationships = CodeDetail::where('CodeID', 'Relationships')->get();
 
-        return view('bancassurance.customers.beneficiaries.create', compact('customers', 'relationships', 'policies'));
+        // Prefill and lock customer if coming from list action
+        $customerId = $request->query('customerId');
+        $selectedCustomer = $customerId ? BancassuranceCustomer::find($customerId) : null;
+
+        return view('bancassurance.customers.beneficiaries.create', compact('customers', 'relationships', 'policies', 'selectedCustomer'));
     }
 
     /**

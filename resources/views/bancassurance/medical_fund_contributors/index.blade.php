@@ -73,12 +73,18 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <div class="btn-group">
-                                        <a href="{{ route('bancassurance.contributors.show', $c->Id) }}" class="btn btn-sm btn-outline-info">Open</a>
-                                        <a href="{{ route('bancassurance.contributors.edit', $c->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{{ route('bancassurance.contributors.show', $c->Id) }}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye me-1"></i>Open
+                                        </a>
+                                        <a href="{{ route('bancassurance.contributors.edit', $c->Id) }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-pencil me-1"></i>Edit
+                                        </a>
                                         <form action="{{ route('bancassurance.contributors.destroy', $c->Id) }}" method="POST" onsubmit="return confirm('Archive this contributor?');">
                                             @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger">Archive</button>
+                                            <button class="btn btn-sm btn-danger">
+                                                <i class="bi bi-archive me-1"></i>Archive
+                                            </button>
                                         </form>
                                     </div>
                                 </td>

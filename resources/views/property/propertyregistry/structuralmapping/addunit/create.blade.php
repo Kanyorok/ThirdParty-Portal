@@ -79,11 +79,16 @@
                 <textarea class="form-control" rows="2" name="Remarks"></textarea>
             </div>
 
-            {{-- Submit --}}
-            <button type="submit" class="btn btn-success"
-                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-                Save Unit
-            </button>
+            {{-- Buttons --}}
+            <div class="d-flex justify-content-between">
+                <a href="{{ route('addunit.index') }}" class="btn btn-secondary">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                    Save Unit
+                </button>
+            </div>
 
         </div>
       </div>
