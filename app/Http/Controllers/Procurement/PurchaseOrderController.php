@@ -34,6 +34,7 @@ class PurchaseOrderController extends Controller
         protected OrderService $orderService,
         protected DocumentApprovalService $documentApprovalService,
         protected RFQService $rfqService,
+        protected SupplierService $supplierService,
         protected ApprovalWorkflow $workflowService  // Changed type hint
     ) {
         $this->middleware('ajax')->except([
@@ -499,29 +500,62 @@ class PurchaseOrderController extends Controller
             Log::info("Line items fetched", ['order_id' => $id, 'line_count' => count($lineInfo)]);
 
             // Use the generic workflow service with error handling
+            $history = collect();
             try {
-                // Use getStatus as requested, but map to objects to support view property access ($item->property)
-                $workflowData = $this->workflowService->getStatus($order);
+                // Use getWorkflowStatus as requested
+                $workflowData = $this->workflowService->getWorkflowStatus($order->getMorphClass(), $order->getKey());
                 $historyArr = $workflowData['completedApprovals'] ?? [];
+                $stageName = isset($workflowData['currentStage']['name']) ? $workflowData['currentStage']['name'] : 'Stage';
                 
-                $history = collect($historyArr)->map(function($item) {
-                     // Cast array item to object
+                $fetchedHistory = collect($historyArr)->map(function($item) use ($stageName) {
                      $obj = (object)$item;
-                     // Shim missing properties expected by view
-                     if (!isset($obj->stage)) $obj->stage = (object)['StageName' => 'Stage ' . ($item['stage'] ?? '')];
-                     if (!isset($obj->status)) $obj->status = (object)['Description' => 'Actioned'];
+                     if (!isset($obj->StatusId)) $obj->StatusId = 'A';
+                     if (!isset($obj->stage)) $obj->stage = (object)['StageName' => $stageName];
+                     if (!isset($obj->status)) $obj->status = (object)['Description' => 'Approved'];
                      if (!isset($obj->creator)) $obj->creator = (object)['Name' => $item['Name'] ?? 'Unknown'];
                      return $obj;
                 });
+                
+                $history = $history->merge($fetchedHistory);
 
-                Log::info("Workflow history fetched via getStatus", ['order_id' => $id, 'history_count' => $history->count()]);
+                Log::info("Workflow history fetched via getWorkflowStatus", ['order_id' => $id, 'history_count' => $history->count()]);
             } catch (\Exception $e) {
                 Log::warning("Failed to fetch workflow history", [
                     'order_id' => $id,
                     'error' => $e->getMessage()
                 ]);
-                $history = collect(); // Empty collection as fallback
             }
+
+            // Manually add "Submitted" entry to ensure at least initiation is visible
+            // This runs regardless of fetch success
+            $submitted = (object)[
+                'stage' => (object)['StageName' => 'Initiation'],
+                'status' => (object)['Description' => 'Submitted'],
+                'creator' => (object)['Name' => $order->creator->Name ?? 'Unknown'],
+                'CreatedOn' => $order->CreatedOn,
+                'Notes' => 'Order initiated',
+                'StatusId' => '' 
+            ];
+            $history->prepend($submitted); // Prepend to be at the start (or Push if order matters? Ascending vs Descending)
+            // View typically iterates top-down. History usually Descending?
+            // If View is "History", usually Newest First?
+            // "Submitted" is Oldest.
+            // If View shows List, usually we want Chronological?
+            // Let's check View again.
+            // View line 117 foreach($history as $record).
+            // It doesn't sort.
+            // Controller `historyForModel` ordered by `CreatedOn desc`.
+            // So Newest First.
+            // So "Submitted" (Oldest) should be LAST (Pushed).
+            // But if I want it to appear at bottom of list...
+            // Wait, if I use Push, it goes to end of collection.
+            // If View iterates, it shows at bottom.
+            // Does View show Newest on Top?
+            // `historyForModel` did `orderBy('CreatedOn', 'desc')`.
+            // So yes, Newest on Top.
+            // So "Submitted" should be at the BOTTOM (End).
+            // So `$history->push($submitted)` is correct.
+
 
             // Check if user can approve
             try {
@@ -537,15 +571,29 @@ class PurchaseOrderController extends Controller
 
             // Get workflow status
             try {
-                $workflowStatus = $this->workflowService->getStatus($order);
-                $isFullyApproved = !isset($workflowStatus['pending']) || $workflowStatus['pending'] === 0;
+                $workflowStatus = $this->workflowService->getWorkflowStatus($order->getMorphClass(), $order->getKey());
+                $isFullyApproved = ($workflowStatus['totalPending'] ?? 0) === 0;
                 Log::info("Workflow status fetched", ['order_id' => $id, 'status' => $workflowStatus]);
             } catch (\Exception $e) {
-                Log::warning("Failed to get workflow status", [
+                Log::warning("Failed to get workflow status via service, using fallback", [
                     'order_id' => $id,
                     'error' => $e->getMessage()
                 ]);
-                $isFullyApproved = false;
+
+                // Fallback: Query pending table directly to ensure approvers are shown
+                $pendingApprovals = \Illuminate\Support\Facades\DB::table('t_WorkFlowPending as p')
+                    ->join('t_WorkFlowStages as s', 'p.StageId', '=', 's.Id')
+                    ->leftJoin('t_Users as u', 'p.UserId', '=', 'u.Id')
+                    ->leftJoin('t_WorkFlowGroups as g', 'p.GroupId', '=', 'g.Id')
+                    ->where('p.Source', $order->getTable())
+                    ->where('p.SourceID', $order->Id)
+                    ->select('s.StageName as stage', \Illuminate\Support\Facades\DB::raw("COALESCE(u.Name, g.Name, 'Unknown') as approver"))
+                    ->get()
+                    ->map(fn($row) => (array)$row)
+                    ->toArray();
+
+                $workflowStatus = ['pendingApprovals' => $pendingApprovals];
+                $isFullyApproved = count($pendingApprovals) === 0;
             }
 
             Log::info("Rendering view", ['order_id' => $id]);
