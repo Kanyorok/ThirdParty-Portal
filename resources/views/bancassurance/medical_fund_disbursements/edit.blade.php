@@ -24,7 +24,7 @@
                         <label class="form-label">Beneficiary *</label>
                         <select name="BeneficiaryID" class="form-select" required>
                             @foreach($beneficiaries as $b)
-                                <option value="{{ $b->ID }}" @selected(old('BeneficiaryID',$disbursement->BeneficiaryId)==$b->Id)>{{ $b->FullName }}</option>
+                                <option value="{{ $b->ID }}" @selected(old('BeneficiaryID',$disbursement->BeneficiaryId)==$b->ID)>{{ $b->FullName }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -38,9 +38,9 @@
                     </div>
                 </div>
 
-                <div class="mt-3 d-flex gap-2">
-                    <button class="btn btn-primary">Update</button>
+                <div class="mt-3 d-flex justify-content-between align-items-center">
                     <a href="{{ route('bancassurance.medicalfunds.disbursements.index',$medical_fund->Id) }}" class="btn btn-outline-secondary">Back</a>
+                    <button class="btn btn-primary" type="submit">Update</button>
                 </div>
             </form>
         </div>

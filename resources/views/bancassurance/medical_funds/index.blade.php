@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2">
         <div class="d-flex gap-2">
             <a href="{{ route('bancassurance.medicalfunds.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-1"></i> New Fund
@@ -165,19 +165,26 @@
                                 </td>
                                 <td>{{ optional($f->CreatedOn)->format('Y-m-d') }}</td>
                                 <td class="text-end">
-                                    <div class="btn-group">
+                                    <div class="d-flex gap-2 justify-content-end">
                                         <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $f->Id]) }}"
-                                           class="btn btn-sm btn-outline-info">Open</a>
+                                           class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye me-1"></i>Open
+                                        </a>
 
                                         <a href="{{ route('bancassurance.medicalfunds.edit', ['medical_fund' => $f->Id]) }}"
-                                           class="btn btn-sm btn-outline-primary">Edit</a>
+                                           class="btn btn-sm btn-primary">
+                                            <i class="bi bi-pencil me-1"></i>Edit
+                                        </a>
 
                                         <form action="{{ route('bancassurance.medicalfunds.destroy', ['medical_fund' => $f->Id]) }}"
                                               method="POST"
-                                              onsubmit="return confirm('Archive this fund?');">
+                                              onsubmit="return confirm('Archive this fund?');"
+                                              class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger">Archive</button>
+                                            <button class="btn btn-sm btn-danger" type="submit">
+                                                <i class="bi bi-archive me-1"></i>Archive
+                                            </button>
                                         </form>
                                     </div>
                                 </td>
