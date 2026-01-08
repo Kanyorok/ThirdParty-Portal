@@ -1,21 +1,26 @@
 "use server"
 
-const API_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-
-interface AuthResult {
+export interface AuthResult {
     success: boolean
     message?: string
     error?: string
-    data?: any
+    redirect?: string
+}
+
+export interface ValidationResult {
+    valid: boolean
+    error?: string
+    message?: string
 }
 
 export async function requestPasswordReset(email: string): Promise<AuthResult> {
     try {
-        const response = await fetch(`${API_URL}/api/third-party-auth/forgot-password`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/password/forgot`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify({ email }),
             cache: 'no-store'
@@ -29,15 +34,13 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
                 message: data.message || "Reset link sent.",
             };
         } else {
-            console.error("Forgot password failed:", data);
             return {
                 success: false,
-                error: "API_ERROR",
+                error: response.status === 429 ? "RATE_LIMIT" : "API_ERROR",
                 message: data.message || "Failed to send reset link.",
             };
         }
     } catch (error) {
-        console.error("Password reset request error:", error);
         return {
             success: false,
             error: "INTERNAL_ERROR",
@@ -46,9 +49,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
     }
 }
 
-export async function validateResetToken(token: string): Promise<{ valid: boolean; error?: string; message?: string }> {
-    // Optimistic validation: We assume token is valid if present. 
-    // Real validation happens on submit. The backend doesn't have a verify-token-only endpoint exposed easily.
+export async function validateResetToken(token: string): Promise<ValidationResult> {
     if (!token) {
         return {
             valid: false,
@@ -61,15 +62,16 @@ export async function validateResetToken(token: string): Promise<{ valid: boolea
 
 export async function resetPassword(token: string, newPassword: string, email: string): Promise<AuthResult> {
     try {
-        const response = await fetch(`${API_URL}/api/third-party-auth/reset-password`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/password/reset`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify({
-                token,
-                email,
+                token: token,
+                email: email,
                 password: newPassword,
                 password_confirmation: newPassword,
             }),
@@ -78,31 +80,33 @@ export async function resetPassword(token: string, newPassword: string, email: s
 
         const data = await response.json();
 
+        if (response.status === 422) {
+            return {
+                success: false,
+                error: "VALIDATION_ERROR",
+                message: data.message || data.errors?.email?.[0] || data.errors?.password?.[0] || "Validation failed.",
+            };
+        }
+
         if (response.ok) {
             return {
                 success: true,
                 message: data.message || "Password successfully reset.",
-            };
-        } else {
-            console.error("Reset password failed:", data);
-
-            // Map backend errors to frontend expected error codes
-            let errorCode = "API_ERROR";
-            if (data.message && data.message.includes("expired")) errorCode = "EXPIRED_TOKEN";
-            if (data.message && data.message.includes("invalid")) errorCode = "INVALID_TOKEN";
-
-            return {
-                success: false,
-                error: errorCode,
-                message: data.message || "Failed to reset password.",
+                redirect: data.redirect
             };
         }
+
+        return {
+            success: false,
+            error: "API_ERROR",
+            message: data.message || "An unexpected error occurred.",
+        };
+
     } catch (error) {
-        console.error("Password reset error:", error);
         return {
             success: false,
             error: "INTERNAL_ERROR",
-            message: "Failed to reset password. Please try again.",
+            message: "Unable to connect to the authentication server.",
         };
     }
 }
