@@ -56,9 +56,10 @@ class SupplierCategoryResolver
 
             if ($thirdCol && $catCol) {
                 try {
-                    // CRITICAL: Use SupplierMaster.Id, not ThirdParty.Id for this table
+                    // CRITICAL FIX: Data inspection shows this table actually stores ThirdPartyId (150 etc) in the ThirdPartyID column
+                    // It does NOT store SupplierMasterId
                     $cats = DB::table($table2)
-                        ->where($thirdCol, $supplierMasterId)
+                        ->where($thirdCol, $thirdPartyId)
                         ->pluck($catCol)
                         ->filter(fn($v) => $v !== null && $v !== '')
                         ->map(fn($v) => (int) $v);

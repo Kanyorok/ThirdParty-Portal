@@ -1451,11 +1451,6 @@ class TenderController extends Controller
      */
     private function getPrequalifiedSuppliers()
     {
-        // Active rounds (Status 'O' for Open). If none, fall back to all active suppliers.
-        $activeRounds = \App\Models\Procurement\Prequalification\PrequalificationRound::where('Status', 'O')
-            ->where('StartDate', '<=', now())
-            ->where('EndDate', '>=', now())
-            ->pluck('RoundID');
 
         // Base supplier query: active suppliers, proper supplier type, with needed relations
         // FIX: 'types' is on ThirdParties (party), not SupplierMaster (thirdParty)
@@ -1466,16 +1461,9 @@ class TenderController extends Controller
              })*/
             ->with(['thirdParty.party', 'supplierCategory.itemCategories']);
 
-        if ($activeRounds->isNotEmpty()) {
-            // Prefer suppliers in active rounds; include rows with NULL RoundID just in case
-            $supplierQuery->where(function ($q) use ($activeRounds) {
-                $q->whereIn('RoundID', $activeRounds)->orWhereNull('RoundID');
-            });
-        }
-
         $prequalifiedSuppliers = $supplierQuery->get();
 
-        Log::info('Suppliers fetch — activeRounds=' . $activeRounds->count() . ', suppliers=' . $prequalifiedSuppliers->count());
+        Log::info('Suppliers fetch — suppliers=' . $prequalifiedSuppliers->count());
 
         $suppliers = collect();
 
@@ -1622,20 +1610,10 @@ class TenderController extends Controller
                 $supplierCategoryIdsInt = array_map('intval', $supplierCategoryIds);
 
                 $common = array_intersect($supplierCategoryIdsInt, $validCategoryIds);
-
+                
                 if (!empty($common)) {
-                    Log::info("Supplier {$s['Id']} matched (Ancestor Check)", [
-                        'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
-                        'matched_categories' => array_values($common)
-                    ]);
                     return true;
                 }
-
-                Log::debug("Supplier {$s['Id']} filtered out", [
-                    'supplier' => $s['SupplierName'] ?? $s['ThirdPartyName'],
-                    'supplier_categories' => $supplierCategoryIds,
-                    'required_one_of' => $validCategoryIds
-                ]);
 
                 return false;
             })->values();
