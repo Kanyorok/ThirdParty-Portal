@@ -153,11 +153,11 @@
 
             </div>
 
-            <div class="card-footer bg-light d-flex justify-content-between">
+            <div class="card-footer bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 <button type="submit" class="btn btn-success">
                     <i class="bi bi-save"></i> Update Maintenance Request
                 </button>
-                <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary">Cancel</a>
             </div>
         </div>
     </form>

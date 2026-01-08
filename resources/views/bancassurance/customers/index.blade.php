@@ -129,7 +129,7 @@
                                     </a>
 
                                     {{-- Beneficiary --}}
-                                    <a href="{{ route('bancassurance.customers.beneficiaries.create') }}"
+                                    <a href="{{ route('bancassurance.customers.beneficiaries.create', ['customerId' => $customer->Id]) }}"
                                         class="btn btn-outline-primary rounded-pill px-2"
                                         title="Add Beneficiary">
                                         <i class="bi bi-person-plus"></i>

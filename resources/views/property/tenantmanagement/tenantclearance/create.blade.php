@@ -94,8 +94,11 @@
             <textarea class="form-control" rows="2" placeholder="Any final notes or clearance details..."
               name="AdditionalNotes"></textarea>
           </div>
-          <button type="submit" class="btn btn-success"
-            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"> Finalize Exit</button>
+          <div class="d-flex justify-content-between">
+            <a href="{{ route('tenantclearance.index') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success"
+              onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"> Finalize Exit</button>
+          </div>
     </form>
   </div>
   </div>

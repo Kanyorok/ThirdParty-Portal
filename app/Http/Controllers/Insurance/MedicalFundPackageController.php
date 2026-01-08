@@ -63,13 +63,13 @@ class MedicalFundPackageController extends Controller
         $this->syncCoverages($package, $request);
 
         return redirect()
-            ->route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $package->FundID])
+            ->route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $package->FundId])
             ->with('success', 'Package updated successfully.');
     }
 
     public function destroy(MedicalFundPackage $package)
     {
-        $fundId = $package->FundID;
+        $fundId = $package->FundId;
         $package->delete();
 
         return redirect()

@@ -62,7 +62,10 @@
                 </div>
 
                 {{-- Submit --}}
-                <div class="d-flex justify-content-end gap-3 mt-4">
+                <div class="d-flex justify-content-between align-items-center gap-3 mt-4">
+                    <a href="{{ route('bancassurance.claims.index') }}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
                     <button type="submit" class="btn btn-primary px-4">
                         <i class="bi bi-check-circle me-1"></i> Close Claim
                     </button>

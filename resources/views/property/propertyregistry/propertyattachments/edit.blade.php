@@ -71,9 +71,12 @@
               @endforelse
           </div>
 
-          <button type="submit" class="btn btn-primary"
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <a href="{{ route('attachments.index') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary"
                   onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Document
-          </button>
+                </button>
+            </div>
       </div>
     </div>
   </form>

@@ -98,7 +98,7 @@
                 </div>
 
                 <!-- Buttons -->
-                <div class="d-flex justify-content-end gap-2 mt-4">
+                <div class="d-flex justify-content-between align-items-center gap-2 mt-4">
                     <a href="{{ route('commissions.rules.index') }}" class="btn btn-secondary rounded-3">
                         Cancel
                     </a>
