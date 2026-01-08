@@ -7,7 +7,8 @@ const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
 export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        console.warn("No session found in /api/procurement/rfq-suppliers/[rfqId], returning 401");
+        return NextResponse.json({ message: "Authentication required" }, { status: 401 });
     }
     const url = new URL(request.url);
     // Extract the RFQ ID from the last non-empty path segment

@@ -11,7 +11,8 @@ const rfqAwards = new Map<string, { rfqId: number; supplierId: number; status: s
 export async function GET(request: NextRequest) {
 	const session = await getServerSession(authOptions);
 	if (!session || !session.accessToken) {
-		return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+		console.warn("No session found in /api/procurement/rfq-suppliers, returning empty data");
+		return NextResponse.json({ data: [] });
 	}
 
 	const search = request.nextUrl.searchParams.toString();
