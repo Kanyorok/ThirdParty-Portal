@@ -46,7 +46,7 @@ class ThirdPartiesController extends Controller
         $actor = null;
 
         if ($userId) {
-            $actor = \App\Models\ThirdParty\ThirdPartyUser::find($userId);
+            $actor = \App\Models\ThirdParty\ThirdPartyUser::where('UserID', $userId)->first();
         } else {
             $actor = $request->user();
         }
