@@ -65,12 +65,21 @@ class NewThirdPartyRequest extends FormRequest
             ],
             'user_Password_confirmation' => ['nullable', Rule::requiredIf($this->boolean('createUser') && !$this->user()), 'string'],
 
-            'customer_DateOfBirth' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'date'],
-            'customer_Gender' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
-            'customer_MaritalStatus' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
-            'customer_Occupation' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
+            'supplier_category_id' => [
+                'nullable',
+                // Rule::requiredIf($isSupplier), // TODO: To enforce this rule in prod
+                Rule::exists('t_SupplierCategories', 'SupplierCategoryID')
+            ],
 
-            'tenant_Remarks' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeTenant, $this->array('types'), true)), 'string', 'max:200'],
+            'user_DateOfBirth' => ['nullable', Rule::requiredIf($isCustomer), 'date'],
+            'user_MaritalStatus' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
+            'user_Occupation' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
+            'user_Remarks' => [
+                'nullable',
+                //  Rule::requiredIf($isTenant), 
+                'string',
+                'max:500'
+            ],
         ];
     }
 

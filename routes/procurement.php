@@ -32,7 +32,7 @@ use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvalAprovalController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
+use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationPeriodController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;

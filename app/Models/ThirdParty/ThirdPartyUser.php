@@ -5,8 +5,8 @@ namespace App\Models\ThirdParty;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Notifications\ThirdParty\VerifyThirdPartyEmail;
-use Illuminate\Auth\MustVerifyEmail;
-use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+// use Illuminate\Auth\MustVerifyEmail;
+// use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,10 +23,10 @@ use App\Enums\EmailPriorityEnum;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 
-class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract, CanResetPasswordContract
+class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 {
     // use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
-    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail, UserActorTrait, CanResetPassword;
+    use HasApiTokens, Notifiable, SoftDeletes, UserActorTrait, CanResetPassword;
 
     public static $snakeAttributes = false;
 
