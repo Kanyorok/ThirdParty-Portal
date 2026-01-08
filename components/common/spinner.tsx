@@ -1,4 +1,3 @@
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { Loader2, LucideProps } from "lucide-react";
 import { cn } from "@/lib/utils";
 

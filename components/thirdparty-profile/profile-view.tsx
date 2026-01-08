@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useQuery } from "@tanstack/react-query"
-import { getBaseProfile } from "@/lib/api/profile-management"
+import { useProfile } from "@/hooks/use-profile"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/common/card"
 import { Button } from "@/components/common/button"
 import { Badge } from "@/components/common/badge"
@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface ProfileViewProps {
   onEdit: () => void
@@ -33,11 +34,7 @@ interface ProfileViewProps {
 
 export function ProfileView({ onEdit }: ProfileViewProps) {
   const { data: session } = useSession()
-
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['base-profile'],
-    queryFn: getBaseProfile,
-  })
+  const { profile: userProfile, thirdPartyDetails, isLoading, error: isError, refetch } = useProfile()
 
   if (isLoading) return <ProfileSkeleton />
 
@@ -60,7 +57,18 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
     )
   }
 
-  const profile = data?.userProfile
+  // Map the new data structure to what the view expects
+  const profile = {
+    Name: thirdPartyDetails?.thirdPartyName || userProfile?.fullName || "Company Name",
+    logo: null, // Image handling needs to be separate if not in profile
+    tax_number: thirdPartyDetails?.taxPIN || "Not Set",
+    created_at: userProfile?.createdOn,
+    website: thirdPartyDetails?.website,
+    Email: userProfile?.email,
+    Mobile: userProfile?.phone,
+    PhysicalAddress: thirdPartyDetails?.physicalAddress,
+    Description: null, // Description not available in base profile
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -92,7 +100,7 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-1">
                     <h1 className="text-3xl md:text-4xl font-black tracking-tight uppercase">
-                      {profile?.Name || "Company Name"}
+                      {profile.Name}
                     </h1>
                     <Badge className="bg-white/20 hover:bg-white/30 text-white border-white/20 rounded-lg px-2 text-[10px] font-bold tracking-widest uppercase backdrop-blur-sm">
                       <ShieldCheck className="size-3 mr-1" /> Verified
@@ -100,7 +108,7 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
                   </div>
                   <div className="flex items-center justify-center md:justify-start gap-2 text-white/70 font-medium">
                     <Briefcase className="size-4" />
-                    <span>{profile?.tax_number || "TAX-XXXXXXXXX"}</span>
+                    <span>{profile.tax_number}</span>
                   </div>
                 </div>
 
@@ -146,12 +154,12 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 rounded-[2rem] border border-slate-200/60 bg-white shadow-sm">
-              <InfoItem icon={Globe} label="Website" value={profile?.website} />
+              <InfoItem icon={Globe} label="Website" value={profile?.website || undefined} />
               <InfoItem icon={Mail} label="Contact Email" value={profile?.Email} />
-              <InfoItem icon={Phone} label="Main Phone" value={profile?.Mobile} />
-              <InfoItem icon={MapPin} label="Physical Address" value={profile?.PhysicalAddress} />
+              <InfoItem icon={Phone} label="Main Phone" value={profile?.Mobile || undefined} />
+              <InfoItem icon={MapPin} label="Physical Address" value={profile?.PhysicalAddress || undefined} />
               <InfoItem icon={Languages} label="Primary Language" value="English" />
-              <InfoItem icon={Clock} label="Operational Since" value={new Date(profile?.created_at).toLocaleDateString()} />
+              <InfoItem icon={Clock} label="Operational Since" value={profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'} />
             </div>
           </section>
 

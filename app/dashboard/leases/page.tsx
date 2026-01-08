@@ -100,7 +100,14 @@ export default function LeaseRegistry() {
                     </div>
                 </div>
             ) : data?.meta ? (
-                <PaginationProvider meta={data.meta}>
+                <PaginationProvider meta={{
+                    ...data.meta,
+                    path: '/dashboard/leases',
+                    from: (data.meta.currentPage - 1) * 20 + 1, // Approximation
+                    to: data.meta.currentPage * 20, // Approximation
+                    links: [], // Empty links for now as we use SharedPagination
+                    perPage: 20
+                }}>
                     <div className="relative">
                         <div className={cn(
                             "transition-all duration-500",

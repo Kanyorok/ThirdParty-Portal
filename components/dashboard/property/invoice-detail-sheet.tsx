@@ -28,7 +28,7 @@ export function InvoiceDetailSheet({ id, onClose }: InvoiceDetailSheetProps) {
     const handleEmail = () => {
         if (!invoice) return
         const subject = `Invoice ${invoice.invoiceNumber} - ${invoice.billingMonth}`
-        const body = `Please find details for invoice ${invoice.invoiceNumber}. Total: ${invoice.currency} ${Object.values(invoice.amounts).reduce((a: any, b: any) => acc + (Number(b) || 0), 0)}`
+        const body = `Please find details for invoice ${invoice.invoiceNumber}. Total: ${invoice.currency} ${Object.values(invoice.amounts).reduce((a: any, b: any) => a + (Number(b) || 0), 0)}`
         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
     }
 

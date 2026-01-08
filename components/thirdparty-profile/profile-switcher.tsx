@@ -45,27 +45,30 @@ export const ProfileSwitcher = memo(() => {
   })
 
   useEffect(() => {
-    if (data?.success && data?.data) {
-      const validTypes = ["Supplier", "Tenant", "Customer", "base"]
+    if (data?.success && data?.data?.availableProfiles) {
       const available = []
 
       // Add base if not present
       available.push("base")
 
-      if (data.data.is_supplier) available.push("Supplier")
-      if (data.data.is_tenant) available.push("Tenant")
-      if (data.data.is_customer) available.push("Customer")
+      const profiles = data.data.availableProfiles
+      
+      if (profiles.some(p => p.type === 'supplier' && p.hasProfile)) available.push("Supplier")
+      if (profiles.some(p => p.type === 'tenant' && p.hasProfile)) available.push("Tenant")
+      if (profiles.some(p => p.type === 'customer' && p.hasProfile)) available.push("Customer")
 
       initializeProfiles(available as ProfileType[])
     }
   }, [data, initializeProfiles])
 
   const profiles = useMemo(() => {
-     if (!data?.success || !data?.data) return ["base" as ProfileType]
+     if (!data?.success || !data?.data?.availableProfiles) return ["base" as ProfileType]
      const available: ProfileType[] = ["base"]
-     if (data.data.is_supplier) available.push("Supplier")
-     if (data.data.is_tenant) available.push("Tenant")
-     if (data.data.is_customer) available.push("Customer")
+     const profiles = data.data.availableProfiles
+     
+     if (profiles.some(p => p.type === 'supplier' && p.hasProfile)) available.push("Supplier")
+     if (profiles.some(p => p.type === 'tenant' && p.hasProfile)) available.push("Tenant")
+     if (profiles.some(p => p.type === 'customer' && p.hasProfile)) available.push("Customer")
      return available
   }, [data])
 
