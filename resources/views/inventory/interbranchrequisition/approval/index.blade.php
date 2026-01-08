@@ -28,8 +28,9 @@
             <select name="ReqId" id="ReqId" class="form-select" onchange="this.form.submit()" required>
                 <option value="">-- Choose Requisition To Approve --</option>
                 @foreach($pendingRequisitions as $requisitionOption)
-                    <option
-                        value="{{ $requisitionOption->Id }}" {{ old('ReqId', request()->ReqId) == $requisitionOption->Id ? 'selected' : '' }}>
+                    <option 
+                        value="{{ $requisitionOption->Id }}" 
+                        {{ request('ReqId') == $requisitionOption->Id ? 'selected' : '' }}>
                         {{ $requisitionOption->ReqNo }} ({{ $requisitionOption->fromBranch?->Name ?? '?' }}
                         → {{ $requisitionOption->toBranch?->Name ?? '?' }})
                     </option>
@@ -39,12 +40,14 @@
     </form>
 
     <div id="requisition-details" class="mt-4">
-        @if(isset($requisition) && $requisition)
+        @if(request()->has('ReqId') && $requisition)
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4>Requisition Details</h4>
-                <span
-                    class="badge bg-primary">Logged in as: {{ Auth::user()->role() ? Auth::user()->role()->name : 'Unknown User' }}</span>
+                <span class="badge bg-primary">
+                    Logged in as: {{ Auth::user()->employee->branch->Name ?? Auth::user()->name }}
+                </span>
             </div>
+            
             <!-- Requisition Summary -->
             <div class="row mb-4 bg-light p-3 border rounded">
                 <div class="col-md-4"><strong>Requisition No.:</strong> {{ $requisition->ReqNo ?? 'N/A' }}</div>
@@ -58,13 +61,14 @@
                         $statusEnum = App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                     @endphp
                     @if($statusEnum)
-                        <span
-                            class="badge bg-{{ $statusEnum->badgeColor() }}{{ $statusEnum->badgeColor() === 'warning' ? ' text-dark' : ' text-light' }}">{{ $statusEnum->label() }}</span>
+                        <span class="badge bg-{{ $statusEnum->badgeColor() }} {{ $statusEnum->badgeColor() === 'warning' ? 'text-dark' : 'text-light' }}">
+                            {{ $statusEnum->label() }}
+                        </span>
                     @else
                         <span class="badge bg-secondary">{{ $requisition->Status }}</span>
                     @endif
                 </div>
-                <div class="col-md-4"><strong>Requested By:</strong> {{ $requisition->creator->Name?? '-' }}</div>
+                <div class="col-md-4"><strong>Requested By:</strong> {{ $requisition->creator?->Name ?? '-' }}</div>
             </div>
 
             <!-- Requisition Items Table -->

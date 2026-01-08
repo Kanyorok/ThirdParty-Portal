@@ -19,12 +19,14 @@ use Illuminate\Http\RedirectResponse;
 
 class InterBranchRequisitionApprovalController extends Controller
 {
+    
     protected InterBranchRequisitionService $service;
     protected ApprovalWorkflow $workflow;
 
     public function __construct(InterBranchRequisitionService $service, ApprovalWorkflow $workflow)
     {
         $this->service = $service;
+        $this->workflow = new ApprovalWorkflow('InterBranchRequisitionStatus','Status');
         $this->workflow = new ApprovalWorkflow('InterBranchRequisitionStatus','Status');
     }
 
