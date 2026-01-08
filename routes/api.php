@@ -126,10 +126,6 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
 });
 
 
-// Tenders API (public index to allow portal to call with third_party_id)
-Route::apiResource('tenders', TenderApiController::class);
-Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
-Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
 
 // DMS: Documents visible to authenticated user
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
@@ -209,14 +205,25 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::apiResource('third-party-categories', ThirdPartyCategoryController::class);
     });
 
-    // Additional tender-related routes (still need auth)
+    // Protected tender-related actions (store, update, delete, items, suppliers)
     Route::prefix('tenders')->group(function () {
         Route::post('{tenderId}/items', [TenderApiController::class, 'addItem']);
         Route::delete('{tenderId}/items/{itemId}', [TenderApiController::class, 'deleteItem']);
         Route::post('{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
         Route::delete('{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
     });
+
+    Route::post('tenders', [TenderApiController::class, 'store']);
+    Route::put('tenders/{tender}', [TenderApiController::class, 'update']);
+    Route::delete('tenders/{tender}', [TenderApiController::class, 'destroy']);
+    
+    Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
 });
+
+// Semi-public routes (index/show handle their own auth checks for filtering)
+Route::get('tenders', [TenderApiController::class, 'index']);
+Route::get('tenders/{tender}', [TenderApiController::class, 'show']);
+Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
 
 // currencies
 Route::prefix('v1')->group(function () {
