@@ -18,11 +18,12 @@ class TenderInvitationController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('viewAny', TenderInvitation::class);
         // If this is an API request (has Accept: application/json header)
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->getSupplierInvitations($request);
         }
+
+        $this->authorize('viewAny', TenderInvitation::class);
 
         // Otherwise return the web view
         return view('procurement.tendering.suppliermanagement.invitationresponsetracking.index');
@@ -75,6 +76,12 @@ class TenderInvitationController extends Controller
             $thirdPartyId = $request->query('third_party_id');
             $page = (int)$request->query('page', 1);
             $limit = (int)$request->query('limit', 10);
+            $user = Auth::guard('sanctum')->user();
+
+            // Fallback to Auth user if query param is missing
+            if (!$thirdPartyId && $user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                $thirdPartyId = $user->ThirdPartyId;
+            }
 
             if (!$thirdPartyId) {
                 return response()->json([

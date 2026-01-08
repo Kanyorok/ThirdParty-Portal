@@ -32,6 +32,12 @@ class TenderApiController extends Controller
             // Enforce invites unless explicitly disabled (default: enabled to protect restricted tenders)
             $enforceInvites = filter_var($request->query('enforce_invites', true), FILTER_VALIDATE_BOOLEAN);
             $thirdPartyId = $request->query('third_party_id');
+            $user = Auth::guard('sanctum')->user();
+
+            // Fallback to Auth user context if available
+            if (!$thirdPartyId && $user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                $thirdPartyId = $user->ThirdPartyId;
+            }
 
             if ($enforceInvites) {
                 // Resolve supplierId(s) for the current thirdParty (DISTINCT across multiple supplier rows)
@@ -45,8 +51,8 @@ class TenderApiController extends Controller
                         ->unique()
                         ->values()
                         ->all();
-                } elseif (Auth::check() && method_exists(Auth::user(), 'thirdParty') && Auth::user()->thirdParty) {
-                    $tpId = Auth::user()->thirdParty->Id ?? null;
+                } elseif ($user && method_exists($user, 'thirdParty') && $user->thirdParty) {
+                    $tpId = $user->thirdParty->Id ?? null;
                     if ($tpId) {
                         $supplierIds = DB::table('t_Suppliers')
                             ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
