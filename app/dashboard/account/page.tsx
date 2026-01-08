@@ -77,20 +77,20 @@ const ProfileDetailsCard: React.FC<{
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">First Name</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.firstName || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser?.firstName || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Last Name</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.lastName || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser?.lastName || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Email Address</Label>
                         <div className="p-3 bg-muted rounded-lg flex items-center gap-2 opacity-80">
                             <Mail className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.email}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser?.email}</p>
                             <Badge variant="secondary" className="ml-auto text-xs">Read-only</Badge>
                         </div>
                     </div>
@@ -98,7 +98,7 @@ const ProfileDetailsCard: React.FC<{
                         <Label className="text-sm font-medium text-muted-foreground">Phone Number</Label>
                         <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">{profile.thirdPartyUser.phone || 'Not provided'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyUser?.phone || 'Not provided'}</p>
                         </div>
                     </div>
                 </div>
@@ -150,40 +150,40 @@ const CompanyDetailsCard: React.FC<{
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Trading Name</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.tradingName || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails?.tradingName || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Business Type</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.businessType || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails?.businessType || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Tax PIN</Label>
                         <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
                             <FileText className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.taxPIN || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails?.taxPIN || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">VAT Number</Label>
                         <div className="p-3 bg-muted rounded-lg">
-                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.vatNumber || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails?.vatNumber || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2 md:col-span-2">
                         <Label className="text-sm font-medium text-muted-foreground">Physical Address</Label>
                         <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails.physicalAddress || '-'}</p>
+                            <p className="font-semibold text-foreground">{profile.thirdPartyDetails?.physicalAddress || '-'}</p>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Website</Label>
                         <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
                             <Globe className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-semibold text-foreground truncate">{profile.thirdPartyDetails.website || '-'}</p>
+                            <p className="font-semibold text-foreground truncate">{profile.thirdPartyDetails?.website || '-'}</p>
                         </div>
                     </div>
                 </div>
@@ -207,9 +207,9 @@ const EditProfileModal: React.FC<{
     accessToken: string
 }> = ({ isOpen, onClose, profile, mutateProfile, accessToken }) => {
     const [formData, setFormData] = useState({
-        firstName: profile.thirdPartyUser.firstName || '',
-        lastName: profile.thirdPartyUser.lastName || '',
-        phone: profile.thirdPartyUser.phone || '',
+        firstName: profile.thirdPartyUser?.firstName || '',
+        lastName: profile.thirdPartyUser?.lastName || '',
+        phone: profile.thirdPartyUser?.phone || '',
     });
 
     const [saving, setSaving] = useState(false);
@@ -217,9 +217,9 @@ const EditProfileModal: React.FC<{
     useEffect(() => {
         if (isOpen) {
             setFormData({
-                firstName: profile.thirdPartyUser.firstName || '',
-                lastName: profile.thirdPartyUser.lastName || '',
-                phone: profile.thirdPartyUser.phone || '',
+                firstName: profile.thirdPartyUser?.firstName || '',
+                lastName: profile.thirdPartyUser?.lastName || '',
+                phone: profile.thirdPartyUser?.phone || '',
             });
         }
     }, [isOpen, profile]);
@@ -319,12 +319,12 @@ const EditCompanyModal: React.FC<{
     accessToken: string
 }> = ({ isOpen, onClose, profile, mutateProfile, accessToken }) => {
     const [formData, setFormData] = useState({
-        tradingName: profile.thirdPartyDetails.tradingName || '',
-        businessType: profile.thirdPartyDetails.businessType || '',
-        taxPin: profile.thirdPartyDetails.taxPIN || '',
-        vatNumber: profile.thirdPartyDetails.vatNumber || '',
-        physicalAddress: profile.thirdPartyDetails.physicalAddress || '',
-        website: profile.thirdPartyDetails.website || '',
+        tradingName: profile.thirdPartyDetails?.tradingName || '',
+        businessType: profile.thirdPartyDetails?.businessType || '',
+        taxPin: profile.thirdPartyDetails?.taxPIN || '',
+        vatNumber: profile.thirdPartyDetails?.vatNumber || '',
+        physicalAddress: profile.thirdPartyDetails?.physicalAddress || '',
+        website: profile.thirdPartyDetails?.website || '',
     });
 
     const [saving, setSaving] = useState(false);
@@ -332,12 +332,12 @@ const EditCompanyModal: React.FC<{
     useEffect(() => {
         if (isOpen) {
             setFormData({
-                tradingName: profile.thirdPartyDetails.tradingName || '',
-                businessType: profile.thirdPartyDetails.businessType || '',
-                taxPin: profile.thirdPartyDetails.taxPIN || '',
-                vatNumber: profile.thirdPartyDetails.vatNumber || '',
-                physicalAddress: profile.thirdPartyDetails.physicalAddress || '',
-                website: profile.thirdPartyDetails.website || '',
+                tradingName: profile.thirdPartyDetails?.tradingName || '',
+                businessType: profile.thirdPartyDetails?.businessType || '',
+                taxPin: profile.thirdPartyDetails?.taxPIN || '',
+                vatNumber: profile.thirdPartyDetails?.vatNumber || '',
+                physicalAddress: profile.thirdPartyDetails?.physicalAddress || '',
+                website: profile.thirdPartyDetails?.website || '',
             });
         }
     }, [isOpen, profile]);
@@ -589,7 +589,7 @@ const ProfilePictureModal: React.FC<{
                     <Avatar className="h-32 w-32 border-4 border-primary/20 shadow-md">
                         <AvatarImage src={selectedFile ? URL.createObjectURL(selectedFile) : profile.imageUrl ?? undefined} alt="Profile Preview" className="object-cover" />
                         <AvatarFallback className="text-xl font-bold bg-muted text-muted-foreground">
-                            {getInitials(profile.thirdPartyUser.firstName ?? undefined, profile.thirdPartyUser.lastName ?? undefined)}
+                            {getInitials(profile.thirdPartyUser?.firstName ?? undefined, profile.thirdPartyUser?.lastName ?? undefined)}
                         </AvatarFallback>
                     </Avatar>
                     <Label htmlFor="picture-upload" className="cursor-pointer bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
@@ -689,16 +689,16 @@ const UserProfilePage: React.FC = () => {
                                     className="relative h-32 w-32 border-4 border-primary/20 shadow-strong cursor-pointer"
                                     onClick={() => setIsProfilePictureModalOpen(true)}
                                 >
-                                    <AvatarImage src={profile.imageUrl ?? undefined} alt={profile.thirdPartyUser.firstName || 'User'} className="object-cover" />
+                                    <AvatarImage src={profile.imageUrl ?? undefined} alt={profile.thirdPartyUser?.firstName || 'User'} className="object-cover" />
                                     <AvatarFallback className="text-3xl font-bold bg-gradient-primary-700">
-                                        {getInitials(profile.thirdPartyUser.firstName ?? undefined, profile.thirdPartyUser.lastName ?? undefined)}
+                                        {getInitials(profile.thirdPartyUser?.firstName ?? undefined, profile.thirdPartyUser?.lastName ?? undefined)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="space-y-2">
-                                    <h2 className="text-2xl font-bold text-foreground">{profile.thirdPartyUser.firstName} {profile.thirdPartyUser.lastName}</h2>
-                                    <p className="text-muted-foreground">{profile.thirdPartyDetails.tradingName || 'No Company Name'}</p>
+                                    <h2 className="text-2xl font-bold text-foreground">{profile.thirdPartyUser?.firstName} {profile.thirdPartyUser?.lastName}</h2>
+                                    <p className="text-muted-foreground">{profile.thirdPartyDetails?.tradingName || 'No Company Name'}</p>
                                     <Badge variant="secondary" className="bg-blue-500/10 text-blue-600">
-                                        {profile.thirdPartyDetails.businessType || 'User'}
+                                        {profile.thirdPartyDetails?.businessType || 'User'}
                                     </Badge>
                                 </div>
                             </CardContent>

@@ -81,7 +81,7 @@ export const sidebarItems: readonly NavSection[] = [
             },
             {
                 title: "Rent & Invoices",
-                url: "/dashboard/rent",
+                url: "/dashboard/invoices",
                 icon: Receipt,
             },
             {
@@ -101,7 +101,7 @@ export const sidebarItems: readonly NavSection[] = [
         items: [
             {
                 title: "My Account",
-                url: "/dashboard/account",
+                url: "/dashboard/settings/profile",
                 icon: User,
             },
             {

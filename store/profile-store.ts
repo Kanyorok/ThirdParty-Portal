@@ -1,40 +1,53 @@
 import { create } from 'zustand'
-import { UserProfile } from '@/types/next-auth.d'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { UserProfile } from '@/types/profile-types'
+
+export type ProfileType = UserProfile | "base"
 
 interface ProfileState {
-    activeProfile: UserProfile | string
-    availableProfiles: (UserProfile | string)[]
-
-    setActiveProfile: (profile: UserProfile | string) => void
-    setAvailableProfiles: (profiles: (UserProfile | string)[]) => void
-
-    initializeProfiles: (profiles: (UserProfile | string)[]) => void
+    activeProfile: ProfileType
+    availableProfiles: ProfileType[]
+    setActiveProfile: (profile: ProfileType) => void
+    setAvailableProfiles: (profiles: ProfileType[]) => void
+    initializeProfiles: (profiles: ProfileType[]) => void
 }
 
-const DEFAULT_PROFILE: string = "Customer"
+export const useProfileStore = create<ProfileState>()(
+    persist(
+        (set, get) => ({
+            activeProfile: "base",
+            availableProfiles: ["base"],
 
-export const useProfileStore = create<ProfileState>((set, get) => ({
-    activeProfile: DEFAULT_PROFILE,
-    availableProfiles: [],
+            setActiveProfile: (profile) => set({ activeProfile: profile }),
 
-    setActiveProfile: (profile) => set({ activeProfile: profile }),
-    setAvailableProfiles: (profiles) => set({ availableProfiles: profiles }),
+            setAvailableProfiles: (profiles) => set({ availableProfiles: profiles }),
 
-    initializeProfiles: (profiles) => {
-        const currentActive = get().activeProfile
+            initializeProfiles: (profiles) => {
+                const state = get()
+                const currentActive = state.activeProfile
 
-        if (profiles.length === 0) {
-            set({
-                availableProfiles: [DEFAULT_PROFILE],
-                activeProfile: DEFAULT_PROFILE
-            })
-            return
+                if (!profiles || profiles.length === 0) {
+                    set({
+                        availableProfiles: ["base"],
+                        activeProfile: "base"
+                    })
+                    return
+                }
+
+                const isCurrentlyValid = profiles.includes(currentActive)
+
+                set({
+                    availableProfiles: profiles,
+                    activeProfile: isCurrentlyValid ? currentActive : profiles[0]
+                })
+            },
+        }),
+        {
+            name: 'app-profile-storage',
+            storage: createJSONStorage(() => localStorage),
+            partialize: (state) => ({
+                activeProfile: state.activeProfile
+            }),
         }
-
-        set({ availableProfiles: profiles })
-
-        if (!profiles.includes(currentActive) || currentActive === DEFAULT_PROFILE) {
-            set({ activeProfile: profiles[0] })
-        }
-    },
-}))
+    )
+)
