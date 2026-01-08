@@ -80,11 +80,12 @@ class NewThirdPartyController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $request->boolean('createUser')
-                    ? 'Registration successful! Please check your email to verify your account.'
+                    ? 'Registration successful! Check your email to verify your account.'
                     : 'Profile created successfully.',
                 'data' => [
                     'id' => $party->Id,
                     'name' => $party->ThirdPartyName,
+                    'isSupplier' => in_array(ThirdPartyService::TypeSupplier, $types),
                     'isTenant' => in_array(ThirdPartyService::TypeTenant, $types),
                     'isCustomer' => in_array(ThirdPartyService::TypeCustomer, $types)
                 ]

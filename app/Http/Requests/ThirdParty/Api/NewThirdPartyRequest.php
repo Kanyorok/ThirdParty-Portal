@@ -64,14 +64,19 @@ class NewThirdPartyRequest extends FormRequest
 
             'supplier_category_id' => [
                 'nullable',
-                Rule::requiredIf($isSupplier),
+                // Rule::requiredIf($isSupplier), // TODO: To enforce this rule in prod
                 Rule::exists('t_SupplierCategories', 'SupplierCategoryID')
             ],
 
             'user_DateOfBirth' => ['nullable', Rule::requiredIf($isCustomer), 'date'],
             'user_MaritalStatus' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
             'user_Occupation' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
-            'user_Remarks' => ['nullable', Rule::requiredIf($isTenant), 'string', 'max:500'],
+            'user_Remarks' => [
+                'nullable',
+                //  Rule::requiredIf($isTenant), 
+                'string',
+                'max:500'
+            ],
         ];
     }
 
