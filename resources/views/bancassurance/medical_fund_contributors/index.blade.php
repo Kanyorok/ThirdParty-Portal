@@ -20,7 +20,7 @@
                     <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Name, No, Email, Phone">
                 </div>
                 <div class="col-md-3">
-                    <label? class="form-label">Status</label>
+                    <label class="form-label">Status</label>
                     <select name="status" class="form-select">
                         <option value="">All</option>
                         @foreach(['Active','Suspended','Closed'] as $st)
