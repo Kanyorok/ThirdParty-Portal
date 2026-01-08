@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\InventoryHoldReviewRequest;
 use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\InventoryHoldReview;
+use App\Models\Core\Branch;
 use App\Services\Inventory\InventoryHoldReviewService;
 use Exception;
 use Illuminate\Http\Request;
@@ -22,7 +23,9 @@ class InventoryHoldReviewController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', InventoryHoldReview::class);
         $currentBranch = $request->user()->branch;
+
             if (!$currentBranch instanceof Branch) {
                  return redirect()->back()->with('fail', 'Current user branch not found.');
             }
