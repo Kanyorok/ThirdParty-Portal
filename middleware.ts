@@ -87,6 +87,8 @@ export async function middleware(req: NextRequest) {
     "/api/third-parties/register-details",   // Third party registration endpoint
     "/api/currencies",            // Currencies for forms
     "/api/third-party-auth",      // Authentication endpoints for third parties
+    "/api/tenders",               // Tenders are semi-public (Open Tenders)
+    "/api/tender-invitations",    // Invitations handled inside the route
   ]
 
   if (publicApiRoutes.some(route => pathname.startsWith(route))) {

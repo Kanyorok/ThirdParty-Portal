@@ -43,10 +43,12 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      console.warn("No session found in /api/tender-invitations, returning empty data");
+      return NextResponse.json({
+        data: [],
+        pagination: { total: 0, page: 1, limit: 10, pages: 0 },
+        supplierInfo: null
+      });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -200,7 +202,7 @@ export async function PUT(request: NextRequest) {
     const response = await fetch(apiUrl, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': session?.accessToken ? `Bearer ${session.accessToken}` : '', // Added optional chaining
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

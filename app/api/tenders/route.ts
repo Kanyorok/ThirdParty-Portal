@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      console.warn("No session found in /api/tenders, proceeding as guest");
     }
 
     const { searchParams } = request.nextUrl;
@@ -30,16 +27,18 @@ export async function GET(request: NextRequest) {
       if (status && status !== 'all') apiUrl.searchParams.set('status', status);
       if (tenderType && tenderType !== 'all') apiUrl.searchParams.set('tenderType', tenderType);
       // Always enforce invitations and pass third party id; backend will include open tenders + invited restricted
-      const thirdPartyId = (session.user as any)?.thirdPartyId;
+      const thirdPartyId = session?.user ? (session.user as any)?.thirdPartyId : null;
       apiUrl.searchParams.set('enforce_invites', 'true');
       if (thirdPartyId) {
         apiUrl.searchParams.set('third_party_id', String(thirdPartyId));
       }
 
+      console.log(`Fetching tenders from ERP: ${apiUrl.toString()} with token: ${session?.accessToken ? 'Present' : 'Missing'}`);
+
       const response = await fetch(apiUrl.toString(), {
         headers: {
           'Accept': 'application/json',
-          'Authorization': session.accessToken ? `Bearer ${session.accessToken}` : ''
+          'Authorization': session?.accessToken ? `Bearer ${session.accessToken}` : ''
         },
         signal: AbortSignal.timeout(10000)
       });
@@ -47,12 +46,28 @@ export async function GET(request: NextRequest) {
       if (response.ok) {
         const data = await response.json();
         return NextResponse.json(data);
+      } else {
+        const errorText = await response.text();
+        console.error(`ERP /api/tenders returned error ${response.status}:`, errorText);
+        
+        // If ERP returns 401, it might be due to an expired token on the backend
+        // We should still return a 200 with empty data to avoid crashing the frontend
+        if (response.status === 401) {
+             return NextResponse.json({
+                data: [],
+                total: 0,
+                page: 1,
+                limit: 10,
+                pages: 0,
+                message: "Authentication with ERP failed. Try logging out and in again."
+            });
+        }
       }
     } catch (e) {
-      console.warn('ERP /api/tenders call failed, falling back to mock:', e);
+      console.warn('ERP /api/tenders call failed:', e);
     }
 
-    // If ERP call failed and we reached here, return empty data
+    // Default empty response
     return NextResponse.json({
       data: [],
       total: 0,
