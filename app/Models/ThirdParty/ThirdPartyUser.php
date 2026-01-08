@@ -239,7 +239,7 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
             <p><small>If you're having trouble clicking the \"Reset Password\" button, copy and paste the URL below into your web browser: <a href='{$url}'>{$url}</a></small></p>
         ";
 
-        // Admin user acts as sender
+        // System actor as sender
         $actor = User::find(1);
 
         if ($actor) {

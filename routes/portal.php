@@ -6,10 +6,10 @@ use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
 use App\Http\Controllers\ThirdParty\API\ProfileController;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use App\Http\Controllers\ThirdParty\API\MetadataController;
-use App\Http\Controllers\Auth\NewPasswordController;
-use  App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
-use App\Http\Controllers\ThirdParty\API\LookupController;
+use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
+use App\Http\Controllers\ThirdParty\API\LookupController;
+use  App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
 
 Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::post('register', [NewThirdPartyController::class, 'store'])
@@ -19,6 +19,12 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login'])
         ->name('login')
         ->middleware(['throttle:10,1']);
+
+    Route::post('password/forgot', [ThirdPartyPasswordController::class, 'forgotPassword'])
+        ->name('password.forgot');
+
+    Route::post('password/reset', [ThirdPartyPasswordController::class, 'resetPassword'])
+        ->name('password.reset');
 
     Route::prefix('lookups')->name('lookups.')->group(function () {
         Route::get('bulk', [LookupController::class, 'bulk'])->name('bulk');
@@ -32,19 +38,9 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::get('metadata/localities/{countryId}', [MetadataController::class, 'getLocalities']);
     Route::get('metadata/code-details/{group}', [MetadataController::class, 'getCodeDetails']);
 
-    Route::post('password/forgot', [NewPasswordController::class, 'forgotPassword'])->name('password.forgot');
-    Route::post('password/reset', [NewPasswordController::class, 'resetPassword'])->name('password.reset');
-
-    Route::get('email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verify'])
-        ->name('verification.verify')
-        ->middleware(['signed', 'throttle:6,1']);
-
     Route::controller(ThirdPartyAuthController::class)->middleware(['auth.thirdparty'])->group(function () {
         Route::post('logout', 'logout')->name('logout');
         Route::get('me', 'me')->name('me');
-        Route::post('email/verification-notification', 'resendVerificationEmail')
-            ->name('verification.send')
-            ->middleware(['throttle:3,1']);
     });
 
     Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->middleware(['auth.thirdparty'])->group(function () {
@@ -59,7 +55,7 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
         Route::put('/customer', 'updateCustomerProfile')->name('customer.update');
     });
 
-    Route::middleware(['auth.thirdparty', 'verified'])->group(function () {
+    Route::middleware(['auth.thirdparty'])->group(function () {
         Route::get('validate-token', function (Request $request) {
             $user = $request->user()->load([
                 'thirdParty.types',

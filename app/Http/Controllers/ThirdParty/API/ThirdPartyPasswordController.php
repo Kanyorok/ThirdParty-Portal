@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\ThirdParty\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Auth\User;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\BR\BREncryption;
 use App\Services\HRM\UserService;
 use Illuminate\Auth\Events\PasswordReset;
@@ -13,28 +13,29 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
-use Illuminate\View\View;
 
-class NewPasswordController extends Controller
+class ThirdPartyPasswordController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('ajax')->only('store');
+        $this->middleware('ajax')->only(['store', 'forgotPassword']);
     }
 
-    /**
-     * Display the password reset view.
-     */
-    public function create(Request $request): View
+    public function forgotPassword(Request $request): JsonResponse
     {
-        return view('auth.reset-password', ['request' => $request]);
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? $this->succeeded(__($status))
+            : throw ValidationException::withMessages([
+                'email' => [__($status)],
+            ]);
     }
 
-    /**
-     * Handle an incoming new password request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -47,7 +48,7 @@ class NewPasswordController extends Controller
             ],
         ]);
 
-        $user = User::where('Email', $request->email)->first();
+        $user = ThirdPartyUser::where('Email', $request->email)->first();
 
         if (!$user || !Password::tokenExists($user, $request->token)) {
             throw ValidationException::withMessages([
@@ -58,7 +59,7 @@ class NewPasswordController extends Controller
         if ($user->Linked) {
             (new UserService($user))->syncBR();
             Password::deleteToken($user);
-            return $this->succeeded('Account linked with core banking, synced. Use core banking password.', route('home'));
+            return $this->succeeded('Account linked with core banking, synced. Use core banking password.');
         }
 
         $user->forceFill([
@@ -73,8 +74,8 @@ class NewPasswordController extends Controller
             ->causedBy($user)
             ->performedOn($user)
             ->event('password-reset')
-            ->log('Reset password using email link.');
+            ->log('Third-party reset password using email link.');
 
-        return $this->succeeded('Password reset successful. Please log in and select a branch.', route('login'));
+        return $this->succeeded('Password reset successful. You can now log in.');
     }
 }
