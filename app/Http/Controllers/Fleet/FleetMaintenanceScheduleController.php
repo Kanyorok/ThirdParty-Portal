@@ -51,7 +51,7 @@ class FleetMaintenanceScheduleController extends Controller
     {
         $this->authorize('create', FleetMaintenanceSchedule::class);
         $data = $request->validated();
-        $this->scheduleService->create($data);
+        $test = $this->scheduleService->create($data);
 
         return redirect()
             ->route('fleet.maintenance_schedule.index')
@@ -106,6 +106,7 @@ class FleetMaintenanceScheduleController extends Controller
     public function show($id)
     {
         $this->authorize('view', FleetMaintenanceSchedule::class);
+
         $schedule = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert', 'vendor.party'])
             ->findOrFail($id);
 
