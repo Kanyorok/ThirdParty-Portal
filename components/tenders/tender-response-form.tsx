@@ -6,7 +6,7 @@ import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
 import { Alert, AlertDescription } from "@/components/common/alert";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/api-base";
+import { useSession } from "next-auth/react";
 import { 
   CheckCircle, 
   XCircle, 
@@ -50,6 +50,7 @@ export default function TenderResponseForm({
   invitation,
   onUpdate,
 }: TenderResponseFormProps) {
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [responseStatus, setResponseStatus] = useState<'accepted' | 'declined' | null>(null);
   const [declineReason, setDeclineReason] = useState("");
@@ -67,21 +68,25 @@ export default function TenderResponseForm({
       return;
     }
 
+    // Check if user is authenticated
+    if (!session?.accessToken) {
+      toast.error("You must be logged in to respond to invitations");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const requestPayload = {
-        invitation_id: invitation?.InvitationID || invitation?.invitationID,
-        response_status: status,
-        decline_reason: status === 'declined' ? declineReason : null,
-        // Alternative field names for Laravel compatibility
         invitationId: invitation?.InvitationID || invitation?.invitationID,
         responseStatus: status,
         declineReason: status === 'declined' ? declineReason : null,
       };
       
       const invitationId = invitation?.InvitationID || invitation?.invitationID;
-      const apiUrl = `${getBaseUrl()}/api/tender-invitations/${invitationId}`;
+      
+      // Use the frontend API proxy route instead of calling backend directly
+      const apiUrl = `/api/tender-invitations/${invitationId}`;
       
       const response = await fetch(apiUrl, {
         method: 'PUT',
@@ -93,7 +98,7 @@ export default function TenderResponseForm({
         body: JSON.stringify(requestPayload),
       });
 
-      let data: any = {};
+      let data: Record<string, unknown> = {};
       
       // Parse response
       try {
@@ -101,15 +106,16 @@ export default function TenderResponseForm({
         if (responseText.trim()) {
           data = JSON.parse(responseText);
         }
-      } catch (parseError) {
+      } catch {
         data = { parseError: 'Invalid JSON response' };
       }
 
       if (!response.ok) {
         // Provide user-friendly error messages
         let errorMessage = 'Failed to update invitation response';
-        if (data.message) errorMessage = data.message;
-        else if (data.error) errorMessage = data.error;
+        if (data.message) errorMessage = data.message as string;
+        else if (data.error) errorMessage = data.error as string;
+        else if (response.status === 401) errorMessage = 'Unauthenticated. Please log in again.';
         else if (response.status === 404) errorMessage = 'API endpoint not found';
         else if (response.status === 422) errorMessage = 'Invalid request data';
         else if (response.status === 500) errorMessage = 'Server error - please try again';
@@ -221,7 +227,6 @@ export default function TenderResponseForm({
   }
 
   const currentStatus = invitation?.ResponseStatus || invitation?.responseStatus || 'pending';
-  const isResponseSubmitted = currentStatus !== 'pending';
   const canRespond = currentStatus === 'pending' && isRestrictedTender;
 
   return (
@@ -247,7 +252,7 @@ export default function TenderResponseForm({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Response Date:</span>
                 <span className="text-sm">
-                  {new Date(invitation?.ResponseDate || invitation?.responseDate!).toLocaleDateString()}
+                  {new Date(invitation?.ResponseDate || invitation?.responseDate || Date.now()).toLocaleDateString()}
                 </span>
               </div>
             )}
@@ -298,7 +303,7 @@ export default function TenderResponseForm({
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 This is a restricted tender invitation. Please carefully review the tender documents before responding.
-                Once you accept, you'll be able to proceed with the bidding process.
+                Once you accept, you&apos;ll be able to proceed with the bidding process.
               </AlertDescription>
             </Alert>
             
@@ -401,7 +406,7 @@ export default function TenderResponseForm({
               <div>
                 <p className="font-medium">{isRestrictedTender ? 'Restricted Tender Invitation Accepted!' : 'Ready to Proceed!'}</p>
                 <p className="text-sm">
-                  You can now proceed to the "Clarifications" tab to ask questions or the "Bidding" tab to submit your proposal.
+                  You can now proceed to the &quot;Clarifications&quot; tab to ask questions or the &quot;Bidding&quot; tab to submit your proposal.
                 </p>
               </div>
             </div>

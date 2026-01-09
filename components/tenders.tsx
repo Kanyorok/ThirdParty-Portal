@@ -29,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from '@/components/common/separator';
 import TenderDetailModal from "./tenders/tender-detail-modal";
 import { getBaseUrl } from "@/lib/api-base";
+import { useSession } from "next-auth/react";
 
 interface Tender {
     id: number;              // Database Id (t_Tenders.Id)
@@ -333,6 +334,7 @@ function TenderCard({
 }
 
 export default function TendersPage() {
+    const { data: session } = useSession();
     const [isLoading, setIsLoading] = useState(true);
     const [tenders, setTenders] = useState<TenderWithInvitation[]>([]);
     const [, setInvitations] = useState<TenderInvitation[]>([]);
@@ -376,6 +378,17 @@ export default function TendersPage() {
             // Build the final URL string
             const tenderUrl = `${API_ROOT}/tenders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
+            // Prepare headers with authentication
+            const headers: Record<string, string> = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            };
+
+            // Add authentication token if available
+            if (session?.accessToken) {
+                headers['Authorization'] = `Bearer ${session.accessToken}`;
+            }
+
             // Fetch both tenders and invitations simultaneously
             const [tendersResponse, invitationsResponse] = await Promise.allSettled([
                 fetch(tenderUrl, {
@@ -385,10 +398,7 @@ export default function TendersPage() {
                     }
                 }),
                 fetch('/api/tender-invitations', {
-                headers: {
-                    'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    }
+                    headers: headers
                 })
             ]);
 
@@ -568,7 +578,7 @@ export default function TendersPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [searchQuery, selectedStatusFilter, selectedTenderTypeFilter]);
+    }, [searchQuery, selectedStatusFilter, selectedTenderTypeFilter, session?.accessToken]);
 
     useEffect(() => {
         fetchTenders();
