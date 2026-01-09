@@ -11,7 +11,7 @@ class ThirdPartyUserResource extends JsonResource
     {
         return [
             'id' => $this->Id,
-            'userId' => $this->UserID,
+            'userId' => $this->Id,
             'firstName' => $this->FirstName,
             'lastName' => $this->LastName,
             'fullName' => "{$this->FirstName} {$this->LastName}",
@@ -21,9 +21,9 @@ class ThirdPartyUserResource extends JsonResource
             'imageId' => $this->ImageId,
             'thirdPartyId' => $this->ThirdPartyId,
             'isActive' => (bool)$this->IsActive,
-            'isSupplier' => $this->isSupplier(),
-            'isTenant' => $this->isTenant(),
-            'isCustomer' => $this->isCustomer(),
+            'isSupplier' => (bool)$this->isSupplier(),
+            'isTenant' => (bool)$this->isTenant(),
+            'isCustomer' => (bool)$this->isCustomer(),
             'emailVerifiedOn' => $this->EmailVerifiedOn?->toDateTimeString(),
             'createdOn' => $this->CreatedOn?->toDateTimeString(),
             'modifiedOn' => $this->ModifiedOn?->toDateTimeString(),

@@ -56,6 +56,34 @@ class BancassuranceCustomersService extends ThirdPartiesService
         return $service;
     }
 
+    public static function updateFromParty(ThirdParties $party, User|ThirdPartyUser $actor, array $data = []): void
+    {
+        $customer = BancassuranceCustomer::where('ThirdPartyId', $party->Id)->first();
+
+        if ($customer) {
+            $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
+            $dob = $data['user_DateOfBirth'] ?? $customer->DateOfBirth;
+            if ($dob && !($dob instanceof DateTime)) {
+                $dob = new DateTime($dob);
+            }
+
+            $customer->update([
+                'DateOfBirth' => $dob,
+                'Gender' => $data['user_Gender_model']?->ID ?? $data['user_Gender'] ?? $customer->Gender,
+                'MaritalStatus' => $data['user_MaritalStatus_model']?->ID ?? $data['user_MaritalStatus'] ?? $customer->MaritalStatus,
+                'Occupation' => $data['user_Occupation_model']?->ID ?? $data['user_Occupation'] ?? $customer->Occupation,
+                'ModifiedBy' => $auditId,
+            ]);
+
+            activity()
+                ->causedBy($actor)
+                ->performedOn($customer)
+                ->event('update')
+                ->log("Updated Customer profile for {$party->ThirdPartyName}");
+        }
+    }
+
     public static function create(
         string $name,
         ?string $tradingName,

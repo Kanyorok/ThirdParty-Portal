@@ -11,7 +11,7 @@ use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use App\Http\Controllers\API\Enums\CodeDetailsController;
-use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 // use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;

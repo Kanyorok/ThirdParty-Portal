@@ -33,12 +33,12 @@ class ThirdPartyResource extends JsonResource
                     'categoryId'     => $this->supplierMaster?->SupplierCategoryId,
                 ]),
 
-                'customer' => $this->whenLoaded('customerProfile', function () {
-                    return new CustomerProfileResource($this->customerProfile);
+                'customer' => $this->when($this->customerProfile || $this->relationLoaded('customerProfile'), function () {
+                    return $this->customerProfile ? new CustomerProfileResource($this->customerProfile) : null;
                 }),
 
-                'tenant' => $this->whenLoaded('tenantProfile', function () {
-                    return new TenantProfileResource($this->tenantProfile);
+                'tenant' => $this->when($this->tenantProfile || $this->relationLoaded('tenantProfile'), function () {
+                    return $this->tenantProfile ? new TenantProfileResource($this->tenantProfile) : null;
                 }),
             ],
 
@@ -47,6 +47,7 @@ class ThirdPartyResource extends JsonResource
                     'id'    => $t->Id,
                     'code'  => $t->TypeCode,
                     'label' => $t->TypeName,
+                    'description' => $t->Description
                 ]);
             }, []),
 

@@ -9,7 +9,8 @@ use App\Http\Controllers\ThirdParty\API\MetadataController;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
 use App\Http\Controllers\ThirdParty\API\LookupController;
-use  App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
+use App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::post('register', [NewThirdPartyController::class, 'store'])
@@ -19,6 +20,16 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login'])
         ->name('login')
         ->middleware(['throttle:10,1']);
+
+    Route::get('verify-email/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+        return response()->json(['message' => 'Email verified successfully.']);
+    })->middleware(['signed'])->name('verification.verify');
+
+    Route::post('verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return response()->json(['message' => 'Verification link sent!']);
+    })->middleware(['auth.thirdparty', 'throttle:6,1'])->name('verification.send');
 
     Route::post('password/forgot', [ThirdPartyPasswordController::class, 'forgotPassword'])
         ->name('password.forgot');

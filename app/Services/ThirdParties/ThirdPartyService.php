@@ -41,7 +41,7 @@ class ThirdPartyService extends ThirdPartiesService
         array $data = []
     ): ThirdParties {
         return DB::transaction(function () use ($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor, $data) {
-            $types = $data['types'] ?? null;
+            $types = $data['types'] ?? [];
             $partyTypes = self::getTypes($types);
 
             $parentParty = parent::create(
@@ -136,28 +136,39 @@ class ThirdPartyService extends ThirdPartiesService
                 foreach ($partyTypes as $type) {
                     if (!$party->types()->where('t_ThirdPartyTypes.TypeId', $type->TypeId)->exists()) {
                         match ($type->Code) {
-                            self::TypeTenant => $partyService->addTenant(
-                                $actor,
-                                $data['user_Remarks'] ?? null,
-                                $data['document'] ?? null
-                            ),
+                            self::TypeTenant => $partyService->addTenant($actor, $data['user_Remarks'] ?? null, $data['document'] ?? null),
                             self::TypeSupplier => $partyService->addSupplier($actor, $data),
-                            self::TypeCustomer => $partyService->addCustomer(
-                                null,
-                                $data['user_DateOfBirth'] ?? null,
-                                $data['user_Gender'] ?? null,
-                                $data['user_MaritalStatus'] ?? null,
-                                $data['user_Occupation'] ?? null,
-                                $actor
-                            ),
+                            self::TypeCustomer => $partyService->addCustomer(null, $data['user_DateOfBirth'] ?? null, $data['user_Gender'] ?? null, $data['user_MaritalStatus'] ?? null, $data['user_Occupation'] ?? null, $actor),
                             default => null
                         };
+                    } else {
+                        $partyService->syncTypeDetails($type->Code, $data, $actor);
                     }
                 }
             }
 
             return $party;
         });
+    }
+
+    protected function syncTypeDetails(string $code, array $data, User|ThirdPartyUser $actor): void
+    {
+        match ($code) {
+            self::TypeSupplier => SupplierService::updateFromParty($this->party, $actor, $data),
+            self::TypeCustomer => BancassuranceCustomersService::updateFromParty($this->party, $actor, $data),
+            self::TypeTenant => PropertyNewTenantService::updateFromParty($this->party, $actor, $data),
+            default => null,
+        };
+    }
+
+    public static function updateFromParty(ThirdParties $party, User|ThirdPartyUser $actor, array $data): void
+    {
+        $instance = new self($party);
+        $types = $data['types'] ?? [];
+
+        foreach ($types as $code) {
+            $instance->syncTypeDetails($code, $data, $actor);
+        }
     }
 
     public function addTenant(User|ThirdPartyUser $actor, ?string $Remarks, ?UploadedFile $document = null): PropertyNewTenantService

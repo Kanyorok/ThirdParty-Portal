@@ -77,6 +77,8 @@ class NewThirdPartyController extends Controller
                 );
             }
 
+            $party->load('types');
+
             return response()->json([
                 'success' => true,
                 'message' => $request->boolean('createUser')
@@ -85,9 +87,9 @@ class NewThirdPartyController extends Controller
                 'data' => [
                     'id' => $party->Id,
                     'name' => $party->ThirdPartyName,
-                    'isSupplier' => in_array(ThirdPartyService::TypeSupplier, $types),
-                    'isTenant' => in_array(ThirdPartyService::TypeTenant, $types),
-                    'isCustomer' => in_array(ThirdPartyService::TypeCustomer, $types)
+                    'isSupplier' => $party->isSupplier(),
+                    'isTenant' => $party->isTenant(),
+                    'isCustomer' => $party->isCustomer()
                 ]
             ], 201);
         });

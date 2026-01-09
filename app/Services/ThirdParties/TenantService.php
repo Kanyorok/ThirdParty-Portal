@@ -109,4 +109,25 @@ class TenantService extends ThirdPartiesService
 
         return $service;
     }
+
+    public static function updateFromParty(ThirdParties $party, User|ThirdPartyUser $actor, array $data = []): void
+    {
+        $tenant = PropertyNewTenant::where('ThirdPartyId', $party->Id)->first();
+
+        if ($tenant) {
+            $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
+            $tenant->update([
+                'TenantType' => $data['tenant_type'] ?? $data['tenantType'] ?? $tenant->TenantType,
+                'Remarks' => $data['tenant_remarks'] ?? $data['remarks'] ?? $tenant->Remarks,
+                'ModifiedBy' => $auditId,
+            ]);
+
+            activity()
+                ->causedBy($actor)
+                ->performedOn($tenant)
+                ->event('update')
+                ->log("Updated Tenant profile for {$party->ThirdPartyName}");
+        }
+    }
 }

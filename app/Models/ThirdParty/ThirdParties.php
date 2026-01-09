@@ -198,35 +198,45 @@ class ThirdParties extends Model
     }
 
     public function isSupplier(): bool
-    {
-        if ($this->relationLoaded('types')) {
-            return $this->types->contains(function ($type) {
-                return (isset($type->Code) && str_starts_with($type->Code, 'SU'))
-                    || (isset($type->pivot->PartyType) && $type->pivot->PartyType === SupplierMaster::getPrimaryKey());
-            });
-        }
-        return $this->ThirdPartyType === \App\Enums\ThirdParty\ThirdPartyTypeEnum::Supplier;
+{
+    if ($this->relationLoaded('types')) {
+        return $this->types->contains(function ($type) {
+            return in_array($type->pivot->PartyType, [
+                'SupplierMasterId', 
+                'SupplierMaster', 
+                (new SupplierMaster())->getMorphClass()
+            ]) || (isset($type->Code) && str_starts_with($type->Code, 'SU'));
+        });
     }
+    return $this->supplierMaster()->exists();
+}
 
-    public function isTenant(): bool
-    {
-        if ($this->relationLoaded('types')) {
-            return $this->types->contains(
-                fn($type) =>
-                $type->pivot->PartyType === (new PropertyNewTenant())->getMorphClass()
-            );
-        }
-        return $this->tenantProfile()->exists();
+public function isTenant(): bool
+{
+    if ($this->relationLoaded('types')) {
+        return $this->types->contains(function ($type) {
+            return in_array($type->pivot->PartyType, [
+                'PropertyNewTenant',
+                'App\Models\PropertyManagement\PropertyNewTenant',
+                (new PropertyNewTenant())->getMorphClass()
+            ]) || (isset($type->Code) && str_starts_with($type->Code, 'TN')) 
+               || $type->TypeId == 1;
+        });
     }
+    return $this->tenantProfile()->exists();
+}
 
-    public function isCustomer(): bool
-    {
-        if ($this->relationLoaded('types')) {
-            return $this->types->contains(
-                fn($type) =>
-                $type->pivot->PartyType === (new BancassuranceCustomer())->getMorphClass()
-            );
-        }
-        return $this->customerProfile()->exists();
+public function isCustomer(): bool
+{
+    if ($this->relationLoaded('types')) {
+        return $this->types->contains(function ($type) {
+            return in_array($type->pivot->PartyType, [
+                'BancassuranceCustomer',
+                'App\Models\Insurance\BancassuranceCustomer',
+                (new BancassuranceCustomer())->getMorphClass()
+            ]) || (isset($type->Code) && str_starts_with($type->Code, 'CU'));
+        });
     }
+    return $this->customerProfile()->exists();
+}
 }

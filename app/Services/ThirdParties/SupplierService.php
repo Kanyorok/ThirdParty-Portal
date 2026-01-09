@@ -114,6 +114,30 @@ class SupplierService extends ThirdPartiesService
         return $service;
     }
 
+    public static function updateFromParty(ThirdParties $party, User|ThirdPartyUser $actor, array $data = []): void
+    {
+        $master = SupplierMaster::where('ThirdPartyId', $party->Id)->first();
+
+        if ($master) {
+            $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
+            $master->update([
+                'ModifiedBy' => $auditId,
+            ]);
+
+            Supplier::where('SupplierMasterId', $master->Id)->update([
+                'CategoryId' => $data['supplier_category_id'] ?? $data['category_id'] ?? null,
+                'ModifiedBy' => $auditId,
+            ]);
+
+            activity()
+                ->causedBy($actor)
+                ->performedOn($master)
+                ->event('update')
+                ->log("Updated Supplier profile for {$party->ThirdPartyName}.");
+        }
+    }
+
     protected static function _ID(): string
     {
         $number = SupplierMaster::withTrashed()->count();
