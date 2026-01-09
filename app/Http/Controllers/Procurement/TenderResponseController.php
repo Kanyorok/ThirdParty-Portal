@@ -26,7 +26,7 @@ class TenderResponseController extends Controller
         ->whereNull('DeletedOn')
         ->get()
         ->map(function($supplier) {
-            return [
+            return (object) [
                 'Id' => $supplier->Id,
                 'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName 
                     ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
