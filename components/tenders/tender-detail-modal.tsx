@@ -131,250 +131,229 @@ export default function TenderDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[98vw] w-full h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0 pb-4 border-b">
-          <DialogTitle className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <h2 className="text-2xl font-bold truncate">{tender.title}</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {tender.tenderNo}
-              </p>
-            </div>
-            <Badge className={cn("ml-4 flex-shrink-0", getStatusColor(tender.status))}>
-              {getStatusText(tender.status)}
-            </Badge>
-          </DialogTitle>
-        </DialogHeader>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
-          <TabsList className="grid w-full grid-cols-5 flex-shrink-0 bg-muted rounded-md">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="response">Response</TabsTrigger>
-            <TabsTrigger value="clarifications">Clarifications</TabsTrigger>
-            <TabsTrigger value="bidding">Bidding</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
-
-          <div className="flex-1 mt-4 overflow-y-auto">
-            <TabsContent value="overview" className="space-y-6 px-4 py-2">
-              {/* Invitation Status */}
-              {invitation && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      Invitation Status
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {getResponseStatusIcon(invitation.ResponseStatus || invitation.responseStatus || 'pending')}
-                        <span className={cn("font-medium capitalize", getResponseStatusColor(invitation.ResponseStatus || invitation.responseStatus || 'pending'))}>
-                          {invitation.ResponseStatus || invitation.responseStatus || 'pending'}
-                        </span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Invited: {format(new Date(invitation.InvitationDate || invitation.invitationDate!), 'PPP')}
-                        {(invitation.ResponseDate || invitation.responseDate) && (
-                          <span className="ml-4">
-                            Responded: {format(new Date(invitation.ResponseDate || invitation.responseDate!), 'PPP')}
-                          </span>
-                        )}
-                      </div>
+      <DialogContent className="sm:max-w-[95vw] w-full h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-gray-50/50" showCloseButton={false}>
+        <div className="flex flex-col bg-white border-b shadow-sm z-10">
+            <DialogHeader className="px-6 py-4 flex flex-row items-center justify-between gap-4 space-y-0">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText className="h-5 w-5 text-primary" />
                     </div>
-                    {(invitation.DeclineReason || invitation.declineReason) && (
-                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-800">
-                          <strong>Decline Reason:</strong> {invitation.DeclineReason || invitation.declineReason}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Tender Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building className="h-5 w-5" />
-                      Tender Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Category</label>
-                      <p className="text-sm">{tender.tenderCategoryRelation?.tenderCategory || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Type</label>
-                      <p className="text-sm">{tender.tenderType === 'op' ? 'Open to All' : 'Restricted'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Procurement Mode</label>
-                      <p className="text-sm">{tender.procurementMode?.name || 'Not specified'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Financial Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Estimated Value</label>
-                      <p className="text-sm font-semibold">
-                        {formatCurrency(tender.estimatedValue, tender.currency?.code)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Currency</label>
-                      <p className="text-sm">{tender.currency?.code || 'KES'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      Important Dates
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Submission Deadline</label>
-                      <p className="text-sm font-semibold text-red-600">
-                        {format(new Date(tender.submissionDeadline), 'PPP p')}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Opening Date</label>
-                      <p className="text-sm">
-                        {format(new Date(tender.openingDate), 'PPP p')}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Scope of Work */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Scope of Work
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none">
-                    <p className="whitespace-pre-wrap">{tender.scopeOfWork}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Instructions */}
-              {tender.instructions && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Instructions to Bidders</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <p className="whitespace-pre-wrap">{tender.instructions}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="response" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
-              <div className="px-4 py-2">
-                <TenderResponseForm
-                  tender={tender}
-                  invitation={invitation}
-                  onUpdate={onInvitationUpdate}
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="clarifications" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
-              <div className="px-4 py-2">
-                <TenderClarifications tenderId={tender.id.toString()} />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="bidding" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
-              <div className="px-4 py-2">
-                <TenderBidForm
-                  tender={{
-                    ...tender,
-                    id: tender.id.toString()
-                  }}
-                  onFinalSubmitSuccess={() => {
-                    // Close the dialog
-                    onClose();
-                  }}
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="documents" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
-              <div className="px-4 py-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Tender Documents
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-blue-600" />
-                        <div>
-                          <p className="font-medium">Tender Document.pdf</p>
-                          <p className="text-sm text-muted-foreground">2.4 MB • PDF</p>
+                    <div className="min-w-0 flex-1">
+                        <DialogTitle className="text-xl font-bold truncate text-gray-900 leadings-tight">
+                            {tender.title}
+                        </DialogTitle>
+                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
+                            <span className="font-medium">{tender.tenderNo}</span>
+                            <span className="w-1 h-1 rounded-full bg-gray-300" />
+                            <Badge variant="secondary" className={cn("rounded-md px-2 py-0 text-xs font-medium capitalize", getStatusColor(tender.status))}>
+                                {getStatusText(tender.status)}
+                            </Badge>
+                             {invitation && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-gray-300" />
+                                     <span className={cn("text-xs font-medium capitalize flex items-center gap-1", getResponseStatusColor(invitation.ResponseStatus || invitation.responseStatus || 'pending'))}>
+                                        {getResponseStatusIcon(invitation.ResponseStatus || invitation.responseStatus || 'pending')}
+                                        {invitation.ResponseStatus || invitation.responseStatus || 'pending'}
+                                    </span>
+                                </>
+                             )}
                         </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
                     </div>
-                    
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-green-600" />
-                        <div>
-                          <p className="font-medium">Bill of Quantities.xlsx</p>
-                          <p className="text-sm text-muted-foreground">1.8 MB • Excel</p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 hover:bg-gray-100" onClick={onClose}>
+                        <XCircle className="h-5 w-5 text-gray-500" />
+                        <span className="sr-only">Close</span>
+                    </Button>
+                </div>
+            </DialogHeader>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col overflow-hidden">
+                <div className="px-6 border-t">
+                     <TabsList className="h-12 w-full justify-start gap-6 bg-transparent p-0">
+                        {['Overview', 'Response', 'Clarifications', 'Bidding', 'Documents'].map((tab) => (
+                          <TabsTrigger 
+                            key={tab} 
+                            value={tab.toLowerCase()}
+                            className="relative h-12 rounded-none border-b-2 border-transparent px-1 pb-3 pt-3 font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none hover:text-gray-900 transition-colors"
+                          >
+                            {tab}
+                          </TabsTrigger>
+                        ))}
+                    </TabsList>
+                </div>
+
+                <div className="flex-1 overflow-y-auto bg-gray-50/50">
+                    <TabsContent value="overview" className="min-h-full p-8 mt-0 focus-visible:outline-none">
+                        <div className="max-w-7xl mx-auto space-y-8">
+                             {/* Key Stats Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="bg-white p-4 rounded-xl border shadow-sm flex flex-col justify-between h-24">
+                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Submission Deadline</span>
+                                    <div className="flex items-center gap-2 text-red-600">
+                                        <Clock className="h-4 w-4" />
+                                        <span className="font-bold text-lg">{format(new Date(tender.submissionDeadline), 'MMM d, yyyy')}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">{format(new Date(tender.submissionDeadline), 'p')}</span>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm flex flex-col justify-between h-24">
+                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estimated Value</span>
+                                    <div className="flex items-center gap-2 text-gray-900">
+                                        <DollarSign className="h-4 w-4 text-green-600" />
+                                        <span className="font-bold text-lg">{formatCurrency(tender.estimatedValue, tender.currency?.code)}</span>
+                                    </div>
+                                     <span className="text-xs text-muted-foreground">{tender.currency?.code || 'KES'}</span>
+                                </div>
+                                 <div className="bg-white p-4 rounded-xl border shadow-sm flex flex-col justify-between h-24">
+                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tender Type</span>
+                                    <div className="flex items-center gap-2 text-gray-900">
+                                        <Building className="h-4 w-4 text-blue-600" />
+                                        <span className="font-bold text-lg">{tender.tenderType === 'op' ? 'Open Tender' : 'Restricted'}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">{tender.procurementMode?.name || 'Standard Mode'}</span>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm flex flex-col justify-between h-24">
+                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Opening Date</span>
+                                    <div className="flex items-center gap-2 text-gray-900">
+                                        <Calendar className="h-4 w-4 text-purple-600" />
+                                        <span className="font-bold text-lg">{format(new Date(tender.openingDate), 'MMM d, yyyy')}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">{format(new Date(tender.openingDate), 'p')}</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                                <div className="xl:col-span-2 space-y-8">
+                                    {/* Scope of Work */}
+                                    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                                        <div className="px-6 py-4 border-b bg-gray-50/30 flex items-center justify-between">
+                                            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                                <FileText className="h-4 w-4 text-blue-500" />
+                                                Scope of Work
+                                            </h3>
+                                        </div>
+                                         <div className="p-6 prose prose-gray max-w-none">
+                                            <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600">{tender.scopeOfWork}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Instructions */}
+                                    {tender.instructions && (
+                                        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                                            <div className="px-6 py-4 border-b bg-gray-50/30 flex items-center justify-between">
+                                                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                                    <Building className="h-4 w-4 text-blue-500" />
+                                                    Instructions to Bidders
+                                                </h3>
+                                            </div>
+                                             <div className="p-6 prose prose-gray max-w-none">
+                                                <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600">{tender.instructions}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-8">
+                                     {/* Quick Details */}
+                                     <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                                        <div className="px-6 py-4 border-b bg-gray-50/30">
+                                            <h3 className="font-semibold text-gray-900">Evaluation & Category</h3>
+                                        </div>
+                                        <div className="p-6 space-y-4">
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category</label>
+                                                <div className="mt-1 font-medium text-gray-900">{tender.tenderCategoryRelation?.tenderCategory || 'General'}</div>
+                                            </div>
+                                             <div className="pt-4 border-t">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="p-2 bg-blue-50 rounded text-blue-600"><FileText className="h-4 w-4"/></div>
+                                                    <div>
+                                                        <div className="font-medium text-sm text-gray-900">Documents Required</div>
+                                                        <div className="text-xs text-muted-foreground mt-0.5">Please check the Documents tab for full requirements.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                     </div>
+
+                                     {/* Action Card */}
+                                     {(!invitation?.ResponseStatus || invitation.ResponseStatus === 'pending') && (
+                                         <div className="bg-blue-50 rounded-xl border border-blue-100 p-6">
+                                            <h3 className="font-semibold text-blue-900 mb-2">Ready to Respond?</h3>
+                                            <p className="text-sm text-blue-700 mb-4">You have not yet responded to this invitation. Please accept or decline to proceed.</p>
+                                            <Button className="w-full" onClick={() => setActiveTab('response')}>
+                                                Submit Response
+                                            </Button>
+                                         </div>
+                                     )}
+                                </div>
+                            </div>
                         </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
+                    </TabsContent>
+
+                    <TabsContent value="response" className="p-8 pb-20 mt-0 focus-visible:outline-none">
+                        <div className="max-w-5xl mx-auto">
+                            <TenderResponseForm tender={tender} invitation={invitation} onUpdate={onInvitationUpdate} />
+                        </div>
+                    </TabsContent>
                     
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Additional documents will appear here</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              </div>
-            </TabsContent>
-          </div>
-        </Tabs>
+                    <TabsContent value="clarifications" className="p-8 pb-20 mt-0 focus-visible:outline-none">
+                         <div className="max-w-5xl mx-auto">
+                            <TenderClarifications tenderId={tender.id.toString()} />
+                         </div>
+                    </TabsContent>
+
+                    <TabsContent value="bidding" className="p-8 pb-20 mt-0 focus-visible:outline-none">
+                         <div className="max-w-screen-xl mx-auto">
+                             <TenderBidForm 
+                                tender={{ ...tender, id: tender.id.toString() }}
+                                onFinalSubmitSuccess={() => onClose()}
+                            />
+                         </div>
+                    </TabsContent>
+
+                    <TabsContent value="documents" className="p-8 pb-20 mt-0 focus-visible:outline-none">
+                        <div className="max-w-5xl mx-auto">
+                            <Card className="shadow-sm border-0 ring-1 ring-gray-200">
+                                <CardHeader>
+                                    <CardTitle>Tender Documents</CardTitle> 
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-white hover:border-blue-300 transition-colors group cursor-pointer">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 bg-red-50 rounded flex items-center justify-center text-red-600"><FileText className="h-5 w-5" /></div>
+                                                <div>
+                                                    <p className="font-medium group-hover:text-blue-600 transition-colors">Tender Document.pdf</p>
+                                                    <p className="text-xs text-muted-foreground">2.4 MB • PDF</p>
+                                                </div>
+                                            </div>
+                                            <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
+                                        </div>
+                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-white hover:border-green-300 transition-colors group cursor-pointer">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 bg-green-50 rounded flex items-center justify-center text-green-600"><FileText className="h-5 w-5" /></div>
+                                                <div>
+                                                    <p className="font-medium group-hover:text-green-600 transition-colors">Bill of Quantities.xlsx</p>
+                                                    <p className="text-xs text-muted-foreground">1.8 MB • Excel</p>
+                                                </div>
+                                            </div>
+                                            <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
+                                        </div>
+                                    </div>
+                                    <div className="mt-8 text-center p-8 bg-gray-50 border border-dashed rounded-lg">
+                                        <div className="mx-auto h-12 w-12 text-gray-300 mb-2"><FileText className="h-full w-full" /></div>
+                                        <h3 className="text-sm font-medium text-gray-900">No additional documents</h3>
+                                        <p className="text-xs text-muted-foreground mt-1">All available documents are listed above.</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </TabsContent>
+                </div>
+            </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   );

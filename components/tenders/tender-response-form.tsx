@@ -251,9 +251,17 @@ export default function TenderResponseForm({
             )}
 
             {(invitation?.DeclineReason || invitation?.declineReason) && (
-              <div className="mt-4 p-3 bg-red-100 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800">
-                  <strong>Decline Reason:</strong> {invitation?.DeclineReason || invitation?.declineReason}
+              <div className={cn(
+                "mt-4 p-3 border rounded-lg",
+                currentStatus === 'declined' ? "bg-red-100 border-red-200" : "bg-blue-50 border-blue-200"
+              )}>
+                <p className={cn(
+                  "text-sm",
+                  currentStatus === 'declined' ? "text-red-800" : "text-blue-800"
+                )}>
+                  <strong>
+                    {currentStatus === 'declined' ? "Decline Reason:" : "Response Note:"}
+                  </strong> {invitation?.DeclineReason || invitation?.declineReason}
                 </p>
               </div>
             )}
