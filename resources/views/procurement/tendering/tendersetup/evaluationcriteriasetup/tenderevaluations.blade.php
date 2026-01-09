@@ -5,9 +5,26 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📑 Tender Section Settings</h4>
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <!-- Search Box -->
+                <form method="GET" class="d-flex">
+                    <input type="text" 
+                           name="search" 
+                           class="form-control form-control-sm" 
+                           placeholder="Search by Tender No or Title..." 
+                           value="{{ request('search') }}"
+                           style="min-width: 250px;">
+                    <button type="submit" class="btn btn-sm btn-primary ms-1">Search</button>
+                    @if(request('search'))
+                        <a href="{{ route('tenderevaluations.index') }}" class="btn btn-sm btn-secondary ms-1">Clear</a>
+                    @endif
+                </form>
+                
                 <label for="perPage" class="me-2 mb-0">Show</label>
                 <form id="perPageForm" method="GET" class="me-3">
+                    @if(request('search'))
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+                    @endif
                     <select id="perPage" name="perPage" class="form-select form-select-sm" onchange="document.getElementById('perPageForm').submit()">
                         @php $currentPer = (int) request()->query('perPage', 10); @endphp
                         @foreach([5,10,15,20,25] as $p)

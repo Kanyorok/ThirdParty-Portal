@@ -217,12 +217,6 @@ class TenderInvitationController extends Controller
                 ];
             });
 
-            Log::info('Debug Invitations Documents', [
-                 'count' => $formattedData->count(),
-                 'sample_tender_id' => $formattedData->first()['tender']['id'] ?? 'N/A',
-                 'sample_doc_count' => count($formattedData->first()['tender']['documents'] ?? [])
-            ]);
-
             return response()->json([
                 'data' => $formattedData,
                 'total' => $total,
@@ -231,11 +225,6 @@ class TenderInvitationController extends Controller
                 'supplierInfo' => [
                     'supplierIds' => $supplierIds->values()->all(),
                     'thirdPartyId' => (int)$thirdPartyId,
-                ],
-                'debug' => [
-                    'message' => 'Successfully fetched tender invitations',
-                    'supplier_found' => true,
-                    'invitations_found' => $invitations->count()
                 ]
             ]);
         } catch (\Exception $e) {
@@ -256,14 +245,6 @@ class TenderInvitationController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        Log::info('=== TenderInvitation Update Started ===', [
-            'id' => $id, 
-            'payload' => $request->all(), 
-            'auth_check' => Auth::check(),
-            'auth_id' => Auth::id(),
-            'auth_guard' => Auth::getDefaultDriver(),
-            'bearer_token' => $request->bearerToken() ? substr($request->bearerToken(), 0, 20) . '...' : null,
-        ]);
         
         try {
             $validated = $request->validate([
@@ -271,18 +252,12 @@ class TenderInvitationController extends Controller
                 'declineReason' => 'nullable|string',
             ]);
 
-            // Test 1: Basic validation and logging
-
-
-            // Test 2: Try to read from database
+            // Try to read from database
             try {
                 $invitation = DB::table('t_TenderInvitations')
                     ->where('InvitationID', $id)
                     ->first();
             } catch (\Exception $readEx) {
-                Log::error('=== STEP 2 FAILED: Database read error ===', [
-                    'error' => $readEx->getMessage()
-                ]);
                 return response()->json([
                     'error' => 'Database read failed',
                     'message' => $readEx->getMessage()
@@ -295,40 +270,27 @@ class TenderInvitationController extends Controller
                 ], 404);
             }
 
-            // Working minimal update - just the essential fields
             try {
-                // EXPLICIT LOGIC: Get user from the active guard (Sanctum)
                 $currentUser = Auth::guard('sanctum')->user();
                 
                 if (!$currentUser) {
-                    // Fallback to default guard if sanctum fails (though logs show sanctum is active)
                     $currentUser = Auth::user();
                 }
 
                 if (!$currentUser) {
-                     Log::error('TenderInvitation Update: No user found.');
                      return response()->json(['error' => 'Unauthenticated'], 401);
                 }
 
                 $userId = $currentUser->getAuthIdentifier();
                 $isThirdParty = $currentUser instanceof \App\Models\ThirdParty\ThirdPartyUser;
-                
-                Log::info('DEBUG ID RESOLUTION', [
-                    'original_id' => $userId,
-                    'user_class' => get_class($currentUser),
-                    'is_third_party' => $isThirdParty
-                ]);
+
 
                 // FK Fix: Use System Admin (1) for ThirdParty users
                 if ($isThirdParty) {
                     $userId = 1; 
                 }
 
-                // Final safety check
                 if (empty($userId)) {
-                    // If somehow we still don't have an ID, force to 1 (System) to prevent crash
-                    // This is a safety net for the "Cannot insert NULL" error
-                    Log::warning('DEBUG: userId was empty/null, forcing to 1');
                     $userId = 1;
                 }
 
