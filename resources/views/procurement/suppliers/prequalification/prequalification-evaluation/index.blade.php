@@ -26,11 +26,28 @@
         </div>
         <div class="card-body">
             <ul class="nav nav-pills mb-3" role="tablist">
-                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-passed" role="tab">Passed</a></li>
+                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-pending" role="tab">Pending</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-passed" role="tab">Passed</a></li>
                 <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-under-review" role="tab">Under Review (Failed)</a></li>
             </ul>
             <div class="tab-content">
-                <div class="tab-pane fade show active" id="tab-passed" role="tabpanel">
+                <div class="tab-pane fade show active" id="tab-pending" role="tabpanel">
+                    <table id="pendingTable" class="table table-striped w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Application</th>
+                                <th>Supplier</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Score</th>
+                                <th>Decision</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="tab-passed" role="tabpanel">
                     <table id="passedTable" class="table table-striped w-100">
                         <thead class="table-light">
                             <tr>
@@ -83,7 +100,8 @@ try {
 @endphp
 
 <script>
-    let passedDt = null,
+    let pendingDt = null,
+        passedDt = null,
         failedDt = null;
 
     const SINGLE_PREQUALIFY_TEMPLATE = @json($singlePrequalifyTemplate);
@@ -144,6 +162,16 @@ try {
     }
 
     function initDt() {
+        pendingDt = $('#pendingTable').DataTable({
+            ajax: {
+                url: '{{ route('prequalification.prequalification-evaluation.datatable') }}',
+                data: {
+                    status: 'pending'
+                }
+            },
+            responsive: true,
+            columns: buildColumns()
+        });
         passedDt = $('#passedTable').DataTable({
             ajax: {
                 url: '{{ route('prequalification.prequalification-evaluation.datatable') }}',

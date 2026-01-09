@@ -36,7 +36,7 @@ class SupplierCategoryResolver
                         ->map(fn($v) => (int) $v);
                     
                     $categoryIds = $categoryIds->merge($cats);
-                    Log::info("Found {$cats->count()} categories from {$table1} for ThirdPartyId {$thirdPartyId}");
+                    // Log::info("Found {$cats->count()} categories from {$table1} for ThirdPartyId {$thirdPartyId}");
                 } catch (\Throwable $e) {
                     Log::warning("Failed reading {$table1}", [
                         'thirdPartyId' => $thirdPartyId,
@@ -56,15 +56,16 @@ class SupplierCategoryResolver
 
             if ($thirdCol && $catCol) {
                 try {
-                    // CRITICAL: Use SupplierMaster.Id, not ThirdParty.Id for this table
+                    // CRITICAL FIX: Data inspection shows this table actually stores ThirdPartyId (150 etc) in the ThirdPartyID column
+                    // It does NOT store SupplierMasterId
                     $cats = DB::table($table2)
-                        ->where($thirdCol, $supplierMasterId)
+                        ->where($thirdCol, $thirdPartyId)
                         ->pluck($catCol)
                         ->filter(fn($v) => $v !== null && $v !== '')
                         ->map(fn($v) => (int) $v);
                     
                     $categoryIds = $categoryIds->merge($cats);
-                    Log::info("Found {$cats->count()} categories from {$table2} for SupplierMasterId {$supplierMasterId}");
+                    // Log::info("Found {$cats->count()} categories from {$table2} for SupplierMasterId {$supplierMasterId}");
                 } catch (\Throwable $e) {
                     Log::warning("Failed reading {$table2}", [
                         'supplierMasterId' => $supplierMasterId,
@@ -79,11 +80,11 @@ class SupplierCategoryResolver
             ->values()
             ->all();
         
-        Log::info("Total unique supplier categories: " . count($result), [
-            'thirdPartyId' => $thirdPartyId,
-            'supplierMasterId' => $supplierMasterId,
-            'categories' => $result
-        ]);
+        // Log::info("Total unique supplier categories: " . count($result), [
+        //     'thirdPartyId' => $thirdPartyId,
+        //     'supplierMasterId' => $supplierMasterId,
+        //     'categories' => $result
+        // ]);
         
         return $result;
     }
