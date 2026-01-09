@@ -7,6 +7,7 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\RFQ;
 use App\Models\ThirdParies\Supplier;
 use App\Models\Procurement\RFQResponse;
+use App\Services\Procurement\RFQ\RFQWorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 
 class RFQController extends Controller
 {
-    public function __construct(protected \App\Services\Procurement\RFQ\RFQWorkflowService $workflowService)
+    public function __construct(protected RFQWorkflowService $workflowService)
     {
         //
     }
@@ -82,27 +83,27 @@ class RFQController extends Controller
     // Paginate
     $rfqs = $query->paginate(10)->withQueryString();
 
-
-        $requisitions = DB::table('t_Requisitions as r')
-            ->join('t_CodeDetails as cd', function ($join) {
-                $join->on('r.DocStatus', '=', 'cd.Value')
-                    ->where('cd.CodeId', '=', 'RequisitionStatus');
-            })
-            ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
-            ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
-            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
-            ->where('cd.Description', 'Approved')
-            ->where('cd.IsActive', 1)
-            ->whereNull('cd.DeletedOn')
-            ->whereNull('r.DeletedOn') // Also check requisition not deleted
-            ->whereNull('rfql.Id') // Requisition line not already in an RFQ
-            ->select(
-                'r.Id',
-                'r.RequisitionNo',
-                DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
-            )
-            ->distinct()
-            ->get();
+    // Get requisitions for the modal
+    $requisitions = DB::table('t_Requisitions as r')
+        ->join('t_CodeDetails as cd', function($join){
+            $join->on('r.DocStatus', '=', 'cd.Value')
+                 ->where('cd.CodeId', '=', 'RequisitionStatus');
+        })
+        ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
+        ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+        ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
+        ->where('cd.Description', 'Approved')
+        ->where('cd.IsActive', 1)
+        ->whereNull('cd.DeletedOn')
+        ->whereNull('r.DeletedOn')
+        ->whereNull('rfql.Id')
+        ->select(
+            'r.Id', 
+            'r.RequisitionNo', 
+            DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
+        )
+        ->distinct()
+        ->get();
 
     // Build CreatedBy map
     $createdByIds = $rfqs->pluck('CreatedBy')->unique()->filter()->values()->all();
@@ -124,72 +125,37 @@ class RFQController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create22()
-    {
-        $this->authorize('create', RFQ::class);
 
+public function create()
+{
+    $this->authorize('create', RFQ::class);
+    
+    $requisitions = DB::table('t_Requisitions as r')
+        ->join('t_CodeDetails as cd', function($join){
+            $join->on('r.DocStatus', '=', 'cd.Value')
+         ->where('cd.CodeId', '=', 'RequisitionStatus');
+        })
+        ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
+        ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+        ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
+        ->where('cd.Description', 'Approved')
+        ->where('cd.IsActive', 1)
+        ->whereNull('cd.DeletedOn')
+        ->whereNull('r.DeletedOn') // Also check requisition not deleted
+        ->whereNull('rfql.Id') // Requisition line not already in an RFQ
+        ->select(
+            'r.Id', 
+            'r.RequisitionNo', 
+            DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
+        )
+        ->distinct()
+        ->get();
 
-        // Let's check what requisitions exist first
-        $allRequisitions = DB::table('t_Requisitions as r')
-            ->select('r.Id', 'r.RequisitionNo', 'r.DocStatus')
-            ->get();
+    $categories = ItemCategories::all();
+    $suppliers = Supplier::all(); 
 
-        dd([
-            'all_requisitions' => $allRequisitions,
-            'code_details' => DB::table('t_CodeDetails')->where('Description', 'Approved')->get(),
-        ]);
-
-        $requisitions = DB::table('t_Requisitions as r')
-            ->join('t_CodeDetails as cd', 'r.DocStatus', '=', 'cd.Description') // Changed from cd.Code to cd.CodeId
-            ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
-            ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
-            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
-            ->where('cd.Description', 'Approved')
-            ->whereNull('rfql.Id') // Ensures we only get requisitions that haven't been used yet
-            ->select(
-                'r.Id',
-                'r.RequisitionNo',
-                DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
-            )
-            ->distinct()
-            ->get();
-
-        $categories = ItemCategories::all();
-        $suppliers = Supplier::all();
-
-        return view('procurement.rfqs.create', compact('categories', 'suppliers', 'requisitions'));
-    }
-
-    public function create()
-    {
-        $this->authorize('create', RFQ::class);
-
-        $requisitions = DB::table('t_Requisitions as r')
-            ->join('t_CodeDetails as cd', function ($join) {
-                $join->on('r.DocStatus', '=', 'cd.Value')
-                    ->where('cd.CodeId', '=', 'RequisitionStatus');
-            })
-            ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
-            ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
-            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
-            ->where('cd.Description', 'Approved')
-            ->where('cd.IsActive', 1)
-            ->whereNull('cd.DeletedOn')
-            ->whereNull('r.DeletedOn') // Also check requisition not deleted
-            ->whereNull('rfql.Id') // Requisition line not already in an RFQ
-            ->select(
-                'r.Id',
-                'r.RequisitionNo',
-                DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
-            )
-            ->distinct()
-            ->get();
-
-        $categories = ItemCategories::all();
-        $suppliers = Supplier::all();
-
-        return view('procurement.rfqs.create', compact('categories', 'suppliers', 'requisitions'));
-    }
+    return view('procurement.rfqs.create', compact('categories', 'suppliers', 'requisitions'));
+}
 
     /**
      * Store a newly created resource in storage.
@@ -253,9 +219,6 @@ public function store(Request $request)
         ->with('success', 'RFQ created successfully and submitted for approval.');
 }
 
-    /**
-     * Approve the RFQ and notify suppliers.
-     */
     /**
      * Approve the RFQ (Workflow).
      */
@@ -338,23 +301,64 @@ public function publish(Request $request, $id)
 
     $request->validate([
         'suppliers' => 'required|array|min:1',
-        'suppliers.*' => 'exists:t_Suppliers,Id',
+        'suppliers.*' => 'exists:t_SupplierMaster,Id', // Validate against SupplierMaster
     ], [
         'suppliers.required' => 'Please select at least one supplier.',
         'suppliers.min' => 'Please select at least one supplier.',
     ]);
 
-    $supplierIds = collect($request->suppliers)
+    $supplierMasterIds = collect($request->suppliers)
         ->map(fn($v) => (int)$v)
         ->unique()
         ->values()
         ->all();
 
-    Log::info('Publishing to suppliers', [
+    Log::info('Publishing to suppliers (Master IDs)', [
         'rfq_id' => $rfq->Id,
-        'supplier_count' => count($supplierIds),
-        'supplier_ids' => $supplierIds
+        'supplier_master_ids' => $supplierMasterIds
     ]);
+
+    $supplierIds = [];
+    foreach ($supplierMasterIds as $masterId) {
+        // Check if supplier exists in t_Suppliers (for this RFQ context, we might need a specific category, 
+        // but for now we just ensure a record exists to link to)
+        // We'll try to find an existing active supplier record for this master ID
+        $supplier = DB::table('t_Suppliers')
+            ->where('SupplierMasterId', $masterId)
+            ->whereNull('DeletedOn')
+            ->first();
+
+        if (!$supplier) {
+            // Create a new supplier record if one doesn't exist
+            // We need a default category or logic here. For now, we'll try to use the RFQ's category if possible,
+            // or a default one. Since we removed strict category filtering, we just need A record.
+            
+            // Get a valid category ID (try RFQ's category, or first available)
+            $categoryId = $rfq->ItemCategoryId ?? DB::table('t_ItemCategories')->value('Id');
+            
+            // Get a valid Supplier Category ID (try to find one linked to the item category, or just the first one)
+            $supplierCategoryId = DB::table('t_SupplierCategory_ItemCategory')
+                ->where('ItemCategoryID', $categoryId)
+                ->value('SupplierCategoryID') 
+                ?? DB::table('t_SupplierCategories')->value('SupplierCategoryID');
+
+            $newSupplierId = DB::table('t_Suppliers')->insertGetId([
+                'SupplierMasterId' => $masterId,
+                'CategoryId' => $supplierCategoryId, // This is actually SupplierCategoryID in some contexts, but schema says CategoryId
+                'SupplierCategoryID' => $supplierCategoryId,
+                'Active_Status' => 1,
+                'CreatedBy' => Auth::user()->Id,
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::user()->Id,
+                'ModifiedOn' => now(),
+            ]);
+            
+            $supplierIds[] = $newSupplierId;
+            Log::info('Created new t_Suppliers record', ['master_id' => $masterId, 'new_id' => $newSupplierId]);
+        } else {
+            $supplierIds[] = $supplier->Id;
+        }
+    }
 
     // Update supplier statuses in the pivot table
     $rfq->suppliers()->syncWithPivotValues($supplierIds, ['Status' => 'Approved']);
@@ -379,22 +383,24 @@ public function publish(Request $request, $id)
     ]);
 
     // Build recipients (unique emails for selected suppliers)
-    $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
-        ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
-        ->whereNull('tpu.DeletedOn')
-        ->groupBy('tpu.ThirdPartyId');
+   // Build recipients (unique emails for selected suppliers)
+$thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
+    ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
+    ->whereNull('tpu.DeletedOn')
+    ->groupBy('tpu.ThirdPartyId');
 
-    $recipientRows = DB::table('t_Suppliers as s')
-        ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-        ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
-            $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
-        })
-        ->whereIn('s.Id', $supplierIds)
-        ->whereNull('s.DeletedOn')
-        ->whereNull('tp.DeletedOn')
-        ->select('tp.TradingName', DB::raw('tpu.Email as Email'))
-        ->get();
-
+$recipientRows = DB::table('t_Suppliers as s')
+    ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+    ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
+    ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
+        $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
+    })
+    ->whereIn('s.Id', $supplierIds)
+    ->whereNull('s.DeletedOn')
+    ->whereNull('sm.DeletedOn')
+    ->whereNull('tp.DeletedOn')
+    ->select('tp.TradingName', DB::raw('tpu.Email as Email'))
+    ->get();
     $cc = [];
     $usedEmails = [];
     foreach ($recipientRows as $row) {
@@ -530,19 +536,11 @@ public function reject(Request $request, $id)
 
     /**
      * Display the specified resource.
-     */ 
-  public function show($id)
+     */
+   public function show($id)
 {
     // Get the RFQ and its associated RFQLines
-    $rfq = RFQ::with([
-        'rfqlines',
-        'rfqLines.uom', 
-        'requisition', 
-        'workflowHistory.creator', // Loads the user who took action
-        'workflowHistory.status',  // Loads the status description
-        'workflowPending.user'     // Loads who the approval is waiting on
-    ])->findOrFail($id);
-
+    $rfq = RFQ::with('rfqLines', 'rfqLines.uom', 'requisition')->findOrFail($id);
     $this->authorize('view', $rfq);
 
     // Debug: Check what's being passed to workflow service
@@ -591,60 +589,57 @@ public function reject(Request $request, $id)
         ->whereNull('tpu.DeletedOn')
         ->groupBy('tpu.ThirdPartyId');
 
-        // Select suppliers and de-duplicate by ThirdPartyId (one row per supplier in UI)
-        $suppliers = DB::table('t_Suppliers as s')
-            ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
-            ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
-            ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
-                $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
-            })
-            ->whereNull('s.DeletedOn')
-            ->whereNull('sm.DeletedOn')
-            ->whereNull('tp.DeletedOn')
-            ->where('s.Active_Status', 1)
-            ->whereExists(function ($q) use ($allCategoryIds) {
-                $q->select(DB::raw(1))
-                    ->from('t_SupplierCategory_ItemCategory as scic')
-                    ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
-                    ->whereNull('sc.DeletedOn')
-                    ->whereNull('scic.DeletedOn')
-                    ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                    ->whereColumn('sc.SupplierCategoryID', 's.CategoryId');
-            })
-            ->groupBy('tp.Id', 'tp.TradingName', 'tp.BusinessType')
-            ->select(
-                DB::raw('MIN(s.Id) as Id'),
-                DB::raw('MIN(s.CategoryId) as SupplierCategoryId'),
-                'tp.Id as ThirdPartyId',
-                'tp.TradingName as SupplierName',
-                'tp.BusinessType',
-                DB::raw('MIN(tpu.Email) as Email')
-            )
-            ->get();
+    // FIXED: Select suppliers from SupplierMaster directly
+    $suppliers = DB::table('t_SupplierMaster as sm')
+        ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
+        ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
+            $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
+        })
+        ->whereNull('sm.DeletedOn')
+        ->whereNull('tp.DeletedOn')
+        ->where('sm.ApprovalStatus', 'A') // Only approved suppliers
+        ->select(
+            'sm.Id', // Use SupplierMaster Id
+            'sm.ThirdPartyId',
+            'tp.TradingName as SupplierName',
+            'tp.BusinessType',
+            DB::raw('tpu.Email as Email')
+        )
+        ->orderBy('tp.TradingName')
+        ->get();
+
+    Log::info('Suppliers fetched for RFQ', [
+        'rfq_id' => $rfq->Id,
+        'supplier_count' => $suppliers->count(),
+        'suppliers' => $suppliers->toArray()
+    ]);
 
     // Load RFQ responses (supplier quotations) with items and supplier info for printing
-    $rfqResponses = RFQResponse::with(['items.uom', 'supplier.thirdParty'])
+    $rfqResponses = RFQResponse::with(['items.uom', 'supplier.supplierMaster.thirdParty'])
         ->where('RFQId', $rfq->Id)
         ->get();
 
     // Get workflow data
-try {
+    $canApprove = false;
+    $history = collect();
+    $pendingApprovals = [];
+    try {
         $canApprove = $this->workflowService->canUserApprove($rfq, Auth::user());
+        $history = $this->workflowService->getHistory($rfq);
+        $pendingApprovals = $this->workflowService->getPendingApprovals($rfq);
         
-        // Use the relationships we just defined and eager-loaded
-        $history = $rfq->workflowHistory; 
-        $pendingApprovals = $rfq->workflowPending;
-
-        Log::info('Workflow data retrieved via Eloquent', [
+        Log::info('Workflow data retrieved', [
             'rfq_id' => $rfq->Id,
+            'can_approve' => $canApprove,
             'history_count' => $history->count(),
-            'pending_count' => $pendingApprovals->count()
+            'pending_count' => count($pendingApprovals)
         ]);
     } catch (\Exception $e) {
-        Log::error('Workflow service error: ' . $e->getMessage());
-        $canApprove = false;
-        $history = collect();
-        $pendingApprovals = collect();
+        Log::error('Failed to get workflow data', [
+            'rfq_id' => $rfq->Id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
     }
 
     return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses', 'canApprove', 'history', 'pendingApprovals'));
@@ -706,34 +701,81 @@ try {
     }
 
     /**
-     * Get categories from requisition for RFQ line creation
-     * Add this method to your RFQController
-     */
-    public function getRequisitionCategories($requisitionId)
-    {
-        try {
-            // Get distinct item categories from requisition lines
-            $categories = DB::table('t_RequisitionLines as rl')
-                ->join('t_ItemCategories as ic', 'rl.ItemCategoryId', '=', 'ic.Id')
-                ->where('rl.RequisitionID', $requisitionId)
-                ->whereNull('rl.DeletedOn')
-                ->whereNull('ic.DeletedOn')
-                ->select('ic.Id', 'ic.Name')
-                ->distinct()
-                ->get();
+ * Get categories from requisition for RFQ line creation
+ * Add this method to your RFQController
+ */
+public function getRequisitionCategories($requisitionId)
+{
+    try {
+        // Get distinct item categories from requisition lines
+        $categories = DB::table('t_RequisitionLines as rl')
+            ->join('t_ItemCategories as ic', 'rl.ItemCategoryId', '=', 'ic.Id')
+            ->where('rl.RequisitionID', $requisitionId)
+            ->whereNull('rl.DeletedOn')
+            ->whereNull('ic.DeletedOn')
+            ->select('ic.Id', 'ic.Name')
+            ->distinct()
+            ->get();
 
-            return response()->json([
-                'success' => true,
-                'categories' => $categories
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Failed to fetch requisition categories: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to load categories',
-                'categories' => []
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'categories' => $categories
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Failed to fetch requisition categories: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to load categories',
+            'categories' => []
+        ], 500);
     }
+}
+/**
+ * Get workflow history manually
+ */
+private function getManualWorkflowHistory($rfqId)
+{
+    return DB::table('t_WorkflowHistory as wh')
+        ->join('t_Users as u', 'wh.UserId', '=', 'u.Id')
+        ->where('wh.Source', 'RFQId')
+        ->where('wh.SourceID', $rfqId)
+        ->whereNull('wh.DeletedOn')
+        ->select(
+            'wh.Action',
+            'u.Name as UserName',
+            'wh.ActionDate',
+            'wh.Notes'
+        )
+        ->orderBy('wh.ActionDate', 'desc')
+        ->get();
+}
+
+/**
+ * Get pending approvals manually
+ */
+private function getManualPendingApprovals($rfqId)
+{
+    $pending = DB::table('t_WorkflowPending as wp')
+        ->join('t_WorkflowStages as ws', 'wp.StageId', '=', 'ws.Id')
+        ->join('t_Users as u', 'wp.UserId', '=', 'u.Id')
+        ->where('wp.Source', 'RFQId')
+        ->where('wp.SourceID', $rfqId)
+        ->whereNull('wp.DeletedOn')
+        ->select(
+            'ws.StageName as stage_name',
+            'u.Name as user_name',
+            'wp.Status'
+        )
+        ->get();
+    
+    return $pending->map(function($item) {
+        return (object)[
+            'stage_name' => $item->stage_name,
+            'user_name' => $item->user_name,
+            'status' => $item->Status ?? 'Pending'
+        ];
+    })->toArray();
+}
+
 }

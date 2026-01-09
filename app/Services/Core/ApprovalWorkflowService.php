@@ -544,10 +544,38 @@ abstract class ApprovalWorkflowService
             // Check for errors returned by SP
             if (!empty($result) && isset($result[0]->Status)) {
                 if ($result[0]->Status === 'ERROR') {
+                    $message = $result[0]->Message ?? 'Unknown error';
+
+                    $permissionId = null;
+                    if (preg_match('/PermissionId:\s*(\d+)/i', $message, $m)) {
+                        $permissionId = (int)$m[1];
+                    }
+
+                    $permissionName = null;
+                    $eligibleCount = null;
+                    if ($permissionId) {
+                        try {
+                            $permissionName = DB::table('t_Permissions')->where('id', $permissionId)->value('name');
+                            $cntRow = DB::selectOne('SELECT COUNT(*) AS cnt FROM dbo.f_getUserWithPermission(?)', [$permissionId]);
+                            $eligibleCount = $cntRow?->cnt ?? null;
+                        } catch (\Throwable $e) {
+                            // ignore enrichment errors
+                        }
+                    }
+
                     Log::error("p_ProcessWorkflowPending returned ERROR", [
-                        'message' => $result[0]->Message ?? 'Unknown error',
+                        'message' => $message,
+                        'permission_id' => $permissionId,
+                        'permission_name' => $permissionName,
+                        'eligible_users' => $eligibleCount,
                     ]);
-                    throw new ErroredException($result[0]->Message ?? 'Failed to create pending approvals');
+
+                    if ($permissionId) {
+                        $suffix = $permissionName ? " (Permission: {$permissionName})" : '';
+                        throw new ErroredException($message . $suffix . '. Assign this permission to at least one approver (not the maker) and retry.');
+                    }
+
+                    throw new ErroredException($message ?: 'Failed to create pending approvals');
                 }
             }
 
@@ -1028,9 +1056,16 @@ abstract class ApprovalWorkflowService
             $mappings = config('workflow', []);
 
             // Try to find the mapping for this workflow source
-            if (isset($mappings[$workflowSource]) && isset($mappings[$workflowSource]['Approved'])) {
-                return $mappings[$workflowSource]['Approved'];
+          if (isset($mappings[$workflowSource]) && isset($mappings[$workflowSource]['Approved'])) {
+            $approvedValue = $mappings[$workflowSource]['Approved'];
+            
+            // If it's an enum, get its value
+            if ($approvedValue instanceof \BackedEnum) {
+                return $approvedValue->value;
             }
+            
+            return (string) $approvedValue;
+        }
 
             // Look for common status patterns in the table's code details
             $commonApprovedStatuses = ['a', 'approved', 'complete', 'completed', 'done', 'final'];

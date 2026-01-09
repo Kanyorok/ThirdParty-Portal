@@ -10,6 +10,7 @@ use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParty\ThirdParties;
 use App\Services\FleetManagement\FleetRepairLogService;
+use App\Models\ThirdParty\SupplierMaster;
 
 class FleetRepairLogController extends Controller
 {
@@ -26,7 +27,7 @@ class FleetRepairLogController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetRepairLog::class);
-        $repairs = FleetRepairLog::with(['vehicle'])
+        $repairs = FleetRepairLog::with(['vehicle','vendor.party'])
             ->orderByDesc('RepairDate')
             ->get();
 
@@ -40,7 +41,9 @@ class FleetRepairLogController extends Controller
     {
         $this->authorize('create', FleetRepairLog::class);
         $vehicles = FleetVehicle::all();
-        $vendors = ThirdParties::where('IsPrequalified', true)->get();
+        $vendors = SupplierMaster::with('party')
+            ->where('IsPrequalified', true)
+            ->get();
         $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
             ->orderBy('Value')
             ->get();
@@ -70,7 +73,7 @@ class FleetRepairLogController extends Controller
     public function show(int $id)
     {
         $this->authorize('index', FleetRepairLog::class);
-        $repair = FleetRepairLog::with(['vehicle'])->findOrFail($id);
+        $repair = FleetRepairLog::with(['vehicle','vendor.party'])->findOrFail($id);
 
         return view('fleet.maintenance.repair_logs.show', compact('repair'));
     }
@@ -78,22 +81,27 @@ class FleetRepairLogController extends Controller
     /**
      * Show form for editing repair log
      */
-    public function edit(int $id)
-    {
-        $this->authorize('edit', FleetRepairLog::class);
-        $repair = FleetRepairLog::with(['vehicle'])->findOrFail($id);
-        $vehicles = FleetVehicle::all();
-        $vendors = ThirdParties::where('IsPrequalified', true)->get();
-        $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
-            ->orderBy('Value')
-            ->get();
-        $schedules = FleetMaintenanceSchedule::where('Status', '!=', '0')
-            ->orderByDesc('ScheduledDate')
-            ->get();
 
-        return view('fleet.maintenance.repair_logs.edit', compact('repair', 'vehicles', 'schedules', 'repairType', 'vendors'));
-    }
+public function edit(int $id)
+{
+    $this->authorize('edit', FleetRepairLog::class);
+    
+    // Load vendor relationship
+    $repair = FleetRepairLog::with(['vehicle', 'vendor'])->findOrFail($id);
+    
+    $vehicles = FleetVehicle::all();
+    $vendors = SupplierMaster::with('party')
+        ->where('IsPrequalified', true)
+        ->get();
+    $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
+        ->orderBy('Value')
+        ->get();
+    $schedules = FleetMaintenanceSchedule::where('Status', '!=', '0')
+        ->orderByDesc('ScheduledDate')
+        ->get();
 
+    return view('fleet.maintenance.repair_logs.edit', compact('repair', 'vehicles', 'schedules', 'repairType', 'vendors'));
+}
     /**
      * Update the specified repair log
      */

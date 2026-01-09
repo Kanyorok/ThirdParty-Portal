@@ -9,7 +9,7 @@ enum Transfers: string
     use UsefulEnumTrait;
 
 
-    case Pending = 'pe';
+    case Pending = 'P';
 
     case InTransit = 'it';
 

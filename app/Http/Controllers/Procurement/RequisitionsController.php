@@ -15,10 +15,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Inventory\UnitOfMeasure;
 
 class RequisitionsController extends Controller
 {
     protected ApprovalWorkflow $workflow;
+
 
     public function __construct(
         protected RequisitionService $service,
@@ -429,12 +431,12 @@ class RequisitionsController extends Controller
                 ->pluck('DepartmentID');
 
             $branches = DB::table('t_Branches')
-                ->whereIn('BranchCode', $branchIds)
+                ->whereIn('Id', $branchIds)
                 ->select('Id', 'Name')
                 ->get();
 
             $departments = DB::table('t_Departments')
-                ->whereIn('DepartmentCode', $departmentIds)
+                ->whereIn('Id', $departmentIds)
                 ->select('Id', 'Name')
                 ->get();
 
@@ -443,9 +445,12 @@ class RequisitionsController extends Controller
                 'departments' => $departments,
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to get plan details: ' . $e->getMessage());
+            Log::error('Failed to get plan details: ' . $e->getMessage(), [
+                'plan_id' => $id,
+                'exception' => $e->getTraceAsString()
+            ]);
             return response()->json([
-                'error' => 'Failed to fetch plan details'
+                'error' => 'Unable to load plan details. Please try again or contact support if the issue persists.'
             ], 500);
         }
     }
@@ -483,8 +488,9 @@ class RequisitionsController extends Controller
             $details = $this->requisitionItemService->getRequisitionRelatedItems($id);
             $types = $this->service->getItemTypes();
             $requisitionInfo = $this->service->getRelatedRequisition($id);
+            $uoms = UnitOfMeasure::all();
             
-            return view('procurement.requisitions.show', compact('details', 'types', 'id', 'requisitionInfo'));
+            return view('procurement.requisitions.show', compact('details', 'types', 'id', 'requisitionInfo', 'uoms'));
         } catch (\Exception $e) {
             Log::error('Failed to show requisition: ' . $e->getMessage());
             return redirect()->route('requisition.index')->with('error', 'Failed to fetch requisition: ' . $e->getMessage());

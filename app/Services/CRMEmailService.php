@@ -50,7 +50,7 @@ class CRMEmailService
         return self::create($actor, $subject, $body, ($priorityEnum) ?? EmailPriorityEnum::Normal, [[$client->Name => $to]], Client::getPrimaryKey(), $client->ClientID, $cc, replyTo: $replyTo);
     }
 
-    private static function create(User $actor, string $subject, string $body, EmailPriorityEnum $priority, array $to, string $Party, string $PartyID, array $cc = [], array $bcc = [], Email $replyTo = null): CRMEmailService
+    private static function create(User $actor, string $subject, string $body, EmailPriorityEnum $priority, array $to, ?string $Party = null, ?string $PartyID = null, array $cc = [], array $bcc = [], Email $replyTo = null): CRMEmailService
     {
         if (!$replyTo instanceof Email && !Str::contains($subject, ['RE:', config('org.name')])) {
             $subject .= ' - ' . config('org.name');
@@ -67,8 +67,8 @@ class CRMEmailService
             'Subject' => $subject,
             'Body' => $body,
             'Text' => StringHelper::cleanHtml($body),
-            'Party' => $Party,
-            'PartyID' => $PartyID,
+            'Party' => $Party ?: null,
+            'PartyID' => $PartyID ?: null,
             'EmailConversationId' => $replyTo?->EmailConversationId,
             'ReferenceId' => $replyTo?->MailID,
             'CreatedBy' => $actor->Id,
@@ -105,15 +105,15 @@ class CRMEmailService
      * @param string $subject
      * @param string $body
      * @param array $to Array of associative arrays like [["Name" => "email@domain"]]
-     * @param string $Party Optional party key (e.g., 'ThirdParty')
-     * @param string $PartyID Optional party id
+     * @param string|null $Party Optional party key (e.g., 'ThirdParty')
+     * @param string|null $PartyID Optional party id
      * @param array $cc Array of associative arrays like [["Name" => "email@domain"]]
      * @param array $bcc Array of associative arrays like [["Name" => "email@domain"]]
      * @param EmailPriorityEnum|null $priorityEnum
      * @param Email|null $replyTo
      * @return CRMEmailService
      */
-    public static function createRaw(User $actor, string $subject, string $body, array $to, string $Party = '', string $PartyID = '', array $cc = [], array $bcc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
+    public static function createRaw(User $actor, string $subject, string $body, array $to, ?string $Party = null, ?string $PartyID = null, array $cc = [], array $bcc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
     {
         return self::create($actor, $subject, $body, ($priorityEnum) ?? EmailPriorityEnum::Normal, $to, $Party, $PartyID, $cc, $bcc, $replyTo);
     }
@@ -222,7 +222,7 @@ class CRMEmailService
 
     public function createReply(string $To, string $subject, string $body, User $actor, array $cc = []): CRMEmailService
     {
-        return self::create($actor, $subject, $body, $this->crmEmail->Priority, [[$To => $To]], ($this->crmEmail->Party) ?? '', ($this->crmEmail->PartyID) ?? "", $cc, /*$this->crmEmail->BCC*/ [], $this->crmEmail);
+        return self::create($actor, $subject, $body, $this->crmEmail->Priority, [[$To => $To]], ($this->crmEmail->Party) ?? '', ($this->crmEmail->PartyID) ?? "", $cc, [], $this->crmEmail);
     }
 
     public function addAttachmentUpload(UploadedFile $file, User $actor): static
@@ -379,9 +379,7 @@ class CRMEmailService
         }
 
         if ($this->crmEmail->Status->value === EmailStatusEnum::Queued->value) {
-            /* if (!filter_var($this->crmEmail->to, FILTER_VALIDATE_EMAIL)) {
-                 $this->_failed();
-             }*/
+
             return $this->_send();
         }
 
@@ -432,9 +430,7 @@ class CRMEmailService
 
     protected function _send(): static
     {
-        /*if (config('app.debug')) {
-            return $this->_failed('In debug');
-        }*/
+
         //$mailable = Mail::send(new DefaultEmail($this->crmEmail));
         try {
             $mailable = $this->_sendNewConfig();
@@ -490,7 +486,7 @@ class CRMEmailService
         $this->crmEmail->update([
             'From' => $emailConfig?->Outgoing?->username,
         ]);
-        // $mailer = (new MailManager(clone app('mailer')));
+
 
         $mailer = clone app('mailer');
         $mailer->alwaysFrom($emailConfig?->Outgoing?->username, config('org.name'));

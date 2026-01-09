@@ -49,6 +49,7 @@ class RegisterThirdPartyUserRequest extends FormRequest
             'CountryId' => ['nullable', 'integer', 'exists:t_Country,Id'],
             'PhysicalAddress' => ['nullable', 'string', 'max:500'],
             'Website' => ['nullable', 'url', 'max:255'],
+            'verification_base_url' => ['nullable', 'string', 'url'],
         ];
     }
 

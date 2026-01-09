@@ -68,7 +68,7 @@
 
     {{-- ✅ Header --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('bancassurance.customers.create') }}"
+        <a href="{{ route('thirdparty.parties.index') }}"
             class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-person-plus me-1"></i> New Customer
         </a>
@@ -100,7 +100,7 @@
                         <tr>
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td>{{ $customer->thirdParty->ThirdPartyName ?? '-' }}</td>
-                            <td>{{ $customer->NationalID ?? '-' }}</td>
+                            <td>{{ $customer->thirdParty->RegistrationNumber ?? '-' }}</td>
                             <td>{{ $customer->thirdParty->Phone ?? '-' }}</td>
                             <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
                             <td>
@@ -108,6 +108,12 @@
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
+                                    {{-- View --}}
+                                    <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" 
+                                        class="btn btn-outline-info rounded-pill px-2" 
+                                        title="View Customer">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     {{-- Portfolio --}}
                                     <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}"
                                         class="btn btn-outline-info rounded-pill px-2"
@@ -123,7 +129,7 @@
                                     </a>
 
                                     {{-- Beneficiary --}}
-                                    <a href="{{ route('bancassurance.customers.beneficiaries.create') }}"
+                                    <a href="{{ route('bancassurance.customers.beneficiaries.create', ['customerId' => $customer->Id]) }}"
                                         class="btn btn-outline-primary rounded-pill px-2"
                                         title="Add Beneficiary">
                                         <i class="bi bi-person-plus"></i>

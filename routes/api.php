@@ -4,15 +4,15 @@ use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
-use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
+// use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use App\Http\Controllers\API\Enums\CodeDetailsController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
+// use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierController;
@@ -20,11 +20,12 @@ use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressCo
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\TenderInvitationController;
 use App\Http\Controllers\API\DMS\DocumentApiController;
-use App\Http\Controllers\Procurement\TenderDocumentController;
+// use App\Http\Controllers\Procurement\TenderDocumentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
+// use App\Http\Controllers\Settings\WorkFlowController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -55,7 +56,9 @@ Route::post('auth/validate-token', function (Request $request) {
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
     Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
-    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
+    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])
+        ->name('verification.verify')
+        ->middleware('signed');
     Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
     Route::post('forgot-password', [ThirdPartyAuthController::class, 'forgotPassword']);
     Route::post('reset-password', [ThirdPartyAuthController::class, 'resetPassword']);
@@ -95,7 +98,7 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
 
         // Fetch tender invitations
         $invitations = \App\Models\Procurement\TenderInvitation::where('SupplierId', $supplier->Id)
-            ->with(['tender'])
+            ->with(['tender.documents'])
             ->take(5)
             ->get();
 
@@ -109,7 +112,9 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
                     'InvitationID' => $inv->InvitationID,
                     'TenderId' => (int)$inv->TenderId,
                     'ResponseStatus' => strtolower($inv->ResponseStatus),
-                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded'
+                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded',
+                    'documents_count' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->count() : 0,
+                    'documents' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->toArray() : []
                 ];
             })
         ]);
@@ -123,10 +128,6 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
 });
 
 
-// Tenders API (public index to allow portal to call with third_party_id)
-Route::apiResource('tenders', TenderApiController::class);
-Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
-Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
 
 // DMS: Documents visible to authenticated user
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
@@ -206,14 +207,25 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::apiResource('third-party-categories', ThirdPartyCategoryController::class);
     });
 
-    // Additional tender-related routes (still need auth)
+    // Protected tender-related actions (store, update, delete, items, suppliers)
     Route::prefix('tenders')->group(function () {
         Route::post('{tenderId}/items', [TenderApiController::class, 'addItem']);
         Route::delete('{tenderId}/items/{itemId}', [TenderApiController::class, 'deleteItem']);
         Route::post('{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
         Route::delete('{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
     });
+
+    Route::post('tenders', [TenderApiController::class, 'store']);
+    Route::put('tenders/{tender}', [TenderApiController::class, 'update']);
+    Route::delete('tenders/{tender}', [TenderApiController::class, 'destroy']);
+    
+    Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
 });
+
+// Semi-public routes (index/show handle their own auth checks for filtering)
+Route::get('tenders', [TenderApiController::class, 'index']);
+Route::get('tenders/{tender}', [TenderApiController::class, 'show']);
+Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
 
 // currencies
 Route::prefix('v1')->group(function () {
@@ -245,6 +257,8 @@ Route::prefix('v1')->group(function () {
 
     require __DIR__ . '/integrations/dms.php';
 
+    require __DIR__ . '/integrations/property.php';
+
     Route::prefix('inventory')->group(function () {
         Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);
     });
@@ -269,22 +283,26 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
-
-        // Supplier RFQ endpoints (supplier portal)
-        Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+        // Protected RFQ actions (submit, clarifying)
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
-        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
 
-// Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage
-Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
+// Semi-public RFQ routes (index handle their own auth checks for filtering)
+Route::prefix('procurement')->name('api.procurement.')->group(function () {
+    Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
+    Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+    Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
+});
+
+// PROTECTED routes for prequalification (submitting applications) - AUTH REQUIRED
+Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
     ->prefix('prequalification')
     ->name('api.prequalification.')
     ->group(function () {
         Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
         Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+        Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
     });
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
@@ -341,5 +359,10 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
     })->name('crdb.health');
 });
 
+// Third paties Portal
+Route::prefix('v1')->group(function () {
+    require __DIR__ . '/portal.php';
+});
+
 //api routes for workflow stages
-Route::get('api/workflows/{id}/state', 'Settings\WorkFlowController@getState');
+Route::get('api/workflows/{id}/state', [\App\Http\Controllers\Settings\WorkFlowController::class, 'getState']);

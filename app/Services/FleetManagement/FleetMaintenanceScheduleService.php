@@ -4,17 +4,14 @@ namespace App\Services\FleetManagement;
 
 use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Fleet\FleetServiceAlert;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Approval\CodeDetail;
-use App\Enums\WorkflowStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class FleetMaintenanceScheduleService
 {
     /**
-     * Create a new maintenance schedule + alert + workflows
+     * Create a new maintenance schedule + alert
      */
     public function create(array $data): FleetMaintenanceSchedule
     {
@@ -28,30 +25,26 @@ class FleetMaintenanceScheduleService
                 'MaintenanceType' => $data['MaintenanceType'],
                 'ScheduledDate' => $data['ScheduledDate'],
                 'ScheduledMileage' => $data['ScheduledMileage'] ?? null,
-                'Location' => $data['Location'] ?? null,
                 'Notes' => $data['Notes'] ?? null,
                 'Status' => $data['Status'] ?? 1,
                 'MaintenanceStatus' => $statusId,
+                'VendorID' => $data['VendorID'] ?? null,
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
 
-            //Create corresponding alert (ack fields null)
+            // Create corresponding alert (ack fields null)
             $alertService = app(FleetServiceAlertService::class);
-            $alert = $alertService->createFromSchedule($schedule->Id, $statusId);
+            $alertService->createFromSchedule($schedule->Id, $statusId);
 
-            // Log workflows for both
-            $this->logWorkflow('MaintenanceSchedule', $schedule->Id, $statusId, 'Schedule created');
-            $this->logWorkflow('ServiceAlert', $alert->Id, $statusId, 'Alert created for schedule');
-
-            // Activity log
+            // Activity log (no workflow)
             activity()
                 ->performedOn($schedule)
                 ->causedBy(Auth::user())
                 ->event('created')
-                ->log("Maintenance Schedule {$schedule->ScheduleID} created with Alert {$alert->AlertID}.");
+                ->log("Maintenance Schedule {$schedule->ScheduleID} created with Alert.");
 
             return $schedule;
         });
@@ -66,7 +59,7 @@ class FleetMaintenanceScheduleService
             $schedule = FleetMaintenanceSchedule::findOrFail($scheduleId);
             $statusId = $this->getStatusId('Acknowledged');
 
-            // Update schedule
+            // Update schedule status
             $schedule->update([
                 'MaintenanceStatus' => $statusId,
                 'ModifiedBy' => Auth::id(),
@@ -76,9 +69,6 @@ class FleetMaintenanceScheduleService
             // Update or create alert
             $alertService = app(FleetServiceAlertService::class);
             $alertService->acknowledgeFromSchedule($scheduleId);
-
-            // Workflow
-            $this->logWorkflow('MaintenanceSchedule', $schedule->Id, $statusId, 'Schedule acknowledged');
 
             activity()
                 ->performedOn($schedule)
@@ -93,7 +83,6 @@ class FleetMaintenanceScheduleService
     /**
      * Complete a schedule + alert
      */
-
     public function updateMileage(int $scheduleId, int $mileage): FleetMaintenanceSchedule
     {
         return DB::transaction(function () use ($scheduleId, $mileage) {
@@ -114,10 +103,7 @@ class FleetMaintenanceScheduleService
                 $alertService->complete($schedule->alert->Id, $mileage);
             }
 
-            // Log workflow
-            $this->logWorkflow('MaintenanceSchedule', $schedule->Id, $statusId, 'Schedule completed via mileage update');
-
-            // Activity log
+            // Activity log (no workflow)
             activity()
                 ->performedOn($schedule)
                 ->causedBy(Auth::user())
@@ -142,8 +128,6 @@ class FleetMaintenanceScheduleService
                 app(FleetServiceAlertService::class)->delete($schedule->alert->Id);
             }
 
-            $this->logWorkflow('MaintenanceSchedule', $schedule->Id, null, 'Schedule deleted');
-
             activity()
                 ->performedOn($schedule)
                 ->causedBy(Auth::user())
@@ -161,45 +145,10 @@ class FleetMaintenanceScheduleService
         return 'SCH-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
     }
 
-
     private function getStatusId(string $description): ?int
     {
         return CodeDetail::where('CodeID', 'FleetMaintenanceStatus')
             ->where('Description', $description)
             ->value('ID');
-    }
-
-    private function logWorkflow(string $source, int $sourceId, ?int $statusId, ?string $notes = null)
-    {
-        $enumValue = match ($statusId) {
-            $this->getStatusId('Scheduled') => WorkflowStatus::Scheduled,
-            $this->getStatusId('Acknowledged') => WorkflowStatus::Acknowledged,
-            $this->getStatusId('Completed') => WorkflowStatus::Completed,
-            default => null,
-        };
-
-        Workflow::create([
-            'Source' => $source,
-            'SourceID' => $sourceId,
-            'Stage' => $statusId,
-            'Status' => $enumValue,
-            'Notes' => $notes,
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
-
-        PendingWorkflow::updateOrCreate(
-            ['Source' => $source, 'SourceID' => $sourceId],
-            [
-                'Stage' => $statusId,
-                'UserId' => Auth::id(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]
-        );
     }
 }

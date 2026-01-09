@@ -16,6 +16,7 @@ class ProcurementPeriodController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', ProcurementPeriod::class);
         $periods = ProcurementPeriod::orderBy('StartDate', 'desc')->get();
         return view('procurement.periods.index', compact('periods'));
     }
@@ -25,6 +26,7 @@ class ProcurementPeriodController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', ProcurementPeriod::class);
         return view('procurement.periods.create');
     }
 
@@ -33,6 +35,7 @@ class ProcurementPeriodController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', ProcurementPeriod::class);
         $validated = $request->validate([
             'Title' => 'nullable|string|max:255',
             'StartDate' => 'required|date',
@@ -58,6 +61,7 @@ class ProcurementPeriodController extends Controller
     public function show(string $id)
     {
         $period = ProcurementPeriod::with('Suppliers')->findOrFail($id);
+        $this->authorize('view', $period);
         $plans = ProcurementPeriod::with('ProcurementPlans')->findOrFail($id);
         return view('procurement.periods.show', compact('period', 'plans'));
     }
@@ -68,6 +72,7 @@ class ProcurementPeriodController extends Controller
     public function edit(string $id)
     {
         $period = ProcurementPeriod::findOrFail($id);
+        $this->authorize('update', $period);
 
         return view('procurement.periods.edit', compact('period'));
     }
@@ -77,6 +82,9 @@ class ProcurementPeriodController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $period = ProcurementPeriod::findOrFail($id);
+        $this->authorize('update', $period);
+
         $validated = $request->validate([
             'Title' => 'nullable|string|max:255',
             'StartDate' => 'required|date',
@@ -85,7 +93,6 @@ class ProcurementPeriodController extends Controller
 
         $validated['ModifiedBy'] = Auth::id();
 
-        $period = ProcurementPeriod::findOrFail($id);
         $period->update($validated);
 
         return redirect()->route('procurement-periods.index')->with('success', 'Procurement period updated.');
@@ -97,6 +104,7 @@ class ProcurementPeriodController extends Controller
     public function destroy(string $id)
     {
         $period = ProcurementPeriod::findOrFail($id);
+        $this->authorize('delete', $period);
         $period->delete();
 
         return redirect()->route('procurement-periods.index')->with('success', 'Procurement period deleted.');
@@ -105,6 +113,7 @@ class ProcurementPeriodController extends Controller
     public function assignSuppliersForm($id)
     {
         $period = ProcurementPeriod::with('Suppliers')->findOrFail($id);
+        $this->authorize('update', $period);
         $suppliers = Supplier::all();
 
         return view('procurement.periods.assign_supplier', compact('period', 'suppliers'));
@@ -112,15 +121,16 @@ class ProcurementPeriodController extends Controller
 
     public function assignSuppliers(Request $request, $id)
     {
+        $period = ProcurementPeriod::findOrFail($id);
+        $this->authorize('update', $period);
+
         $request->validate([
             'SupplierIds' => 'required|array',
             'SupplierIds.*' => 'exists:t_Suppliers,Id',
         ]);
 
-        $period = ProcurementPeriod::findOrFail($id);
         $period->Suppliers()->sync($request->SupplierIds); // replaces existing
 
         return redirect()->route('procurement-periods.index')->with('success', 'Suppliers assigned successfully.');
     }
-
 }

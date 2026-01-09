@@ -16,7 +16,7 @@ class SupplierCategorySeeder extends Seeder
      */
     public function run()
     {
-        SupplierCategory::truncate();
+        // SupplierCategory::truncate(); // Cannot truncate due to FK constraints
 
         $cats = [
             [
@@ -71,7 +71,10 @@ class SupplierCategorySeeder extends Seeder
         ];
 
         foreach ($cats as $cat) {
-            SupplierCategory::create($cat);
+            SupplierCategory::firstOrCreate(
+                ['CategoryName' => $cat['CategoryName']],
+                $cat
+            );
         }
     }
 }

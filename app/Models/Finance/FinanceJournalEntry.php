@@ -3,10 +3,14 @@
 namespace App\Models\Finance;
 
 use App\Models\Auth\User;
+use App\Models\Core\Approval\Workflow;
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Finance\ReverseJournalEntry;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -143,5 +147,38 @@ class FinanceJournalEntry extends Model
         }
         return null;
     }
+
+    /**
+     * Workflows Relationships
+     */
+    public function workflows(): MorphMany
+    {
+        return $this->morphMany(
+            Workflow::class,
+            'source',
+            'Source',      // Column name in t_Workflow table
+            id: 'SourceID',    // ID column in t_Workflow table
+            localKey: 'Id'           // Local key
+        );
+    }
+    public function workflowHistory()
+    {
+        return $this->morphMany(
+            WorkflowHistory::class,
+            'source',
+            'Source',
+            'SourceID',
+            'Id'
+        );
+    }
+
+
+    public function workflowPending()
+    {
+        return $this->hasMany(WorkflowPending::class, 'SourceID', 'Id')
+            ->where('Source', 'FinanceJournalEntryId')
+            ->whereNull('DeletedOn');
+    }
+
 
 }

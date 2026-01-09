@@ -57,8 +57,8 @@ class RFQClarificationController extends Controller
 
         // Decorate
         $rfqNumbers = DB::table('t_RFQ')->whereIn('Id', $rows->pluck('RFQId')->unique())->pluck('RFQNumber','Id');
-        $supplierNames = DB::table('t_Suppliers as s')
-            ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+        $supplierNames = DB::table('t_SupplierMaster as s')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyId')
             ->whereIn('s.Id', $rows->pluck('SupplierId')->unique())
             ->pluck('tp.TradingName', 's.Id');
         $lineInfo = DB::table('t_RFQLines')->whereIn('Id', $rows->pluck('RFQLineId')->filter())->get(['Id','ItemName'])->keyBy('Id');
@@ -95,7 +95,7 @@ class RFQClarificationController extends Controller
             ->get(['Id','RFQId','SupplierId','RFQLineId','Question','Answer','CreatedOn']);
 
         // Decorate with supplier and line info
-        $supplierNames = DB::table('t_Suppliers as s')
+        $supplierNames = DB::table('t_SupplierMaster as s')
             ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
             ->whereIn('s.Id', $rows->pluck('SupplierId')->filter())
             ->pluck('tp.TradingName', 's.Id');

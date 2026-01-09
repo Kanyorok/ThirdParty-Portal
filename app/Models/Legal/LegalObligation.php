@@ -23,6 +23,7 @@ class LegalObligation extends Model
         'Title',
         'SourceType', // 'Contract' or 'Case'
         'DueDate',
+        'ExpiryDate',
         'Status', // Pending, Completed, Overdue
         'Description',
         'AssignedTo', // User ID for assignment

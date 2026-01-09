@@ -202,7 +202,8 @@ class OrderService
                 t_Orders.OrdTotExcl,
                 t_Orders.OrdTotIncl,
                 t_Orders.OrdTotTax,
-                t_Orders.OrdDiscAmnt
+                t_Orders.OrdDiscAmnt,
+                t_Orders.DocStatus
             '))
             ->groupBy(
                 't_Orders.Id',
@@ -219,7 +220,8 @@ class OrderService
                 't_Orders.OrdTotIncl',
                 't_Orders.OrdTotTax',
                 't_Orders.OrdDiscAmnt',
-                't_RFQ.RFQNumber'
+                't_RFQ.RFQNumber',
+                't_Orders.DocStatus'
             )
             ->orderByDesc('t_Orders.CreatedOn');
 
@@ -234,7 +236,8 @@ class OrderService
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_Orders.AccountID', '=', 't_Suppliers.Id')
-            ->leftJoin(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', DB::raw('t_Suppliers.ThirdPartyID'))
+            ->leftJoin(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 't_Suppliers.SupplierMasterId', '=', 'sm.Id')
+            ->leftJoin(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'sm.ThirdPartyId', '=', 'tp.Id')
             ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), function ($join) {
                 $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
@@ -253,9 +256,9 @@ class OrderService
                 SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
                 COUNT(t_OrderLines.Id) as ordercount,
                 t_Orders.AccountID,
-                t_Orders.OrdTotExcl,
-                t_Orders.OrdTotIncl,
-                t_Orders.OrdTotTax,
+                t_Orders.OrdTotExcl as ExclusiveTotal,
+                t_Orders.OrdTotIncl as InclusiveTotal,
+                t_Orders.OrdTotTax as TaxAmount,
                 t_Orders.OrdDiscAmnt,
                 COALESCE(tp.TradingName, tp.ThirdPartyName, CAST(t_Orders.AccountID AS NVARCHAR(50))) as SupplierName,
                 t_CodeDetails.Description as terms_description,
@@ -301,12 +304,12 @@ class OrderService
             ->select(DB::raw('
                 t_OrderLines.Id,
                 t_OrderLines.iOrderID,
-                t_OrderLines.fQuantity,
-                t_OrderLines.fLineDiscount,
-                t_OrderLines.fUnitPriceExcl,
+                t_OrderLines.fQuantity as Quantity,
+                t_OrderLines.fLineDiscount as Discount,
+                t_OrderLines.fUnitPriceExcl as UnitPrice,
                 t_OrderLines.CreatedOn,
                 t_Users.Name as CreatedBy,
-                t_OrderLines.fTaxRate,
+                t_OrderLines.fTaxRate as Tax,
                 t_Items.Id as ItemID,
                 t_Items.ItemName,
                 COALESCE(cd.Description, CAST(t_Items.ItemType AS NVARCHAR(50))) as ItemTypeName,

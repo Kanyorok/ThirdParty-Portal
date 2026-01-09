@@ -134,10 +134,12 @@
                     <textarea class="form-control" rows="2" name="InvoiceNotes" placeholder="Optional notes or remarks...">{{ old('InvoiceNotes') }}</textarea>
                 </div>
 
-                <a href="{{ route('rentinvoice.index') }}" class="btn btn-secondary">Back</a>
-                <button type="submit" class="btn btn-success"
-                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Generate Invoice
-                </button>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <a href="{{ route('rentinvoice.index') }}" class="btn btn-secondary">Back</a>
+                    <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Generate Invoice
+                    </button>
+                </div>
 
             </div>
         </div>

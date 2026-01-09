@@ -83,7 +83,8 @@ class PropertyMaintananceAssignController extends Controller
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
         $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
         $technicians = Employee::all();
-        $vendors = Supplier::all();
+        $vendors = SupplierMaster::where('IsPrequalified', true)
+            ->select('ThirdPartyId')->get();
         return view('property.maintenanceandissues.assignrequests.edit', compact('assignment','assignmentTypes', 'priorityLevels', 'technicians', 'vendors'));
     }
 

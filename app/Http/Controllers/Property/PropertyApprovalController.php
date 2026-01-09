@@ -72,7 +72,7 @@ class PropertyApprovalController extends Controller
 
         try {
             DB::transaction(function () use ($lease, $user) {
-                // Use 'ApprovalStatus' column for lease approvals (not the default 'Status')
+
                 $this->workflow->approve($lease, $user, ApprovalEnum::Approved, 'Approved via UI', statusColumn: 'ApprovalStatus');
             });
         } catch (ErroredException $e) {
@@ -81,7 +81,7 @@ class PropertyApprovalController extends Controller
             Log::error('Error approving lease: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         } finally {
-            // Release lock
+
             optional($lock)->release();
         }
 
@@ -113,7 +113,7 @@ class PropertyApprovalController extends Controller
 
         try {
             DB::transaction(function () use ($lease, $user, $reason) {
-                // Ensure workflow updates the 'ApprovalStatus' column for leases
+
                 $this->workflow->reject($lease, $user, ApprovalEnum::Rejected, $reason, statusColumn: 'ApprovalStatus');
             });
         } catch (ErroredException $e) {

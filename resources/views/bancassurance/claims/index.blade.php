@@ -59,13 +59,13 @@
 
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="{{ route('bancassurance.claims.create') }}"
-            class="btn btn-sm btn-primary rounded-pill shadow-sm">
-            <i class="bi bi-plus-circle me-1"></i> Initiate New Claim
-        </a>
         <a href="{{ route('bancassurance.claims.closed') }}"
             class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
             View Closed Claims
+        </a>
+        <a href="{{ route('bancassurance.claims.create') }}"
+            class="btn btn-sm btn-primary rounded-pill shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Initiate New Claim
         </a>
     </div>
 
@@ -114,13 +114,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                No claims found.
-                            </td>
-                        </tr>
-                        @endforelse
+                          @endforelse
                     </tbody>
                 </table>
             </div>

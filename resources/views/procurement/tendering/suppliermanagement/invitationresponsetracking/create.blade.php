@@ -61,4 +61,40 @@
         <button type="submit" class="btn btn-primary">Submit Response</button>
     </form>
 </div>
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tenderSelect = document.getElementById('tenderSelect');
+        const supplierSelect = document.getElementById('supplierSelect');
+
+        tenderSelect.addEventListener('change', function() {
+            const tenderId = this.value;
+            supplierSelect.innerHTML = '<option selected disabled>Loading...</option>';
+
+            fetch(`{{ url('procurement/tenderresponse/invited-suppliers') }}/${tenderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    supplierSelect.innerHTML = '<option selected disabled>-- Select Supplier --</option>';
+                    if (data.length === 0) {
+                        const option = document.createElement('option');
+                        option.disabled = true;
+                        option.text = 'No invited suppliers found';
+                        supplierSelect.add(option);
+                    } else {
+                        data.forEach(supplier => {
+                            const option = document.createElement('option');
+                            option.value = supplier.Id;
+                            option.text = supplier.SupplierName;
+                            supplierSelect.add(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    supplierSelect.innerHTML = '<option selected disabled>Error fetching suppliers</option>';
+                });
+        });
+    });
+</script>
+@endsection
 @endsection

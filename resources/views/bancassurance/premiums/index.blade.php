@@ -8,7 +8,7 @@
 <div class="container mt-4">
 
     {{-- Action Button --}}
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-end align-items-center mb-3">
         <a href="{{ route('bancassurance.premiums.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i> Record Premium Payment
         </a>
@@ -58,9 +58,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">No premium payments found.</td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>

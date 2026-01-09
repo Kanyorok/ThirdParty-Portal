@@ -83,7 +83,7 @@ class PrequalificationApplicationController extends Controller
             $page = (int) $request->get('page', 1);
             $pageSize = (int) $request->get('pageSize', 10);
             $sortBy = $request->get('sortBy', 'startDate');
-            $sortOrder = $request->get('sortOrder', 'asc');
+            $sortOrder = $request->get('sortOrder', 'desc');
             $status = $request->get('status', 'open');
             $search = $request->get('q', '');
 
@@ -98,7 +98,7 @@ class PrequalificationApplicationController extends Controller
             }
 
             // Validate sortOrder parameter
-            $sortOrder = in_array(strtolower($sortOrder), ['asc', 'desc']) ? strtolower($sortOrder) : 'asc';
+            $sortOrder = in_array(strtolower($sortOrder), ['asc', 'desc']) ? strtolower($sortOrder) : 'desc';
 
             // Map frontend sortBy to database column names
             $sortColumnMap = [
@@ -152,7 +152,7 @@ class PrequalificationApplicationController extends Controller
                 if ($supplierId) {
                     $supplierCats = DB::table('t_ThirdParty_SupplierCategory as tpsc')
                         ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'tpsc.supplier_category_id')
-                        ->where('tpsc.third_party_id', $supplierId)
+                        ->where('tpsc.third_party_id', $supplierMaster->ThirdPartyId)
                         ->whereNull('sc.DeletedOn')
                         ->where(function ($q) {
                             $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive');
@@ -492,7 +492,7 @@ class PrequalificationApplicationController extends Controller
         if (!$user->thirdParty) return response()->json(['error' => 'User not associated with a third party.'], 400);
 
         $validatedData = $request->validated();
-        
+
         // CRITICAL FIX: Get SupplierMaster.Id, not ThirdParty.Id
         // t_SupplierPrequalificationApplications.SupplierID references t_SupplierMaster.Id
         $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $user->thirdParty->Id)->first();
@@ -500,7 +500,7 @@ class PrequalificationApplicationController extends Controller
             return response()->json(['error' => 'Supplier profile not found for this third party.'], 400);
         }
         $supplierId = $supplierMaster->Id;
-        
+
         $roundId = $validatedData['round_id'];
         $categoryIds = $validatedData['category_ids'] ?? [];
 

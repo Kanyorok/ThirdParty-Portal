@@ -236,6 +236,9 @@
                             <label class="form-label" for="UOM">UOM <span class="text-danger">*</span></label>
                             <select class="form-control" name="UOM" id="UOM" required>
                                 <option value="">Select UOM</option>
+                                @foreach($uoms as $uom)
+                                    <option value="{{ $uom->Id }}">{{ $uom->Code }}</option>
+                                @endforeach
                             </select>
                             <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                         </div>
@@ -311,9 +314,43 @@
     const $Modal = $('#RequisitionItemModal');
     const $SubmitModal = $('#submitConfirmationModal');
     const requisitionId = "{{ $id ?? '' }}";
+    // Check if plan exists based on requisition info
+    const requisitionInfo = @json($requisitionInfo);
+    console.log('Requisition Info:', requisitionInfo);
+    const hasPlan = {{ isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef ? 'true' : 'false' }};
+    console.log('Has Plan:', hasPlan);
 
     function getRequisitionIdFromUrl() {
         return requisitionId || window.location.pathname.split('/').pop();
+    }
+
+    // Function to fetch items
+    function fetchItems(type = null) {
+        let requisitionId = getRequisitionIdFromUrl();
+        let url = `/procurement/requisitionItem/getItems/${type}?requisition_id=${requisitionId}`;
+        
+        // If type is null (for plan), adjust URL
+        if (!type) {
+            url = `/procurement/requisitionItem/getItems?requisition_id=${requisitionId}`;
+        }
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                $('#Item').empty().append('<option value="">Select Item</option>');
+                if (response.data && response.data.length > 0) {
+                    $.each(response.data, function (key, item) {
+                        $('#Item').append(
+                            `<option value="${item.Id}">${item.Name}</option>`
+                        );
+                    });
+                }
+            },
+            error: function () {
+                alert('Failed to load items');
+            }
+        });
     }
 
     $(document).ready(function () {
@@ -355,7 +392,24 @@
             // Reset form
             $('#createRequisitionItemForm')[0].reset();
             $('#Item').empty().append('<option value="">Select Item</option>');
-            $('#UOM').empty().append('<option value="">Select UOM</option>');
+            $('#UOM').val('').trigger('change'); // Reset UOM selection
+            $('#EstUnitCostDisplay').prop('readonly', true); // Reset readonly
+            
+            // Handle Plan vs Manual logic
+            if (hasPlan) {
+                // Hide Type selection
+                $('#Type').closest('.mb-3').hide();
+                $('#Type').removeAttr('required');
+                
+                // Auto-load items from plan
+                fetchItems(null);
+            } else {
+                // Show Type selection
+                $('#Type').closest('.mb-3').show();
+                $('#Type').attr('required', 'required');
+                // Reset type selection
+                $('#Type').val('').trigger('change');
+            }
             
             // Show modal
             $Modal.modal('show');
@@ -431,26 +485,9 @@
         // On type change -> fetch items
         $('#Type').on('change', function () {
             let type = $(this).val();
-            let requisitionId = getRequisitionIdFromUrl();
-
+            
             if (type !== '' && type !== null) {
-                $.ajax({
-                    url: `/procurement/requisitionItem/getItem/${type}?requisition_id=${requisitionId}`,
-                    type: 'GET',
-                    success: function (response) {
-                        $('#Item').empty().append('<option value="">Select Item</option>');
-                        if (response.data && response.data.length > 0) {
-                            $.each(response.data, function (key, item) {
-                                $('#Item').append(
-                                    `<option value="${item.Id}">${item.ItemName}</option>`
-                                );
-                            });
-                        }
-                    },
-                    error: function () {
-                        alert('Failed to load items');
-                    }
-                });
+                fetchItems(type);
             } else {
                 $('#Item').empty().append('<option value="">Select Item</option>');
             }
@@ -470,14 +507,23 @@
                             let itemData = response.data[0];
 
                             // UOM
-                            $('#UOM').empty().append(
-                                `<option value="${itemData.UOMID}">${itemData.UOM}</option>`
-                            );
+                            if (itemData.UOMID) {
+                                $('#UOM').val(itemData.UOMID).trigger('change');
+                            } else {
+                                $('#UOM').val('').trigger('change');
+                            }
 
                             // Est. Unit Cost
                             const unit = parseFloat(itemData.UnitPrice || 0) || 0;
                             $('#EstimatedPrice').val(unit);
                             $('#EstUnitCostDisplay').val(unit.toFixed(2));
+                            
+                            // Make price editable if 0
+                            if (unit === 0) {
+                                $('#EstUnitCostDisplay').prop('readonly', false);
+                            } else {
+                                $('#EstUnitCostDisplay').prop('readonly', true);
+                            }
 
                             // LineItem ID
                             $('#LineItemID').val(itemData.LineItemID || '');
@@ -512,14 +558,21 @@
         });
 
         function resetItemFields() {
-            $('#UOM').empty().append('<option value="">Select UOM</option>');
+            $('#UOM').val('').trigger('change');
             $('#EstimatedPrice').val('');
-            $('#EstUnitCostDisplay').val('');
+            $('#EstUnitCostDisplay').val('').prop('readonly', true);
             $('#QtyAvailable').html('');
             $('#LineItemID').val('');
         }
         
         console.log('All event handlers attached successfully');
+        
+        // Update EstimatedPrice when EstUnitCostDisplay changes (for manual entry)
+        $('#EstUnitCostDisplay').on('input', function() {
+            if (!$(this).prop('readonly')) {
+                $('#EstimatedPrice').val($(this).val());
+            }
+        });
     });
 </script>
 @endsection

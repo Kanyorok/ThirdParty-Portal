@@ -133,14 +133,14 @@
                     </div>
 
                     {{-- Buttons --}}
-                    <div class="d-flex justify-content-end gap-2 mt-3">
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{{ route('addunit.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
                         <button type="submit" class="btn btn-success"
                                 onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">
                             <i class="bi bi-check-circle"></i> Update Unit
                         </button>
-                        <a href="{{ route('addunit.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </a>
                     </div>
                 </div>
             </div>

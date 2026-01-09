@@ -31,6 +31,7 @@ class PropertyUnitRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
+                'min:1',
                 Rule::unique((new PropertyUnit)->getTable())
                     ->where(fn($query) => $query
                         ->where('PropertyID', $this->PropertyID)

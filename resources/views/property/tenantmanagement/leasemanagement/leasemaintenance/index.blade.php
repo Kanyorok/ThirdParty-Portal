@@ -37,8 +37,9 @@
     @if($newleases->count())
         <div class="card shadow-sm">
             <div class="card-body">
-                <table id="leaseagreement"
-                       class="table table-bordered table-striped table-hover align-middle mb-0">
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table id="leaseagreement"
+                           class="table table-bordered table-striped table-hover align-middle mb-0" style="min-width: 1200px;">
                     <thead class="table-light">
                     <tr>
                         <th style="width: 5%">#</th>
@@ -108,11 +109,12 @@
                     @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     @else
         <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle me-2"></i> No lease agreements registered yet.
+            <i class="bi bi-info-circle me-2"></i> No lease agreements registered yet. Kindly Ensure You Have The WORKFLOW Set Up For Lease Agreements In Settings.
         </div>
     @endif
 

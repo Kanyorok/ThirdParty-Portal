@@ -9,6 +9,7 @@ use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Services\FleetManagement\FleetMaintenanceScheduleService;
+use App\Models\ThirdParty\SupplierMaster;
 
 class FleetMaintenanceScheduleController extends Controller
 {
@@ -23,7 +24,7 @@ class FleetMaintenanceScheduleController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetMaintenanceSchedule::class);
-        $schedules = FleetMaintenanceSchedule::with('vehicle', 'maintenanceStatus')
+        $schedules = FleetMaintenanceSchedule::with('vehicle', 'maintenanceStatus','vendor.party')
             ->orderByDesc('ScheduleID', 'desc')
             ->get();
 
@@ -38,8 +39,11 @@ class FleetMaintenanceScheduleController extends Controller
         $maintenanceType = CodeDetail::where('CodeID', 'FleetMaintenanceType')
             ->orderBy('Value')
             ->get();
+        $vendors = SupplierMaster::with('party')
+            ->where('IsPrequalified', true)
+            ->get();    
 
-        return view('fleet.maintenance.schedule.create', compact('vehicles', 'maintenanceType'));
+        return view('fleet.maintenance.schedule.create', compact('vehicles', 'maintenanceType', 'vendors'));
     }
 
     // Store a new maintenance schedule
@@ -47,7 +51,7 @@ class FleetMaintenanceScheduleController extends Controller
     {
         $this->authorize('create', FleetMaintenanceSchedule::class);
         $data = $request->validated();
-        $this->scheduleService->create($data);
+        $test = $this->scheduleService->create($data);
 
         return redirect()
             ->route('fleet.maintenance_schedule.index')
@@ -58,13 +62,16 @@ class FleetMaintenanceScheduleController extends Controller
     public function edit($id)
     {
         $this->authorize('edit', FleetMaintenanceSchedule::class);
-        $schedule = FleetMaintenanceSchedule::findOrFail($id);
+        $schedule = FleetMaintenanceSchedule::with(['vendor'])->findOrFail($id);
         $vehicles = FleetVehicle::all();
         $maintenanceType = CodeDetail::where('CodeID', 'FleetMaintenanceType')
             ->orderBy('Value')
             ->get();
+        $vendors = SupplierMaster::with('party')
+            ->where('IsPrequalified', true)
+            ->get();
 
-        return view('fleet.maintenance.schedule.edit', compact('schedule', 'vehicles', 'maintenanceType'));
+        return view('fleet.maintenance.schedule.edit', compact('schedule', 'vehicles', 'maintenanceType', 'vendors'));
     }
 
     // Update a schedule (acknowledge)
@@ -99,7 +106,8 @@ class FleetMaintenanceScheduleController extends Controller
     public function show($id)
     {
         $this->authorize('view', FleetMaintenanceSchedule::class);
-        $schedule = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert'])
+
+        $schedule = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert', 'vendor.party'])
             ->findOrFail($id);
 
         return view('fleet.maintenance.schedule.show', compact('schedule'));

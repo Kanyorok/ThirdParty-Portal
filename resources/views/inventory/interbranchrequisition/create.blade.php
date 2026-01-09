@@ -14,7 +14,6 @@
     @endif
 
     <div class="container mt-4">
-        <h4 class="fw-bold mb-3">New Inter-Branch Requisition</h4>
 
         <form action="{{ route('interbranchrequisition.store') }}" method="POST">
             @csrf
@@ -67,10 +66,19 @@
 
                         @endif
                         <div class="col-md-4">
-                            <label class="form-label">Date <span class="text-danger">*</span></label>
-                            <input type="date" name="CreatedOn" class="form-control"
-                                   value="{{ old('CreatedOn', now()->toDateString()) }}" required>
-                        </div>
+                         <label class="form-label">Date <span class="text-danger">*</span></label>
+                        {{-- Hidden field for form submission with Y-m-d format --}}
+                        <input type="hidden" name="CreatedOn" value="{{ now()->format('Y-m-d') }}">
+                        
+                        {{-- Display-only field for user visibility --}}
+                        <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
+                        
+                        <small class="text-muted">Current date (non-editable)</small>
+                        
+                        @error('CreatedOn')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
                     </div>
 
                     <div class="mb-3">

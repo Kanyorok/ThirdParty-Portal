@@ -36,19 +36,13 @@ class PrequalificationEvaluationController extends Controller
     {
         try {
             $statusFilter = $request->get('status'); // passed | failed
-            $userId = Auth::id();
 
-            $appIds = PrequalificationEvaluation::where('EvaluatorID', $userId)
-                ->distinct()->pluck('ApplicationID');
+            // Modified to show all applications, allowing all authorized users to see suppliers
+            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party']);
 
-            if ($appIds->isEmpty()) {
-                return response()->json(['data' => []]);
-            }
-
-            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party'])
-                ->whereIn('ApplicationID', $appIds);
-
-            if (in_array($statusFilter, ['passed', 'failed'])) {
+            if ($statusFilter === 'pending') {
+                $appsQuery->doesntHave('result');
+            } elseif (in_array($statusFilter, ['passed', 'failed'])) {
                 $appsQuery->whereHas('result', function ($q) use ($statusFilter) {
                     $q->where('Decision', $statusFilter === 'passed' ? 'Passed' : 'Failed');
                 });
@@ -71,9 +65,10 @@ class PrequalificationEvaluationController extends Controller
                 $supplierRow = $supplierRows->get($key)?->first();
 
                 // Check if supplier is prequalified for this specific category
+                $partyId = $app->supplier?->ThirdPartyId;
                 $categoryPrequalified = DB::table('t_PrequalificationRoundSupplierCategory')
                     ->where('RoundID', $app->RoundID)
-                    ->where('ThirdPartyID', $app->SupplierID)
+                    ->where('ThirdPartyID', $partyId)
                     ->where('SupplierCategoryID', $app->CategoryID)
                     ->exists();
 
@@ -92,7 +87,7 @@ class PrequalificationEvaluationController extends Controller
                     'total_score' => $res ? number_format($res->TotalScore, 2) : null,
                     'decision' => $decision,
                     'application_id' => $app->ApplicationID,
-                    'supplier_id' => $app->SupplierID,
+                    'supplier_id' => $partyId,
                     'round_id' => $app->RoundID,
                     'category_id' => $app->CategoryID,
                     'is_prequalified' => !$prequalifyAllowed, // kept for backward compatibility but now means 'button hidden'
@@ -286,6 +281,17 @@ class PrequalificationEvaluationController extends Controller
             return back()->with('error', "Supplier (ThirdParty) $thirdPartyId not found.");
         }
 
+        // Resolve SupplierMaster from ThirdPartyId
+        $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $thirdPartyId)->first();
+        if (!$supplierMaster) {
+            Log::warning('Single prequalify aborted: SupplierMaster not found for ThirdParty', ['thirdPartyId' => $thirdPartyId]);
+            if (request()->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => "Supplier Master record not found for ThirdParty $thirdPartyId."], 422);
+            }
+            return back()->with('error', "Supplier Master record not found for this party.");
+        }
+        $supplierMasterId = $supplierMaster->Id;
+
         // Validate category existence (defensive)
         $categoryExists = DB::table('t_SupplierCategories')
             ->where('SupplierCategoryID', $categoryId)
@@ -309,23 +315,24 @@ class PrequalificationEvaluationController extends Controller
         // Optional trace: try to locate an application that matches the triplet for auditability
         $matchingApplication = PrequalificationApplication::where([
             'RoundID' => $roundId,
-            'SupplierID' => $thirdPartyId,
+            'SupplierID' => $supplierMasterId, // Corrected to use SupplierMasterId
             'CategoryID' => $categoryId,
         ])->orderByDesc('SubmittedOn')->first();
 
         Log::info('Single prequalify invoked', [
             'roundId' => $roundId,
             'thirdPartyId' => $thirdPartyId,
+            'supplierMasterId' => $supplierMasterId,
             'categoryId' => $categoryId,
             'foundApplicationId' => $matchingApplication?->ApplicationID,
             'userId' => $userId,
         ]);
-        DB::transaction(function () use ($thirdPartyId, $roundId, $categoryId, $now, $userId) {
+        DB::transaction(function () use ($thirdPartyId, $supplierMasterId, $roundId, $categoryId, $now, $userId) {
             // Create category-specific prequalification record
             DB::table('t_PrequalificationRoundSupplierCategory')->updateOrInsert(
                 [
                     'RoundID' => $roundId,
-                    'ThirdPartyID' => $thirdPartyId,
+                    'ThirdPartyID' => $thirdPartyId, // Correct: Uses ThirdPartyId
                     'SupplierCategoryID' => $categoryId,
                 ],
                 [
@@ -335,7 +342,7 @@ class PrequalificationEvaluationController extends Controller
             );
 
             // Also update the supplier master prequalification flag
-            \App\Models\ThirdParty\SupplierMaster::where('Id', $thirdPartyId)->update([
+            \App\Models\ThirdParty\SupplierMaster::where('Id', $supplierMasterId)->update([ // Correct: Uses SupplierMasterId
                 'IsPrequalified' => 1,
                 'ModifiedOn' => $now,
                 'ModifiedBy' => $userId,
@@ -343,7 +350,7 @@ class PrequalificationEvaluationController extends Controller
 
             // Ensure supplier row exists per category with required audit fields
             Supplier::updateOrCreate(
-                ['SupplierMasterId' => $thirdPartyId, 'RoundID' => $roundId, 'CategoryId' => $categoryId],
+                ['SupplierMasterId' => $supplierMasterId, 'RoundID' => $roundId, 'CategoryId' => $categoryId], // Correct: Uses SupplierMasterId
                 [
                     'Active_Status' => 1,
                     'ModifiedOn' => $now,
@@ -357,11 +364,17 @@ class PrequalificationEvaluationController extends Controller
                 // Try to find a matching application for audit linkage
                 $matchingApp = PrequalificationApplication::where([
                     'RoundID' => $roundId,
-                    'SupplierID' => $thirdPartyId,
+                    'SupplierID' => $supplierMasterId, // Correct: Uses SupplierMasterId
                     'CategoryID' => $categoryId,
                 ])->orderByDesc('SubmittedOn')->first();
 
                 if ($matchingApp) {
+                    // Resolve a valid ThirdPartyUser ID to satisfy the FK_AppCatStatus_CreatedBy constraint
+                    // This table strictly requires a ThirdPartyUser ID, causing issues when updated by System Users.
+                    // We fallback to the first user of the ThirdParty as a proxy.
+                    $proxyUserId = \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyID', $thirdPartyId)->value('Id');
+                    $auditUserId = $proxyUserId ?? $userId; // Fallback to system user if no TP user found (will likely fail constraint but best effort)
+
                     $acs = ApplicationCategoryStatus::firstOrNew([
                         'ApplicationId' => $matchingApp->ApplicationID,
                         'CategoryId' => $categoryId,
@@ -369,7 +382,7 @@ class PrequalificationEvaluationController extends Controller
                     $prevStatus = $acs->exists ? $acs->Status : null;
                     $prevProgress = $acs->exists ? (float)$acs->ProgressPercent : 0.0;
                     if (!$acs->exists) {
-                        $acs->CreatedBy = $userId;
+                        $acs->CreatedBy = $auditUserId;
                         $acs->CreatedOn = $now;
                     }
                     $acs->Status = 'A';
@@ -377,7 +390,7 @@ class PrequalificationEvaluationController extends Controller
                     $acs->Stage = 'prequalified';
                     $acs->StageLabel = 'Prequalified';
                     $acs->DecisionDate = $now;
-                    $acs->ModifiedBy = $userId;
+                    $acs->ModifiedBy = $auditUserId;
                     $acs->ModifiedOn = $now;
                     $acs->save();
 
@@ -387,7 +400,7 @@ class PrequalificationEvaluationController extends Controller
                         'NewStatus' => 'A',
                         'PreviousProgress' => $prevProgress,
                         'NewProgress' => 100.00,
-                        'ChangedBy' => $userId,
+                        'ChangedBy' => $userId, // This table likely points to t_Users or is polymorphic, so we keep real user
                         'Notes' => 'Manual prequalification approved',
                         'CreatedBy' => $userId,
                         'CreatedOn' => $now,

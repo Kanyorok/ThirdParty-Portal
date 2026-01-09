@@ -48,7 +48,7 @@ class LoanService
                     ->setSource(DebtProduct::getPrimaryKey(), $this->loan->AccountID)->send()
                     ->addActivity(now(), 'Loan (' . $this->loan->AccountID . ') Guarantor Message'));
             }
-            return $activities;
+            return $activities->toArray();
         });
     }
 

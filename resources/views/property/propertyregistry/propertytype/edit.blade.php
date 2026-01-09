@@ -37,7 +37,9 @@
                       rows="4">{{ old('Description', $type->Description) }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-success">Update Type</button>
-        <a href="{{ route('propertytype.index') }}" class="btn btn-secondary">Cancel</a>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <a href="{{ route('propertytype.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">Update Type</button>
+        </div>
     </form>
 @endsection

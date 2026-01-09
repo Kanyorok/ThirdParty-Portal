@@ -76,7 +76,19 @@ class RoleController extends Controller
 
     public function create(): View
     {
-        return view('settings.roles.create');
+        
+    // Get all permissions from DB
+    $allPermissions = \Spatie\Permission\Models\Permission::all();
+
+    // Get permissions from Enum
+    $enumPermissions = collect(\App\Enums\Core\PermissionEnum::cases())->map(fn($p) => $p->value)->toArray();
+
+    // Filter dynamic permissions (those not in Enum)
+    $dynamicPermissions = $allPermissions->reject(function ($perm) use ($enumPermissions) {
+        return in_array($perm->name, $enumPermissions);
+    });
+
+    return view('settings.roles.create', compact('dynamicPermissions'));
     }
 
     public function store(RoleRequest $request): JsonResponse
