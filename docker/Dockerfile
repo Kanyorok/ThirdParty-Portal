@@ -54,12 +54,14 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
 
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
-    curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
-    apt-get update && \
-    ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 && \
-    pecl install pdo_sqlsrv && \
-    docker-php-ext-enable pdo_sqlsrv
+RUN apt-get update && apt-get install -y gnupg2 curl unixodbc-dev \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg \
+    && curl https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 \
+    && pecl channel-update pecl.php.net \
+    && pecl install pdo_sqlsrv \
+    && docker-php-ext-enable pdo_sqlsrv
 
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
@@ -80,20 +82,26 @@ WORKDIR /var/www
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# 1. Copy Source Code (The Clean/Original Version first)
-# We do this to get views, configs, routes, and public assets
+# 1. Install PHP Dependencies (Dependencies Layer)
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --no-scripts --no-autoloader --no-dev
+
+# 2. Install Node Dependencies (Dependencies Layer)
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+COPY package.json package-lock.json ./
+RUN npm install --prefix /var/www
+
+# 3. Copy Source Code (The Clean/Original Version first)
 COPY . .
 
-# 2. [CRITICAL STEP] Overwrite with Obfuscated Code
-# We pull the scrambled folders from Stage 1 and overwrite the clean 'app' folder
+# 4. [CRITICAL STEP] Overwrite with Obfuscated Code (If needed, otherwise this is just a copy from stage 1)
 COPY --from=obfuscator_builder /app/dist/app /var/www/app
 
-# 3. Lock the Environment (Prevent user tampering)
-# Ensure you have a .env.production file in your project root!
+# 5. Lock the Environment
 COPY .env.production /var/www/.env
 
-# 4. Permissions Setup (Must be done BEFORE composer install)
-# Create storage structure and set permissions so artisan commands can run
+# 6. Permissions Setup
 RUN rm -rf database/ && \
     mkdir -p /var/www/storage/app/public \
     /var/www/storage/framework/cache \
@@ -105,22 +113,14 @@ RUN rm -rf database/ && \
     chown -R www-data:www-data /var/www && \
     chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# 4. Install PHP Dependencies (No Dev tools)
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# 7. Generate Autoload
+RUN composer dump-autoload --optimize
 
-# 5. Install Node Dependencies
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-RUN npm install --prefix /var/www
-
-# 6. "Bake" the Configuration
-# This creates a static config file. Even if the user edits .env, Laravel 
-# will load the cached config instead.
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
-
-# Permissions Setup moved to before composer install
+# 8. "Bake" the Configuration
+# 8. "Bake" the Configuration - REMOVED to allow runtime env vars
+# RUN php artisan config:cache && \
+#     php artisan route:cache && \
+#     php artisan view:cache
 
 # Expose Ports
 EXPOSE 80
@@ -132,6 +132,12 @@ COPY docker/erp-worker.config /etc/supervisor/conf.d/erp-worker.conf
 RUN echo "* * * * * php /var/www/artisan schedule:run >> /var/www/storage/logs/scheduler.log 2>&1" > /etc/cron.d/erp-scheduler \
     && chmod 0644 /etc/cron.d/erp-scheduler \
     && crontab /etc/cron.d/erp-scheduler
+
+# Setup Entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["entrypoint.sh"]
 
 # Start Everything
 CMD service cron start && supervisord -c /etc/supervisor/supervisord.conf && apache2-foreground

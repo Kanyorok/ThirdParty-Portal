@@ -130,18 +130,38 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($contract->winningSupplier && $contract->winningSupplier->thirdParty)
-                                        <div>
-                                            <strong>{{ $contract->winningSupplier->thirdParty->TradingName ?? $contract->winningSupplier->thirdParty->Name }}</strong>
-                                            @if($contract->winningSupplier->thirdParty->ContactPerson)
-                                                <div class="text-muted small">
-                                                    {{ $contract->winningSupplier->thirdParty->ContactPerson }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <span class="text-muted">N/A</span>
-                                    @endif
+                                    @php
+                                        $supplierName = 'N/A';
+                                        $contactPerson = null;
+                                        
+                                        if ($contract->winningSupplier) {
+                                            // Try RFQ structure (Supplier -> SupplierMaster -> Party)
+                                            if ($contract->winningSupplier->supplierMaster && $contract->winningSupplier->supplierMaster->party) {
+                                                $supplierName = $contract->winningSupplier->supplierMaster->party->TradingName 
+                                                    ?? $contract->winningSupplier->supplierMaster->party->Name;
+                                                $contactPerson = $contract->winningSupplier->supplierMaster->party->ContactPerson;
+                                            } 
+                                            // Try Tender structure (TenderSupplier -> ThirdParty)
+                                            elseif ($contract->winningSupplier->thirdParty) {
+                                                $supplierName = $contract->winningSupplier->thirdParty->TradingName 
+                                                    ?? $contract->winningSupplier->thirdParty->Name;
+                                                $contactPerson = $contract->winningSupplier->thirdParty->ContactPerson;
+                                            }
+                                            // Fallback
+                                            elseif ($contract->winningSupplier->SupplierName) {
+                                                $supplierName = $contract->winningSupplier->SupplierName;
+                                            }
+                                        }
+                                    @endphp
+
+                                    <div>
+                                        <strong>{{ $supplierName }}</strong>
+                                        @if($contactPerson)
+                                            <div class="text-muted small">
+                                                {{ $contactPerson }}
+                                            </div>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     @if($contract->ContractValue)
@@ -187,18 +207,18 @@
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     @if($contract->hasContract())
-                                        <a href="{{ route('contracts.show', $contract->Id) }}"
+                                        <a href="{{ route('contracts.show', ['id' => $contract->Id, 'type' => $contract->type ?? 'tender']) }}"
                                            class="btn btn-sm btn-outline-info" title="View Contract">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         @if($contract->ContractStatus !== 'Executed')
-                                            <a href="{{ route('contracts.edit', $contract->Id) }}"
+                                            <a href="{{ route('contracts.edit', ['id' => $contract->Id, 'type' => $contract->type ?? 'tender']) }}"
                                                class="btn btn-sm btn-outline-primary" title="Edit Contract">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         @endif
                                     @elseif($contract->isContractReady())
-                                        <a href="{{ route('contracts.create', ['award_id' => $contract->Id]) }}"
+                                        <a href="{{ route('contracts.create', ['award_id' => $contract->Id, 'award_type' => $contract->type ?? 'tender']) }}"
                                            class="btn btn-sm btn-success" title="Create Contract">
                                             <i class="fas fa-plus"></i> Create
                                         </a>

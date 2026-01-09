@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Link New Evidence')
+@section('title', 'Link New Document')
 
 @section('content')
 <div class="container">
@@ -12,7 +12,7 @@
     <div class="card p-2 shadow rounded-4 mb-0">
         <div class="card-body mb-0">
             <p class="text-muted">
-                Fill out the form below to link new evidence to the case:
+                Fill out the form below to link new document to the case:
                 <strong class="text-dark">{{ $case->CaseTitle }}</strong>
             </p>
 
@@ -21,7 +21,7 @@
                 @csrf
 
                 <div class="mb-3">
-                    <label class="form-label">Evidence Title</label>
+                    <label class="form-label">Document Title</label>
                     <input type="text" name="EvidenceTitle" value="{{ old('EvidenceTitle') }}" class="form-control"
                         required>
                 </div>
@@ -55,7 +55,7 @@
                     </a>
                     <button type="submit" class="btn btn-info"
                         onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">
-                        <i class="fas fa-save"></i> Save Evidence
+                        <i class="fas fa-save"></i> Save Document
                     </button>
                 </div>
             </form>

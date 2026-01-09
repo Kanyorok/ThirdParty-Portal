@@ -75,21 +75,19 @@
 
             {{-- ✅ Only show the form if status is still pending --}}
             @if(!in_array($request->Status, ['Approved', 'Rejected']))
-                <form method="POST" action="{{ route('legal.store_findings.storeApprovalStatus', $request->Id) }}">
+                <form method="POST" action="{{ route('legal.store_findings.storeApprovalStatus', $request->Id) }}" enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
 
                     {{-- Status --}}
                     <div class="row">
                         <div class="col-md-12 mb-3">
-                            <label for="Status" class="form-label">Status</label>
+                            <label for="Status" class="form-label">Findings Status</label>
                             <select class="form-select" name="Status" id="Status" onchange="toggleSearchRequests()"
                                     required>
-                                <option value="" disabled {{ !$request->Status ? 'selected' : '' }}>-- Select Status
-                                    --
-                                </option>
-                                <option value="Approved">Approve</option>
-                                <option value="Rejected">Reject</option>
+                                <option value="" disabled selected>-- Select Status --</option>
+                                <option value="Approved">Record Findings</option>
+                                <option value="Rejected">Reject Findings</option>
                             </select>
                         </div>
                     </div>
@@ -101,6 +99,14 @@
                                 <label for="Findings" class="form-label">Findings</label>
                                 <textarea name="Findings" id="Findings" rows="3" class="form-control"
                                           placeholder="Enter findings here...">{{ $request->Findings ?? '' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="DocumentFile" class="form-label">Upload Document (Optional)</label>
+                                <input type="file" name="DocumentFile" id="DocumentFile" class="form-control"
+                                    accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,application/pdf,image/jpeg,image/jpg,image/png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                                <small class="form-text text-muted">Accepted formats: PDF, JPG, JPEG, PNG, DOCX, XLSX (Max: 5MB)</small>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end gap-2">
@@ -136,6 +142,29 @@
                     </div>
                 </form>
             @endif
+
+            {{-- Attachments Section --}}
+            <div class="mt-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 text-muted"><i class="far fa-paperclip me-2"></i>Attachments</h6>
+                    </div>
+                    <div class="card-body" id="searchRequestAttachments">
+                        @php
+                        $documents = $request->documents()
+                            ->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                        @endphp
+                        @forelse($documents as $document)
+                        @php
+                        $document->setRelations([]);
+                        @endphp
+                        {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                        @empty
+                        <span class="text-muted">No attachments.</span>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -169,4 +198,8 @@
             }
         }
     </script>
+@endsection
+
+@section('scripts')
+@includeIf('snippets.actions.preview-files')
 @endsection

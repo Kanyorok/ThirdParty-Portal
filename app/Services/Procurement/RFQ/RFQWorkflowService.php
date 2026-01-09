@@ -215,9 +215,9 @@ class RFQWorkflowService extends ApprovalWorkflow
                 u.Email as user_email,
                 wt.TypeID as workflow_type
             FROM t_WorkFlowPending p
-            JOIN t_WorkFlowStages ws ON p.Stage = ws.Id
-            JOIN t_Users u ON p.UserId = u.Id
-            JOIN t_WorkFlowTypes wt ON ws.WorkFlowTypeId = wt.Id
+            LEFT JOIN t_WorkFlowStages ws ON p.Stage = ws.Id
+            LEFT JOIN t_Users u ON p.UserId = u.Id
+            LEFT JOIN t_WorkFlowTypes wt ON ws.WorkFlowTypeId = wt.Id
             WHERE p.Source = ? AND p.SourceID = ? AND p.DeletedOn IS NULL
             ORDER BY ws.[Order] ASC
         ", [$sourceAlias, $rfq->getKey()]);

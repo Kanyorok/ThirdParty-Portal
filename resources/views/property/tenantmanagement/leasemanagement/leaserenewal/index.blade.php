@@ -16,9 +16,11 @@
 @section('content')
 <div class="container mt-4">
 
-    <a href="{{ route('renewlease.create') }}" class="btn btn-primary mb-3">
-        Renew Lease
-    </a>
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ route('renewlease.create') }}" class="btn btn-primary">
+            Renew Lease
+        </a>
+    </div>
 
     <p><small>This is a list of renewals</small></p>
 
@@ -97,7 +99,7 @@
     @else
         <div class="alert alert-info mt-3">
             <i class="bi bi-info-circle me-2"></i>
-            No lease renewals registered yet.
+            No lease renewals registered yet. Kindly Ensure You Have The WORKFLOW Set Up For Lease Renewals In Settings.
         </div>
     @endif
 

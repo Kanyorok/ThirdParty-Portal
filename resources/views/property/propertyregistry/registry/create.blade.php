@@ -1,157 +1,222 @@
 @extends('layouts.app')
+
 @section('title', 'Add New Property')
+
 @section('content')
+
+{{-- ================= ERROR SUMMARY ================= --}}
 @if ($errors->any())
-<div class="alert alert-danger">
-  <ul class="mb-0">
-    @foreach ($errors->all() as $error)
-    <li>{{ $error }}</li>
-    @endforeach
-  </ul>
-</div>
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
 @endif
+
 <div class="container mt-4">
-  <form action="{{ route('propertyregistry.store') }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    <div class="card shadow">
-      <div class="card-header bg-light fw-bold">Property Registration</div>
-      <div class="card-body">
-        <div class="row g-3 mb-3">
-          <div class="col-md-4">
-            <label class="form-label">Property Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" name="PropertyName">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Property Code <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" name="PropertyCode">
-          </div>
-          <div class="col-md-4">
-            <label for="Category" class="form-label">Property Category <span class="text-danger">*</span></label>
-            <select name="Category" id="category-select" class="form-select" required>
-              <option value="">-- Select a category --</option>
-              @foreach ($lineentries as $category)
-              <option value="{{ $category->Id }}">{{ $category->Name }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label for="PropertyType" class="form-label">Property Type <span class="text-danger">*</span></label>
-              <select name="PropertyType" id="type-select" class="form-select" required>
-                <option value="">-- Select a Type --</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Owner <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="Owner" required>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Acquisition Date <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" name="AcquisitionDate" required>
-            </div>
-          </div>
+    <form action="{{ route('propertyregistry.store') }}" method="POST" enctype="multipart/form-data">
+        @csrf
 
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label class="form-label">Country <span class="text-danger">*</span></label>
-              <select name="CountryId" id="country-select" class="form-select" required>
-                <option value="">-- Select a Country --</option>
-                @foreach ($countries as $country)
-                <option value="{{ $country->Id }}">{{ $country->Name }}</option>
-                @endforeach
-              </select>
+        <div class="card shadow">
+            <div class="card-header bg-light fw-bold">
+                Property Registration
             </div>
-            <div class="col-md-4">
-              <label for="TownCity" class="form-label">Town / City<span class="text-danger">*</span></label>
-              <select name="LocationId" id="locality-select" class="form-select" required>
-                <option value="">-- Select a Town or City --</option>
-              </select>
+
+            <div class="card-body">
+
+                {{-- ================= BASIC DETAILS ================= --}}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Property Name <span class="text-danger">*</span></label>
+                        <input type="text" name="PropertyName" class="form-control"
+                               value="{{ old('PropertyName') }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Property Code <span class="text-danger">*</span></label>
+                        <input type="text" name="PropertyCode" class="form-control"
+                               value="{{ old('PropertyCode') }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Property Category <span class="text-danger">*</span></label>
+                        <select name="Category" id="category-select" class="form-select">
+                            <option value="">-- Select a category --</option>
+                            @foreach ($lineentries as $category)
+                                <option value="{{ $category->Id }}"
+                                    {{ old('Category') == $category->Id ? 'selected' : '' }}>
+                                    {{ $category->Name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                {{-- ================= TYPE / OWNER / DATE ================= --}}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Property Type <span class="text-danger">*</span></label>
+                        <select name="PropertyType" id="type-select" class="form-select">
+                            <option value="">-- Select a Type --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Owner <span class="text-danger">*</span></label>
+                        <input type="text" name="Owner" class="form-control"
+                               value="{{ old('Owner') }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Acquisition Date <span class="text-danger">*</span></label>
+                        <input type="date" name="AcquisitionDate" class="form-control"
+                               value="{{ old('AcquisitionDate') }}">
+                    </div>
+                </div>
+
+                {{-- ================= LOCATION ================= --}}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Country <span class="text-danger">*</span></label>
+                        <select name="CountryId" id="country-select" class="form-select">
+                            <option value="">-- Select a Country --</option>
+                            @foreach ($countries as $country)
+                                <option value="{{ $country->Id }}"
+                                    {{ old('CountryId') == $country->Id ? 'selected' : '' }}>
+                                    {{ $country->Name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Town / City <span class="text-danger">*</span></label>
+                        <select name="LocationId" id="locality-select" class="form-select">
+                            <option value="">-- Select a Town or City --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Address <span class="text-danger">*</span></label>
+                        <input type="text" name="Address" class="form-control"
+                               value="{{ old('Address') }}">
+                    </div>
+                </div>
+
+                {{-- ================= DOCUMENTS ================= --}}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Upload Documents</label>
+                        <small class="text-muted d-block mb-1">
+                            Allowed: pdf, jpg, png, docx, xlsx | Max 25MB
+                        </small>
+                        <input type="file" name="file[]" class="form-control"
+                               accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+                    </div>
+                </div>
+
+                {{-- ================= DESCRIPTION ================= --}}
+                <div class="mb-3">
+                    <label class="form-label">Property Description</label>
+                    <textarea name="PropertyDescription" class="form-control" rows="3">{{ old('PropertyDescription') }}</textarea>
+                </div>
+
+                {{-- ================= ACTIONS ================= --}}
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                        Save Property
+                    </button>
+                </div>
+
             </div>
-            <div class="col-md-4">
-              <label class="form-label">Address <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="Address" required>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Upload Documents</label>
-            <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
-            <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
-          </div>
         </div>
-
-        <div class="mb-3">
-          <label class="form-label">Property Description</label>
-          <textarea class="form-control" rows="3" name="PropertyDescription"></textarea>
-        </div>
-        <button type="submit" class="btn btn-success"
-          onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Property
-        </button>
-        <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">Cancel</a>
-  </form>
-</div>
-</div>
+    </form>
 </div>
 
-
+{{-- ================= OLD VALUES FOR JS ================= --}}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+    const oldCategory     = "{{ old('Category') }}";
+    const oldPropertyType = "{{ old('PropertyType') }}";
+    const oldCountry      = "{{ old('CountryId') }}";
+    const oldLocality     = "{{ old('LocationId') }}";
+</script>
+
+{{-- ================= PROPERTY TYPES ================= --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
     const categorySelect = document.getElementById('category-select');
     const typeSelect = document.getElementById('type-select');
 
-    categorySelect.addEventListener('change', function() {
-      const categoryId = this.value;
+    function loadTypes(categoryId, selectedType = null) {
+        typeSelect.innerHTML = '<option value="">-- Select a Type --</option>';
+        if (!categoryId) return;
 
-      // Reset type dropdown
-      typeSelect.innerHTML = '<option value="">-- Select a Type --</option>';
-
-      if (categoryId) {
-        // Construct the URL from the named route
-        const url = `{{ route('gettypes', ':Id') }}`.replace(':Id', categoryId);
+        const url = `{{ route('gettypes', ':id') }}`.replace(':id', categoryId);
 
         fetch(url)
-          .then(response => response.json())
-          .then(types => {
-            types.forEach(type => {
-              const option = document.createElement('option');
-              option.value = type.Id;
-              option.textContent = type.PropertyTypeName;
-              typeSelect.appendChild(option);
+            .then(res => res.json())
+            .then(types => {
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.Id;
+                    option.textContent = type.PropertyTypeName;
+                    if (selectedType && selectedType == type.Id) option.selected = true;
+                    typeSelect.appendChild(option);
+                });
             });
-          })
-          .catch(error => console.error('Error loading property types:', error));
-      }
+    }
+
+    categorySelect.addEventListener('change', () => {
+        loadTypes(categorySelect.value);
     });
-  });
 
+    if (oldCategory) {
+        categorySelect.value = oldCategory;
+        loadTypes(oldCategory, oldPropertyType);
+    }
+});
+</script>
 
-  document.addEventListener('DOMContentLoaded', function() {
+{{-- ================= LOCALITIES ================= --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
     const countrySelect = document.getElementById('country-select');
     const localitySelect = document.getElementById('locality-select');
 
-    countrySelect.addEventListener('change', function() {
-      const country = this.value;
+    function loadLocalities(countryId, selectedLocality = null) {
+        localitySelect.innerHTML = '<option value="">-- Select a Town or City --</option>';
+        if (!countryId) return;
 
-      // Reset locality dropdown
-      localitySelect.innerHTML = '<option value="">-- Select a Locality --</option>';
-
-      if (country) {
-        // Construct the URL from the named route
-        const url = `{{ route('getlocalities', ':country') }}`.replace(':country', country);
+        const url = `{{ route('getlocalities', ':id') }}`.replace(':id', countryId);
 
         fetch(url)
-          .then(response => response.json())
-          .then(localities => {
-            localities.forEach(locality => {
-              const option = document.createElement('option');
-              option.value = locality.ID;
-              option.textContent = locality.Name;
-              localitySelect.appendChild(option);
+            .then(res => res.json())
+            .then(localities => {
+                localities.forEach(loc => {
+                    const option = document.createElement('option');
+                    option.value = loc.ID;
+                    option.textContent = loc.Name;
+                    if (selectedLocality && selectedLocality == loc.ID) option.selected = true;
+                    localitySelect.appendChild(option);
+                });
             });
-          })
-          .catch(error => console.error('Error loading localities:', error));
-      }
+    }
+
+    countrySelect.addEventListener('change', () => {
+        loadLocalities(countrySelect.value);
     });
-  });
+
+    if (oldCountry) {
+        countrySelect.value = oldCountry;
+        loadLocalities(oldCountry, oldLocality);
+    }
+});
 </script>
 
 @endsection

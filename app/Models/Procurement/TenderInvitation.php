@@ -4,10 +4,10 @@ namespace App\Models\Procurement;
 
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TenderInvitation extends Model
+class TenderInvitation extends Pivot
 {
     use SoftDeletes, UserActorTrait;
 
@@ -17,6 +17,7 @@ class TenderInvitation extends Model
 
     protected $table = 't_TenderInvitations';
     protected $primaryKey = 'InvitationID';
+    public $incrementing = true;
 
     public static function getPrimaryKey(): string
     {

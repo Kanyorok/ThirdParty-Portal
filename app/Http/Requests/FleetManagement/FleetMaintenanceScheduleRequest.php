@@ -36,7 +36,7 @@ class FleetMaintenanceScheduleRequest extends FormRequest
                     }
                 },
             ],
-            'Location' => 'nullable|string|max:255',
+            'VendorID' => 'nullable|exists:t_SupplierMaster,Id',
             'Notes' => 'nullable|string',
             'Status' => 'nullable|boolean',
         ];

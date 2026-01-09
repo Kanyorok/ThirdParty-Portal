@@ -6,6 +6,37 @@ use App\Http\Controllers\Settings\WorflowLimitController;
 use App\Http\Controllers\Settings\WorkFlowController;
 use Illuminate\Support\Facades\Route;
 
+// Added for debugging authentication in production
+// Added for debugging authentication in production
+Route::get('/debug/auth', function (Illuminate\Http\Request $request) {
+    $sessionId = session()->getId();
+    $tableName = config('session.table', 't_SYSSessions');
+    
+    $sessionEntry = \Illuminate\Support\Facades\DB::table($tableName)
+        ->where('id', $sessionId)
+        ->first();
+
+    return response()->json([
+        'auth_check' => auth()->check(),
+        'user_id' => auth()->id(),
+        'session_id' => $sessionId,
+        'session_table' => $tableName,
+        'db_session_found' => (bool) $sessionEntry,
+        'db_user_id' => $sessionEntry ? $sessionEntry->user_id : null,
+        'db_last_activity' => $sessionEntry ? $sessionEntry->last_activity : null,
+        'session_config' => [
+            'driver' => config('session.driver'),
+            'cookie' => config('session.cookie'),
+            'domain' => config('session.domain'),
+            'secure' => config('session.secure'),
+        ],
+        'cookies_received' => [
+            'value' => $request->cookie(config('session.cookie')),
+            'matches_current' => $request->cookie(config('session.cookie')) === $sessionId,
+        ],
+    ]);
+});
+
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/auth/heartbeat', function () {
         return response()->noContent();
@@ -40,20 +71,20 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
-        Route::get('workflows', 'WorkFlowController@index')->name('settings.workflows.index');
-        Route::post('workflows/create', 'WorkFlowController@store')->name('settings.workflows.store');
-        Route::put('workflows/{id}', 'WorkFlowController@update')->name('settings.workflows.update');
+        Route::get('workflows', [WorkFlowController::class, 'index'])->name('settings.workflows.index');
+        Route::post('workflows/create', [WorkFlowController::class, 'store'])->name('settings.workflows.store');
+        Route::put('workflows/{id}', [WorkFlowController::class, 'update'])->name('settings.workflows.update');
         // Delete workflow: use proper HTTP verb. Remove old GET delete route.
-        Route::delete('workflows/{id}', 'WorkFlowController@destroy')->name('settings.workflows.destroy');
+        Route::delete('workflows/{id}', [WorkFlowController::class, 'destroy'])->name('settings.workflows.destroy');
         // Optional fallback if DELETE is blocked by infra
-        Route::post('workflows/delete/{id}', 'WorkFlowController@destroy')->name('settings.workflows.delete.post');
-        Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
+        Route::post('workflows/delete/{id}', [WorkFlowController::class, 'destroy'])->name('settings.workflows.delete.post');
+        Route::get('workflows/{id}', [WorkFlowController::class, 'show'])->name('settings.workflows.show');
         Route::post('workflow-stages', 'WorkflowStagesController@store')->name('settings.workflow_stages.store');
         Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
 
         Route::get('/workflows/{id}/state', [WorkFlowController::class, 'getState'])->name('settings.workflows.state');
-         
-        
+
+
 
         //         // Add POST alternative for delete to handle form submission
         // Route::post('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy.post');
@@ -101,7 +132,7 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
         Route::namespace('Users')->group(function () {
             Route::post('user_roles/branch', 'UserRoleController@storeBranch')->name('user_roles.store_branch');
             // Delete a branch role assignment (under the settings prefix)
-            Route::delete('users/branch-role/{modelRole}', 'UserRoleController                                     @destroy')
+            Route::delete('users/branch-role/{modelRole}', 'UserRoleController@destroy')
                 ->whereNumber('modelRole')
                 ->name('user_roles.delete_branch');
             // Fallback endpoints to operate on ModelRole records identified by composite keys
@@ -138,10 +169,10 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     // ✅ Global Locality Endpoint
     Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
 });
-// Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/license', [LicenseController::class, 'index'])
-        ->name('admin.license.index');
-    Route::post('/admin/license', [LicenseController::class, 'store'])
-        ->name('admin.license.store');
-});
+// // Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('/admin/license', [LicenseController::class, 'index'])
+//         ->name('admin.license.index');
+//     Route::post('/admin/license', [LicenseController::class, 'store'])
+//         ->name('admin.license.store');
+// });

@@ -33,12 +33,11 @@ class Authenticate extends Middleware
         $this->authenticate($request, $guards);
         $actor = $request->user();
 
-        // Allow ThirdPartyUser to bypass branch/internal checks
-        if ($actor instanceof ThirdPartyUser) {
+        if (!$request->hasSession() || in_array('sanctum', $guards)) {
             return $next($request);
         }
 
-        $branch = $actor?->branch;
+        $branch = $actor->branch;
         if (!$actor instanceof User || !$branch instanceof Branch) {
             $this->unauthenticated($request, $guards, $actor);
         }
@@ -76,9 +75,10 @@ class Authenticate extends Middleware
             ]);
         }
 
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+        }
 
         throw new AuthenticationException(
             'Unauthenticated.',

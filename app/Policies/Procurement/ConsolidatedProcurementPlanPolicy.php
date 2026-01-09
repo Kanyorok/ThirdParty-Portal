@@ -2,41 +2,58 @@
 
 namespace App\Policies\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\DepartmentNeeds;
-use App\Enums\Core\PermissionEnum;
-use App\Enums\ProcurementPlanStatusEnum;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ConsolidatedProcurementPlanPolicy
 {
-    public function viewAny(User $user)
-    {
+    use HandlesAuthorization;
 
-        return $user->can(PermissionEnum::PlanConsolidationRead->value);
+    public function viewAny(User $user): bool
+    {
+        // Allow if user has access to Consolidation OR Maintenance
+        return $user->can(PermissionEnum::PlanConsolidationRead->value) ||
+            $user->can(PermissionEnum::PlanMaintenanceRead->value);
     }
 
-    public function view(User $user, DepartmentNeeds $need)
+    public function view(User $user, ConsolidatedProcurementPlan $plan): bool
     {
-        return $user->can(PermissionEnum::PlanConsolidationRead->value);
+        return $user->can(PermissionEnum::PlanConsolidationRead->value) ||
+            $user->can(PermissionEnum::PlanMaintenanceRead->value);
     }
 
-    public function create(User $user)
+    public function create(User $user): bool
     {
-        return $user->can(PermissionEnum::PlanConsolidationWrite->value);
+        return $user->can(PermissionEnum::PlanConsolidationWrite->value) ||
+            $user->can(PermissionEnum::PlanMaintenanceWrite->value);
     }
 
-    public function approve(User $user, ConsolidatedProcurementPlan $consolidatedProcurementPlan): bool
+    public function store(User $user): bool
     {
-        //dd($departmentNeeds);
-        if ($consolidatedProcurementPlan->Status->value === ProcurementPlanStatusEnum::Approved->value) {
-            return false;
-        }
+        return $this->create($user);
+    }
 
-        if ($consolidatedProcurementPlan->CreatedBy === $user->Id) {
-            return false;
-        }
+    public function update(User $user, ConsolidatedProcurementPlan $plan): bool
+    {
+        return $user->can(PermissionEnum::PlanConsolidationUpdate->value) ||
+            $user->can(PermissionEnum::PlanMaintenanceUpdate->value);
+    }
 
-        return $user->can(PermissionEnum::PlanMaintenanceApproval->value);
+    public function editDraft(User $user): bool
+    {
+        return $this->create($user); // Assuming editDraft is similar to write access
+    }
+
+    public function delete(User $user, ConsolidatedProcurementPlan $plan): bool
+    {
+        return $user->can(PermissionEnum::PlanConsolidationDelete->value) ||
+            $user->can(PermissionEnum::PlanMaintenanceDelete->value);
+    }
+
+    public function submit(User $user, ConsolidatedProcurementPlan $plan): bool
+    {
+        return $user->can(PermissionEnum::ProcurementPlanSubmit->value);
     }
 }

@@ -11,7 +11,7 @@
         </div>
         @endif
         <p class="text-muted">Fill in the details below to register a new loan security or collateral.</p>
-        <form action="{{ route('legal.securities.store') }}" method="POST">
+        <form action="{{ route('legal.securities.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="row mb-3">
                 <div class="col-md-6">
@@ -68,6 +68,12 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
+            <div class="mb-3">
+                <label>Upload Document (Optional)</label>
+                <input type="file" name="DocumentFile" class="form-control"
+                    accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,application/pdf,image/jpeg,image/jpg,image/png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <small class="form-text text-muted">Accepted formats: PDF, JPG, JPEG, PNG, DOCX, XLSX (Max: 5MB)</small>
             </div>
             <div class="mb-3">
                 <label>Remarks</label>

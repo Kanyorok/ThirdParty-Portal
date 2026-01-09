@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetDriver;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use Illuminate\Http\UploadedFile;
@@ -15,7 +13,7 @@ use Illuminate\Http\UploadedFile;
 class FleetDriverService
 {
     /**
-     * Create a new Driver with default status and workflow
+     * Create a new Driver with default status (NO WORKFLOW)
      */
     public function create(array $data, UploadedFile $document = null): FleetDriver
     {
@@ -29,10 +27,6 @@ class FleetDriverService
                 $defaultStatusValue = $this->getDefaultStatusValue();
                 $statusId = $this->getStatusIdByValue($defaultStatusValue);
                 $data['DriverStatus'] = $statusId;
-                $statusValueForWorkflow = $defaultStatusValue;
-            } else {
-                $statusId = $data['DriverStatus'];
-                $statusValueForWorkflow = $this->getStatusValueById($statusId);
             }
 
             $driver = FleetDriver::create($data);
@@ -46,16 +40,6 @@ class FleetDriverService
                 );
             }
 
-            if ($statusId) {
-                $this->logWorkflow(
-                    'DriverAvailability',
-                    $driver->Id,
-                    $statusId,
-                    $statusValueForWorkflow,
-                    'Driver created'
-                );
-            }
-
             activity()
                 ->performedOn($driver)
                 ->causedBy(Auth::user())
@@ -66,13 +50,12 @@ class FleetDriverService
     }
 
     /**
-     * Update Driver by ID, log workflow if status changed
+     * Update Driver by ID - NO WORKFLOW LOGGING
      */
     public function update(int $id, array $data, UploadedFile $document = null): FleetDriver
     {
         return DB::transaction(function () use ($id, $data, $document) {
             $driver = FleetDriver::findOrFail($id);
-            $originalStatus = $driver->DriverStatus;
 
             $driver->fill($data);
             $driver->ModifiedBy = Auth::id();
@@ -92,21 +75,6 @@ class FleetDriverService
                 );
             }
 
-            if (isset($data['DriverStatus']) && $data['DriverStatus'] != $originalStatus) {
-                $statusId = $data['DriverStatus'];
-                $statusValue = $this->getStatusValueById($statusId);
-
-                if ($statusId && $statusValue) {
-                    $this->logWorkflow(
-                        'DriverAvailability',
-                        $driver->Id,
-                        $statusId,
-                        $statusValue,
-                        'Driver status updated'
-                    );
-                }
-            }
-
             activity()
                 ->performedOn($driver)
                 ->causedBy(Auth::user())
@@ -118,7 +86,7 @@ class FleetDriverService
     }
 
     /**
-     * Soft delete a Fleet Driver by ID
+     * Soft delete a Fleet Driver by ID - NO WORKFLOW LOGGING
      */
     public function delete(int $id): bool
     {
@@ -131,14 +99,7 @@ class FleetDriverService
 
             $driver->delete();
 
-            $this->logWorkflow(
-                'DriverAvailability',
-                $driver->Id,
-                null,
-                'Deleted',
-                'Driver deleted'
-            );
-
+            // Removed workflow logging
             activity()
                 ->performedOn($driver)
                 ->causedBy(Auth::user())
@@ -197,36 +158,5 @@ class FleetDriverService
         return CodeDetail::where('CodeID', 'DriverAvailabilityStatus')
             ->where('Description', 'Available')
             ->value('Value');
-    }
-
-    /**
-     * Log workflow and pending workflow
-     */
-    private function logWorkflow(string $source, int $sourceId, ?int $statusId, ?string $statusValue, ?string $notes = null)
-    {
-        Workflow::create([
-            'Source' => $source,
-            'SourceID' => $sourceId,
-            'Stage' => $statusId,
-            'Status' => $statusValue,
-            'Notes' => $notes,
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
-
-        PendingWorkflow::updateOrCreate(
-            ['Source' => $source, 'SourceID' => $sourceId],
-            [
-                'Stage' => $statusId,
-                'Status' => $statusValue,
-                'UserId' => Auth::id(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]
-        );
     }
 }

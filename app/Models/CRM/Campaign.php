@@ -4,8 +4,8 @@ namespace App\Models\CRM;
 
 use App\Enums\CampaignStatusEnum;
 use App\Enums\CampaignTypeEnum;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Core\Workflow;
+use App\Models\CRM\Approval\PendingWorkflow;
+use App\Models\CRM\Approval\Workflow;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,34 +17,25 @@ class Campaign extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Campaigns';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-                           'CampaignID',
-                           'Label',
-                           'Status',
-                           'Type',
-                           'Details',
-                           'MarketingListId',
-                           'Processing',
-                           'Notes',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        'CampaignID', 'Label', 'Status', 'Type', 'Details', 'MarketingListId', 'Processing', 'Notes',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+    ];
 
     protected $casts = [
-                        'Status'     => CampaignStatusEnum::class,
-                        'Type'       => CampaignTypeEnum::class,
-                        'CreatedBy'  => 'integer',
-                        'ModifiedBy' => 'integer',
-                        'Processing' => 'boolean',
-                       ];
+        'Status' => CampaignStatusEnum::class,
+        'Type' => CampaignTypeEnum::class,
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+        'Processing' => 'boolean',
+    ];
 
     public static function getPrimaryKey(): string
     {

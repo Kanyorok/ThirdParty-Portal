@@ -21,7 +21,7 @@ class PropertyInvoiceController extends Controller
         ->latest('Id')
         ->paginate(10); // pagination supported
 
-        return PropertyInvoiceCollection::collection($invoices);
+        return new PropertyInvoiceCollection($invoices);
     }
 
     public function show($id)

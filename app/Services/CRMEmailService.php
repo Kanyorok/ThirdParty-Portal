@@ -222,7 +222,7 @@ class CRMEmailService
 
     public function createReply(string $To, string $subject, string $body, User $actor, array $cc = []): CRMEmailService
     {
-        return self::create($actor, $subject, $body, $this->crmEmail->Priority, [[$To => $To]], ($this->crmEmail->Party) ?? '', ($this->crmEmail->PartyID) ?? "", $cc, /*$this->crmEmail->BCC*/ [], $this->crmEmail);
+        return self::create($actor, $subject, $body, $this->crmEmail->Priority, [[$To => $To]], ($this->crmEmail->Party) ?? '', ($this->crmEmail->PartyID) ?? "", $cc, [], $this->crmEmail);
     }
 
     public function addAttachmentUpload(UploadedFile $file, User $actor): static
@@ -379,9 +379,7 @@ class CRMEmailService
         }
 
         if ($this->crmEmail->Status->value === EmailStatusEnum::Queued->value) {
-            /* if (!filter_var($this->crmEmail->to, FILTER_VALIDATE_EMAIL)) {
-                 $this->_failed();
-             }*/
+
             return $this->_send();
         }
 
@@ -432,9 +430,7 @@ class CRMEmailService
 
     protected function _send(): static
     {
-        /*if (config('app.debug')) {
-            return $this->_failed('In debug');
-        }*/
+
         //$mailable = Mail::send(new DefaultEmail($this->crmEmail));
         try {
             $mailable = $this->_sendNewConfig();
@@ -490,7 +486,7 @@ class CRMEmailService
         $this->crmEmail->update([
             'From' => $emailConfig?->Outgoing?->username,
         ]);
-        // $mailer = (new MailManager(clone app('mailer')));
+
 
         $mailer = clone app('mailer');
         $mailer->alwaysFrom($emailConfig?->Outgoing?->username, config('org.name'));

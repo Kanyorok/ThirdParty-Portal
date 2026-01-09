@@ -34,7 +34,7 @@
                         <td>{{ $repair->vehicle->RegistrationNo ?? '-' }}</td>
                         <td>{{ $repair->repairType->Description ?? '-' }}</td>
                         <td>{{ $repair->RepairDate }}</td>
-                        <td>{{ $repair->vendor->ThirdPartyName ?? '-' }}</td>
+                        <td>{{ $repair->vendor->party->ThirdPartyName ?? 'N/A' }}</td>
                         <td>KES {{ number_format($repair->Cost, 2) }}</td>
                         <td>{{ $repair->Description }}</td>
                         <td>

@@ -32,7 +32,7 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded-3">
-                        <h6 class="text-info mb-1">Owner:</h6>
+                        <h6 class="text-info mb-1">Registration Body:</h6>
                         <p class="mb-0 fw-semibold">{{ $record->Owner ?? '—' }}</p>
                     </div>
                 </div>
@@ -80,6 +80,31 @@
                 </div>
             @endif
 
+            {{-- Attachments Section --}}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 text-muted"><i class="far fa-paperclip me-2"></i>Attachments</h6>
+                </div>
+                <div class="card-body" id="ipAttachments">
+                    @php
+                    $documents = $record->documents()
+                        ->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                    @endphp
+                    @forelse($documents as $document)
+                    @php
+                    $document->setRelations([]);
+                    @endphp
+                    {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                    @empty
+                    <span class="text-muted">No attachments.</span>
+                    @endforelse
+                </div>
+            </div>
+
         </div>
     </div>
+@endsection
+
+@section('scripts')
+@includeIf('snippets.actions.preview-files')
 @endsection

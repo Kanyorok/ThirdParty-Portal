@@ -41,22 +41,26 @@ abstract class ThirdPartiesService
         return $partyTypes;
     }
 
-    public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User|ThirdPartyUser $actor): static
+    public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User $actor, ?string $password = null, bool $sendVerification = true): static
     {
         $user = ThirdPartyUser::create([
             'FirstName' => $firstName,
             'LastName' => $lastName,
             'Email' => $email,
             'Phone' => $phone,
-            'Gender' => $gender->ID,
+            'Gender' => $gender->getKey(),
             'ThirdPartyId' => $this->party->Id,
-            'Password' => 'NON SET',
-            'IsActive' => true,
+            'Password' => $password ? \Illuminate\Support\Facades\Hash::make($password) : 'NON SET',
+            'IsActive' => $password ? true : false, // Only activate if password is set
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
 
-        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+        // Send email verification notification if password is set
+        if ($password && $sendVerification) {
+            $user->sendEmailVerificationNotification();
+        }
+
         activity()->causedBy($actor)->performedOn($user)->event('create')->log("Created user {$user->FirstName} {$user->LastName} to thirdparty {$this->party->ThirdPartyName}");
         return $this;
     }
@@ -154,6 +158,8 @@ abstract class ThirdPartiesService
 
     final protected function addType(ThirdPartyType $type, string $partyType, string|int $partyId, User|ThirdPartyUser $actor): static
     {
+        $userId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
         ThirdPartyTypeTypes::create([
             'TypeId' => $type->TypeId,
             'ThirdPartyId' => $this->party->Id,

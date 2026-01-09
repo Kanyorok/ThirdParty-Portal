@@ -32,7 +32,6 @@ class MarketingPlannerActivityPolicy
     public function create(User $user, MarketingPlanner $planner): bool
     {
         return ($planner->OwnerId === $user->Id && $planner->Status->value === PlannerStatus::Draft->value);
-        /* return $user->can(PermissionEnum::MarketingPlannerWrite->value);*/
     }
 
     /**
@@ -41,7 +40,6 @@ class MarketingPlannerActivityPolicy
     public function update(User $user, MarketingPlannerActivity $marketingPlannerActivity): bool
     {
         return false;
-        //return $user->can(PermissionEnum::MarketingPlannerUpdate->value);
     }
 
     /**
@@ -50,7 +48,6 @@ class MarketingPlannerActivityPolicy
     public function delete(User $user, MarketingPlanner $planner, MarketingPlannerActivity $marketingPlannerActivity): bool
     {
         return ($planner->OwnerId === $user->Id && $planner->Status->value === PlannerStatus::Draft->value);
-        //return $user->can(PermissionEnum::MarketingPlannerDelete->value);
     }
 
     /**
@@ -59,7 +56,6 @@ class MarketingPlannerActivityPolicy
     public function restore(User $user, MarketingPlannerActivity $marketingPlannerActivity): bool
     {
         return false;
-        //return $user->can(PermissionEnum::MarketingPlannerDelete->value);
     }
 
     /**
