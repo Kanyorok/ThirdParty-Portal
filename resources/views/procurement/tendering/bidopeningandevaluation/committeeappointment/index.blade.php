@@ -94,7 +94,7 @@
                         <div class="col-md-6">
                             <label for="referenceId" class="form-label">Reference</label>
                             <select id="referenceId" class="form-select select2-reference" name="referenceId" required>
-                                <option value="">-- Select Reference --</option>
+                                <option value=""></option>
                             </select>
                         </div>
 
@@ -140,6 +140,27 @@
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <style>
+        /* Remove text decoration from Select2 dropdown options */
+        .select2-container--default .select2-results__option {
+            text-decoration: none !important;
+        }
+        
+        /* Specifically target the Reference dropdown */
+        .select2-reference + .select2-container .select2-results__option {
+            text-decoration: none !important;
+        }
+        
+        /* Remove text decoration from selected items */
+        .select2-container--default .select2-selection__rendered {
+            text-decoration: none !important;
+        }
+        
+        /* Ensure no underline on hover */
+        .select2-container--default .select2-results__option:hover {
+            text-decoration: none !important;
+        }
+    </style>
 @endpush
 
 @push('scripts')
@@ -227,7 +248,7 @@
                 fetch(`/procurement/committee-references/${selectedType}`)
                     .then(response => response.json())
                     .then(data => {
-                        referenceSelect.innerHTML = '<option value="">-- Select Reference --</option>';
+                        referenceSelect.innerHTML = '<option value=""></option>';
                         data.forEach(item => {
                             const ref = item.RefNo ?? item.RFQNumber ?? 'N/A';
                             referenceSelect.innerHTML += `<option value="${item.Id}">${ref} ${item.Title ? '| ' + item.Title : ''}</option>`;
