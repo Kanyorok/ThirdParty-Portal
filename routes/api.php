@@ -98,7 +98,7 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
 
         // Fetch tender invitations
         $invitations = \App\Models\Procurement\TenderInvitation::where('SupplierId', $supplier->Id)
-            ->with(['tender'])
+            ->with(['tender.documents'])
             ->take(5)
             ->get();
 
@@ -112,7 +112,9 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
                     'InvitationID' => $inv->InvitationID,
                     'TenderId' => (int)$inv->TenderId,
                     'ResponseStatus' => strtolower($inv->ResponseStatus),
-                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded'
+                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded',
+                    'documents_count' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->count() : 0,
+                    'documents' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->toArray() : []
                 ];
             })
         ]);

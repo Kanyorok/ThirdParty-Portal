@@ -116,7 +116,7 @@ class TenderInvitationController extends Controller
 
             try {
                 // Eager load items and prices for calculation
-                $invitationsQuery = TenderInvitation::with(['tender.currency', 'tender.items.item.price', 'tender.tenderCategoryRelation'])
+                $invitationsQuery = TenderInvitation::with(['tender.currency', 'tender.items.item.price', 'tender.tenderCategoryRelation', 'tender.documents'])
                     ->whereIn('SupplierId', $supplierIds)
                     ->whereNull('DeletedOn')
                     ->orderBy('InvitationDate', 'desc');
@@ -176,6 +176,16 @@ class TenderInvitationController extends Controller
                         'tenderCategoryRelation' => $invitation->tender->tenderCategoryRelation ? [
                             'tenderCategory' => $invitation->tender->tenderCategoryRelation->TenderCategory
                         ] : null,
+                        'documents' => $invitation->tender->documents ? $invitation->tender->documents->map(function ($doc) {
+                            return [
+                                'id' => $doc->Id,
+                                'fileName' => $doc->Name,
+                                'extension' => $doc->Extension,
+                                'fileSize' => $doc->Size, // Assuming Size attribute exists, otherwise null
+                                'module' => $doc->Module,
+                                'createdOn' => $doc->CreatedOn,
+                            ];
+                        }) : [],
                     ];
                 } else {
                     // Fallback tender data if relationship fails
@@ -206,7 +216,11 @@ class TenderInvitationController extends Controller
                 ];
             });
 
-
+            Log::info('Debug Invitations Documents', [
+                 'count' => $formattedData->count(),
+                 'sample_tender_id' => $formattedData->first()['tender']['id'] ?? 'N/A',
+                 'sample_doc_count' => count($formattedData->first()['tender']['documents'] ?? [])
+            ]);
 
             return response()->json([
                 'data' => $formattedData,
@@ -241,6 +255,7 @@ class TenderInvitationController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        Log::info('TenderInvitation Update Hit', ['id' => $id, 'payload' => $request->all(), 'user' => Auth::id()]);
         try {
             $validated = $request->validate([
                 'responseStatus' => 'required|in:accepted,declined,pending',
@@ -275,15 +290,25 @@ class TenderInvitationController extends Controller
             try {
 
 
-                // Start with just the status field that we know works
+                // Harmonize with storeResponse: Use PascalCase for status
+                $statusMap = [
+                    'accepted' => 'Accepted',
+                    'declined' => 'Declined',
+                    'pending' => 'Pending',
+                    'submitted' => 'Submitted'
+                ];
+                $cleanStatus = strtolower($validated['responseStatus']);
+                $dbStatus = $statusMap[$cleanStatus] ?? ucfirst($cleanStatus);
+
                 $updateData = [
-                    'ResponseStatus' => $validated['responseStatus']
+                    'ResponseStatus' => $dbStatus,
+                    'ResponseDate' => now(),
+                    'ModifiedBy' => Auth::check() ? Auth::user()->Id : null
                 ];
 
                 // Add decline reason only if provided and we're declining
                 if (
-                    $validated['responseStatus'] === 'declined' &&
-                    isset($validated['declineReason']) &&
+                    $cleanStatus === 'declined' &&
                     !empty($validated['declineReason'])
                 ) {
                     $updateData['DeclineReason'] = $validated['declineReason'];

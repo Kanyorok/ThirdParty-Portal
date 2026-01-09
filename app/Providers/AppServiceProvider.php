@@ -537,6 +537,7 @@ class AppServiceProvider extends ServiceProvider
             LegalHold::getPrimaryKey() => LegalHold::class,
             Repository::getPrimaryKey() => Repository::class,
 
+
             //Third Parties
             // Allow resolving morph type 'ThirdParty' used by legacy data
             'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,

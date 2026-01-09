@@ -27,7 +27,7 @@ class TenderApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Tender::with(['procurementMode', 'currency', 'tenderCategoryRelation', 'itemCategoryRelation']);
+            $query = Tender::with(['procurementMode', 'currency', 'tenderCategoryRelation', 'itemCategoryRelation', 'documents']);
 
             // Enforce invites unless explicitly disabled (default: enabled to protect restricted tenders)
             $enforceInvites = filter_var($request->query('enforce_invites', true), FILTER_VALIDATE_BOOLEAN);
