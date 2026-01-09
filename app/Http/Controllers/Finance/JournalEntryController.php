@@ -197,8 +197,54 @@ class JournalEntryController extends Controller
                 $canApprove = false;
             }
 
+        $workflowSources = array_values(array_unique(array_filter([
+            $journalEntry->getTable(),
+            $journalEntry->getMorphClass(),
+            $journalEntry::getPrimaryKey(),
+        ])));
 
-        return view('finance.generalledger.journalentry.show', compact('journalEntry', 'canApprove'));
+        $hasPendingApprovals = DB::table('t_WorkFlowPending')
+            ->whereIn('Source', $workflowSources)
+            ->where('SourceID', (string)$journalEntry->getKey())
+            ->whereNull('DeletedOn')
+            ->exists();
+
+        if (!$canApprove && $hasPendingApprovals) {
+            $canApprove = $this->canApproveFromPending(
+                $workflowSources,
+                $journalEntry->getKey(),
+                (int)Auth::id()
+            );
+        }
+
+        return view('finance.generalledger.journalentry.show', compact('journalEntry', 'canApprove', 'hasPendingApprovals'));
+    }
+
+    private function canApproveFromPending(array $sources, string|int $sourceId, int $userId): bool
+    {
+        $hasPendingForUser = DB::table('t_WorkFlowPending')
+            ->whereIn('Source', $sources)
+            ->where('SourceID', (string)$sourceId)
+            ->where('UserId', $userId)
+            ->whereNull('DeletedOn')
+            ->exists();
+
+        if (!$hasPendingForUser) {
+            return false;
+        }
+
+        $makerId = DB::table('t_WorkFlowHistory')
+            ->whereIn('Source', $sources)
+            ->where('SourceID', (string)$sourceId)
+            ->whereNull('DeletedOn')
+            ->orderBy('CreatedOn', 'asc')
+            ->value('CreatedBy');
+
+        if ($makerId && (int)$makerId === $userId) {
+            return false;
+        }
+
+        return true;
     }
 
     public function edit($id)

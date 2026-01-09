@@ -708,14 +708,14 @@ enum PermissionEnum: string
     case FinanceCreditManagementDelete = 'financeCreditManagement-delete';
 
         //Posting
-    case FinanceJournalPosting = 'financeJournal-financeJournal';
-    case FinanceAPInvoicePosting = 'financeAPInvoice-financeAPInvoice';
-    case FinanceARInvoicePosting = 'financeARInvoice-financeARInvoice'; // AR Account Receivables
-    case FinanceCreditNotePosting = 'financeCreditNote-financeCreditNote';
-    case FinanceDebitNotePosting = 'financeDebitNote-financeDebitNote';
-    case FinanceVoucherPosting = 'financeVoucher-financeVoucher';
-    case FinancePaymentProcessingPosting = 'financePaymentProcessing-financePaymentProcessing';
-    case FinanceReceiptPosting = 'financeReceipt-financeReceipt';
+    case FinanceJournalPosting = 'financeJournal-posting';
+    case FinanceAPInvoicePosting = 'financeAPInvoice-posting';
+    case FinanceARInvoicePosting = 'financeARInvoice-posting'; // AR Account Receivables
+    case FinanceCreditNotePosting = 'financeCreditNote-posting';
+    case FinanceDebitNotePosting = 'financeDebitNote-posting';
+    case FinanceVoucherPosting = 'financeVoucher-posting';
+    case FinancePaymentProcessingPosting = 'financePaymentProcessing-posting';
+    case FinanceReceiptPosting = 'financeReceipt-posting';
 
 
         /*

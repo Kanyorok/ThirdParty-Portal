@@ -401,7 +401,7 @@
                             <span class="badge bg-success">Approved</span>
                         @elseif($journalEntry->ApprovalStatus == 'rejected')
                             <span class="badge bg-danger">Rejected</span>
-                        @elseif($journalEntry->ApprovalStatus == 'draft')
+                        @elseif(($hasPendingApprovals ?? false) || $journalEntry->ApprovalStatus == 'pending' || $journalEntry->ApprovalStatus == 'draft' || empty($journalEntry->ApprovalStatus))
                             <span class="badge bg-warning text-dark">Pending</span>
                         @endif
                 </div>
@@ -511,7 +511,7 @@
                 </div>
 
                 {{-- Action Buttons --}}
-                @if($journalEntry->ApprovalStatus=='draft')
+                @if((!($hasPendingApprovals ?? false)) && ($journalEntry->ApprovalStatus=='draft' || empty($journalEntry->ApprovalStatus)))
                     <div class="mt-4 d-flex justify-content-end gap-3 no-print">
                         {{-- <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
                             <i class="fas fa-times-circle me-1"></i> Reject
@@ -522,7 +522,7 @@
                         </button>
                     </div>
                  @endif
-                @if($journalEntry->ApprovalStatus=='pending' && $canApprove)
+                @if(($hasPendingApprovals ?? false) && $canApprove)
                     <div class="mt-4 d-flex justify-content-end gap-3 no-print">
                         <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
                             <i class="fas fa-times-circle me-1"></i> Reject

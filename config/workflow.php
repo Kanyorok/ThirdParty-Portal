@@ -73,6 +73,13 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 'S'
     ],
 
+    'FinanceJournalEntryId' => [
+        'Approved' => 'posted',
+        'Rejected' => 'rejected',
+        'Pending' => 'draft',
+        'Submitted for Approval' => 'draft',
+    ],
+
     'tender' => [
         'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED, // Will now be 'Ap'
         'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED, // Will now be 'R'
