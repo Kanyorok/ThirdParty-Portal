@@ -87,7 +87,9 @@ export default function TenderResponseForm({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(requestPayload),
       });
 

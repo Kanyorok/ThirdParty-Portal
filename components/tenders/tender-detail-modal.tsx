@@ -197,7 +197,7 @@ export default function TenderDetailModal({
                     </TabsList>
                 </div>
 
-                <div className="flex-1 overflow-y-auto bg-white">
+                <div className="flex-1 overflow-y-auto bg-white min-h-0">
                     <TabsContent value="overview" className="min-h-full p-8 mt-0 focus-visible:outline-none">
                         <div className="max-w-7xl mx-auto space-y-8">
                              {/* Key Stats Row */}
