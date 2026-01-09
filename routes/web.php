@@ -46,27 +46,27 @@ Route::middleware(['web', 'auth'])->group(function () {
 require __DIR__ . '/auth.php';
 
 Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(function () {
-    // require __DIR__ . '/crm.php';
+    require __DIR__ . '/crm.php';
 
     // Procurement routes with prefix
     Route::prefix('procurement')->group(function () {
         require __DIR__ . '/procurement.php';
     });
 
-    // require __DIR__ . '/inventory.php';
-    // require __DIR__ . '/property.php';
-    // require __DIR__ . '/finance.php';
-    // require __DIR__ . '/fleet.php';
-    // require __DIR__ . '/insurance.php';
+    require __DIR__ . '/inventory.php';
+    require __DIR__ . '/property.php';
+    require __DIR__ . '/finance.php';
+    require __DIR__ . '/fleet.php';
+    require __DIR__ . '/insurance.php';
     require __DIR__ . '/dms.php';
-    // require __DIR__ . '/legal.php';
-    // require __DIR__ . '/hrms.php';
-    // require __DIR__ . '/budget.php';
+    require __DIR__ . '/legal.php';
+    require __DIR__ . '/hrms.php';
+    require __DIR__ . '/budget.php';
     require __DIR__ . '/thirdparty.php';
     // Prequalification pages temporarily disabled due to stability issues
     require __DIR__ . '/prequalification.php';
     require __DIR__ . '/supplier-cat.php';
-    // require __DIR__ . '/assets.php';
+    require __DIR__ . '/assets.php';
 
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
