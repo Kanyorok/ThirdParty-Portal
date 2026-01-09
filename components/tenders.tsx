@@ -439,6 +439,63 @@ export default function TendersPage() {
                 }
             }
 
+            // Normalize to Standard Tender Object - HOISTED for reuse
+            const normalizeTender = (t: any): TenderWithInvitation => {
+                const currency = t.currency || t.Currency || {};
+                const procMode = t.procurementMode || t.ProcurementMode || {};
+                
+                return {
+                    id: t.id ?? t.Id,
+                    tenderNo: t.tenderNo ?? t.TenderNo,
+                    title: t.title ?? t.Title,
+                    tenderType: t.tenderType ?? t.TenderType,
+                    tenderCategory: t.tenderCategory ?? t.TenderCategory,
+                    scopeOfWork: t.scopeOfWork ?? t.ScopeOfWork,
+                    instructions: t.instructions ?? t.Instructions,
+                    submissionDeadline: t.submissionDeadline ?? t.SubmissionDeadline,
+                    openingDate: t.openingDate ?? t.OpeningDate,
+                    status: t.status ?? t.Status,
+                    estimatedValue: t.estimatedValue ?? t.EstimatedValue,
+                    currencyId: t.currencyId ?? t.CurrencyId,
+                    procurementModeId: t.procurementModeId ?? t.ProcurementModeId,
+                    itemCategoryId: t.itemCategoryId ?? t.ItemCategoryId,
+                    createdBy: t.createdBy ?? t.CreatedBy,
+                    createdOn: t.createdOn ?? t.CreatedOn,
+                    modifiedBy: t.modifiedBy ?? t.ModifiedBy,
+                    modifiedOn: t.modifiedOn ?? t.ModifiedOn,
+                    deletedBy: t.deletedBy ?? t.DeletedBy,
+                    deletedOn: t.deletedOn ?? t.DeletedOn,
+                    relatedPRID: t.relatedPRID ?? t.RelatedPRID,
+                    approvalRemarks: t.approvalRemarks ?? t.ApprovalRemarks,
+                    approvalStatus: t.approvalStatus ?? t.ApprovalStatus,
+                    
+                    // Relationships with robust fallbacks
+                    currency: Object.keys(currency).length > 0 ? {
+                        id: currency.id ?? currency.Id,
+                        name: currency.name ?? currency.Name,
+                        code: currency.code || currency.Code || 'KES', // Defaulting to KES if code is missing but object exists is somewhat safe but 'code' should be preferred. Added fallback for self-ref.
+                        symbol: currency.symbol ?? currency.Symbol,
+                        symbolNative: currency.symbolNative ?? currency.SymbolNative,
+                        decimalDigits: currency.decimalDigits ?? currency.DecimalDigits,
+                        rounding: currency.rounding ?? currency.Rounding,
+                        createdOn: currency.createdOn ?? currency.CreatedOn,
+                        modifiedOn: currency.modifiedOn ?? currency.ModifiedOn,
+                        deletedOn: currency.deletedOn ?? currency.DeletedOn,
+                    } : undefined,
+                    
+                    procurementMode: Object.keys(procMode).length > 0 ? {
+                        id: procMode.id ?? procMode.Id,
+                        name: procMode.name ?? procMode.Name,
+                    } : undefined,
+                    
+                    tenderCategoryRelation: t.tenderCategoryRelation ?? t.TenderCategoryRelation,
+                    itemCategoryRelation: t.itemCategoryRelation ?? t.ItemCategoryRelation,
+                    
+                    // Invitation will be attached later
+                    invitation: undefined
+                };
+            };
+
             // Union: ensure invited restricted tenders are present even if backend /api/tenders omitted them
             try {
                 const existingIds = new Set(tendersData.map(t => parseInt(t.id.toString())));
@@ -448,36 +505,8 @@ export default function TendersPage() {
                 for (const invTender of invitedTenders) {
                     const tid = parseInt(invTender.id.toString());
                     if (!existingIds.has(tid)) {
-                        // Normalize minimal shape to Tender interface fields if missing
-                        const normalized: Tender = {
-                            id: tid,
-                            tenderNo: invTender.tenderNo ?? invTender.TenderNo ?? '',
-                            title: invTender.title ?? invTender.Title ?? '',
-                            tenderType: invTender.tenderType ?? invTender.TenderType ?? 'rs',
-                            tenderCategory: invTender.tenderCategory ?? invTender.TenderCategory ?? '',
-                            scopeOfWork: invTender.scopeOfWork ?? invTender.ScopeOfWork ?? '',
-                            instructions: invTender.instructions ?? invTender.Instructions ?? '',
-                            submissionDeadline: invTender.submissionDeadline ?? invTender.SubmissionDeadline ?? '',
-                            openingDate: invTender.openingDate ?? invTender.OpeningDate ?? '',
-                            status: invTender.status ?? invTender.Status ?? 'pb',
-                            procurementModeId: invTender.procurementModeId ?? invTender.ProcurementModeId ?? null,
-                            estimatedValue: invTender.estimatedValue ?? invTender.EstimatedValue ?? null,
-                            itemCategoryId: invTender.itemCategoryId ?? invTender.ItemCategoryId ?? 0,
-                            currencyId: invTender.currencyId ?? invTender.CurrencyId ?? '',
-                            createdBy: invTender.createdBy ?? invTender.CreatedBy ?? null,
-                            createdOn: invTender.createdOn ?? invTender.CreatedOn ?? '',
-                            modifiedBy: invTender.modifiedBy ?? invTender.ModifiedBy ?? null,
-                            modifiedOn: invTender.modifiedOn ?? invTender.ModifiedOn ?? '',
-                            deletedBy: invTender.deletedBy ?? invTender.DeletedBy ?? null,
-                            deletedOn: invTender.deletedOn ?? invTender.DeletedOn ?? null,
-                            relatedPRID: invTender.relatedPRID ?? invTender.RelatedPRID ?? null,
-                            approvalRemarks: invTender.approvalRemarks ?? invTender.ApprovalRemarks ?? null,
-                            approvalStatus: invTender.approvalStatus ?? invTender.ApprovalStatus ?? 0,
-                            procurementMode: undefined,
-                            currency: undefined,
-                            tenderCategoryRelation: undefined,
-                            itemCategoryRelation: undefined,
-                        };
+                        // Normalize using the standard function to ensure relations like Currency are kept
+                        const normalized = normalizeTender(invTender);
                         tendersData.push(normalized);
                         existingIds.add(tid);
                     }
@@ -490,23 +519,25 @@ export default function TendersPage() {
 
             // Merge tenders with invitations
             const tendersWithInvitations: TenderWithInvitation[] = tendersData.map(tender => {
+                const normalized = normalizeTender(tender);
+                
                 const invitation = invitationsData.find(inv => {
                     // Support both Laravel field naming conventions
                     const tenderId = inv?.TenderId || inv?.tenderId;
                     
-                    if (!inv || tenderId == null || tender.id == null) {
+                    if (!inv || tenderId == null || normalized.id == null) {
                         return false;
                     }
                     
                     // Convert both to integers for proper comparison
-                    const tenderDbId = parseInt(tender.id.toString());
+                    const tenderDbId = parseInt(normalized.id.toString());
                     const invitationTenderId = parseInt(tenderId.toString());
                     
                     return tenderDbId === invitationTenderId;
                 });
                 
                 return {
-                    ...tender,
+                    ...normalized,
                     invitation
                 };
             });

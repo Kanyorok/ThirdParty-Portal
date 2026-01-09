@@ -121,12 +121,17 @@ export default function TenderDetailModal({
     }
   };
 
-  const formatCurrency = (amount: string | null | undefined, currencyCode: string = 'KES') => {
+  const formatCurrency = (amount: string | null | undefined, currencyCode?: string) => {
     if (!amount) return 'Not specified';
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: currencyCode,
-    }).format(parseFloat(amount));
+    try {
+      return new Intl.NumberFormat('en-KE', {
+        style: 'currency',
+        currency: currencyCode || 'KES', // Only fall back if absolutely necessary, but preferably use the one from tender
+      }).format(parseFloat(amount));
+    } catch (e) {
+      // Fallback for invalid currency codes
+      return `${currencyCode || ''} ${parseFloat(amount).toLocaleString()}`;
+    }
   };
 
   return (
