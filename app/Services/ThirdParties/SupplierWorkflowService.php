@@ -17,19 +17,21 @@ class SupplierWorkflowService extends ApprovalWorkflowService
      */
     public function submit(SupplierMaster $supplier, User $actor, string $remarks = 'Submitted'): bool
     {
-        $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Submitted;
-        $supplier->save();
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($supplier, $actor, $remarks) {
+            $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Submitted;
+            $supplier->save();
 
-        $status = self::codeDetail(ThirdPartyApprovalStatusEnum::Submitted, self::CODE_ID);
+            $status = self::codeDetail(ThirdPartyApprovalStatusEnum::Submitted, self::CODE_ID);
 
-        return $this->submittedAction(
-            $actor,
-            $status,
-            $supplier,
-            SupplierMaster::getPrimaryKey(),
-            $supplier->getKey(),
-            $remarks
-        );
+            return $this->submittedAction(
+                $actor,
+                $status,
+                $supplier,
+                SupplierMaster::getPrimaryKey(),
+                $supplier->getKey(),
+                $remarks
+            );
+        });
     }
 
     /**
