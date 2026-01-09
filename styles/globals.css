@@ -4,7 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* --- Default Theme Variables --- */
   --color-background: oklch(0.98 0.005 240);
   --color-foreground: oklch(0.15 0.02 240);
 
@@ -14,7 +13,6 @@
   --color-popover: oklch(1 0 0);
   --color-popover-foreground: oklch(0.15 0.02 240);
 
-  /* Primary mapped to a variable for the Role Switcher */
   --color-primary: var(--primary);
   --color-primary-foreground: oklch(1 0 0);
 
@@ -34,7 +32,6 @@
   --color-input: oklch(0.88 0.01 240);
   --color-ring: var(--primary);
 
-  /* --- Sidebar Variables --- */
   --color-sidebar: oklch(0.98 0.005 240);
   --color-sidebar-foreground: oklch(0.2 0.02 240);
   --color-sidebar-primary: var(--primary);
@@ -44,25 +41,23 @@
   --color-sidebar-border: oklch(0.9 0.01 240);
   --color-sidebar-ring: var(--primary);
 
-  /* --- Radius --- */
   --radius-sm: 0.45rem;
   --radius-md: 0.65rem;
   --radius-lg: 0.85rem;
   --radius-xl: 1.25rem;
 
-  /* --- Role Tokens (Internal) --- */
+  --spacing-sidebar-width: 16rem;
+  --spacing-sidebar-width-icon: 5rem;
+
   --supplier-color: oklch(0.5 0.18 260);
-  /* Blue */
   --tenant-color: oklch(0.62 0.17 155);
-  /* Emerald */
   --customer-color: oklch(0.58 0.21 285);
-  /* Purple */
 }
 
-/* --- Role Logic --- */
 :root {
   --primary: oklch(0.5 0.18 260);
-  /* Fallback */
+  --sidebar-width: var(--spacing-sidebar-width);
+  --sidebar-width-icon: var(--spacing-sidebar-width-icon);
 }
 
 .theme-supplier {
@@ -77,7 +72,6 @@
   --primary: var(--customer-color);
 }
 
-/* --- Dark Mode Overrides --- */
 .dark {
   --color-background: oklch(0.12 0.015 240);
   --color-foreground: oklch(0.96 0.01 240);
@@ -94,7 +88,6 @@
   --color-sidebar: oklch(0.14 0.015 240);
   --color-sidebar-border: oklch(0.24 0.02 240);
 
-  /* Dark mode variants of role colors for better contrast */
   --supplier-color: oklch(0.7 0.12 250);
   --tenant-color: oklch(0.75 0.14 155);
   --customer-color: oklch(0.72 0.16 285);

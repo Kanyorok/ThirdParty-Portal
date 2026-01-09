@@ -30,7 +30,8 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
     }
 
     const cookieStore = await cookies()
-    const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+    const sidebarState = cookieStore.get("sidebar:state")?.value
+    const defaultOpen = sidebarState ? sidebarState === "true" : true
 
     const sidebarVariant = await getSidebarVariant()
     const sidebarCollapsible = await getSidebarCollapsible()
@@ -42,15 +43,15 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
                 <AppSidebar variant={sidebarVariant} collapsible={sidebarCollapsible} />
                 <SidebarInset
                     className={cn(
-                        "flex flex-col transition-all duration-300 ease-in-out",
-                        contentLayout === "centered" && "!mx-auto max-w-7xl border-x border-border/40 min-h-screen shadow-2xl",
-                        "max-[113rem]:peer-data-[variant=inset]:!mr-2 min-[101rem]:peer-data-[variant=inset]:peer-data-[state=collapsed]:!mr-auto"
+                        "flex flex-col transition-all duration-300 ease-in-out bg-background/50",
+                        contentLayout === "centered" && "mx-auto w-full max-w-7xl border-x border-border/40 min-h-screen shadow-2xl",
+                        "peer-data-[variant=inset]:m-2 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:border peer-data-[variant=inset]:shadow-sm"
                     )}
                 >
                     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border/40 bg-background/80 px-4 backdrop-blur-md lg:px-6">
                         <div className="flex w-full items-center justify-between">
                             <div className="flex items-center gap-1 lg:gap-2">
-                                <SidebarTrigger className="-ml-1 size-8 rounded-lg hover:bg-accent" />
+                                <SidebarTrigger className="-ml-1 size-8 rounded-lg hover:bg-accent transition-transform active:scale-95" />
                                 <Separator orientation="vertical" className="mx-2 h-4 opacity-50" />
                                 <SearchDialog />
                             </div>
@@ -65,11 +66,14 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
                             </div>
                         </div>
                     </header>
-                    <main className="flex-1 p-4 md:p-6 lg:p-8">
+                    <main className={cn(
+                        "flex-1 p-4 md:p-6 lg:p-8",
+                        contentLayout === "centered" && "bg-card/30"
+                    )}>
                         {children}
                     </main>
                     {contentLayout === "centered" && (
-                        <footer className="mt-auto border-t border-border/40 p-4">
+                        <footer className="mt-auto border-t border-border/40 p-4 bg-muted/5">
                             <p className="text-center text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">
                                 System Status: Operational
                             </p>

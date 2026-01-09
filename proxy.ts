@@ -14,7 +14,9 @@ const PUBLIC_ROUTES = [
     "/api/portal/auth",
     "/api/v1/portal/auth",
     "/api/health",
-    "/register"
+    "/register",
+    "/forgot-password",
+    "/reset-password"
 ]
 
 function createRedirect(req: NextRequest, path: string, params?: Record<string, string>): NextResponse {
@@ -39,7 +41,6 @@ export async function proxy(req: NextRequest) {
     const isAuth = !!token
     const isAuthPage = pathname === AUTH_SIGN_IN_PATH || pathname === AUTH_REGISTER_PATH
 
-    // If logged in, don't allow access to Sign In or Register pages
     if (isAuth && isAuthPage) {
         return createRedirect(req, DEFAULT_AUTH_REDIRECT)
     }

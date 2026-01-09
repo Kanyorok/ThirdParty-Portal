@@ -66,14 +66,14 @@ interface NavMainProps {
 }
 
 const ComingSoonBadge = memo(() => (
-  <Badge variant="outline" className="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border-amber-200 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
+  <Badge variant="outline" className="ml-auto px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border-primary/20 bg-primary/5 text-primary">
     Soon
   </Badge>
 ))
 ComingSoonBadge.displayName = "ComingSoonBadge"
 
 const NavBadge = memo(({ badge }: { badge: string }) => (
-  <Badge className="ml-auto px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-primary text-primary-foreground">
+  <Badge className="ml-auto px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-primary text-primary-foreground shadow-sm">
     {badge}
   </Badge>
 ))
@@ -96,10 +96,8 @@ const NavItemExpanded = memo(
     const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems])
     const isOpen = useMemo(() => isSubmenuOpen(item.subItems), [isSubmenuOpen, item.subItems])
 
-    // Filter sub-items based on active profile
     const visibleSubItems = useMemo(() => {
       if (!item.subItems) return []
-      if (activeProfile === 'base') return item.subItems
       return item.subItems.filter(sub => sub.allowedProfiles.includes(activeProfile))
     }, [item.subItems, activeProfile])
 
@@ -137,8 +135,10 @@ const NavItemExpanded = memo(
           disabled={item.disabled || item.comingSoon}
           isActive={isItemActive}
           className={cn(
-            "group h-10 border-transparent px-3.5 transition-all duration-200 border-l-2 rounded-lg",
-            isItemActive ? "bg-primary/5 border-l-primary" : "hover:bg-muted/50 hover:border-l-muted-foreground/20",
+            "group h-10 border-transparent px-3.5 transition-all duration-300 border-l-2 rounded-lg",
+            isItemActive
+              ? "bg-primary/10 border-l-primary text-primary shadow-[inset_3px_0_0_0_oklch(var(--primary))]"
+              : "hover:bg-muted/50 hover:border-l-muted-foreground/20",
             (item.disabled || item.comingSoon) && "opacity-40"
           )}
           onClick={handleItemClick}
@@ -153,13 +153,13 @@ const NavItemExpanded = memo(
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>{button}</TooltipTrigger>
-                <TooltipContent side="right" className="bg-black text-[10px] font-bold uppercase tracking-widest text-white">
-                  {item.comingSoon ? "Available Soon" : "Restricted Access"}
+                <TooltipContent side="right" className="bg-black text-[10px] font-black uppercase tracking-widest text-white border-none">
+                  {item.comingSoon ? "Coming Soon" : "Locked"}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <Link href={item.url} target={item.newTab ? "_blank" : undefined} className="block">
+            <Link href={item.url} target={item.newTab ? "_blank" : undefined} className="block w-full">
               {button}
             </Link>
           )}
@@ -174,9 +174,9 @@ const NavItemExpanded = memo(
             <SidebarMenuButton
               isActive={isItemActive}
               className={cn(
-                "group h-10 border-transparent px-3.5 transition-all duration-200 border-l-2 rounded-lg",
+                "group h-10 border-transparent px-3.5 transition-all duration-300 border-l-2 rounded-lg",
                 isOpen ? "bg-muted/30" : "hover:bg-muted/50 hover:border-l-muted-foreground/20",
-                isItemActive && !isOpen && "border-l-primary bg-primary/5"
+                isItemActive && !isOpen && "border-l-primary bg-primary/10 text-primary shadow-[inset_3px_0_0_0_oklch(var(--primary))]"
               )}
               onClick={handleItemClick}
             >
@@ -184,7 +184,7 @@ const NavItemExpanded = memo(
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden">
-            <SidebarMenuSub className="ml-6 border-l border-muted-foreground/10 pl-3 py-2 space-y-1 mt-1">
+            <SidebarMenuSub className="ml-6 border-l border-primary/10 pl-3 py-2 space-y-1 mt-1">
               {visibleSubItems.map((subItem) => {
                 const subActive = isActive(subItem.url)
                 return (
@@ -193,8 +193,8 @@ const NavItemExpanded = memo(
                       isActive={subActive}
                       asChild
                       className={cn(
-                        "h-9 px-3 transition-all duration-200 rounded-md",
-                        subActive ? "text-primary font-bold bg-primary/5" : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/50"
+                        "h-9 px-3 transition-all duration-300 rounded-md",
+                        subActive ? "text-primary font-black bg-primary/10" : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/50"
                       )}
                       onClick={() => onItemClick?.(subItem)}
                     >
@@ -229,27 +229,27 @@ const NavItemCollapsed = memo(
     const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems])
 
     return (
-      <SidebarMenuItem>
+      <SidebarMenuItem className="flex justify-center">
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <div className="px-2">
-                <SidebarMenuButton
-                  isActive={isItemActive}
-                  asChild
-                  onClick={() => onItemClick?.(item)}
-                  className={cn(
-                    "h-10 w-10 justify-center transition-all duration-300 rounded-lg",
-                    isItemActive ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" : "hover:bg-muted"
-                  )}
-                >
-                  <Link href={item.url}>
-                    {item.icon && <item.icon className="h-4.5 w-4.5" />}
-                  </Link>
-                </SidebarMenuButton>
-              </div>
+              <SidebarMenuButton
+                isActive={isItemActive}
+                asChild
+                onClick={() => onItemClick?.(item)}
+                className={cn(
+                  "h-12 w-12 justify-center transition-all duration-300 rounded-xl",
+                  isItemActive
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-110"
+                    : "hover:bg-muted text-muted-foreground hover:scale-105"
+                )}
+              >
+                <Link href={item.url}>
+                  {item.icon && <item.icon className="h-6 w-6" />}
+                </Link>
+              </SidebarMenuButton>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-black text-[10px] font-black uppercase tracking-widest text-white border-none shadow-xl">
+            <TooltipContent side="right" sideOffset={15} className="bg-black text-[10px] font-black uppercase tracking-[0.15em] text-white border-none shadow-xl">
               {item.title}
             </TooltipContent>
           </Tooltip>
@@ -283,16 +283,16 @@ export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) =>
   )
 
   return (
-    <div className={cn("space-y-8 py-2", className)}>
+    <div className={cn("space-y-8 py-4", className)}>
       {items.map((group) => (
         <SidebarGroup key={group.id} className="p-0">
           {group.label && state !== "collapsed" && (
-            <SidebarGroupLabel className="px-4 mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+            <SidebarGroupLabel className="px-5 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40">
               {group.label}
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1 px-2">
+            <SidebarMenu className={cn("gap-1.5", state === "collapsed" && !isMobile ? "px-0" : "px-2")}>
               {group.items.map((item) =>
                 state === "collapsed" && !isMobile ? (
                   <NavItemCollapsed key={item.title} item={item} isActive={isActive} onItemClick={onItemClick} />
