@@ -95,7 +95,7 @@
                             <td>{{ $rider->provider->Name ?? '-'}}</td>
                             <td>{{ $rider->product->Name ?? '-'}}</td>
                             <td>{{ $rider->RiderName ?? '-'}}</td>
-                            <td class="text-end">{{ $rider->currency->SymbolNative }} {{ number_format($rider->AdditionalPremium, 2) }}</td>
+                            <td class="text-end">{{ $rider->currency->SymbolNative ?? 'Cu'}} {{ number_format($rider->AdditionalPremium, 2) }}</td>
                             <td class="text-center">
                                 <span class="badge bg-{{ $rider->IsOptional ? 'info' : 'secondary' }}">
                                     {{ $rider->IsOptional ? 'Yes' : 'No' }}

@@ -63,7 +63,7 @@
                 {{-- Paid By --}}
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Paid By <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Paid to<span class="text-danger">*</span></label>
                         <select name="PaidBy" class="form-select rounded-3" required>
                             <option value="">-- Select User --</option>
                             @foreach ($paidBy as $user)

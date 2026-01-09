@@ -107,7 +107,8 @@
                     @forelse($installments as $row)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ \Carbon\Carbon::parse($row->PaymentDate)->format('d M Y') }}</td>                           <td>KES {{ number_format($row->Amount, 2) }}</td>
+                            <td>{{ \Carbon\Carbon::parse($row->PaymentDate)->format('d M Y') }}</td>
+                            <td>KES {{ number_format($row->Amount, 2) }}</td>
                             <td>{{ $row->paymentModes->Description ?? '-' }}</td>
                             <td>{{ $row->ReferenceNumber ?? '-' }}</td>
                             <td>{{ $row->CustomerID ?? '-' }}</td>

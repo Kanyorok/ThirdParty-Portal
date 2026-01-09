@@ -61,6 +61,20 @@
                                required>
                     </div>
 
+                    <!-- Currency -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Currency <span class="text-danger">*</span></label>
+                        <select name="CurrencyId" class="form-select rounded-3" required>
+                            <option value="">-- Select Currency --</option>
+                            @foreach ($currencies as $curr)
+                                <option value="{{ $curr->Id }}"
+                                    {{ $rule->CurrencyId == $curr->Id ? 'selected' : '' }}>
+                                    {{ $curr->Code }} - {{ $curr->SymbolNative }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <!-- Fixed Amount -->
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Fixed Amount <span class="text-danger">*</span></label>

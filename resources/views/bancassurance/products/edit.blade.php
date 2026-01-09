@@ -1,101 +1,155 @@
 @extends('layouts.app')
-@section('title', 'Edit Insurance Product')
+@section('title', 'Insurance Product')
 
 @section('content')
-    <div class="container mt-5" style="max-width: 750px;">
 
-        {{-- Validation Errors --}}
-        @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show">
-                <strong>Please fix the following errors:</strong>
-                <ul class="mb-0 mt-2">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+{{-- ================= STYLES ================= --}}
+<style>
+    .section-title {
+        color: #000;
+        font-weight: 600;
+        font-size: .9rem;
+        padding-bottom: .35rem;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
 
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-header bg-info text-dark">
-                <h5 class="mb-0"><i class="bi bi-pencil-square"></i>Product</h5>
-            </div>
+<div class="container mt-4" style="max-width: 850px;">
 
-            <div class="card-body p-4">
-                <form method="POST" action="{{ route('bancassurance.products.update', $product->Id) }}">
-                    @csrf
-                    @method('PUT')
+    {{-- ================= ERRORS ================= --}}
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm">
+            <strong>Please fix the following errors:</strong>
+            <ul class="mb-0 mt-2 small">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
-                    {{-- Insurance Provider (read-only) --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Insurance Provider</label>
-                        <input type="text"
-                               class="form-control bg-light"
-                               value="{{ optional($providers->firstWhere('Id', $product->InsuranceProviderID))->Name ?? 'N/A' }}"
-                               readonly>
-                        <input type="hidden" name="InsuranceProviderID" value="{{ $product->InsuranceProviderID }}">
+    <div class="card shadow-lg border-0 rounded-4">
+
+        {{-- Header --}}
+        <div class="card-header border-bottom bg-primary">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-pencil-square me-2"></i>Edit Insurance Product
+            </h5>
+        </div>
+
+        {{-- Body --}}
+        <div class="card-body p-4">
+            <form method="POST" action="{{ route('bancassurance.products.update', $product->Id) }}">
+                @csrf
+                @method('PUT')
+
+                {{-- ================= PRODUCT DETAILS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Product Details</h6>
+
+                    <div class="row g-3">
+
+                        {{-- Insurance Provider (Read-only) --}}
+                        <div class="col-md-4">
+                            <label class="form-label small">
+                                Insurance Provider
+                            </label>
+                            <input type="text"
+                                class="form-control form-control-sm bg-light"
+                                value="{{ optional($providers->firstWhere('Id', $product->InsuranceProviderID))->Name ?? 'N/A' }}"
+                                readonly>
+                            <input type="hidden"
+                                name="InsuranceProviderID"
+                                value="{{ $product->InsuranceProviderID }}">
+                        </div>
+
+                        {{-- Product Name --}}
+                        <div class="col-md-4">
+                            <label class="form-label small">
+                                Product Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                name="Name"
+                                class="form-control form-control-sm"
+                                value="{{ old('Name', $product->Name) }}"
+                                maxlength="150"
+                                required>
+                        </div>
+
+                        {{-- Product Type --}}
+                        <div class="col-md-4">
+                            <label class="form-label small">
+                                Product Type <span class="text-danger">*</span>
+                            </label>
+                            <select name="Type"
+                                    class="form-select form-select-sm"
+                                    required>
+                                <option value="">-- Select Type --</option>
+                                @foreach ($producttypes as $type)
+                                    <option value="{{ $type->ID }}"
+                                        {{ old('Type', $product->Type) == $type->ID ? 'selected' : '' }}>
+                                        {{ $type->Description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                     </div>
+                </div>
 
-                    {{-- Name --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Product Name <span class="text-danger">*</span></label>
-                        <input type="text"
-                               name="Name"
-                               class="form-control"
-                               value="{{ old('Name', $product->Name) }}"
-                               placeholder="Enter product name"
-                               maxlength="150"
-                               required>
-                    </div>
 
-                    {{-- Type --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Type <span class="text-danger">*</span></label>
-                        <select name="Type" class="form-select" required>
-                            <option value="" disabled>-- Select Type --</option>
-                            @foreach ($producttypes as $type)
-                                <option value="{{ $type->ID }}"
-                                    {{ old('Type', $product->Type) == $type->ID ? 'selected' : '' }}>
-                                    {{ $type->Description }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                {{-- ================= ADDITIONAL INFO ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Additional Information</h6>
 
-                    {{-- Description --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Description</label>
+                        <label class="form-label small ">
+                            Description
+                        </label>
                         <textarea name="Description"
-                                  class="form-control"
-                                  rows="3"
-                                  placeholder="Enter product description">{{ old('Description', $product->Description) }}</textarea>
+                                  class="form-control form-control-sm"
+                                  rows="4">{{ old('Description', $product->Description) }}</textarea>
                     </div>
+                </div>
 
-                    {{-- Active Checkbox --}}
-                    <div class="form-check mb-4">
+                {{-- ================= STATUS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Product Status</h6>
+
+                    <div class="form-check form-switch">
                         <input class="form-check-input"
                                type="checkbox"
                                name="IsActive"
                                value="1"
-                               id="isActiveCheck"
+                               id="IsActive"
                             {{ old('IsActive', $product->IsActive) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="isActiveCheck">
+                        <label class="form-check-label " for="IsActive">
                             Active Product
+                            <small class="text-muted d-block">
+                                Disable to hide this product from new policies
+                            </small>
                         </label>
                     </div>
+                </div>
 
-                    {{-- Actions --}}
-                    <div class="d-flex justify-content-end gap-2">
-                        <a href="{{ route('bancassurance.products.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left-circle"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle"></i> Update Product
-                        </button>
-                    </div>
-                </form>
-            </div>
+                {{-- ================= ACTIONS ================= --}}
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <a href="{{ route('bancassurance.products.index') }}"
+                       class="btn btn-sm btn-outline-secondary px-4">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-sm btn-success px-4">
+                        <i class="bi bi-check-circle me-1"></i> Update Product
+                    </button>
+                </div>
+
+            </form>
         </div>
+    </div>
 </div>
+
 @endsection
