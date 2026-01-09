@@ -584,6 +584,16 @@ export default function TendersPage() {
         fetchTenders();
     }, [fetchTenders]);
 
+    // Update selectedTender when the list changes (e.g. after invitation update)
+    useEffect(() => {
+        if (selectedTender && isModalOpen) {
+            const updatedTender = tenders.find(t => t.id === selectedTender.id);
+            if (updatedTender && updatedTender !== selectedTender) {
+                setSelectedTender(updatedTender);
+            }
+        }
+    }, [tenders, isModalOpen, selectedTender]);
+
     const handleSearch = () => {
         fetchTenders();
     };

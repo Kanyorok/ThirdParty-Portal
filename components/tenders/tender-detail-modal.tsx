@@ -145,8 +145,8 @@ export default function TenderDetailModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[95vw] w-full h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-white" showCloseButton={false}>
-        <div className="flex flex-col bg-white border-b shadow-sm z-10">
-            <DialogHeader className="px-6 py-4 flex flex-row items-center justify-between gap-4 space-y-0">
+        <div className="flex flex-col h-full overflow-hidden">
+            <DialogHeader className="px-6 py-4 flex flex-row items-center justify-between gap-4 space-y-0 flex-shrink-0 bg-white border-b shadow-sm z-10">
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                     <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                         <FileText className="h-5 w-5 text-primary" />
@@ -183,8 +183,8 @@ export default function TenderDetailModal({
             </DialogHeader>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col overflow-hidden">
-                <div className="px-6 border-t">
-                     <TabsList className="h-12 w-full justify-start gap-6 bg-transparent p-0">
+                <div className="px-6 border-t overflow-x-auto scrollbar-hide">
+                     <TabsList className="h-12 w-full justify-start gap-6 bg-transparent p-0 min-w-max">
                         {['Overview', 'Response', 'Clarifications', 'Bidding', 'Documents'].map((tab) => (
                           <TabsTrigger 
                             key={tab} 
