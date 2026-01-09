@@ -51,7 +51,7 @@ class FleetMaintenanceScheduleController extends Controller
     {
         $this->authorize('create', FleetMaintenanceSchedule::class);
         $data = $request->validated();
-        $test = $this->scheduleService->create($data);
+        $this->scheduleService->create($data);
 
         return redirect()
             ->route('fleet.maintenance_schedule.index')
