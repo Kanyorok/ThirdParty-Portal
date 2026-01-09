@@ -1097,12 +1097,20 @@ class PurchaseOrderController extends Controller
             
             if ($type === 'rfq') {
                 // Fetch RFQ Award
+                // Fetch RFQ Award
                 $contract = DB::table('t_RFQAward')->where('Id', $contractId)->first();
-                 if (!$contract) {
+                
+                if (!$contract) {
+                    // Fallback: Try looking up by RFQId (in case the frontend passed the RFQ ID)
+                    $contract = DB::table('t_RFQAward')->where('RFQId', $contractId)->first();
+                }
+
+                if (!$contract) {
                     return response()->json(['success' => false, 'message' => 'RFQ Contract not found'], 404);
                 }
                 
-                // Resolve Supplier's ThirdPartyId because t_RFQResponse typically uses ThirdPartyId
+                // Resolve Supplier's ThirdPartyId or SupplierId used in RFQResponse
+                // t_RFQResponse typically uses ThirdPartyId as SupplierId
                 $supplier = DB::table('t_Suppliers as s')
                     ->leftJoin('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
                     ->where('s.Id', $contract->SupplierId)
@@ -1114,8 +1122,8 @@ class PurchaseOrderController extends Controller
                 // Find the successful response for this supplier and RFQ
                 $response = DB::table('t_RFQResponse')
                     ->where('RFQId', $contract->RFQId)
-                    ->where('SupplierId', $thirdPartyId)
-                    ->orderByDesc('CreatedOn') // Get latest if multiple
+                    ->where('SupplierId', $thirdPartyId) // Ensure this matches logic in RFQService
+                    ->orderByDesc('CreatedOn') 
                     ->first();
 
                 $responseId = $response ? $response->Id : null;
@@ -1141,13 +1149,6 @@ class PurchaseOrderController extends Controller
                         DB::raw('0 as discount')
                     )
                     ->get();
-                    
-                 return response()->json([
-                    'success' => true,
-                    'data' => $items
-                ]);
-                
-                Log::info("Fetched " . $items->count() . " items for RFQ Contract.");
                     
                  return response()->json([
                     'success' => true,
