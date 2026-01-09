@@ -9,14 +9,7 @@ export async function PUT(
   try {
     const session = await getServerSession(authOptions);
     
-    console.log('=== TENDER INVITATION UPDATE DEBUG ===');
-    console.log('Session exists:', !!session);
-    console.log('Session user:', session?.user?.email);
-    console.log('Access token exists:', !!session?.accessToken);
-    console.log('Access token preview:', session?.accessToken?.substring(0, 20) + '...');
-    
     if (!session?.user) {
-      console.log('ERROR: No session user found');
       return NextResponse.json(
         { error: "Unauthorized - Please log in" },
         { status: 401 }
@@ -24,7 +17,6 @@ export async function PUT(
     }
 
     if (!session?.accessToken) {
-      console.log('ERROR: No access token in session');
       return NextResponse.json(
         { error: "Authentication token missing" },
         { status: 401 }
@@ -37,8 +29,6 @@ export async function PUT(
       responseStatus, 
       declineReason,
     } = body;
-
-    console.log('Request payload:', { id, responseStatus, declineReason });
 
     // Validate required fields
     if (!responseStatus) {
@@ -74,9 +64,6 @@ export async function PUT(
 
     const apiUrl = `${externalApiUrl}/api/tender-invitations/${id}`;
     
-    console.log('Calling Laravel API:', apiUrl);
-    console.log('With token:', session.accessToken.substring(0, 30) + '...');
-    
     const response = await fetch(apiUrl, {
       method: 'PUT',
       headers: {
@@ -86,9 +73,6 @@ export async function PUT(
       },
       body: JSON.stringify(updatePayload),
     });
-
-    console.log('Laravel response status:', response.status);
-    console.log('Laravel response ok:', response.ok);
 
     const responseText = await response.text();
     let updatedInvitation;
