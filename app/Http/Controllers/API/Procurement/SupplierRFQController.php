@@ -21,10 +21,11 @@ class SupplierRFQController extends Controller
 
     public function listInvitations(Request $request): JsonResponse
     {
-        $user = Auth::user();
-        $thirdPartyId = $user->ThirdPartyId ?? null;
+        $user = Auth::guard('sanctum')->user();
+        $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
+        
         if (!$thirdPartyId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(['data' => []]);
         }
 
         // FIXED: Get supplier IDs through SupplierMaster
@@ -56,10 +57,11 @@ class SupplierRFQController extends Controller
     public function getInvitation(int|string $rfq): JsonResponse
     {
         $rfqId = (int) $rfq;
-        $user = Auth::user();
-        $thirdPartyId = $user->ThirdPartyId ?? null;
+        $user = Auth::guard('sanctum')->user();
+        $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
+        
         if (!$thirdPartyId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(['error' => 'Authentication required'], 401);
         }
 
         $rfq = RFQ::find($rfqId);
@@ -170,10 +172,10 @@ class SupplierRFQController extends Controller
             'isDraft' => 'sometimes|boolean',
         ]);
 
-        $user = Auth::user();
-        $thirdPartyId = $user->ThirdPartyId ?? null;
+        $user = Auth::guard("sanctum")->user();
+        $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
         if (!$thirdPartyId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(["error" => "Authentication required"], 401);
         }
 
         $rfq = RFQ::find($request->rfqId);
@@ -282,10 +284,10 @@ class SupplierRFQController extends Controller
             'rfqLineId' => 'nullable|integer|exists:t_RFQLines,Id',
         ]);
 
-        $user = Auth::user();
-        $thirdPartyId = $user->ThirdPartyId ?? null;
+        $user = Auth::guard("sanctum")->user();
+        $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
         if (!$thirdPartyId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(["error" => "Authentication required"], 401);
         }
 
         // FIXED: Get supplier IDs through SupplierMaster
@@ -322,10 +324,11 @@ class SupplierRFQController extends Controller
     public function listClarifications(int|string $rfq): JsonResponse
     {
         $rfqId = (int) $rfq;
-        $user = Auth::user();
-        $thirdPartyId = $user->ThirdPartyId ?? null;
+        $user = Auth::guard('sanctum')->user();
+        $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
+        
         if (!$thirdPartyId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(['data' => []]);
         }
 
         // FIXED: Get supplier IDs through SupplierMaster

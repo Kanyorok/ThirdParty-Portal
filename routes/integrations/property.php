@@ -13,3 +13,9 @@ Route::get('property/rentable-properties', [PropertyViewController::class, 'inde
 Route::get('property/leases', [PropertyLeaseController::class, 'index']);
 Route::get('invoices', [PropertyInvoiceController::class, 'index']);
 Route::get('invoices/{id}', [PropertyInvoiceController::class, 'show']);
+
+use App\Http\Controllers\API\Property\PropertyMaintenanceRequestController;
+Route::get('property/maintenancerequest', [PropertyMaintenanceRequestController::class, 'index']);
+Route::post('property/maintenancerequest', [PropertyMaintenanceRequestController::class, 'store']);
+Route::get('property/maintenancerequest/{id}', [PropertyMaintenanceRequestController::class, 'show']);
+Route::delete('property/maintenancerequest/{id}', [PropertyMaintenanceRequestController::class, 'destroy']);

@@ -500,8 +500,21 @@ class PurchaseOrderController extends Controller
 
             // Use the generic workflow service with error handling
             try {
-                $history = $this->workflowService->historyForModel($order);
-                Log::info("Workflow history fetched", ['order_id' => $id, 'history_count' => $history->count()]);
+                // Use getStatus as requested, but map to objects to support view property access ($item->property)
+                $workflowData = $this->workflowService->getStatus($order);
+                $historyArr = $workflowData['completedApprovals'] ?? [];
+                
+                $history = collect($historyArr)->map(function($item) {
+                     // Cast array item to object
+                     $obj = (object)$item;
+                     // Shim missing properties expected by view
+                     if (!isset($obj->stage)) $obj->stage = (object)['StageName' => 'Stage ' . ($item['stage'] ?? '')];
+                     if (!isset($obj->status)) $obj->status = (object)['Description' => 'Actioned'];
+                     if (!isset($obj->creator)) $obj->creator = (object)['Name' => $item['Name'] ?? 'Unknown'];
+                     return $obj;
+                });
+
+                Log::info("Workflow history fetched via getStatus", ['order_id' => $id, 'history_count' => $history->count()]);
             } catch (\Exception $e) {
                 Log::warning("Failed to fetch workflow history", [
                     'order_id' => $id,
