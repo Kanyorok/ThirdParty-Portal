@@ -54,12 +54,14 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
 
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
-    curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
-    apt-get update && \
-    ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 && \
-    pecl install pdo_sqlsrv && \
-    docker-php-ext-enable pdo_sqlsrv
+RUN apt-get update && apt-get install -y gnupg2 curl unixodbc-dev \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg \
+    && curl https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 \
+    && pecl channel-update pecl.php.net \
+    && pecl install pdo_sqlsrv \
+    && docker-php-ext-enable pdo_sqlsrv
 
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \

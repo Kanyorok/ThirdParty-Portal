@@ -30,7 +30,6 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         return $this->succeeded(message: 'Logged in successfully.', route: route('home'));
-
     }
 
     public function destroy(Request $request): RedirectResponse

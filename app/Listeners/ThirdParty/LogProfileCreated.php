@@ -6,7 +6,7 @@ use App\Events\ThirdParty\ProfileCreated;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Support\Facades\Log;
 
-class LogProfileCreatedlistener
+class LogProfileCreated
 {
     public function handle(ProfileCreated $event): void
     {

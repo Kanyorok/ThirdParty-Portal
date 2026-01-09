@@ -260,7 +260,7 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+    {{-- <script src="{{ asset('assets/js/datatables.js') }}"></script> --}}
     <script>
         (function(){
             const grid = document.getElementById('dashboard-grid');
@@ -335,7 +335,8 @@
         let tasksTable = null, approvalsTable = null, leadStatus = [0, 0];
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
-            fetchTasksTable();
+            $.fn.dataTable.ext.errMode = 'none';
+
 
             var ctx = document.getElementById("leadChart").getContext("2d");
 

@@ -189,82 +189,225 @@ class SSRSService
     /**
      * @throws ErroredException
      */
+    /* public function parseReportXml(string $xmlString): Collection
+     {
+         // Suppress errors for malformed XML
+         libxml_use_internal_errors(true);
+
+         try {
+             $dom = new DOMDocument();
+             $dom->loadXML($xmlString);
+             $xpath = new DOMXPath($dom);
+
+             // 1. Extract Header Data (Root Attributes)
+             // In SSRS, the <Report> tag contains the title and parameters
+             $header = [];
+             $root = $dom->documentElement;
+             if ($root->hasAttributes()) {
+                 foreach ($root->attributes as $attr) {
+                     // Skip any attributes starting with 'xsi:'
+                     if (!str_starts_with($attr->nodeName, 'xsi:')) {
+                         $header[$attr->nodeName] = $attr->nodeValue;
+                     }
+                 }
+             }
+
+             // 2. Extract Data Records with Group Attributes
+             $dataRows = [];
+
+             // Find all group/collection parent elements
+             $groupNodes = $xpath->query('//node()[local-name() != "Details"]/*[starts-with(local-name(), "Details_Collection")]/..');
+
+             if ($groupNodes->length === 0) {
+                 // Fallback: If no group structure, look for Details directly under any parent
+                 $groupNodes = $xpath->query('//*[*[starts-with(local-name(), "Details")]]');
+             }
+
+             foreach ($groupNodes as $groupNode) {
+                 // Extract group attributes
+                 $groupAttributes = [];
+                 if ($groupNode->hasAttributes()) {
+                     foreach ($groupNode->attributes as $attr) {
+                         if (!str_starts_with($attr->nodeName, 'xsi:')) {
+                             $groupAttributes[$attr->nodeName] = $attr->nodeValue;
+                         }
+                     }
+                 }
+
+                 // Find all Details elements within this group
+                 $detailsNodes = $xpath->query('.//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]', $groupNode);
+
+                 foreach ($detailsNodes as $detailNode) {
+                     $row = array_merge($groupAttributes, []);
+
+                     // Add detail attributes
+                     if ($detailNode->hasAttributes()) {
+                         foreach ($detailNode->attributes as $attr) {
+                             $row[$attr->nodeName] = $attr->nodeValue;
+                         }
+                     }
+
+                     if (!empty($row)) {
+                         $dataRows[] = $row;
+                     }
+                 }
+             }
+
+             libxml_clear_errors();
+
+             // 3. Return as a Collection with Header and Nested Data
+             return collect([
+                 'error' => null,
+                 'header' => $header,
+                 'data'   => $dataRows
+             ]);
+
+     } catch (Exception $e) {
+         libxml_clear_errors();
+         return collect([
+             'error' => $e->getMessage(),
+             'header' => [],
+             'data'   => []
+         ]);
+     }
+ }*/
+
+
     public function parseReportXml(string $xmlString): Collection
     {
-        // Suppress XML errors and warnings
+        // Suppress errors for malformed XML
         libxml_use_internal_errors(true);
 
         try {
-            // Create a new DOM document
-            $dom = new DOMDocument('1.0', 'UTF-8');
-
-            // Load the XML string
+            $dom = new DOMDocument();
             $dom->loadXML($xmlString);
-
-            // Create a new XPath object
             $xpath = new DOMXPath($dom);
 
-            // Register the namespaces
-            $xpath->registerNamespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-
-            // The default namespace is trickier - we need to give it a prefix
-            // Find default namespace from the document root
+            // 1. Extract Header Data (Root Attributes)
+            $header = [];
             $root = $dom->documentElement;
-            if ($root && $root->hasAttribute('xmlns')) {
-                $defaultNs = $root->getAttribute('xmlns');
-                $xpath->registerNamespace('ns', $defaultNs);
-            }
-
-            // Create a new collection to hold our results
-            $collection = collect();
-
-            // Try different patterns for detail elements
-            $detailsPatterns = [
-                '//ns:Details',      // Standard Details with namespace
-                '//ns:Details1',     // Details1 with namespace
-                '//Details',         // Standard Details without namespace
-                '//Details1',        // Details1 without namespace
-                '//*[starts-with(local-name(), "Details")]' // Any element starting with "Details"
-            ];
-
-            $detailsNodes = null;
-            foreach ($detailsPatterns as $pattern) {
-                $detailsNodes = $xpath->query($pattern);
-                if ($detailsNodes && $detailsNodes->length > 0) {
-                    break;
+            if ($root->hasAttributes()) {
+                foreach ($root->attributes as $attr) {
+                    if (!str_starts_with($attr->nodeName, 'xsi:')) {
+                        $header[$attr->nodeName] = $attr->nodeValue;
+                    }
                 }
             }
 
-            // Process each Details node
-            if ($detailsNodes && $detailsNodes->length > 0) {
-                foreach ($detailsNodes as $node) {
-                    $item = [];
+            // 2. Find all Details elements
+            $allDetailsNodes = $xpath->query('//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]');
 
-                    // Get all attributes
-                    if ($node->hasAttributes()) {
-                        foreach ($node->attributes as $attr) {
-                            $item[$attr->nodeName] = $attr->nodeValue;
+            // 3. Detect if report has grouping
+            $groupedData = [];
+            $ungroupedData = [];
+            $groupKeyAttribute = null;
+            $hasGrouping = false;
+
+            // Try to find group/collection parent elements
+            $groupNodes = $xpath->query('//node()[local-name() != "Details"]/*[starts-with(local-name(), "Details_Collection")]/..');
+
+            if ($groupNodes->length === 0) {
+                // Fallback: If no group structure, look for Details directly under any parent
+                $groupNodes = $xpath->query('//*[*[starts-with(local-name(), "Details")]]');
+            }
+
+            foreach ($groupNodes as $groupNode) {
+                // Extract group attributes
+                $groupAttributes = [];
+                if ($groupNode->hasAttributes()) {
+                    foreach ($groupNode->attributes as $attr) {
+                        if (!str_starts_with($attr->nodeName, 'xsi:')) {
+                            $groupAttributes[$attr->nodeName] = $attr->nodeValue;
+                        }
+                    }
+                }
+
+                // Determine the group key
+                $groupKey = null;
+                foreach ($groupAttributes as $attrName => $attrValue) {
+                    if (!$groupKeyAttribute) {
+                        $groupKeyAttribute = $attrName;
+                    }
+                    // Check if this attribute is different from Details attributes (indicates it's a group attribute)
+                    if (strpos($attrName, '1') !== false || strpos($attrName, '2') !== false) {
+                        $groupKey = $attrValue;
+                        $hasGrouping = true;
+                        break;
+                    }
+                }
+
+                // If no group key found but we have group attributes, use the first one
+                if (!$groupKey && !empty($groupAttributes)) {
+                    $groupKey = reset($groupAttributes);
+                    $groupKeyAttribute = key($groupAttributes);
+                    $hasGrouping = true;
+                }
+
+                // Find all Details elements within this group
+                $detailsNodes = $xpath->query('.//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]', $groupNode);
+
+                foreach ($detailsNodes as $detailNode) {
+                    $row = [];
+
+                    // Add detail attributes
+                    if ($detailNode->hasAttributes()) {
+                        foreach ($detailNode->attributes as $attr) {
+                            $row[$attr->nodeName] = $attr->nodeValue;
                         }
                     }
 
-                    // Add item to collection if it has any attributes
-                    if (!empty($item)) {
-                        $collection->push($item);
+                    if (!empty($row)) {
+                        if ($hasGrouping && $groupKey) {
+                            if (!isset($groupedData[$groupKey])) {
+                                $groupedData[$groupKey] = [];
+                            }
+                            $groupedData[$groupKey][] = $row;
+                        } else {
+                            $ungroupedData[] = $row;
+                        }
                     }
                 }
             }
 
-            // Clear XML errors
+            // If no groups were found, treat all details as ungrouped
+            if (empty($groupedData) && empty($ungroupedData)) {
+                foreach ($allDetailsNodes as $detailNode) {
+                    $row = [];
+                    if ($detailNode->hasAttributes()) {
+                        foreach ($detailNode->attributes as $attr) {
+                            $row[$attr->nodeName] = $attr->nodeValue;
+                        }
+                    }
+                    if (!empty($row)) {
+                        $ungroupedData[] = $row;
+                    }
+                }
+            }
+
             libxml_clear_errors();
 
-            return $collection;
+            // 3. Return as a Collection with appropriate format
+            $data = $hasGrouping && !empty($groupedData) ? $groupedData : $ungroupedData;
+
+            return collect([
+                'error' => null,
+                'header' => $header,
+                'data' => $data,
+                'groupKeyAttribute' => $groupKeyAttribute,
+                'isGrouped' => $hasGrouping && !empty($groupedData)
+            ]);
+
         } catch (Exception $e) {
-            // Log::error('XML Parsing Error: ' . $e->getMessage());
             libxml_clear_errors();
-            throw new ErroredException('Failed to parse report ');
+            return collect([
+                'error' => $e->getMessage(),
+                'header' => [],
+                'data' => [],
+                'groupKeyAttribute' => null,
+                'isGrouped' => false
+            ]);
         }
     }
-
 
     /**
      * Get content type based on export format

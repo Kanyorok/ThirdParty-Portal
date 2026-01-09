@@ -30,10 +30,9 @@
                 <strong>Scheduled Mileage:</strong>
                 <p>{{ $schedule->ScheduledMileage ?? 'N/A' }}</p>
             </div>
-
             <div class="col-md-6">
                 <strong>Vendor Name:</strong>
-                <p>{{ $schedule->vendor->party->ThirdPartyName ?? 'N/A' }}</p>
+                <p>{{ $schedule->vendor->party->ThirdPartyName ?? 'N/A' }}<p>
             </div>
 
             <div class="col-md-12">
@@ -55,7 +54,7 @@
 
         <div class="mt-4">
             <a href="{{ route('fleet.maintenance_schedule.index') }}" class="btn btn-secondary">⬅ Back</a>
-            <a href="{{ route('fleet.maintenance_schedule.edit', $schedule->ScheduleID) }}" class="btn btn-warning">✏
+            <a href="{{ route('fleet.maintenance_schedule.edit', $schedule->Id) }}" class="btn btn-warning">✏
                 Edit</a>
         </div>
     </div>

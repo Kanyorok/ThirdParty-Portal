@@ -289,6 +289,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Http\Controllers\Finance\JournalEntryController;
+use App\Http\Controllers\Finance\PostingController;
 use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\RequisitionsController;
 use App\Http\Controllers\Procurement\AwardsController;
@@ -314,6 +316,39 @@ class AppServiceProvider extends ServiceProvider
             return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
         });
 
+        // Bind Finance Journal workflows
+        $this->app->when(PostingController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'ApprovalStatus',
+                    'ApprovalStatus'
+                );
+            });
+
+        $this->app->when(JournalEntryController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'ApprovalStatus',
+                    'ApprovalStatus'
+                );
+            });
+
+        // 🔥 FIX: Bind Tender Workflow using contextual binding
+        $this->app->when(TenderController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'TenderStatus',      // CodeID for tender approval workflow
+                    'ApprovalStatus'     // Status column name - THIS WAS WRONG
+                );
+            });
+
+        // Bind Requisition Workflow Service
+        $this->app->singleton(RequisitionWorkflowService::class, function ($app) {
+            return new RequisitionWorkflowService();
+        });
         // TODO: Profile Management repositories
         $this->app->bind(
             \App\Repositories\ThirdParty\Contracts\ThirdPartyRepositoryInterface::class,

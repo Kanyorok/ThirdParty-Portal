@@ -176,12 +176,14 @@
                     @enderror
                 </div>
 
-                <!-- SUBMIT -->
-                <button type="submit"
-                        class="btn btn-success"
-                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-                    Submit Request
-                </button>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                    <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit"
+                            class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                        Submit Request
+                    </button>
+                </div>
 
             </div>
         </div>

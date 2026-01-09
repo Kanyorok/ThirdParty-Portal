@@ -146,9 +146,9 @@
 </div>
 
 
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-success">Update Property</button>
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success">Update Property</button>
                     </div>
                 </div>
             </div>

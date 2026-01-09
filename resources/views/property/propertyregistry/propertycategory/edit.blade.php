@@ -25,7 +25,9 @@
                       rows="4">{{ old('Description', $category->Description) }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-success">Update Category</button>
-        <a href="{{ route('propertycategory.index') }}" class="btn btn-secondary">Cancel</a>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <a href="{{ route('propertycategory.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">Update Category</button>
+        </div>
     </form>
 @endsection

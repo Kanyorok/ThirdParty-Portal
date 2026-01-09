@@ -8,6 +8,8 @@ use App\Services\ThirdParties\SupplierService;
 use App\Services\ThirdParties\TenantService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Auth\User;
+use Illuminate\Auth\Events\Registered;
 
 class RegistrationService
 {

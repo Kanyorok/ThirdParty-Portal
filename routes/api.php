@@ -56,7 +56,9 @@ Route::post('auth/validate-token', function (Request $request) {
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
     Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
-    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])->name('verification.verify');
+    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])
+        ->name('verification.verify')
+        ->middleware('signed');
     Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
     Route::post('forgot-password', [ThirdPartyAuthController::class, 'forgotPassword']);
     Route::post('reset-password', [ThirdPartyAuthController::class, 'resetPassword']);
@@ -124,10 +126,6 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
 });
 
 
-// Tenders API (public index to allow portal to call with third_party_id)
-Route::apiResource('tenders', TenderApiController::class);
-Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
-Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
 
 // DMS: Documents visible to authenticated user
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
@@ -207,14 +205,25 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::apiResource('third-party-categories', ThirdPartyCategoryController::class);
     });
 
-    // Additional tender-related routes (still need auth)
+    // Protected tender-related actions (store, update, delete, items, suppliers)
     Route::prefix('tenders')->group(function () {
         Route::post('{tenderId}/items', [TenderApiController::class, 'addItem']);
         Route::delete('{tenderId}/items/{itemId}', [TenderApiController::class, 'deleteItem']);
         Route::post('{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
         Route::delete('{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
     });
+
+    Route::post('tenders', [TenderApiController::class, 'store']);
+    Route::put('tenders/{tender}', [TenderApiController::class, 'update']);
+    Route::delete('tenders/{tender}', [TenderApiController::class, 'destroy']);
+    
+    Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
 });
+
+// Semi-public routes (index/show handle their own auth checks for filtering)
+Route::get('tenders', [TenderApiController::class, 'index']);
+Route::get('tenders/{tender}', [TenderApiController::class, 'show']);
+Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
 
 // currencies
 Route::prefix('v1')->group(function () {
@@ -272,13 +281,17 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
-        // Supplier RFQ endpoints (supplier portal)
-        Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+        // Protected RFQ actions (submit, clarifying)
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
-        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
+
+// Semi-public RFQ routes (index handle their own auth checks for filtering)
+Route::prefix('procurement')->name('api.procurement.')->group(function () {
+    Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
+    Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+    Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
+});
 
 // PROTECTED routes for prequalification (submitting applications) - AUTH REQUIRED
 Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
