@@ -36,7 +36,7 @@ class SupplierCategoryResolver
                         ->map(fn($v) => (int) $v);
                     
                     $categoryIds = $categoryIds->merge($cats);
-                    Log::info("Found {$cats->count()} categories from {$table1} for ThirdPartyId {$thirdPartyId}");
+                    // Log::info("Found {$cats->count()} categories from {$table1} for ThirdPartyId {$thirdPartyId}");
                 } catch (\Throwable $e) {
                     Log::warning("Failed reading {$table1}", [
                         'thirdPartyId' => $thirdPartyId,
@@ -65,7 +65,7 @@ class SupplierCategoryResolver
                         ->map(fn($v) => (int) $v);
                     
                     $categoryIds = $categoryIds->merge($cats);
-                    Log::info("Found {$cats->count()} categories from {$table2} for SupplierMasterId {$supplierMasterId}");
+                    // Log::info("Found {$cats->count()} categories from {$table2} for SupplierMasterId {$supplierMasterId}");
                 } catch (\Throwable $e) {
                     Log::warning("Failed reading {$table2}", [
                         'supplierMasterId' => $supplierMasterId,
@@ -80,11 +80,11 @@ class SupplierCategoryResolver
             ->values()
             ->all();
         
-        Log::info("Total unique supplier categories: " . count($result), [
-            'thirdPartyId' => $thirdPartyId,
-            'supplierMasterId' => $supplierMasterId,
-            'categories' => $result
-        ]);
+        // Log::info("Total unique supplier categories: " . count($result), [
+        //     'thirdPartyId' => $thirdPartyId,
+        //     'supplierMasterId' => $supplierMasterId,
+        //     'categories' => $result
+        // ]);
         
         return $result;
     }
