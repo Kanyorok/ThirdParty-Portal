@@ -18,8 +18,12 @@ class MonthlyAllowanceController extends Controller
 
     public function create()
     {
-        $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName']);
-        $allowances = PayrollAllowance::where('IsActive',1)->orderBy('Name')->get();
+        $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName','GradeID']);
+        $allowances = PayrollAllowance::with('grades')
+            ->where('IsActive', 1)
+            ->where('IsMandatory', 0)
+            ->orderBy('Name')
+            ->get();
         return view('hr.payroll.allowances.create', compact('employees','allowances'));
     }
 
@@ -35,13 +39,52 @@ class MonthlyAllowanceController extends Controller
             'IsTaxable' => ['sometimes','boolean'],
         ]);
         $allowance = PayrollAllowance::find($data['AllowanceID']);
-        $data['Name'] = $data['Name'] ?: ($allowance?->Name ?? 'Allowance');
+        if ($allowance && $allowance->IsMandatory) {
+            return back()->withErrors([
+                'AllowanceID' => 'Mandatory allowances are auto-applied during payroll and cannot be added here.',
+            ])->withInput();
+        }
+        $data['Name'] = $data['Name'] ?? ($allowance?->Name ?? 'Allowance');
         $data['IsTaxable'] = $request->has('IsTaxable') ? $request->boolean('IsTaxable') : ($allowance?->IsTaxable ?? true);
+        $data['IsRecurring'] = $request->boolean('IsRecurring', false);
         $data['Status'] = 'Pending';
         $data['CreatedBy'] = auth()->id();
         $data['CreatedOn'] = now();
         MonthlyAllowance::create($data);
 
         return redirect()->route('hr.payroll.allowances.index')->with('success', 'Allowance captured.');
+    }
+
+    public function approve($id, Request $request)
+    {
+        $row = MonthlyAllowance::findOrFail($id);
+        $row->update([
+            'Status' => 'Approved',
+            'ApprovedBy' => auth()->id(),
+            'ApprovedOn' => now(),
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+        return redirect()->route('hr.payroll.allowances.index')->with('success', 'Allowance approved.');
+    }
+
+    public function reject($id, Request $request)
+    {
+        $row = MonthlyAllowance::findOrFail($id);
+        $row->update([
+            'Status' => 'Rejected',
+            'ApprovedBy' => auth()->id(),
+            'ApprovedOn' => now(),
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+        return redirect()->route('hr.payroll.allowances.index')->with('success', 'Allowance rejected.');
+    }
+
+    public function destroy($id)
+    {
+        $row = MonthlyAllowance::findOrFail($id);
+        $row->delete();
+        return redirect()->route('hr.payroll.allowances.index')->with('success', 'Allowance removed.');
     }
 }

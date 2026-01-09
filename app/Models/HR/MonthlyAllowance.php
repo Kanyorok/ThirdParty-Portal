@@ -11,13 +11,14 @@ class MonthlyAllowance extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'EmployeeID','AllowanceID','Name','Amount','Month','Year','IsTaxable','Status',
+        'EmployeeID','AllowanceID','Name','Amount','Month','Year','IsTaxable','IsRecurring','Status',
         'CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn'
     ];
 
     protected $casts = [
         'Amount' => 'decimal:2',
         'IsTaxable' => 'boolean',
+        'IsRecurring' => 'boolean',
         'CreatedOn' => 'datetime',
         'ApprovedOn' => 'datetime',
         'ModifiedOn' => 'datetime',

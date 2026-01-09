@@ -214,17 +214,13 @@
                     <div class="col-md-3">
                         <label class="form-label">Bank Name</label>
                         @php
-                            $selectedBank = old('BankName', $employee->BankName);
-                            $bankNames = collect($banks ?? [])->pluck('BankName')->all();
+                            $selectedBankId = old('BankID', $employee->BankID);
                         @endphp
-                        <select name="BankName" class="form-select">
+                        <select name="BankID" id="BankID" class="form-select">
                             <option value="">Select Bank</option>
-                            @if($selectedBank && !in_array($selectedBank, $bankNames))
-                                <option value="{{ $selectedBank }}" selected>{{ $selectedBank }} (current)</option>
-                            @endif
                             @foreach($banks ?? [] as $bank)
-                                <option value="{{ $bank->BankName }}"
-                                        @selected($selectedBank === $bank->BankName)>
+                                <option value="{{ $bank->BankID }}"
+                                        @selected($selectedBankId == $bank->BankID)>
                                     {{ $bank->BankName }}
                                 </option>
                             @endforeach
@@ -232,8 +228,18 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Bank Branch</label>
-                        <input type="text" name="BankBranch" class="form-control"
-                               value="{{ old('BankBranch', $employee->BankBranch) }}">
+                        @php
+                            $selectedBranchId = old('BankBranchID', $employee->BankBranchID);
+                        @endphp
+                        <select name="BankBranchID" id="BankBranchID" class="form-select">
+                            <option value="">Select Branch</option>
+                            @foreach($bankBranches ?? [] as $branch)
+                                <option value="{{ $branch->BranchID }}" data-bank-id="{{ $branch->BankID }}"
+                                        @selected($selectedBranchId == $branch->BranchID)>
+                                    {{ $branch->BranchName }}@if($branch->BranchCode) ({{ $branch->BranchCode }})@endif
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Bank Account</label>
@@ -389,3 +395,36 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const bankSelect = document.getElementById('BankID');
+        const branchSelect = document.getElementById('BankBranchID');
+        if (!bankSelect || !branchSelect) return;
+
+        const allBranchOptions = Array.from(branchSelect.options);
+
+        const filterBranches = () => {
+            const bankId = bankSelect.value;
+            branchSelect.innerHTML = '';
+            allBranchOptions.forEach((opt) => {
+                if (!opt.value) {
+                    branchSelect.appendChild(opt);
+                    return;
+                }
+                if (!bankId || opt.getAttribute('data-bank-id') === bankId) {
+                    branchSelect.appendChild(opt);
+                }
+            });
+        };
+
+        bankSelect.addEventListener('change', () => {
+            filterBranches();
+            branchSelect.value = '';
+        });
+
+        filterBranches();
+    });
+</script>
+@endpush

@@ -21,7 +21,9 @@
                         <tr>
                             <th>Code</th>
                             <th>Name</th>
-                            <th>Amount</th>
+                            <th>Stage</th>
+                            <th>Type</th>
+                            <th>Value</th>
                             <th>Effective From</th>
                             <th>Status</th>
                             <th></th>
@@ -32,7 +34,18 @@
                             <tr>
                                 <td>{{ $relief->Code }}</td>
                                 <td>{{ $relief->Name }}</td>
-                                <td>{{ number_format($relief->Amount,2) }}</td>
+                                <td>{{ ($relief->ApplyStage ?? 'PostTax') === 'PreTax' ? 'Pre-tax' : 'Post-tax' }}</td>
+                                <td>{{ $relief->ReliefType ?? 'Fixed' }}</td>
+                                <td>
+                                    @if(($relief->ReliefType ?? 'Fixed') === 'Percentage')
+                                        {{ number_format($relief->ReliefRate ?? 0, 2) }}%
+                                        @if($relief->DeductionID)
+                                            of {{ $deductionLookup[$relief->DeductionID] ?? 'deduction' }}
+                                        @endif
+                                    @else
+                                        {{ number_format($relief->Amount, 2) }}
+                                    @endif
+                                </td>
                                 <td>{{ $relief->EffectiveFrom }}</td>
                                 <td>{{ $relief->IsActive ? 'Active' : 'Inactive' }}</td>
                                 <td class="text-end">
@@ -45,7 +58,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center">No reliefs found.</td></tr>
+                            <tr><td colspan="8" class="text-center">No reliefs found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

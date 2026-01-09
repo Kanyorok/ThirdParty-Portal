@@ -11,12 +11,14 @@ class MonthlyDeduction extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'EmployeeID','Name','Amount','Month','Year','Status',
+        'EmployeeID','DeductionID','StaffLoanID','Name','Amount','Month','Year','IsRecurring','IsAutoCalculated','Status',
         'CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn'
     ];
 
     protected $casts = [
         'Amount' => 'decimal:2',
+        'IsRecurring' => 'boolean',
+        'IsAutoCalculated' => 'boolean',
         'CreatedOn' => 'datetime',
         'ApprovedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
@@ -25,5 +27,10 @@ class MonthlyDeduction extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
+    }
+
+    public function deduction()
+    {
+        return $this->belongsTo(PayrollDeduction::class, 'DeductionID', 'Id');
     }
 }

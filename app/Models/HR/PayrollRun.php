@@ -11,12 +11,16 @@ class PayrollRun extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'PayrollCycleID','Status','GeneratedOn','GeneratedBy','Notes',
+        'PayrollCycleID','Status','FinanceJournalEntryID','FinancePostingMode','FinancePostedOn','FinancePostedBy','GeneratedOn','GeneratedBy','Notes',
+        'ApprovedBy','ApprovedOn','RejectedBy','RejectedOn','RejectionReason',
         'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn'
     ];
 
     protected $casts = [
         'GeneratedOn' => 'datetime',
+        'FinancePostedOn' => 'datetime',
+        'ApprovedOn' => 'datetime',
+        'RejectedOn' => 'datetime',
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
     ];

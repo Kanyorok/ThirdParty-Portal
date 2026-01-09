@@ -29,7 +29,6 @@
                             <th>Band To</th>
                             <th>Min</th>
                             <th>Max</th>
-                            <th>Relief</th>
                             <th>Formula</th>
                             <th>Effective From</th>
                             <th>Status</th>
@@ -46,13 +45,6 @@
                                 <td>{{ $rule->IncomeTo ?? 'No cap' }}</td>
                                 <td>{{ $rule->MinAmount ?? '-' }}</td>
                                 <td>{{ $rule->MaxAmount ?? '-' }}</td>
-                                <td>
-                                    @if($rule->HasRelief)
-                                        {{ $rule->ReliefType }} @if($rule->ReliefType === 'Percentage') {{ $rule->ReliefRate }}% @else {{ $rule->ReliefAmount }} @endif
-                                    @else
-                                        None
-                                    @endif
-                                </td>
                                 <td><code>{{ \Illuminate\Support\Str::limit($rule->FormulaText,50) }}</code></td>
                                 <td>{{ $rule->EffectiveFrom }}</td>
                                 <td>{{ $rule->IsActive ? 'Active' : 'Inactive' }}</td>

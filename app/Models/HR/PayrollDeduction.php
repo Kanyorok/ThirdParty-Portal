@@ -3,6 +3,7 @@
 namespace App\Models\HR;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Finance\FinanceGLAccounts;
 
 class PayrollDeduction extends Model
 {
@@ -14,6 +15,14 @@ class PayrollDeduction extends Model
         'Code',
         'Name',
         'Description',
+        'DebitGLAccountID',
+        'CreditGLAccountID',
+        'EmployerContributionEnabled',
+        'EmployerCalcMethod',
+        'EmployerRate',
+        'EmployerAmount',
+        'EmployerDebitGLAccountID',
+        'EmployerCreditGLAccountID',
         'IsMandatory',
         'ShowInPayslip',
         'ApplyFor',
@@ -30,6 +39,9 @@ class PayrollDeduction extends Model
         'IsActive' => 'boolean',
         'IsMandatory' => 'boolean',
         'ShowInPayslip' => 'boolean',
+        'EmployerContributionEnabled' => 'boolean',
+        'EmployerRate' => 'decimal:4',
+        'EmployerAmount' => 'decimal:2',
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
@@ -38,5 +50,15 @@ class PayrollDeduction extends Model
     public function rules()
     {
         return $this->hasMany(PayrollDeductionRule::class, 'DeductionID');
+    }
+
+    public function debitGL()
+    {
+        return $this->belongsTo(FinanceGLAccounts::class, 'DebitGLAccountID', 'Id');
+    }
+
+    public function creditGL()
+    {
+        return $this->belongsTo(FinanceGLAccounts::class, 'CreditGLAccountID', 'Id');
     }
 }

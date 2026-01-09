@@ -32,6 +32,26 @@ class KpiSeeder extends Seeder
             );
         }
 
+        $perspectives = [
+            ['Code' => 'FIN', 'Name' => 'Financial', 'Description' => 'Financial perspective'],
+            ['Code' => 'CUST', 'Name' => 'Customer Focus', 'Description' => 'Customer experience perspective'],
+            ['Code' => 'INT', 'Name' => 'Internal Processes', 'Description' => 'Process excellence perspective'],
+            ['Code' => 'PEOPLE', 'Name' => 'People', 'Description' => 'People and culture perspective'],
+        ];
+
+        foreach ($perspectives as $perspective) {
+            DB::table('t_HRKPIPerspectives')->updateOrInsert(
+                ['Code' => $perspective['Code']],
+                array_merge($perspective, [
+                    'IsActive' => 1,
+                    'CreatedBy' => $actor,
+                    'CreatedOn' => $now,
+                    'ModifiedBy' => $actor,
+                    'ModifiedOn' => $now,
+                ])
+            );
+        }
+
         $units = [
             ['Code' => 'PCT', 'Name' => 'Percent', 'Description' => 'Percentage %'],
             ['Code' => 'COUNT', 'Name' => 'Count', 'Description' => 'Raw count'],
@@ -58,14 +78,27 @@ class KpiSeeder extends Seeder
             ['Code' => 'OTIF', 'Name' => 'On-time Delivery', 'Category' => 'Operations', 'Unit' => '%', 'DefaultWeight' => 10, 'Description' => 'Deliveries on time and in full'],
         ];
 
+        $categoryToPerspective = [
+            'Financial' => 'Financial',
+            'Customer' => 'Customer Focus',
+            'Operations' => 'Internal Processes',
+            'People' => 'People',
+        ];
+
         foreach ($kpis as $kpi) {
             $categoryId = DB::table('t_HRKPICategories')->where('Name', $kpi['Category'])->value('Id');
             $unitId = DB::table('t_HRKPIUnits')->where('Name', $kpi['Unit'])->value('Id');
+            $perspectiveName = $categoryToPerspective[$kpi['Category']] ?? null;
+            $perspectiveId = $perspectiveName
+                ? DB::table('t_HRKPIPerspectives')->where('Name', $perspectiveName)->value('Id')
+                : null;
             DB::table('t_HRKPIItems')->updateOrInsert(
                 ['Code' => $kpi['Code']],
                 array_merge($kpi, [
                     'CategoryID' => $categoryId,
                     'UnitID' => $unitId,
+                    'PerspectiveID' => $perspectiveId,
+                    'Perspective' => $perspectiveName,
                     'IsActive' => 1,
                     'CreatedBy' => $actor,
                     'CreatedOn' => $now,
@@ -93,6 +126,32 @@ class KpiSeeder extends Seeder
             );
         }
 
+        $scoreCharts = [
+            ['MinPercent' => 0, 'MaxPercent' => 50, 'RatingValue' => 1, 'RatingLabel' => 'Not Met'],
+            ['MinPercent' => 51, 'MaxPercent' => 79.99, 'RatingValue' => 2, 'RatingLabel' => 'Partially Met'],
+            ['MinPercent' => 80, 'MaxPercent' => 100, 'RatingValue' => 3, 'RatingLabel' => 'Met'],
+            ['MinPercent' => 101, 'MaxPercent' => 120, 'RatingValue' => 4, 'RatingLabel' => 'Exceeded'],
+            ['MinPercent' => 120.01, 'MaxPercent' => null, 'RatingValue' => 5, 'RatingLabel' => 'Exceptional'],
+        ];
+
+        foreach ($scoreCharts as $row) {
+            DB::table('t_HRKPIScoreCharts')->updateOrInsert(
+                ['RatingScaleID' => null, 'MinPercent' => $row['MinPercent']],
+                [
+                    'RatingScaleID' => null,
+                    'MinPercent' => $row['MinPercent'],
+                    'MaxPercent' => $row['MaxPercent'],
+                    'RatingValue' => $row['RatingValue'],
+                    'RatingLabel' => $row['RatingLabel'],
+                    'IsActive' => 1,
+                    'CreatedBy' => $actor,
+                    'CreatedOn' => $now,
+                    'ModifiedBy' => $actor,
+                    'ModifiedOn' => $now,
+                ]
+            );
+        }
+
         $periods = [
             ['Code' => 'QTR', 'Name' => 'Quarterly', 'StartMonth' => 1, 'EndMonth' => 3, 'Description' => 'Quarterly KPI period'],
             ['Code' => 'H1', 'Name' => 'Half-Year', 'StartMonth' => 1, 'EndMonth' => 6, 'Description' => 'First half'],
@@ -110,6 +169,39 @@ class KpiSeeder extends Seeder
                     'ModifiedOn' => $now,
                 ])
             );
+        }
+
+        $quarterlyId = DB::table('t_HRKPIPeriods')->where('Code', 'QTR')->value('Id');
+        if ($quarterlyId) {
+            $weights = [
+                ['Code' => 'FIN', 'Weight' => 0.1],
+                ['Code' => 'CUST', 'Weight' => 0.2],
+                ['Code' => 'INT', 'Weight' => 0.4],
+                ['Code' => 'PEOPLE', 'Weight' => 0.3],
+            ];
+
+            foreach ($weights as $weight) {
+                $perspectiveId = DB::table('t_HRKPIPerspectives')->where('Code', $weight['Code'])->value('Id');
+                if (!$perspectiveId) {
+                    continue;
+                }
+                DB::table('t_HRKPIPerspectiveWeights')->updateOrInsert(
+                    [
+                        'PerspectiveID' => $perspectiveId,
+                        'PeriodID' => $quarterlyId,
+                        'GradeID' => null,
+                        'RoleID' => null,
+                    ],
+                    [
+                        'Weight' => $weight['Weight'],
+                        'IsActive' => 1,
+                        'CreatedBy' => $actor,
+                        'CreatedOn' => $now,
+                        'ModifiedBy' => $actor,
+                        'ModifiedOn' => $now,
+                    ]
+                );
+            }
         }
 
         $formulas = [

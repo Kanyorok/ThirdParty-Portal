@@ -280,11 +280,11 @@
                         </div>
                         <div class="col-md-3">
                             <label class="text-muted d-block mb-1">Bank Name</label>
-                            <div>{{ $employee->BankName ?? '-' }}</div>
+                            <div>{{ $employee->bank?->BankName ?? '-' }}</div>
                         </div>
                         <div class="col-md-3">
                             <label class="text-muted d-block mb-1">Bank Branch</label>
-                            <div>{{ $employee->BankBranch ?? '-' }}</div>
+                            <div>{{ $employee->bankBranch?->BranchName ?? '-' }}</div>
                         </div>
                         <div class="col-md-4">
                             <label class="text-muted d-block mb-1">Bank Account</label>

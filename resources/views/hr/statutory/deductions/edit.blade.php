@@ -27,7 +27,8 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Code *</label>
-                        <input type="text" class="form-control" value="{{ $deduction->Code }}" disabled>
+                        <input type="hidden" name="Code" value="{{ $deduction->Code }}">
+                        <input type="text" class="form-control" value="{{ $deduction->Code }}" readonly>
                     </div>
                     <div class="col-md-8">
                         <label class="form-label">Name *</label>
@@ -36,6 +37,81 @@
                     <div class="col-md-12">
                         <label class="form-label">Description</label>
                         <input type="text" name="Description" class="form-control" value="{{ old('Description', $deduction->Description) }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Debit GL (ERP)</label>
+                        <select name="DebitGLAccountID" class="form-select">
+                            <option value="">Select</option>
+                            @foreach(($glAccounts ?? []) as $gl)
+                                <option value="{{ $gl->Id }}" @selected(old('DebitGLAccountID', $deduction->DebitGLAccountID) == $gl->Id)>
+                                    {{ $gl->GLCode }} - {{ $gl->GLName }} @if($gl->CBSAccountCode) (CBS: {{ $gl->CBSAccountCode }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">CBS GL is picked from the selected ERP GL account.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Credit GL (ERP)</label>
+                        <select name="CreditGLAccountID" class="form-select">
+                            <option value="">Select</option>
+                            @foreach(($glAccounts ?? []) as $gl)
+                                <option value="{{ $gl->Id }}" @selected(old('CreditGLAccountID', $deduction->CreditGLAccountID) == $gl->Id)>
+                                    {{ $gl->GLCode }} - {{ $gl->GLName }} @if($gl->CBSAccountCode) (CBS: {{ $gl->CBSAccountCode }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <hr>
+                        <div class="fw-semibold">Employer Contribution (optional)</div>
+                        <div class="text-muted small">Configure any employer match, e.g. SHA at 100% of employee deduction.</div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" name="EmployerContributionEnabled" value="1" id="EmployerContributionEnabled" @checked(old('EmployerContributionEnabled', $deduction->EmployerContributionEnabled))>
+                            <label for="EmployerContributionEnabled" class="form-check-label">Employer contributes</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Employer Calc Method</label>
+                        <select name="EmployerCalcMethod" class="form-select">
+                            <option value="">Select</option>
+                            <option value="MatchEmployeeDeduction" @selected(old('EmployerCalcMethod', $deduction->EmployerCalcMethod) === 'MatchEmployeeDeduction')>Match Employee Deduction (%)</option>
+                            <option value="PercentageOfBasic" @selected(old('EmployerCalcMethod', $deduction->EmployerCalcMethod) === 'PercentageOfBasic')>Percentage of Basic</option>
+                            <option value="PercentageOfGross" @selected(old('EmployerCalcMethod', $deduction->EmployerCalcMethod) === 'PercentageOfGross')>Percentage of Gross</option>
+                            <option value="Flat" @selected(old('EmployerCalcMethod', $deduction->EmployerCalcMethod) === 'Flat')>Fixed Amount</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Employer Rate (%)</label>
+                        <input type="number" step="0.0001" name="EmployerRate" class="form-control" value="{{ old('EmployerRate', $deduction->EmployerRate) }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Employer Amount</label>
+                        <input type="number" step="0.01" name="EmployerAmount" class="form-control" value="{{ old('EmployerAmount', $deduction->EmployerAmount) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Employer Debit GL (ERP)</label>
+                        <select name="EmployerDebitGLAccountID" class="form-select">
+                            <option value="">Select</option>
+                            @foreach(($glAccounts ?? []) as $gl)
+                                <option value="{{ $gl->Id }}" @selected(old('EmployerDebitGLAccountID', $deduction->EmployerDebitGLAccountID) == $gl->Id)>
+                                    {{ $gl->GLCode }} - {{ $gl->GLName }} @if($gl->CBSAccountCode) (CBS: {{ $gl->CBSAccountCode }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Employer Credit GL (ERP)</label>
+                        <select name="EmployerCreditGLAccountID" class="form-select">
+                            <option value="">Select</option>
+                            @foreach(($glAccounts ?? []) as $gl)
+                                <option value="{{ $gl->Id }}" @selected(old('EmployerCreditGLAccountID', $deduction->EmployerCreditGLAccountID) == $gl->Id)>
+                                    {{ $gl->GLCode }} - {{ $gl->GLName }} @if($gl->CBSAccountCode) (CBS: {{ $gl->CBSAccountCode }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-4 d-flex align-items-center">
                         <div class="form-check mt-4">

@@ -69,24 +69,6 @@ class StatutorySeeder extends Seeder
             );
         }
 
-        $reliefs = [
-            ['Code' => 'PERS', 'Name' => 'Personal Relief', 'Amount' => 2400],
-            ['Code' => 'INS', 'Name' => 'Insurance Relief', 'Amount' => 5000],
-        ];
-        foreach ($reliefs as $row) {
-            DB::table('t_HRStatutoryReliefs')->updateOrInsert(
-                ['Code' => $row['Code']],
-                array_merge($row, [
-                    'IsActive' => 1,
-                    'EffectiveFrom' => '2025-01-01',
-                    'CreatedBy' => $actor,
-                    'CreatedOn' => $now,
-                    'ModifiedBy' => $actor,
-                    'ModifiedOn' => $now,
-                ])
-            );
-        }
-
         DB::table('t_HRStatutoryHousingLevyRates')->updateOrInsert(
             ['EffectiveFrom' => '2025-01-01'],
             [
@@ -160,6 +142,54 @@ class StatutorySeeder extends Seeder
             );
         }
 
+        $reliefs = [
+            [
+                'Code' => 'PERS',
+                'Name' => 'Personal Relief',
+                'ReliefType' => 'Fixed',
+                'ReliefRate' => null,
+                'DeductionID' => null,
+                'Amount' => 2400,
+                'ApplyStage' => 'PostTax',
+            ],
+            [
+                'Code' => 'INS',
+                'Name' => 'Insurance Relief',
+                'ReliefType' => 'Fixed',
+                'ReliefRate' => null,
+                'DeductionID' => null,
+                'Amount' => 5000,
+                'ApplyStage' => 'PostTax',
+            ],
+        ];
+        foreach ($reliefs as $row) {
+            DB::table('t_HRStatutoryReliefs')->updateOrInsert(
+                ['Code' => $row['Code']],
+                array_merge($row, [
+                    'IsActive' => 1,
+                    'EffectiveFrom' => '2025-01-01',
+                    'CreatedBy' => $actor,
+                    'CreatedOn' => $now,
+                    'ModifiedBy' => $actor,
+                    'ModifiedOn' => $now,
+                ])
+            );
+        }
+
+        DB::table('t_HRGratuitySettings')->updateOrInsert(
+            ['ApplyFor' => 'Contract'],
+            [
+                'RatePercent' => 5,
+                'CalcBasis' => 'Basic',
+                'EffectiveFrom' => '2025-01-01',
+                'IsActive' => 1,
+                'CreatedBy' => $actor,
+                'CreatedOn' => $now,
+                'ModifiedBy' => $actor,
+                'ModifiedOn' => $now,
+            ]
+        );
+
 
         // Acting Allowance default (percentage on basic)
         DB::table('t_HRPayrollAllowances')->updateOrInsert(
@@ -168,7 +198,8 @@ class StatutorySeeder extends Seeder
                 'Name' => 'Acting Allowance',
                 'Description' => 'Allowance for acting assignments',
                 'IsTaxable' => 1,
-                'IsMandatory' => 1,
+                // Not mandatory for all employees; applied only when an acting assignment exists.
+                'IsMandatory' => 0,
                 'IsActive' => 1,
                 'CreatedBy' => $actor,
                 'CreatedOn' => $now,
@@ -201,7 +232,25 @@ class StatutorySeeder extends Seeder
             ['Code' => 'LOAN-REP'],
             [
                 'Name' => 'Staff Loan Repayment',
-                'Description' => 'Repayments pushed from staff loan schedules',
+                'Description' => 'Repayments pushed from staff loans into payroll',
+                // Not mandatory for all employees; created only when a staff loan is approved.
+                'IsMandatory' => 0,
+                'ShowInPayslip' => 1,
+                'ApplyFor' => 'All',
+                'IsActive' => 1,
+                'CreatedBy' => $actor,
+                'CreatedOn' => $now,
+                'ModifiedBy' => $actor,
+                'ModifiedOn' => $now,
+            ]
+        );
+
+        // PAYE deduction scaffold using taxable income + post-tax reliefs
+        $payeId = DB::table('t_HRPayrollDeductions')->updateOrInsert(
+            ['Code' => 'PAYE'],
+            [
+                'Name' => 'PAYE',
+                'Description' => 'Pay As You Earn',
                 'IsMandatory' => 1,
                 'ShowInPayslip' => 1,
                 'ApplyFor' => 'All',
@@ -212,6 +261,35 @@ class StatutorySeeder extends Seeder
                 'ModifiedOn' => $now,
             ]
         );
+        $payeDedId = DB::table('t_HRPayrollDeductions')->where('Code','PAYE')->value('Id');
+        if ($payeDedId) {
+            DB::table('t_HRPayrollDeductionRules')->updateOrInsert(
+                [
+                    'DeductionID' => $payeDedId,
+                    'EffectiveFrom' => '2025-01-01',
+                    'IncomeFrom' => 0,
+                    'IncomeTo' => null,
+                ],
+                [
+                    'CalcMethod' => 'PAYEOnTaxableIncome',
+                    'Rate' => 0,
+                    'Amount' => null,
+                    'MinAmount' => null,
+                    'MaxAmount' => null,
+                    'HasRelief' => 0,
+                    'AffectsTaxableIncome' => 0,
+                    'IsTaxRelief' => 0,
+                    'ReliefType' => null,
+                    'ReliefAmount' => null,
+                    'IsActive' => 1,
+                    'CreatedBy' => $actor,
+                    'CreatedOn' => $now,
+                    'ModifiedBy' => $actor,
+                    'ModifiedOn' => $now,
+                ]
+            );
+
+        }
 
     }
 }

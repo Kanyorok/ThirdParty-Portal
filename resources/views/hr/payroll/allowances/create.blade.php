@@ -26,10 +26,10 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Employee *</label>
-                        <select name="EmployeeID" class="form-select" required>
+                        <select name="EmployeeID" id="EmployeeID" class="form-select" required>
                             <option value="">Select</option>
                             @foreach($employees as $emp)
-                                <option value="{{ $emp->Id }}" @selected(old('EmployeeID') == $emp->Id)>{{ $emp->FirstName }} {{ $emp->LastName }}</option>
+                                <option value="{{ $emp->Id }}" data-grade="{{ $emp->GradeID }}" @selected(old('EmployeeID') == $emp->Id)>{{ $emp->FirstName }} {{ $emp->LastName }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -38,9 +38,15 @@
                         <select name="AllowanceID" id="AllowanceID" class="form-select" required>
                             <option value="">Select</option>
                             @foreach($allowances as $a)
-                                <option value="{{ $a->Id }}" data-taxable="{{ $a->IsTaxable ? 1 : 0 }}" data-name="{{ $a->Name }}" @selected(old('AllowanceID')==$a->Id)>{{ $a->Name }}</option>
+                                @php $gradeIds = $a->grades->pluck('Id')->toArray(); @endphp
+                                <option value="{{ $a->Id }}"
+                                        data-taxable="{{ $a->IsTaxable ? 1 : 0 }}"
+                                        data-name="{{ $a->Name }}"
+                                        data-grades="{{ implode(',', $gradeIds) }}"
+                                    @selected(old('AllowanceID')==$a->Id)>{{ $a->Name }}</option>
                             @endforeach
                         </select>
+                        <div class="form-text">Mandatory allowances are auto-applied during payroll and are not listed here.</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Amount *</label>
@@ -60,6 +66,12 @@
                             <label class="form-check-label" for="taxable">Taxable</label>
                         </div>
                     </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="IsRecurring" value="1" id="recurring" @checked(old('IsRecurring', false))>
+                            <label class="form-check-label" for="recurring">Recurring</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="mt-4 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary">Save</button>
@@ -73,11 +85,28 @@
 document.addEventListener('DOMContentLoaded', function() {
     const allowanceSelect = document.getElementById('AllowanceID');
     const taxable = document.getElementById('taxable');
+    const empSelect = document.getElementById('EmployeeID');
     allowanceSelect?.addEventListener('change', function(){
         const opt = allowanceSelect.options[allowanceSelect.selectedIndex];
         const isTaxable = opt ? opt.getAttribute('data-taxable') : '1';
         if (taxable) taxable.checked = isTaxable === '1';
     });
+
+    const filterAllowances = () => {
+        if (!empSelect || !allowanceSelect) return;
+        const grade = empSelect.options[empSelect.selectedIndex]?.getAttribute('data-grade') || '';
+        Array.from(allowanceSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            const grades = (opt.getAttribute('data-grades') || '').split(',').filter(Boolean);
+            const allowed = grades.length === 0 || grades.includes(grade);
+            opt.disabled = !allowed;
+            if (!allowed && opt.selected) {
+                opt.selected = false;
+            }
+        });
+    };
+    empSelect?.addEventListener('change', filterAllowances);
+    filterAllowances();
 });
 </script>
 @endpush

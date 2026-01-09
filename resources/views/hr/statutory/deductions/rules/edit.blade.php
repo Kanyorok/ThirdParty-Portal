@@ -31,10 +31,11 @@
                     <div class="col-md-4">
                         <label class="form-label">Calculation Method *</label>
                         <select name="CalcMethod" class="form-select" required>
-                            @foreach(['PercentageOnGross','Flat','PercentageOnBand','FlatOnBand'] as $method)
+                            @foreach(['PercentageOnGross','PercentageOnBasic','PercentageOnPensionable','Flat','PercentageOnBand','FlatOnBand','PAYEOnTaxableIncome'] as $method)
                                 <option value="{{ $method }}" @selected(old('CalcMethod', $rule->CalcMethod)==$method)>{{ $method }}</option>
                             @endforeach
                         </select>
+                        <div class="form-text">Use PercentageOnPensionable for pension deductions and PAYEOnTaxableIncome for PAYE bands.</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Rate (%)</label>
@@ -59,28 +60,6 @@
                     <div class="col-md-4">
                         <label class="form-label">Maximum Amount</label>
                         <input type="number" step="0.01" name="MaxAmount" class="form-control" value="{{ old('MaxAmount', $rule->MaxAmount) }}">
-                    </div>
-                    <div class="col-md-4 d-flex align-items-center">
-                        <div class="form-check mt-4">
-                            <input type="checkbox" class="form-check-input" name="HasRelief" value="1" id="HasRelief" @checked(old('HasRelief', $rule->HasRelief))>
-                            <label for="HasRelief" class="form-check-label">Has Relief</label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Relief Type</label>
-                        <select name="ReliefType" class="form-select">
-                            <option value="">None</option>
-                            <option value="Percentage" @selected(old('ReliefType', $rule->ReliefType)=='Percentage')>Percentage</option>
-                            <option value="Fixed" @selected(old('ReliefType', $rule->ReliefType)=='Fixed')>Fixed</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Relief Rate (%)</label>
-                        <input type="number" step="0.01" name="ReliefRate" class="form-control" value="{{ old('ReliefRate', $rule->ReliefRate) }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Relief Amount</label>
-                        <input type="number" step="0.01" name="ReliefAmount" class="form-control" value="{{ old('ReliefAmount', $rule->ReliefAmount) }}">
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Formula (optional)</label>

@@ -57,8 +57,16 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Default Weight</label>
-                        <input type="number" step="0.01" name="DefaultWeight" class="form-control" value="{{ old('DefaultWeight') }}">
+                        <label class="form-label d-flex justify-content-between align-items-center">
+                            <span>Perspective</span>
+                            <a class="small" href="{{ route('hr.config.kpi.perspectives.index') }}">Manage</a>
+                        </label>
+                        <select name="PerspectiveID" class="form-select">
+                            <option value="">Select Perspective</option>
+                            @foreach($perspectives as $perspective)
+                                <option value="{{ $perspective->Id }}" @selected(old('PerspectiveID') == $perspective->Id)>{{ $perspective->Name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Description</label>

@@ -22,8 +22,8 @@
                             <th>Code</th>
                             <th>Name</th>
                             <th>Category</th>
+                            <th>Perspective</th>
                             <th>Unit</th>
-                            <th>Default Weight</th>
                             <th>Status</th>
                             <th></th>
                         </tr>
@@ -34,8 +34,8 @@
                                 <td>{{ $item->Code }}</td>
                                 <td>{{ $item->Name }}</td>
                                 <td>{{ $item->Category }}</td>
+                                <td>{{ $item->Perspective ?? '-' }}</td>
                                 <td>{{ $item->Unit }}</td>
-                                <td>{{ $item->DefaultWeight }}</td>
                                 <td>{{ $item->IsActive ? 'Active' : 'Inactive' }}</td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.config.kpi.library.edit', $item->Id) }}">Edit</a>

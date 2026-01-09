@@ -38,8 +38,8 @@ class Employee extends Model
         'KRAPIN',
         'BasicSalary',
         'PaymentMode',
-        'BankName',
-        'BankBranch',
+        'BankID',
+        'BankBranchID',
         'BankAccount',
         'Status',
         'StatusReason',
@@ -88,6 +88,16 @@ class Employee extends Model
     public function supervisor()
     {
         return $this->belongsTo(self::class, 'SupervisorID');
+    }
+
+    public function bank()
+    {
+        return $this->belongsTo(\App\Models\Finance\Bank::class, 'BankID', 'BankID');
+    }
+
+    public function bankBranch()
+    {
+        return $this->belongsTo(\App\Models\Finance\BankBranch::class, 'BankBranchID', 'BranchID');
     }
 
     public function attendanceDaily()

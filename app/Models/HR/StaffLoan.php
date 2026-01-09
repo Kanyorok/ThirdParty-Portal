@@ -11,7 +11,7 @@ class StaffLoan extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'EmployeeID','Name','Principal','InterestRate','TenureMonths','InstallmentAmount','Balance',
+        'EmployeeID','LoanRef','Name','Principal','InterestRate','TenureMonths','InstallmentAmount','Balance',
         'StartDate','EndDate','Status','CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn'
     ];
 

@@ -7,14 +7,17 @@ use App\Models\HR\Employee;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Finance\Bank;
+use App\Models\Finance\BankBranch;
 use App\Models\HR\JobGrade;
 use App\Models\HR\JobRole;
 use App\Models\HR\EmployeeContact;
 use App\Models\HR\EmployeeDocument;
 use App\Models\HR\EmployeeSalaryHistory;
 use App\Models\HR\EmployeeEducation;
+use App\Services\HR\PayrollMandatoryAllocator;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
@@ -66,10 +69,11 @@ class EmployeeController extends Controller
         $departments = Department::whereNull('DeletedOn')->orderBy('Name')->get();
         $supervisors = Employee::where('IsActive', 1)->orderBy('FirstName')->get(['Id', 'FirstName', 'LastName']);
         $banks = Bank::where('IsActive', 1)->orderBy('BankName')->get(['BankID', 'BankName']);
+        $bankBranches = BankBranch::where('IsActive', 1)->orderBy('BranchName')->get(['BranchID', 'BankID', 'BranchName', 'BranchCode']);
 
         $statusList = self::STATUSES;
 
-        return view('hr.employees.create', compact('grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'statusList'));
+        return view('hr.employees.create', compact('grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'bankBranches', 'statusList'));
     }
 
     public function store(Request $request)
@@ -96,8 +100,8 @@ class EmployeeController extends Controller
             'KRAPIN'          => 'nullable|string|max:50',
             'BasicSalary'     => 'required|numeric|min:0',
             'PaymentMode'     => 'required|string|max:50',
-            'BankName'        => 'nullable|string|max:150',
-            'BankBranch'      => 'nullable|string|max:150',
+            'BankID'          => 'nullable|integer|exists:t_Banks,BankID',
+            'BankBranchID'    => 'nullable|integer|exists:t_BankBranches,BranchID',
             'BankAccount'     => 'nullable|string|max:100',
             'Status'          => ['nullable', 'string', 'max:20', Rule::in(self::STATUSES)],
             'SalaryEffectiveFrom' => 'nullable|date',
@@ -123,6 +127,8 @@ class EmployeeController extends Controller
             'documents_description.*' => 'nullable|string|max:255',
         ]);
 
+        $this->syncBankNames($data);
+
         $data['CreatedBy'] = auth()->id();
         $data['CreatedOn'] = now();
 
@@ -146,6 +152,9 @@ class EmployeeController extends Controller
             'CreatedOn'    => now(),
         ]);
 
+        // Ensure mandatory allowances/deductions are mapped for new employee for the current month.
+        app(PayrollMandatoryAllocator::class)->syncForEmployee($employee, now()->month, now()->year);
+
         return redirect()
             ->route('hr.employees.index')
             ->with('success', 'Employee created successfully.');
@@ -153,7 +162,7 @@ class EmployeeController extends Controller
 
     public function show($id)
     {
-        $employee = Employee::with(['branch', 'department', 'grade', 'role', 'supervisor', 'contacts', 'documents', 'salaryHistory'])
+        $employee = Employee::with(['branch', 'department', 'grade', 'role', 'supervisor', 'bank', 'bankBranch', 'contacts', 'documents', 'salaryHistory'])
             ->findOrFail($id);
 
         $attendanceSummary = $employee->attendanceDaily()
@@ -174,9 +183,10 @@ class EmployeeController extends Controller
         $departments = Department::whereNull('DeletedOn')->orderBy('Name')->get();
         $supervisors = Employee::where('IsActive', 1)->orderBy('FirstName')->get(['Id', 'FirstName', 'LastName']);
         $banks = Bank::where('IsActive', 1)->orderBy('BankName')->get(['BankID', 'BankName']);
+        $bankBranches = BankBranch::where('IsActive', 1)->orderBy('BranchName')->get(['BranchID', 'BankID', 'BranchName', 'BranchCode']);
         $statusList = self::STATUSES;
 
-        return view('hr.employees.edit', compact('employee', 'grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'statusList'));
+        return view('hr.employees.edit', compact('employee', 'grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'bankBranches', 'statusList'));
     }
 
     public function update(Request $request, $id)
@@ -204,8 +214,8 @@ class EmployeeController extends Controller
             'KRAPIN'          => 'nullable|string|max:50',
             'BasicSalary'     => 'required|numeric|min:0',
             'PaymentMode'     => 'required|string|max:50',
-            'BankName'        => 'nullable|string|max:150',
-            'BankBranch'      => 'nullable|string|max:150',
+            'BankID'          => 'nullable|integer|exists:t_Banks,BankID',
+            'BankBranchID'    => 'nullable|integer|exists:t_BankBranches,BranchID',
             'BankAccount'     => 'nullable|string|max:100',
             'Status'          => ['nullable', 'string', 'max:20', Rule::in(self::STATUSES)],
             'SalaryEffectiveFrom' => 'nullable|date',
@@ -230,6 +240,8 @@ class EmployeeController extends Controller
             'documents_category.*' => 'nullable|string|max:100',
             'documents_description.*' => 'nullable|string|max:255',
         ]);
+
+        $this->syncBankNames($data);
 
         $data['ModifiedBy'] = auth()->id();
         $data['ModifiedOn'] = now();
@@ -395,6 +407,31 @@ class EmployeeController extends Controller
                 'CreatedBy'   => auth()->id(),
                 'CreatedOn'   => now(),
             ]);
+        }
+    }
+
+    private function syncBankNames(array &$data): void
+    {
+        $bankId = $data['BankID'] ?? null;
+        $branchId = $data['BankBranchID'] ?? null;
+
+        if ($branchId) {
+            $branch = BankBranch::find($branchId);
+            if (!$branch) {
+                throw ValidationException::withMessages(['BankBranchID' => 'Selected bank branch is invalid.']);
+            }
+            if ($bankId && (int)$branch->BankID !== (int)$bankId) {
+                throw ValidationException::withMessages(['BankBranchID' => 'Selected bank branch does not belong to the chosen bank.']);
+            }
+            $bankId = $bankId ?: (int)$branch->BankID;
+            $data['BankID'] = $bankId;
+        }
+
+        if ($bankId) {
+            $bank = Bank::find($bankId);
+            if (!$bank) {
+                throw ValidationException::withMessages(['BankID' => 'Selected bank is invalid.']);
+            }
         }
     }
 }

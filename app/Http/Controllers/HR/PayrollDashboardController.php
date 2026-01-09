@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\HR\PayrollCycle;
 use App\Models\HR\PayrollRun;
 use App\Models\HR\PayrollRunLine;
+use App\Services\HR\PayrollMandatoryAllocator;
+use Illuminate\Http\Request;
 
 class PayrollDashboardController extends Controller
 {
@@ -23,5 +25,15 @@ class PayrollDashboardController extends Controller
         $recentCycles = PayrollCycle::orderByDesc('Id')->limit(5)->get();
 
         return view('hr.payroll.dashboard', compact('totals', 'recentRuns', 'recentCycles'));
+    }
+
+    public function syncMandatory(Request $request)
+    {
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+
+        app(PayrollMandatoryAllocator::class)->syncForAllEmployees($month, $year);
+
+        return redirect()->route('hr.payroll.dashboard')->with('success', "Mandatory payroll components synced for {$month}/{$year}.");
     }
 }

@@ -9,8 +9,16 @@
         <div class="d-flex gap-2">
             <a class="btn btn-primary" href="{{ route('hr.payroll.cycles.create') }}">Open Payroll Cycle</a>
             <a class="btn btn-outline-primary" href="{{ route('hr.payroll.runs.create') }}">Generate Payroll</a>
+            <form method="POST" action="{{ route('hr.payroll.syncMandatory') }}">
+                @csrf
+                <button class="btn btn-outline-secondary" type="submit">Sync Mandatory</button>
+            </form>
         </div>
     </div>
+
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
     <div class="row g-3">
         <div class="col-md-3">

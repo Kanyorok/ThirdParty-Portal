@@ -14,6 +14,10 @@ class StatutoryRelief extends Model
         'Code',
         'Name',
         'Amount',
+        'ReliefType',
+        'ReliefRate',
+        'DeductionID',
+        'ApplyStage',
         'EffectiveFrom',
         'EffectiveTo',
         'Description',
@@ -28,6 +32,7 @@ class StatutoryRelief extends Model
 
     protected $casts = [
         'Amount' => 'decimal:2',
+        'ReliefRate' => 'decimal:4',
         'IsActive' => 'boolean',
         'EffectiveFrom' => 'date',
         'EffectiveTo' => 'date',

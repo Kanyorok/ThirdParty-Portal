@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HR\KpiItem;
 use App\Models\HR\KpiCategory;
 use App\Models\HR\KpiUnit;
+use App\Models\HR\KpiPerspective;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -21,7 +22,8 @@ class KpiItemController extends Controller
     {
         $categories = KpiCategory::where('IsActive', 1)->orderBy('Name')->get();
         $units = KpiUnit::where('IsActive', 1)->orderBy('Name')->get();
-        return view('hr.config.kpi.library.create', compact('categories', 'units'));
+        $perspectives = KpiPerspective::where('IsActive', 1)->orderBy('Name')->get();
+        return view('hr.config.kpi.library.create', compact('categories', 'units', 'perspectives'));
     }
 
     public function store(Request $request)
@@ -31,6 +33,7 @@ class KpiItemController extends Controller
             'Name'          => ['required', 'string', 'max:200'],
             'CategoryID'    => ['required', 'integer', 'exists:t_HRKPICategories,Id'],
             'UnitID'        => ['required', 'integer', 'exists:t_HRKPIUnits,Id'],
+            'PerspectiveID' => ['nullable', 'integer', 'exists:t_HRKPIPerspectives,Id'],
             'DefaultWeight' => ['nullable', 'numeric', 'min:0'],
             'Description'   => ['nullable', 'string', 'max:500'],
         ]);
@@ -43,6 +46,8 @@ class KpiItemController extends Controller
         $unit = KpiUnit::find($data['UnitID']);
         $data['Category'] = $category?->Name;
         $data['Unit'] = $unit?->Name;
+        $perspective = isset($data['PerspectiveID']) ? KpiPerspective::find($data['PerspectiveID']) : null;
+        $data['Perspective'] = $perspective?->Name;
 
         KpiItem::create($data);
 
@@ -54,7 +59,8 @@ class KpiItemController extends Controller
         $item = KpiItem::findOrFail($id);
         $categories = KpiCategory::where('IsActive', 1)->orderBy('Name')->get();
         $units = KpiUnit::where('IsActive', 1)->orderBy('Name')->get();
-        return view('hr.config.kpi.library.edit', compact('item', 'categories', 'units'));
+        $perspectives = KpiPerspective::where('IsActive', 1)->orderBy('Name')->get();
+        return view('hr.config.kpi.library.edit', compact('item', 'categories', 'units', 'perspectives'));
     }
 
     public function update(Request $request, $id)
@@ -65,6 +71,7 @@ class KpiItemController extends Controller
             'Name'          => ['required', 'string', 'max:200'],
             'CategoryID'    => ['required', 'integer', 'exists:t_HRKPICategories,Id'],
             'UnitID'        => ['required', 'integer', 'exists:t_HRKPIUnits,Id'],
+            'PerspectiveID' => ['nullable', 'integer', 'exists:t_HRKPIPerspectives,Id'],
             'DefaultWeight' => ['nullable', 'numeric', 'min:0'],
             'Description'   => ['nullable', 'string', 'max:500'],
             'IsActive'      => ['nullable', 'boolean'],
@@ -78,6 +85,8 @@ class KpiItemController extends Controller
         $unit = KpiUnit::find($data['UnitID']);
         $data['Category'] = $category?->Name;
         $data['Unit'] = $unit?->Name;
+        $perspective = isset($data['PerspectiveID']) ? KpiPerspective::find($data['PerspectiveID']) : null;
+        $data['Perspective'] = $perspective?->Name;
 
         $item->update($data);
 

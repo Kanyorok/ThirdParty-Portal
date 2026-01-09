@@ -16,19 +16,38 @@
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <table class="table mb-0">
-                <thead><tr><th>Employee</th><th>Allowance</th><th>Amount</th><th>Period</th><th>Taxable</th><th>Status</th></tr></thead>
+                <thead><tr><th>Employee</th><th>Allowance</th><th>Mandatory</th><th>Amount</th><th>Period</th><th>Taxable</th><th>Recurring</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                 <tbody>
                     @forelse($allowances as $row)
                         <tr>
                             <td>{{ $row->employee?->FirstName }} {{ $row->employee?->LastName }}</td>
                             <td>{{ $row->allowance?->Name ?? $row->Name }}</td>
+                            <td>{{ $row->allowance?->IsMandatory ? 'Yes' : 'No' }}</td>
                             <td>{{ number_format($row->Amount, 2) }}</td>
                             <td>{{ $row->Month }}/{{ $row->Year }}</td>
                             <td>{{ $row->IsTaxable ? 'Yes' : 'No' }}</td>
+                            <td>{{ $row->IsRecurring ? 'Yes' : 'No' }}</td>
                             <td>{{ $row->Status }}</td>
+                            <td class="text-end">
+                                @if($row->Status === 'Pending')
+                                    <form method="POST" action="{{ route('hr.payroll.allowances.approve', $row->Id) }}" class="d-inline">
+                                        @csrf
+                                        <button class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('hr.payroll.allowances.reject', $row->Id) }}" class="d-inline ms-1">
+                                        @csrf
+                                        <button class="btn btn-sm btn-outline-danger">Reject</button>
+                                    </form>
+                                @endif
+                                <form method="POST" action="{{ route('hr.payroll.allowances.destroy', $row->Id) }}" class="d-inline ms-1" onsubmit="return confirm('Remove this monthly allowance?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-secondary">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted py-3">No allowances yet.</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted py-3">No allowances yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>

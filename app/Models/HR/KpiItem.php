@@ -17,6 +17,8 @@ class KpiItem extends Model
         'CategoryID',
         'Unit',
         'UnitID',
+        'Perspective',
+        'PerspectiveID',
         'DefaultWeight',
         'Description',
         'IsActive',
@@ -44,5 +46,10 @@ class KpiItem extends Model
     public function unit()
     {
         return $this->belongsTo(KpiUnit::class, 'UnitID');
+    }
+
+    public function perspective()
+    {
+        return $this->belongsTo(KpiPerspective::class, 'PerspectiveID');
     }
 }

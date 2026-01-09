@@ -40,6 +40,12 @@
                     </div>
                     <div class="col-md-3 d-flex align-items-end">
                         <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="IsPensionable" value="1" id="IsPensionable" @checked(old('IsPensionable', false))>
+                            <label for="IsPensionable" class="form-check-label">Pensionable</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
                             <input type="checkbox" class="form-check-input" name="IsMandatory" value="1" id="IsMandatory" @checked(old('IsMandatory', false))>
                             <label for="IsMandatory" class="form-check-label">Mandatory (auto-load)</label>
                         </div>
@@ -47,6 +53,30 @@
                     <div class="col-md-12">
                         <label class="form-label">Description</label>
                         <input type="text" name="Description" class="form-control" value="{{ old('Description') }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Debit GL (ERP)</label>
+                        <select name="DebitGLAccountID" class="form-select">
+                            <option value="">Select</option>
+                            @foreach(($glAccounts ?? []) as $gl)
+                                <option value="{{ $gl->Id }}" @selected(old('DebitGLAccountID') == $gl->Id)>
+                                    {{ $gl->GLCode }} - {{ $gl->GLName }} @if($gl->CBSAccountCode) (CBS: {{ $gl->CBSAccountCode }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">CBS GL is picked from the selected ERP GL account.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Credit GL (ERP)</label>
+                        <select name="CreditGLAccountID" class="form-select">
+                            <option value="">Select</option>
+                            @foreach(($glAccounts ?? []) as $gl)
+                                <option value="{{ $gl->Id }}" @selected(old('CreditGLAccountID') == $gl->Id)>
+                                    {{ $gl->GLCode }} - {{ $gl->GLName }} @if($gl->CBSAccountCode) (CBS: {{ $gl->CBSAccountCode }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Applicable Job Grades</label>

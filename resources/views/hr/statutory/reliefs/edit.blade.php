@@ -34,8 +34,38 @@
                         <input type="text" name="Name" class="form-control" value="{{ old('Name', $relief->Name) }}" required>
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label">Relief Type *</label>
+                        <select name="ReliefType" id="ReliefType" class="form-select" required>
+                            <option value="Fixed" @selected(old('ReliefType', $relief->ReliefType) === 'Fixed')>Fixed</option>
+                            <option value="Percentage" @selected(old('ReliefType', $relief->ReliefType) === 'Percentage')>Percentage of Deduction</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Apply Stage *</label>
+                        <select name="ApplyStage" class="form-select" required>
+                            <option value="PostTax" @selected(old('ApplyStage', $relief->ApplyStage) === 'PostTax')>Post-tax (reduce PAYE)</option>
+                            <option value="PreTax" @selected(old('ApplyStage', $relief->ApplyStage) === 'PreTax')>Pre-tax (reduce taxable income)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4" id="fixedAmountGroup">
                         <label class="form-label">Amount *</label>
-                        <input type="number" step="0.01" name="Amount" class="form-control" value="{{ old('Amount', $relief->Amount) }}" required>
+                        <input type="number" step="0.01" name="Amount" class="form-control" value="{{ old('Amount', $relief->Amount) }}">
+                    </div>
+                    <div class="col-md-4" id="deductionGroup">
+                        <label class="form-label">Deduction *</label>
+                        <select name="DeductionID" class="form-select">
+                            <option value="">Select deduction</option>
+                            @foreach($deductions as $deduction)
+                                <option value="{{ $deduction->Id }}" @selected(old('DeductionID', $relief->DeductionID) == $deduction->Id)>
+                                    {{ $deduction->Name }} ({{ $deduction->Code }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Used when relief type is Percentage.</div>
+                    </div>
+                    <div class="col-md-4" id="rateGroup">
+                        <label class="form-label">Relief Rate (%) *</label>
+                        <input type="number" step="0.01" name="ReliefRate" class="form-control" value="{{ old('ReliefRate', $relief->ReliefRate) }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Effective From *</label>
@@ -64,3 +94,32 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('ReliefType');
+        const fixedGroup = document.getElementById('fixedAmountGroup');
+        const deductionGroup = document.getElementById('deductionGroup');
+        const rateGroup = document.getElementById('rateGroup');
+
+        const toggleGroup = (group, enabled) => {
+            if (!group) return;
+            group.style.display = enabled ? '' : 'none';
+            group.querySelectorAll('input, select').forEach((el) => {
+                el.disabled = !enabled;
+            });
+        };
+
+        const syncGroups = () => {
+            const isFixed = (typeSelect.value || 'Fixed') === 'Fixed';
+            toggleGroup(fixedGroup, isFixed);
+            toggleGroup(deductionGroup, !isFixed);
+            toggleGroup(rateGroup, !isFixed);
+        };
+
+        typeSelect.addEventListener('change', syncGroups);
+        syncGroups();
+    });
+</script>
+@endpush

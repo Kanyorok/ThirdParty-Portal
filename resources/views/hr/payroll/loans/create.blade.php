@@ -34,6 +34,10 @@
                         </select>
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label">Loan Ref (CBS)</label>
+                        <input type="text" name="LoanRef" class="form-control" value="{{ old('LoanRef') }}" placeholder="Optional reference from CBS">
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Loan Name *</label>
                         <input type="text" name="Name" class="form-control" value="{{ old('Name', 'Staff Loan') }}" required>
                     </div>
@@ -46,16 +50,16 @@
                         <input type="number" step="0.0001" name="InterestRate" class="form-control" value="{{ old('InterestRate', 0) }}">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Tenure (Months)</label>
-                        <input type="number" name="TenureMonths" class="form-control" value="{{ old('TenureMonths', 0) }}">
+                        <label class="form-label">Tenure (Months) *</label>
+                        <input type="number" name="TenureMonths" class="form-control" value="{{ old('TenureMonths', 12) }}" min="1" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Start Date</label>
-                        <input type="date" name="StartDate" class="form-control" value="{{ old('StartDate') }}">
+                        <label class="form-label">Monthly Repayment *</label>
+                        <input type="number" step="0.01" name="InstallmentAmount" class="form-control" value="{{ old('InstallmentAmount') }}" min="0.01" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">End Date</label>
-                        <input type="date" name="EndDate" class="form-control" value="{{ old('EndDate') }}">
+                        <label class="form-label">Start Date *</label>
+                        <input type="date" name="StartDate" class="form-control" value="{{ old('StartDate', now()->startOfMonth()->toDateString()) }}" required>
                     </div>
                 </div>
                 <div class="mt-4 d-flex justify-content-end">
