@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Shield, Building2, User, Mail, Phone, MapPin, FileText, Lock, Calendar, Briefcase, Heart } from "lucide-react"
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Shield, Building2, User, Mail, Phone, MapPin, FileText, Lock, Calendar, Briefcase, Heart, UserPlus } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Spinner } from "@/components/common/spinner"
 import { Button } from "@/components/common/button"
@@ -33,7 +33,7 @@ export default function RegisterForm() {
     isCustomer
   } = useRegisterForm()
 
-  const passwordValue = form.watch("user_Password")
+  const createUser = form.watch("createUser")
 
   const nextStep = async () => {
     const fields = ["Name", "Email", "Phone", "RegistrationNumber", "TaxPIN", "Country", "Location", "BusinessType", "types"] as any[]
@@ -42,13 +42,17 @@ export default function RegisterForm() {
 
     const isValid = await form.trigger(fields)
     if (isValid) {
-      setStep(2)
-      window.scrollTo({ top: 0, behavior: "smooth" })
+      if (!createUser) {
+        handleSubmit(new Event('submit') as any)
+      } else {
+        setStep(2)
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      }
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e?.preventDefault()
     setAuthError(null)
     try {
       await onSubmit(e)
@@ -175,7 +179,29 @@ export default function RegisterForm() {
                   <Input {...form.register("TaxPIN")} className={cn(inputStyle, errors.TaxPIN && "border-red-300")} />
                 </div>
               </div>
-              <Button type="button" onClick={nextStep} className="h-14 bg-blue-600 text-white font-bold uppercase rounded-lg">Continue</Button>
+
+              <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-blue-600">
+                    <UserPlus className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800">Create Admin Account</h4>
+                    <p className="text-xs text-slate-500">Enable portal access for this organization</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => form.setValue("createUser", !createUser)}
+                  className={cn("w-12 h-6 rounded-full transition-all relative", createUser ? "bg-blue-600" : "bg-slate-300")}
+                >
+                  <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full transition-all", createUser ? "right-1" : "left-1")} />
+                </button>
+              </div>
+
+              <Button type="button" onClick={nextStep} disabled={isSubmitting} className="h-14 bg-blue-600 text-white font-bold uppercase rounded-lg">
+                {createUser ? "Continue to User Details" : (isSubmitting ? "Processing..." : "Finish Registration")}
+              </Button>
             </motion.div>
           ) : (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">

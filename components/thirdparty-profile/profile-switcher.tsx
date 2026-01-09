@@ -1,203 +1,95 @@
 "use client"
 
-import { memo, useMemo, useEffect } from "react"
+import * as React from "react"
+import { ChevronsUpDown, Building2, HardHat, Shield, Check } from "lucide-react"
 import { useProfileStore, ProfileType } from "@/store/profile-store"
-import { getAvailableProfiles } from "@/lib/api/profile-management"
-import { useQuery } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
-import { Shuffle, ShieldCheck, Loader2, AlertCircle, RefreshCw, Building2, User, ShoppingCart } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/common/dropdown-menu"
 
-const profileConfig = {
-  base: {
-    label: "Business Information",
-    color: "bg-blue-600",
-    icon: Building2
-  },
-  supplier: {
-    label: "Supplier Profile",
-    color: "bg-slate-900",
-    icon: Building2
-  },
-  tenant: {
-    label: "Tenant Profile",
-    color: "bg-indigo-600",
-    icon: User
-  },
-  customer: {
-    label: "Customer Profile",
-    color: "bg-emerald-600",
-    icon: ShoppingCart
-  },
-} as const
+const profileConfig: Record<Exclude<ProfileType, 'base'>, { label: string; icon: React.ElementType; color: string }> = {
+  Supplier: { label: "Supplier Portal", icon: HardHat, color: "text-blue-600" },
+  Tenant: { label: "Tenant Portal", icon: Building2, color: "text-emerald-600" },
+  Customer: { label: "Customer Portal", icon: Shield, color: "text-purple-600" },
+}
 
-export const ProfileSwitcher = memo(() => {
-  const { activeProfile, setActiveProfile, initializeProfiles } = useProfileStore()
+export function ProfileSwitcher() {
+  const { activeProfile, setActiveProfile, availableProfiles } = useProfileStore()
 
-  const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['available-profiles'],
-    queryFn: getAvailableProfiles,
-  })
+  const businessProfiles = availableProfiles.filter((p): p is Exclude<ProfileType, 'base'> => p !== 'base')
 
-  useEffect(() => {
-    if (data?.success && data?.data?.availableProfiles) {
-      const validTypes = Object.keys(profileConfig) as ProfileType[]
-      const activeTypes = data.data.availableProfiles
-        .filter((p: any) => p.hasProfile && validTypes.includes(p.type))
-        .map((p: any) => p.type as ProfileType)
+  if (businessProfiles.length === 0) return null
 
-      if (activeTypes.length > 0) {
-        initializeProfiles(activeTypes)
-      }
-    }
-  }, [data, initializeProfiles])
-
-  const profiles = useMemo(() => {
-    const rawData = data?.data?.availableProfiles
-    if (!Array.isArray(rawData)) return ["base" as ProfileType]
-
-    const validTypes = Object.keys(profileConfig) as ProfileType[]
-    const available = rawData
-      .filter((p: any) => p.hasProfile && validTypes.includes(p.type))
-      .map((p: any) => p.type as ProfileType)
-
-    return available.length > 0 ? available : ["base" as ProfileType]
-  }, [data])
-
-  const activeConfig = profileConfig[activeProfile as keyof typeof profileConfig] || profileConfig.base
+  const currentProfile = activeProfile === 'base' ? businessProfiles[0] : (activeProfile as Exclude<ProfileType, 'base'>)
+  const config = profileConfig[currentProfile]
+  const ActiveIcon = config.icon
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          disabled={isPending}
-          className={cn(
-            "group relative flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm",
-            isError && "border-red-200 bg-red-50"
-          )}
-        >
-          {isPending ? (
-            <Loader2 className="size-4 animate-spin text-slate-400" />
-          ) : (
-            <div className="relative">
-              <div className={cn("size-8 rounded-lg flex items-center justify-center transition-all", activeConfig.color)}>
-                <activeConfig.icon className="size-4 text-white" />
-              </div>
-              <span className={cn(
-                "absolute -right-1 -top-1 size-2.5 rounded-full border-2 border-white shadow-sm",
-                activeConfig.color
-              )} />
-            </div>
-          )}
-
-          <div className="flex flex-col items-start">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-              Active Profile
+        <button className="group flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card p-2.5 text-left shadow-sm transition-all hover:shadow-md hover:border-primary/30 focus:outline-none">
+          <div className={cn(
+            "flex size-9 shrink-0 items-center justify-center rounded-lg border border-primary/10 bg-primary/5 transition-colors group-hover:bg-primary/10",
+            config.color
+          )}>
+            <ActiveIcon className="size-5" />
+          </div>
+          <div className="flex flex-1 flex-col truncate">
+            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/70">
+              Workspace
             </span>
-            <span className="text-sm font-bold text-slate-900">
-              {isPending ? "Loading..." : activeConfig.label}
+            <span className="truncate text-[13px] font-bold leading-tight text-foreground uppercase tracking-tight">
+              {config.label}
             </span>
           </div>
-
-          <Shuffle className={cn(
-            "size-4 text-slate-400 transition-transform group-hover:rotate-180 ml-2",
-            isError && "text-red-500"
-          )} />
+          <div className="flex size-5 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
+            <ChevronsUpDown className="size-3 text-muted-foreground/50 group-hover:text-primary" />
+          </div>
         </button>
       </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-64 p-2" align="start" side="bottom" sideOffset={8}>
+        <DropdownMenuLabel className="px-2 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
+          Switch Portal View
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="my-2" />
+        {businessProfiles.map((profile) => {
+          const itemConfig = profileConfig[profile]
+          const ItemIcon = itemConfig.icon
+          const isActive = activeProfile === profile
 
-      <DropdownMenuContent
-        align="start"
-        sideOffset={8}
-        className="w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
-      >
-        <div className="px-3 py-2.5 border-b border-slate-100 mb-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            {isPending ? "Syncing Profiles..." : "Switch Active Profile"}
-          </span>
-          {!isPending && profiles.length > 1 && (
-            <p className="text-xs text-slate-400 mt-1">
-              {profiles.length} profile{profiles.length > 1 ? 's' : ''} available
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          {isError ? (
-            <button
-              onClick={() => refetch()}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-red-600 hover:bg-red-50 transition-colors"
+          return (
+            <DropdownMenuItem
+              key={profile}
+              onClick={() => setActiveProfile(profile)}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-2 py-2.5 cursor-pointer transition-all mb-1 last:mb-0",
+                isActive ? "bg-primary/5 shadow-sm" : "hover:bg-accent"
+              )}
             >
-              <div className="size-8 rounded-lg bg-red-100 flex items-center justify-center">
-                <AlertCircle className="size-4 text-red-600" />
+              <div className={cn(
+                "flex size-8 items-center justify-center rounded-md border border-border/40 bg-background shadow-xs",
+                isActive ? itemConfig.color : "text-muted-foreground"
+              )}>
+                <ItemIcon className="size-4" />
               </div>
-              <div className="flex-1 text-left">
-                <span className="block text-sm font-bold">Connection Failed</span>
-                <span className="text-xs text-red-500">Click to retry</span>
+              <div className="flex flex-col flex-1">
+                <span className={cn("text-sm font-bold", isActive ? "text-foreground" : "text-muted-foreground")}>
+                  {itemConfig.label}
+                </span>
               </div>
-              <RefreshCw className="size-4" />
-            </button>
-          ) : (
-            profiles.map((profile) => {
-              const isSelected = profile === activeProfile
-              const config = profileConfig[profile as keyof typeof profileConfig] || profileConfig.base
-              const Icon = config.icon
-
-              return (
-                <DropdownMenuItem
-                  key={profile}
-                  onClick={() => setActiveProfile(profile)}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 transition-all focus:bg-slate-50",
-                    isSelected ? "bg-blue-50 border border-blue-100" : "hover:bg-slate-50 border border-transparent"
-                  )}
-                >
-                  <div className={cn(
-                    "size-9 rounded-lg flex items-center justify-center transition-all",
-                    config.color,
-                    !isSelected && "opacity-60"
-                  )}>
-                    <Icon className="size-4 text-white" />
-                  </div>
-
-                  <div className="flex-1">
-                    <span className={cn(
-                      "block text-sm font-bold",
-                      isSelected ? "text-slate-900" : "text-slate-600"
-                    )}>
-                      {config.label}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      {isSelected ? "Currently active" : "Click to switch"}
-                    </span>
-                  </div>
-
-                  {isSelected && (
-                    <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <ShieldCheck className="size-4 text-blue-600" />
-                    </div>
-                  )}
-                </DropdownMenuItem>
-              )
-            })
-          )}
-        </div>
-
-        {!isError && profiles.length === 1 && (
-          <div className="mt-2 px-3 py-2 text-center">
-            <p className="text-xs text-slate-400">
-              Complete your profile setup to unlock more options
-            </p>
-          </div>
-        )}
+              {isActive && (
+                <Check className="size-4 text-primary animate-in zoom-in-50" />
+              )}
+            </DropdownMenuItem>
+          )
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   )
-})
-
-ProfileSwitcher.displayName = "ProfileSwitcher"
+}

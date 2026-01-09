@@ -23,6 +23,8 @@ import {
 import { Badge } from "@/components/common/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/common/tooltip"
 import { cn } from "@/lib/utils"
+import { useProfileStore } from "@/store/profile-store"
+import { UserProfile } from "@/types/profile-types"
 
 export interface NavSubItem {
   readonly title: string
@@ -33,6 +35,7 @@ export interface NavSubItem {
   readonly badge?: string
   readonly description?: string
   readonly disabled?: boolean
+  readonly allowedProfiles: readonly UserProfile[]
 }
 
 export interface NavMainItem {
@@ -45,6 +48,7 @@ export interface NavMainItem {
   readonly badge?: string
   readonly description?: string
   readonly disabled?: boolean
+  readonly allowedProfiles: readonly UserProfile[]
 }
 
 export interface NavGroup {
@@ -81,14 +85,23 @@ const NavItemExpanded = memo(
     isActive,
     isSubmenuOpen,
     onItemClick,
+    activeProfile
   }: {
     item: NavMainItem
     isActive: (url: string, subItems?: readonly NavSubItem[]) => boolean
     isSubmenuOpen: (subItems?: readonly NavSubItem[]) => boolean
     onItemClick?: (item: NavMainItem | NavSubItem) => void
+    activeProfile: UserProfile
   }) => {
     const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems])
     const isOpen = useMemo(() => isSubmenuOpen(item.subItems), [isSubmenuOpen, item.subItems])
+
+    // Filter sub-items based on active profile
+    const visibleSubItems = useMemo(() => {
+      if (!item.subItems) return []
+      if (activeProfile === 'base') return item.subItems
+      return item.subItems.filter(sub => sub.allowedProfiles.includes(activeProfile))
+    }, [item.subItems, activeProfile])
 
     const handleItemClick = useCallback(() => {
       if (!item.disabled && !item.comingSoon) onItemClick?.(item)
@@ -111,14 +124,14 @@ const NavItemExpanded = memo(
         <div className="flex items-center gap-2">
           {item.comingSoon && <ComingSoonBadge />}
           {item.badge && !item.comingSoon && <NavBadge badge={item.badge} />}
-          {item.subItems && (
+          {visibleSubItems.length > 0 && (
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90" />
           )}
         </div>
       </>
     )
 
-    if (!item.subItems) {
+    if (visibleSubItems.length === 0) {
       const button = (
         <SidebarMenuButton
           disabled={item.disabled || item.comingSoon}
@@ -172,7 +185,7 @@ const NavItemExpanded = memo(
           </CollapsibleTrigger>
           <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden">
             <SidebarMenuSub className="ml-6 border-l border-muted-foreground/10 pl-3 py-2 space-y-1 mt-1">
-              {item.subItems.map((subItem) => {
+              {visibleSubItems.map((subItem) => {
                 const subActive = isActive(subItem.url)
                 return (
                   <SidebarMenuSubItem key={subItem.title}>
@@ -250,6 +263,7 @@ NavItemCollapsed.displayName = "NavItemCollapsed"
 export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) => {
   const pathname = usePathname()
   const { state, isMobile } = useSidebar()
+  const activeProfile = useProfileStore((s) => s.activeProfile)
 
   const isActive = useCallback(
     (url: string, subItems?: readonly NavSubItem[]) => {
@@ -289,6 +303,7 @@ export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) =>
                     isActive={isActive}
                     isSubmenuOpen={isSubmenuOpen}
                     onItemClick={onItemClick}
+                    activeProfile={activeProfile}
                   />
                 ),
               )}

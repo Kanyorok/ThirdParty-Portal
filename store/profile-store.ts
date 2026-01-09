@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { UserProfile } from '@/types/profile-types'
 
-export type ProfileType = UserProfile | "base"
+export type ProfileType = 'base' | 'Tenant' | 'Supplier' | 'Customer'
 
 interface ProfileState {
     activeProfile: ProfileType
