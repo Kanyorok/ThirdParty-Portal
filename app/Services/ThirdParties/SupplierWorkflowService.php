@@ -53,6 +53,17 @@ class SupplierWorkflowService extends ApprovalWorkflowService
         if ($result) {
             $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
             $supplier->save();
+
+            // Activate associated ThirdPartyUsers
+            // Activate associated ThirdPartyUsers
+            // 1. Verify email if not already verified (auto-verify for backend-approved suppliers)
+            \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)
+                 ->whereNull('EmailVerifiedOn')
+                 ->update(['EmailVerifiedOn' => now()]);
+
+            // 2. Ensure account is active
+            \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)
+                ->update(['IsActive' => true]);
         }
 
         return $result;

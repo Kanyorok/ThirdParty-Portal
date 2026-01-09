@@ -255,6 +255,7 @@ class TenderInvitationController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        Log::info('TenderInvitation Update Hit', ['id' => $id, 'payload' => $request->all(), 'user' => Auth::id()]);
         try {
             $validated = $request->validate([
                 'responseStatus' => 'required|in:accepted,declined,pending',
@@ -289,15 +290,25 @@ class TenderInvitationController extends Controller
             try {
 
 
-                // Start with just the status field that we know works
+                // Harmonize with storeResponse: Use PascalCase for status
+                $statusMap = [
+                    'accepted' => 'Accepted',
+                    'declined' => 'Declined',
+                    'pending' => 'Pending',
+                    'submitted' => 'Submitted'
+                ];
+                $cleanStatus = strtolower($validated['responseStatus']);
+                $dbStatus = $statusMap[$cleanStatus] ?? ucfirst($cleanStatus);
+
                 $updateData = [
-                    'ResponseStatus' => $validated['responseStatus']
+                    'ResponseStatus' => $dbStatus,
+                    'ResponseDate' => now(),
+                    'ModifiedBy' => Auth::check() ? Auth::user()->Id : null
                 ];
 
                 // Add decline reason only if provided and we're declining
                 if (
-                    $validated['responseStatus'] === 'declined' &&
-                    isset($validated['declineReason']) &&
+                    $cleanStatus === 'declined' &&
                     !empty($validated['declineReason'])
                 ) {
                     $updateData['DeclineReason'] = $validated['declineReason'];
