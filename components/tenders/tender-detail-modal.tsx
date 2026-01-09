@@ -47,6 +47,14 @@ interface Tender {
   tenderCategoryRelation?: {
     tenderCategory: string;
   };
+  documents?: {
+    id: number;
+    fileName: string;
+    extension: string;
+    fileSize: string;
+    module: string;
+    createdOn: string;
+  }[];
 }
 
 interface TenderInvitation {
@@ -136,7 +144,7 @@ export default function TenderDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[95vw] w-full h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-gray-50/50" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[95vw] w-full h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-white" showCloseButton={false}>
         <div className="flex flex-col bg-white border-b shadow-sm z-10">
             <DialogHeader className="px-6 py-4 flex flex-row items-center justify-between gap-4 space-y-0">
                 <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -189,7 +197,7 @@ export default function TenderDetailModal({
                     </TabsList>
                 </div>
 
-                <div className="flex-1 overflow-y-auto bg-gray-50/50">
+                <div className="flex-1 overflow-y-auto bg-white">
                     <TabsContent value="overview" className="min-h-full p-8 mt-0 focus-visible:outline-none">
                         <div className="max-w-7xl mx-auto space-y-8">
                              {/* Key Stats Row */}
@@ -318,40 +326,57 @@ export default function TenderDetailModal({
                          </div>
                     </TabsContent>
 
-                    <TabsContent value="documents" className="p-8 pb-20 mt-0 focus-visible:outline-none">
+            <TabsContent value="documents" className="p-8 pb-20 mt-0 focus-visible:outline-none">
                         <div className="max-w-5xl mx-auto">
                             <Card className="shadow-sm border-0 ring-1 ring-gray-200">
                                 <CardHeader>
                                     <CardTitle>Tender Documents</CardTitle> 
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-white hover:border-blue-300 transition-colors group cursor-pointer">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 bg-red-50 rounded flex items-center justify-center text-red-600"><FileText className="h-5 w-5" /></div>
-                                                <div>
-                                                    <p className="font-medium group-hover:text-blue-600 transition-colors">Tender Document.pdf</p>
-                                                    <p className="text-xs text-muted-foreground">2.4 MB • PDF</p>
-                                                </div>
-                                            </div>
-                                            <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
+                                    {tender.documents && tender.documents.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {tender.documents.map((doc) => {
+                                                const ext = doc.extension?.toLowerCase() || 'file';
+                                                let iconColor = "text-gray-600";
+                                                let bgColor = "bg-gray-50";
+                                                
+                                                if (['pdf'].includes(ext)) {
+                                                    iconColor = "text-red-600";
+                                                    bgColor = "bg-red-50";
+                                                } else if (['xls', 'xlsx', 'csv'].includes(ext)) {
+                                                    iconColor = "text-green-600";
+                                                    bgColor = "bg-green-50";
+                                                } else if (['doc', 'docx'].includes(ext)) {
+                                                    iconColor = "text-blue-600";
+                                                    bgColor = "bg-blue-50";
+                                                } else if (['jpg', 'jpeg', 'png'].includes(ext)) {
+                                                    iconColor = "text-purple-600";
+                                                    bgColor = "bg-purple-50";
+                                                }
+
+                                                return (
+                                                    <div key={doc.id} className={`flex items-center justify-between p-4 border rounded-lg bg-white hover:border-gray-300 transition-colors group cursor-pointer`}>
+                                                        <div className="flex items-center gap-3 overflow-hidden">
+                                                            <div className={`h-10 w-10 ${bgColor} rounded flex items-center justify-center ${iconColor} flex-shrink-0`}>
+                                                                <FileText className="h-5 w-5" />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="font-medium truncate group-hover:text-blue-600 transition-colors" title={doc.fileName}>{doc.fileName}</p>
+                                                                <p className="text-xs text-muted-foreground uppercase">{doc.fileSize || 'Unknown Size'} • {ext}</p>
+                                                            </div>
+                                                        </div>
+                                                        <Button variant="ghost" size="icon" className="flex-shrink-0"><Download className="h-4 w-4" /></Button>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-white hover:border-green-300 transition-colors group cursor-pointer">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 bg-green-50 rounded flex items-center justify-center text-green-600"><FileText className="h-5 w-5" /></div>
-                                                <div>
-                                                    <p className="font-medium group-hover:text-green-600 transition-colors">Bill of Quantities.xlsx</p>
-                                                    <p className="text-xs text-muted-foreground">1.8 MB • Excel</p>
-                                                </div>
-                                            </div>
-                                            <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
+                                    ) : (
+                                        <div className="mt-8 text-center p-8 bg-gray-50 border border-dashed rounded-lg">
+                                            <div className="mx-auto h-12 w-12 text-gray-300 mb-2"><FileText className="h-full w-full" /></div>
+                                            <h3 className="text-sm font-medium text-gray-900">No additional documents</h3>
+                                            <p className="text-xs text-muted-foreground mt-1">All available documents are listed above.</p>
                                         </div>
-                                    </div>
-                                    <div className="mt-8 text-center p-8 bg-gray-50 border border-dashed rounded-lg">
-                                        <div className="mx-auto h-12 w-12 text-gray-300 mb-2"><FileText className="h-full w-full" /></div>
-                                        <h3 className="text-sm font-medium text-gray-900">No additional documents</h3>
-                                        <p className="text-xs text-muted-foreground mt-1">All available documents are listed above.</p>
-                                    </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>

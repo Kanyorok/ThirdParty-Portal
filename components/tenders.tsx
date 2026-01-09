@@ -96,6 +96,16 @@ interface Tender {
         categoryCode: string;
         status: string;
     };
+    documents?: Document[];
+}
+
+interface Document {
+    id: number;
+    fileName: string;
+    extension: string;
+    fileSize: string;
+    module: string;
+    createdOn: string;
 }
 
 interface TenderInvitation {
@@ -488,8 +498,16 @@ export default function TendersPage() {
                         name: procMode.name ?? procMode.Name,
                     } : undefined,
                     
-                    tenderCategoryRelation: t.tenderCategoryRelation ?? t.TenderCategoryRelation,
                     itemCategoryRelation: t.itemCategoryRelation ?? t.ItemCategoryRelation,
+
+                    documents: Array.isArray(t.documents || t.Documents) ? (t.documents || t.Documents).map((d: any) => ({
+                        id: d.id ?? d.Id,
+                        fileName: d.fileName ?? d.FileName,
+                        extension: d.extension ?? d.Extension,
+                        fileSize: d.fileSize ?? d.FileSize,
+                        module: d.module ?? d.Module,
+                        createdOn: d.createdOn ?? d.CreatedOn
+                    })) : [],
                     
                     // Invitation will be attached later
                     invitation: undefined
