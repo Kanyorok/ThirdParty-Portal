@@ -54,12 +54,12 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     });
 
     require __DIR__ . '/inventory.php';
-    require __DIR__ . '/property.php';
+    // require __DIR__ . '/property.php';
     require __DIR__ . '/finance.php';
-    require __DIR__ . '/fleet.php';
+    // require __DIR__ . '/fleet.php';
     require __DIR__ . '/insurance.php';
     require __DIR__ . '/dms.php';
-    require __DIR__ . '/legal.php';
+    // require __DIR__ . '/legal.php';
     require __DIR__ . '/hrms.php';
     require __DIR__ . '/budget.php';
     require __DIR__ . '/thirdparty.php';

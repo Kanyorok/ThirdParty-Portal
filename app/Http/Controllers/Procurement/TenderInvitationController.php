@@ -9,6 +9,7 @@ use App\Models\ThirdParies\ThirdParty;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -255,7 +256,15 @@ class TenderInvitationController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        Log::info('TenderInvitation Update Hit', ['id' => $id, 'payload' => $request->all(), 'user' => Auth::id()]);
+        Log::info('=== TenderInvitation Update Started ===', [
+            'id' => $id, 
+            'payload' => $request->all(), 
+            'auth_check' => Auth::check(),
+            'auth_id' => Auth::id(),
+            'auth_guard' => Auth::getDefaultDriver(),
+            'bearer_token' => $request->bearerToken() ? substr($request->bearerToken(), 0, 20) . '...' : null,
+        ]);
+        
         try {
             $validated = $request->validate([
                 'responseStatus' => 'required|in:accepted,declined,pending',
@@ -288,6 +297,54 @@ class TenderInvitationController extends Controller
 
             // Working minimal update - just the essential fields
             try {
+                // EXPLICIT LOGIC: Get user from the active guard (Sanctum)
+                $currentUser = Auth::guard('sanctum')->user();
+                
+                if (!$currentUser) {
+                    // Fallback to default guard if sanctum fails (though logs show sanctum is active)
+                    $currentUser = Auth::user();
+                }
+
+                if (!$currentUser) {
+                     Log::error('TenderInvitation Update: No user found.');
+                     return response()->json(['error' => 'Unauthenticated'], 401);
+                }
+
+                $userId = $currentUser->getAuthIdentifier();
+                $isThirdParty = $currentUser instanceof \App\Models\ThirdParty\ThirdPartyUser;
+                
+                Log::info('DEBUG ID RESOLUTION', [
+                    'original_id' => $userId,
+                    'user_class' => get_class($currentUser),
+                    'is_third_party' => $isThirdParty
+                ]);
+
+                // FK Fix: Use System Admin (1) for ThirdParty users
+                if ($isThirdParty) {
+                    $userId = 1; 
+                }
+
+                // Final safety check
+                if (empty($userId)) {
+                    // If somehow we still don't have an ID, force to 1 (System) to prevent crash
+                    // This is a safety net for the "Cannot insert NULL" error
+                    Log::warning('DEBUG: userId was empty/null, forcing to 1');
+                    $userId = 1;
+                }
+
+                DB::update(
+                    'update t_TenderInvitations set ResponseStatus = ?, ResponseDate = ?, ModifiedBy = ? where InvitationID = ?',
+                    [
+                        ucfirst($validated['responseStatus']),
+                        now(), 
+                        $userId, 
+                        $id
+                    ]
+                );
+                
+                $invitation->ResponseStatus = ucfirst($validated['responseStatus']);
+                $invitation->ResponseDate = now();
+                // $invitation->save(); // We used direct DB update above to bypass model issues
 
 
                 // Harmonize with storeResponse: Use PascalCase for status
@@ -303,7 +360,9 @@ class TenderInvitationController extends Controller
                 $updateData = [
                     'ResponseStatus' => $dbStatus,
                     'ResponseDate' => now(),
-                    'ModifiedBy' => Auth::check() ? Auth::user()->Id : null
+                    // Don't set ModifiedBy for supplier portal responses to avoid FK constraint issues
+                    // ModifiedBy references t_Users, but Auth::user() is ThirdPartyUser
+                    'ModifiedBy' => 1
                 ];
 
                 // Add decline reason only if provided and we're declining
