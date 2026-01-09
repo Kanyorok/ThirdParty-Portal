@@ -116,7 +116,7 @@ class TenderInvitationController extends Controller
 
             try {
                 // Eager load items and prices for calculation
-                $invitationsQuery = TenderInvitation::with(['tender.currency', 'tender.items.item.price', 'tender.tenderCategoryRelation'])
+                $invitationsQuery = TenderInvitation::with(['tender.currency', 'tender.items.item.price', 'tender.tenderCategoryRelation', 'tender.documents'])
                     ->whereIn('SupplierId', $supplierIds)
                     ->whereNull('DeletedOn')
                     ->orderBy('InvitationDate', 'desc');
@@ -176,6 +176,16 @@ class TenderInvitationController extends Controller
                         'tenderCategoryRelation' => $invitation->tender->tenderCategoryRelation ? [
                             'tenderCategory' => $invitation->tender->tenderCategoryRelation->TenderCategory
                         ] : null,
+                        'documents' => $invitation->tender->documents ? $invitation->tender->documents->map(function ($doc) {
+                            return [
+                                'id' => $doc->Id,
+                                'fileName' => $doc->Name,
+                                'extension' => $doc->Extension,
+                                'fileSize' => $doc->Size, // Assuming Size attribute exists, otherwise null
+                                'module' => $doc->Module,
+                                'createdOn' => $doc->CreatedOn,
+                            ];
+                        }) : [],
                     ];
                 } else {
                     // Fallback tender data if relationship fails
@@ -206,7 +216,11 @@ class TenderInvitationController extends Controller
                 ];
             });
 
-
+            Log::info('Debug Invitations Documents', [
+                 'count' => $formattedData->count(),
+                 'sample_tender_id' => $formattedData->first()['tender']['id'] ?? 'N/A',
+                 'sample_doc_count' => count($formattedData->first()['tender']['documents'] ?? [])
+            ]);
 
             return response()->json([
                 'data' => $formattedData,
