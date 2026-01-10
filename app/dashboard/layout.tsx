@@ -10,7 +10,7 @@ import { AppSidebar } from "@/app/dashboard/side-nav/app-sidebar"
 import { HeaderActions } from "@/app/dashboard/header-actions"
 import { LayoutControls } from "@/app/dashboard/layout-controls"
 import { SearchDialog } from "@/app/dashboard/search-dialog"
-import Loading from "@/app/dashboard/loading"
+import Loading from "@/components/common/custom-loader"
 
 export default function Layout({ children }: { children: ReactNode }) {
     return (

@@ -12,7 +12,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/common/form"
 import { useProfile } from "@/hooks/use-profile"
 import {
@@ -124,7 +123,6 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {/* Header */}
           <motion.div variants={itemVariants} className="flex items-center justify-between pb-2 border-b">
             <div className="space-y-1">
               <h2 className="text-xl font-bold">Edit Profile</h2>
@@ -156,7 +154,6 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
             </div>
           </motion.div>
 
-          {/* Business Information Section */}
           <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
             <div className="flex items-center gap-2 mb-4 pb-2 border-b">
               <Building2 className="h-4 w-4 text-primary" />
@@ -261,7 +258,6 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
             </div>
           </motion.div>
 
-          {/* Contact Information Section */}
           <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
             <div className="flex items-center gap-2 mb-4 pb-2 border-b">
               <Mail className="h-4 w-4 text-primary" />
@@ -331,7 +327,6 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
             </div>
           </motion.div>
 
-          {/* Physical Location Section */}
           <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
             <div className="flex items-center gap-2 mb-4 pb-2 border-b">
               <MapPin className="h-4 w-4 text-primary" />
@@ -358,7 +353,6 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
             />
           </motion.div>
 
-          {/* Footer Actions */}
           <motion.div variants={itemVariants} className="flex justify-end gap-2 pt-2 border-t">
             <Button
               type="button"
@@ -368,7 +362,7 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
               disabled={isUpdating}
             >
               <X className="h-3.5 w-3.5 mr-1" />
-              Discard Changes
+              Discard
             </Button>
             <Button
               type="submit"

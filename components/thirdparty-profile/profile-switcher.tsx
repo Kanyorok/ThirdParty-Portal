@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { ChevronsUpDown, Building2, HardHat, Shield, Check } from "lucide-react"
-import { useProfileStore, ProfileType } from "@/store/profile-store"
+import { useProfileStore, ProfileType } from "@/store/use-profile-store"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ const profileConfig: Record<Exclude<ProfileType, 'base'>, { label: string; icon:
 }
 
 export function ProfileSwitcher() {
+  const router = useRouter()
   const { activeProfile, setActiveProfile, availableProfiles } = useProfileStore()
   const { state, isMobile } = useSidebar()
 
@@ -39,10 +41,16 @@ export function ProfileSwitcher() {
   const config = profileConfig[currentProfile]
   const ActiveIcon = config.icon
 
+  const handleProfileChange = (profile: ProfileType) => {
+    if (profile === activeProfile) return
+    const path = setActiveProfile(profile)
+    router.push(path)
+  }
+
   const trigger = (
     <DropdownMenuTrigger asChild>
       <button className={cn(
-        "group flex items-center rounded-xl border border-border/50 bg-card p-2 text-left shadow-sm transition-all hover:shadow-md hover:border-primary/30 focus:outline-none",
+        "group flex items-center rounded-xl border border-border/50 bg-card text-left shadow-sm transition-all hover:shadow-md hover:border-primary/30 focus:outline-none",
         isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "w-full gap-3 p-2.5"
       )}>
         <div className={cn(
@@ -50,7 +58,7 @@ export function ProfileSwitcher() {
           isCollapsed ? "size-8 border-none bg-transparent" : "size-9",
           config.color
         )}>
-          <ActiveIcon className={cn(isCollapsed ? "size-5" : "size-5")} />
+          <ActiveIcon className="size-5" />
         </div>
 
         {!isCollapsed && (
@@ -105,7 +113,7 @@ export function ProfileSwitcher() {
           return (
             <DropdownMenuItem
               key={profile}
-              onClick={() => setActiveProfile(profile)}
+              onClick={() => handleProfileChange(profile)}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-2 py-2.5 cursor-pointer transition-all mb-1 last:mb-0",
                 isActive ? "bg-primary/5 shadow-sm" : "hover:bg-accent"

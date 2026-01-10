@@ -3,12 +3,21 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 
 export type ProfileType = 'base' | 'Tenant' | 'Supplier' | 'Customer'
 
+export const PROFILE_HOME_PATHS: Record<ProfileType, string> = {
+    base: '/dashboard',
+    Tenant: '/dashboard/tenant',
+    Supplier: '/dashboard/supplier',
+    Customer: '/dashboard/customer'
+}
+
 interface ProfileState {
     activeProfile: ProfileType
     availableProfiles: ProfileType[]
-    setActiveProfile: (profile: ProfileType) => void
+    isHydrated: boolean
+    setActiveProfile: (profile: ProfileType) => string
     setAvailableProfiles: (profiles: ProfileType[]) => void
     initializeProfiles: (profiles: ProfileType[]) => void
+    setHydrated: () => void
 }
 
 export const useProfileStore = create<ProfileState>()(
@@ -16,8 +25,14 @@ export const useProfileStore = create<ProfileState>()(
         (set, get) => ({
             activeProfile: "base",
             availableProfiles: ["base"],
+            isHydrated: false,
 
-            setActiveProfile: (profile) => set({ activeProfile: profile }),
+            setHydrated: () => set({ isHydrated: true }),
+
+            setActiveProfile: (profile) => {
+                set({ activeProfile: profile })
+                return PROFILE_HOME_PATHS[profile] || PROFILE_HOME_PATHS.base
+            },
 
             setAvailableProfiles: (profiles) => set({ availableProfiles: profiles }),
 
@@ -44,6 +59,9 @@ export const useProfileStore = create<ProfileState>()(
         {
             name: 'app-profile-storage',
             storage: createJSONStorage(() => localStorage),
+            onRehydrateStorage: () => (state) => {
+                state?.setHydrated()
+            },
             partialize: (state) => ({
                 activeProfile: state.activeProfile
             }),

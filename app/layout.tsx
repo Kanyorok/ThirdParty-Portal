@@ -3,6 +3,9 @@ import { Geist } from "next/font/google"
 import "@/styles/globals.css"
 import { NextAuthProvider } from "@/components/providers/providers"
 import { CLIENT_APP_NAME, CLIENT_APP_NAME_STRING } from "@/config/client-config"
+import { ProfileSyncWatcher } from "@/components/profiles/profile-watcher"
+import { OnboardingWatcher } from "@/components/common/onboarding-tooltip"
+import { ProfileTransitionOverlay } from "@/components/common/profile-switch-overlay"
 
 const geist = Geist({
   weight: ['100', '400', '900'],
@@ -74,6 +77,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ProfileSyncWatcher />
+          <OnboardingWatcher />
+          <ProfileTransitionOverlay />
           {children}
         </NextAuthProvider>
       </body>

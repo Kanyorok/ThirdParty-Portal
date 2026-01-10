@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
-import { useProfileStore } from "@/store/profile-store"
+import { useProfileStore } from "@/store/use-profile-store"
 import { cn } from "@/lib/utils"
 
 export function ThemeProvider({

@@ -1,34 +1,32 @@
 import { apiClient } from "@/lib/api"
 
 export interface ThirdPartyType {
-  id: number
-  code: string
-  label: string
+  id: number | null
+  code: string | null
+  label: string | null
+  description: string
 }
 
 export interface ThirdPartyUserProfile {
   id: number
-  userId: string
+  userId: number
   firstName: string
   lastName: string
   fullName: string
   email: string
   phone: string | null
   imageId: number | null
-  gender: string | null
+  gender: any
   thirdPartyId: string
   isActive: boolean
-  isPrequalified: boolean
-  approvalStatus: string
   isSupplier: boolean
   isTenant: boolean
   isCustomer: boolean
-  hasProfile: boolean
-  emailVerified: boolean
   emailVerifiedOn: string | null
   createdOn: string
   modifiedOn: string
   thirdParty?: {
+    approvalStatus: string | null
     id: number
     profileCompletion: number
     thirdPartyDetails: {
@@ -39,11 +37,15 @@ export interface ThirdPartyUserProfile {
       taxPIN: string
       physicalAddress: string | null
       website: string | null
+      email: string
+      phone: string
       countryId: string
     }
-    isPrequalified: boolean
-    supplierId: string | null
-    approvalStatus: string
+    profiles: {
+      supplier: SupplierProfile | null
+      tenant: TenantProfile | null
+      customer: CustomerProfile | null
+    }
     types?: ThirdPartyType[]
     createdOn: string
   }
@@ -51,7 +53,7 @@ export interface ThirdPartyUserProfile {
 
 export interface ProfileResponse {
   success: boolean
-  message: string
+  message?: string
   data: ThirdPartyUserProfile
 }
 
@@ -67,7 +69,6 @@ export interface UpdateProfilePayload {
   Website?: string
 }
 
-// Get Available Profiles
 export interface AvailableProfile {
   type: 'supplier' | 'tenant' | 'customer'
   label: string
@@ -82,14 +83,18 @@ export interface AvailableProfilesResponse {
   }
 }
 
-// Supplier Profile
 export interface SupplierProfile {
   supplierId: string
-  approvalStatus: string
   isPrequalified: boolean
-  categories: any[]
-  status: any
-  createdOn: string
+  approvalStatus: string
+  categoryId: number | null
+  categories?: Array<{
+    id: number;
+    name: string;
+    SupplierCategoryID?: number;
+    CategoryName?: string;
+  }>;
+  createdOn?: string
 }
 
 export interface SupplierProfileResponse {
@@ -98,14 +103,9 @@ export interface SupplierProfileResponse {
   message?: string
 }
 
-export interface UpdateSupplierPayload {
-  category_ids?: number[]
-}
-
-// Tenant Profile
 export interface TenantProfile {
-  tenantType: number
-  type: any
+  tenantType: string
+  typeName: string | null
   remarks: string | null
   isActive: boolean
   createdOn: string
@@ -117,21 +117,12 @@ export interface TenantProfileResponse {
   message?: string
 }
 
-export interface UpdateTenantPayload {
-  TenantType?: number
-  Remarks?: string
-}
-
-// Customer Profile
 export interface CustomerProfile {
-  dateOfBirth: string
-  gender: number
-  genderDetail: any
-  maritalStatus: number
-  maritalStatusDetail: any
-  occupation: number
-  occupationDetail: any
-  createdOn: string
+  dateOfBirth?: string
+  gender?: number
+  maritalStatus?: number
+  occupation?: number
+  createdOn?: string
 }
 
 export interface CustomerProfileResponse {
@@ -140,62 +131,43 @@ export interface CustomerProfileResponse {
   message?: string
 }
 
-export interface UpdateCustomerPayload {
-  DateOfBirth?: string
-  Gender?: number
-  MaritalStatus?: number
-  Occupation?: number
-}
-
-// Base Profile API
+// API Calls
 export async function getProfile(): Promise<ProfileResponse> {
   return apiClient.get<ProfileResponse>("/api/v1/portal/auth/profile")
 }
 
-export async function updateProfile(
-  profileData: UpdateProfilePayload
-): Promise<ProfileResponse> {
-  return apiClient.put<ProfileResponse>("/api/v1/portal/auth/profile", profileData)
+export async function updateProfile(data: UpdateProfilePayload): Promise<ProfileResponse> {
+  return apiClient.put<ProfileResponse>("/api/v1/portal/auth/profile", data)
 }
 
 export async function getCurrentUser(): Promise<ProfileResponse> {
-  return apiClient.post<ProfileResponse>("/api/v1/portal/auth/me", {})
+  return apiClient.get<ProfileResponse>("/api/v1/portal/auth/me")
 }
 
-// Available Profiles API
 export async function getAvailableProfiles(): Promise<AvailableProfilesResponse> {
   return apiClient.get<AvailableProfilesResponse>("/api/v1/portal/auth/profile/available")
 }
 
-// Supplier Profile API
 export async function getSupplierProfile(): Promise<SupplierProfileResponse> {
   return apiClient.get<SupplierProfileResponse>("/api/v1/portal/auth/profile/supplier")
 }
 
-export async function updateSupplierProfile(
-  data: UpdateSupplierPayload
-): Promise<SupplierProfileResponse> {
+export async function updateSupplierProfile(data: { category_ids: number[] }): Promise<SupplierProfileResponse> {
   return apiClient.put<SupplierProfileResponse>("/api/v1/portal/auth/profile/supplier", data)
 }
 
-// Tenant Profile API
 export async function getTenantProfile(): Promise<TenantProfileResponse> {
   return apiClient.get<TenantProfileResponse>("/api/v1/portal/auth/profile/tenant")
 }
 
-export async function updateTenantProfile(
-  data: UpdateTenantPayload
-): Promise<TenantProfileResponse> {
+export async function updateTenantProfile(data: { TenantType?: number; Remarks?: string }): Promise<TenantProfileResponse> {
   return apiClient.put<TenantProfileResponse>("/api/v1/portal/auth/profile/tenant", data)
 }
 
-// Customer Profile API
 export async function getCustomerProfile(): Promise<CustomerProfileResponse> {
   return apiClient.get<CustomerProfileResponse>("/api/v1/portal/auth/profile/customer")
 }
 
-export async function updateCustomerProfile(
-  data: UpdateCustomerPayload
-): Promise<CustomerProfileResponse> {
+export async function updateCustomerProfile(data: any): Promise<CustomerProfileResponse> {
   return apiClient.put<CustomerProfileResponse>("/api/v1/portal/auth/profile/customer", data)
 }

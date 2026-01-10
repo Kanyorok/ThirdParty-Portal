@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { ProfileType } from "@/store/profile-store"
+import { ProfileType } from "@/store/use-profile-store"
 
 export type UserProfile = ProfileType
 

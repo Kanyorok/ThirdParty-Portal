@@ -1,21 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProfileView } from "@/components/thirdparty-profile/profile-view";
 import { ProfileEditForm } from "@/components/thirdparty-profile/profile-edit-form";
 import { SupplierProfileView } from "@/components/thirdparty-profile/supplier-profile-view";
 import { TenantProfileView } from "@/components/thirdparty-profile/tenant-profile-view";
 import { CustomerProfileView } from "@/components/thirdparty-profile/customer-profile-view";
-import { ProfileSwitcher, type ProfileType } from "@/components/thirdparty-profile/profile-switcher";
+import { ProfileSwitcher } from "@/components/thirdparty-profile/profile-switcher";
 import { Button } from "@/components/common/button";
 import { ArrowLeft } from "lucide-react";
+import { useProfileStore } from "@/store/use-profile-store";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
-  const [currentProfile, setCurrentProfile] = useState<ProfileType>('base');
+  const { activeProfile } = useProfileStore();
+
+  useEffect(() => {
+    setIsEditing(false);
+  }, [activeProfile]);
 
   const renderProfileContent = () => {
-    if (isEditing && currentProfile === 'base') {
+    if (isEditing && activeProfile === 'base') {
       return (
         <ProfileEditForm
           onCancel={() => setIsEditing(false)}
@@ -24,54 +30,58 @@ export default function ProfilePage() {
       );
     }
 
-    switch (currentProfile) {
+    switch (activeProfile) {
       case 'base':
         return <ProfileView onEdit={() => setIsEditing(true)} />;
-      case 'supplier':
-        return <SupplierProfileView onEdit={() => {/* TODO: Add supplier edit */ }} />;
-      case 'tenant':
-        return <TenantProfileView onEdit={() => {/* TODO: Add tenant edit */ }} />;
-      case 'customer':
-        return <CustomerProfileView onEdit={() => {/* TODO: Add customer edit */ }} />;
+      case 'Supplier':
+        return <SupplierProfileView onEdit={() => { }} />;
+      case 'Tenant':
+        return <TenantProfileView onEdit={() => { }} />;
+      case 'Customer':
+        return <CustomerProfileView onEdit={() => { }} />;
       default:
         return <ProfileView onEdit={() => setIsEditing(true)} />;
     }
   };
 
   return (
-    <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Profile Management</h1>
-        <p className="text-muted-foreground">
-          Manage your third-party profile types and information
-        </p>
+    <div className="w-full max-w-[1200px] mx-auto">
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-border/40">
+          <div className="w-full md:w-80">
+            <ProfileSwitcher />
+          </div>
+
+          <AnimatePresence mode="wait">
+            {isEditing && activeProfile === 'base' && (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsEditing(false)}
+                  className="text-[10px] font-black uppercase tracking-widest hover:bg-primary/5 transition-all gap-2"
+                >
+                  <ArrowLeft className="size-3" strokeWidth={3} />
+                  Cancel Changes
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <motion.main
+          key={activeProfile + (isEditing ? '-edit' : '-view')}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="min-h-[500px]"
+        >
+          {renderProfileContent()}
+        </motion.main>
       </div>
-
-      {/* Profile Switcher - Always Visible */}
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <ProfileSwitcher
-          currentProfile={currentProfile}
-          onProfileChange={(profile) => {
-            setCurrentProfile(profile);
-            setIsEditing(false);
-          }}
-        />
-
-        {isEditing && currentProfile === 'base' && (
-          <Button
-            variant="ghost"
-            onClick={() => setIsEditing(false)}
-            className="gap-2 rounded-xl hover:bg-muted/50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Cancel
-          </Button>
-        )}
-      </div>
-
-      {/* Profile Content */}
-      {renderProfileContent()}
     </div>
   );
 }

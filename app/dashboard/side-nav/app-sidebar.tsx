@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useEffect } from "react"
+import React, { useMemo, useEffect, useState } from "react"
 import { Command, LogOut } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import {
@@ -13,29 +13,57 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/common/sidebar"
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/common/tooltip"
 import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items"
-import { useProfileStore } from "@/store/profile-store"
+import { useProfileStore } from "@/store/use-profile-store"
 import { NavMain } from "@/app/dashboard/side-nav/nav-main"
-import { UserProfile } from "@/types/profile-types"
 import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
 import { ProfileSwitcher } from "@/components/thirdparty-profile/profile-switcher"
 import { cn } from "@/lib/utils"
 
+function NavItemSkeleton() {
+    return (
+        <div className="flex items-center gap-3 px-3.5 h-11 w-full">
+            <div className="size-7 rounded-lg bg-muted/60 animate-pulse shrink-0" />
+            <div className="h-3 w-24 bg-muted/60 animate-pulse rounded-md" />
+        </div>
+    )
+}
+
+function SidebarSkeleton() {
+    return (
+        <div className="flex flex-col gap-8 py-4 px-3">
+            {[1, 2].map((group) => (
+                <div key={group} className="space-y-4">
+                    <div className="px-5 h-2 w-16 bg-muted/30 rounded-full mb-4" />
+                    <div className="space-y-2">
+                        {[1, 2, 3].map((i) => (
+                            <NavItemSkeleton key={i} />
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { data: session } = useSession()
-    const { state, isMobile } = useSidebar()
-    const { initializeProfiles, activeProfile, setActiveProfile } = useProfileStore()
+    const { state } = useSidebar()
+    const {
+        initializeProfiles,
+        activeProfile,
+        setActiveProfile,
+        isHydrated
+    } = useProfileStore()
 
-    const authorizedRoles = useMemo((): UserProfile[] => {
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => setMounted(true), [])
+
+    const authorizedRoles = useMemo(() => {
         if (!session?.user) return []
         const u = session.user
-        const roles: UserProfile[] = []
+        const roles: any[] = []
         if (u.is_supplier) roles.push("Supplier")
         if (u.is_tenant) roles.push("Tenant")
         if (u.is_customer) roles.push("Customer")
@@ -43,28 +71,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }, [session])
 
     useEffect(() => {
-        if (authorizedRoles.length > 0) {
+        if (authorizedRoles.length > 0 && isHydrated) {
             initializeProfiles(authorizedRoles)
-            if (!activeProfile || activeProfile === 'base' || !authorizedRoles.includes(activeProfile)) {
+
+            const isProfileStillValid = authorizedRoles.includes(activeProfile)
+
+            if (!activeProfile || activeProfile === 'base' || !isProfileStillValid) {
                 setActiveProfile(authorizedRoles[0])
             }
         }
-    }, [authorizedRoles, initializeProfiles, activeProfile, setActiveProfile])
+    }, [authorizedRoles, isHydrated, initializeProfiles, activeProfile, setActiveProfile])
 
     const { primaryNav, utilityNav } = useMemo(() => {
-        const currentProfile = activeProfile === 'base' && authorizedRoles.length > 0
-            ? authorizedRoles[0]
-            : activeProfile
+        if (!mounted || !isHydrated) return { primaryNav: [], utilityNav: [] }
 
         const filteredMenus = sidebarItems
             .filter(section => {
-                if (currentProfile === 'base') return section.id === 'general' || section.id === 'utility'
-                return section.allowedProfiles.includes(currentProfile)
+                if (activeProfile === 'base') return section.id === 'general' || section.id === 'utility'
+                return section.allowedProfiles.includes(activeProfile)
             })
             .map(section => ({
                 ...section,
                 items: section.items.filter(item =>
-                    currentProfile === 'base' ? true : item.allowedProfiles.includes(currentProfile)
+                    activeProfile === 'base' ? true : item.allowedProfiles.includes(activeProfile)
                 )
             }))
 
@@ -72,66 +101,63 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             primaryNav: filteredMenus.filter(s => s.id !== "utility"),
             utilityNav: filteredMenus.filter(s => s.id === "utility")
         }
-    }, [activeProfile, authorizedRoles])
+    }, [activeProfile, authorizedRoles, mounted, isHydrated])
+
+    if (!mounted) return null
 
     return (
         <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar" {...props}>
             <SidebarHeader className="p-4">
-                <TooltipProvider>
-                    <Tooltip delayDuration={0}>
-                        <TooltipTrigger asChild>
-                            <div className="flex items-start gap-3 px-2 py-1 min-w-0 overflow-hidden">
-                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg transition-transform duration-500 hover:scale-105">
-                                    <Command className="size-5" />
-                                </div>
-                                <div className={cn(
-                                    "flex flex-col min-w-0 transition-all duration-300 ease-in-out",
-                                    state === "collapsed" ? "opacity-0 -translate-x-4 pointer-events-none w-0" : "opacity-100 w-auto"
-                                )}>
-                                    <span className="font-black uppercase tracking-tighter text-sm leading-[1.1] line-clamp-2 break-words">
-                                        {CLIENT_APP_NAME_STRING}
-                                    </span>
-                                </div>
-                            </div>
-                        </TooltipTrigger>
-                        {state === "collapsed" && (
-                            <TooltipContent side="right" className="bg-black text-[10px] font-black uppercase tracking-widest text-white border-none shadow-xl">
-                                {CLIENT_APP_NAME_STRING}
-                            </TooltipContent>
-                        )}
-                    </Tooltip>
-                </TooltipProvider>
+                <div className="flex items-center gap-3 px-2 py-1">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-primary/20">
+                        <Command className="size-5" />
+                    </div>
+                    <div className={cn(
+                        "flex flex-col transition-all duration-300",
+                        state === "collapsed" ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
+                    )}>
+                        <span className="font-black uppercase tracking-tighter text-sm leading-tight line-clamp-1">
+                            {CLIENT_APP_NAME_STRING}
+                        </span>
+                    </div>
+                </div>
 
                 <div className={cn(
-                    "px-1 mt-6 transition-all duration-300",
-                    state === "collapsed" && "opacity-0 pointer-events-none scale-95 h-0 overflow-hidden"
+                    "mt-6 transition-all duration-300 ease-in-out",
+                    state === "collapsed" ? "opacity-0 h-0 overflow-hidden translate-y-2" : "opacity-100 h-auto translate-y-0"
                 )}>
                     <ProfileSwitcher />
                 </div>
             </SidebarHeader>
 
-            <SidebarContent className="scrollbar-none px-3 flex flex-col h-full mt-2">
-                <div className="flex-1">
-                    <NavMain items={primaryNav} />
-                </div>
-                <div className="pb-4 mt-auto">
-                    <NavMain items={utilityNav} />
-                </div>
+            <SidebarContent className="px-3 mt-2 scrollbar-none overflow-y-auto">
+                {!isHydrated ? (
+                    <SidebarSkeleton />
+                ) : (
+                    <>
+                        <div className="flex flex-col gap-6">
+                            <NavMain items={primaryNav} />
+                        </div>
+                        <div className="mt-auto pb-4">
+                            <NavMain items={utilityNav} />
+                        </div>
+                    </>
+                )}
             </SidebarContent>
 
-            <SidebarFooter className="p-4 border-t border-sidebar-border bg-muted/30">
+            <SidebarFooter className="p-4 border-t border-sidebar-border/50">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             onClick={() => signOut({ callbackUrl: "/signin" })}
-                            className="text-destructive hover:bg-destructive/10 hover:text-destructive h-11 w-full justify-start transition-all"
+                            className="group h-11 w-full justify-start rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
                         >
-                            <LogOut className="size-4 shrink-0" />
+                            <LogOut className="size-4 shrink-0 transition-transform group-hover:-translate-x-1" />
                             <span className={cn(
-                                "font-bold text-[10px] uppercase tracking-widest ml-3 transition-opacity duration-300 whitespace-nowrap",
+                                "font-bold text-[10px] uppercase tracking-widest ml-3 transition-all",
                                 state === "collapsed" ? "opacity-0 w-0" : "opacity-100"
                             )}>
-                                Logout
+                                Logout Session
                             </span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/ca
 import { containerVariants, itemVariants } from '@/lib/dashboard-animations'
 import SummaryCharts from '@/components/dashboard/summary-charts'
 import { usePageTitle } from '@/hooks/use-page-title'
-import { TenantDashboard } from "@/components/dashboard/tenant-dashboard"
+import { TenantDashboard } from "@/components/dashboard/tenant-dashboard/home"
 
 
 type DashboardLayoutProps = {
@@ -51,7 +51,7 @@ function DashboardContent() {
     }
 
     const firstName =
-        session?.user?.firstName ||
+        session?.user?.name ||
         session?.user?.name?.split(" ")[0] ||
         "User"
 

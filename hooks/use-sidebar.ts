@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
-import { useProfileStore } from '@/store/profile-store'
+import { useProfileStore } from '@/store/use-profile-store'
 import { sidebarItems } from '@/navigation/sidebar/sidebar-nav-items'
 
 export function useSidebar() {
     const activeProfile = useProfileStore((state) => state.activeProfile)
 
+    // hook to ensure that we show the user data based on their current profile
     const filteredNavigation = useMemo(() => {
         return sidebarItems
             .filter((section) => {

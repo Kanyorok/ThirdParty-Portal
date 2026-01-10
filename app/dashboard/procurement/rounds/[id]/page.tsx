@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { Separator } from "@/components/common/separator"
 import { cn } from "@/lib/utils"
+import Loading from "@/components/common/custom-loader"
 
 export default function RoundDetailPage() {
     const params = useParams()
@@ -33,6 +34,7 @@ export default function RoundDetailPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary"></div>
+                <Loading />
                 <p className="text-muted-foreground animate-pulse font-medium">Loading Round Data...</p>
             </div>
         )

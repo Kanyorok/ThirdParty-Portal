@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useProfileStore, ProfileType } from '@/store/profile-store'
+import { useProfileStore, ProfileType } from '@/store/use-profile-store'
 
 export function ProfileSyncWatcher() {
     const { data: session, status } = useSession()
