@@ -375,7 +375,7 @@ class AwardsController extends Controller
                 return redirect()->back()->with('error', 'An active award already exists for this tender.');
             }
 
-            // Create award in Draft status
+            // Create award in Pending status
             $award = TenderAward::create([
                 'TenderID' => $request->tender_id,
                 'WinningSupplierID' => $request->winning_supplier_id,
@@ -388,7 +388,7 @@ class AwardsController extends Controller
                 'FinancialScore' => $request->financial_score,
                 'TotalScore' => $request->total_score,
                 'NotifyUnsuccessfulBidders' => $request->boolean('notify_unsuccessful', true),
-                'AwardStatus' => 'Draft', // Start as draft
+                'AwardStatus' => 'Pending', // Start as pending (Draft not allowed by CHECK constraint)
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
             ]);
@@ -421,9 +421,9 @@ class AwardsController extends Controller
             
             $award = TenderAward::findOrFail($id);
 
-            // Validation: Must be in Draft status
-            if ($award->AwardStatus !== 'Draft') {
-                return redirect()->back()->with('error', 'Only draft awards can be submitted for approval.');
+            // Validation: Must be in Pending status
+            if ($award->AwardStatus !== 'Pending') {
+                return redirect()->back()->with('error', 'Only pending awards can be submitted for approval.');
             }
 
             // Validation: Cannot already be approved
