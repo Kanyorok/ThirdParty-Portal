@@ -20,6 +20,11 @@ return new class extends Migration
         Schema::table('t_BancassuranceCommissionRules', function (Blueprint $table) {
             $table->foreignId('CurrencyId')->nullable()->constraint('t_Currencies', 'Id');
         });
+        Schema::table('t_BancassuranceCommissionPayouts', function (Blueprint $table) {
+            $table->foreignId('CurrencyId')->nullable()->constraint('t_Currencies', 'Id');
+            $table->foreignId('CommissionRuleId')->nullable()->constraint('t_BancassuranceCommissionRules', 'Id');
+            $table->renameColumn('PaidBy', 'PaidTo');
+        });
     }
 
     /**
@@ -38,6 +43,13 @@ return new class extends Migration
         Schema::table('t_BancassuranceCommissionRules', function (Blueprint $table) {
             // $table->dropForeign(['CurrencyId']);
             $table->dropColumn('CurrencyId');
+        });
+        Schema::table('t_BancassuranceCommissionPayouts', function (Blueprint $table) {
+            // $table->dropForeign(['CurrencyId']);
+            // $table->dropForeign(['CommissionRuleId']);
+            $table->dropColumn('CurrencyId');
+            $table->dropColumn('CommissionRuleId');
+            $table->renameColumn('PaidTo', 'PaidBy');
         });
 
     }

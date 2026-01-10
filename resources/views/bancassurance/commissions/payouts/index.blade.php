@@ -72,7 +72,7 @@
                         <tr>
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td>{{ $p->policies->PolicyNumber ?? '-'}}</td>
-                            <td class="text-end">{{ number_format($p->PaidAmount, 2) ?? '-'}}</td>
+                            <td class="text-end">{{ $p->currencies->SymbolNative }} {{ number_format($p->PaidAmount, 2) ?? '-'}}</td>
                             <td>{{ $p->PayoutReference ?? '-'}}</td>
                             <td>{{ \Carbon\Carbon::parse($p->PaymentDate)->format('d M Y') ?? '-'}}</td>
                             <td>{{ $p->paymentmodes->Description ?? '-'}}</td>
