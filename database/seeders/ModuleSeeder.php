@@ -150,7 +150,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 306300, 'Name' => 'Quotation Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'evaluations.index', 'RequiredPermission' => PermissionEnum::RFQCommitteeRead->value],
 
             //Awards
-            ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index', 'RequiredPermission' => PermissionEnum::TenderRead->value],
+            ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index', 'RequiredPermission' => PermissionEnum::AwardRead->value],
             // Contracts
             ['ModuleID' => 306600, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 306610, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 306600, 'Route' => 'contracts.index', 'RequiredPermission' => PermissionEnum::ContractCreate->value],
@@ -175,9 +175,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.create', 'RequiredPermission' => PermissionEnum::GoodsReceiptWrite->value],
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
-            ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index', 'RequiredPermission' => PermissionEnum::ProcurementSectionRead->value],
-            ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index', 'RequiredPermission' => PermissionEnum::ProcurementConfigRead->value],
-            ['ModuleID' => 398300, 'Name' => 'Approval Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'approval-setup.index', 'RequiredPermission' => PermissionEnum::ApprovalSetupRead->value],
+            ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index', 'RequiredPermission' => PermissionEnum::ProcurementSectionRead->value],        
             ['ModuleID' => 398500, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'tendercommittee.index', 'RequiredPermission' => PermissionEnum::TenderCommitteeRead->value],
             ['ModuleID' => 398600, 'Name' => 'Member Response', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'memberresponse.index', 'RequiredPermission' => PermissionEnum::TenderCommitteeRead->value],
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 300000, 'Route' => 'procurement-reports.index', 'RequiredPermission' => PermissionEnum::ProcurementPlanRead->value], // generic for reports?

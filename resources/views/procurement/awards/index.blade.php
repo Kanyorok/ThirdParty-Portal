@@ -152,15 +152,16 @@
             <div class="modal-content">
                 <form id="approveForm" method="POST">
                     @csrf
+                    <input type="hidden" name="award_id" id="approvalAwardId" value="">
                     <div class="modal-header">
                         <h5 class="modal-title">Approve Award</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Approval Remarks (Optional)</label>
-                            <textarea name="approval_remarks" class="form-control" rows="3"
-                                      placeholder="Enter any additional remarks for this approval..."></textarea>
+                            <label class="form-label">Approval Remarks <span class="text-danger">*</span></label>
+                            <textarea name="remarks" class="form-control" rows="3" required
+                                      placeholder="Enter remarks for this approval..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -178,6 +179,7 @@
             <div class="modal-content">
                 <form id="rejectForm" method="POST">
                     @csrf
+                    <input type="hidden" name="award_id" id="rejectionAwardId" value="">
                     <div class="modal-header">
                         <h5 class="modal-title">Reject Award</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -185,7 +187,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
-                            <textarea name="rejection_reason" class="form-control" rows="3" required
+                            <textarea name="remarks" class="form-control" rows="3" required
                                       placeholder="Please provide a reason for rejecting this award..."></textarea>
                         </div>
                     </div>
@@ -201,6 +203,11 @@
     <script>
         function approveAward(type, id) {
             const form = document.getElementById('approveForm');
+            const awardIdInput = document.getElementById('approvalAwardId');
+            
+            // Set the award_id in the hidden field
+            awardIdInput.value = id;
+            
             if (type === 'rfq') {
                 form.action = `{{ route('awards.rfq.approve', ':id') }}`.replace(':id', id);
             } else {
@@ -210,6 +217,11 @@
         }
         function rejectAward(awardId) {
             const form = document.getElementById('rejectForm');
+            const awardIdInput = document.getElementById('rejectionAwardId');
+            
+            // Set the award_id in the hidden field
+            awardIdInput.value = awardId;
+            
             form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', awardId);
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
