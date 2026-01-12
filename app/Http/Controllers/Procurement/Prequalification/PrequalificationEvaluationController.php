@@ -36,19 +36,13 @@ class PrequalificationEvaluationController extends Controller
     {
         try {
             $statusFilter = $request->get('status'); // passed | failed
-            $userId = Auth::id();
 
-            $appIds = PrequalificationEvaluation::where('EvaluatorID', $userId)
-                ->distinct()->pluck('ApplicationID');
+            // Modified to show all applications, allowing all authorized users to see suppliers
+            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party']);
 
-            if ($appIds->isEmpty()) {
-                return response()->json(['data' => []]);
-            }
-
-            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party'])
-                ->whereIn('ApplicationID', $appIds);
-
-            if (in_array($statusFilter, ['passed', 'failed'])) {
+            if ($statusFilter === 'pending') {
+                $appsQuery->doesntHave('result');
+            } elseif (in_array($statusFilter, ['passed', 'failed'])) {
                 $appsQuery->whereHas('result', function ($q) use ($statusFilter) {
                     $q->where('Decision', $statusFilter === 'passed' ? 'Passed' : 'Failed');
                 });

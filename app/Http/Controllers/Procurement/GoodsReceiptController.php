@@ -10,6 +10,7 @@ use App\Models\Procurement\GoodsReceipt;
 use App\Models\Inventory\StockItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Core\Branch;
 
 class GoodsReceiptController extends Controller
 {
@@ -113,6 +114,9 @@ class GoodsReceiptController extends Controller
         // If no stores exist, this is critical, but we'll fallback to 1 to attempt save (or handle error upstream)
         $defaultStoreId = $defaultStoreId ?? 1;
 
+        // Get HQ Branch
+        $hqBranch = Branch::where('IsHQ', 1)->first();
+
         DB::beginTransaction();
         try {
             foreach ($request->items as $item) {
@@ -125,7 +129,7 @@ class GoodsReceiptController extends Controller
                     'SupplierId'       => $request->SupplierID,
                     'ItemNo'           => $item['ItemNo'],
                     'StoreID'          => $item['StoreID'] ?? $defaultStoreId,
-                    'TransferTo'       => $item['TransferTo'] ?? null,
+                    'TransferTo'       => $hqBranch ? $hqBranch->Id : null,
                     'TransferStatus'   => $item['TransferTo'] ?? null,
                     'POQTY'            => $item['POQTY'] ?? 0,
                     'ReceivedQTY'      => $item['ReceivedQTY'] ?? 0,

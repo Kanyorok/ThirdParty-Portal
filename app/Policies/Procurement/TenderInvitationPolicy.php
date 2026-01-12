@@ -11,8 +11,11 @@ class TenderInvitationPolicy
 {
     use HandlesAuthorization;
 
-    public function viewAny(User $user): bool
+    public function viewAny($user): bool
     {
+        if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+            return true;
+        }
         return $user->can(PermissionEnum::TenderInvitationRead->value);
     }
 

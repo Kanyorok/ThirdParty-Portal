@@ -7,7 +7,7 @@
             <div class="d-flex gap-2">
             {{-- Pass the model directly so route-model-binding provides the correct parameter regardless of attribute name casing --}}
             <a href="{{ route('bancassurance.medicalfunds.disbursements.create', $medical_fund) }}" class="btn btn-primary">New Disbursement</a>
-            <a href="{{ route('bancassurance.medicalfunds.edit', $medical_fund) }}" class="btn btn-outline-secondary">Back to Fund</a>
+            <a href="{{ route('bancassurance.contributors.show', $contributor) }}" class="btn btn-outline-secondary">Back to Contributor</a>
         </div>
     </div>
 

@@ -54,12 +54,12 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     });
 
     require __DIR__ . '/inventory.php';
-    require __DIR__ . '/property.php';
+    // require __DIR__ . '/property.php';
     require __DIR__ . '/finance.php';
-    require __DIR__ . '/fleet.php';
+    // require __DIR__ . '/fleet.php';
     require __DIR__ . '/insurance.php';
     require __DIR__ . '/dms.php';
-    require __DIR__ . '/legal.php';
+    // require __DIR__ . '/legal.php';
     require __DIR__ . '/hrms.php';
     require __DIR__ . '/budget.php';
     require __DIR__ . '/thirdparty.php';
@@ -169,10 +169,10 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     // ✅ Global Locality Endpoint
     Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
 });
-// Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/license', [LicenseController::class, 'index'])
-        ->name('admin.license.index');
-    Route::post('/admin/license', [LicenseController::class, 'store'])
-        ->name('admin.license.store');
-});
+// // Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('/admin/license', [LicenseController::class, 'index'])
+//         ->name('admin.license.index');
+//     Route::post('/admin/license', [LicenseController::class, 'store'])
+//         ->name('admin.license.store');
+// });
