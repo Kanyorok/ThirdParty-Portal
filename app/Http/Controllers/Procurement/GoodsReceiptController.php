@@ -111,8 +111,12 @@ class GoodsReceiptController extends Controller
         // Get a valid default store
         $defaultStoreId = DB::connection('sqlsrv')->table('t_Stores')->where('Id', 1)->exists() ? 1 : DB::connection('sqlsrv')->table('t_Stores')->value('Id');
         
-        // If no stores exist, this is critical, but we'll fallback to 1 to attempt save (or handle error upstream)
-        $defaultStoreId = $defaultStoreId ?? 1;
+        // If no stores exist, return error - cannot create GRN without a valid store
+        if (!$defaultStoreId) {
+            return back()->withErrors([
+                'error' => 'Cannot create GRN: No stores are configured in the system. Please create at least one store before creating goods receipts.'
+            ])->withInput();
+        }
 
         // Get HQ Branch
         $hqBranch = Branch::where('IsHQ', 1)->first();
