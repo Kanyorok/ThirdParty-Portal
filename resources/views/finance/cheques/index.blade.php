@@ -92,7 +92,7 @@
                         <tbody>
                         @forelse($rows as $row)
                             <tr>
-                                <td class="ps-3">{{ $row->ChequeID }}</td>
+                                <td class="ps-3">{{ $loop->iteration }}</td>
                                 <td>
                                     @php
                                         $badgeClass = match($row->Status) {

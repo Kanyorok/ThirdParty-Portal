@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('styles')
     <style>
@@ -94,6 +94,84 @@
             border: 1px solid #dee2e6;
             border-radius: 0.5rem;
             padding: 1rem 1.25rem;
+        }
+
+        .audit-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 0.35rem;
+        }
+
+        .audit-steps,
+        .approver-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .audit-steps li,
+        .approver-list li {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.35rem 0;
+            border-bottom: 1px dashed #e9ecef;
+        }
+
+        .audit-steps li:last-child,
+        .approver-list li:last-child {
+            border-bottom: 0;
+        }
+
+        .audit-actor,
+        .approver-name {
+            min-width: 140px;
+            font-weight: 600;
+            color: #343a40;
+        }
+
+        .audit-action {
+            color: #495057;
+        }
+
+        .audit-stage {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .audit-notes {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        .audit-time,
+        .approver-stage {
+            margin-left: auto;
+            color: #6c757d;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .approver-role {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .audit-divider {
+            border-top: 1px solid #e9ecef;
+            margin: 0.6rem 0;
+        }
+
+        .posted-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #495057;
         }
 
         .audit-list { list-style: none; padding: 0; margin: 0; }
@@ -393,17 +471,31 @@
         <div class="journal-header">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <h1 class="journal-title">📘 Journal Entry Details</h1>
+                    <h1 class="journal-title">ðŸ“˜ Journal Entry Details</h1>
                     <p class="journal-subtitle">Reference: {{ $journalEntry->RefNo }}</p>
                 </div>
                 <div class="status-badge">
-                        @if($journalEntry->ApprovalStatus == 'posted')
-                            <span class="badge bg-success">Approved</span>
-                        @elseif($journalEntry->ApprovalStatus == 'rejected')
-                            <span class="badge bg-danger">Rejected</span>
-                        @elseif(($hasPendingApprovals ?? false) || $journalEntry->ApprovalStatus == 'pending' || $journalEntry->ApprovalStatus == 'draft' || empty($journalEntry->ApprovalStatus))
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        @endif
+                    @php
+                        $statusValue = strtolower($journalEntry->Status ?? '');
+                        if (!$statusValue && ($hasPendingApprovals ?? false)) {
+                            $statusValue = 'pending';
+                        }
+                        $statusClass = match($statusValue) {
+                            'draft' => 'bg-secondary',
+                            'pending' => 'bg-warning text-dark',
+                            'posted' => 'bg-success',
+                            'rejected' => 'bg-danger',
+                            default => 'bg-secondary'
+                        };
+                        $statusLabel = match($statusValue) {
+                            'draft' => 'Draft',
+                            'pending' => 'Pending',
+                            'posted' => 'Posted',
+                            'rejected' => 'Rejected',
+                            default => 'Draft'
+                        };
+                    @endphp
+                    <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
                 </div>
             </div>
             <button class="btn btn-light btn-sm mt-3 no-print" onclick="window.print()">
@@ -446,20 +538,85 @@
                     <div class="col-lg-6 print-cards-col">
                         <div class="audit-trail-card h-100">
                             <h6 class="mb-3 text-primary"><i class="fas fa-history me-2"></i>Audit Trail</h6>
-                            <ul class="audit-list">
-                                <li><span class="label">Created By</span><span>{{ $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d M Y H:i') }}</span></li>
+                            <div class="audit-section-title">Entry</div>
+                            <ul class="audit-steps">
+                                <li>
+                                    <span class="audit-actor">{{ $journalEntry->createdBy->Name ?? 'System' }}</span>
+                                    <span class="audit-action">Created</span>
+                                    <span class="audit-time">{{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d M Y H:i') }}</span>
+                                </li>
                                 @if($journalEntry->ModifiedBy && $journalEntry->ModifiedBy != $journalEntry->CreatedBy)
-                                    <li><span class="label">Last Modified By</span><span>{{ $journalEntry->modifiedBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d M Y H:i') }}</span></li>
-                                @endif
-                                @if($journalEntry->ApprovalStatus == 'posted' || $journalEntry->ApprovalStatus == 'rejected')
-                                    <li><span class="label">Approval Action</span><span>{{ ucfirst($journalEntry->ApprovalStatus) }} by {{ $journalEntry->modifiedBy->Name ?? $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d M Y H:i') }}</span></li>
+                                    <li>
+                                        <span class="audit-actor">{{ $journalEntry->modifiedBy->Name ?? 'System' }}</span>
+                                        <span class="audit-action">Updated</span>
+                                        <span class="audit-time">{{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d M Y H:i') }}</span>
+                                    </li>
                                 @endif
                                 @if($journalEntry->IsReversed && $journalEntry->reversed_by)
-                                    <li><span class="label">Reversed By</span><span>{{ $journalEntry->reversed_by->Name ?? 'System' }}@if($journalEntry->reversal_info && $journalEntry->reversal_info->CreatedOn) — {{ \Carbon\Carbon::parse($journalEntry->reversal_info->CreatedOn)->format('d M Y H:i') }}@endif</span></li>
+                                    <li>
+                                        <span class="audit-actor">{{ $journalEntry->reversed_by->Name ?? 'System' }}</span>
+                                        <span class="audit-action">Reversed</span>
+                                        <span class="audit-time">{{ \Carbon\Carbon::parse($journalEntry->reversal_info->CreatedOn)->format('d M Y H:i') }}</span>
+                                    </li>
                                 @elseif($journalEntry->Type === 'reversing')
-                                    <li><span class="label">Reversal Journal</span><span>This is a reversing journal — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d M Y H:i') }}</span></li>
+                                    <li>
+                                        <span class="audit-actor">System</span>
+                                        <span class="audit-action">Reversal Journal</span>
+                                        <span class="audit-time">{{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d M Y H:i') }}</span>
+                                    </li>
                                 @endif
                             </ul>
+
+                            <div class="audit-divider"></div>
+                            <div class="audit-section-title">Approval Timeline</div>
+                            @if(($workflowHistory ?? collect())->isNotEmpty())
+                                <ul class="audit-steps">
+                                    @foreach($workflowHistory as $history)
+                                        <li>
+                                            <span class="audit-actor">{{ $history->UserName ?? 'System' }}</span>
+                                            <span class="audit-action">{{ $history->StatusDescription ?? 'Action' }}</span>
+                                            @if($history->StageName || $history->PermissionName)
+                                                <span class="audit-stage">
+                                                    {{ $history->StageName ?? 'Stage' }}@if($history->PermissionName) - {{ $history->PermissionName }}@endif
+                                                </span>
+                                            @endif
+                                            @if(!empty($history->Notes))
+                                                <span class="audit-notes">"{{ $history->Notes }}"</span>
+                                            @endif
+                                            <span class="audit-time">{{ \Carbon\Carbon::parse($history->CreatedOn)->format('d M Y H:i') }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <div class="text-muted small">No approval actions recorded yet.</div>
+                            @endif
+
+                            <div class="audit-divider"></div>
+                            <div class="audit-section-title">Approvers</div>
+                            @if(($pendingApprovers ?? collect())->isNotEmpty())
+                                <ul class="approver-list">
+                                    @foreach($pendingApprovers as $approver)
+                                        <li>
+                                            <span class="approver-name">{{ $approver->UserName ?? 'User' }}</span>
+                                            <span class="approver-role">{{ $approver->RoleNames ?? '-' }}</span>
+                                            <span class="approver-stage">{{ $approver->StageName ?? 'Stage' }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <div class="text-muted small">No approvers assigned.</div>
+                            @endif
+
+                            @if(!empty($postedBy))
+                                <div class="audit-divider"></div>
+                                <div class="audit-section-title">Posted By</div>
+                                <div class="posted-row">
+                                    <span>{{ $postedBy['name'] }}</span>
+                                    @if(!empty($postedBy['time']))
+                                        <span class="audit-time">{{ \Carbon\Carbon::parse($postedBy['time'])->format('d M Y H:i') }}</span>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -511,33 +668,38 @@
                 </div>
 
                 {{-- Action Buttons --}}
-                @if((!($hasPendingApprovals ?? false)) && ($journalEntry->ApprovalStatus=='draft' || empty($journalEntry->ApprovalStatus)))
-                    <div class="mt-4 d-flex justify-content-end gap-3 no-print">
-                        {{-- <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
-                            <i class="fas fa-times-circle me-1"></i> Reject
-                        </button> --}}
-                        <button class="btn btn-outline-success" data-bs-toggle="modal"
-                                data-bs-target="#submitForApprovalModal" data-action="submitForApproval">
-                            <i class="fas fa-paper-plane me-1"></i> Submit for Approval
-                        </button>
-                    </div>
-                 @endif
-                @if(($hasPendingApprovals ?? false) && $canApprove)
-                    <div class="mt-4 d-flex justify-content-end gap-3 no-print">
-                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
-                            <i class="fas fa-times-circle me-1"></i> Reject
-                        </button>
-                        <button class="btn btn-outline-success" data-bs-toggle="modal"
-                                data-bs-target="#actionApproveModal" data-action="approve">
-                            <i class="fas fa-check-circle me-1"></i> Approve
-                        </button>
+                @if(($hasPendingApprovals ?? false) && !$canApprove && !empty($cantApproveReason))
+                    <div class="alert alert-warning mt-4 no-print" role="alert">
+                        {{ $cantApproveReason }}
                     </div>
                 @endif
 
-                <div class="mt-4 text-center no-print">
+                <div class="mt-4 d-flex justify-content-between align-items-center no-print">
                     <a href="{{ route('journalentry.index') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-2"></i>Back to Journal Entries
                     </a>
+
+                    <div class="d-flex gap-3">
+                        @if((!($hasPendingApprovals ?? false)) && ($journalEntry->ApprovalStatus=='draft' || empty($journalEntry->ApprovalStatus)))
+                            {{-- <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
+                                <i class="fas fa-times-circle me-1"></i> Reject
+                            </button> --}}
+                            <button class="btn btn-outline-success" data-bs-toggle="modal"
+                                    data-bs-target="#submitForApprovalModal" data-action="submitForApproval">
+                                <i class="fas fa-paper-plane me-1"></i> Submit for Approval
+                            </button>
+                        @endif
+
+                        @if(($hasPendingApprovals ?? false) && $canApprove)
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
+                                <i class="fas fa-times-circle me-1"></i> Reject
+                            </button>
+                            <button class="btn btn-outline-success" data-bs-toggle="modal"
+                                    data-bs-target="#actionApproveModal" data-action="approve">
+                                <i class="fas fa-check-circle me-1"></i> Approve
+                            </button>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -582,8 +744,7 @@
     {{-- End Submit for Approval Modal --}}
 
 
-    @if($canApprove)
-    @if($journalEntry->ApprovalStatus==='pending')
+    @if(($hasPendingApprovals ?? false) && $canApprove)
         {{-- Approve Modal --}}
         <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel"
              aria-hidden="true">
@@ -650,5 +811,8 @@
             </div>
         </div>
     @endif
-    @endif
 @endsection
+
+
+
+

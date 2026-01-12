@@ -44,7 +44,7 @@ class PostingController extends Controller
             $journal = FinanceJournalEntry::findOrFail($validated['journalID']);
 
             if (in_array($validated['action_type'], ['approve', 'reject'], true)
-                && ! $this->canApproveJournal($journal, Auth::user())
+                && ! $this->workflowService->canApproveModel($journal, Auth::user())
             ) {
                 DB::rollBack();
                 return back()->with('fail', 'You are not authorized to approve this journal entry.');
@@ -76,7 +76,8 @@ class PostingController extends Controller
             elseif($validated['action_type'] === 'submitForApproval'){
                 $result = $this->submitForApproval($validated['journalID'], $validated['Reason']);
                 if ($result) {
-                    //Update ApprovalStatus Column to Pending
+                    //Update Status Column to Pending
+                    FinanceJournalEntry::where('Id', $validated['journalID'])->update(['Status' => 'pending']);
                     //return FinanceJournalEntry::where('Id', $validated['journalID'])->update(['ApprovalStatus' => 'pending']);
                     activity('Journal Entry Approval')
                         ->performedOn($journal)
@@ -338,39 +339,6 @@ class PostingController extends Controller
             ]);
             return back()->with('error', 'Transaction Posting Failed: ' . $th->getMessage());
         }
-    }
-
-    private function canApproveJournal(FinanceJournalEntry $journal, $user): bool
-    {
-        if ($this->workflowService->canApproveModel($journal, $user)) {
-            return true;
-        }
-
-        $sources = array_values(array_unique(array_filter([
-            $journal->getTable(),
-            $journal->getMorphClass(),
-            $journal::getPrimaryKey(),
-        ])));
-
-        $hasPendingForUser = DB::table('t_WorkFlowPending')
-            ->whereIn('Source', $sources)
-            ->where('SourceID', (string)$journal->getKey())
-            ->where('UserId', $user->Id)
-            ->whereNull('DeletedOn')
-            ->exists();
-
-        if (!$hasPendingForUser) {
-            return false;
-        }
-
-        $makerId = DB::table('t_WorkFlowHistory')
-            ->whereIn('Source', $sources)
-            ->where('SourceID', (string)$journal->getKey())
-            ->whereNull('DeletedOn')
-            ->orderBy('CreatedOn', 'asc')
-            ->value('CreatedBy');
-
-        return !($makerId && (int)$makerId === (int)$user->Id);
     }
 
     protected function updateBalanceForLine(int $trxId, array $trx): void
