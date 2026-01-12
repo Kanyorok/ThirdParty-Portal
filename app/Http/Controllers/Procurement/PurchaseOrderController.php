@@ -512,7 +512,7 @@ class PurchaseOrderController extends Controller
                      if (!isset($obj->StatusId)) $obj->StatusId = 'A';
                      if (!isset($obj->stage)) $obj->stage = (object)['StageName' => $stageName];
                      if (!isset($obj->status)) $obj->status = (object)['Description' => 'Approved'];
-                     if (!isset($obj->creator)) $obj->creator = (object)['Name' => $item['Name'] ?? 'Unknown'];
+                     if (!isset($obj->creator)) $obj->creator = (object)['Name' => $item->Name ?? 'Unknown'];
                      return $obj;
                 });
                 

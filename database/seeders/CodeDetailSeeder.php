@@ -736,6 +736,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Posting', 'Value' => 'ps', 'DisplayOrder' => 4],
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
 
+            //tender Approval Status
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value'=> 'P','DisplayOrder' => 53],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value'=> 'A','DisplayOrder' => 54],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value'=> 'R','DisplayOrder' => 55],
+
 
 
         ];
