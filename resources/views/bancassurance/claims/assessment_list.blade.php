@@ -59,7 +59,7 @@
 
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('bancassurance.claims.index') }}"
+        <a href="{{ route('bancassurance.claims.assessForm') }}"
             class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> New Assessment
         </a>
@@ -104,7 +104,7 @@
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}"
                                         class="btn btn-outline-info rounded-pill px-2" title="View">
-                                        <i class="bi bi-eye"></i> View
+                                        <i class="bi bi-eye"></i>
                                     </a>
 
                                     @if($assessment->claimpaiyments()->exists())

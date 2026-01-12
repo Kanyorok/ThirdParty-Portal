@@ -20,7 +20,7 @@ return new class extends Migration {
     {
         Schema::table('t_ContractedDrivers', function (Blueprint $table) {
 
-            $table->dropForeign('CompanyID');
+            $table->dropForeign(['CompanyID']);
             $table->dropColumn('CompanyID');
             $table->foreignId('CompanyID')
                 ->nullable()->constrained('t_ThirdParties', 'Id');
