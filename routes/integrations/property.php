@@ -18,8 +18,9 @@ Route::get('property/leases/tenant', [PropertyLeaseController::class, 'index']);
 Route::get('property/leases/tenant/show',[PropertyLeaseController::class, 'show']);
 
 // Property Invoice Routes
-Route::get('property/invoices', [PropertyInvoiceController::class, 'index']);
-Route::get('property/invoices/{id}', [PropertyInvoiceController::class, 'show']);
+Route::get('property/invoices/tenant', [PropertyInvoiceController::class, 'index']);
+Route::get('property/invoices/tenant/show', [PropertyInvoiceController::class, 'show']);
+
 
 // Maintenance Request Routes
 Route::get('property/maintenancerequest', [PropertyMaintenanceRequestController::class, 'index']);
