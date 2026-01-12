@@ -208,6 +208,7 @@
                     </div>
                 </div>
             </div>
+            @include('layouts._partials._alerts')
             @yield('content')
         </div>
     </div>

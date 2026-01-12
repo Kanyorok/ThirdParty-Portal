@@ -17,19 +17,21 @@ class SupplierWorkflowService extends ApprovalWorkflowService
      */
     public function submit(SupplierMaster $supplier, User $actor, string $remarks = 'Submitted'): bool
     {
-        $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Submitted;
-        $supplier->save();
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($supplier, $actor, $remarks) {
+            $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Submitted;
+            $supplier->save();
 
-        $status = self::codeDetail(ThirdPartyApprovalStatusEnum::Submitted, self::CODE_ID);
+            $status = self::codeDetail(ThirdPartyApprovalStatusEnum::Submitted, self::CODE_ID);
 
-        return $this->submittedAction(
-            $actor,
-            $status,
-            $supplier,
-            SupplierMaster::getPrimaryKey(),
-            $supplier->getKey(),
-            $remarks
-        );
+            return $this->submittedAction(
+                $actor,
+                $status,
+                $supplier,
+                SupplierMaster::getPrimaryKey(),
+                $supplier->getKey(),
+                $remarks
+            );
+        });
     }
 
     /**
@@ -51,6 +53,17 @@ class SupplierWorkflowService extends ApprovalWorkflowService
         if ($result) {
             $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
             $supplier->save();
+
+            // Activate associated ThirdPartyUsers
+            // Activate associated ThirdPartyUsers
+            // 1. Verify email if not already verified (auto-verify for backend-approved suppliers)
+            \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)
+                 ->whereNull('EmailVerifiedOn')
+                 ->update(['EmailVerifiedOn' => now()]);
+
+            // 2. Ensure account is active
+            \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)
+                ->update(['IsActive' => true]);
         }
 
         return $result;

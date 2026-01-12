@@ -3,8 +3,6 @@
 namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
-// use Illuminate\Validation\Rule;
-use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 
 class LoginThirdPartyRequest extends FormRequest
 {
@@ -16,6 +14,8 @@ class LoginThirdPartyRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
+            'password' => ['required', 'string'],
             'profile_type' => [
                 'required',
                 'string',
@@ -25,7 +25,6 @@ class LoginThirdPartyRequest extends FormRequest
             'password' => ['required', 'string', Password::min(8)],
         ];
     }
-
     public function messages(): array
     {
         return [

@@ -165,9 +165,9 @@ class ModuleSeeder extends Seeder
 
             // Contracts
 
-            ['ModuleID' => 307500, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
-            ['ModuleID' => 307510, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contracts.index', 'RequiredPermission' => PermissionEnum::ContractCreate->value],
-            ['ModuleID' => 307520, 'Name' => 'Contract Lifecycle', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contractcycle.index', 'RequiredPermission' => PermissionEnum::ContractView->value],
+            // ['ModuleID' => 307500, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
+            // ['ModuleID' => 307510, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contracts.index', 'RequiredPermission' => PermissionEnum::ContractCreate->value],
+            // ['ModuleID' => 307520, 'Name' => 'Contract Lifecycle', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contractcycle.index', 'RequiredPermission' => PermissionEnum::ContractView->value],
 
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
@@ -192,28 +192,25 @@ class ModuleSeeder extends Seeder
     {
         $values = collect([
             ['ModuleID' => 400000, 'Name' => ModulesEnum::Inventory->description(), 'Icon' => '<i data-feather="archive"></i>', 'Description' => 'Inventory Management Module', 'Route' => null, 'ParentID' => null],
-            ['ModuleID' => 401000, 'Name' => 'Item Master', 'Icon' => null, 'Description' => 'Item Master Management', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::MasterListView->value],
-            ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000, 'RequiredPermission' => PermissionEnum::MasterListView->value],
-            ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000, 'RequiredPermission' => PermissionEnum::StockItemView->value],
+            ['ModuleID' => 401000, 'Name' => 'Item Master', 'Icon' => null, 'Description' => 'Item Master Management', 'Route' => null, 'ParentID' => 400000],
 
-            ['ModuleID' => 402000, 'Name' => 'InterBranch Requisition', 'Icon' => null, 'Description' => 'InterBranch Requisition Management', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::InterBranchRequisitionCreate->value],
-            ['ModuleID' => 402100, 'Name' => 'New Requisition', 'Icon' => null, 'Description' => 'Create New Requisition', 'Route' => 'interbranchrequisition.index', 'ParentID' => 402000, 'RequiredPermission' => PermissionEnum::InterBranchRequisitionCreate->value],
-            ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000, 'RequiredPermission' => PermissionEnum::InterBranchRequisitionApproval->value],
-
-            ['ModuleID' => 403000, 'Name' => 'Inventory Dashboard', 'Icon' => null, 'Description' => 'Inventory Dashboard', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::InventoryDashboardView->value],
+            ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000],
+            ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000],
+            ['ModuleID' => 402000, 'Name' => 'InterBranch Requisition', 'Icon' => null, 'Description' => 'InterBranch Requisition Management', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 402100, 'Name' => 'New Requisition', 'Icon' => null, 'Description' => 'Create New Requisition', 'Route' => 'interbranchrequisition.index', 'ParentID' => 402000],
+            ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000],
+            ['ModuleID' => 403000, 'Name' => 'Inventory Dashboard', 'Icon' => null, 'Description' => 'Inventory Dashboard', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 403200, 'Name' => 'Movement Dashboard', 'Icon' => null, 'Description' => 'Movement Dashboard', 'Route' => 'movementdashboard.index', 'ParentID' => 403000],
-
-            ['ModuleID' => 404000, 'Name' => 'Transactions', 'Icon' => null, 'Description' => 'Inventory Transactions', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::TransactionTransferView->value],
-            ['ModuleID' => 404300, 'Name' => 'Stock Transfers', 'Icon' => null, 'Description' => 'Stock Transfers', 'Route' => 'transactionstransfers.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::TransactionTransferView->value],
-            ['ModuleID' => 404200, 'Name' => 'Stock Receipts', 'Icon' => null, 'Description' => 'Transaction Receipts', 'Route' => 'transactionsreceipts.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::TransactionReceiptView->value],
-            ['ModuleID' => 404400, 'Name' => 'Stock Adjustments', 'Icon' => null, 'Description' => 'Stock Adjustments', 'Route' => 'transactionsadjustment.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::StockAdjustmentView->value],
-            ['ModuleID' => 404500, 'Name' => 'Transactions Approval', 'Icon' => null, 'Description' => 'Transaction Approvals', 'Route' => 'transactionsapproval.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::TransactionTransferApproval->value],
-
-            ['ModuleID' => 405000, 'Name' => 'Stock Management', 'Icon' => null, 'Description' => 'Stock Management', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::StockTakeView->value],
-            ['ModuleID' => 405100, 'Name' => 'Stock Take', 'Icon' => null, 'Description' => 'Stock Take Management', 'Route' => 'stocktake.index', 'ParentID' => 405000, 'RequiredPermission' => PermissionEnum::StockTakeView->value],
-            ['ModuleID' => 405200, 'Name' => 'Stock Consumption', 'Icon' => null, 'Description' => 'Stock Consumption', 'Route' => 'stockconsumption.index', 'ParentID' => 405000, 'RequiredPermission' => PermissionEnum::StockConsumptionView->value],
-            ['ModuleID' => 407000, 'Name' => 'Price Management', 'Icon' => null, 'Description' => 'Items Prices', 'Route' => 'pricemanagement.index', 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::PriceManagementView->value],
-            ['ModuleID' => 408000, 'Name' => 'Stock Defects Review', 'Icon' => null, 'Description' => 'Stock Defects Review', 'Route' => 'inventoryholdreview.index', 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::InventoryHoldReviewView->value],
+            ['ModuleID' => 404000, 'Name' => 'Transactions', 'Icon' => null, 'Description' => 'Inventory Transactions', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 404300, 'Name' => 'Stock Transfers', 'Icon' => null, 'Description' => 'Stock Transfers', 'Route' => 'transactionstransfers.index', 'ParentID' => 404000],
+            ['ModuleID' => 404200, 'Name' => 'Stock Receipts', 'Icon' => null, 'Description' => 'Transaction Receipts', 'Route' => 'transactionsreceipts.index', 'ParentID' => 404000],
+            ['ModuleID' => 404400, 'Name' => 'Stock Adjustments', 'Icon' => null, 'Description' => 'Stock Adjustments', 'Route' => 'transactionsadjustment.index', 'ParentID' => 404000],
+            ['ModuleID' => 404500, 'Name' => 'Transactions Approval', 'Icon' => null, 'Description' => 'Transaction Approvals', 'Route' => 'transactionsapproval.index', 'ParentID' => 404000],
+            ['ModuleID' => 405000, 'Name' => 'Stock Management', 'Icon' => null, 'Description' => 'Stock Management', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 405100, 'Name' => 'Stock Take', 'Icon' => null, 'Description' => 'Stock Take Management', 'Route' => 'stocktake.index', 'ParentID' => 405000],
+            ['ModuleID' => 405200, 'Name' => 'Stock Consumption', 'Icon' => null, 'Description' => 'Stock Consumption', 'Route' => 'stockconsumption.index', 'ParentID' => 405000],
+            ['ModuleID' => 407000, 'Name' => 'Price Management', 'Icon' => null, 'Description' => 'Items Prices', 'Route' => 'pricemanagement.index', 'ParentID' => 400000],
+            ['ModuleID' => 408000, 'Name' => 'Stock Defects Review', 'Icon' => null, 'Description' => 'Stock Defects Review', 'Route' => 'inventoryholdreview.index', 'ParentID' => 400000],
 
 
             ['ModuleID' => 498000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Inventory Settings', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::ItemCategoryView->value],

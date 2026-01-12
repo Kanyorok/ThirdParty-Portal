@@ -5,7 +5,9 @@ namespace App\Http\Controllers\ThirdParty\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\{
     UpdateThirdPartyProfileRequest,
-    UpdateSupplierProfileRequest
+    UpdateSupplierProfileRequest,
+    UpdateTenantProfileRequest,
+    UpdateCustomerProfileRequest
 };
 use App\Http\Resources\ThirdParty\Api\{
     ThirdPartyUserResource,
@@ -154,6 +156,42 @@ class ProfileController extends Controller
             'success' => true,
             'data' => new SupplierProfileResource($supplier->refresh()),
             'message' => 'Supplier profile updated'
+        ]);
+    }
+
+    public function updateTenantProfile(UpdateTenantProfileRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $tenant = $user->thirdParty->tenantProfile;
+
+        if (!$tenant) {
+            return response()->json(['success' => false, 'message' => 'Tenant profile not found'], 404);
+        }
+
+        DB::transaction(fn() => $tenant->update($request->validated()));
+
+        return response()->json([
+            'success' => true,
+            'data' => new TenantProfileResource($tenant->refresh()),
+            'message' => 'Tenant profile updated'
+        ]);
+    }
+
+    public function updateCustomerProfile(UpdateCustomerProfileRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $customer = $user->thirdParty->customerProfile;
+
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Customer profile not found'], 404);
+        }
+
+        DB::transaction(fn() => $customer->update($request->validated()));
+
+        return response()->json([
+            'success' => true,
+            'data' => new CustomerProfileResource($customer->refresh()),
+            'message' => 'Customer profile updated'
         ]);
     }
 }

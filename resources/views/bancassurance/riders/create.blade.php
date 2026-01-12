@@ -1,125 +1,222 @@
 @extends('layouts.app')
 @section('title', 'Add Rider & Add On')
+
 @section('content')
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+{{-- ================= ERRORS ================= --}}
+@if ($errors->any())
+    <div class="alert alert-danger py-2">
+        <ul class="mb-0 small">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Add Rider</h5>
+{{-- ================= STYLES ================= --}}
+<style>
+    .section-title {
+        color: #000;
+        font-weight: 600;
+        font-size: .9rem;
+        padding-bottom: .35rem;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container mt-4" style="max-width: 850px;">
+    <div class="card shadow-lg border-0 rounded-4">
+
+        {{-- Header --}}
+        <div class="card-header bg-primary text-white rounded-top-4 py-3">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-puzzle me-2"></i> Add Rider
+            </h5>
         </div>
-        <div class="card-body">
+
+        {{-- Body --}}
+        <div class="card-body p-4">
             <form method="POST" action="{{ route('bancassurance.riders.store') }}">
                 @csrf
 
-                <!-- Provider & Product (same row) -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="Provider-select" class="form-label">
-                            Select Provider <span class="text-danger">*</span>
-                        </label>
-                        <select name="InsuranceProviderId" id="Provider-select" class="form-select" required>
-                            <option value="">-- Select --</option>
-                            @foreach($providers as $provider)
-                                <option value="{{ $provider->Id }}">{{ $provider->Name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="Product-select" class="form-label">
-                            Product <span class="text-danger">*</span>
-                        </label>
-                        <select name="Product" id="Product-select" class="form-select" required>
-                            <option value="">-- Select --</option>
-                        </select>
+                {{-- ================= BASIC INFORMATION ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Basic Information</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label class="small fw-semibold">
+                                Rider Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   name="RiderName"
+                                   class="form-control form-control-sm"
+                                   required>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Rider Name & Additional Premium (same row) -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="RiderName" class="form-label">
-                            Rider Name <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" name="RiderName" id="RiderName" class="form-control" required>
+                {{-- ================= PROVIDER & PRODUCT ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Provider & Product</h6>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label class="small fw-semibold">
+                                Provider <span class="text-danger">*</span>
+                            </label>
+                            <select name="InsuranceProviderId"
+                                    id="Provider-select"
+                                    class="form-select form-select-sm"
+                                    required>
+                                <option value="">-- Select --</option>
+                                @foreach($providers as $provider)
+                                    <option value="{{ $provider->Id }}">{{ $provider->Name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-2">
+                            <label class="small fw-semibold">
+                                Product <span class="text-danger">*</span>
+                            </label>
+                            <select name="Product"
+                                    id="Product-select"
+                                    class="form-select form-select-sm"
+                                    required>
+                                <option value="">-- Select --</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label for="AdditionalPremium" class="form-label">
-                            Additional Premium <span class="text-danger">*</span>
-                        </label>
-                        <input type="number" name="AdditionalPremium" id="AdditionalPremium"
-                               class="form-control" step="0.01" min="0" required>
+                </div>
+
+                {{-- ================= PRICING ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Pricing</h6>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <label class="small fw-semibold">
+                                Additional Premium <span class="text-danger">*</span>
+                            </label>
+                            <input type="number"
+                                   name="AdditionalPremium"
+                                   class="form-control form-control-sm"
+                                   step="0.01"
+                                   min="0"
+                                   required>
+                        </div>
+
+                        <div class="col-md-3 mb-2">
+                            <label class="small fw-semibold">
+                                Currency <span class="text-danger">*</span>
+                            </label>
+                            <select name="CurrencyId"
+                                    class="form-select form-select-sm"
+                                    required>
+                                <option value="">-- Select --</option>
+                                @foreach($currencies as $currency)
+                                    <option value="{{ $currency->Id }}">
+                                        {{ $currency->Code }} - {{ $currency->SymbolNative }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Description -->
-                <div class="mb-3">
-                    <label for="Description" class="form-label">Description</label>
-                    <textarea name="Description" id="Description" class="form-control" rows="2"></textarea>
+                {{-- ================= STATUS & DESCRIPTION ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Status & Description</h6>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="IsOptional"
+                                       value="1"
+                                       id="IsOptional"
+                                       checked>
+                                <label class="form-check-label small" for="IsOptional">
+                                    Optional Rider
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="IsActive"
+                                       value="1"
+                                       id="IsActive"
+                                       checked>
+                                <label class="form-check-label fw-semibold" for="IsActive">
+                                    Active Rider
+                                    <small class="text-muted d-block">
+                                        Enable this rider for selection
+                                    </small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-7">
+                            <label class="small fw-semibold">Description</label>
+                            <textarea name="Description"
+                                      class="form-control form-control-sm"
+                                      rows="2"></textarea>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Checkboxes -->
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" name="IsOptional" value="1" id="IsOptional" checked>
-                    <label class="form-check-label" for="IsOptional">Is Optional</label>
-                </div>
-
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="IsActive" checked>
-                    <label class="form-check-label" for="IsActive">Is Active</label>
-                </div>
-
-                <!-- Submit -->
-                <div class="text-end">
-                    <a href="{{ route('bancassurance.riders.index') }}" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left-circle me-1"></i> Back
+                {{-- ================= ACTIONS ================= --}}
+                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                    <a href="{{ route('bancassurance.riders.index') }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        Back
                     </a>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Save Rider
+
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="bi bi-check-circle me-1"></i> Save Rider
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
 </div>
 
-    <!-- Script -->
+{{-- ================= SCRIPT ================= --}}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const ProviderSelect = document.getElementById('Provider-select');
-        const ProductSelect = document.getElementById('Product-select');
+document.addEventListener('DOMContentLoaded', function () {
+    const provider = document.getElementById('Provider-select');
+    const product  = document.getElementById('Product-select');
 
-        ProviderSelect.addEventListener('change', function () {
-            const ProviderId = this.value;
+    provider.addEventListener('change', function () {
+        product.innerHTML = '<option value="">-- Select --</option>';
 
-            // Reset Product dropdown
-            ProductSelect.innerHTML = '<option value="">-- Select a Product --</option>';
+        if (this.value) {
+            const url = `{{ route('bancassurance.riders.getProductByProvider', ':Id') }}`
+                .replace(':Id', this.value);
 
-            if (ProviderId) {
-                const url = `{{ route('bancassurance.riders.getProductByProvider', ':Id') }}`.replace(':Id', ProviderId);
-
-                fetch(url)
-                    .then(response => response.json())
-                    .then(products => {
-                        products.forEach(product => {
-                            const option = document.createElement('option');
-                            option.value = product.Id;
-                            option.textContent = product.Name;
-                            ProductSelect.appendChild(option);
-                        });
-                    })
-                    .catch(error => console.error('Error loading Product:', error));
-            }
-        });
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.Id;
+                        option.textContent = item.Name;
+                        product.appendChild(option);
+                    });
+                });
+        }
     });
+});
 </script>
+
 @endsection

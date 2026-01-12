@@ -21,19 +21,41 @@ class TenderEvaluationsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //return Tender::all();
+        $search = $request->query('search', '');
+        
         $sections = Section::select('Id', 'SectionName')->get();
-        //Get unique tenderID form the TenderSection table
+        
+        // Get unique tenderID from the TenderSection table
         $tenderSections = TenderSection::select('TenderID')->distinct()->get();
-        //Get tender that are not in the TenderSection table
+        
+        // Get tender IDs that have sections
         $tenderIds = $tenderSections->pluck('TenderID')->toArray();
-        //return Tender::whereNotIn('Id', $tenderIds)->get();
-        //Get tenders that are not in the TenderSection table
-        $tenders = Tender::whereNotIn('Id', $tenderIds)->get();
-        //Get tender that are have sections
-        $tenderswithsections = Tender::whereIn('Id', $tenderIds)->get();
+        
+        // Get tenders that are not in the TenderSection table (with search and sort)
+        $tendersQuery = Tender::whereNotIn('Id', $tenderIds);
+        
+        if (!empty($search)) {
+            $tendersQuery->where(function($q) use ($search) {
+                $q->where('TenderNo', 'like', '%' . $search . '%')
+                  ->orWhere('Title', 'like', '%' . $search . '%');
+            });
+        }
+        
+        $tenders = $tendersQuery->orderBy('CreatedOn', 'desc')->get();
+        
+        // Get tenders that have sections (with search and sort)
+        $tenderswithsectionsQuery = Tender::whereIn('Id', $tenderIds);
+        
+        if (!empty($search)) {
+            $tenderswithsectionsQuery->where(function($q) use ($search) {
+                $q->where('TenderNo', 'like', '%' . $search . '%')
+                  ->orWhere('Title', 'like', '%' . $search . '%');
+            });
+        }
+        
+        $tenderswithsections = $tenderswithsectionsQuery->orderBy('CreatedOn', 'desc')->get();
 
         $data = [];
         foreach ($tenderswithsections as $key => $value) {

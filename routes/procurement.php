@@ -538,6 +538,7 @@ Route::middleware(['module:300000'])->group(function () {
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
+    Route::get('/tenderresponse/invited-suppliers/{tenderId}', [TenderResponseController::class, 'getInvitedSuppliers'])->name('tenderresponse.getInvitedSuppliers');
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
     // Enhanced Tender Clarification Management

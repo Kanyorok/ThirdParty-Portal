@@ -141,7 +141,8 @@
                     @error('InstructionNotes') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
-                <div class="text-end">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <a href="{{ route('assignrequest.index') }}" class="btn btn-outline-secondary">Cancel</a>
                     <button type="submit" class="btn btn-success">
                         Assign Task
                     </button>

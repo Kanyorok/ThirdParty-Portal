@@ -42,7 +42,7 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'thirdparty' => [
+        'third_party' => [
             'driver' => 'sanctum',
             // 'provider' => 'thirdparties',
             'provider' => 'thirdparty_users',

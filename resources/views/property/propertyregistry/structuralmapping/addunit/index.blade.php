@@ -7,9 +7,24 @@
     <style>
         /* Improve readability for table text */
         #propertyunits td {
-            white-space: normal !important;
-            word-wrap: break-word;
-            max-width: 200px;
+            white-space: nowrap;
+        }
+        
+        /* Ensure table scrolls horizontally when needed */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Prevent card body from adding extra padding that affects scroll */
+        .card-body {
+            padding: 0;
+        }
+        
+        /* Add padding back to table */
+        #propertyunits {
+            margin: 1rem;
+            width: calc(100% - 2rem);
         }
     </style>
 @endsection
@@ -31,7 +46,8 @@
     @if($units->count())
         <div class="card shadow-sm">
             <div class="card-body">
-                <table id="propertyunits" class="table table-bordered table-striped table-hover align-middle mb-0">
+                <div class="table-responsive">
+                    <table id="propertyunits" class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th style="width: 5%">#</th>
@@ -99,6 +115,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     @else
@@ -118,7 +135,9 @@
             pageLength: 10,
             ordering: true,
             searching: true,
-            lengthChange: true
+            lengthChange: true,
+            scrollX: true,
+            autoWidth: false
         });
     });
 </script>

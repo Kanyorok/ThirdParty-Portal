@@ -117,14 +117,46 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
         return !is_null($this->EmailVerifiedOn);
     }
 
+    public ?string $verificationBaseUrl = null;
+
     public function markEmailAsVerified(): bool
     {
-        return $this->forceFill(['EmailVerifiedOn' => $this->freshTimestamp()])->save();
+        return $this->forceFill([
+            'EmailVerifiedOn' => $this->freshTimestamp(),
+            'IsActive' => true, // Activate user upon verification
+        ])->save();
     }
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new VerifyThirdPartyEmail);
+        // 1. Generate the Signed Backend URL (which verifies the signature)
+        $backendSignedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'verification.verify',
+            \Illuminate\Support\Carbon::now()->addMinutes(config('auth.verification.expire', 60)),
+            [
+                'id' => $this->getKey(),
+                'hash' => sha1($this->getEmailForVerification()),
+            ]
+        );
+
+        // 2. Construct the Frontend URL
+        // Use dynamically provided base URL if available, otherwise fallback to config
+        $frontendUrl = $this->verificationBaseUrl ?? config('app.frontend_url', config('app.nextauth_url', 'http://localhost:3000'));
+        $frontendUrl = rtrim($frontendUrl, '/');
+
+        $url = $frontendUrl . '/verify-email?verify_url=' . urlencode($backendSignedUrl);
+
+        $body = '<p>Please click the button below to verify your email address.</p>';
+        $body .= '<p><a href="' . $url . '" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a></p>';
+        $body .= '<p style="font-size: small; color: #666; margin-top: 20px;">If the button above does not work, copy and paste the following link into your browser:<br>' . $url . '</p>';
+        $body .= '<p>If you did not create an account, no further action is required.</p>';
+
+        \App\Services\CRMEmailService::createRaw(
+            \App\Helpers\SystemHelper::user(),
+            'Verify Email Address - ' . config('app.name'),
+            $body,
+            [['Name' => $this->fullName, 'Email' => $this->Email]]
+        )->send(true);
     }
 
     public function country(): BelongsTo
@@ -144,7 +176,8 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 
     public function isActive(): bool
     {
-        return $this->IsActive === true;
+        // User must be explicitly active AND have a verified email
+        return (bool)$this->IsActive && !is_null($this->EmailVerifiedOn);
     }
 
     public function isApproved(): bool

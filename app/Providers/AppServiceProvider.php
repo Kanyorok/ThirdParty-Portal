@@ -371,6 +371,8 @@ class AppServiceProvider extends ServiceProvider
             Authenticate::class
         );
 
+
+
         \Illuminate\Support\Facades\Blade::if('canRead', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
             if (!$user) return false;
@@ -535,11 +537,13 @@ class AppServiceProvider extends ServiceProvider
             LegalHold::getPrimaryKey() => LegalHold::class,
             Repository::getPrimaryKey() => Repository::class,
 
+
             //Third Parties
             // Allow resolving morph type 'ThirdParty' used by legacy data
             'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
             'ThirdPartyUser' => \App\Models\ThirdParty\ThirdPartyUser::class,
+            \App\Models\ThirdParty\SupplierMaster::getPrimaryKey() => \App\Models\ThirdParty\SupplierMaster::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,

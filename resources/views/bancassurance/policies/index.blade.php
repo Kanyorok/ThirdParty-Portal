@@ -56,58 +56,60 @@
 
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-center">#</th>
-                        <th>Customer</th>
-                        <th>Product</th>
-                        <th>Insurer</th>
-                        <th class="text-end">Sum Assured</th>
-                        <th class="text-end">Premium</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($policies as $policy)
-                    <tr>
-                        <td class="text-center text-muted">{{ $loop->iteration }}</td>
-                        <td>{{ $policy->customer->thirdParty->ThirdPartyName ?? '-' }}</td>
-                        <td>{{ $policy->product->Name ?? '-' }}</td>
-                        <td>{{ $policy->insurer->Name ?? '—' }}</td>
-                        <td class="text-end">{{ number_format($policy->SumAssured, 2) }}</td>
-                        <td class="text-end">{{ number_format($policy->PremiumAmount, 2) }}</td>
-                        <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d M Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</td>
-                        <td>
-                            <span class="badge 
-                                    @if($policy->Status->value === 'approved') bg-success 
-                                    @elseif($policy->Status->value === 'pending') bg-warning text-dark
-                                    @elseif($policy->Status->value === 'rejected') bg-danger
-                                    @else bg-secondary
-                                    @endif
-                                    rounded-pill px-3 py-2">
-                                {{ $policy->Status->Label() }}
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <a href="{{ route('bancassurance.policies.print', $policy->Id) }}"
-                            target="_blank"
-                            class="btn btn-outline-primary btn-sm">
-                                🖨️ Print Contract
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="10" class="text-center text-muted py-4">No policy proposals found.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.95rem; white-space: nowrap;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center" style="width: 40px;">#</th>
+                            <th style="min-width: 120px;">Customer</th>
+                            <th style="min-width: 130px;">Product</th>
+                            <th style="min-width: 100px;">Insurer</th>
+                            <th class="text-end" style="min-width: 110px;">Sum Assured</th>
+                            <th class="text-end" style="min-width: 90px;">Premium</th>
+                            <th style="min-width: 100px;">Start Date</th>
+                            <th style="min-width: 100px;">End Date</th>
+                            <th style="min-width: 80px;">Status</th>
+                            <th class="text-end" style="min-width: 130px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($policies as $policy)
+                        <tr>
+                            <td class="text-center text-muted">{{ $loop->iteration }}</td>
+                            <td>{{ $policy->customer->thirdParty->ThirdPartyName ?? '-' }}</td>
+                            <td>{{ $policy->product->Name ?? '-' }}</td>
+                            <td>{{ $policy->insurer->Name ?? '—' }}</td>
+                            <td class="text-end">{{ number_format($policy->SumAssured, 2) }}</td>
+                            <td class="text-end">{{ number_format($policy->PremiumAmount, 2) }}</td>
+                            <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d M Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</td>
+                            <td>
+                                <span class="badge 
+                                        @if($policy->Status->value === 'approved') bg-success 
+                                        @elseif($policy->Status->value === 'pending') bg-warning text-dark
+                                        @elseif($policy->Status->value === 'rejected') bg-danger
+                                        @else bg-secondary
+                                        @endif
+                                        rounded-pill px-3 py-2">
+                                    {{ $policy->Status->Label() }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ route('bancassurance.policies.print', $policy->Id) }}"
+                                target="_blank"
+                                class="btn btn-outline-primary btn-sm">
+                                    🖨️ Print
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-4">No policy proposals found.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
