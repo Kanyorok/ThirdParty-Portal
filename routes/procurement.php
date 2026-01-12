@@ -728,6 +728,7 @@ Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])
     ->middleware(\App\Http\Middleware\CanAction::class . ':approve,procawards')
     ->name('awards.reject');
 Route::post('/awards/{award}/cancel', [AwardsController::class, 'cancel'])->name('awards.cancel');
+Route::post('/awards/{id}/submit-approval', [AwardsController::class, 'submitForApproval'])->name('awards.submit-approval');
 
 // Workflow history
 Route::get('/{id}/workflow-history', [AwardsController::class, 'workflowHistory'])->name('workflow-history');
@@ -735,11 +736,6 @@ Route::get('/{id}/workflow-history', [AwardsController::class, 'workflowHistory'
 // Direct from consolidation
 Route::get('/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])
     ->name('create-from-consolidation');
-// Workflow actions
-Route::post('/{id}/submit-approval', [AwardsController::class, 'submitForApproval'])->name('submit-approval');
-Route::post('/approve', [AwardsController::class, 'approve'])->name('approve');
-Route::post('/reject', [AwardsController::class, 'reject'])->name('reject');
-Route::post('/{id}/cancel', [AwardsController::class, 'cancel'])->name('cancel');
 
 // RFQ direct award approval (no TenderAward model yet)
 Route::post('/awards/rfq/{rfq}/approve', [AwardsController::class, 'approveRfq'])

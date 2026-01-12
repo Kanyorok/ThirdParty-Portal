@@ -87,6 +87,7 @@
                                 <td>{{ $row['award_date'] ?? '--' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
+
                                         @if($row['type'] === 'tender' && !empty($row['tender_id']))
                                             <a href="{{ route('awards.tender', $row['tender_id']) }}"
                                                class="btn btn-sm btn-outline-info" title="View Award Details">
@@ -101,34 +102,59 @@
                                             <span class="btn btn-sm btn-outline-secondary disabled" title="Missing reference id">View</span>
                                         @endif
 
-                                        @if($row['status'] === 'Pending')
-                                            <button type="button" class="btn btn-sm btn-success"
-                                                    onclick="approveAward('{{ $row['type'] }}', {{ $row['type']==='rfq' ? ($row['rfq_id'] ?? $row['id']) : ($row['award_id'] ?? $row['id']) }})" title="Approve Award">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            @if($row['type'] === 'tender')
-                                                <button type="button" class="btn btn-sm btn-danger"
-                                                        onclick="rejectAward({{ $row['award_id'] ?? $row['id'] }})" title="Reject Award">
-                                                    <i class="fas fa-times"></i>
+                                        {{-- Workflow Action Buttons --}}
+                                        @if($row['type'] === 'tender' && !empty($row['award_id']))
+                                            @if(in_array($row['status'], ['Draft', 'Pending']))
+                                                {{-- Submit for Approval Button --}}
+                                                <form action="{{ route('awards.submit-approval', $row['award_id']) }}" method="POST" style="display:inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-primary" title="Submit for Approval">
+                                                        <i class="fas fa-paper-plane"></i>
+                                                    </button>
+                                                </form>
+                                            @elseif(in_array($row['status'], ['Submitted for Approval', 'Under Review']))
+                                                {{-- Approve/Reject Buttons (only if user can approve) --}}
+                                                @if($row['can_approve'] ?? false)
+                                                    <button type="button" class="btn btn-sm btn-success"
+                                                            onclick="approveAward('tender', {{ $row['award_id'] }})" title="Approve Award">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                            onclick="rejectAward({{ $row['award_id'] }})" title="Reject Award">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                @else
+                                                    <span class="badge bg-info text-white">Awaiting Approval</span>
+                                                @endif
+                                            @elseif($row['status'] === 'Approved')
+                                                @php
+                                                    $award = \App\Models\Procurement\TenderAward::find($row['award_id']);
+                                                    $hasContract = $award && $award->hasContract();
+                                                @endphp
+                                                @if($hasContract)
+                                                    <a href="{{ route('contracts.show', $row['award_id']) }}"
+                                                       class="btn btn-sm btn-info" title="View Contract">
+                                                        <i class="fas fa-file-contract"></i> Contract
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('contracts.createFromAward', $row['award_id']) }}"
+                                                       class="btn btn-sm btn-primary" title="Create Contract">
+                                                        <i class="fas fa-file-contract"></i> Create Contract
+                                                    </a>
+                                                @endif
+                                            @elseif($row['status'] === 'Rejected')
+                                                <span class="badge bg-danger">Rejected</span>
+                                            @endif
+                                        @elseif($row['type'] === 'rfq')
+                                            {{-- RFQ awards - keep existing logic for now --}}
+                                            @if($row['status'] === 'Pending')
+                                                <button type="button" class="btn btn-sm btn-success"
+                                                        onclick="approveAward('rfq', {{ $row['rfq_id'] ?? $row['id'] }})" title="Approve Award">
+                                                    <i class="fas fa-check"></i>
                                                 </button>
                                             @endif
-                                        @elseif($row['status'] === 'Approved')
-                                            @php
-                                                $award = \App\Models\Procurement\TenderAward::find($row['award_id'] ?? $row['id']);
-                                                $hasContract = $award && $award->hasContract();
-                                            @endphp
-                                            @if($hasContract)
-                                                <a href="{{ route('contracts.show', $row['award_id'] ?? $row['id']) }}"
-                                                   class="btn btn-sm btn-info" title="View Contract">
-                                                    <i class="fas fa-eye"></i> View Contract
-                                                </a>
-                                            @else
-                                                <a href="{{ route('contracts.createFromAward', $row['award_id'] ?? $row['id']) }}"
-                                                   class="btn btn-sm btn-primary" title="Create Contract">
-                                                    <i class="fas fa-file-contract"></i> Create Contract
-                                                </a>
-                                            @endif
                                         @endif
+
                                     </div>
                                 </td>
                             </tr>
