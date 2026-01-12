@@ -87,7 +87,6 @@
                     <th>Amount Due</th>
                     <th>Amount Paid</th>
                     <th>Status</th>
-                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -96,10 +95,10 @@
                     $tenant = $invoice->lease->tenant->thirdParty->ThirdPartyName  ?? 'N/A';
                     $property = $invoice->lease->property->PropertyName ?? 'N/A';
                     $unit = $invoice->lease->unit->UnitCode ?? 'N/A';
-                    $due = $invoice->RentAmount + $invoice->ServicesCharge + $invoice->ParkingFee + $invoice->OtherCharges;
-                    $paid = $invoice->receipts->sum('AmountPaidNow');
+                    $due = $invoice->DerivedDue ?? (($invoice->RentAmount ?? 0) + ($invoice->ServicesCharge ?? 0) + ($invoice->ParkingFee ?? 0) + ($invoice->OtherCharges ?? 0));
+                    $paid = $invoice->DerivedPaid ?? 0;
                     $balance = $due - $paid;
-                    $status = $paid == 0 ? 'Unpaid' : ($paid < $due ? 'Partial' : 'Paid');
+                    $status = $invoice->DerivedStatus ?? ($paid == 0 ? 'Pending' : ($paid < $due ? 'Partial Paid' : 'Fully Paid'));
                 @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
@@ -109,18 +108,9 @@
                     <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y') }}</td>                   <td>KES {{ number_format($due) }}</td>
                     <td>KES {{ number_format($paid) }}</td>
                     <td>
-                        <span class="badge bg-{{ $status == 'Paid' ? 'success' : ($status == 'Partial' ? 'warning' : 'danger') }}">
+                        <span class="badge bg-{{ $status == 'Fully Paid' ? 'success' : ($status == 'Partial Paid' ? 'warning' : 'danger') }}">
                             {{ $status }}
                         </span>
-                    </td>
-                    <td>
-                        @foreach($invoice->receipts as $receipt)
-                            <a href="{{ route('rentreceipt.show', $receipt->Id) }}" class="btn btn-sm btn-info mb-1">View</a>
-                        @endforeach
-                        @if($invoice->receipts->isEmpty())
-                            <span class="text-muted">No Receipts</span>
-                        @endif
-
                     </td>
                 </tr>
                 @endforeach
