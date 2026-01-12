@@ -172,7 +172,7 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.index', 'RequiredPermission' => PermissionEnum::GoodsReceiptRead->value],
-            ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.create', 'RequiredPermission' => PermissionEnum::GoodsReceiptWrite->value],
+            // ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.create', 'RequiredPermission' => PermissionEnum::GoodsReceiptWrite->value],
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index', 'RequiredPermission' => PermissionEnum::ProcurementSectionRead->value],        
