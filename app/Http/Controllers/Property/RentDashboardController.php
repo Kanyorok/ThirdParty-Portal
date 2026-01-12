@@ -9,6 +9,7 @@ use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 class RentDashboardController extends Controller
@@ -36,20 +37,57 @@ class RentDashboardController extends Controller
 
         $invoices = $query->get();
 
+        // Map Finance invoices by RequestID (no Finance code changes; Property-side reads)
+        $requestIds = $invoices->pluck('RequestID')->filter()->unique()->values();
+        $financeByReq = collect();
+        if ($requestIds->isNotEmpty()) {
+            $financeByReq = collect(DB::table('t_FinanceInvoices')
+                ->whereIn('RequestID', $requestIds)
+                ->get())->keyBy('RequestID');
+        }
+
+        // Derive due/paid/status per Property invoice from Finance amounts
+        $invoices->each(function ($inv) use ($financeByReq) {
+            $due = (float)($inv->RentAmount ?? 0)
+                + (float)($inv->ServicesCharge ?? 0)
+                + (float)($inv->ParkingFee ?? 0)
+                + (float)($inv->OtherCharges ?? 0);
+
+            $fin = $inv->RequestID ? $financeByReq->get($inv->RequestID) : null;
+            $paid = $fin ? (float)($fin->AmountPaid ?? 0) : 0.0;
+
+            $inv->DerivedDue = $due;
+            $inv->DerivedPaid = $paid;
+            $inv->DerivedStatus = $due <= 0 ? 'Pending'
+                : ($paid >= $due ? 'Fully Paid' : ($paid > 0 ? 'Partial Paid' : 'Pending'));
+        });
+
         // --- Group by month (e.g., "2025-01") ---
         $invoiceByMonth = $invoices->groupBy(function ($inv) {
             return Carbon::parse($inv->InvoiceDate)->format('Y-m');
         })->map(function ($group) {
             return $group->sum(function ($inv) {
-                return $inv->RentAmount + $inv->ServicesCharge + $inv->ParkingFee + $inv->OtherCharges;
+                return ($inv->RentAmount ?? 0) + ($inv->ServicesCharge ?? 0) + ($inv->ParkingFee ?? 0) + ($inv->OtherCharges ?? 0);
             });
         });
 
-        $receiptByMonth = $invoices->flatMap->receipts
-            ->groupBy(function ($receipt) {
-                return Carbon::parse($receipt->ReceiptDate)->format('Y-m');
-            })->map(function ($group) {
-                return $group->sum('AmountPaidNow');
+        // Collections from Finance receipt allocations for these invoices
+        $financeIds = $financeByReq->pluck('Id')->filter()->values();
+        $allocations = collect();
+        if ($financeIds->isNotEmpty()) {
+            $allocations = collect(DB::table('t_FinanceReceiptAllocations as a')
+                ->join('t_FinanceReceipts as r', 'r.Id', '=', 'a.ReceiptID')
+                ->whereIn('a.InvoiceID', $financeIds)
+                ->select('r.ReceiptDate', 'a.AmountAllocated')
+                ->get());
+        }
+
+        $receiptByMonth = $allocations
+            ->groupBy(function ($row) {
+                return Carbon::parse($row->ReceiptDate)->format('Y-m');
+            })
+            ->map(function ($group) {
+                return (float)collect($group)->sum('AmountAllocated');
             });
 
         // --- Merge both monthly keys to cover all months ---
@@ -64,20 +102,19 @@ class RentDashboardController extends Controller
             ];
         });
 
-        // Summary calculations (unchanged)
-        $collected = $invoices->sum(fn($inv) => $inv->receipts->sum('AmountPaidNow'));
-        $dueSoon = 0; // You can calculate due soon based on due dates
-        $overdue = $invoices->filter(function ($inv) {
-            $due = $inv->RentAmount + $inv->ServicesCharge + $inv->ParkingFee + $inv->OtherCharges;
-            $paid = $inv->receipts->sum('AmountPaidNow');
-            return $paid < $due && Carbon::parse($inv->InvoiceDate)->lt(now());
-        })->sum(fn($inv) => ($inv->RentAmount + $inv->ServicesCharge + $inv->ParkingFee + $inv->OtherCharges) - $inv->receipts->sum('AmountPaidNow'));
+        // Summary calculations (Finance-driven)
+        $collected = (float)$allocations->sum('AmountAllocated');
+        $dueSoon = 0; // Optional: compute based on due dates
+        $overdue = $invoices->sum(function ($inv) {
+            $diff = ($inv->DerivedDue ?? 0) - ($inv->DerivedPaid ?? 0);
+            return $diff > 0 ? $diff : 0;
+        });
 
-        $partial = $invoices->filter(function ($inv) {
-            $due = $inv->RentAmount + $inv->ServicesCharge + $inv->ParkingFee + $inv->OtherCharges;
-            $paid = $inv->receipts->sum('AmountPaidNow');
-            return $paid > 0 && $paid < $due;
-        })->sum(fn($inv) => $inv->receipts->sum('AmountPaidNow'));
+        $partial = $invoices->sum(function ($inv) {
+            $paid = ($inv->DerivedPaid ?? 0);
+            $due = ($inv->DerivedDue ?? 0);
+            return ($paid > 0 && $paid < $due) ? $paid : 0;
+        });
 
         // Filters
         $properties = PropertyRegistry::all();
