@@ -196,7 +196,7 @@
     </div>
 </div>
 
-{{-- JS for consistent decimal places --}}
+{{-- JS for consistent decimal places and auto-fill from selected commission rule --}}
 <script>
     function fixDecimalPlaces(input) {
         let val = parseFloat(input.value);
@@ -204,6 +204,48 @@
             input.value = val.toFixed(2);
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Prepare rule data: Id, FixedAmount and CurrencyId
+        const commissionRules = @json($commissionRules->map(function($r) {
+            return ['Id' => $r->Id, 'FixedAmount' => $r->FixedAmount, 'CurrencyId' => $r->CurrencyId];
+        }));
+
+        const ruleSelect = document.querySelector('select[name="CommissionRuleId"]');
+        const currencySelect = document.querySelector('select[name="CurrencyId"]');
+        const paidAmountInput = document.querySelector('#PaidAmount');
+
+        function onRuleChange() {
+            const selected = ruleSelect ? ruleSelect.value : null;
+
+            if (!selected) {
+                if (paidAmountInput) paidAmountInput.value = '';
+                if (currencySelect) currencySelect.value = '';
+                return;
+            }
+
+            const rule = commissionRules.find(r => String(r.Id) === String(selected));
+            if (!rule) return;
+
+            // Auto-fill Paid Amount from FixedAmount
+            if (paidAmountInput && rule.FixedAmount !== null && rule.FixedAmount !== undefined) {
+                const val = parseFloat(rule.FixedAmount);
+                if (!isNaN(val)) paidAmountInput.value = val.toFixed(2);
+            }
+
+            // Auto-select currency if present in the rule
+            if (currencySelect && rule.CurrencyId) {
+                const opt = currencySelect.querySelector('option[value="' + rule.CurrencyId + '"]');
+                if (opt) currencySelect.value = rule.CurrencyId;
+            }
+        }
+
+        if (ruleSelect) {
+            ruleSelect.addEventListener('change', onRuleChange);
+            // Run once in case a rule is pre-selected
+            onRuleChange();
+        }
+    });
 </script>
 
 @endsection
