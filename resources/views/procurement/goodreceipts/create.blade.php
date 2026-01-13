@@ -54,6 +54,7 @@
             <th>UOM</th>
             <th>PO Qty</th>
             <th>Received Qty</th>
+            <th>Unit Price</th>
             <th>Transfer To</th>
             <th>Tag Required?</th>
           </tr>
@@ -126,6 +127,7 @@ function populatePODetails() {
         <td>${item.UOM}</td>
         <td><input type="number" class="form-control" name="items[${index}][POQTY]" value="${item.fQuantity}" readonly></td>
         <td><input type="number" class="form-control" name="items[${index}][ReceivedQTY]" value="${item.fQuantity}"></td>
+        <td><input type="number" class="form-control" name="items[${index}][UnitPrice]" value="${item.fUnitPriceExcl || 0}" readonly></td>
         <td><input type="text" class="form-control" name="items[${index}][TransferTo]" value="${item.InventoryType}" readonly></td>
         <td><input type="hidden" name="items[${index}][TagRequired]" value="0">
         <input type="checkbox" name="items[${index}][TagRequired]" value="1"></td>

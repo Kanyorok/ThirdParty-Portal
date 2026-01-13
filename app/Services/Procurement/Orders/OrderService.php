@@ -328,7 +328,7 @@ class OrderService
     public function AddPurchaseOrderSum($orderId)
     {
         try {
-            DB::statement('EXEC p_AddPurchaseOrderSum @PurchaseOrderID = ?', [$orderId]);
+            DB::statement('EXEC p_AddPurchaseOrderSum @OrderId = ?', [$orderId]);
             return true;
         } catch (QueryException $e) {
             Log::error("Failed to execute p_AddPurchaseOrderSum: " . $e->getMessage());

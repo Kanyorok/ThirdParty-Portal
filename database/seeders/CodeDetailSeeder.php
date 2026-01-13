@@ -155,6 +155,7 @@ class CodeDetailSeeder extends Seeder
                 'Value' => $tenderAwardStatusEnum->value,
                 'Description' => $tenderAwardStatusEnum->name,
                 'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
             ]);
         }
 
