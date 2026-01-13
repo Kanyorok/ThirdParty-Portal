@@ -149,6 +149,16 @@ class CodeDetailSeeder extends Seeder
             ]);
         }
 
+        foreach (\App\Enums\TenderAwardStatusEnum::cases() as $index => $tenderAwardStatusEnum) {
+            $entries->push([
+                'CodeID' => 'TenderAwardStatus',
+                'Value' => $tenderAwardStatusEnum->value,
+                'Description' => $tenderAwardStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+
         foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
             $entries->push([
                 'CodeID' => 'BusinessType',
