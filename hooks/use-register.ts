@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -47,7 +49,9 @@ export const useRegisterForm = () => {
         maritalStatuses: [] as any[],
         occupations: [] as any[]
     })
+
     const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
+    const [isLoadingLocalities, setIsLoadingLocalities] = useState(false)
     const [metadataError, setMetadataError] = useState<string | null>(null)
 
     const form = useForm<RegisterFormInputs>({
@@ -68,53 +72,85 @@ export const useRegisterForm = () => {
     const fetchInitialMetadata = useCallback(async () => {
         setIsLoadingMetadata(true)
         try {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL
             const [countriesRes, categoriesRes, lookupsRes] = await Promise.all([
-                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/countries`),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/supplier-categories`),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`)
+                fetch(`${baseUrl}/api/v1/portal/auth/metadata/countries`),
+                fetch(`${baseUrl}/api/v1/portal/auth/metadata/supplier-categories`),
+                fetch(`${baseUrl}/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`)
             ])
+
             const countries = await countriesRes.json()
             const categories = await categoriesRes.json()
             const lookups = await lookupsRes.json()
 
             const lData = lookups.data || {}
+
             setMetadata(prev => ({
                 ...prev,
-                countries: countries.data || countries,
-                supplierCategories: categories.data || categories,
-                businessTypes: lData.businessType || [],
-                genders: lData.gender || [],
-                maritalStatuses: lData.maritalStatus || [],
-                occupations: lData.occupation || [],
+                countries: countries.data || [],
+                supplierCategories: categories.data || [],
+                businessTypes: lData.BusinessType || [],
+                genders: lData.Gender || [],
+                maritalStatuses: lData.MaritalStatus || [],
+                occupations: lData.Occupation || [],
             }))
         } catch (error) {
-            setMetadataError("Unable to load registration data.")
+            setMetadataError("Initialization failed. Please refresh.")
         } finally {
             setIsLoadingMetadata(false)
         }
     }, [])
 
     const fetchLocalities = useCallback(async (countryCode: string) => {
+        if (!countryCode || metadata.countries.length === 0) return
+
         const country = metadata.countries.find(c => c.code === countryCode)
         if (!country?.id) return
+
+        setIsLoadingLocalities(true)
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/localities/${country.id}`)
             const result = await res.json()
-            setMetadata(prev => ({ ...prev, localities: result.data || result || [] }))
-        } catch (error) { console.error(error) }
+            setMetadata(prev => ({ ...prev, localities: result.data || [] }))
+        } catch (error) {
+            console.error("Locality fetch error:", error)
+        } finally {
+            setIsLoadingLocalities(false)
+        }
     }, [metadata.countries])
 
     useEffect(() => { fetchInitialMetadata() }, [fetchInitialMetadata])
-    useEffect(() => { if (selectedCountryCode) fetchLocalities(selectedCountryCode) }, [selectedCountryCode, fetchLocalities])
+
+    useEffect(() => {
+        if (selectedCountryCode) {
+            fetchLocalities(selectedCountryCode)
+            // Reset location selection if country changes
+            const currentLoc = form.getValues("Location")
+            if (currentLoc !== 0) {
+                form.setValue("Location", 0)
+            }
+        }
+    }, [selectedCountryCode, fetchLocalities, form])
 
     const onSubmitHandler = async (values: RegisterFormInputs) => {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/register`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
             body: JSON.stringify(values)
         })
+
         const result = await response.json()
-        if (!response.ok) throw new Error(result.message || "Registration failed")
+        if (!response.ok) {
+            if (result.errors) {
+                Object.keys(result.errors).forEach((key) => {
+                    form.setError(key as any, { message: result.errors[key][0] })
+                })
+            }
+            throw new Error(result.message || "Registration failed")
+        }
         return result
     }
 
@@ -123,17 +159,20 @@ export const useRegisterForm = () => {
         errors: form.formState.errors,
         metadata,
         isLoadingMetadata,
+        isLoadingLocalities,
         metadataError,
-        onSubmit: form.handleSubmit(onSubmitHandler as any),
+        onSubmit: form.handleSubmit(onSubmitHandler),
         isSubmitting: form.formState.isSubmitting,
         toggleType: (type: string) => {
             const current = form.getValues("types") || []
-            const updated = current.includes(type) ? current.filter(t => t !== type) : [...current, type]
+            const updated = current.includes(type)
+                ? current.filter(t => t !== type)
+                : [...current, type]
             form.setValue("types", updated, { shouldValidate: true })
         },
         selectedTypes,
-        isSupplier: selectedTypes?.includes("SU"),
-        isTenant: selectedTypes?.includes("TN"),
-        isCustomer: selectedTypes?.includes("CU")
+        isSupplier: selectedTypes?.includes("Supplier"),
+        isTenant: selectedTypes?.includes("Tenant"),
+        isCustomer: selectedTypes?.includes("Customer")
     }
 }

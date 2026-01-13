@@ -1,113 +1,135 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
-import { Building2, Search, Inbox, Layers, LayoutGrid, Loader2, ArrowUpRight, Maximize2, Sparkles, Filter, Building, X } from "lucide-react"
+import {
+    Building2, Search, Inbox, Maximize2, Sparkles,
+    MapPin, ArrowUpRight, LayoutGrid, ChevronDown, X
+} from "lucide-react"
 import { usePagination } from "@/components/providers/pagination-provider"
-import { Property, PaginatedResponse, Unit } from "@/types/property"
+import { Property, PaginatedResponse } from "@/types/property"
 import { Button } from "@/components/common/button"
 import { Badge } from "@/components/common/badge"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger, } from "@/components/common/sheet"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, } from "@/components/common/accordion"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/common/sheet"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/common/accordion"
 import { cn } from "@/lib/utils"
 
 export function RentablePropertiesList({
     initialData,
     searchQuery,
-    setSearchQuery
+    setSearchQuery,
+    localities = []
 }: {
     initialData?: PaginatedResponse<Property>;
     searchQuery: string;
-    setSearchQuery: (q: string) => void
+    setSearchQuery: (q: string) => void;
+    localities?: any[];
 }) {
     const { isPending } = usePagination()
     const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
     const properties = initialData?.data ?? []
 
+    const resolveLocation = (locId: number | undefined) => {
+        if (!locId) return "Nairobi, KE"
+        const found = localities.find(l => l.id === locId)
+        return found ? found.name : "Nairobi, KE"
+    }
+
     const filteredProperties = useMemo(() => {
         const query = searchQuery.trim().toLowerCase()
         return properties.filter(p => {
-            const matchesSearch = p.propertyName.toLowerCase().includes(query) ||
-                p.propertyCode.toLowerCase().includes(query)
+            const locName = resolveLocation(p.locationId).toLowerCase()
+            const matchesSearch =
+                p.propertyName.toLowerCase().includes(query) ||
+                p.propertyCode.toLowerCase().includes(query) ||
+                locName.includes(query)
 
             if (!statusFilter) return matchesSearch
 
-            const hasMatchingUnit = p.blocks.some(b =>
-                b.floors.some(f =>
-                    f.units.some(u => u.availabilityLabel === statusFilter)
+            return matchesSearch && p.blocks?.some(b =>
+                b.floors?.some(f =>
+                    f.units?.some(u => u.availabilityLabel === statusFilter)
                 )
             )
-            return matchesSearch && hasMatchingUnit
         })
-    }, [properties, searchQuery, statusFilter])
+    }, [properties, searchQuery, statusFilter, localities])
 
     return (
-        <div className="w-full space-y-8 antialiased selection:bg-sky-500/10 min-h-screen pb-20">
-            <header className="flex flex-col gap-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-sky-600">
-                            <Sparkles className="h-4 w-4 fill-current" />
-                            <span className="text-[15px] font-black uppercase tracking-[0.25em]">Asset Inventory</span>
-                        </div>
+        <div className="w-full space-y-8 antialiased">
+            <header className="space-y-6">
+                <div className="space-y-2.5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                        <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Property Registry</span>
                     </div>
-
-                    <div className="flex items-center gap-3">
-                        <div className="relative group w-full md:w-96">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-sky-600 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search by name, code..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-sky-50/50 dark:bg-sky-950/20 border border-transparent focus:bg-background focus:border-sky-200 focus:ring-4 focus:ring-sky-500/5 outline-none transition-all text-sm font-medium"
-                            />
-                        </div>
-                        <Button variant="outline" className="rounded-2xl h-[52px] border-sky-100 dark:border-sky-900/30 bg-sky-50/30 px-4 md:px-6 hover:bg-sky-50">
-                            <Filter className="h-4 w-4 md:mr-2 text-sky-600" />
-                            <span className="hidden md:inline font-bold text-[10px] uppercase tracking-widest text-sky-700">Refine</span>
-                        </Button>
-                    </div>
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+                        Available Properties for Rent
+                    </h1>
+                    <p className="text-sm text-slate-600">Browse to rent/lease properties</p>
                 </div>
 
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                    {["Vacant", "Occupied", "Under Maintenance"].map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => setStatusFilter(statusFilter === status ? null : status)}
-                            className={cn(
-                                "px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
-                                statusFilter === status
-                                    ? "bg-sky-600 text-white border-sky-600 shadow-lg shadow-sky-600/20"
-                                    : "bg-background text-muted-foreground border-border/60 hover:border-sky-200 hover:text-sky-600"
-                            )}
-                        >
-                            {status}
-                        </button>
-                    ))}
-                    {statusFilter && (
-                        <button
-                            onClick={() => setStatusFilter(null)}
-                            className="p-2.5 rounded-full bg-secondary/50 text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                            <X className="h-3.5 w-3.5" />
-                        </button>
-                    )}
+                <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" strokeWidth={2} />
+                        <input
+                            type="text"
+                            placeholder="Search properties by name, code, or location..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-11 pr-10 h-11 rounded-xl bg-white border border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm placeholder:text-slate-400"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors"
+                            >
+                                <X className="h-4 w-4 text-slate-400" strokeWidth={2} />
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200 lg:min-w-[280px]">
+                        {["All", "Vacant", "Occupied"].map((label) => (
+                            <button
+                                key={label}
+                                onClick={() => setStatusFilter(label === "All" ? null : label)}
+                                className={cn(
+                                    "flex-1 px-4 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+                                    (statusFilter === label || (label === "All" && !statusFilter))
+                                        ? "bg-white text-slate-900"
+                                        : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                                )}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </header>
 
             {isPending && properties.length === 0 ? (
-                <div className="h-[40vh] flex flex-col items-center justify-center gap-4 text-sky-600/30">
-                    <Loader2 className="h-10 w-10 animate-spin" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em]">Synchronizing Registry</span>
+                <div className="h-[50vh] flex flex-col items-center justify-center gap-4">
+                    <div className="relative">
+                        <div className="h-12 w-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin" />
+                    </div>
+                    <p className="text-sm font-medium text-slate-600">Loading properties...</p>
                 </div>
             ) : filteredProperties.length === 0 ? (
                 <EmptyState isSearch={!!searchQuery || !!statusFilter} onClear={() => { setSearchQuery(""); setStatusFilter(null) }} />
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 md:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredProperties.map((property) => (
-                        <PropertyDetailsSheet key={property.id} property={property}>
-                            <PropertyCard property={property} />
+                        <PropertyDetailsSheet
+                            key={property.id}
+                            property={property}
+                            locationName={resolveLocation(property.locationId)}
+                        >
+                            <div className="cursor-pointer">
+                                <PropertyCard
+                                    property={property}
+                                    locationName={resolveLocation(property.locationId)}
+                                />
+                            </div>
                         </PropertyDetailsSheet>
                     ))}
                 </div>
@@ -116,67 +138,62 @@ export function RentablePropertiesList({
     )
 }
 
-function PropertyCard({ property }: { property: Property }) {
+function PropertyCard({ property, locationName }: { property: Property, locationName: string }) {
     const stats = useMemo(() => {
-        let units = 0, sqft = 0, vacant = 0;
-        property.blocks.forEach(b => b.floors.forEach(f => f.units.forEach(u => {
-            units++;
-            sqft += parseFloat(u.unitSize) || 0;
-            if (u.availabilityLabel === "Vacant") vacant++;
+        let totalUnits = 0, vacantUnits = 0;
+        property.blocks?.forEach(b => b.floors?.forEach(f => f.units?.forEach(u => {
+            totalUnits++;
+            if (u.availabilityLabel === "Vacant") vacantUnits++;
         })));
-        return { units, sqft: sqft.toLocaleString(), vacant };
+        return { totalUnits, vacantUnits };
     }, [property]);
 
     return (
-        <div className="group relative flex flex-col h-full bg-background border border-border/50 rounded-[2rem] overflow-hidden hover:border-sky-300 transition-all duration-500 shadow-none hover:shadow-2xl hover:shadow-sky-500/5">
-            <div className="relative aspect-[16/10] bg-sky-50/50 dark:bg-sky-950/20 overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Building2 className="h-20 w-20 text-sky-600/[0.03] group-hover:scale-125 group-hover:text-sky-600/[0.07] transition-all duration-1000" />
+        <div className="group/card relative bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all duration-300 hover:border-blue-300">
+            <div className="relative aspect-[16/9] bg-gradient-to-br from-blue-50 to-slate-50 overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <Building2 className="h-20 w-20 text-slate-200 group-hover/card:scale-110 group-hover/card:text-blue-200 transition-all duration-500" strokeWidth={1} />
                 </div>
 
-                <div className="absolute top-5 left-5">
-                    <Badge variant="outline" className="bg-background/90 backdrop-blur-md border-sky-100 text-[9px] font-black tracking-widest uppercase text-sky-700">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300" />
+
+                <div className="absolute top-4 left-4 flex gap-2">
+                    <Badge className="bg-white/95 backdrop-blur-sm text-slate-900 border border-slate-200 text-[10px] font-semibold px-3 py-1 rounded-lg">
                         {property.propertyCode}
                     </Badge>
-                </div>
-
-                {stats.vacant > 0 && (
-                    <div className="absolute top-5 right-5">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-white text-[9px] font-black shadow-lg shadow-emerald-500/20">
-                            <span className="relative flex h-1.5 w-1.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
-                            </span>
-                            {stats.vacant} VACANT
-                        </div>
-                    </div>
-                )}
-
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                <div className="absolute bottom-5 right-5 h-11 w-11 rounded-full bg-sky-600 text-white flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 shadow-xl shadow-sky-600/30">
-                    <ArrowUpRight className="h-5 w-5 stroke-[2.5px]" />
+                    {stats.vacantUnits > 0 && (
+                        <Badge className="bg-emerald-500/95 backdrop-blur-sm text-white border-none text-[10px] font-semibold px-3 py-1 rounded-lg">
+                            {stats.vacantUnits} Units Available
+                        </Badge>
+                    )}
                 </div>
             </div>
 
-            <div className="p-6 space-y-6 flex-grow flex flex-col">
+            <div className="p-5 space-y-4">
                 <div className="space-y-2">
-                    <h3 className="text-xl font-bold tracking-tight group-hover:text-sky-600 transition-colors line-clamp-1">
+                    <h3 className="text-lg font-semibold text-slate-900 group-hover/card:text-blue-600 transition-colors line-clamp-1">
                         {property.propertyName}
                     </h3>
-                    <div className="flex items-center gap-4 text-muted-foreground/60 text-[10px] font-bold uppercase tracking-widest">
-                        <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-sky-600/40" /> {property.blocks.length} Blocks</span>
-                        <span className="flex items-center gap-1.5"><LayoutGrid className="h-3.5 w-3.5 text-sky-600/40" /> {stats.units} Units</span>
+                    <div className="flex items-center gap-1.5 text-slate-600">
+                        <MapPin className="h-3.5 w-3.5 text-blue-500" strokeWidth={2} />
+                        <span className="text-xs font-medium">{locationName}</span>
                     </div>
                 </div>
 
-                <div className="mt-auto pt-6 border-t border-border/40 flex items-center justify-between">
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-black tracking-tighter text-foreground">{stats.sqft}</span>
-                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase">sqft</span>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-6">
+                        <div>
+                            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-0.5">Units</p>
+                            <p className="text-base font-semibold text-slate-900">{stats.totalUnits}</p>
+                        </div>
+                        <div className="h-8 w-px bg-slate-200" />
+                        <div>
+                            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-0.5">Type</p>
+                            <p className="text-base font-semibold text-slate-900">Commercial</p>
+                        </div>
                     </div>
-                    <div className="text-[10px] font-black text-sky-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
-                        Explore
+                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover/card:bg-blue-500 group-hover/card:text-white transition-all">
+                        <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
                     </div>
                 </div>
             </div>
@@ -184,107 +201,167 @@ function PropertyCard({ property }: { property: Property }) {
     )
 }
 
-function PropertyDetailsSheet({ property, children }: { property: Property, children: React.ReactNode }) {
+function PropertyDetailsSheet({ property, locationName, children }: { property: Property, locationName: string, children: React.ReactNode }) {
+    const totalVacant = property.blocks?.reduce((acc, b) =>
+        acc + b.floors.reduce((fAcc, f) =>
+            fAcc + f.units.filter(u => u.availabilityLabel === "Vacant").length, 0
+        ), 0
+    );
+
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="w-full sm:max-w-2xl bg-background p-0 border-l-border/30 shadow-none">
+            <SheetContent className="w-full sm:max-w-[540px] md:max-w-2xl bg-white p-0 border-l border-slate-200 overflow-hidden">
                 <div className="h-full flex flex-col">
-                    <div className="p-8 border-b border-sky-100 dark:border-sky-900/30 shrink-0 bg-sky-50/30 dark:bg-sky-950/10 relative overflow-hidden">
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-2 text-[10px] font-black text-sky-600 uppercase tracking-[0.3em] mb-3">
-                                <Building className="h-3.5 w-3.5" /> ID: {property.propertyCode}
-                            </div>
-                            <SheetTitle className="text-4xl font-black tracking-tight text-foreground">
+                    <header className="p-8 pb-10 bg-gradient-to-br from-blue-50/40 to-white border-b border-slate-200 relative shrink-0">
+                        <div className="relative z-10 space-y-4">
+                            <Badge className="bg-blue-500 text-white border-none px-3 py-1.5 rounded-lg text-[10px] font-semibold tracking-wide uppercase">
+                                {property.propertyCode}
+                            </Badge>
+                            <SheetTitle className="text-3xl font-semibold text-slate-900 tracking-tight leading-tight pr-12">
                                 {property.propertyName}
                             </SheetTitle>
-                            <SheetDescription className="font-medium text-muted-foreground/70 leading-relaxed pt-2">
-                                Architectural hierarchy and real-time unit availability for this asset.
-                            </SheetDescription>
-                        </div>
-                        <Building2 className="absolute -right-8 -bottom-8 h-48 w-48 text-sky-600/[0.03] rotate-12" />
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-12 scrollbar-none">
-                        {property.blocks.map((block) => (
-                            <div key={block.id} className="space-y-8">
-                                <div className="flex items-center gap-6">
-                                    <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-foreground shrink-0">{block.blockName}</h4>
-                                    <div className="h-px w-full bg-gradient-to-r from-sky-100 dark:from-sky-900/50 to-transparent" />
-                                </div>
-
-                                <Accordion type="multiple" className="space-y-4">
-                                    {block.floors.map((floor) => (
-                                        <AccordionItem key={floor.id} value={`floor-${floor.id}`} className="border rounded-[1.5rem] px-6 bg-background border-border/60 overflow-hidden shadow-none transition-all hover:border-sky-200">
-                                            <AccordionTrigger className="hover:no-underline py-6 group/trigger">
-                                                <div className="flex items-center justify-between w-full pr-4 text-left">
-                                                    <div className="space-y-1">
-                                                        <p className="text-sm font-bold tracking-tight group-hover/trigger:text-sky-600 transition-colors">{floor.floorLabel}</p>
-                                                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{floor.units.length} Units Found</p>
-                                                    </div>
-                                                </div>
-                                            </AccordionTrigger>
-                                            <AccordionContent className="pb-8">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    {floor.units.map((unit) => (
-                                                        <UnitRow key={unit.id} unit={unit} />
-                                                    ))}
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))}
-                                </Accordion>
+                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                <MapPin className="h-4 w-4 text-blue-500" strokeWidth={2} />
+                                {locationName}
                             </div>
-                        ))}
+                        </div>
+                        <div className="absolute -right-10 -bottom-10 text-blue-50 select-none pointer-events-none">
+                            <Building2 className="h-64 w-64" strokeWidth={0.5} />
+                        </div>
+                    </header>
+
+                    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 pb-32">
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Overview</h4>
+                                <p className="text-base leading-relaxed text-slate-700">
+                                    {property.propertyDescription || "Premium commercial property located in a prime business district with excellent accessibility and modern amenities."}
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-6 p-6 bg-blue-50 rounded-xl border border-blue-200">
+                                <div className="flex items-baseline gap-2">
+                                    <div className="text-4xl font-semibold text-slate-900">{totalVacant}</div>
+                                    <div className="text-sm text-slate-600">of {property.blocks?.reduce((acc, b) =>
+                                        acc + b.floors.reduce((fAcc, f) => fAcc + f.units.length, 0), 0
+                                    )}</div>
+                                </div>
+                                <div className="h-12 w-px bg-blue-200" />
+                                <div className="text-xs font-medium text-slate-600 leading-relaxed">
+                                    Units currently<br />available to lease
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Property Structure</h4>
+
+                            {property.blocks?.map((block) => (
+                                <section key={block.id} className="space-y-4">
+                                    <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
+                                        <div className="h-9 w-9 rounded-xl bg-blue-500 text-white flex items-center justify-center">
+                                            <LayoutGrid className="h-4 w-4" strokeWidth={2} />
+                                        </div>
+                                        <h4 className="text-lg font-semibold text-slate-900">{block.blockName}</h4>
+                                    </div>
+
+                                    <Accordion type="multiple" className="space-y-2">
+                                        {block.floors?.map((floor) => (
+                                            <AccordionItem key={floor.id} value={`floor-${floor.id}`} className="border-none">
+                                                <AccordionTrigger className="hover:no-underline py-0 [&[data-state=open]>div]:border-blue-300 [&[data-state=open]>div]:bg-blue-50/30">
+                                                    <div className="flex items-center justify-between w-full p-4 rounded-xl bg-white border border-slate-200 text-left transition-all">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="h-10 w-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center">
+                                                                <span className="text-base font-semibold text-blue-600">
+                                                                    {floor.floorLabel.replace(/\D/g, '')?.padStart(2, '0') || "01"}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-semibold text-slate-900">{floor.floorLabel}</p>
+                                                                <p className="text-xs text-slate-600 font-medium mt-0.5">{floor.units.length} Units</p>
+                                                            </div>
+                                                        </div>
+                                                        <ChevronDown className="h-4 w-4 text-slate-400 transition-transform duration-200" strokeWidth={2} />
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2 px-1">
+                                                    <div className="space-y-2">
+                                                        {floor.units?.map((unit) => (
+                                                            <div
+                                                                key={unit.id}
+                                                                className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 border border-slate-200 hover:border-blue-300 hover:bg-blue-50/20 transition-colors"
+                                                            >
+                                                                <div className="space-y-1">
+                                                                    <p className="text-sm font-semibold text-slate-900">{unit.unitCode}</p>
+                                                                    <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                                                                        <Maximize2 className="h-3.5 w-3.5 text-blue-500" strokeWidth={2} />
+                                                                        {unit.unitSize} sq ft
+                                                                    </div>
+                                                                </div>
+                                                                <Badge className={cn(
+                                                                    "text-[10px] font-semibold uppercase px-2.5 py-1 rounded-lg border",
+                                                                    unit.availabilityLabel === "Vacant"
+                                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                                        : "bg-slate-100 text-slate-600 border-slate-200"
+                                                                )}>
+                                                                    {unit.availabilityLabel}
+                                                                </Badge>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
+                                </section>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="p-8 border-t border-border/40 shrink-0 flex gap-4 bg-background">
-                        <Button variant="outline" className="flex-1 h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest border-border/60 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200 transition-all">
-                            Specifications
+                    <footer className="p-6 border-t border-slate-200 bg-white flex gap-3 shrink-0 absolute bottom-0 w-full z-50">
+                        <Button
+                            variant="outline"
+                            className="flex-1 h-11 rounded-xl text-xs font-medium border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                        >
+                            Download Details
                         </Button>
-                        <Button className="flex-1 h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-600/20">
-                            Book Inspection
+                        <Button
+                            className="flex-[2] h-11 rounded-xl text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                        >
+                            Request Viewing ({totalVacant} Available)
                         </Button>
-                    </div>
+                    </footer>
                 </div>
             </SheetContent>
         </Sheet>
     )
 }
 
-function UnitRow({ unit }: { unit: Unit }) {
-    const isVacant = unit.availabilityLabel === "Vacant";
-    return (
-        <div className="flex items-center justify-between p-4 rounded-2xl border border-sky-50 dark:border-sky-900/10 bg-sky-50/30 dark:bg-sky-900/5 hover:border-sky-200 transition-all group/unit">
-            <div className="flex items-center gap-3">
-                <div className={cn("h-2.5 w-2.5 rounded-full transition-all", isVacant ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" : "bg-muted-foreground/20")} />
-                <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground transition-colors group-hover/unit:text-sky-700">{unit.unitCode}</p>
-                    <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tighter flex items-center gap-1.5">
-                        <Maximize2 className="h-3 w-3 text-sky-600/40" /> {unit.unitSize} SQFT
-                    </p>
-                </div>
-            </div>
-            <Badge variant="outline" className={cn("text-[8px] font-black tracking-widest px-2.5 h-6 rounded-lg border-none", isVacant ? "bg-emerald-500/10 text-emerald-600" : "bg-muted-foreground/10 text-muted-foreground/60")}>
-                {unit.availabilityLabel}
-            </Badge>
-        </div>
-    )
-}
-
 function EmptyState({ isSearch, onClear }: { isSearch: boolean, onClear: () => void }) {
     return (
-        <div className="h-[50vh] flex flex-col items-center justify-center text-center p-12 bg-sky-50/30 dark:bg-sky-950/10 rounded-[3rem] border-2 border-dashed border-sky-100 dark:border-sky-900/30">
-            <div className="h-24 w-24 rounded-[2rem] bg-background flex items-center justify-center border border-sky-100 mb-8 shadow-none">
-                <Inbox className="h-10 w-10 text-sky-600/20 stroke-[1.5px]" />
+        <div className="h-[50vh] flex flex-col items-center justify-center text-center px-6">
+            <div className="relative mb-6">
+                <div className="h-20 w-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
+                    <Inbox className="h-9 w-9 text-slate-300" strokeWidth={1.5} />
+                </div>
             </div>
-            <h3 className="text-2xl font-black tracking-tight text-foreground mb-3">Portfolio Empty</h3>
-            <p className="text-sm text-muted-foreground/60 font-medium max-w-sm leading-relaxed mb-10">
-                Refine your search parameters or reset filters to discover available inventory.
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                {isSearch ? "No Properties Found" : "No Properties Available"}
+            </h3>
+            <p className="text-sm text-slate-600 max-w-sm mb-6 leading-relaxed">
+                {isSearch
+                    ? "Try adjusting your search criteria or filters to find what you're looking for."
+                    : "Properties will appear here once they're added to your portfolio."
+                }
             </p>
             {isSearch && (
-                <Button onClick={onClear} className="rounded-full px-10 text-[11px] font-black uppercase tracking-[0.2em] h-12 bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-600/20 transition-all">
-                    Reset Portfolio Filter
+                <Button
+                    onClick={onClear}
+                    variant="outline"
+                    className="rounded-xl px-6 h-10 text-xs font-medium hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                >
+                    Clear Filters
                 </Button>
             )}
         </div>

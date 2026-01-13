@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { ShieldCheck, TrendingUp } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/common/button"
 import { itemVariants } from "@/lib/animations"
 
 interface BalanceInfo {
@@ -64,7 +64,6 @@ export function BalanceCard({ balance = defaultBalance }: { balance?: BalanceInf
                     </div>
                 </motion.div>
 
-                {/* Status Badge */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -76,7 +75,6 @@ export function BalanceCard({ balance = defaultBalance }: { balance?: BalanceInf
                     <p className="text-sm font-medium text-white/95">{balance.status}</p>
                 </motion.div>
 
-                {/* Action Button */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}

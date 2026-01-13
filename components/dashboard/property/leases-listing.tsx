@@ -13,7 +13,8 @@ import {
     ArrowUpRight,
     MapPin,
     CheckCircle2,
-    Clock
+    Clock,
+    ChevronRight
 } from "lucide-react";
 import { LeaseRenewalForm } from "./lease-renewal-form";
 import { LeaseTerminationForm } from "./lease-termination-form";
@@ -27,13 +28,15 @@ export function LeasesList({ initialData }: { initialData: any }) {
 
     if (leases.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 px-6 border border-dashed rounded-[2rem] border-border/60 bg-secondary/5 text-center">
-                <div className="h-14 w-14 rounded-2xl bg-background border border-border/40 flex items-center justify-center mb-4">
-                    <Building2 className="h-7 w-7 text-muted-foreground/40" />
+            <div className="flex flex-col items-center justify-center py-24 px-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/40">
+                <div className="relative mb-6">
+                    <div className="h-20 w-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
+                        <Building2 className="h-9 w-9 text-slate-300" strokeWidth={1.5} />
+                    </div>
                 </div>
-                <h3 className="text-base font-semibold text-foreground">Registry Empty</h3>
-                <p className="text-xs text-muted-foreground max-w-[240px] mt-1.5 leading-relaxed">
-                    No active lease agreements found. New contracts will appear here once finalized.
+                <h3 className="text-lg font-semibold text-slate-900 mb-1.5">No Active Leases</h3>
+                <p className="text-sm text-slate-600 max-w-[300px] text-center leading-relaxed">
+                    New lease agreements will appear here once they're finalized and activated.
                 </p>
             </div>
         );
@@ -41,80 +44,82 @@ export function LeasesList({ initialData }: { initialData: any }) {
 
     return (
         <div className="w-full">
-            {/* Removed shadow-sm, added refined light blue header */}
-            <div className="rounded-[1.5rem] border border-border/50 bg-background overflow-hidden shadow-none">
+            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-sky-50/50 dark:bg-sky-950/20 border-b border-sky-100 dark:border-sky-900/30">
-                                <th className="px-6 py-5 text-[10px] uppercase tracking-[0.15em] font-black text-sky-700 dark:text-sky-400/80">Asset Details</th>
-                                <th className="px-6 py-5 text-[10px] uppercase tracking-[0.15em] font-black text-sky-700 dark:text-sky-400/80">Contract Period</th>
-                                <th className="px-6 py-5 text-[10px] uppercase tracking-[0.15em] font-black text-sky-700 dark:text-sky-400/80">Financials</th>
-                                <th className="px-6 py-5 text-[10px] uppercase tracking-[0.15em] font-black text-sky-700 dark:text-sky-400/80 text-center">Status</th>
-                                <th className="px-6 py-5 text-right text-[10px] uppercase tracking-[0.15em] font-black text-sky-700 dark:text-sky-400/80">Action</th>
+                            <tr className="border-b border-slate-200 bg-slate-50">
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Property</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Term</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Monthly Rent</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wide text-center">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wide">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border/40">
+                        <tbody className="divide-y divide-slate-100">
                             {leases.map((lease: any) => (
-                                <tr key={lease.id} className="group hover:bg-sky-50/20 dark:hover:bg-sky-900/5 transition-colors">
+                                <tr
+                                    key={lease.id}
+                                    className="group hover:bg-blue-50/30 transition-colors duration-200"
+                                >
                                     <td className="px-6 py-5">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 rounded-xl bg-secondary/30 flex items-center justify-center text-muted-foreground group-hover:bg-sky-100 dark:group-hover:bg-sky-900/30 group-hover:text-sky-600 transition-colors">
-                                                <Building2 className="h-5 w-5" />
+                                        <div className="flex items-center gap-3.5">
+                                            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 flex items-center justify-center border border-blue-200/60">
+                                                <Building2 className="h-5 w-5 text-blue-600" strokeWidth={2} />
                                             </div>
-                                            <div>
-                                                <div className="font-bold text-sm text-foreground leading-tight">
-                                                    {lease.unit?.code} — {lease.property?.name || "Global Asset"}
+                                            <div className="min-w-0">
+                                                <div className="font-semibold text-sm text-slate-900 truncate">
+                                                    {lease.unit?.code} · {lease.property?.name || "Property"}
                                                 </div>
                                                 <div className="flex items-center gap-1.5 mt-1">
-                                                    <MapPin className="h-3 w-3 text-muted-foreground" />
-                                                    <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-tight">
-                                                        {lease.block?.name || 'Main Block'} • {lease.unit?.size} SQFT
+                                                    <MapPin className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
+                                                    <span className="text-xs text-slate-600 font-medium">
+                                                        {lease.block?.name || 'Main Block'} · {lease.unit?.size} sq ft
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-foreground font-mono uppercase tracking-tighter">
+                                        <div className="space-y-1">
+                                            <div className="text-xs font-mono font-semibold text-slate-800 tracking-tight">
                                                 {lease.leaseNumber}
-                                            </span>
-                                            <div className="flex items-center gap-1.5 mt-1 text-muted-foreground">
-                                                <Calendar className="h-3 w-3" />
-                                                <span className="text-[11px] font-medium whitespace-nowrap">
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-slate-600">
+                                                <Calendar className="h-3.5 w-3.5" strokeWidth={2} />
+                                                <span className="text-xs font-medium">
                                                     {lease.dates?.start} – {lease.dates?.end}
                                                 </span>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <div className="flex flex-col">
+                                        <div className="space-y-0.5">
                                             <div className="flex items-baseline gap-1">
-                                                <span className="text-[10px] font-bold text-muted-foreground">{lease.financials?.currency || 'KES'}</span>
-                                                <span className="text-sm font-black text-foreground tabular-nums">
+                                                <span className="text-xs font-medium text-slate-600">{lease.financials?.currency || 'KES'}</span>
+                                                <span className="text-base font-semibold text-slate-900 tabular-nums">
                                                     {lease.financials?.monthlyRent?.toLocaleString()}
                                                 </span>
                                             </div>
-                                            <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground/60 mt-0.5">Monthly Rent</span>
+                                            <span className="text-[10px] text-slate-500 font-medium">per month</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="flex justify-center">
                                             <Badge
                                                 className={cn(
-                                                    "h-7 px-3 rounded-full text-[9px] font-black uppercase tracking-[0.1em] border-none shadow-none",
+                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border",
                                                     lease.isActive
-                                                        ? "bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20"
-                                                        : "bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20"
+                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                        : "bg-amber-50 text-amber-700 border-amber-200"
                                                 )}
                                             >
                                                 {lease.isActive ? (
-                                                    <CheckCircle2 className="h-2.5 w-2.5 mr-1.5 stroke-[3px]" />
+                                                    <CheckCircle2 className="h-3 w-3" strokeWidth={2.5} />
                                                 ) : (
-                                                    <Clock className="h-2.5 w-2.5 mr-1.5 stroke-[3px]" />
+                                                    <Clock className="h-3 w-3" strokeWidth={2.5} />
                                                 )}
-                                                {lease.isActive ? "Active" : "Review"}
+                                                {lease.isActive ? "Active" : "Pending"}
                                             </Badge>
                                         </div>
                                     </td>
@@ -123,10 +128,10 @@ export function LeasesList({ initialData }: { initialData: any }) {
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => setSelectedLease(lease)}
-                                            className="h-9 px-4 rounded-xl border border-transparent hover:border-sky-200 dark:hover:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-all group/btn"
+                                            className="h-9 px-4 rounded-lg hover:bg-blue-400 hover:text-blue-900 transition-all group/btn"
                                         >
-                                            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground group-hover/btn:text-sky-600">Manage</span>
-                                            <ArrowUpRight className="ml-2 h-3.5 w-3.5 opacity-40 group-hover/btn:opacity-100 group-hover/btn:text-sky-600 transition-all" />
+                                            <span className="text-xs font-medium">Manage Lease</span>
+                                            <ChevronRight className="ml-1 h-4 w-4 opacity-60 group-hover/btn:opacity-100 group-hover/btn:translate-x-0.5 transition-all" />
                                         </Button>
                                     </td>
                                 </tr>
@@ -137,73 +142,73 @@ export function LeasesList({ initialData }: { initialData: any }) {
             </div>
 
             <Sheet open={!!selectedLease} onOpenChange={() => { setSelectedLease(null); setActionType(null); }}>
-                <SheetContent className="sm:max-w-[440px] bg-background border-l border-border/40 p-0 flex flex-col shadow-2xl">
-                    <div className="p-8 bg-sky-50/30 dark:bg-sky-950/10 border-b border-border/40 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-5">
-                            <Building2 className="h-24 w-24" />
-                        </div>
-                        <SheetHeader className="relative z-10">
-                            <div className="h-11 w-11 rounded-2xl bg-background border border-border/40 flex items-center justify-center mb-5">
-                                <RotateCw className={cn("h-5 w-5 text-sky-600", actionType === 'terminate' && "text-destructive")} />
+                <SheetContent className="sm:max-w-[480px] bg-white border-l border-slate-200 p-0 flex flex-col">
+                    <div className="px-8 py-8 bg-gradient-to-br from-blue-50/40 to-white border-b border-slate-200">
+                        <SheetHeader>
+                            <div className="inline-flex h-12 w-12 rounded-xl bg-blue-500 items-center justify-center mb-4">
+                                <RotateCw className={cn(
+                                    "h-5 w-5 text-white",
+                                    actionType === 'terminate' && "hidden"
+                                )} strokeWidth={2} />
+                                <XOctagon className={cn(
+                                    "h-5 w-5 text-white",
+                                    actionType !== 'terminate' && "hidden"
+                                )} strokeWidth={2} />
                             </div>
-                            <SheetTitle className="text-2xl font-black tracking-tight text-foreground">
-                                {actionType === "renew" ? "Contract Extension" : actionType === "terminate" ? "Early Termination" : "Agreement Portal"}
+                            <SheetTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+                                {actionType === "renew" ? "Renew Lease" : actionType === "terminate" ? "Terminate Lease" : "Lease Management"}
                             </SheetTitle>
-                            <SheetDescription className="text-[10px] font-black uppercase tracking-[0.25em] text-sky-600/60 mt-1">
-                                {selectedLease?.leaseNumber} • {selectedLease?.unit?.code}
+                            <SheetDescription className="text-sm text-slate-600 mt-1.5">
+                                {selectedLease?.leaseNumber} · {selectedLease?.unit?.code}
                             </SheetDescription>
                         </SheetHeader>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto px-8 py-6">
                         {!actionType ? (
                             <div className="space-y-6">
-                                <div className="space-y-1.5">
-                                    <div className="grid gap-3">
-                                        <button
-                                            onClick={() => setActionType("renew")}
-                                            className="group flex items-center justify-between p-5 rounded-2xl border border-border/60 hover:border-sky-400/40 hover:bg-sky-50/30 dark:hover:bg-sky-900/10 transition-all text-left bg-background"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 group-hover:scale-105 transition-transform">
-                                                    <RotateCw className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-sm text-foreground leading-none">Renew Agreement</div>
-                                                    <div className="text-[10px] text-muted-foreground font-bold mt-1.5 uppercase tracking-tight">Extend term & adjustments</div>
-                                                </div>
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={() => setActionType("renew")}
+                                        className="group/action w-full flex items-center justify-between p-5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all text-left bg-white"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-11 w-11 rounded-xl bg-blue-100 flex items-center justify-center group-hover/action:bg-blue-200 transition-colors">
+                                                <RotateCw className="h-5 w-5 text-blue-600" strokeWidth={2} />
                                             </div>
-                                            <div className="h-8 w-8 rounded-full flex items-center justify-center border border-border/40 group-hover:border-sky-200 group-hover:bg-sky-50 transition-all">
-                                                <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-sky-600 transition-colors" />
+                                            <div>
+                                                <div className="font-semibold text-sm text-slate-900">Renew Agreement</div>
+                                                <div className="text-xs text-slate-600 mt-0.5">Extend term and update conditions</div>
                                             </div>
-                                        </button>
+                                        </div>
+                                        <ArrowUpRight className="h-5 w-5 text-slate-400 group-hover/action:text-blue-600 group-hover/action:translate-x-0.5 group-hover/action:-translate-y-0.5 transition-all" />
+                                    </button>
 
-                                        <button
-                                            onClick={() => setActionType("terminate")}
-                                            className="group flex items-center justify-between p-5 rounded-2xl border border-border/60 hover:border-destructive/40 hover:bg-destructive/[0.02] transition-all text-left bg-background"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive group-hover:scale-105 transition-transform">
-                                                    <XOctagon className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-sm text-foreground leading-none">Terminate Lease</div>
-                                                    <div className="text-[10px] text-muted-foreground font-bold mt-1.5 uppercase tracking-tight">Request notice of exit</div>
-                                                </div>
+                                    <button
+                                        onClick={() => setActionType("terminate")}
+                                        className="group/action w-full flex items-center justify-between p-5 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50/30 transition-all text-left bg-white"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-11 w-11 rounded-xl bg-rose-100 flex items-center justify-center group-hover/action:bg-rose-200 transition-colors">
+                                                <XOctagon className="h-5 w-5 text-rose-600" strokeWidth={2} />
                                             </div>
-                                            <div className="h-8 w-8 rounded-full flex items-center justify-center border border-border/40 group-hover:border-destructive/20 group-hover:bg-destructive/5 transition-all">
-                                                <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-destructive transition-colors" />
+                                            <div>
+                                                <div className="font-semibold text-sm text-slate-900">Terminate Lease</div>
+                                                <div className="text-xs text-slate-600 mt-0.5">Submit termination notice</div>
                                             </div>
-                                        </button>
-                                    </div>
+                                        </div>
+                                        <ArrowUpRight className="h-5 w-5 text-slate-400 group-hover/action:text-rose-600 group-hover/action:translate-x-0.5 group-hover/action:-translate-y-0.5 transition-all" />
+                                    </button>
                                 </div>
 
-                                <div className="p-5 rounded-2xl bg-sky-50/50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-900/20">
-                                    <div className="flex items-start gap-3">
-                                        <Wallet className="h-4 w-4 text-sky-600 mt-0.5" />
-                                        <div>
-                                            <div className="text-[10px] font-black uppercase tracking-widest text-sky-700/60">Current Commitment</div>
-                                            <div className="text-base font-black text-foreground mt-0.5 tabular-nums">
+                                <div className="p-5 rounded-xl bg-blue-50/50 border border-blue-200/60">
+                                    <div className="flex items-start gap-3.5">
+                                        <div className="h-10 w-10 rounded-lg bg-white border border-blue-200 flex items-center justify-center shrink-0">
+                                            <Wallet className="h-5 w-5 text-blue-600" strokeWidth={2} />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="text-xs font-medium text-slate-600 mb-1">Current Monthly Rent</div>
+                                            <div className="text-xl font-semibold text-slate-900 tabular-nums">
                                                 {selectedLease?.financials?.currency} {selectedLease?.financials?.monthlyRent?.toLocaleString()}
                                             </div>
                                         </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/common/input"
 import { RoundCard } from "@/components/procurement/round-card"
 import { PrequalificationRound } from "@/types/procurement/types"
 import { useRoundFilter } from "@/hooks/procurement/use-round-filter"
