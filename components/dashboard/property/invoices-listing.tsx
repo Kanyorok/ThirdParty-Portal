@@ -26,142 +26,154 @@ export function InvoicesList({ initialData }: InvoicesListProps) {
     const { isPending } = usePagination()
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null)
     const invoices = initialData?.data || []
+    const currentTenantId = 9
 
     const getStatusDetails = (status: string) => {
         switch (status) {
             case 'P': return {
                 label: 'Pending',
-                class: 'bg-amber-50 text-amber-600 border-amber-100',
+                class: 'bg-amber-50 text-amber-700 border-amber-200',
                 icon: Clock
             };
             case 'Paid': return {
-                label: 'Settled',
-                class: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                label: 'Paid',
+                class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
                 icon: CheckCircle2
             };
             case 'O': return {
                 label: 'Overdue',
-                class: 'bg-rose-50 text-rose-600 border-rose-100',
+                class: 'bg-rose-50 text-rose-700 border-rose-200',
                 icon: AlertCircle
             };
             default: return {
                 label: status,
-                class: 'bg-slate-50 text-slate-600 border-slate-100',
+                class: 'bg-slate-50 text-slate-700 border-slate-200',
                 icon: FileText
             };
         }
     }
 
     const handleDownload = (id: number) => {
-        window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/?id=${id}`, '_blank');
+        window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/download/${id}`, '_blank');
     };
 
     return (
         <>
             <div className={cn(
-                "rounded-[2.5rem] border border-border/50 bg-background overflow-hidden transition-all duration-500 shadow-none",
-                isPending && "opacity-40 grayscale blur-[2px] pointer-events-none"
+                "rounded-2xl border border-slate-200 bg-white overflow-hidden transition-all duration-300",
+                isPending && "opacity-50 pointer-events-none"
             )}>
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="border-b border-sky-100 dark:border-sky-900/30 bg-sky-50/30 dark:bg-sky-950/10">
-                                <th className="h-16 px-8 text-left text-[10px] font-black uppercase tracking-[0.25em] text-sky-900 dark:text-sky-100">
+                            <tr className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
                                     <div className="flex items-center gap-2">
-                                        <Hash className="h-3.5 w-3.5" /> Ref No.
+                                        <Hash className="h-3.5 w-3.5" strokeWidth={2} />
+                                        Invoice
                                     </div>
                                 </th>
-                                <th className="h-16 px-8 text-left text-[10px] font-black uppercase tracking-[0.25em] text-sky-900 dark:text-sky-100">
+                                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
                                     <div className="flex items-center gap-2">
-                                        <Wallet className="h-3.5 w-3.5" /> Contract
+                                        <Wallet className="h-3.5 w-3.5" strokeWidth={2} />
+                                        Lease
                                     </div>
                                 </th>
-                                <th className="h-16 px-8 text-left text-[10px] font-black uppercase tracking-[0.25em] text-sky-900 dark:text-sky-100">
+                                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
                                     Status
                                 </th>
-                                <th className="h-16 px-8 text-right text-[10px] font-black uppercase tracking-[0.25em] text-sky-900 dark:text-sky-100">
+                                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-700">
                                     <div className="flex items-center justify-end gap-2">
-                                        <Coins className="h-3.5 w-3.5" /> Total Due
+                                        <Coins className="h-3.5 w-3.5" strokeWidth={2} />
+                                        Amount
                                     </div>
                                 </th>
-                                <th className="h-16 px-8 text-right text-[10px] font-black uppercase tracking-[0.25em] text-sky-900 dark:text-sky-100">
+                                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-700">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border/40">
+                        <tbody className="divide-y divide-slate-100">
                             {invoices.map((invoice) => {
-                                const totalAmount = Object.values(invoice.amounts || {}).reduce(
+                                const subtotal = Object.values(invoice.amounts || {}).reduce(
                                     (acc: number, curr: any) => acc + (Number(curr) || 0),
                                     0
                                 );
+                                const taxAmount = invoice.tax ? (subtotal * invoice.tax.rate) / 100 : 0;
+                                const totalAmount = subtotal + taxAmount;
+
                                 const status = getStatusDetails(invoice.status);
                                 const StatusIcon = status.icon;
+                                const currencyCode = typeof invoice.currency === 'object' ? invoice.currency.code : (invoice.currency || 'KES');
 
                                 return (
-                                    <tr key={invoice.id} className="group hover:bg-sky-50/20 dark:hover:bg-sky-900/5 transition-all cursor-default">
-                                        <td className="px-8 py-7">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 rounded-[1rem] bg-secondary/30 flex items-center justify-center text-foreground group-hover:bg-sky-600 group-hover:text-white transition-all duration-300">
-                                                    <FileText className="h-5 w-5" />
+                                    <tr key={invoice.id} className="group hover:bg-blue-50/30 transition-all duration-200">
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-3.5">
+                                                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/60 flex items-center justify-center group-hover:border-blue-300 transition-all">
+                                                    <FileText className="h-5 w-5 text-blue-600" strokeWidth={2} />
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className="font-mono text-sm font-black tracking-tight text-foreground">
+                                                <div className="space-y-1">
+                                                    <div className="font-mono text-sm font-semibold tracking-tight text-slate-900">
                                                         {invoice.invoiceNumber}
-                                                    </span>
-                                                    <div className="flex items-center gap-1.5 mt-0.5 text-[9px] font-bold text-muted-foreground/40 uppercase">
-                                                        <Calendar className="h-2.5 w-2.5" />
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                                                        <Calendar className="h-3 w-3" strokeWidth={2} />
                                                         {invoice.billingMonth}
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-7">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-foreground/80 group-hover:text-sky-600 transition-colors">
-                                                    {invoice.leaseNumber}
-                                                </span>
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/30">
+                                        <td className="px-6 py-5">
+                                            <div className="space-y-1">
+                                                <div className="text-sm font-semibold text-slate-900">
+                                                    {invoice.lease?.leaseNumber || invoice.leaseNumber}
+                                                </div>
+                                                <div className="text-xs text-slate-500 font-medium">
                                                     ID: {invoice.id}
-                                                </span>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-7">
+                                        <td className="px-6 py-5">
                                             <div className={cn(
-                                                "inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase tracking-[0.15em]",
+                                                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-all",
                                                 status.class
                                             )}>
-                                                <StatusIcon className="h-3 w-3" />
+                                                <StatusIcon className="h-3 w-3" strokeWidth={2} />
                                                 {status.label}
                                             </div>
                                         </td>
-                                        <td className="px-8 py-7 text-right">
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-base font-black text-foreground tracking-tighter">
-                                                    {invoice.currency} {totalAmount.toLocaleString(undefined, {
+                                        <td className="px-6 py-5 text-right">
+                                            <div className="space-y-1">
+                                                <div className="text-base font-semibold text-slate-900 tabular-nums">
+                                                    {currencyCode} {totalAmount.toLocaleString(undefined, {
                                                         minimumFractionDigits: 2,
                                                         maximumFractionDigits: 2
                                                     })}
-                                                </span>
-                                                <span className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-widest">
-                                                    Issued {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}
-                                                </span>
+                                                </div>
+                                                <div className="text-xs text-slate-500 font-medium">
+                                                    {new Date(invoice.invoiceDate).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })}
+                                                </div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-7">
-                                            <div className="flex items-center justify-end gap-3">
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => setSelectedInvoiceId(invoice.id)}
-                                                    className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-secondary/50 text-foreground border border-transparent hover:bg-foreground hover:text-background transition-all duration-300"
+                                                    className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all"
                                                 >
-                                                    <Eye className="h-4 w-4" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">Preview</span>
+                                                    <Eye className="h-4 w-4" strokeWidth={2} />
+                                                    <span className="text-xs font-medium">View</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleDownload(invoice.id)}
-                                                    className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-sky-50 dark:bg-sky-950/30 text-sky-600 border border-sky-100 dark:border-sky-900/50 hover:bg-sky-600 hover:text-white hover:border-sky-600 hover:shadow-lg hover:shadow-sky-600/20 transition-all duration-300 group/btn"
+                                                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all group/btn"
                                                 >
-                                                    <Download className="h-4 w-4 transition-transform group-hover/btn:-translate-y-0.5" />
+                                                    <Download className="h-4 w-4 transition-transform group-hover/btn:-translate-y-0.5" strokeWidth={2} />
                                                 </button>
                                             </div>
                                         </td>
@@ -176,6 +188,7 @@ export function InvoicesList({ initialData }: InvoicesListProps) {
             <InvoiceDetailSheet
                 id={selectedInvoiceId}
                 onClose={() => setSelectedInvoiceId(null)}
+                tenantId={currentTenantId}
             />
         </>
     )

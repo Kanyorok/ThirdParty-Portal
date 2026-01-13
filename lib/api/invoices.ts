@@ -5,23 +5,34 @@ export interface Invoice {
     invoiceNumber: string;
     billingMonth: string;
     invoiceDate: string;
-    status: 'P' | 'Paid' | 'O';
+    status: 'P' | 'Paid' | 'O' | string;
     amounts: {
         rent: number;
         serviceCharge: number;
         otherCharges: number;
         parkingFee: number;
     };
-    currency: string;
-    leaseNumber: string;
+    currency: string | { id: number; code: string };
+    tax?: {
+        id: number;
+        name: string | null;
+        rate: number;
+    };
+    lease?: {
+        id: number;
+        leaseNumber: string;
+    };
+    leaseNumber?: string;
     createdOn: string;
+    description?: string | null;
+    notes?: string;
 }
 
-export async function getInvoices(page: number = 1, id?: number): Promise<PaginatedResponse<Invoice>> {
-    const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices`;
+export async function getInvoices(page: number = 1, tenantId: number = 9): Promise<PaginatedResponse<Invoice>> {
+    const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/tenant`;
     const params = new URLSearchParams({
         page: page.toString(),
-        ...(id && { id: id.toString() })
+        tenant_id: tenantId.toString()
     });
 
     const res = await fetch(`${baseUrl}?${params.toString()}`, {
@@ -37,13 +48,35 @@ export async function getInvoices(page: number = 1, id?: number): Promise<Pagina
     });
 
     if (!res.ok) {
-        throw new Error(`Invoice fetch failed: ${res.status}`);
+        throw new Error(`Invoices fetch failed: ${res.status}`);
+    }
+
+    return res.json();
+}
+
+export async function getInvoiceDetails(invoiceId: number, tenantId: number = 9): Promise<{ data: Invoice }> {
+    const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/tenant/show`;
+    const params = new URLSearchParams({
+        tenant_id: tenantId.toString(),
+        invoice_id: invoiceId.toString()
+    });
+
+    const res = await fetch(`${baseUrl}?${params.toString()}`, {
+        method: 'GET',
+        next: { tags: [`invoice-${invoiceId}`] },
+        headers: {
+            'Accept': 'application/json',
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error(`Invoice detail fetch failed: ${res.status}`);
     }
 
     return res.json();
 }
 
 export async function downloadInvoicePdf(id: number): Promise<void> {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/?id=${id}`;
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/download/${id}`;
     window.open(url, '_blank');
 }

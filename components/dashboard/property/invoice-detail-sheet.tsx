@@ -1,34 +1,33 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { getInvoices } from "@/lib/api/invoices"
 import {
     X,
     Receipt,
     Printer,
     ShieldCheck,
     Calendar,
-    Coins,
     Building,
     Mail,
-    Share2
+    Share2,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/common/skeleton"
+import { getInvoiceDetails } from "@/lib/api/invoices"
 
 interface InvoiceDetailSheetProps {
     id: number | null
     onClose: () => void
+    tenantId: number
 }
 
-export function InvoiceDetailSheet({ id, onClose }: InvoiceDetailSheetProps) {
-    const { data, isLoading } = useQuery({
-        queryKey: ['invoice', id],
-        queryFn: () => getInvoices(1, id!),
+export function InvoiceDetailSheet({ id, onClose, tenantId }: InvoiceDetailSheetProps) {
+    const { data: response, isLoading } = useQuery({
+        queryKey: ['invoice', id, tenantId],
+        queryFn: () => getInvoiceDetails(id!, tenantId),
         enabled: !!id,
     })
 
-    const invoice = data?.data?.find((inv: any) => inv.id === id)
+    const invoice = response?.data;
 
     if (!id) return null
 
@@ -36,10 +35,18 @@ export function InvoiceDetailSheet({ id, onClose }: InvoiceDetailSheetProps) {
         window.print()
     }
 
+    const currencyCode = typeof invoice?.currency === 'object'
+        ? invoice.currency.code
+        : (invoice?.currency || 'KES');
+
+    const subtotal = invoice ? Object.values(invoice.amounts).reduce((a: any, b: any) => a + (Number(b) || 0), 0) : 0;
+    const taxAmount = invoice?.tax ? (subtotal * invoice.tax.rate) / 100 : 0;
+    const totalAmount = subtotal + taxAmount;
+
     const handleEmail = () => {
         if (!invoice) return
         const subject = `Invoice ${invoice.invoiceNumber} - ${invoice.billingMonth}`
-        const body = `Please find details for invoice ${invoice.invoiceNumber}. Total: ${invoice.currency} ${Object.values(invoice.amounts).reduce((a: any, b: any) => a + b, 0)}`
+        const body = `Find details for invoice ${invoice.invoiceNumber}. Total: ${currencyCode} ${totalAmount.toLocaleString()}`
         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
     }
 
@@ -57,7 +64,9 @@ export function InvoiceDetailSheet({ id, onClose }: InvoiceDetailSheetProps) {
                             <Receipt className="h-5 w-5" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black tracking-tight leading-none uppercase">{invoice?.invoiceNumber || "Loading..."}</h2>
+                            <h2 className="text-xl font-black tracking-tight leading-none uppercase">
+                                {isLoading ? "Fetching..." : invoice?.invoiceNumber}
+                            </h2>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 print:hidden">
@@ -82,7 +91,9 @@ export function InvoiceDetailSheet({ id, onClose }: InvoiceDetailSheetProps) {
                                 <div className="p-5 rounded-3xl bg-secondary/30 border border-border/40">
                                     <Building className="h-4 w-4 text-muted-foreground mb-3" />
                                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block mb-1">Contract</span>
-                                    <span className="text-sm font-bold text-foreground">{invoice.leaseNumber}</span>
+                                    <span className="text-sm font-bold text-foreground">
+                                        {invoice.lease?.leaseNumber || invoice.leaseNumber}
+                                    </span>
                                 </div>
                                 <div className="p-5 rounded-3xl bg-secondary/30 border border-border/40">
                                     <Calendar className="h-4 w-4 text-muted-foreground mb-3" />
@@ -93,7 +104,7 @@ export function InvoiceDetailSheet({ id, onClose }: InvoiceDetailSheetProps) {
 
                             <div className="rounded-[2.5rem] bg-sky-50/50 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/40 p-8 space-y-6 print:border-black print:rounded-none">
                                 <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-sky-100 dark:border-sky-900/40 pb-4">
-                                    <span>Item Description</span>
+                                    <span>Invoice Description</span>
                                     <span>Amount</span>
                                 </div>
 
@@ -104,25 +115,40 @@ export function InvoiceDetailSheet({ id, onClose }: InvoiceDetailSheetProps) {
                                                 {key.replace(/([A-Z])/g, ' $1')}
                                             </span>
                                             <span className="text-sm font-mono font-black">
-                                                {invoice.currency} {val.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                {currencyCode} {Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </span>
                                         </div>
                                     ))}
+                                    {invoice.tax && (
+                                        <div className="flex justify-between items-center group/item pt-2 border-t border-dashed border-sky-200 dark:border-sky-800">
+                                            <span className="text-sm font-bold text-foreground/60 italic">
+                                                Tax ({invoice.tax.rate}%)
+                                            </span>
+                                            <span className="text-sm font-mono font-black">
+                                                {currencyCode} {taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="pt-6 border-t-2 border-sky-600 dark:border-sky-400 flex justify-between items-center print:border-black">
                                     <span className="text-xs font-black uppercase tracking-widest">Total Payable</span>
                                     <span className="text-2xl font-black text-sky-600 print:text-black">
-                                        {invoice.currency} {Object.values(invoice.amounts).reduce((a: any, b: any) => a + b, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        {currencyCode} {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="p-6 rounded-3xl border border-dashed border-border flex items-start gap-4 print:border-solid">
                                 <ShieldCheck className="h-5 w-5 text-sky-600 shrink-0 mt-0.5 print:text-black" />
-                                <p className="text-[11px] leading-relaxed text-muted-foreground font-medium">
-                                    Certified record generated on {new Date(invoice.createdOn).toLocaleDateString()}. Payment is due as per the terms of contract {invoice.leaseNumber}.
-                                </p>
+                                <div className="space-y-1">
+                                    <p className="text-[11px] leading-relaxed text-muted-foreground font-medium">
+                                        Record generated on {new Date(invoice.createdOn).toLocaleDateString()}. Payment is due as per the terms of contract {invoice.lease?.leaseNumber || invoice.leaseNumber}.
+                                    </p>
+                                    {invoice.notes && (
+                                        <p className="text-[10px] text-sky-600/70 font-bold uppercase tracking-tighter italic">Note: {invoice.notes}</p>
+                                    )}
+                                </div>
                             </div>
                         </>
                     )}

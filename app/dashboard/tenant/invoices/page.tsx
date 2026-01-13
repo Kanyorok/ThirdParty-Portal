@@ -10,18 +10,20 @@ import { AlertCircle, RefreshCw, Search, FileText, Layers } from "lucide-react"
 import { Input } from "@/components/common/input"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
+import { useSearchParams } from "next/navigation"
 import { getInvoices } from "@/lib/api/invoices"
 
 export default function InvoicesRegistry() {
     const [searchQuery, setSearchQuery] = useState("")
     const debouncedSearch = useDebounce(searchQuery, 400)
+    const searchParams = useSearchParams()
 
-    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : "")
     const page = Number(searchParams.get("page")) || 1
+    const tenantId = 9
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['invoices', page, debouncedSearch],
-        queryFn: () => getInvoices(page),
+        queryKey: ['invoices', page, debouncedSearch, tenantId],
+        queryFn: () => getInvoices(page, tenantId),
         placeholderData: (previousData) => previousData,
     })
 
@@ -32,13 +34,14 @@ export default function InvoicesRegistry() {
             </div>
             <div className="text-center space-y-2">
                 <h3 className="text-xl font-black text-foreground tracking-tight">Fetch Interrupted</h3>
+                <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Unable to reach invoice gateway</p>
             </div>
             <button
                 onClick={() => refetch()}
                 className="group px-8 py-3 bg-foreground text-background rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-sky-600 transition-all flex items-center gap-3 active:scale-95"
             >
                 <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-                Refres
+                Refresh Registry
             </button>
         </div>
     )
@@ -51,11 +54,14 @@ export default function InvoicesRegistry() {
                 <div className="space-y-4">
                     <div className="space-y-1">
                         <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                            <div className="h-10 w-10 bg-sky-600/10 rounded-xl flex items-center justify-center text-sky-600">
                                 <FileText className="h-5 w-5" />
                             </div>
-                            <h2 className="text-3xl font-blue-400 tracking-tight text-foreground">Invoices Registry</h2>
+                            <h2 className="text-3xl font-black tracking-tight text-foreground uppercase">Invoices Registry</h2>
                         </div>
+                        <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.3em] ml-[3.25rem]">
+                            Financial Records & Ledger
+                        </p>
                     </div>
                 </div>
 

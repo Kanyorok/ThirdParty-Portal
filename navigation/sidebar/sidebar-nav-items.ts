@@ -2,7 +2,8 @@ import { UserProfile, NavSection, NavMainItem } from "@/types/profile-types"
 import {
     LayoutDashboard, Receipt, FileText,
     ClipboardList, FolderOpen, ShieldCheck, Home, BookOpen,
-    Settings, HelpCircle, Send
+    Settings, HelpCircle, Send,
+    Construction
 } from "lucide-react"
 
 const allProfiles: readonly UserProfile[] = ["base", "Supplier", "Tenant", "Customer"]
@@ -53,6 +54,7 @@ export const sidebarItems: readonly NavSection[] = [
             withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: Home }, ["Tenant"]),
             withProfiles({ title: "Leases", url: "/dashboard/tenant/leases", icon: BookOpen }, ["Tenant"]),
             withProfiles({ title: "Invoices", url: "/dashboard/tenant/invoices", icon: Receipt }, ["Tenant"]),
+            withProfiles({ title: "Maintenance", url: "/dashboard/tenant/maintenance", icon: Construction }, ["Tenant"])
         ],
     },
     {

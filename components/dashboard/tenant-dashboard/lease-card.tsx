@@ -41,7 +41,6 @@ export function LeaseCard({ lease = defaultLeaseInfo }: { lease?: LeaseInfo } = 
                     <span className="text-xs font-semibold text-blue-700 tracking-wide">ACTIVE LEASE</span>
                 </motion.div>
 
-                {/* Main Content */}
                 <div className="space-y-4">
                     <div>
                         <p className="text-sm font-medium text-gray-500 mb-2">Your Property</p>
@@ -59,7 +58,6 @@ export function LeaseCard({ lease = defaultLeaseInfo }: { lease?: LeaseInfo } = 
                     </motion.div>
                 </div>
 
-                {/* Lease Details Grid */}
                 <div className="space-y-4 pt-6 border-t border-blue-100/40">
                     <div className="grid grid-cols-2 gap-6">
                         <motion.div
@@ -85,7 +83,6 @@ export function LeaseCard({ lease = defaultLeaseInfo }: { lease?: LeaseInfo } = 
                     </div>
                 </div>
 
-                {/* CTA */}
                 <motion.button
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
