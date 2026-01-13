@@ -84,7 +84,6 @@
                             <th>#</th>
                             <th>Policy No.</th>
                             <th>Claim Type</th>
-                            <th>Claim Reason</th>
                             <th>Amount</th>
                             <th>Date</th>
                             <th>Status</th>
@@ -97,8 +96,7 @@
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td>{{ $claim->policy->PolicyNumber ?? '-'}}</td>
                             <td>{{ $claim->claimtype->Description ?? '-'}}</td>
-                            <td>{{ $claim->ClaimReason ?? '-'}}</td>
-                            <td>{{ number_format($claim->ClaimAmount, 2) }}</td>
+                            <td>{{ $claim->currency->SymbolNative ?? 'cu'}} {{ number_format($claim->ClaimAmount, 2) }}</td>
                             <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d M Y') }}</td>                           <td class="text-center">
                                 <span class="badge bg-primary">
                                     {{ $claim->status->Description ?? '-' }}
@@ -139,7 +137,7 @@
             },
             columnDefs: [{
                     orderable: false,
-                    targets: [7]
+                    targets: [6]
                 } // Disable sorting on Actions
             ]
         });

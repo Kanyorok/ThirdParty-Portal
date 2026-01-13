@@ -21,6 +21,7 @@ class RFQResponseController extends Controller
         $rfqResponses = RFQResponse::with(['rfq', 'items', 'items.uom'])->latest()->paginate(10);
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
+
     public function create()
     {
         $this->authorize('create', RFQResponse::class);
@@ -53,6 +54,22 @@ class RFQResponseController extends Controller
 
         return view('procurement.rfqresponses.create', compact('rfqs', 'suppliers', 'currencies'));
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'RFQId' => 'required|exists:t_RFQ,Id',
+            'RFQNumber' => 'required|string|max:255',
+            'RequisitionItems' => 'required|array|min:1',
+            'RequisitionItems.*.name' => 'required|string|max:255',
+            'RequisitionItems.*.uom_id' => 'required|integer|exists:t_UOM,Id',
+            'RequisitionItems.*.quantity' => 'required|integer|min:1',
+            'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
+            'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
+            'SupplierId' => 'required|exists:t_Suppliers,Id',
+            'Currency' => 'required|string|max:3',
+            'DurationDays' => 'required|integer|min:1',
+            'TotalPayable' => 'required|numeric|min:0',
     
     DB::transaction(function () use ($request, $supplier, $supplierName, $newRFQResponseNumber, $userId) {
         // Create RFQ Response (header)
@@ -68,7 +85,11 @@ class RFQResponseController extends Controller
             'CreatedBy' => $userId,
             'ModifiedBy' => $userId,
         ]);
-
+    /**
+     * Re-organized the orphaned logic into the store method
+     */
+    public function store(Request $request)
+    {
         $userId = Auth::user()->Id;
 
         // Get the selected supplier with relationships
@@ -171,7 +192,7 @@ class RFQResponseController extends Controller
         $rfqResponse->update([
             'TotalPayable' => $request->TotalPayable,
             'DurationDays' => $request->DurationDays,
-            'ModifiedBy' => \Illuminate\Support\Facades\Auth::id(),
+            'ModifiedBy' => Auth::id(),
         ]);
 
         // Only update editable fields in items
@@ -181,7 +202,7 @@ class RFQResponseController extends Controller
                 $item->update([
                     'QuotedPrice' => $itemData['quotedprice'],
                     'TotalPayable' => $itemData['totalpayable'],
-                    'ModifiedBy' => \Illuminate\Support\Facades\Auth::id(),
+                    'ModifiedBy' => Auth::id(),
                 ]);
             }
         }
@@ -198,14 +219,12 @@ class RFQResponseController extends Controller
 
     public function getRequisitionItems($rfqId)
     {
-        // Fetch RFQ lines and eager load uomDetails relation
         $rfqLines = RFQLine::with('uom')->where('RFQId', $rfqId)->get();
 
         if ($rfqLines->isEmpty()) {
             return response()->json(['error' => 'No RFQ lines found for the given RFQ ID'], 404);
         }
 
-        // Transform for frontend
         $items = $rfqLines->map(function ($line) {
             return [
                 'id' => $line->Id,
@@ -216,12 +235,8 @@ class RFQResponseController extends Controller
             ];
         });
 
-        return response()->json([
-            'requisitionItems' => $items,
-        ]);
+        return response()->json(['requisitionItems' => $items]);
     }
-
-
 
     public function getSuppliers($rfqId)
     {
@@ -230,39 +245,6 @@ class RFQResponseController extends Controller
             return response()->json([], 404);
         }
 
-        // Get categories from RFQ lines and expand to include hierarchy
-        $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
-
-        $allCategoryIds = collect();
-        foreach ($itemCategoryIds as $catId) {
-            $catId = (int)$catId;
-            if (!$catId) continue;
-
-            // Climb ancestors
-            $current = $catId;
-            while ($current) {
-                $allCategoryIds->push($current);
-                $parent = DB::table('t_ItemCategories')->where('Id', $current)->value('ParentId');
-                if ($parent === null || (int)$parent === 0) break;
-                $current = (int)$parent;
-            }
-        }
-
-        // BFS descendants
-        $queue = collect($allCategoryIds->unique()->values());
-        while ($queue->isNotEmpty()) {
-            $batch = $queue->splice(0, 200)->all();
-            $children = DB::table('t_ItemCategories')->whereIn('ParentId', $batch)->pluck('Id');
-            $new = $children->diff($allCategoryIds);
-            if ($new->isNotEmpty()) {
-                $allCategoryIds = $allCategoryIds->merge($new);
-                $queue = $queue->merge($new);
-            }
-        }
-
-        $allCategoryIds = $allCategoryIds->unique()->values();
-
-        // Exclude suppliers (by ThirdParty via SupplierMaster) that already submitted FINAL responses
         $respondedThirdPartyIds = DB::table('t_RFQResponse as rr')
             ->join('t_Suppliers as s', 's.Id', '=', 'rr.SupplierId')
             ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
@@ -272,44 +254,28 @@ class RFQResponseController extends Controller
             ->where('rr.Status', 'FINAL')
             ->pluck('sm.ThirdPartyId');
 
-        //  Check if t_RFQ_Supplier table exists, otherwise get all suppliers
         $hasInvitationTable = Schema::hasTable('t_RFQ_Supplier');
 
+        $query = DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
+            ->whereNull('s.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->whereNull('tp.DeletedOn')
+            ->where('s.Active_Status', 1)
+            ->whereNotIn('sm.ThirdPartyId', $respondedThirdPartyIds);
+
         if ($hasInvitationTable) {
-            // Get invited suppliers from pivot table
-            $suppliers = DB::table('t_RFQ_Supplier as p')
-                ->join('t_Suppliers as s', 's.Id', '=', 'p.SupplierId')
-                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-                ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
-                ->where('p.RFQId', $rfqId)
-                ->whereNull('s.DeletedOn')
-                ->whereNull('sm.DeletedOn')
-                ->whereNull('tp.DeletedOn')
-                ->where('s.Active_Status', 1)
-                ->whereNotIn('sm.ThirdPartyId', $respondedThirdPartyIds)
-                ->groupBy('sm.ThirdPartyId', 'tp.TradingName', 'tp.ThirdPartyName')
-                ->select(
-                    DB::raw('MIN(s.Id) as Id'),
-                    DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName) as SupplierName")
-                )
-                ->get();
-        } else {
-            // Fallback: Get all active suppliers if no invitation table
-            $suppliers = DB::table('t_Suppliers as s')
-                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-                ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
-                ->whereNull('s.DeletedOn')
-                ->whereNull('sm.DeletedOn')
-                ->whereNull('tp.DeletedOn')
-                ->where('s.Active_Status', 1)
-                ->whereNotIn('sm.ThirdPartyId', $respondedThirdPartyIds)
-                ->groupBy('sm.ThirdPartyId', 'tp.TradingName', 'tp.ThirdPartyName')
-                ->select(
-                    DB::raw('MIN(s.Id) as Id'),
-                    DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName) as SupplierName")
-                )
-                ->get();
+            $query->join('t_RFQ_Supplier as p', 'p.SupplierId', '=', 's.Id')
+                ->where('p.RFQId', $rfqId);
         }
+
+        $suppliers = $query->groupBy('sm.ThirdPartyId', 'tp.TradingName', 'tp.ThirdPartyName')
+            ->select(
+                DB::raw('MIN(s.Id) as Id'),
+                DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName) as SupplierName")
+            )
+            ->get();
 
         return response()->json($suppliers);
     }
@@ -326,7 +292,6 @@ class RFQResponseController extends Controller
             return response()->json(['exists' => false]);
         }
 
-        // Find ThirdPartyId via SupplierMaster relationship
         $thirdPartyId = DB::table('t_Suppliers as s')
             ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
             ->where('s.Id', $supplierId)

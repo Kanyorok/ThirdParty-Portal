@@ -70,18 +70,13 @@ class ItemMasterListController extends Controller
     ]);
 
         try {
-            // Create import instance
             $import = new ItemMasterListImport();
-
-            // Import the file
             Excel::import($import, $request->file('file'));
 
-            // Get the Items sheet from the associative array
             $sheets = $import->sheets();
             $itemsSheet = $sheets['Items'] ?? null;
 
             if (!$itemsSheet) {
-                // Try to find the sheet with different casing
                 foreach ($sheets as $sheetName => $sheet) {
                     if (strtolower($sheetName) === 'items') {
                         $itemsSheet = $sheet;
@@ -94,40 +89,30 @@ class ItemMasterListController extends Controller
                 }
             }
 
-            // Get the import statistics
+            // Statistics extraction
             $processed = $itemsSheet->getProcessedCount();
             $created = $itemsSheet->getCreatedCount();
             $updated = $itemsSheet->getUpdatedCount();
             $skipped = $itemsSheet->getSkippedCount();
             $errors = $itemsSheet->getErrors();
 
-            // Build success message with details
-            $successMessage = "Import completed! ";
-            $successMessage .= "Processed: {$processed} rows. ";
-            $successMessage .= "Created: {$created} new items. ";
-            $successMessage .= "Updated: {$updated} existing items. ";
-
+            $successMessage = "Import completed! Processed: {$processed} rows. Created: {$created} new items. Updated: {$updated} existing items. ";
             if ($skipped > 0) {
                 $successMessage .= "Skipped: {$skipped} rows.";
             }
 
-            // If there are validation errors, show them
             if (!empty($errors)) {
                 $errorMessage = "<strong>Some rows had errors:</strong><br>";
-                foreach (array_slice($errors, 0, 20) as $error) { // Show first 20 errors max
+                foreach (array_slice($errors, 0, 20) as $error) {
                     $errorMessage .= "• {$error}<br>";
                 }
-
                 if (count($errors) > 20) {
                     $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
                 }
 
-                return back()
-                    ->with('warning', $successMessage)
-                    ->with('error_details', $errorMessage);
+                return back()->with('warning', $successMessage)->with('error_details', $errorMessage);
             }
 
-            // Log for debugging
             \Log::info('Item Master List Import Statistics', [
                 'processed' => $processed,
                 'created' => $created,
@@ -138,11 +123,10 @@ class ItemMasterListController extends Controller
 
             return back()->with('success', $successMessage);
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            // Handle Excel validation errors
             $errors = collect($e->failures())->map(function ($failure) {
                 $row = $failure->row();
-                $errors = implode(', ', $failure->errors());
-                return "Row {$row}: {$errors}";
+                $errs = implode(', ', $failure->errors());
+                return "Row {$row}: {$errs}";
             })->implode('<br>');
 
             return back()->with('error', "Validation errors:<br>{$errors}");
@@ -150,14 +134,9 @@ class ItemMasterListController extends Controller
             \Log::error('Item Master List Import Failed', [
                 'error' => $e->getMessage(),
                 'file' => $request->file('file')?->getClientOriginalName(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
-            $errorMessage = config('app.debug')
-                ? "Import failed: " . $e->getMessage()
-                : "Import failed. Please check the file format and try again.";
-
-            return back()->with('error', $errorMessage);
+            return back()->with('error', config('app.debug') ? "Import failed: " . $e->getMessage() : "Import failed. Please check the file format.");
         }
         
         // Get the import statistics
@@ -227,6 +206,7 @@ class ItemMasterListController extends Controller
             
         return back()->with('error', $errorMessage);
     }
+
     public function export()
     {
         return Excel::download(new ItemMasterListExport, 'ItemMasterList.xlsx');
@@ -245,8 +225,7 @@ class ItemMasterListController extends Controller
 
         $this->service->create($validated, $image, $document);
 
-        return redirect()->route('itemmaster.index')
-            ->with('success', 'Item created successfully.');
+        return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
     }
 
     public function show($Id)
@@ -287,7 +266,6 @@ class ItemMasterListController extends Controller
         $document = $request->file('Document');
         $image = $request->file('ImageUpload');
 
-        // Handle image removal if requested
         if ($request->has('remove_image') && $request->input('remove_image') == '1') {
             if ($item->ImageId) {
                 \App\Models\DMS\Image::destroy($item->ImageId);
@@ -297,10 +275,8 @@ class ItemMasterListController extends Controller
 
         $this->service->update($Id, $validated, $image, $document);
 
-        return redirect()->route('itemmaster.index')
-            ->with('success', 'Item updated successfully.');
+        return redirect()->route('itemmaster.index')->with('success', 'Item updated successfully.');
     }
-
 
     public function destroy($Id)
     {
@@ -309,13 +285,12 @@ class ItemMasterListController extends Controller
 
         if ($item->inUse()) {
             return redirect()->route('itemmaster.index')
-                ->with('error', '❌ Cannot delete this item because it is currently in use.');
+                ->with('error', 'Cannot delete this item because it is currently in use.');
         }
 
         $this->service->delete($item);
 
-        return redirect()->route('itemmaster.index')
-            ->with('success', 'Item deleted successfully.');
+        return redirect()->route('itemmaster.index')->with('success', 'Item deleted successfully.');
     }
 
     public function getSubcategories(Request $request)

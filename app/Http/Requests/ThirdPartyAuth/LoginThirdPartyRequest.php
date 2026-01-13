@@ -20,6 +20,7 @@ class LoginThirdPartyRequest extends FormRequest
             'password' => ['required', 'string', Password::min(8)],
         ];
     }
+
     public function messages(): array
     {
         return [

@@ -2,10 +2,13 @@
 
 namespace App\Services\Insurance;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimAssessment;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 
 class BancassuranceClaimAssessmentService
@@ -24,6 +27,7 @@ class BancassuranceClaimAssessmentService
         float              $AssessmentAmount,
         CodeDetail         $Decision,
         User               $user,
+        UploadedFile        $document = null
     ): self
     {
         $assessment = BancassuranceClaimAssessment::create([
@@ -36,6 +40,15 @@ class BancassuranceClaimAssessmentService
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
+
+        if ($document) {
+            $assessment->newDocument(
+                ModulesEnum::Insurance,
+                $document,
+                [PermissionEnum::BancassuranceClaimView->value],
+                $user
+            );
+        }
 
         activity()
             ->causedBy($user->Id)
