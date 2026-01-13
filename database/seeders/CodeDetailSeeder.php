@@ -16,6 +16,7 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Enums\TenderApprovalStatusEnum;
+use App\Enums\TenderCategoryEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
@@ -145,6 +146,15 @@ class CodeDetailSeeder extends Seeder
                 'CodeID' => 'TenderApprovalStatus',
                 'Value' => $TenderApprovalStatusEnum->value,
                 'Description' => $TenderApprovalStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (TenderCategoryEnum::cases() as $index => $tenderCategoryEnum) {
+            $entries->push([
+                'CodeID' => 'TenderCategory',
+                'Value' => $tenderCategoryEnum->value,
+                'Description' => $tenderCategoryEnum->displayName(),
                 'DisplayOrder' => $index + 1,
             ]);
         }

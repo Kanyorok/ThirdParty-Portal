@@ -23,8 +23,8 @@
                                 class="form-select @error('TenderCategory') is-invalid @enderror" required>
                             <option value="">-- Select Category Type --</option>
                             @foreach($tenderCatOptions as $option)
-                                <option value="{{ $option->value }}" {{ old('TenderCategory') == $option->value ? 'selected' : '' }}>
-                                    {{ $option->displayName() }}
+                                <option value="{{ $option->Value }}" {{ old('TenderCategory') == $option->Value ? 'selected' : '' }}>
+                                    {{ $option->Description }}
                                 </option>
                             @endforeach
                         </select>
