@@ -68,6 +68,13 @@ class ClaimController extends Controller
         return view('bancassurance.claims.index', compact('claims', 'mode'));
     }
 
+    public function assessmentlist()
+    {
+        $assessments = BancassuranceClaimAssessment::all();
+
+        return view('bancassurance.claims.assessment_list', compact('assessments'));
+    }
+
     public function assessForm($id)
     {
         $this->authorize(PermissionEnum::BancassuranceClaimAssessmentView, BancassuranceClaimAssessment::class);
@@ -90,23 +97,18 @@ class ClaimController extends Controller
         $claim = BancassuranceClaim::findOrFail($id);
         $Decision = CodeDetail::findOrFail($validated['Decision']);
 
+        foreach ($request->file('file', []) as $uploadedFile) {
         $assessment = BancassuranceClaimAssessmentService::create(
             $claim,
             $validated['AssessmentComments'],
             $validated['AssessmentAmount'],
             $Decision,
             $request->user(),
+            $uploadedFile
         );
+        }
 
         return redirect()->route('bancassurance.claims.index')->with('success', 'Assessment submitted.');
-    }
-
-
-    public function assessmentlist()
-    {
-        $assessments = BancassuranceClaimAssessment::all();
-
-        return view('bancassurance.claims.assessment_list', compact('assessments'));
     }
 
     public function assessmentshow($id)
@@ -137,13 +139,16 @@ class ClaimController extends Controller
          
         $Decision = CodeDetail::findOrFail($validated['Decision']);
 
+        foreach ($request->file('file', []) as $uploadedFile) {
         $assessment = BancassuranceClaimAssessmentService::update(
             $assessment,
             $validated['AssessmentComments'],
             $validated['AssessmentAmount'],
             $Decision,
             $request->user(),
+            $uploadedFile
         );
+        }
 
 
         return redirect()->route('bancassurance.claims.assessment_list')
