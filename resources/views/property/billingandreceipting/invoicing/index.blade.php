@@ -47,13 +47,19 @@
                                 <th>Lease</th>
                                 <th>Billing Period</th>
                                 <th>Invoice Date</th>
-                                <th class="text-end">Rent Amount</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-end">Amount Paid</th>
                                 <th>Status</th>
                                 <th style="width: 20%">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($invoices as $invoice)
+                                @php
+                                    $totalAmount = ($invoice->RentAmount ?? 0) + ($invoice->ServicesCharge ?? 0) + ($invoice->ParkingFee ?? 0) + ($invoice->OtherCharges ?? 0);
+                                    $paidAmount = $invoice->DerivedPaid ?? 0;
+                                    $status = $invoice->DerivedStatus ?? 'Pending';
+                                @endphp
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $invoice->InvoiceNumber ?? '-' }}</td>
@@ -61,15 +67,16 @@
                                     <td>{{ $invoice->lease->LeaseNumber ?? '-' }}</td>
                                     <td>{{ $invoice->BillingMonth ? \Carbon\Carbon::parse($invoice->BillingMonth)->format('m/Y') : '-' }}</td>
                                     <td>{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y') : '-' }}</td>
-                                    <td class="text-end">{{ number_format($invoice->RentAmount, 2) ?? '-' }}</td>
+                                    <td class="text-end fw-semibold">KES {{ number_format($totalAmount, 2) }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success px-3 py-2">
+                                            KES {{ number_format($paidAmount, 2) }}
+                                        </span>
+                                    </td>
                                     <td>
-                                        @if($invoice->Status instanceof \App\Enums\Property\PropertyInvoiceEnum)
-                                            <span class="badge bg-{{ $invoice->Status->badgeColor() }}">
-                                                {{ $invoice->Status->label() }}
-                                            </span>
-                                        @else
-                                            <span class="badge bg-secondary">{{ $invoice->Status }}</span>
-                                        @endif
+                                        <span class="badge bg-{{ $status == 'Fully Paid' ? 'success' : ($status == 'Partial Paid' ? 'warning' : 'danger') }} px-3 py-2">
+                                            {{ $status }}
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="action-buttons">

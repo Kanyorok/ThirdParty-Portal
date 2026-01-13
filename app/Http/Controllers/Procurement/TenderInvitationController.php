@@ -9,6 +9,7 @@ use App\Models\ThirdParies\ThirdParty;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -216,12 +217,6 @@ class TenderInvitationController extends Controller
                 ];
             });
 
-            Log::info('Debug Invitations Documents', [
-                 'count' => $formattedData->count(),
-                 'sample_tender_id' => $formattedData->first()['tender']['id'] ?? 'N/A',
-                 'sample_doc_count' => count($formattedData->first()['tender']['documents'] ?? [])
-            ]);
-
             return response()->json([
                 'data' => $formattedData,
                 'total' => $total,
@@ -230,11 +225,6 @@ class TenderInvitationController extends Controller
                 'supplierInfo' => [
                     'supplierIds' => $supplierIds->values()->all(),
                     'thirdPartyId' => (int)$thirdPartyId,
-                ],
-                'debug' => [
-                    'message' => 'Successfully fetched tender invitations',
-                    'supplier_found' => true,
-                    'invitations_found' => $invitations->count()
                 ]
             ]);
         } catch (\Exception $e) {
@@ -255,25 +245,19 @@ class TenderInvitationController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        Log::info('TenderInvitation Update Hit', ['id' => $id, 'payload' => $request->all(), 'user' => Auth::id()]);
+        
         try {
             $validated = $request->validate([
                 'responseStatus' => 'required|in:accepted,declined,pending',
                 'declineReason' => 'nullable|string',
             ]);
 
-            // Test 1: Basic validation and logging
-
-
-            // Test 2: Try to read from database
+            // Try to read from database
             try {
                 $invitation = DB::table('t_TenderInvitations')
                     ->where('InvitationID', $id)
                     ->first();
             } catch (\Exception $readEx) {
-                Log::error('=== STEP 2 FAILED: Database read error ===', [
-                    'error' => $readEx->getMessage()
-                ]);
                 return response()->json([
                     'error' => 'Database read failed',
                     'message' => $readEx->getMessage()
@@ -286,8 +270,43 @@ class TenderInvitationController extends Controller
                 ], 404);
             }
 
-            // Working minimal update - just the essential fields
             try {
+                $currentUser = Auth::guard('sanctum')->user();
+                
+                if (!$currentUser) {
+                    $currentUser = Auth::user();
+                }
+
+                if (!$currentUser) {
+                     return response()->json(['error' => 'Unauthenticated'], 401);
+                }
+
+                $userId = $currentUser->getAuthIdentifier();
+                $isThirdParty = $currentUser instanceof \App\Models\ThirdParty\ThirdPartyUser;
+
+
+                // FK Fix: Use System Admin (1) for ThirdParty users
+                if ($isThirdParty) {
+                    $userId = 1; 
+                }
+
+                if (empty($userId)) {
+                    $userId = 1;
+                }
+
+                DB::update(
+                    'update t_TenderInvitations set ResponseStatus = ?, ResponseDate = ?, ModifiedBy = ? where InvitationID = ?',
+                    [
+                        ucfirst($validated['responseStatus']),
+                        now(), 
+                        $userId, 
+                        $id
+                    ]
+                );
+                
+                $invitation->ResponseStatus = ucfirst($validated['responseStatus']);
+                $invitation->ResponseDate = now();
+                // $invitation->save(); // We used direct DB update above to bypass model issues
 
 
                 // Harmonize with storeResponse: Use PascalCase for status
@@ -303,7 +322,9 @@ class TenderInvitationController extends Controller
                 $updateData = [
                     'ResponseStatus' => $dbStatus,
                     'ResponseDate' => now(),
-                    'ModifiedBy' => Auth::check() ? Auth::user()->Id : null
+                    // Don't set ModifiedBy for supplier portal responses to avoid FK constraint issues
+                    // ModifiedBy references t_Users, but Auth::user() is ThirdPartyUser
+                    'ModifiedBy' => 1
                 ];
 
                 // Add decline reason only if provided and we're declining
