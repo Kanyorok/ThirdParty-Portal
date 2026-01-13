@@ -82,6 +82,7 @@ class SupplierService extends ThirdPartiesService
         $master = SupplierMaster::create([
             'ThirdPartyId' => $party->Id,
             'SupplierID' => self::_ID(),
+            'CategoryId' => $categoryId,
             'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Pending,
             'IsPrequalified' => false,
             'CreatedBy' => $auditId,

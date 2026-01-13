@@ -48,10 +48,10 @@ abstract class ThirdPartiesService
             'Phone' => $phone,
             'Gender' => $gender->getAttribute('ID') ?? $gender->ID,
             'ThirdPartyId' => $this->party->Id,
-            'Password' => $password ? Hash::make($password) : 'NOT SET',
-            'IsActive' => (bool)$password,
-            'CreatedBy' => $auditId,
-            'ModifiedBy' => $auditId,
+            'Password' => $password ? \Illuminate\Support\Facades\Hash::make($password) : 'NON SET',
+            'IsActive' => $password ? true : false,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
         ]);
 
         if ($password && $sendVerification) {
@@ -171,15 +171,13 @@ abstract class ThirdPartiesService
 
     final protected function addType(ThirdPartyType $type, string $partyType, string|int $partyId, User|ThirdPartyUser $actor): static
     {
-        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
-
         ThirdPartyTypeTypes::create([
             'TypeId' => $type->TypeId,
             'ThirdPartyId' => $this->party->Id,
             'PartyType' => $partyType,
             'PartyID' => $partyId,
-            'CreatedBy' => $auditId,
-            'ModifiedBy' => $auditId,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
         ]);
 
         return $this;

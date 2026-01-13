@@ -11,7 +11,6 @@ use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\ThirdParty\ThirdParties;
 use App\Services\Insurance\BancassuranceCustomersService;
-use App\Services\Property\TenantAndLease\PropertyNewTenantService;
 use DateTime;
 use RuntimeException;
 use Illuminate\Support\Facades\DB;
@@ -113,17 +112,17 @@ class ThirdPartyService extends ThirdPartiesService
             $party->update([
                 'ThirdPartyName' => $name,
                 'TradingName' => $tradingName,
-                'BusinessType' => $businessType->getKey(),
+                'BusinessType' => $businessType->ID,
                 'RegistrationNumber' => $registrationNumber,
                 'TaxPIN' => $taxPIN,
                 'VATNumber' => $vatNumber,
                 'CountryId' => $locationID->CountryId,
-                'LocationId' => $locationID->getKey(),
+                'LocationId' => $locationID->ID,
                 'PhysicalAddress' => $physicalAddress,
                 'Email' => $email,
                 'Phone' => $phone,
                 'Website' => $website,
-                'Status' => $status?->getKey() ?? $party->Status,
+                'Status' => $status?->ID ?? $party->Status,
                 'Extra' => $extra,
                 'ModifiedBy' => $actor->Id,
             ]);
@@ -188,19 +187,22 @@ class ThirdPartyService extends ThirdPartiesService
 
     public function addCustomer(
         ?BancAssuranceReferral $Referral,
-        ?DateTime $DateOfBirth,
-        ?CodeDetail $Gender,
-        ?CodeDetail $MaritalStatus,
-        ?CodeDetail $Occupation,
+        mixed $DateOfBirth,
+        mixed $Gender,
+        mixed $MaritalStatus,
+        mixed $Occupation,
         User|ThirdPartyUser $actor
     ): BancassuranceCustomersService {
         if (!$DateOfBirth || !$Gender || !$MaritalStatus || !$Occupation) {
             throw new ErroredException('Missing required details for Customer registration');
         }
+
+        $dob = $DateOfBirth instanceof DateTime ? $DateOfBirth : new DateTime($DateOfBirth);
+
         return BancassuranceCustomersService::createFromParty(
             $this->party,
             $Referral,
-            $DateOfBirth,
+            $dob,
             $Gender,
             $MaritalStatus,
             $Occupation,

@@ -64,7 +64,7 @@ class NewThirdPartyRequest extends FormRequest
 
             'supplier_category_id' => [
                 'nullable',
-                // Rule::requiredIf($isSupplier), // TODO: To enforce this rule in prod
+                Rule::requiredIf($isSupplier),
                 Rule::exists('t_SupplierCategories', 'SupplierCategoryID')
             ],
 
@@ -73,7 +73,7 @@ class NewThirdPartyRequest extends FormRequest
             'user_Occupation' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
             'user_Remarks' => [
                 'nullable',
-                //  Rule::requiredIf($isTenant), 
+                Rule::requiredIf($isTenant), 
                 'string',
                 'max:500'
             ],
@@ -82,7 +82,20 @@ class NewThirdPartyRequest extends FormRequest
 
     public function getBusinessType(): CodeDetail
     {
-        return $this->getCodeDetail('BusinessType', 'BusinessType');
+        $occupation = CodeDetail::query()->where('CodeID', 'Occupation')->where('Value', $this->validated('user_Occupation'))->first();
+        if ($occupation instanceof CodeDetail) {
+            return $occupation;
+        }
+        throw ValidationException::withMessages(['user_Occupation' => 'Occupation is not a valid Occupation.']);
+    }
+
+    public function getMaritalStatus(): CodeDetail
+    {
+        $maritalStatus = CodeDetail::query()->where('CodeID', 'MaritalStatus')->where('Value', $this->validated('user_MaritalStatus'))->first();
+        if ($maritalStatus instanceof CodeDetail) {
+            return $maritalStatus;
+        }
+        throw ValidationException::withMessages(['user_MaritalStatus' => 'Marital Status is not a valid Marital Status.']);
     }
 
     public function getGender(string $field): CodeDetail

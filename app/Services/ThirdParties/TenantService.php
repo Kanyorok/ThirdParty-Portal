@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 namespace App\Services\ThirdParties;
 
@@ -44,7 +44,7 @@ class TenantService extends ThirdPartiesService
     }
 
     public static function create(
-        string $name,
+        string   $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
@@ -82,22 +82,18 @@ class TenantService extends ThirdPartiesService
         ?string $remarks = null,
         ?UploadedFile $document = null
     ): self {
-        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+        $tenant = PropertyNewTenant::updateOrCreate(
+            ['ThirdPartyId' => $party->Id],
+            [
+                'TenantType' => $tenantType ?? 80,
+                'Remarks' => $remarks,
+                'IsActive' => true,
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+            ]
+        );
 
-        $tenant = PropertyNewTenant::create([
-            'ThirdPartyId' => $party->Id,
-            'TenantType' => $tenantType ?? 80,
-            'Remarks' => $remarks ?? 'Tenant profile created via portal',
-            'IsActive' => true,
-            'CreatedBy' => $auditId,
-            'ModifiedBy' => $auditId,
-        ]);
-
-        activity()
-            ->causedBy($actor)
-            ->performedOn($tenant)
-            ->event('create')
-            ->log("Added Tenant profile for {$party->ThirdPartyName}");
+        activity()->causedBy($actor)->performedOn($tenant)->event('create')->log("Added/Updated Tenant for thirdparty {$party->ThirdPartyName}.");
 
         $service = new self($tenant);
         $service->addType(

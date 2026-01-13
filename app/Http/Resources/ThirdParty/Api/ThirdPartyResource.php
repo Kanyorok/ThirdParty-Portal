@@ -24,33 +24,17 @@ class ThirdPartyResource extends JsonResource
                 'phone'              => $this->Phone,
                 'countryId'          => (string) $this->CountryId,
             ],
-
-            'profiles' => [
-                'supplier' => $this->when($this->supplierMaster, [
-                    'supplierId'     => $this->supplierMaster?->SupplierID,
-                    'isPrequalified' => (bool) ($this->supplierMaster?->IsPrequalified ?? false),
-                    'approvalStatus' => $this->supplierMaster?->ApprovalStatus,
-                    'categoryId'     => $this->supplierMaster?->SupplierCategoryId,
-                ]),
-
-                'customer' => $this->when($this->customerProfile || $this->relationLoaded('customerProfile'), function () {
-                    return $this->customerProfile ? new CustomerProfileResource($this->customerProfile) : null;
-                }),
-
-                'tenant' => $this->when($this->tenantProfile || $this->relationLoaded('tenantProfile'), function () {
-                    return $this->tenantProfile ? new TenantProfileResource($this->tenantProfile) : null;
-                }),
-            ],
-
-            'types' => $this->whenLoaded('types', function () {
-                return $this->types->map(fn($t) => [
-                    'id'    => $t->Id,
-                    'code'  => $t->TypeCode,
-                    'label' => $t->TypeName,
-                    'description' => $t->Description
-                ]);
-            }, []),
-
+            'isSupplier'     => $this->supplierMaster()->exists(),
+            'isTenant'       => \App\Models\PropertyManagement\PropertyNewTenant::where('ThirdPartyId', $this->Id)->exists(),
+            'isCustomer'     => \App\Models\Insurance\BancassuranceCustomer::where('ThirdPartyId', $this->Id)->exists(),
+            'isPrequalified' => (bool) ($this->supplierMaster?->IsPrequalified ?? false),
+            'supplierId'     => $this->supplierMaster?->SupplierID,
+            'approvalStatus' => $this->supplierMaster?->ApprovalStatus,
+            'types' => $this->types->map(fn($t) => [
+                'id'    => $t->TypeId,
+                'code'  => $t->Code,
+                'label' => $t->Description,
+            ]),
             'createdOn' => $this->CreatedOn?->toDateTimeString(),
         ];
     }

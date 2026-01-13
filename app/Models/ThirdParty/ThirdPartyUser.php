@@ -176,6 +176,7 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 
     public function isActive(): bool
     {
+        // return (bool)$this->IsActive();
         // User must be explicitly active AND have a verified email
         return (bool)$this->IsActive && !is_null($this->EmailVerifiedOn);
     }

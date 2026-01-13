@@ -1,11 +1,17 @@
-<?php
+<?php 
 
 namespace App\Http\Controllers\ThirdParty\API;
+
+use App\Services\ThirdParties\TenantService;
+use App\Services\Insurance\BancassuranceCustomersService;
+use App\Services\ThirdParties\ThirdPartiesService;
 
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
+use App\Services\ThirdParties\SupplierService;
 use App\Services\ThirdParties\ThirdPartyService;
+use App\Models\ThirdParty\ThirdPartyUser as ThirdPartyUserModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use DateTime;
@@ -18,17 +24,15 @@ class NewThirdPartyController extends Controller
             $country = $request->getCountry();
             $location = $request->getLocation($country);
             $businessType = $request->getBusinessType();
+            
             $actor = SystemHelper::user();
 
-            $email = $request->validated('Email') ??
-                Str::slug($request->validated('RegistrationNumber')) . '@noreply.local';
+            $types = $request->validated('types') ?? [];
 
-            $data = $request->validated();
-            $types = $request->validated('types');
-
-            if (in_array(ThirdPartyService::TypeTenant, $types)) {
-                $data['tenantType'] = $data['tenantType'] ?? 80;
-                $data['user_Remarks'] = $data['user_Remarks'] ?? 'Tenant profile created via portal';
+            $email = $request->validated('Email');
+            if (empty($email)) {
+                $registrationNumber = $request->validated('RegistrationNumber');
+                $email = strtolower(str_replace([' ', '-', '/'], '', $registrationNumber)) . '@noreply.local';
             }
 
             if (in_array(ThirdPartyService::TypeCustomer, $types)) {
@@ -61,10 +65,47 @@ class NewThirdPartyController extends Controller
             $partyService = new ThirdPartyService($party);
 
             if ($request->hasFile('logo')) {
-                $partyService->setLogo($request->file('logo'), $actor);
+                $partyService = new class($party) extends ThirdPartiesService {
+                    public static function getType(): \App\Models\ThirdParty\ThirdPartyType {
+                        return ThirdPartyService::getType();
+                    }
+                };
+                $partyService->setLogo($request->file('logo'), $actor ?? $party);
+            }
+
+            if (in_array(ThirdPartyService::TypeSupplier, $types)) {
+                SupplierService::createFromParty($party, $actor ?? $party);
+            }
+
+            if (in_array(ThirdPartyService::TypeTenant, $types)) {
+                TenantService::createFromParty(
+                    party: $party, 
+                    actor: $actor ?? $party, 
+                    remarks: $request->validated('tenant_remarks')
+                );
+            }
+
+            if (in_array(ThirdPartyService::TypeCustomer, $types)) {
+                BancassuranceCustomersService::createFromParty(
+                    party: $party,
+                    Referral: null,
+                    DateOfBirth: null, 
+                    Gender: null,      
+                    MaritalStatus: null,
+                    Occupation: null,
+                    user: $actor ?? $party
+                );
             }
 
             if ($request->boolean('createUser')) {
+                $gender = $request->getGender('user_Gender');
+                
+                $partyService = new class($party) extends ThirdPartiesService {
+                    public static function getType(): \App\Models\ThirdParty\ThirdPartyType {
+                        return ThirdPartyService::getType();
+                    }
+                };
+
                 $partyService->addUser(
                     firstName: $request->validated('user_FirstName'),
                     lastName: $request->validated('user_LastName'),
