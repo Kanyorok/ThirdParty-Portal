@@ -274,10 +274,11 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
         ";
 
         // System actor as sender
-        $actor = User::find(1);
+        // $actor = User::find(1);
+        $actor = \App\Models\Auth\User::where('Id', 1)->first() ?? \App\Models\Auth\User::first();
 
         if ($actor) {
-            CRMEmailService::createRaw(
+            \App\Services\CRMEmailService::createRaw(
                 $actor,
                 $subject,
                 $body,
@@ -286,11 +287,24 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
                 (string)$this->Id,
                 [], // cc
                 [], // bcc
-                EmailPriorityEnum::Important
+                \App\Enums\EmailPriorityEnum::Important
             )->send(true); // Send immediately
         } else {
             // Fallback to default notification if admin user not found (or log error)
             $this->notify(new \Illuminate\Auth\Notifications\ResetPassword($token));
         }
+    }
+
+    public function getEmailAttribute($val){
+        return $this->attributes['Email'] ?? $val;
+    }
+
+    public function setAttribute($key, $val)
+    {
+        if ($key === 'email') {
+            $this->attributes['Email'] = $val;
+            return $this;
+        }
+        return parent::setAttribute($key, $val);
     }
 }

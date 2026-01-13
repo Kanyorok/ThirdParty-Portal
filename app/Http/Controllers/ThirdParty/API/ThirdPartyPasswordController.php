@@ -25,7 +25,7 @@ class ThirdPartyPasswordController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $status = Password::sendResetLink(
+        $status = Password::broker('thirdparties')->sendResetLink(
             $request->only('email')
         );
 
@@ -48,9 +48,10 @@ class ThirdPartyPasswordController extends Controller
             ],
         ]);
 
+        $broker = Password::broker('thirdparties');
         $user = ThirdPartyUser::where('Email', $request->email)->first();
 
-        if (!$user || !Password::tokenExists($user, $request->token)) {
+        if (!$user || !$broker->tokenExists($user, $request->token)) {
             throw ValidationException::withMessages([
                 'email' => ['Confirm the email and token are valid.'],
             ]);
@@ -58,7 +59,7 @@ class ThirdPartyPasswordController extends Controller
 
         if ($user->Linked) {
             (new UserService($user))->syncBR();
-            Password::deleteToken($user);
+            $broker->deleteToken($user);
             return $this->succeeded('Account linked with core banking, synced. Use core banking password.');
         }
 
@@ -67,14 +68,16 @@ class ThirdPartyPasswordController extends Controller
             'remember_token' => Str::random(60),
         ])->save();
 
-        Password::deleteToken($user);
+        $broker->deleteToken($user);
         event(new PasswordReset($user));
 
-        activity()
-            ->causedBy($user)
-            ->performedOn($user)
-            ->event('password-reset')
-            ->log('Third-party reset password using email link.');
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy($user)
+                ->performedOn($user)
+                ->event('password-reset')
+                ->log('Third-party reset password using email link.');
+        }
 
         return $this->succeeded('Password reset successful. You can now log in.');
     }
