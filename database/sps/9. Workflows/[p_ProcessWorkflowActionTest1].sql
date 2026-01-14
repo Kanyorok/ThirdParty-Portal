@@ -1,12 +1,4 @@
-USE [BR_ERP]
-GO
-/****** Object:  StoredProcedure [dbo].[p_ProcessWorkflowActionTest1]    Script Date: 13/01/2026 14:03:41 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-ALTER   PROCEDURE [dbo].[p_ProcessWorkflowActionTest1]
+ALTER PROCEDURE [dbo].[p_ProcessWorkflowActionTest1]
     @Source NVARCHAR(255),
     @SourceID NVARCHAR(100),
     @UserID BIGINT,
@@ -20,7 +12,7 @@ ALTER   PROCEDURE [dbo].[p_ProcessWorkflowActionTest1]
 AS
 BEGIN
     SET NOCOUNT ON;
-    SET XACT_ABORT ON; -- This will automatically rollback and abort on errors
+    SET XACT_ABORT ON;
 
     DECLARE
         @StageID NVARCHAR(200) = NULL,
@@ -41,7 +33,7 @@ BEGIN
         @ErrorSeverity INT,
         @ErrorState INT,
         @DynamicErrorMessage NVARCHAR(1000),
-        @IsDocRequired bit,
+        @IsDocRequired BIT = 0,
         @ValidationErrorMessage NVARCHAR(500) = NULL;
 
     BEGIN TRY
@@ -49,17 +41,28 @@ BEGIN
 
         -- 1. VALIDATE SOURCEID CONVERSION
         SET @SourceIDInt = TRY_CAST(@SourceID AS INT);
-
         IF @SourceIDInt IS NULL
         BEGIN
             RAISERROR('SourceID must be a valid integer', 16, 1);
             RETURN;
         END
 
+        -- 2. CHECK MAKER-CHECKER VIOLATION EARLY
+        SELECT
+            @IsMakerCheckerViolation = IsViolation,
+            @ViolationReason = FailureReason
+        FROM dbo.f_CheckMakerCheckerViolation(@Source, @SourceIDInt, @UserID);
+
+        IF @IsMakerCheckerViolation = 1
+        BEGIN
+            SET @ErrorMessage = ISNULL(@ViolationReason, 'Maker-Checker violation detected');
+            RAISERROR(@ErrorMessage, 16, 1);
+            RETURN;
+        END
+
         -- =====================================================================
-        -- DOCUMENT & SIGNATURE VALIDATION (MODULAR)
+        -- DOCUMENT & SIGNATURE VALIDATION
         -- =====================================================================
-        -- Only validate if document or signature parameters are provided
         IF @DocumentId IS NOT NULL OR @SignatureID IS NOT NULL
         BEGIN
             EXEC dbo.p_ValidateWorkflowDocumentSignature
@@ -78,35 +81,19 @@ BEGIN
             END
         END
         -- =====================================================================
-        -- END DOCUMENT & SIGNATURE VALIDATION
-        -- =====================================================================
-
-        -- 2. CHECK MAKER-CHECKER VIOLATION EARLY (FAIL FAST)
-        SELECT
-            @IsMakerCheckerViolation = IsViolation,
-            @ViolationReason = FailureReason
-        FROM dbo.f_CheckMakerCheckerViolation(@Source, @SourceIDInt, @UserID);
-
-        IF @IsMakerCheckerViolation = 1
-        BEGIN
-            SET @ErrorMessage = ISNULL(@ViolationReason, 'Maker-Checker violation detected');
-            RAISERROR(@ErrorMessage, 16, 1);
-            RETURN;
-        END
 
         -- 3. GET CURRENT WORKFLOW INFO
-        SELECT
+        SELECT TOP 1
             @StageID = p.Stage,
             @WorkFlowID = ws.WorkFlowId,
             @WorkflowStagePermission = ws.PermissionId
-        FROM t_WorkFlowPendingTest p
-        JOIN t_WorkFlowStagesTest ws ON TRY_CAST(p.Stage AS BIGINT) = ws.Id
+        FROM t_WorkFlowPendingTest p WITH (NOLOCK)
+        JOIN t_WorkFlowStagesTest ws WITH (NOLOCK) ON TRY_CAST(p.Stage AS BIGINT) = ws.Id
         WHERE p.Source = @Source
           AND p.SourceID = @SourceID
           AND p.UserId = @UserID
           AND p.DeletedOn IS NULL;
 
-        -- Validate action - if no workflow found
         IF @StageID IS NULL
         BEGIN
             RAISERROR('No pending approval found for this user', 16, 1);
@@ -117,12 +104,12 @@ BEGIN
         SET @UserHasPermissions = [dbo].[f_CheckUserPermission](@UserID, @WorkflowStagePermission);
         IF @UserHasPermissions = 0
         BEGIN
-            RAISERROR('User has no permissions', 16, 1);
+            RAISERROR('User has no permissions for this workflow stage', 16, 1);
             RETURN;
         END
 
         -- 5. VALIDATE STATUS ID
-        IF NOT EXISTS (SELECT 1 FROM t_CodeDetails WHERE ID = @StatusID)
+        IF NOT EXISTS (SELECT 1 FROM t_CodeDetails WITH (NOLOCK) WHERE ID = @StatusID)
         BEGIN
             SET @ErrorMessage = 'Status ID not found: ' + CAST(@StatusID AS NVARCHAR(20));
             RAISERROR(@ErrorMessage, 16, 1);
@@ -130,15 +117,15 @@ BEGIN
         END
 
         -- Get status values
-        SELECT
+        SELECT TOP 1
             @StatusValue = Value,
             @Description = Description
-        FROM t_CodeDetails
+        FROM t_CodeDetails WITH (NOLOCK)
         WHERE ID = @StatusID;
 
         -- 6. CHECK FOR PENDING APPROVALS
         SELECT @HasPendingApprovals = CASE WHEN EXISTS (
-            SELECT 1 FROM t_WorkFlowPendingTest
+            SELECT 1 FROM t_WorkFlowPendingTest WITH (NOLOCK)
             WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL
         ) THEN 1 ELSE 0 END;
 
@@ -149,6 +136,7 @@ BEGIN
         INSERT INTO t_WorkFlowHistoryTest (
             Source, SourceID, Stage, Notes, StatusId,
             CreatedBy, CreatedOn, ModifiedBy, ModifiedOn, IsApproved
+            -- NO DocumentId or SignatureId added - keeping it simple
         )
         VALUES (
             @Source, @SourceID, @StageID, @Notes, @StatusID,
@@ -172,7 +160,7 @@ BEGIN
             DECLARE @TableName NVARCHAR(255) = PARSENAME(@Source, 1);
 
             -- Validate the table exists
-            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName)
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WITH (NOLOCK) WHERE TABLE_NAME = @TableName)
             BEGIN
                 SET @ErrorMessage = 'Source table does not exist: ' + @Source;
                 RAISERROR(@ErrorMessage, 16, 1);
@@ -181,7 +169,7 @@ BEGIN
 
             -- Validate StatusColumn exists
             IF NOT EXISTS (
-                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
                 WHERE TABLE_NAME = @TableName AND COLUMN_NAME = @StatusColumn
             )
             BEGIN
@@ -192,7 +180,7 @@ BEGIN
 
             -- Validate ModifiedBy column exists
             IF NOT EXISTS (
-                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
                 WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'ModifiedBy'
             )
             BEGIN
@@ -203,7 +191,7 @@ BEGIN
 
             -- Validate ModifiedOn column exists
             IF NOT EXISTS (
-                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
                 WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'ModifiedOn'
             )
             BEGIN
@@ -214,7 +202,7 @@ BEGIN
 
             -- Check if LastApprover column exists (optional)
             IF EXISTS (
-                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
                 WHERE TABLE_NAME = PARSENAME(@Source, 1)
                   AND COLUMN_NAME = 'LastApprover'
             )
@@ -224,7 +212,7 @@ BEGIN
 
             -- Find key column name (Id or ID)
             SELECT TOP 1 @KeyColumn = COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
+            FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
             WHERE TABLE_NAME = PARSENAME(@Source, 1)
               AND COLUMN_NAME IN ('Id', 'ID');
 
@@ -243,8 +231,8 @@ BEGIN
                 @StatusID, @UserName, @SourceID, @UserID;
         END
 
-        -- 10. EMAIL NOTIFICATION (moved before COMMIT to ensure it's part of transaction)
-        SELECT @UserEmail = Email FROM t_Users WHERE Id = @UserID;
+        -- 10. EMAIL NOTIFICATION
+        SELECT @UserEmail = Email FROM t_Users WITH (NOLOCK) WHERE Id = @UserID;
 
         IF @UserEmail IS NOT NULL AND LEN(@UserEmail) > 5
         BEGIN
@@ -277,13 +265,11 @@ BEGIN
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
 
-        -- Capture error details
         SELECT
             @ErrorMessage = ERROR_MESSAGE(),
             @ErrorSeverity = ERROR_SEVERITY(),
             @ErrorState = ERROR_STATE();
 
-        -- Re-throw the error to stop continuation
         RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
     END CATCH
 END
