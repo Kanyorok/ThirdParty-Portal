@@ -80,7 +80,7 @@ class ModuleSeeder extends Seeder
             // Submenu: Policy & Training Repository
             // =========================================================
             /* ['ModuleID' => 209400, 'Name' => 'Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 200000, 'Route' => null],
- 
+
              // ['ModuleID' => 209405, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 209400, 'Route' => 'legal.compliance.policies.index'],
              ['ModuleID' => 209410, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 209400, 'Route' => 'legal.compliance.trainings.index'],
              ['ModuleID' => 209415, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 209400, 'Route' => 'legal.compliance.certifications.index'],*/
@@ -175,7 +175,7 @@ class ModuleSeeder extends Seeder
             // ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.create', 'RequiredPermission' => PermissionEnum::GoodsReceiptWrite->value],
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
-            ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index', 'RequiredPermission' => PermissionEnum::ProcurementSectionRead->value],        
+            ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index', 'RequiredPermission' => PermissionEnum::ProcurementSectionRead->value],
             ['ModuleID' => 398500, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'tendercommittee.index', 'RequiredPermission' => PermissionEnum::TenderCommitteeRead->value],
             ['ModuleID' => 398600, 'Name' => 'Member Response', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'memberresponse.index', 'RequiredPermission' => PermissionEnum::TenderCommitteeRead->value],
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 300000, 'Route' => 'procurement-reports.index', 'RequiredPermission' => PermissionEnum::ProcurementPlanRead->value], // generic for reports?
@@ -582,7 +582,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 908400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 908000],
             ['ModuleID' => 908500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 908000],
             ['ModuleID' => 909000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
-            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+
+            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => 'insurance-reports.index', 'ParentID' => 900000],
         ]);
 
         return $values;
@@ -597,7 +598,7 @@ class ModuleSeeder extends Seeder
         $moduleIds = $modules->pluck('ModuleID')->toArray();
 
         // 2. Soft-Delete any modules in DB that are NOT in the collection
-        // "Removed even from the database" -> Using Soft Delete (DeletedOn) for safety, 
+        // "Removed even from the database" -> Using Soft Delete (DeletedOn) for safety,
         // as Module model uses SoftDeletes. This effectively removes them from view.
         DB::table('t_Modules')
             ->whereNotIn('ModuleID', $moduleIds)
