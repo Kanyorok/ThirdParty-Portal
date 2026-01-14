@@ -62,11 +62,11 @@
                     @forelse($data['data'] as $groupName => $rows)
                         @foreach($rows as $index => $row)
                             <tr>
-                                @if($index === 0)
-                                    <td rowspan="{{ count($rows) }}" class="align-middle fw-bold">
+                                <td class="align-middle fw-bold">
+                                    @if($index === 0)
                                         {{ $groupName }}
-                                    </td>
-                                @endif
+                                    @endif
+                                </td>
                                 @foreach($row as $value)
                                     <td>{{ $value }}</td>
                                 @endforeach

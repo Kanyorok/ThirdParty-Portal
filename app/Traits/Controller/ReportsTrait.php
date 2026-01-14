@@ -87,6 +87,7 @@ trait ReportsTrait
                 return view('snippets.errors')->with('message', 'cannot retrieve report data.');
             }
 
+
             return view('reports.table', compact('report', 'data'))->with('params', SSRSService::queryParams($parameters->put('_key', md5($report->Path))->toArray()))
                 ->with('module', Str::lower(self::MODULE->name))->with('message', 'Report has no data. Please check your report parameters and try again.');
         }
