@@ -251,9 +251,9 @@ class PurchaseOrderController extends Controller
                     ->where('ra.ContractStatus', 'Executed')
                     ->whereNotNull('ra.ContractRef')
                     ->where('ra.ContractRef', '!=', '')
-                    // Note: We need a way to distinguish SourceType in Orders if checking existence. 
-                    // Assuming safely that RFQ contracts use 'CONTRACT-RFQ' or similar? 
-                    // Or if they use 'CONTRACT', we might have collision. 
+                    // Note: We need a way to distinguish SourceType in Orders if checking existence.
+                    // Assuming safely that RFQ contracts use 'CONTRACT-RFQ' or similar?
+                    // Or if they use 'CONTRACT', we might have collision.
                     // checking SourceType='CONTRACT' AND SourceId = ra.Id might yield false positives if Tender ID matches.
                     // For now, let's assume we can fetch them.
                      ->orderByDesc('ra.ContractApprovedOn')
@@ -385,14 +385,14 @@ class PurchaseOrderController extends Controller
     {
         try {
             $validated = $request->validated();
-            
+
             // Extract main PO data
             $supplier = $validated['supplier'];
             $poDate = $validated['pODate'];
             $rfqNo = $validated['refNo'] ?? null;
             $priority = $validated['priority'] ?? null;
             $terms = $validated['terms'];
-            
+
             // Create the PO header using OrderService
             $poResult = $this->orderService->addPO(
                 $supplier,
@@ -402,15 +402,15 @@ class PurchaseOrderController extends Controller
                 $terms,
                 auth()->user()
             );
-            
+
             if ($poResult['status'] !== 'success') {
                 return back()
                     ->withInput()
                     ->with('error', $poResult['message'] ?? 'Failed to create Purchase Order');
             }
-            
+
             $poId = $poResult['po_id'];
-            
+
             // Add PO line items
             $itemCodes = $validated['itemCode'];
             $quantities = $validated['quantity'];
@@ -418,7 +418,7 @@ class PurchaseOrderController extends Controller
             $taxes = $validated['tax'] ?? [];
             $discounts = $validated['discount'] ?? [];
             $lineTotals = $validated['lineTotal'];
-            
+
             foreach ($itemCodes as $index => $itemCode) {
                 $lineResult = $this->orderService->addPOLines(
                     $itemCode,
@@ -430,7 +430,7 @@ class PurchaseOrderController extends Controller
                     auth()->user(),
                     $poId
                 );
-                
+
                 if ($lineResult['status'] !== 'success') {
                     Log::warning('Failed to add PO line item', [
                         'po_id' => $poId,
@@ -439,7 +439,7 @@ class PurchaseOrderController extends Controller
                     ]);
                 }
             }
-            
+
             // Calculate PO totals
             $this->orderService->AddPurchaseOrderSum($poId);
 
@@ -450,12 +450,12 @@ class PurchaseOrderController extends Controller
                     'SourceId' => $request->input('SourceId')
                 ]);
             }
-            
+
             // Prepare redirect response first
             $redirectResponse = redirect()
                 ->route('purchaseOrder.show', $poId)
                 ->with('success', 'Purchase Order created successfully');
-            
+
             // Initialize approval workflow for the newly created PO (after preparing response)
             try {
                 $order = Order::findOrFail($poId);
@@ -468,15 +468,15 @@ class PurchaseOrderController extends Controller
                 ]);
                 // Don't fail the entire operation if workflow initiation fails
             }
-            
+
             return $redirectResponse;
-                
+
         } catch (\Exception $e) {
             Log::error('Error creating Purchase Order', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()
                 ->withInput()
                 ->with('error', 'An error occurred while creating the Purchase Order: ' . $e->getMessage());
@@ -487,14 +487,14 @@ class PurchaseOrderController extends Controller
     {
         try {
             Log::info("Loading PO show page", ['order_id' => $id]);
-            
+
             $order = Order::findOrFail($id);
             $this->authorize('view', $order);
             Log::info("Order found and authorized", ['order_id' => $id]);
 
             $orderInfo = $this->orderService->fetchOrderDetails($id);
             Log::info("Order details fetched", ['order_id' => $id]);
-            
+
             $lineInfo = $this->orderService->fetchOrderLineDetails($id);
             Log::info("Line items fetched", ['order_id' => $id, 'line_count' => count($lineInfo)]);
 
@@ -503,7 +503,7 @@ class PurchaseOrderController extends Controller
                 // Use getStatus as requested, but map to objects to support view property access ($item->property)
                 $workflowData = $this->workflowService->getStatus($order);
                 $historyArr = $workflowData['completedApprovals'] ?? [];
-                
+
                 $history = collect($historyArr)->map(function($item) {
                      // Cast array item to object
                      $obj = (object)$item;
@@ -1046,21 +1046,21 @@ class PurchaseOrderController extends Controller
     {
         try {
             $type = request('type', 'tender'); // Default to tender if not specified
-            
+
             if ($type === 'rfq') {
                 // Fetch RFQ Award
                 $contract = DB::table('t_RFQAward')->where('Id', $contractId)->first();
                  if (!$contract) {
                     return response()->json(['success' => false, 'message' => 'RFQ Contract not found'], 404);
                 }
-                
+
                 // Resolve Supplier's ThirdPartyId because t_RFQResponse typically uses ThirdPartyId
                 $supplier = DB::table('t_Suppliers as s')
                     ->leftJoin('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
                     ->where('s.Id', $contract->SupplierId)
                     ->select('sm.ThirdPartyId')
                     ->first();
-                    
+
                 $thirdPartyId = $supplier ? $supplier->ThirdPartyId : $contract->SupplierId;
 
                 // Find the successful response for this supplier and RFQ
@@ -1093,14 +1093,14 @@ class PurchaseOrderController extends Controller
                         DB::raw('0 as discount')
                     )
                     ->get();
-                    
+
                  return response()->json([
                     'success' => true,
                     'data' => $items
                 ]);
-                
+
                 Log::info("Fetched " . $items->count() . " items for RFQ Contract.");
-                    
+
                  return response()->json([
                     'success' => true,
                     'data' => $items
@@ -1116,10 +1116,10 @@ class PurchaseOrderController extends Controller
                 if (!empty($contract->TenderID)) {
                     return $this->getTenderItems($contract->TenderID);
                 }
-                
+
                  return response()->json([
                     'success' => true,
-                    'data' => [] 
+                    'data' => []
                 ]);
             }
 
@@ -1223,7 +1223,7 @@ class PurchaseOrderController extends Controller
              return response()->json(['success' => false, 'data' => []]);
         }
     }
-    
+
     public function getPrequalifiedSuppliers($categoryId): JsonResponse
     {
          try {
@@ -1233,7 +1233,7 @@ class PurchaseOrderController extends Controller
              return response()->json(['success' => false, 'data' => []]);
         }
     }
-    
+
     public function relatedPO()
     {
         return view('procurement.orders.index');
@@ -1244,7 +1244,7 @@ class PurchaseOrderController extends Controller
         try {
             // Re-use RFQTOPO reasoning to get items
             $rfqData = $this->rfqService->RFQTOPO($rfqId);
-            
+
             // RFQTOPO returns an object (the RFQ record) with an 'items' property which is an array
             $items = $rfqData->items ?? [];
 
