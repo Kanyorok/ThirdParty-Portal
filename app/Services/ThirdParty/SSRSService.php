@@ -4,6 +4,7 @@ namespace App\Services\ThirdParty;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\Settings\APICredential;
 use DOMDocument;
 use DOMXPath;
@@ -25,6 +26,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SSRSService
 {
+    public const string UserParameter = 'LoginUser';
+
     protected PendingRequest $_query;
 
     protected string $_serverAPIUrl;
@@ -141,13 +144,18 @@ class SSRSService
         return null;
     }
 
-    public static function queryParams(array $parameters): string
+    public static function queryParams(array $parameters, bool $encode = true): string
     {
         $params = '';
         foreach ($parameters as $index => $value) {
             if (is_array($value)) {
                 foreach ($value as $val) {
-                    $params .= "&$index=$val";
+                    if ($encode) {
+                        $params .= "&{$index}[]=$val";
+                    } else {
+                        $params .= "&$index=$val";
+                    }
+
                 }
             } else {
                 $params .= "&$index=$value";
@@ -162,7 +170,7 @@ class SSRSService
     public function exportReport(string $path, array $parameters = [], string $format = 'XML', bool $content = false): StreamedResponse|string
     {
         $response = $this->_query
-            ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters));
+            ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters, false));
 
         if (!$response->successful()) {
             throw new ConnectionException(
@@ -177,7 +185,11 @@ class SSRSService
         $contentType = $this->getContentType($format);
         $extension = $this->getFileExtension($format);
 
+
         return response()->streamDownload(function () use ($response) {
+            if (ob_get_length()) {
+                ob_end_clean();
+            }
             echo $response->body();
         }, basename($path) . $extension, [
             'Content-Type' => $contentType,
@@ -189,90 +201,6 @@ class SSRSService
     /**
      * @throws ErroredException
      */
-    /* public function parseReportXml(string $xmlString): Collection
-     {
-         // Suppress errors for malformed XML
-         libxml_use_internal_errors(true);
-
-         try {
-             $dom = new DOMDocument();
-             $dom->loadXML($xmlString);
-             $xpath = new DOMXPath($dom);
-
-             // 1. Extract Header Data (Root Attributes)
-             // In SSRS, the <Report> tag contains the title and parameters
-             $header = [];
-             $root = $dom->documentElement;
-             if ($root->hasAttributes()) {
-                 foreach ($root->attributes as $attr) {
-                     // Skip any attributes starting with 'xsi:'
-                     if (!str_starts_with($attr->nodeName, 'xsi:')) {
-                         $header[$attr->nodeName] = $attr->nodeValue;
-                     }
-                 }
-             }
-
-             // 2. Extract Data Records with Group Attributes
-             $dataRows = [];
-
-             // Find all group/collection parent elements
-             $groupNodes = $xpath->query('//node()[local-name() != "Details"]/*[starts-with(local-name(), "Details_Collection")]/..');
-
-             if ($groupNodes->length === 0) {
-                 // Fallback: If no group structure, look for Details directly under any parent
-                 $groupNodes = $xpath->query('//*[*[starts-with(local-name(), "Details")]]');
-             }
-
-             foreach ($groupNodes as $groupNode) {
-                 // Extract group attributes
-                 $groupAttributes = [];
-                 if ($groupNode->hasAttributes()) {
-                     foreach ($groupNode->attributes as $attr) {
-                         if (!str_starts_with($attr->nodeName, 'xsi:')) {
-                             $groupAttributes[$attr->nodeName] = $attr->nodeValue;
-                         }
-                     }
-                 }
-
-                 // Find all Details elements within this group
-                 $detailsNodes = $xpath->query('.//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]', $groupNode);
-
-                 foreach ($detailsNodes as $detailNode) {
-                     $row = array_merge($groupAttributes, []);
-
-                     // Add detail attributes
-                     if ($detailNode->hasAttributes()) {
-                         foreach ($detailNode->attributes as $attr) {
-                             $row[$attr->nodeName] = $attr->nodeValue;
-                         }
-                     }
-
-                     if (!empty($row)) {
-                         $dataRows[] = $row;
-                     }
-                 }
-             }
-
-             libxml_clear_errors();
-
-             // 3. Return as a Collection with Header and Nested Data
-             return collect([
-                 'error' => null,
-                 'header' => $header,
-                 'data'   => $dataRows
-             ]);
-
-     } catch (Exception $e) {
-         libxml_clear_errors();
-         return collect([
-             'error' => $e->getMessage(),
-             'header' => [],
-             'data'   => []
-         ]);
-     }
- }*/
-
-
     public function parseReportXml(string $xmlString): Collection
     {
         // Suppress errors for malformed XML
@@ -429,7 +357,7 @@ class SSRSService
     // Example usage with device info
 
     /**
-     * Get file extension based on export format
+     * Get file extension based on the export format
      */
     protected function getFileExtension(string $format): string
     {
@@ -499,12 +427,17 @@ class SSRSService
      * @throws ConnectionException
      * @throws ErroredException
      */
-    public function getReportParametersValidated(string $id, array $requestParameters): Collection
+    public function getReportParametersValidated(string $id, array $requestParameters, ?User $actor): Collection
     {
         $finalParameters = collect();
         $parameters = $this->getReportParameters($id);
 
         foreach ($parameters as $parameter) {
+            if ($parameter['Name'] === self::UserParameter && $actor instanceof User) {
+                $finalParameters->put($parameter['Name'], $actor->UserID);
+                continue;
+            }
+
             if (isset($requestParameters[$parameter['Name']])) {
                 $value = $requestParameters[$parameter['Name']];
                 if ($parameter['ParameterType'] === 'DateTime') {
@@ -539,6 +472,7 @@ class SSRSService
                         }
 
                         $finalParameters->put($parameter['Name'], $value);
+
                         continue;
                     }
 
@@ -643,7 +577,7 @@ class SSRSService
     }
 
     private function _getRoute(string $path): string
-    { //reports/report/BRERP/Admin/Permissions?rs:embed=true
+    {
         return $this->serverURL . "{$this->path}/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
     }
 

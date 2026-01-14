@@ -18,20 +18,22 @@
     </div>
 </div>
 <div class="card-body">
+    @if(!empty($data['header']))
+        <div class="mb-3 text-center">
+            @foreach($data['header'] as $key=>$value)
+                @if($loop->first ||  (array_key_exists('name',array_change_key_case($data['header'] , CASE_LOWER)) && \Illuminate\Support\Str::of($key)->lower()->contains('name')))
+                    <h2>{{ $value }}</h2>
+                @else
+                    <span class="h5">{{ $value }}&nbsp;</span>  &nbsp;
+                @endif
+            @endforeach
+        </div>
+    @endif
+
     @if($data['error'] || empty($data['data']))
         @include('snippets.errors')
     @else
-        @if(!empty($data['header']))
-            <div class="mb-3 text-center">
-                @foreach($data['header'] as $key=>$value)
-                    @if($loop->first ||  (array_key_exists('name',array_change_key_case($data['header'] , CASE_LOWER)) && \Illuminate\Support\Str::of($key)->lower()->contains('name')))
-                        <h2>{{ $value }}</h2>
-                    @else
-                        <span class="h5">{{ $value }}&nbsp;</span>  &nbsp;
-                    @endif
-                @endforeach
-            </div>
-        @endif
+
         <div class="table-responsive">
             <table class="table table-bordered w-100" id="reports-table">
                 <thead>
