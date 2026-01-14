@@ -1,11 +1,3 @@
-USE [BR_ERP]
-GO
-/****** Object:  StoredProcedure [dbo].[p_ValidateWorkflowDocumentSignature]    Script Date: 13/01/2026 14:05:15 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE OR ALTER PROCEDURE [dbo].[p_ValidateWorkflowDocumentSignature]
     @Source NVARCHAR(255),
     @SourceID NVARCHAR(100),
@@ -24,11 +16,23 @@ BEGIN
     SET @IsDocRequired = 0;
     SET @ErrorMessage = NULL;
 
+
+    -- EARLY FAIL: Signature without Document
+
+    IF @SignatureID IS NOT NULL AND @DocumentId IS NULL
+    BEGIN
+        SET @ErrorMessage = 'Signature ID ' + CAST(@SignatureID AS NVARCHAR(20)) +
+                           ' was provided but no document was included for signing. A document is required.';
+        RETURN;
+    END
+
+
     -- 1. GET DOCUMENT REQUIREMENT FROM STAGE
+
     SELECT TOP 1
         @IsDocRequired = ISNULL(a.IsDocRequired, 0)
-    FROM t_WorkFlowStagesTest a
-    JOIN t_WorkFlowPendingTest c ON TRY_CAST(c.Stage AS BIGINT) = a.Id
+    FROM t_WorkFlowStagesTest a WITH (NOLOCK)
+    JOIN t_WorkFlowPendingTest c WITH (NOLOCK) ON TRY_CAST(c.Stage AS BIGINT) = a.Id
     WHERE c.Source = @Source
         AND c.SourceID = @SourceID
         AND c.UserId = @UserID
@@ -36,30 +40,31 @@ BEGIN
         AND a.DeletedOn IS NULL
         AND a.DeletedBy IS NULL;
 
-    -- If no stage found, set default and continue (main SP will handle this)
+    -- If no stage found, set default
     IF @IsDocRequired IS NULL
     BEGIN
         SET @IsDocRequired = 0;
-        -- Don't error here - let main SP handle "no pending approval" error
         RETURN;
     END
 
+
     -- 2. VALIDATE BUSINESS RULES
 
-    -- Rule 1: Document required but not provided
+
+  -- 1: Document required but not provided
     IF @IsDocRequired = 1 AND @DocumentId IS NULL
     BEGIN
         SET @ErrorMessage = 'A reference document is required for this approval stage.';
         RETURN;
     END
 
-    -- Rule 2: Document provided (any scenario) - validate
+  -- 2: Document provided (any scenario) - validate
     IF @DocumentId IS NOT NULL
     BEGIN
         -- Validate document exists and is active
         IF NOT EXISTS (
             SELECT 1
-            FROM t_Documents
+            FROM t_Documents WITH (NOLOCK)
             WHERE Id = @DocumentId
                 AND DeletedOn IS NULL
                 AND DeletedBy IS NULL
@@ -69,7 +74,7 @@ BEGIN
             RETURN;
         END
 
-        -- Rule 3: Signature is mandatory when document is provided
+      -- 3: Signature is mandatory when document is provided
         IF @SignatureID IS NULL
         BEGIN
             SET @ErrorMessage = 'A signature is required to sign the document.';
@@ -79,7 +84,7 @@ BEGIN
         -- Validate signature exists, is active, and belongs to user
         IF NOT EXISTS (
             SELECT 1
-            FROM t_DMSSignatures
+            FROM t_DMSSignatures WITH (NOLOCK)
             WHERE Id = @SignatureID
                 AND DeletedOn IS NULL
                 AND DeletedBy IS NULL
@@ -87,13 +92,13 @@ BEGIN
         )
         BEGIN
             -- Determine specific error for better user feedback
-            IF NOT EXISTS (SELECT 1 FROM t_DMSSignatures WHERE Id = @SignatureID)
+            IF NOT EXISTS (SELECT 1 FROM t_DMSSignatures WITH (NOLOCK) WHERE Id = @SignatureID)
             BEGIN
                 SET @ErrorMessage = 'Signature ID ' + CAST(@SignatureID AS NVARCHAR(20)) + ' was not found.';
             END
             ELSE IF EXISTS (
                 SELECT 1
-                FROM t_DMSSignatures
+                FROM t_DMSSignatures WITH (NOLOCK)
                 WHERE Id = @SignatureID
                     AND (DeletedOn IS NOT NULL OR DeletedBy IS NOT NULL)
             )
@@ -106,16 +111,43 @@ BEGIN
             END
             RETURN;
         END
+
+
+        -- INSERT DOCUMENT SIGNATURE RECORD (AFTER ALL VALIDATIONS PASS)
+
+        -- Only insert if we have BOTH DocumentId AND SignatureID
+        DECLARE @Content NVARCHAR(MAX);
+        DECLARE @SignatureStatus NVARCHAR(50) = 'p';
+
+        -- Create meaningful content for audit trail
+        SET @Content =
+            'Workflow Action - Source: ' + ISNULL(@Source, '') +
+            ' | SourceID: ' + ISNULL(@SourceID, '') +
+            ' | UserID: ' + CAST(@UserID AS NVARCHAR(20)) +
+            ' | Timestamp: ' + CONVERT(NVARCHAR(23), GETDATE(), 121);
+
+        -- Check for existing record to prevent duplicates
+        IF NOT EXISTS (
+            SELECT 1
+            FROM t_DocumentSignatures WITH (NOLOCK)
+            WHERE DocumentId = @DocumentId
+              AND SignatureId = @SignatureID
+        )
+        BEGIN
+            INSERT INTO t_DocumentSignatures
+                (DocumentId, SignatureId, Content, CreatedBy, CreatedOn,
+                 ModifiedBy, ModifiedOn, Status)
+            VALUES
+                (@DocumentId, @SignatureID, @Content, @UserID, GETDATE(),
+                 @UserID, GETDATE(), @SignatureStatus);
+        END
+
+
     END
 
-    -- Rule 4: Signature provided without document
-    ELSE IF @SignatureID IS NOT NULL
-    BEGIN
-        SET @ErrorMessage = 'Signature ID ' + CAST(@SignatureID AS NVARCHAR(20)) + ' was provided but no document was included for signing.';
-        RETURN;
-    END
 
-    -- If we reach here, validation passed
+
+    -- If we reach here, validation passed AND insert was completed (if applicable)
     RETURN 0;
 END
 GO
