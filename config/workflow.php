@@ -139,6 +139,17 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,
     ],
 
+    'TenderAwardStatus' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+        'Draft' => 'Draft',
+    ],
+
+
+
+
 
 
     /*

@@ -25,7 +25,7 @@ class BancassuranceClaimPaymentService
         float $PaymentAmount,
         string $PaymentReference,
         ?string $Note = null,
-        string $PaidBy,
+        string $PaidTo,
         CodeDetail $PaymentMethod,
         User $user
     ):self{
@@ -35,7 +35,7 @@ class BancassuranceClaimPaymentService
             'PaymentAmount' => $PaymentAmount,
             'PaymentReference' => $PaymentReference,
             'Note' => $Note,
-            'PaidBy' => $PaidBy,
+            'PaidTo' => $PaidTo,
             'PaymentMethod' => $PaymentMethod->ID,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,

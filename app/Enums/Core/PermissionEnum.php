@@ -229,6 +229,13 @@ enum PermissionEnum: string
     case ContractDelete = 'contract-delete';
     case ContractApprove = 'contract-approve';
 
+    // Awards
+    case AwardRead = 'award-read';
+    case AwardCreate = 'award-create';
+    case AwardUpdate = 'award-update';
+    case AwardDelete = 'award-delete';
+    case AwardApprove = 'award-approve';
+
         // Purchase Orders (LPO)
     case PurchaseOrderRead = 'purchaseorder-read';
     case PurchaseOrderWrite = 'purchaseorder-create';
@@ -1013,7 +1020,7 @@ enum PermissionEnum: string
             [self::EmailRead, self::EmailAssign, self::EmailDelete,],
             [self::CallRead, self::CallWrite, self::CallUpdate, self::CallDelete,],
             [self::ScheduleRead, self::ScheduleWrite, self::ScheduleDelete, self::MeetingRooms,],
-
+            [self::AwardRead, self::AwardCreate, self::AwardUpdate, self::AwardDelete, self::AwardApprove],
             [self::MarketingPlannerRead, self::MarketingPlannerWrite, self::MarketingPlannerUpdate, self::MarketingPlannerDelete, self::MarketingPlannerApproval,],
             [self::MarketingListRead, self::MarketingListWrite, self::MarketingListUpdate, self::MarketingListDelete,/*, self::MarketingListApproval*/],
             [self::ReviewsView, self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,],
@@ -1045,6 +1052,8 @@ enum PermissionEnum: string
 
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
+
+    
 
             //Inventory
             [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
@@ -1207,6 +1216,7 @@ enum PermissionEnum: string
             self::TenderApproval,
             self::ContractApproval,
             self::SupplierApprove,
+            self::AwardApprove,
 
             self::PurchaseOrderApprove,
             self::RequisitionApproval,
@@ -1260,6 +1270,24 @@ enum PermissionEnum: string
             self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval,
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete,
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete,
+            self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete, self::ContractApprove,
+            self::AwardRead, self::AwardCreate, self::AwardUpdate, self::AwardDelete, self::AwardApprove,
+            self::GoodsReceiptRead, self::GoodsReceiptWrite, self::GoodsReceiptUpdate, self::GoodsReceiptDelete, self::GoodsReceiptApprove,
+            self::BidOpeningRead, self::BidOpeningWrite,
+            self::RFQResponseRead, self::RFQResponseWrite, self::RFQResponseUpdate,
+            self::RFQCommitteeRead, self::RFQCommitteeWrite,
+            self::TenderCommitteeRead, self::TenderCommitteeWrite,
+            self::PrequalificationRoundRead, self::PrequalificationRoundCreate, self::PrequalificationRoundUpdate, self::PrequalificationRoundDelete, self::PrequalificationRoundApproval,
+            self::ThirdPartyRead, self::ThirdPartyCreate, self::ThirdPartyUpdate, self::ThirdPartyDelete, self::ThirdPartyApprove,
+            self::ApprovalSetupRead, self::ApprovalSetupWrite, self::ApprovalSetupUpdate, self::ApprovalSetupDelete,
+            self::EvaluationCriteriaRead, self::EvaluationCriteriaWrite, self::EvaluationCriteriaUpdate, self::EvaluationCriteriaDelete,
+            self::ProcurementSectionRead, self::ProcurementSectionWrite, self::ProcurementSectionUpdate, self::ProcurementSectionDelete,
+            self::ProcurementConfigRead, self::ProcurementConfigWrite, self::ProcurementConfigUpdate, self::ProcurementConfigDelete,
+            self::ProcurementPlanRead, self::ProcurementPlanWrite, self::ProcurementPlanUpdate, self::ProcurementPlanDelete, self::ProcurementPlanApprove,
+            self::DepartmentPlanRead, self::DepartmentPlanWrite,
+            self::ProcurementMethodUpdate,
+            self::ProcurementPlanSubmit,
+            self::HRCommitteeView, self::HRCommitteeCreate, self::HRCommitteeUpdate, self::HRCommitteeDelete
             => ModulesEnum::Procurement,
 
             //Human Resource Management
@@ -1458,7 +1486,7 @@ enum PermissionEnum: string
 
             self::PrequalificationRoundRead, self::PrequalificationRoundCreate, self::PrequalificationRoundUpdate, self::PrequalificationRoundDelete, self::PrequalificationRoundApproval => 'Prequalification Rounds',
             self::ThirdPartyRead, self::ThirdPartyCreate, self::ThirdPartyUpdate, self::ThirdPartyDelete, self::ThirdPartyApprove => 'Third Party Management',
-
+            self::AwardRead, self::AwardCreate, self::AwardUpdate, self::AwardDelete, self::AwardApprove => 'Awards',
             // Settings & Setup (Batch 4)
             self::ApprovalSetupRead, self::ApprovalSetupWrite, self::ApprovalSetupUpdate, self::ApprovalSetupDelete => 'Approval Setup',
             self::EvaluationCriteriaRead, self::EvaluationCriteriaWrite, self::EvaluationCriteriaUpdate, self::EvaluationCriteriaDelete => 'Evaluation Criteria',

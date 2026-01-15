@@ -59,7 +59,7 @@
 
     {{-- ✅ Header / Action --}}
     <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('bancassurance.claims.assessForm') }}"
+        <a href="{{ route('bancassurance.claims.index') }}"
             class="btn btn-sm btn-primary rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> New Assessment
         </a>

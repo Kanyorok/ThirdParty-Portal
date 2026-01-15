@@ -24,7 +24,10 @@ class TenderAward extends Model
     protected $primaryKey = 'Id';
 
     // Award Status Enums
+    const STATUS_DRAFT = 'Draft';
     const STATUS_PENDING = 'Pending';
+    const STATUS_SUBMITTED = 'Submitted for Approval';
+    const STATUS_UNDER_REVIEW = 'Under Review';
     const STATUS_APPROVED = 'Approved';
     const STATUS_REJECTED = 'Rejected';
     const STATUS_CANCELLED = 'Cancelled';
@@ -140,7 +143,10 @@ class TenderAward extends Model
     public function getStatusBadgeAttribute()
     {
         return match ($this->AwardStatus) {
+            self::STATUS_DRAFT => ['text' => 'Draft', 'class' => 'bg-secondary'],
             self::STATUS_PENDING => ['text' => 'Pending', 'class' => 'bg-warning text-dark'],
+            self::STATUS_SUBMITTED => ['text' => 'Submitted', 'class' => 'bg-info'],
+            self::STATUS_UNDER_REVIEW => ['text' => 'Under Review', 'class' => 'bg-primary'],
             self::STATUS_APPROVED => ['text' => 'Approved', 'class' => 'bg-success'],
             self::STATUS_REJECTED => ['text' => 'Rejected', 'class' => 'bg-danger'],
             self::STATUS_CANCELLED => ['text' => 'Cancelled', 'class' => 'bg-secondary'],

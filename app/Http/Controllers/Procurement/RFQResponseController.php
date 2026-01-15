@@ -25,7 +25,12 @@ class RFQResponseController extends Controller
     public function create()
     {
         $this->authorize('create', RFQResponse::class);
-        $rfqs = RFQ::where('Status', 'Approved')->get();
+        
+        // Include both Approved and Published RFQs
+        // Status values: 'Ap'/'AP'/'Approved' for approved, 'Pub'/'Published' for published
+        $rfqs = RFQ::whereIn('Status', ['Ap', 'AP', 'Approved', 'Pub', 'Published'])
+            ->select('Id', 'RFQNumber', 'Comments', 'Status')
+            ->get();
 
         // Load currencies from DB, prioritize Ksh first
         $currencies = \App\Models\Core\Currency::query()
