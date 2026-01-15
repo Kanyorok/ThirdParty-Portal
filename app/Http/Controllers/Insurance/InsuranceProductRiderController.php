@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Currency;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Insurance\InsuranceProvider;
@@ -27,8 +28,9 @@ class InsuranceProductRiderController extends Controller
     {
         $this->authorize(PermissionEnum::InsuranceProductRiderView, InsuranceProductRider::class);
         $providers = InsuranceProvider::all();
+        $currencies = Currency::all();
 
-        return view('bancassurance.riders.create', compact('providers'));
+        return view('bancassurance.riders.create', compact('providers', 'currencies'));
     }
 
     public function getProductByProvider($providerId)
@@ -45,6 +47,7 @@ class InsuranceProductRiderController extends Controller
 
         $InsuranceProviderId = InsuranceProvider::findOrFail($validated['InsuranceProviderId']);
         $Product = InsuranceProduct::findOrFail($validated['Product']);
+        $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
 
         $providers = InsuranceProductRiderService::create(
             $InsuranceProviderId,
@@ -52,6 +55,7 @@ class InsuranceProductRiderController extends Controller
             $validated['RiderName'],
             $validated['Description'] ?? '',
             $validated['AdditionalPremium'],
+            $CurrencyId,
             $validated['IsOptional'] ?? null,
             $validated['IsActive'] ?? null,
             Auth::user(),
@@ -65,8 +69,9 @@ class InsuranceProductRiderController extends Controller
         $this->authorize(PermissionEnum::InsuranceProductRiderView, InsuranceProductRider::class);
         $rider = InsuranceProductRider::findOrFail($Id);
         $providers = InsuranceProvider::all();
+        $currencies = Currency::all();
         $products = InsuranceProduct::where('InsuranceProviderID', $rider->InsuranceProviderId)->get();
-        return view('bancassurance.riders.edit', compact('rider', 'providers', 'products'));
+        return view('bancassurance.riders.edit', compact('rider', 'providers', 'products', 'currencies'));
     }
 
     // Update product
@@ -79,6 +84,7 @@ class InsuranceProductRiderController extends Controller
 
         try {
             $rider = InsuranceProductRider::findOrFail($id);
+            $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
 
             $rider->update([
                 'InsuranceProviderId' => $validated['InsuranceProviderId'],
@@ -86,6 +92,7 @@ class InsuranceProductRiderController extends Controller
                 'RiderName' => $validated['RiderName'],
                 'Description' => $validated['Description'] ?? '',
                 'AdditionalPremium' => $validated['AdditionalPremium'],
+                'CurrencyId' => $CurrencyId->Id,
                 'IsOptional' => $validated['IsOptional'] ?? '',
                 'IsActive' => $validated['IsActive'] ?? '',
                 'ModifiedBy' => Auth::Id(),

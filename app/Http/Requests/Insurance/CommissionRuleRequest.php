@@ -42,6 +42,7 @@ class CommissionRuleRequest extends FormRequest
             'PolicyTypeId' => 'nullable|exists:t_CodeDetails,ID',
             'CommissionRate' => 'required|numeric',
             'FixedAmount' => 'required|numeric',
+            'CurrencyId' => 'required|exists:t_Currencies,Id',
             'AppliesTo' => 'nullable|exists:t_CodeDetails,ID',
             'IsActive' => 'nullable|boolean',
         ];

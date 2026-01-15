@@ -2,10 +2,13 @@
 
 namespace App\Services\Insurance;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimAssessment;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 
 class BancassuranceClaimAssessmentService
@@ -24,6 +27,7 @@ class BancassuranceClaimAssessmentService
         float              $AssessmentAmount,
         CodeDetail         $Decision,
         User               $user,
+        UploadedFile        $document = null
     ): self
     {
         $assessment = BancassuranceClaimAssessment::create([
@@ -37,6 +41,15 @@ class BancassuranceClaimAssessmentService
             'ModifiedBy' => $user->Id,
         ]);
 
+        if ($document) {
+            $assessment->newDocument(
+                ModulesEnum::Insurance,
+                $document,
+                [PermissionEnum::BancassuranceClaimAssessmentView->value],
+                $user
+            );
+        }
+
         activity()
             ->causedBy($user->Id)
             ->performedOn($assessment)
@@ -48,14 +61,15 @@ class BancassuranceClaimAssessmentService
 
 
     public static function update(
-        BancassuranceClaimAssessment $assessment,
+        BancassuranceClaimAssessment $assessments,
         string                       $AssessmentComments,
         float                        $AssessmentAmount,
         CodeDetail                   $Decision,
         User                         $user,
+        UploadedFile                 $document = null
     ): self
     {
-        $assessment->update([
+        $assessments->update([
             'AssessmentComments' => $AssessmentComments,
             'AssessmentAmount' => $AssessmentAmount,
             'Decision' => $Decision->ID,
@@ -64,13 +78,23 @@ class BancassuranceClaimAssessmentService
             'ModifiedBy' => $user->Id,
         ]);
 
+        if ($document) {
+            $assessments->newDocument(
+                ModulesEnum::Insurance,
+                $document,
+                [PermissionEnum::BancassuranceClaimAssessmentView->value],
+                $user
+            );
+        }
+        
+
         activity()
             ->causedBy($user->Id)
-            ->performedOn($assessment)
+            ->performedOn($assessments)
             ->event('update')
-            ->log("Updated assessment {$assessment->Id}");
+            ->log("Updated assessment {$assessments->Id}");
 
-        return new self($assessment);
+        return new self($assessments);
     }
 
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Core\Currency;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,6 +24,7 @@ class InsuranceProductRider extends Model
         'RiderName',
         'Description',
         'AdditionalPremium',
+        'CurrencyId',
         'IsOptional',
         'IsActive',
         'CreatedBy',
@@ -43,5 +45,10 @@ class InsuranceProductRider extends Model
     public function product()
     {
         return $this->belongsTo(InsuranceProduct::class, 'Product', 'Id');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
     }
 }
