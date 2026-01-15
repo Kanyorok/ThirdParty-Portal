@@ -39,8 +39,7 @@ abstract class ThirdPartiesService
 
     public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User|ThirdPartyUser $actor, ?string $password = null, bool $sendVerification = true): static
     {
-        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
-
+        // Use standard Laravel Hash for Laravel 11
         $user = ThirdPartyUser::create([
             'FirstName' => $firstName,
             'LastName' => $lastName,
@@ -48,8 +47,8 @@ abstract class ThirdPartiesService
             'Phone' => $phone,
             'Gender' => $gender->getAttribute('ID') ?? $gender->ID,
             'ThirdPartyId' => $this->party->Id,
-            'Password' => $password ? \Illuminate\Support\Facades\Hash::make($password) : 'NON SET',
-            'IsActive' => $password ? true : false,
+            'Password' => $password ? Hash::make($password) : 'NON SET',
+            'IsActive' => (bool)$password,
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
@@ -70,7 +69,7 @@ abstract class ThirdPartiesService
     public static function create(
         string  $name,
         ?string $tradingName,
-        CodeDetail $businessType,
+        ?CodeDetail $businessType, // Changed to nullable to match Request logic
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
@@ -89,7 +88,7 @@ abstract class ThirdPartiesService
         $party = ThirdParties::create([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
-            'BusinessType' => $businessType->getKey(),
+            'BusinessType' => $businessType?->getKey(), // Use null-safe operator
             'RegistrationNumber' => $registrationNumber,
             'TaxPIN' => $taxPIN,
             'VATNumber' => $vatNumber,
@@ -133,8 +132,8 @@ abstract class ThirdPartiesService
                 'Description' => $status->label(),
                 'DisplayOrder' => CodeDetail::query()->where('CodeID', 'ThirdPartyStatus')->count() + 1,
                 'IsActive' => true,
-                'CreatedBy' => $actor->Id,
-                'ModifiedBy' => $actor->Id,
+                'CreatedBy' => $actor->Id ?? 1, // Fallback if no user
+                'ModifiedBy' => $actor->Id ?? 1,
             ]);
         }
         throw new ErroredException('Invalid Status, not set and could not create');

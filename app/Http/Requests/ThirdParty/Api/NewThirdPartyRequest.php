@@ -41,7 +41,6 @@ class NewThirdPartyRequest extends FormRequest
             'PhysicalAddress' => ['nullable', 'string', 'max:200'],
             'types' => ['required', 'array', 'min:1'],
             'logo' => ['nullable', Rule::imageFile()->max(9000)],
-
             'createUser' => ['boolean'],
             'user_FirstName' => [Rule::requiredIf($isUser), 'nullable', 'string', 'max:200'],
             'user_LastName' => [Rule::requiredIf($isUser), 'nullable', 'string', 'max:200'],
@@ -61,13 +60,11 @@ class NewThirdPartyRequest extends FormRequest
                 'min:8',
                 'confirmed'
             ],
-
             'supplier_category_id' => [
                 'nullable',
                 Rule::requiredIf($isSupplier),
                 Rule::exists('t_SupplierCategories', 'SupplierCategoryID')
             ],
-
             'user_DateOfBirth' => ['nullable', Rule::requiredIf($isCustomer), 'date'],
             'user_MaritalStatus' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
             'user_Occupation' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
@@ -82,30 +79,26 @@ class NewThirdPartyRequest extends FormRequest
 
     public function getBusinessType(): CodeDetail
     {
-        $occupation = CodeDetail::query()->where('CodeID', 'Occupation')->where('Value', $this->validated('user_Occupation'))->first();
-        if ($occupation instanceof CodeDetail) {
-            return $occupation;
-        }
-        throw ValidationException::withMessages(['user_Occupation' => 'Occupation is not a valid Occupation.']);
-    }
+        $businessType = CodeDetail::query()
+            ->where('CodeID', 'BusinessType')
+            ->where('Value', $this->validated('BusinessType'))
+            ->first();
 
-    public function getMaritalStatus(): CodeDetail
-    {
-        $maritalStatus = CodeDetail::query()->where('CodeID', 'MaritalStatus')->where('Value', $this->validated('user_MaritalStatus'))->first();
-        if ($maritalStatus instanceof CodeDetail) {
-            return $maritalStatus;
+        if ($businessType instanceof CodeDetail) {
+            return $businessType;
         }
-        throw ValidationException::withMessages(['user_MaritalStatus' => 'Marital Status is not a valid Marital Status.']);
-    }
 
-    public function getGender(string $field): CodeDetail
-    {
-        return $this->getCodeDetail('Gender', $field);
+        throw ValidationException::withMessages(['BusinessType' => 'The selected business type is invalid.']);
     }
 
     public function getMaritalStatus(string $field): CodeDetail
     {
         return $this->getCodeDetail('MaritalStatus', $field);
+    }
+
+    public function getGender(string $field): CodeDetail
+    {
+        return $this->getCodeDetail('Gender', $field);
     }
 
     public function getOccupation(string $field): CodeDetail
@@ -136,13 +129,6 @@ class NewThirdPartyRequest extends FormRequest
         } catch (\Exception $e) {
             throw ValidationException::withMessages([$field => 'The provided phone number is invalid.']);
         }
-    }
-
-    public function getSupplierData(): array
-    {
-        return [
-            'category_id' => $this->validated('supplier_category_id'),
-        ];
     }
 
     public function getLogo(): ?UploadedFile

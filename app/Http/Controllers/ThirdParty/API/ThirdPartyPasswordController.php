@@ -18,7 +18,7 @@ class ThirdPartyPasswordController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('ajax')->only(['store', 'forgotPassword']);
+        $this->middleware('ajax')->only(['resetPassword', 'forgotPassword']);
     }
 
     public function forgotPassword(Request $request): JsonResponse
@@ -36,7 +36,7 @@ class ThirdPartyPasswordController extends Controller
             ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
             'token' => ['required'],
@@ -80,5 +80,15 @@ class ThirdPartyPasswordController extends Controller
         }
 
         return $this->succeeded('Password reset successful. You can now log in.');
+    }
+
+    public function succeeded(string $message, string $route = '', array $data = [], int $status = 202): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'message' => $message,
+            'route' => $route,
+            'data' => $data
+        ], $status);
     }
 }

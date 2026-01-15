@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Services\ThirdParties;
 
@@ -44,9 +44,9 @@ class TenantService extends ThirdPartiesService
     }
 
     public static function create(
-        string   $name,
+        string $name,
         ?string $tradingName,
-        CodeDetail $businessType,
+        ?CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
@@ -68,7 +68,7 @@ class TenantService extends ThirdPartiesService
                 $party,
                 $actor,
                 $data['tenant_type'] ?? $data['tenantType'] ?? null,
-                $data['tenant_remarks'] ?? $data['remarks'] ?? null
+                $data['user_Remarks'] ?? $data['tenant_remarks'] ?? $data['remarks'] ?? null
             );
 
             return $party;
@@ -115,7 +115,7 @@ class TenantService extends ThirdPartiesService
 
             $tenant->update([
                 'TenantType' => $data['tenant_type'] ?? $data['tenantType'] ?? $tenant->TenantType,
-                'Remarks' => $data['tenant_remarks'] ?? $data['remarks'] ?? $tenant->Remarks,
+                'Remarks' => $data['user_Remarks'] ?? $data['tenant_remarks'] ?? $data['remarks'] ?? $tenant->Remarks,
                 'ModifiedBy' => $auditId,
             ]);
 

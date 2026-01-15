@@ -5,16 +5,14 @@ namespace App\Http\Controllers\ThirdParty\API;
 use App\Services\ThirdParties\TenantService;
 use App\Services\Insurance\BancassuranceCustomersService;
 use App\Services\ThirdParties\ThirdPartiesService;
-
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Services\ThirdParties\SupplierService;
 use App\Services\ThirdParties\ThirdPartyService;
-use App\Models\ThirdParty\ThirdPartyUser as ThirdPartyUserModel;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use DateTime;
+use App\Exceptions\ErroredException;
 
 class NewThirdPartyController extends Controller
 {
@@ -23,17 +21,26 @@ class NewThirdPartyController extends Controller
         return DB::transaction(function () use ($request) {
             $country = $request->getCountry();
             $location = $request->getLocation($country);
+            
             $businessType = $request->getBusinessType();
             
+            if (!$businessType) {
+                throw new ErroredException("Invalid Business Type provided.");
+            }
+
             $actor = SystemHelper::user();
-
             $types = $request->validated('types') ?? [];
-
+            
             $email = $request->validated('Email');
             if (empty($email)) {
                 $registrationNumber = $request->validated('RegistrationNumber');
                 $email = strtolower(str_replace([' ', '-', '/'], '', $registrationNumber)) . '@noreply.local';
             }
+
+            $data = [
+                'types' => $types,
+                'user_Remarks' => $request->validated('user_Remarks'),
+            ];
 
             if (in_array(ThirdPartyService::TypeCustomer, $types)) {
                 $data['user_Gender'] = $request->getGender('user_Gender');
@@ -65,47 +72,10 @@ class NewThirdPartyController extends Controller
             $partyService = new ThirdPartyService($party);
 
             if ($request->hasFile('logo')) {
-                $partyService = new class($party) extends ThirdPartiesService {
-                    public static function getType(): \App\Models\ThirdParty\ThirdPartyType {
-                        return ThirdPartyService::getType();
-                    }
-                };
                 $partyService->setLogo($request->file('logo'), $actor ?? $party);
             }
 
-            if (in_array(ThirdPartyService::TypeSupplier, $types)) {
-                SupplierService::createFromParty($party, $actor ?? $party);
-            }
-
-            if (in_array(ThirdPartyService::TypeTenant, $types)) {
-                TenantService::createFromParty(
-                    party: $party, 
-                    actor: $actor ?? $party, 
-                    remarks: $request->validated('tenant_remarks')
-                );
-            }
-
-            if (in_array(ThirdPartyService::TypeCustomer, $types)) {
-                BancassuranceCustomersService::createFromParty(
-                    party: $party,
-                    Referral: null,
-                    DateOfBirth: null, 
-                    Gender: null,      
-                    MaritalStatus: null,
-                    Occupation: null,
-                    user: $actor ?? $party
-                );
-            }
-
             if ($request->boolean('createUser')) {
-                $gender = $request->getGender('user_Gender');
-                
-                $partyService = new class($party) extends ThirdPartiesService {
-                    public static function getType(): \App\Models\ThirdParty\ThirdPartyType {
-                        return ThirdPartyService::getType();
-                    }
-                };
-
                 $partyService->addUser(
                     firstName: $request->validated('user_FirstName'),
                     lastName: $request->validated('user_LastName'),

@@ -52,7 +52,7 @@ class SupplierService extends ThirdPartiesService
     public static function create(
         string $name,
         ?string $tradingName,
-        CodeDetail $businessType,
+        ?CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
@@ -82,7 +82,6 @@ class SupplierService extends ThirdPartiesService
         $master = SupplierMaster::create([
             'ThirdPartyId' => $party->Id,
             'SupplierID' => self::_ID(),
-            'CategoryId' => $categoryId,
             'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Pending,
             'IsPrequalified' => false,
             'CreatedBy' => $auditId,

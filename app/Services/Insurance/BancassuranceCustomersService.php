@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Services\Insurance;
 
@@ -87,7 +87,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
     public static function create(
         string $name,
         ?string $tradingName,
-        CodeDetail $businessType,
+        ?CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,

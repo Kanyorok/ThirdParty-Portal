@@ -25,7 +25,7 @@ class ThirdPartyService extends ThirdPartiesService
     public static function create(
         string $name,
         ?string $tradingName,
-        CodeDetail $businessType,
+        ?CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
@@ -155,7 +155,7 @@ class ThirdPartyService extends ThirdPartiesService
         match ($code) {
             self::TypeSupplier => SupplierService::updateFromParty($this->party, $actor, $data),
             self::TypeCustomer => BancassuranceCustomersService::updateFromParty($this->party, $actor, $data),
-            self::TypeTenant => PropertyNewTenantService::updateFromParty($this->party, $actor, $data),
+            self::TypeTenant => TenantService::updateFromParty($this->party, $actor, $data),
             default => null,
         };
     }
@@ -170,13 +170,14 @@ class ThirdPartyService extends ThirdPartiesService
         }
     }
 
-    public function addTenant(User|ThirdPartyUser $actor, ?string $Remarks, ?UploadedFile $document = null): PropertyNewTenantService
+    public function addTenant(User|ThirdPartyUser $actor, ?string $Remarks, ?UploadedFile $document = null): TenantService
     {
-        return PropertyNewTenantService::createFromParty(
+        return TenantService::createFromParty(
             party: $this->party,
-            user: $actor,
+            actor: $actor,
             document: $document,
-            Remarks: $Remarks
+            tenantType: $data['tenant_type'] ?? 80,
+            remarks: $data['remarks'] ?? 'Portal registration'
         );
     }
 
