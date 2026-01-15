@@ -208,7 +208,7 @@ public function index(Request $request)
         return view('inventory.interbranchrequisition.show', compact('item'));
     }
 
-   public function edit($Id)
+   public function edit($Id, Request $request)
 {
     
     $currentBranch = $request->user()->branch;

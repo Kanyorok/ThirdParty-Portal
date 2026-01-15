@@ -93,9 +93,9 @@
                                 <td>
                                     <select name="items[{{ $index }}][Item]"
                                             class="form-select item" required
-                                            data-selected="{{ $reqItem->ItemId }}"
+                                            data-selected="{{ $reqItem->Item }}"
                                             data-preserved-name="{{ $reqItem->item->ItemName }}">
-                                        <option value="{{ $reqItem->ItemId }}" selected>
+                                        <option value="{{ $reqItem->Item }}" selected>
                                             {{ $reqItem->item->ItemName }}
                                         </option>
                                     </select>

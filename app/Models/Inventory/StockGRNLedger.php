@@ -12,7 +12,6 @@ use App\Models\Inventory\Store;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Core\Branch;
 
-
 class StockGRNLedger extends Model
 {
     use UserActorTrait, SoftDeletes;
@@ -36,6 +35,9 @@ class StockGRNLedger extends Model
         'Store',
         'Branch',
         'ReceivedDate',
+        'SourceType',
+        'SourceReference',
+        'ParentLedgerId',
         'CreatedBy',
         'CreatedOn',
         'ModifiedOn',   
@@ -74,6 +76,35 @@ class StockGRNLedger extends Model
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
 
+    // Relationship to parent ledger (for tracking transfers)
+    public function parentLedger()
+    {
+        return $this->belongsTo(StockGRNLedger::class, 'ParentLedgerId');
+    }
 
+    // Relationship to child ledgers (transferred batches)
+    public function childLedgers()
+    {
+        return $this->hasMany(StockGRNLedger::class, 'ParentLedgerId');
+    }
 
+    // Get original GRN ID (traverse up the chain)
+    public function getOriginalGrnIdAttribute()
+    {
+        $current = $this;
+        while ($current->parentLedger) {
+            $current = $current->parentLedger;
+        }
+        return $current->GRNID;
+    }
+
+    // Get original goods receipt
+    public function getOriginalGoodsReceiptAttribute()
+    {
+        $current = $this;
+        while ($current->parentLedger) {
+            $current = $current->parentLedger;
+        }
+        return $current->goodsReceipt;
+    }
 }

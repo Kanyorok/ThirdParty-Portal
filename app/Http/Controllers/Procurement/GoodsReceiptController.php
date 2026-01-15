@@ -11,6 +11,7 @@ use App\Models\Inventory\StockGRNLedger;
 use App\Models\Inventory\StockItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Inventory\Store;
 
 class GoodsReceiptController extends Controller
 {
@@ -87,7 +88,7 @@ class GoodsReceiptController extends Controller
     }
 
 
-    public function store(Request $request)
+       public function store(Request $request)
     {
         $this->authorize('create', GoodsReceipt::class);
         
@@ -101,6 +102,14 @@ class GoodsReceiptController extends Controller
         DB::beginTransaction();
         try {
             foreach ($request->items as $index => $item) {
+                $branchId = $item['TransferTo'] ?? Auth::user()->BranchId;
+                
+                $mainStore = $this->getDefaultStoreForBranch($branchId);
+                
+                if (!$mainStore) {
+                    throw new \Exception("No main store found for branch {$branchId}");
+                }
+                
                 $grn = GoodsReceipt::create([
                     'GRNID'            => $request->GRNID,
                     'ReceivedDate'     => now(),
@@ -108,7 +117,7 @@ class GoodsReceiptController extends Controller
                     'POID'             => $request->POID,
                     'SupplierId'       => $request->SupplierID,
                     'ItemNo'           => $item['ItemNo'],
-                    'StoreID'          => $item['StoreID'] ?? '2',
+                    'StoreID'          => $mainStore->Id, 
                     'TransferTo'       => $item['TransferTo'] ?? null,
                     'TransferStatus'   => $item['TransferTo'] ? 'Pending' : null,
                     'POQTY'            => $item['POQTY'] ?? 0,
@@ -143,7 +152,7 @@ class GoodsReceiptController extends Controller
         return response()->json($items);
     }
 
-    public function updateLine(Request $request)
+       public function updateLine(Request $request)
     {
         $request->validate([
             'items' => 'required|array',
@@ -155,6 +164,16 @@ class GoodsReceiptController extends Controller
 
         foreach ($request->items as $item) {
             $line = GoodsReceipt::find($item['id']);
+            
+            if (isset($item['TransferTo']) && $item['TransferTo'] != $line->TransferTo) {
+                $branchId = $item['TransferTo'] ?? Auth::user()->BranchId;
+                $mainStore = $this->getDefaultStoreForBranch($branchId);
+                
+                if ($mainStore) {
+                    $line->StoreID = $mainStore->Id;
+                }
+            }
+            
             $line->ReceivedQTY = $item['ReceivedQTY'];
             $line->TransferTo = $item['TransferTo'];
             $line->TagRequired = $item['TagRequired'];
@@ -164,7 +183,6 @@ class GoodsReceiptController extends Controller
 
         return redirect()->route('procurementreceipts.index')->with('success', 'All GRN line items updated.');
     }
-
     public function destroy($grnId, $poId)
     {
         $deleted = GoodsReceipt::where('GRNID', $grnId)
@@ -183,93 +201,116 @@ class GoodsReceiptController extends Controller
 
 
    public function postReceipt(Request $request)
-    {
-        $this->authorize('post', GoodsReceipt::class);
-        
-        $grnId = $request->input('grn_id');
-        $poId = $request->input('po_id');
+{
+    $this->authorize('post', GoodsReceipt::class);
+    
+    $grnId = $request->input('grn_id');
+    $poId = $request->input('po_id');
 
-        $grnLines = GoodsReceipt::with('item')
-            ->where('GRNID', $grnId)
-            ->where('POID', $poId)
-            ->where('InspectionStatus', PostingEnum::Draft)
-            ->get();
+    $grnLines = GoodsReceipt::with('item')
+        ->where('GRNID', $grnId)
+        ->where('POID', $poId)
+        ->where('InspectionStatus', PostingEnum::Draft)
+        ->get();
 
-        if ($grnLines->isEmpty()) {
-            return response()->json(['error' => 'No draft GRN lines found.'], 404);
-        }
+    if ($grnLines->isEmpty()) {
+        return response()->json(['error' => 'No draft GRN lines found.'], 404);
+    }
 
-        DB::beginTransaction();
-        try {
-            foreach ($grnLines as $grnLine) {
-                $grnLine->InspectionStatus = PostingEnum::Posted;
-                $grnLine->save();
+    DB::beginTransaction();
+    try {
+        foreach ($grnLines as $grnLine) {
+            $grnLine->InspectionStatus = PostingEnum::Posted;
+            $grnLine->save();
 
-                $stockItem = StockItem::where('ItemID', $grnLine->ItemNo)
-                    ->where('Store', $grnLine->StoreID)
-                    ->first();
+            // Get the branch for this GRN line
+            $branchId = $grnLine->TransferTo ?? Auth::user()->BranchId;
+            
+            // Get the main store for this branch
+            $mainStore = $this->getDefaultStoreForBranch($branchId);
+            
+            if (!$mainStore) {
+                throw new \Exception("No main store found for branch {$branchId}");
+            }
 
-                if ($stockItem) {
-                    $stockItem->UnitCost = $grnLine->UnitPrice;
-                    $stockItem->CurrentQty += (int) $grnLine->ReceivedQTY;
-                    $stockItem->LastReceived = now();
-                    $stockItem->ModifiedBy = Auth::id();
-                    $stockItem->save();
-                } else {
-                    $stockItem = StockItem::create([
-                        'SKUCode'      => 'SKU-' . $grnLine->ItemNo . '-' . $grnLine->StoreID . '-' . time(),
-                        'ItemID'       => $grnLine->ItemNo,
-                        'UOM'          => optional($grnLine->item)->UOM ?? 1,
-                        'UnitCost'     => $grnLine->UnitPrice, 
-                        'Store'        => $grnLine->StoreID,
-                        'Branch'       => $grnLine->TransferTo ?? Auth::user()->BranchId,
-                        'CurrentQty'   => (int) $grnLine->ReceivedQTY,
-                        'Min'          => 0,
-                        'Reorder'      => 0,
-                        'Max'          => 0,
-                        'LastReceived' => now(),
-                        'Status'       => true,
-                        'CreatedBy'    => Auth::id(),
-                        'CreatedOn'    => now(),
-                        'ModifiedBy'   => Auth::id(),
-                        'ModifiedOn'   => now(),
-                    ]);
-                }
+            $stockItem = StockItem::where('ItemID', $grnLine->ItemNo)
+                ->where('Store', $mainStore->Id) // Use the main store ID
+                ->where('Branch', $branchId) // Also check the branch
+                ->first();
 
-                StockGRNLedger::create([
-                    'GRNID' => $grnLine->GRNID,
-                    'GoodsReceiptId' => $grnLine->id,
-                    'StockItemId' => $stockItem->Id,
-                    'ItemNo' => $grnLine->ItemNo,
-                    'SKUCode' => $stockItem->SKUCode,
-                    'ReceivedQTY' => $grnLine->ReceivedQTY,
-                    'RemainingQTY' => $grnLine->ReceivedQTY,
-                    'UnitPrice' => $grnLine->UnitPrice,
-                    'Store' => $grnLine->StoreID,
-                    'Branch' => $grnLine->TransferTo ?? Auth::user()->BranchId,
-                    'ReceivedDate' => now(),
+            if ($stockItem) {
+                $stockItem->UnitCost = $grnLine->UnitPrice;
+                $stockItem->CurrentQty += (int) $grnLine->ReceivedQTY;
+                $stockItem->LastReceived = now();
+                $stockItem->ModifiedBy = Auth::id();
+                $stockItem->save();
+            } else {
+                $stockItem = StockItem::create([
+                    'SKUCode'      => 'SKU-' . $grnLine->ItemNo . '-' . $mainStore->Id . '-' . time(),
+                    'ItemID'       => $grnLine->ItemNo,
+                    'UOM'          => optional($grnLine->item)->UOM ?? 1,
+                    'UnitCost'     => $grnLine->UnitPrice, 
+                    'Store'        => $mainStore->Id, // Use the main store ID
+                    'Branch'       => $branchId,
+                    'CurrentQty'   => (int) $grnLine->ReceivedQTY,
+                    'Min'          => 0,
+                    'Reorder'      => 0,
+                    'Max'          => 0,
+                    'LastReceived' => now(),
+                    'Status'       => true,
                     'CreatedBy'    => Auth::id(),
                     'CreatedOn'    => now(),
-                    'ModifiedBy'   => Auth::id(), 
+                    'ModifiedBy'   => Auth::id(),
                     'ModifiedOn'   => now(),
                 ]);
             }
 
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'GRN posted successfully. Stock updated and ledger created.',
-                'grn_id' => $grnId
+            StockGRNLedger::create([
+                'GRNID' => $grnLine->GRNID,
+                'GoodsReceiptId' => $grnLine->id,
+                'StockItemId' => $stockItem->Id,
+                'ItemNo' => $grnLine->ItemNo,
+                'SKUCode' => $stockItem->SKUCode,
+                'ReceivedQTY' => $grnLine->ReceivedQTY,
+                'RemainingQTY' => $grnLine->ReceivedQTY,
+                'UnitPrice' => $grnLine->UnitPrice,
+                'Store' => $mainStore->Id, // Use the main store ID for the ledger
+                'Branch' => $branchId,
+                'ReceivedDate' => now(),
+                'CreatedBy'    => Auth::id(),
+                'CreatedOn'    => now(),
+                'ModifiedBy'   => Auth::id(), 
+                'ModifiedOn'   => now(),
             ]);
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error posting GRN: ' . $e->getMessage());
-            return response()->json([
-                'error' => true,
-                'message' => 'Failed to post GRN: ' . $e->getMessage()
-            ], 500);
         }
+
+        DB::commit();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'GRN posted successfully. Stock updated and ledger created.',
+            'grn_id' => $grnId
+        ]);
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error posting GRN: ' . $e->getMessage());
+        return response()->json([
+            'error' => true,
+            'message' => 'Failed to post GRN: ' . $e->getMessage()
+        ], 500);
     }
+}
+
+protected function getDefaultStoreForBranch($branchId)
+{
+    $store = Store::where('BranchID', $branchId)
+        ->where('Status', true)
+        ->where('IsMainStore', true)
+        ->first();
+
+    return $store;
+}
+
+     
 }

@@ -63,7 +63,23 @@ class InventoryHoldReviewController extends Controller
             }
 
         $branchId = $currentBranch->Id; 
+        $reviews = InventoryHoldReview::with([
+            'item.uom',
+            'fromBranch',
+            'store',
+            'creator',
+            'conditionDetail',
+            'defectDetail',
+            'inventoryHold'
+        ])
+            ->whereNull('DeletedOn')
+            ->where('FromBranch', $branchId) 
+            ->get();
 
+        $reviews->each(function ($review) {
+            $review->Condition = $review->conditionDetail?->Description ?? null;
+            $review->Defect = $review->defectDetail?->Description ?? null;
+        });
         $holds = InventoryHold::whereNull('DeletedOn')
             ->where('BranchID', $branchId) 
             ->whereHas('sourceDetail', function ($q) {
@@ -77,7 +93,7 @@ class InventoryHoldReviewController extends Controller
             $hold->Defect = $hold->defectDetail?->Description ?? null;
         });
 
-        return view('inventory.inventoryholdreview.create', compact('holds'));
+        return view('inventory.inventoryholdreview.create', compact('holds','reviews'));
     }
 
     public function store(InventoryHoldReviewRequest $request)
