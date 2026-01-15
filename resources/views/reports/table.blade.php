@@ -63,6 +63,7 @@
 
                 // Pre-calculate rowspans for each group at each row
                 $rowspans = [];
+                $rowCount = count($rows);
                 foreach ($rows as $rowIndex => $row) {
                     $groups = $row['_groups'] ?? [];
                     $rowspans[$rowIndex] = [];
@@ -75,7 +76,7 @@
                         // (and all parent levels must also match)
                         if ($groupChanged($rows, $rowIndex, $groupIndex)) {
                             $count = 1;
-                            for ($nextRow = $rowIndex + 1; $nextRow < count($rows); $nextRow++) {
+                            for ($nextRow = $rowIndex + 1; $nextRow < $rowCount; $nextRow++) {
                                 $nextGroups = $rows[$nextRow]['_groups'] ?? [];
                                 $nextGroupValue = $nextGroups[$groupIndex]['value'] ?? '';
 
@@ -115,7 +116,6 @@
                 </tr>
                 </thead>
                 <tbody>
-                @php $displayedGroups = []; @endphp
                 @forelse($rows as $rowIndex => $row)
                     @php
                         $groups = $row['_groups'] ?? [];
@@ -124,15 +124,11 @@
                         {{-- Render group columns with rowspan --}}
                         @foreach($groups as $groupIndex => $group)
                             @php
-                                $groupKey = '';
-                                for ($k = 0; $k <= $groupIndex; $k++) {
-                                    $groupKey .= ($groups[$k]['value'] ?? '') . '|';
-                                }
+                                $rowspanValue = $rowspans[$rowIndex][$groupIndex] ?? 0;
                             @endphp
-                            @if(!isset($displayedGroups[$groupIndex][$groupKey]))
-                                @php $displayedGroups[$groupIndex][$groupKey] = true; @endphp
+                            @if($rowspanValue > 0)
                                 <td class="align-middle fw-bold bg-light"
-                                    @if($rowspans[$rowIndex][$groupIndex] > 1) rowspan="{{ $rowspans[$rowIndex][$groupIndex] }}" @endif>
+                                    @if($rowspanValue > 1) rowspan="{{ $rowspanValue }}" @endif>
                                     {{ $group['value'] }}
                                 </td>
                             @endif
@@ -158,10 +154,12 @@
 <script>
     $(document).ready(function () {
         $.fn.dataTable.ext.errMode = 'none';
+        @if(empty($groupLevels))
         $('#reports-table').DataTable({
             dom: '<"row"<"col-12 mb-2"tr><"col-5 text-center"i><"col-7"p>>',
             paging: false,
             ordering: false
         });
+        @endif
     });
 </script>
