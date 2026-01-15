@@ -155,7 +155,7 @@
                 <div class="mb-4">
                     <h6 class="section-title">Payee Information</h6>
 
-                    <div class="row g-3">
+                    {{-- <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small ">
                                 Paid To <span class="text-danger">*</span>
@@ -165,7 +165,18 @@
                                    class="form-control form-control-sm"
                                    required>
                         </div>
-                    </div>
+                    </div> --}}
+                {{-- ================= Paid To ================= --}}
+                <div class="mb-3">
+                        <label class="form-label small ">Paid To <span class="text-danger">*</span></label>
+                        <select name="PaidTo" class="form-select form-select-sm" required>
+                            <option value="">-- Select User --</option>
+                            @foreach ($Users as $user)
+                                <option value="{{ $user->Id }}">
+                                    {{ $user->Name ?? '-'}}
+                                </option>
+                            @endforeach
+                        </select>
                 </div>
 
                 <div class="mb-4">
