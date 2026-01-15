@@ -3,25 +3,23 @@
 namespace App\Http\Controllers\API\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Services\Procurement\SupplierRFQService;
+use App\Models\Procurement\RFQ;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\RFQResponse;
-use App\Models\Procurement\RFQClarification;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
+
+//use App\Services\Procurement\SupplierRFQService;
 
 class SupplierRFQController extends Controller
 {
-    protected SupplierRFQService $rfqService;
+    /*protected SupplierRFQService $rfqService;
 
     public function __construct(SupplierRFQService $rfqService)
     {
         $this->rfqService = $rfqService;
-    }
+    }*/
 
     /**
      * Get all RFQ invitations for authenticated supplier
@@ -34,7 +32,7 @@ class SupplierRFQController extends Controller
         try {
             $user = Auth::guard('sanctum')->user();
             $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
-            
+
             if (!$thirdPartyId) {
                 return response()->json(['data' => []]);
             }
@@ -82,7 +80,7 @@ class SupplierRFQController extends Controller
             $rfqId = (int) $rfq;
             $user = Auth::guard('sanctum')->user();
             $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
-            
+
             if (!$thirdPartyId) {
                 return response()->json(['error' => 'Authentication required'], 401);
             }
@@ -141,7 +139,7 @@ class SupplierRFQController extends Controller
     public function submitResponse(Request $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
+            $request->validate([
                 'rfqId' => 'required|integer|exists:t_RFQ,Id',
                 'currency' => 'required|string|max:3',
                 'durationDays' => 'required|integer|min:1',
@@ -203,7 +201,7 @@ class SupplierRFQController extends Controller
                     'message' => 'Response already submitted'
                 ], 409);
             }
-            
+
             // Logic to save response would go here (truncated in original file? Assuming placeholder)
              return response()->json(['message' => 'Response submitted successfully'], 200);
 
@@ -253,7 +251,7 @@ class SupplierRFQController extends Controller
 
             // $actor = SystemHelper::user();
             $actorId = $user->Id ?? 0;
-            
+
             \App\Models\Procurement\RFQClarification::create([
                 'RFQId' => $request->rfqId,
                 'SupplierId' => $supplierId,
@@ -275,7 +273,7 @@ class SupplierRFQController extends Controller
              $rfqId = (int) $rfq;
             $user = Auth::guard('sanctum')->user();
             $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
-            
+
             if (!$thirdPartyId) {
                 return response()->json(['data' => []]);
             }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Insurance\CommissionEarnedController;
 use App\Http\Controllers\Insurance\CommissionPayoutController;
 use App\Http\Controllers\Insurance\CommissionRuleController;
 use App\Http\Controllers\Insurance\CommissionTierController;
+use App\Http\Controllers\Insurance\ContributorBeneficiaryController;
 use App\Http\Controllers\Insurance\CustomerBeneficiaryController;
 use App\Http\Controllers\Insurance\CustomerCommunicationController;
 use App\Http\Controllers\Insurance\CustomerController;
@@ -15,27 +16,22 @@ use App\Http\Controllers\Insurance\InsuranceProductController;
 use App\Http\Controllers\Insurance\InsuranceProductRiderController;
 use App\Http\Controllers\Insurance\InsuranceProviderController;
 use App\Http\Controllers\Insurance\InsuranceProviderProductController;
+use App\Http\Controllers\Insurance\MedicalFundBeneficiaryController;
+use App\Http\Controllers\Insurance\MedicalFundContributionController;
+use App\Http\Controllers\Insurance\MedicalFundContributorController;
+use App\Http\Controllers\Insurance\MedicalFundController;
+use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
+use App\Http\Controllers\Insurance\MedicalFundPackageController;
 use App\Http\Controllers\Insurance\PolicyController;
 use App\Http\Controllers\Insurance\PremiumController;
 use App\Http\Controllers\Insurance\PricingRuleController;
-use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\ReportsController;
-use App\Http\Controllers\Insurance\MedicalFundController;
-use App\Http\Controllers\Insurance\MedicalFundContributionController;
-use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
+use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\UnderwritingController;
-use App\Http\Controllers\Insurance\MedicalFundBeneficiaryController;
-use App\Http\Controllers\Insurance\MedicalFundContributorController;
-use App\Http\Controllers\Insurance\ContributorBeneficiaryController; // new, see quick store below
-use App\Http\Controllers\Insurance\MedicalFundPackageController;
 
-
-
-
+// new, see quick store below
 
 Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance')->group(function () {
-
-
     Route::prefix('bancassurance/referrals')->name('bancassurance.referrals.')->group(function () {
         Route::get('create', [BancassuranceReferralController::class, 'create'])->name('create');
         Route::get('edit/{Id}', [BancassuranceReferralController::class, 'edit'])->name('edit');
@@ -240,21 +236,21 @@ Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance'
     });
 
     // Route::prefix('medical')->as('bancassurance.')->group(function () {
- 
+
     //     // Medical Funds (no hyphen → clean names)
     //     Route::resource('medicalfunds', MedicalFundController::class)
     //         ->parameters(['medicalfunds' => 'medicalfund']);
- 
+
     //     // Nested: Beneficiaries
     //     Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
     //         ->shallow()
     //         ->parameters(['medicalfunds' => 'medical_fund','beneficiaries' => 'beneficiary']);
- 
+
     //     // Nested: Contributions
     //     Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
     //         ->shallow()
     //         ->parameters(['medicalfunds' => 'medical_fund','contributions' => 'contribution']);
- 
+
     //     // Nested: Disbursements
     //     Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
     //         ->shallow()

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CRM\ReportsController;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['module:200000'])->namespace('CRM')->prefix('crm')->group(function () {
@@ -294,9 +295,8 @@ Route::middleware(['module:200000'])->namespace('CRM')->prefix('crm')->group(fun
         Route::resource('board', 'BoardController')->except(['edit']);
     });
 
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('crm-reports.export');
-    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'crm-reports.index',
-        'show' => 'crm-reports.show'
-    ]);
+    Route::withoutMiddleware(TrimStrings::class)->name('crm-')->group(function () {
+        Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('reports.export');
+        Route::resource('reports', ReportsController::class)->only(['index', 'show']);
+    });
 });
