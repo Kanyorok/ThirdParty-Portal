@@ -155,6 +155,7 @@ class CodeDetailSeeder extends Seeder
                 'Value' => $tenderAwardStatusEnum->value,
                 'Description' => $tenderAwardStatusEnum->name,
                 'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
             ]);
         }
 
@@ -308,8 +309,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
+            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
+            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
             ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],
@@ -738,6 +739,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Approved', 'Value' => 'ap', 'DisplayOrder' => 3],
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Posting', 'Value' => 'ps', 'DisplayOrder' => 4],
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
+
+            //tender Approval Status
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value'=> 'P','DisplayOrder' => 53],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value'=> 'A','DisplayOrder' => 54],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value'=> 'R','DisplayOrder' => 55],
 
 
 
