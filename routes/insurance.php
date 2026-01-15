@@ -93,7 +93,7 @@ Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance'
         Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
         Route::post('{id}/endorsement/store', [PolicyController::class, 'storeEndorsement'])->name('storeEndorsement');
         Route::get('endorsements/list', [PolicyController::class, 'endorsementList'])->name('endorsements.list');
-            Route::get('register', [PolicyController::class, 'register'])->name('register');
+        Route::get('register', [PolicyController::class, 'register'])->name('register');
         Route::post('{id}/renew/store', [PolicyController::class, 'storeRenewal'])->name('storeRenewal');
         Route::get('{id}/show', [PolicyController::class, 'show'])->name('show');
     });

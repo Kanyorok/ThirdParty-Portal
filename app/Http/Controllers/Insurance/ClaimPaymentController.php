@@ -53,7 +53,7 @@ class ClaimPaymentController extends Controller
             $validated['PaymentAmount'],
             $validated['PaymentReference'],
             $validated['Note'] ?? '',
-            $validated['PaidBy'],
+            $validated['PaidTo'],
             $PaymentMethod,
             $request->user(),
         );

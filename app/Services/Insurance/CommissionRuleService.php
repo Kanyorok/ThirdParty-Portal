@@ -4,6 +4,7 @@ namespace App\Services\Insurance;
 
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
 use App\Models\Insurance\BancassuranceCommissionRule;
 use App\Models\Insurance\InsuranceProduct;
 
@@ -20,6 +21,7 @@ class CommissionRuleService
         ?CodeDetail $PolicyTypeId = null,
         float $CommissionRate,
         float $FixedAmount,
+        Currency $CurrencyId = null,
         ?CodeDetail $AppliesTo = null,
         ?bool $IsActive = null,
         User   $user
@@ -31,6 +33,7 @@ class CommissionRuleService
             'PolicyTypeId' => $PolicyTypeId->ID ?? null,
             'CommissionRate' => $CommissionRate,
             'FixedAmount' => $FixedAmount,
+            'CurrencyId' => $CurrencyId->Id,
             'AppliesTo' => $AppliesTo->ID ?? null,
             'IsActive' => $IsActive ? 1 : 0 ?? null,
             'CreatedBy' => $user->Id,

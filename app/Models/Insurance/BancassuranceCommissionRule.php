@@ -2,6 +2,7 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Core\Currency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\Approval\CodeDetail;
@@ -24,6 +25,7 @@ class BancassuranceCommissionRule extends Model
         'PolicyTypeId',
         'CommissionRate',
         'FixedAmount',
+        'CurrencyId',
         'AppliesTo',
         'IsActive',
         'CreatedBy',
@@ -49,5 +51,10 @@ class BancassuranceCommissionRule extends Model
     public function appliesto()
     {
         return $this->belongsTo(CodeDetail::class, 'AppliesTo', 'ID');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
     }
 }

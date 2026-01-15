@@ -6,6 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\CommissionRuleRequest;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
 use App\Services\Insurance\CommissionRuleService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +23,9 @@ class CommissionRuleController extends Controller
         $products = InsuranceProduct::all();
         $policytypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
         $assignto = CodeDetail::where('CodeID', 'AppliesTo')->get();
+        $currencies = Currency::all();
 
-        return view('bancassurance.commissions.rules.create', compact('rules', 'policytypes', 'assignto', 'products'));
+        return view('bancassurance.commissions.rules.create', compact('rules', 'policytypes', 'assignto', 'products', 'currencies'));
     }
 
     public function store(CommissionRuleRequest $request)
@@ -34,6 +36,7 @@ class CommissionRuleController extends Controller
         $ProductId = InsuranceProduct::findOrFail($validated['ProductId']);
         $PolicyTypeId = CodeDetail::findOrFail($validated['PolicyTypeId']) ?? null;
         $AppliesTo = CodeDetail::findOrFail($validated['AppliesTo']) ?? null;
+        $CurrencyId = Currency::findOrFail($validated['CurrencyId']) ?? null;
 
         $rule = CommissionRuleService::create(
             $validated['RuleName'],
@@ -41,6 +44,7 @@ class CommissionRuleController extends Controller
             $PolicyTypeId,
             $validated['CommissionRate'],
             $validated['FixedAmount'],
+            $CurrencyId,
             $AppliesTo,
             $validated['IsActive'] ?? '',
             Auth::user(),
@@ -54,7 +58,8 @@ class CommissionRuleController extends Controller
         $rules = BancassuranceCommissionRule::all();
         $policytypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
         $assignto = CodeDetail::where('CodeID', 'AppliesTo')->get();
-        return view('bancassurance.commissions.rules.index', compact('rules', 'policytypes', 'assignto'));
+        $currencies = Currency::all();
+        return view('bancassurance.commissions.rules.index', compact('rules', 'policytypes', 'assignto', 'currencies'));
     }
 
     public function edit($id)
@@ -64,7 +69,8 @@ class CommissionRuleController extends Controller
         $products = InsuranceProduct::all();
         $policytypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
         $assignto = CodeDetail::where('CodeID', 'AppliesTo')->get();
-        return view('bancassurance.commissions.rules.edit', compact('rule', 'products', 'policytypes', 'assignto'));
+        $currencies = Currency::all();
+        return view('bancassurance.commissions.rules.edit', compact('rule', 'products', 'policytypes', 'assignto', 'currencies'));
     }
 
     public function update(CommissionRuleRequest $request, $id)
@@ -76,6 +82,7 @@ class CommissionRuleController extends Controller
 
         try {
             $rule = BancassuranceCommissionRule::findOrFail($id);
+            $CurrencyId = Currency::findOrFail($validated['CurrencyId']) ?? null;
 
             $rule->update([
                 'RuleName' => $validated['RuleName'],
@@ -83,6 +90,7 @@ class CommissionRuleController extends Controller
                 'PolicyTypeId' => $validated['PolicyTypeId'],
                 'CommissionRate' => $validated['CommissionRate'],
                 'FixedAmount' => $validated['FixedAmount'],
+                'CurrencyId' => $CurrencyId->Id,
                 'AppliesTo' => $validated['AppliesTo'],
                 'IsActive' => $validated['IsActive'] ?? '',
                 'ModifiedBy' => Auth::id(),

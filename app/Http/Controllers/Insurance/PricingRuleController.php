@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Currency;
 use Illuminate\Support\Facades\DB;
 use App\Models\Insurance\InsurancePricingRule;
 use App\Enums\Core\PermissionEnum;
@@ -26,9 +27,10 @@ class PricingRuleController extends Controller
         $this->authorize(PermissionEnum::InsurancePricingRuleView, InsurancePricingRule::class);
         $providers = InsuranceProvider::all();
         $products = InsuranceProduct::all();
+        $currencies = Currency::all();
 
 
-        return view('bancassurance.pricing.create', compact('providers', 'products'));
+        return view('bancassurance.pricing.create', compact('providers', 'products', 'currencies'));
     }
 
     public function store(InsurancePricingRuleRequest $request)
@@ -38,6 +40,7 @@ class PricingRuleController extends Controller
 
         $InsuranceProviderId = InsuranceProvider::findOrFail($validated['InsuranceProviderId']);
         $Product = InsuranceProduct::findOrFail($validated['Product']);
+        $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
 
         $providers = InsurancePricingRuleService::create(
             $InsuranceProviderId,
@@ -46,6 +49,7 @@ class PricingRuleController extends Controller
             $validated['CoverageAmountMax'],
             $validated['CoverageAmountMin'],
             $validated['PremiumRate'],
+            $CurrencyId,
             $validated['AgeMin'],
             $validated['AgeMax'],
             $validated['TenureMin'],
@@ -69,8 +73,9 @@ class PricingRuleController extends Controller
 
         $rule = InsurancePricingRule::findOrFail($Id);
         $providers = InsuranceProvider::all();
+        $currencies = Currency::all();
 
-        return view('bancassurance.pricing.edit', compact('rule', 'providers'));
+        return view('bancassurance.pricing.edit', compact('rule', 'providers','currencies'));
     }
 
     // Update product
@@ -83,6 +88,7 @@ class PricingRuleController extends Controller
 
         try {
             $rule = InsurancePricingRule::findOrFail($id);
+            $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
 
             $rule->update([
                 'InsuranceProviderId' => $validated['InsuranceProviderId'],
@@ -91,6 +97,7 @@ class PricingRuleController extends Controller
                 'CoverageAmountMax' => $validated['CoverageAmountMax'],
                 'CoverageAmountMin' => $validated['CoverageAmountMin'],
                 'PremiumRate' => $validated['PremiumRate'],
+                'CurrencyId' => $CurrencyId->Id,
                 'AgeMin' => $validated['AgeMin'],
                 'AgeMax' => $validated['AgeMax'],
                 'TenureMin' => $validated['TenureMin'],

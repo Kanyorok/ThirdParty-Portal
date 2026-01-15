@@ -2,6 +2,7 @@
 
 namespace App\Services\Insurance\ProviderAndProducts;
 
+use App\Models\Core\Currency;
 use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Auth\User;
 use App\Models\Insurance\InsuranceProduct;
@@ -22,6 +23,7 @@ class InsuranceProductRiderService
         string            $RiderName,
         ?string           $Description = null,
         float             $AdditionalPremium,
+        Currency          $CurrencyId,
         ?bool             $IsOptional = null,
         ?bool             $IsActive = null,
         User              $user
@@ -34,6 +36,7 @@ class InsuranceProductRiderService
             'RiderName' => $RiderName,
             'Description' => $Description ?? null,
             'AdditionalPremium' => $AdditionalPremium,
+            'CurrencyId' => $CurrencyId->Id,
             'IsOptional' => $IsOptional ? 1 : 0 ?? null,
             'IsActive' => $IsActive ? 1 : 0 ?? null,
             'CreatedBy' => $user->Id,
