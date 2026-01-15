@@ -66,10 +66,10 @@
                         @foreach(($lineInfo ?? []) as $i => $line)
                             @php
                                 // Raw fields from OrderService.fetchOrderLineDetails
-                                $qtyRaw = $line->fQuantity ?? null; // quantity
-                                $discRaw = $line->fLineDiscount ?? null; // absolute or percent? assumed absolute amount per line
-                                $unitExcl = $line->fUnitPriceExcl ?? null; // unit price exclusive
-                                $taxRate = $line->fTaxRate ?? null; // tax percentage (already percent value e.g. 16)
+                                $qtyRaw = $line->Quantity ?? null; // Was fQuantity
+                                $discRaw = $line->Discount ?? null; // Was fLineDiscount
+                                $unitExcl = $line->UnitPrice ?? null; // Was fUnitPriceExcl
+                                $taxRate = $line->Tax ?? null; // Was fTaxRate
                                 $lineTotal = $line->LineTotal ?? null; // inclusive line total (assumed)
 
                                 // Derive display quantity
