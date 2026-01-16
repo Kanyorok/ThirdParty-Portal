@@ -33,7 +33,7 @@ class InventoryTypeRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_InventoryTypes', 'Type')->ignore($this->route('Id')),
+                Rule::unique('t_InventoryTypes', 'Type')->ignore($this->route('Id'))->whereNull('DeletedOn'),
             ],
             'Status' => 'required|boolean',
         ];
