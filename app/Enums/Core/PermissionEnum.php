@@ -132,6 +132,12 @@ enum PermissionEnum: string
     case MarketingManager = 'marketingManager';
     case Managers = 'manager';
 
+    //Workflows
+    case WorkflowView = 'workflow-view';
+    case WorkflowCreate = 'workflow-create';
+    case WorkflowUpdate = 'workflow-update';
+    case WorkflowDelete = 'workflow-delete';
+
         /*
      *
      * ========================================  Procurement  ========================================
@@ -1110,7 +1116,7 @@ enum PermissionEnum: string
             [self::FinanceJournalPosting, self::FinanceAPInvoicePosting, self::FinanceARInvoicePosting, self::FinanceCreditNotePosting, self::FinanceDebitNotePosting, self::FinanceVoucherPosting, self::FinancePaymentProcessingPosting, self::FinanceReceiptPosting],
 
             ///////////////////////  Settings  /////////////////////////////////////
-            // [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
+            [self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete],      
 
             ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
@@ -1247,8 +1253,8 @@ enum PermissionEnum: string
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
-            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
-            // self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete
+            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate,
+            self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete
             => ModulesEnum::Settings,
 
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
@@ -1612,6 +1618,7 @@ enum PermissionEnum: string
             self::ComplianceFilingView, self::ComplianceFilingCreate, self::ComplianceFilingUpdate, self::ComplianceFilingDelete => 'Compliance Filings',
             self::CompliancePolicyView, self::CompliancePolicyCreate, self::CompliancePolicyUpdate, self::CompliancePolicyDelete => 'Compliance Policies',
             self::ComplianceGenericView => 'Compliance Analytic',
+            self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete => 'GlobalWorkflow',
 
             default      => 'System Codes' // Fallback to System Codes or specific category if unknown, but better to be explicit.
         };
@@ -1621,8 +1628,4 @@ enum PermissionEnum: string
      *
      * ========================================  Workflow  ========================================
      */
-    case WorkflowView = 'workflow-view';
-    case WorkflowCreate = 'workflow-create';
-    case WorkflowUpdate = 'workflow-update';
-    case WorkflowDelete = 'workflow-delete';
 }

@@ -308,6 +308,21 @@
                                     </div>
                                 @endif
 
+                                @if($contract->ContractStatus === 'Under Review' && $canApprove)
+                                    <div class="col-md-3">
+                                        <button class="btn btn-success w-100" onclick="showApproveModal()">
+                                            <i class="fas fa-check-circle"></i>
+                                            Approve Contract
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-danger w-100" onclick="showRejectModal()">
+                                            <i class="fas fa-times-circle"></i>
+                                            Reject Contract
+                                        </button>
+                                    </div>
+                                @endif
+
                                 @if($contract->ContractStatus === 'Approved')
                                     <div class="col-md-3">
                                         <button class="btn btn-primary w-100" onclick="executeContract()">
@@ -383,6 +398,72 @@
 
                 <!-- Legacy Timeline (Hidden or Removed if replaced) -->
                 <!-- You can keep the old one below or remove it. I will replace it with the new dynamic history for clarity -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div class="modal fade" id="approveModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="approveForm" method="POST" action="{{ route('contracts.approve', $contract->Id) }}">
+                    @csrf
+                    <input type="hidden" name="award_type" value="{{ $type ?? 'tender' }}">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">Approve Contract</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            You are about to approve contract <strong>{{ $contract->ContractRef ?? 'PENDING' }}</strong>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Approval Remarks (Optional)</label>
+                            <textarea name="approval_remarks" class="form-control" rows="3"
+                                      placeholder="Enter any approval remarks or conditions..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i> Approve Contract
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="rejectForm" method="POST" action="{{ route('contracts.reject', $contract->Id) }}">
+                    @csrf
+                    <input type="hidden" name="award_type" value="{{ $type ?? 'tender' }}">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">Reject Contract</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Warning:</strong> This will return the contract to draft status for revision.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                            <textarea name="rejection_reason" class="form-control" rows="4" required
+                                      placeholder="Please explain why this contract is being rejected and what changes are needed..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times-circle"></i> Reject Contract
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -705,24 +786,13 @@
             const modal = new bootstrap.Modal(document.getElementById('addendumModal'));
             modal.show();
         }
-        function rejectContract() {
-             // Create a modal or prompt for rejection reason if more detail needed, 
-             // but for now we use the main form.
-             // We need to change the action to reject route. 
-             // Ideally, separate forms are cleaner, but we can reuse the form with JS.
-             
-             const form = document.getElementById('approvalForm');
-             const remarks = form.querySelector('textarea[name="approval_remarks"]').value;
-             
-             if (!remarks.trim()) {
-                 alert('Please provide remarks for rejection.');
-                 return;
-             }
-             
-             if (confirm('Are you sure you want to REJECT this contract?')) {
-                 form.action = '{{ route("contracts.reject", $contract->Id) }}';
-                 form.submit();
-             }
+
+        function showApproveModal() {
+            new bootstrap.Modal(document.getElementById('approveModal')).show();
+        }
+
+        function showRejectModal() {
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
     </script>
 @endsection
