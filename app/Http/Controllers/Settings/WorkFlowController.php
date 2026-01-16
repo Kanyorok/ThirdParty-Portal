@@ -93,7 +93,16 @@ class WorkFlowController extends Controller
         };
         $flatten('root');
 
-        return view('settings.approvals.sections', compact('workFlowGroups', 'sourceOptions', 'tableToAlias', 'modules'));
+        // Create labeled options for better UX
+        $labeledSourceOptions = collect($sourceOptions)->map(function($class, $alias) {
+            return [
+                'alias' => $alias,
+                'class' => $class,
+                'label' => $this->getDocumentTypeLabel($class)
+            ];
+        })->sortBy('label')->values();
+
+        return view('settings.approvals.sections', compact('workFlowGroups', 'labeledSourceOptions', 'tableToAlias', 'modules'));
     }
 
     public function create()
@@ -318,6 +327,56 @@ class WorkFlowController extends Controller
 
             return back()->with('error', 'Delete failed: ' . $e->getMessage());
         }
+    }
+
+    private function getDocumentTypeLabel(string $class): string
+    {
+        $basename = class_basename($class);
+        
+        // Map class names to user-friendly labels with module context
+        $labelMap = [
+            // Procurement
+            'Requisitions' => 'Purchase Requisition (Procurement)',
+            'RequisitionLine' => 'Purchase Requisition Line Items (Procurement)',
+            'PurchaseOrder' => 'Purchase Order / LPO (Procurement)',
+            'GoodsReceipt' => 'Goods Receipt Note / GRN (Procurement)',
+            'Tender' => 'Tender (Procurement)',
+            'Contract' => 'Contract (Procurement)',
+            'Award' => 'Award (Procurement)',
+            'Supplier' => 'Supplier (Procurement)',
+            'ThirdParty' => 'Third Party / Supplier (Procurement)',
+            'ConsolidatedProcurementPlan' => 'Consolidated Procurement Plan (Procurement)',
+            'DepartmentNeeds' => 'Department Needs (Procurement)',
+            'PrequalificationRound' => 'Prequalification Round (Procurement)',
+            
+            // Inventory
+            'InterBranchRequisition' => 'Inter-Branch Requisition (Inventory)',
+            'InterBranchRequisitionItem' => 'Inter-Branch Requisition Items (Inventory)',
+            'StockAdjustment' => 'Stock Adjustment (Inventory)',
+            'TransactionTransfer' => 'Stock Transfer (Inventory)',
+            'StockTake' => 'Stock Take (Inventory)',
+            'StockConsumption' => 'Stock Consumption (Inventory)',
+            
+            // Property Management
+            'PropertyLease' => 'Property Lease (Property Management)',
+            'PropertyLeaseRenewal' => 'Lease Renewal (Property Management)',
+            'PropertyLeaseTermination' => 'Lease Termination (Property Management)',
+            'PropertyNewLease' => 'New Lease (Property Management)',
+            
+            // Budget
+            'Budget' => 'Budget (Budget & Analytics)',
+            'BudgetReallocation' => 'Budget Reallocation (Budget & Analytics)',
+            
+            // Finance
+            'PaymentVoucher' => 'Payment Voucher (Finance)',
+            'CreditNote' => 'Credit Note (Finance)',
+            'DebitNote' => 'Debit Note (Finance)',
+            
+            // HR
+            'Employee' => 'Employee (Human Resources)',
+        ];
+        
+        return $labelMap[$basename] ?? $basename . ' (Other)';
     }
 
     private function resolveSelectedToTable(?string $selection): ?string
