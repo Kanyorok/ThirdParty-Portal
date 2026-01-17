@@ -117,7 +117,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
             : []
         processedUtilityItems.push({
             title: "Logout",
-            url: "/logout",
+            url: "#",
             icon: LogOut,
             onClick: handleLogout,
         })
