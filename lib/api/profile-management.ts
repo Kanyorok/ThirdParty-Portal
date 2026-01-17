@@ -7,6 +7,67 @@ export interface ThirdPartyType {
   description: string
 }
 
+export interface ThirdPartyDetails {
+  thirdPartyName: string
+  tradingName: string | null
+  businessType: string | null
+  registrationNumber: string
+  taxPIN: string
+  physicalAddress: string | null
+  website: string | null
+  email: string
+  phone: string
+  countryId: string
+}
+
+export interface SupplierProfile {
+  supplierId: string
+  isPrequalified: boolean
+  approvalStatus: string
+  categoryId: number | null
+  categories?: Array<{
+    id: number
+    name: string
+    SupplierCategoryID?: number
+    CategoryName?: string
+  }>
+  createdOn?: string
+}
+
+export interface TenantProfile {
+  type: any
+  tenantType: string
+  typeName: string | null
+  remarks: string | null
+  isActive: boolean
+  createdOn: string
+}
+
+export interface CustomerProfile {
+  genderDetail?: { Description?: string; label?: string }
+  maritalStatusDetail?: { Description?: string; label?: string }
+  occupationDetail?: { Description?: string; label?: string }
+  dateOfBirth?: string
+  gender?: number
+  maritalStatus?: number
+  occupation?: number
+  createdOn?: string
+}
+
+export interface ThirdPartyEntity {
+  id: number
+  profileCompletion: number
+  approvalStatus: string | null
+  isPrequalified: boolean
+  supplierId: string | null
+  isSupplier: boolean
+  isTenant: boolean
+  isCustomer: boolean
+  thirdPartyDetails: ThirdPartyDetails
+  types?: ThirdPartyType[]
+  createdOn: string
+}
+
 export interface ThirdPartyUserProfile {
   id: number
   userId: number
@@ -25,36 +86,14 @@ export interface ThirdPartyUserProfile {
   emailVerifiedOn: string | null
   createdOn: string
   modifiedOn: string
-  thirdParty?: {
-    approvalStatus: string | null
-    id: number
-    profileCompletion: number
-    thirdPartyDetails: {
-      thirdPartyName: string
-      tradingName: string | null
-      businessType: string | null
-      registrationNumber: string
-      taxPIN: string
-      physicalAddress: string | null
-      website: string | null
-      email: string
-      phone: string
-      countryId: string
-    }
-    profiles: {
-      supplier: SupplierProfile | null
-      tenant: TenantProfile | null
-      customer: CustomerProfile | null
-    }
-    types?: ThirdPartyType[]
-    createdOn: string
-  }
+  thirdParty?: ThirdPartyEntity
 }
 
 export interface ProfileResponse {
   success: boolean
   message?: string
-  data: ThirdPartyUserProfile
+  data?: ThirdPartyUserProfile
+  user?: ThirdPartyUserProfile
 }
 
 export interface UpdateProfilePayload {
@@ -69,32 +108,16 @@ export interface UpdateProfilePayload {
   Website?: string
 }
 
-export interface AvailableProfile {
-  type: 'supplier' | 'tenant' | 'customer'
-  label: string
-  hasProfile: boolean
-}
-
 export interface AvailableProfilesResponse {
   success: boolean
   data: {
-    availableProfiles: AvailableProfile[]
+    availableProfiles: Array<{
+      type: 'supplier' | 'tenant' | 'customer'
+      label: string
+      hasProfile: boolean
+    }>
     totalProfiles: number
   }
-}
-
-export interface SupplierProfile {
-  supplierId: string
-  isPrequalified: boolean
-  approvalStatus: string
-  categoryId: number | null
-  categories?: Array<{
-    id: number;
-    name: string;
-    SupplierCategoryID?: number;
-    CategoryName?: string;
-  }>;
-  createdOn?: string
 }
 
 export interface SupplierProfileResponse {
@@ -103,26 +126,10 @@ export interface SupplierProfileResponse {
   message?: string
 }
 
-export interface TenantProfile {
-  tenantType: string
-  typeName: string | null
-  remarks: string | null
-  isActive: boolean
-  createdOn: string
-}
-
 export interface TenantProfileResponse {
   success: boolean
   data: TenantProfile
   message?: string
-}
-
-export interface CustomerProfile {
-  dateOfBirth?: string
-  gender?: number
-  maritalStatus?: number
-  occupation?: number
-  createdOn?: string
 }
 
 export interface CustomerProfileResponse {
@@ -131,7 +138,6 @@ export interface CustomerProfileResponse {
   message?: string
 }
 
-// API Calls
 export async function getProfile(): Promise<ProfileResponse> {
   return apiClient.get<ProfileResponse>("/api/v1/portal/auth/profile")
 }

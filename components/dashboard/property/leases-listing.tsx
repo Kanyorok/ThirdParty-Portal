@@ -13,7 +13,6 @@ import {
     ArrowUpRight,
     MapPin,
     ChevronRight,
-    Loader2,
     Layers,
     Calendar
 } from "lucide-react"
@@ -22,8 +21,9 @@ import { LeaseTerminationForm } from "@/components/dashboard/property/lease-term
 import { cn } from "@/lib/utils"
 import { useLeaseStore } from "@/store/use-lease-store"
 import { PaginationProvider, usePagination } from "@/components/providers/pagination-provider"
+import Loading from "@/components/common/custom-loader"
 
-export function LeasesList({ tenantId }: { tenantId?: number }) {
+export function LeasesList({ tenantId, initialData: _initialData }: { tenantId?: number; initialData?: unknown }) {
     const searchParams = useSearchParams()
     const page = Number(searchParams.get("page")) || 1
 
@@ -41,7 +41,7 @@ export function LeasesList({ tenantId }: { tenantId?: number }) {
                 <div className="relative">
                     <div className="h-12 w-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin" />
                 </div>
-                <p className="text-sm text-slate-600 mt-4">Loading leases...</p>
+                <Loading />
             </div>
         )
     }

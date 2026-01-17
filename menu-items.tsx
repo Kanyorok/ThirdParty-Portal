@@ -17,7 +17,7 @@ export const MenuItemComponent = memo<MenuItemComponentProps>(({ item, onSelect 
             href={item.href}
             className={cn(
                 "flex w-full items-center cursor-pointer rounded-lg p-3 text-sm transition-colors",
-                "hover:bg-accent focus:bg-accent focus:outline-none"
+                "hover:bg-muted focus:bg-muted focus:outline-none"
             )}
         >
             {item.icon && <item.icon className="mr-3 h-4 w-4 text-muted-foreground" />}

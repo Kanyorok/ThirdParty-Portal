@@ -125,7 +125,7 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
                     <Settings className={cn("size-3.5 transition-transform duration-500", isPending && "animate-spin text-primary")} />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-[320px] p-0 overflow-hidden border-border/40 shadow-2xl">
+            <PopoverContent align="end" className="w-[320px] p-0 overflow-hidden border border-border/40 bg-background/95 shadow-none backdrop-blur-xl">
                 <div className="flex flex-col">
                     <div className="bg-muted/30 p-4 border-b border-border/40">
                         <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground">Interface Engine</h4>
@@ -167,7 +167,6 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
                     </div>
 
                     <div className="bg-primary/5 px-4 py-2 border-t border-border/40 flex items-center justify-between">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-primary/60">System Ready</span>
                         {isPending && <span className="text-[8px] font-black uppercase tracking-widest text-primary animate-pulse">Syncing...</span>}
                     </div>
                 </div>

@@ -45,12 +45,16 @@ export interface Lease {
     createdBy: string | null;
 }
 
-export async function getLeases(page: number = 1, tenantId: number = 9): Promise<PaginatedResponse<Lease>> {
+export async function getLeases(page: number = 1, search: string = "", tenantId: number = 9): Promise<PaginatedResponse<Lease>> {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
     const url = new URL(`${baseUrl}/api/v1/property/leases/tenant`)
     url.searchParams.append('page', page.toString())
     url.searchParams.append('id', tenantId.toString())
+
+    if (search) {
+        url.searchParams.append('search', search)
+    }
 
     const res = await fetch(url.toString(), {
         method: 'GET',
@@ -70,7 +74,8 @@ export async function getLeases(page: number = 1, tenantId: number = 9): Promise
 }
 
 export async function getLeaseDetails(tenantId: number, leaseId: number): Promise<PaginatedResponse<Lease>> {
-    const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/leases/tenant/show`);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+    const url = new URL(`${baseUrl}/api/v1/property/leases/tenant/show`);
 
     url.searchParams.append('id', tenantId.toString());
     url.searchParams.append('lease_id', leaseId.toString());

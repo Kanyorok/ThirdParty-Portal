@@ -81,6 +81,7 @@ export function RentablePropertiesList({
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery("")}
+                                type="button"
                                 className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors"
                             >
                                 <X className="h-4 w-4 text-slate-400" strokeWidth={2} />
@@ -117,7 +118,7 @@ export function RentablePropertiesList({
             ) : filteredProperties.length === 0 ? (
                 <EmptyState isSearch={!!searchQuery || !!statusFilter} onClear={() => { setSearchQuery(""); setStatusFilter(null) }} />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
                     {filteredProperties.map((property) => (
                         <PropertyDetailsSheet
                             key={property.id}
@@ -322,14 +323,20 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                     <footer className="p-6 border-t border-slate-200 bg-white flex gap-3 shrink-0 absolute bottom-0 w-full z-50">
                         <Button
                             variant="outline"
-                            className="flex-1 h-11 rounded-xl text-xs font-medium border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                            className="flex-1 h-11 rounded-xl text-xs font-medium border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-none focus-visible:ring-4 focus-visible:ring-blue-50 focus-visible:border-blue-300"
                         >
                             Download Details
                         </Button>
                         <Button
-                            className="flex-[2] h-11 rounded-xl text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                            disabled={totalVacant === 0}
+                            className={cn(
+                                "flex-[2] h-11 rounded-xl text-xs font-medium transition-colors shadow-none focus-visible:ring-4 focus-visible:ring-blue-50",
+                                totalVacant === 0
+                                    ? "bg-slate-200 text-slate-500 cursor-not-allowed hover:bg-slate-200"
+                                    : "bg-blue-500 hover:bg-blue-600 text-white",
+                            )}
                         >
-                            Request Viewing ({totalVacant} Available)
+                            {totalVacant === 0 ? "No Units Available" : `Request Viewing (${totalVacant} Available)`}
                         </Button>
                     </footer>
                 </div>
@@ -359,7 +366,7 @@ function EmptyState({ isSearch, onClear }: { isSearch: boolean, onClear: () => v
                 <Button
                     onClick={onClear}
                     variant="outline"
-                    className="rounded-xl px-6 h-10 text-xs font-medium hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                    className="rounded-xl px-6 h-10 text-xs font-medium border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors shadow-none focus-visible:ring-4 focus-visible:ring-blue-50 focus-visible:border-blue-300"
                 >
                     Clear Filters
                 </Button>

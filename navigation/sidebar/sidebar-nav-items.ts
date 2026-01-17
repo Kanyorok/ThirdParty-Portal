@@ -32,7 +32,7 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Overview",
         allowedProfiles: allProfiles,
         items: [
-            withProfiles({ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }, allProfiles),
+            withProfiles({ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, description: "Summary & quick actions" }, allProfiles),
         ],
     },
     {
@@ -40,10 +40,10 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Vendor Management",
         allowedProfiles: ["Supplier"],
         items: [
-            withProfiles({ title: "Prequalification", url: "/dashboard/procurement/rounds", icon: ShieldCheck }, ["Supplier"]),
-            withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList }, ["Supplier"]),
-            withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText }, ["Supplier"]),
-            withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderOpen }, ["Supplier"]),
+            withProfiles({ title: "Prequalification", url: "/dashboard/procurement/rounds", icon: ShieldCheck, description: "Compliance & onboarding" }, ["Supplier"]),
+            withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
+            withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText, description: "Explore available tenders" }, ["Supplier"]),
+            withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderOpen, description: "Contracts, files & uploads" }, ["Supplier"]),
         ],
     },
     {
@@ -51,10 +51,10 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Property Management",
         allowedProfiles: ["Tenant"],
         items: [
-            withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: Home }, ["Tenant"]),
-            withProfiles({ title: "Leases", url: "/dashboard/tenant/leases", icon: BookOpen }, ["Tenant"]),
-            withProfiles({ title: "Invoices", url: "/dashboard/tenant/invoices", icon: Receipt }, ["Tenant"]),
-            withProfiles({ title: "Maintenance", url: "/dashboard/tenant/maintenance", icon: Construction }, ["Tenant"])
+            withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: Home, description: "Units, availability & listings" }, ["Tenant"]),
+            withProfiles({ title: "Leases", url: "/dashboard/tenant/leases", icon: BookOpen, description: "Lease terms & renewals" }, ["Tenant"]),
+            withProfiles({ title: "Invoices", url: "/dashboard/tenant/invoices", icon: Receipt, description: "Billing history & payments" }, ["Tenant"]),
+            withProfiles({ title: "Maintenance", url: "/dashboard/tenant/maintenance", icon: Construction, description: "Requests & work orders" }, ["Tenant"])
         ],
     },
     {
@@ -62,7 +62,7 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Insurance Services",
         allowedProfiles: ["Customer"],
         items: [
-            withProfiles({ title: "My Policies", url: "/dashboard/customer/policies", icon: ShieldCheck }, ["Customer"]),
+            withProfiles({ title: "My Policies", url: "/dashboard/customer/policies", icon: ShieldCheck, description: "Coverage & documents" }, ["Customer"]),
         ],
     },
     {
@@ -70,9 +70,9 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Account & Help",
         allowedProfiles: allProfiles,
         items: [
-            withProfiles({ title: "Settings", url: "/dashboard/account", icon: Settings }, allProfiles),
-            withProfiles({ title: "Help Center", url: "/dashboard/help", icon: HelpCircle }, allProfiles),
-            withProfiles({ title: "Send Feedback", url: "/dashboard/feedback", icon: Send, newTab: true }, allProfiles),
+            withProfiles({ title: "Settings", url: "/dashboard/account", icon: Settings, description: "Profile & preferences" }, allProfiles),
+            withProfiles({ title: "Help Center", url: "/dashboard/help", icon: HelpCircle, description: "Guides & support" }, allProfiles),
+            withProfiles({ title: "Send Feedback", url: "/dashboard/feedback", icon: Send, newTab: true, description: "Report issues or suggestions" }, allProfiles),
         ],
     },
 ]

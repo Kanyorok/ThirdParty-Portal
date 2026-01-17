@@ -1,13 +1,13 @@
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { create } from "zustand"
+import { persist, createJSONStorage } from "zustand/middleware"
 
-export type ProfileType = 'base' | 'Tenant' | 'Supplier' | 'Customer'
+export type ProfileType = "base" | "Tenant" | "Supplier" | "Customer"
 
 export const PROFILE_HOME_PATHS: Record<ProfileType, string> = {
-    base: '/dashboard',
-    Tenant: '/dashboard/tenant',
-    Supplier: '/dashboard/supplier',
-    Customer: '/dashboard/customer'
+    base: "/dashboard",
+    Tenant: "/dashboard/tenant",
+    Supplier: "/dashboard/supplier",
+    Customer: "/dashboard/customer",
 }
 
 interface ProfileState {
@@ -43,7 +43,7 @@ export const useProfileStore = create<ProfileState>()(
                 if (!profiles || profiles.length === 0) {
                     set({
                         availableProfiles: ["base"],
-                        activeProfile: "base"
+                        activeProfile: "base",
                     })
                     return
                 }
@@ -52,19 +52,19 @@ export const useProfileStore = create<ProfileState>()(
 
                 set({
                     availableProfiles: profiles,
-                    activeProfile: isCurrentlyValid ? currentActive : profiles[0]
+                    activeProfile: isCurrentlyValid ? currentActive : profiles[0],
                 })
             },
         }),
         {
-            name: 'app-profile-storage',
+            name: "app-profile-storage",
             storage: createJSONStorage(() => localStorage),
             onRehydrateStorage: () => (state) => {
                 state?.setHydrated()
             },
             partialize: (state) => ({
-                activeProfile: state.activeProfile
+                activeProfile: state.activeProfile,
             }),
-        }
-    )
+        },
+    ),
 )

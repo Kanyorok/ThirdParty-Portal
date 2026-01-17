@@ -9,7 +9,7 @@ export function useThirdPartyProfile() {
 
     const updateProfile = async (values: ThirdPartyInputs) => {
         if (!data?.userProfile) return
-        toast.promise(
+        return toast.promise(
             (async () => {
                 const res = await fetch("/api/third-party-profile", {
                     method: "PUT",
@@ -26,13 +26,20 @@ export function useThirdPartyProfile() {
     }
 
     const createProfile = async (values: ThirdPartyInputs) => {
-        const res = await fetch("/api/third-party-profile", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(values),
-        })
-        const created = await res.json()
-        mutate(created, { revalidate: true })
+        return toast.promise(
+            (async () => {
+                const res = await fetch("/api/third-party-profile", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(values),
+                })
+                if (!res.ok) throw new Error("Failed to create profile")
+                const json = await res.json()
+                mutate({ userProfile: json.userProfile }, { revalidate: true })
+                return "Profile created successfully"
+            })(),
+            { loading: "Creating...", success: (m) => m, error: (e) => String(e) }
+        )
     }
 
     return { profile: data?.userProfile, createProfile, updateProfile, mutateProfile: mutate, isLoading }

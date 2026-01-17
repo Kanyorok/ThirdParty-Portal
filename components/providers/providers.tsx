@@ -5,7 +5,6 @@ import { ThemeProvider as NextThemesProvider, ThemeProviderProps } from 'next-th
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Session } from 'next-auth'
-import { ProfileSyncWatcher } from "@/components/profiles/profile-watcher"
 
 const queryClient = new QueryClient()
 
@@ -19,7 +18,6 @@ export function NextAuthProvider({ children, session, ...props }: Props) {
         <SessionProvider session={session}>
             <QueryClientProvider client={queryClient}>
                 <NextThemesProvider {...props}>
-                    <ProfileSyncWatcher />
                     {children}
                 </NextThemesProvider>
             </QueryClientProvider>

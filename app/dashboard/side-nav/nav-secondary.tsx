@@ -27,10 +27,10 @@ export const NavSecondary = memo(({ items }: { items: readonly NavSecondaryItem[
             <PopoverTrigger asChild>
                 <button className="flex w-full items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-all duration-200 group">
                     <div className="flex items-center gap-2.5">
-                        <div className="flex size-7 items-center justify-center rounded-lg bg-background border border-border/50 shadow-sm group-hover:border-primary/30 transition-colors">
+                        <div className="flex size-7 items-center justify-center rounded-lg bg-background border border-border/50 ring-1 ring-transparent group-hover:border-primary/30 group-hover:ring-primary/10 transition-colors">
                             <MoreHorizontal className="size-3.5 text-muted-foreground group-hover:text-primary" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 group-hover:text-foreground transition-colors">
+                        <span className="text-[11px] font-semibold tracking-tight text-muted-foreground/80 group-hover:text-foreground transition-colors">
                             Utilities
                         </span>
                     </div>
@@ -45,7 +45,7 @@ export const NavSecondary = memo(({ items }: { items: readonly NavSecondaryItem[
                 side="right"
                 align="end"
                 sideOffset={12}
-                className="w-56 p-1.5 rounded-2xl shadow-2xl border-border/40 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200"
+                className="w-56 p-1.5 rounded-2xl border border-border/40 bg-background/95 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 shadow-none"
             >
                 <div className="flex flex-col gap-0.5">
                     {items.map((item) => {
@@ -67,7 +67,7 @@ export const NavSecondary = memo(({ items }: { items: readonly NavSecondaryItem[
                                         "size-4 transition-colors",
                                         isActive ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground"
                                     )} />
-                                    <span className="text-[11px] font-bold uppercase tracking-tight">
+                                    <span className="text-[12px] font-semibold tracking-tight">
                                         {item.title}
                                     </span>
                                 </div>

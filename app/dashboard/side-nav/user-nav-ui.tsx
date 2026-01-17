@@ -85,14 +85,14 @@ const UserAvatar = memo(({ user, size = "default" }: { user: UserData; size?: "d
 
     return (
         <div className="relative shrink-0">
-            <Avatar className={cn(dimensions, "rounded-xl border border-border/40 shadow-sm ring-2 ring-transparent transition-all group-hover:ring-primary/10")}>
+            <Avatar className={cn(dimensions, "rounded-xl border border-border/60 ring-1 ring-transparent transition-all group-hover:ring-primary/10")}>
                 <AvatarImage src={avatarSrc} alt={displayName} className="object-cover" />
                 <AvatarFallback className="rounded-xl bg-primary text-[10px] font-black text-primary-foreground">
                     {initials}
                 </AvatarFallback>
             </Avatar>
             {user.isActive && (
-                <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-background bg-emerald-500 shadow-sm" />
+                <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-background bg-emerald-500" />
             )}
         </div>
     )
@@ -109,7 +109,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
 
     if (isLoading) return <UserNavSkeleton />
     if (!user) return (
-        <Button asChild size="sm" className="rounded-full px-6 text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-primary/20">
+        <Button asChild size="sm" className="rounded-full px-6 text-[12px] font-semibold shadow-none">
             <Link href="/signin">Sign In</Link>
         </Button>
     )
@@ -122,14 +122,14 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                     disabled={isPending}
                     className={cn(
                         "group flex h-11 items-center gap-3 rounded-full border border-border/40 bg-background/40 pl-1.5 pr-4 transition-all duration-300",
-                        "hover:bg-muted/40 hover:border-border hover:shadow-md",
+                        "hover:bg-muted/40 hover:border-border",
                         "data-[state=open]:bg-muted/60 data-[state=open]:border-primary/30",
                         isPending && "opacity-50 grayscale cursor-not-allowed"
                     )}
                 >
                     <UserAvatar user={user} />
                     <div className="hidden flex-col items-start leading-none sm:flex">
-                        <span className="max-w-[110px] truncate text-[11px] font-black uppercase tracking-tight text-foreground">
+                        <span className="max-w-[160px] truncate text-[12px] font-semibold tracking-tight text-foreground">
                             {displayName}
                         </span>
                     </div>
@@ -146,7 +146,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                         forceMount
                         sideOffset={12}
                         align="end"
-                        className="w-72 overflow-hidden rounded-[24px] border border-border/40 bg-background/90 p-0 shadow-[0_20px_50px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+                        className="w-72 overflow-hidden rounded-[24px] border border-border/40 bg-background/95 p-0 shadow-none backdrop-blur-2xl"
                         asChild
                     >
                         <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
@@ -155,7 +155,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                                     <UserAvatar user={user} size="large" />
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex items-center gap-1.5">
-                                            <h4 className="truncate text-[13px] font-black uppercase tracking-tight">
+                                            <h4 className="truncate text-[14px] font-semibold tracking-tight">
                                                 {displayName}
                                             </h4>
                                             <ShieldCheck className="size-3.5 text-primary" />
@@ -175,10 +175,10 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                                         <motion.div key={item.id} custom={i} variants={itemVariants} initial="hidden" animate="visible">
                                             <DropdownMenuItem asChild>
                                                 <Link href={item.href} className="flex cursor-pointer items-center gap-3.5 rounded-2xl px-3 py-2.5 transition-all duration-200 hover:bg-muted group active:scale-[0.98]">
-                                                    <div className="flex size-8 items-center justify-center rounded-xl bg-muted group-hover:bg-background transition-colors shadow-sm group-hover:shadow-md">
+                                                    <div className="flex size-8 items-center justify-center rounded-xl bg-muted group-hover:bg-background transition-colors ring-1 ring-transparent group-hover:ring-primary/10">
                                                         <item.icon className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                                     </div>
-                                                    <span className="text-[11px] font-black uppercase tracking-widest text-foreground/70 group-hover:text-foreground">
+                                                    <span className="text-[12px] font-semibold tracking-tight text-foreground/80 group-hover:text-foreground">
                                                         {item.label}
                                                     </span>
                                                 </Link>
@@ -194,11 +194,11 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                                         onClick={onLogout}
                                         className="flex cursor-pointer items-center gap-3.5 rounded-2xl px-3 py-3 transition-all duration-300 hover:bg-destructive/10 text-destructive group active:scale-[0.98]"
                                     >
-                                        <div className="flex size-8 items-center justify-center rounded-xl bg-destructive/5 group-hover:bg-destructive/10 transition-colors shadow-sm">
+                                        <div className="flex size-8 items-center justify-center rounded-xl bg-destructive/5 group-hover:bg-destructive/10 transition-colors ring-1 ring-transparent group-hover:ring-destructive/10">
                                             <LogOut className="size-4" />
                                         </div>
                                         <div className="flex flex-1 flex-col items-start leading-none">
-                                            <span className="text-[11px] font-black uppercase tracking-widest">
+                                            <span className="text-[12px] font-semibold tracking-tight">
                                                 Sign out
                                             </span>
                                         </div>

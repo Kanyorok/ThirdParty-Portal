@@ -8,10 +8,14 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export async function getDashboardData() {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.thirdPartyId) return null;
+    const thirdPartyId =
+        (session?.user as any)?.thirdPartyId ??
+        (session?.user as any)?.third_party_id ??
+        null
+
+    if (!thirdPartyId) return null;
 
     const { accessToken } = session as any;
-    const thirdPartyId = session.user.thirdPartyId;
     const headers = {
         "Accept": "application/json",
         ...(accessToken && { "Authorization": `Bearer ${accessToken}` }),

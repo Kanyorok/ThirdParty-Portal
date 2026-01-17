@@ -1,9 +1,9 @@
 "use client"
 
-import * as React from "react"
+import type * as React from "react"
 import { useRouter } from "next/navigation"
 import { ChevronsUpDown, Building2, HardHat, Shield, Check } from "lucide-react"
-import { useProfileStore, ProfileType } from "@/store/use-profile-store"
+import { useProfileStore, type ProfileType } from "@/store/use-profile-store"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -14,14 +14,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/common/dropdown-menu"
 import { useSidebar } from "@/components/common/sidebar"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/common/tooltip"
 
-const profileConfig: Record<Exclude<ProfileType, 'base'>, { label: string; icon: React.ElementType; color: string }> = {
+const profileConfig: Record<Exclude<ProfileType, "base">, { label: string; icon: React.ElementType; color: string }> = {
   Supplier: { label: "Supplier Portal", icon: HardHat, color: "text-blue-600" },
   Tenant: { label: "Tenant Portal", icon: Building2, color: "text-emerald-600" },
   Customer: { label: "Customer Portal", icon: Shield, color: "text-purple-600" },
@@ -33,11 +28,12 @@ export function ProfileSwitcher() {
   const { state, isMobile } = useSidebar()
 
   const isCollapsed = state === "collapsed" && !isMobile
-  const businessProfiles = availableProfiles.filter((p): p is Exclude<ProfileType, 'base'> => p !== 'base')
+  const businessProfiles = availableProfiles.filter((p): p is Exclude<ProfileType, "base"> => p !== "base")
 
   if (businessProfiles.length === 0) return null
 
-  const currentProfile = activeProfile === 'base' ? businessProfiles[0] : (activeProfile as Exclude<ProfileType, 'base'>)
+  const currentProfile =
+    activeProfile === "base" ? businessProfiles[0] : (activeProfile as Exclude<ProfileType, "base">)
   const config = profileConfig[currentProfile]
   const ActiveIcon = config.icon
 
@@ -49,15 +45,19 @@ export function ProfileSwitcher() {
 
   const trigger = (
     <DropdownMenuTrigger asChild>
-      <button className={cn(
-        "group flex items-center rounded-xl border border-border/50 bg-card text-left shadow-sm transition-all hover:shadow-md hover:border-primary/30 focus:outline-none",
-        isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "w-full gap-3 p-2.5"
-      )}>
-        <div className={cn(
-          "flex shrink-0 items-center justify-center rounded-lg border border-primary/10 bg-primary/5 transition-colors group-hover:bg-primary/10",
-          isCollapsed ? "size-8 border-none bg-transparent" : "size-9",
-          config.color
-        )}>
+      <button
+        className={cn(
+          "group flex items-center rounded-xl border border-border/50 bg-card text-left shadow-sm transition-all hover:shadow-md hover:border-primary/30 focus:outline-none",
+          isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "w-full gap-3 p-2.5",
+        )}
+      >
+        <div
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-lg border border-primary/10 bg-primary/5 transition-colors group-hover:bg-primary/10",
+            isCollapsed ? "size-8 border-none bg-transparent" : "size-9",
+            config.color,
+          )}
+        >
           <ActiveIcon className="size-5" />
         </div>
 
@@ -85,15 +85,18 @@ export function ProfileSwitcher() {
       {isCollapsed ? (
         <TooltipProvider>
           <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              {trigger}
-            </TooltipTrigger>
-            <TooltipContent side="right" className="bg-black text-[10px] font-black uppercase tracking-widest text-white border-none shadow-xl">
+            <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+            <TooltipContent
+              side="right"
+              className="bg-black text-[10px] font-black uppercase tracking-widest text-white border-none shadow-xl"
+            >
               Switch Portal ({config.label})
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      ) : trigger}
+      ) : (
+        trigger
+      )}
 
       <DropdownMenuContent
         className="w-64 p-2"
@@ -116,13 +119,15 @@ export function ProfileSwitcher() {
               onClick={() => handleProfileChange(profile)}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-2 py-2.5 cursor-pointer transition-all mb-1 last:mb-0",
-                isActive ? "bg-primary/5 shadow-sm" : "hover:bg-accent"
+                isActive ? "bg-primary/5 shadow-sm" : "hover:bg-accent",
               )}
             >
-              <div className={cn(
-                "flex size-8 items-center justify-center rounded-md border border-border/40 bg-background shadow-xs",
-                isActive ? itemConfig.color : "text-muted-foreground"
-              )}>
+              <div
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-md border border-border/40 bg-background shadow-xs",
+                  isActive ? itemConfig.color : "text-muted-foreground",
+                )}
+              >
                 <ItemIcon className="size-4" />
               </div>
               <div className="flex flex-col flex-1">
@@ -130,9 +135,7 @@ export function ProfileSwitcher() {
                   {itemConfig.label}
                 </span>
               </div>
-              {isActive && (
-                <Check className="size-4 text-primary animate-in zoom-in-50" />
-              )}
+              {isActive && <Check className="size-4 text-primary animate-in zoom-in-50" />}
             </DropdownMenuItem>
           )
         })}

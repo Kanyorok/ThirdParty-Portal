@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['http://127.0.0.1'],
   output: "standalone",
-  cacheComponents: true,
+  cacheComponents: false,
   experimental: {
   },
   typescript: {

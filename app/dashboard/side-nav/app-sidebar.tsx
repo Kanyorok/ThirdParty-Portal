@@ -23,8 +23,8 @@ import { cn } from "@/lib/utils"
 function NavItemSkeleton() {
     return (
         <div className="flex items-center gap-3 px-3.5 h-11 w-full">
-            <div className="size-7 rounded-lg bg-muted/60 animate-pulse shrink-0" />
-            <div className="h-3 w-24 bg-muted/60 animate-pulse rounded-md" />
+            <div className="size-7 rounded-lg bg-sidebar-accent/70 animate-pulse shrink-0" />
+            <div className="h-3 w-24 bg-sidebar-accent/70 animate-pulse rounded-md" />
         </div>
     )
 }
@@ -34,7 +34,7 @@ function SidebarSkeleton() {
         <div className="flex flex-col gap-8 py-4 px-3">
             {[1, 2].map((group) => (
                 <div key={group} className="space-y-4">
-                    <div className="px-5 h-2 w-16 bg-muted/30 rounded-full mb-4" />
+                    <div className="px-5 h-2 w-16 bg-sidebar-accent/40 rounded-full mb-4" />
                     <div className="space-y-2">
                         {[1, 2, 3].map((i) => (
                             <NavItemSkeleton key={i} />
@@ -91,7 +91,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 return section.allowedProfiles.includes(activeProfile)
             })
             .map(section => ({
-                ...section,
+                id: section.id,
+                label: section.title,
+                allowedProfiles: section.allowedProfiles,
                 items: section.items.filter(item =>
                     activeProfile === 'base' ? true : item.allowedProfiles.includes(activeProfile)
                 )
@@ -109,14 +111,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar" {...props}>
             <SidebarHeader className="p-4">
                 <div className="flex items-center gap-3 px-2 py-1">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-primary/20">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground ring-1 ring-primary/15 transition-colors">
                         <Command className="size-5" />
                     </div>
                     <div className={cn(
                         "flex flex-col transition-all duration-300",
                         state === "collapsed" ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
                     )}>
-                        <span className="font-black uppercase tracking-tighter text-sm leading-tight line-clamp-1">
+                        <span className="font-semibold tracking-tight text-sm leading-tight line-clamp-1">
                             {CLIENT_APP_NAME_STRING}
                         </span>
                     </div>
@@ -150,11 +152,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             onClick={() => signOut({ callbackUrl: "/signin" })}
-                            className="group h-11 w-full justify-start rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+                            tooltip="Logout"
+                            className={cn(
+                                "group h-11 w-full rounded-xl transition-all text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
+                                state === "collapsed" ? "justify-center px-0" : "justify-start"
+                            )}
                         >
-                            <LogOut className="size-4 shrink-0 transition-transform group-hover:-translate-x-1" />
+                            <LogOut className={cn(
+                                "size-4 shrink-0 transition-transform",
+                                state === "collapsed" ? "" : "group-hover:-translate-x-1"
+                            )} />
                             <span className={cn(
-                                "font-bold text-[10px] uppercase tracking-widest ml-3 transition-all",
+                                "font-semibold text-[12px] tracking-tight ml-3 transition-all",
                                 state === "collapsed" ? "opacity-0 w-0" : "opacity-100"
                             )}>
                                 Logout Session

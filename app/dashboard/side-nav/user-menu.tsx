@@ -173,7 +173,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                 {!isCollapsed && (
                     <>
                         <div className="flex flex-1 flex-col items-start overflow-hidden">
-                            <span className="font-bold text-xs text-foreground truncate w-full uppercase tracking-tight">
+                            <span className="font-semibold text-sm text-foreground truncate w-full tracking-tight">
                                 {displayName || displayEmail.split('@')[0]}
                             </span>
                             <span className="text-[10px] text-muted-foreground truncate w-full">
@@ -191,17 +191,17 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
         <DropdownMenu open={isOpen} onOpenChange={onOpenChange}>
             {isCollapsed ? (
                 <TooltipProvider>
-                    <Tooltip delayDuration={0}>
-                        <TooltipTrigger asChild>{trigger}</TooltipTrigger>
-                        <TooltipContent side="right" className="bg-black text-[10px] font-black uppercase tracking-widest text-white border-none shadow-xl">
+                        <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+                        <TooltipContent side="right" className="bg-black text-[11px] font-semibold text-white border border-white/10 shadow-none">
                             {displayName}
                         </TooltipContent>
-                    </Tooltip>
+                        </Tooltip>
                 </TooltipProvider>
             ) : trigger}
 
             <DropdownMenuContent
-                className="w-64 rounded-xl border border-border/50 bg-background/95 p-2 shadow-lg backdrop-blur-md z-[50]"
+                className="w-64 rounded-xl border border-border/50 bg-background/95 p-2 shadow-none backdrop-blur-md z-[50]"
                 side={isCollapsed ? "right" : "bottom"}
                 align={isCollapsed ? "end" : "end"}
                 sideOffset={isCollapsed ? 20 : 10}
@@ -209,22 +209,22 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                 <motion.div initial="hidden" animate="visible" exit="hidden" variants={containerVariants}>
                     <DropdownMenuLabel className="px-2.5 pt-2 pb-1 font-semibold text-foreground">
                         <div className="flex flex-col items-start gap-1.5">
-                            <span className="truncate text-sm font-black uppercase tracking-tight w-full">{displayName || "Guest User"}</span>
+                            <span className="truncate text-sm font-semibold tracking-tight w-full">{displayName || "Guest User"}</span>
                             {displayEmail && <span className="truncate text-[11px] text-muted-foreground w-full">{displayEmail}</span>}
                             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="mt-2">
                                 {user.isApproved ? (
-                                    <Badge className="flex items-center gap-1 bg-green-500/10 text-green-600 border-green-500/20 text-[9px] font-black uppercase tracking-wider">
-                                        <BadgeCheck className="h-3 w-3" />
-                                        Verified
-                                    </Badge>
-                                ) : (
-                                    <Link href="/dashboard/profile" passHref>
-                                        <Badge variant="outline" className="flex items-center gap-1 border-orange-500/30 bg-orange-500/10 text-orange-600 text-[9px] font-black uppercase tracking-wider cursor-pointer hover:bg-orange-500/20 transition-colors">
+                                        <Badge className="flex items-center gap-1 bg-green-500/10 text-green-600 border-green-500/20 text-[10px] font-semibold">
+                                            <BadgeCheck className="h-3 w-3" />
+                                            Verified
+                                        </Badge>
+                                    ) : (
+                                        <Link href="/dashboard/profile" passHref>
+                                        <Badge variant="outline" className="flex items-center gap-1 border-orange-500/30 bg-orange-500/10 text-orange-600 text-[10px] font-semibold cursor-pointer hover:bg-orange-500/20 transition-colors">
                                             <XCircle className="h-3 w-3" />
                                             Unverified
                                         </Badge>
-                                    </Link>
-                                )}
+                                        </Link>
+                                    )}
                             </motion.div>
                         </div>
                     </DropdownMenuLabel>
@@ -233,7 +233,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                         {MENU_ITEMS.map((item) => (
                             <motion.div key={item.id} variants={itemVariants}>
                                 <DropdownMenuItem asChild>
-                                    <Link href={item.href} className="flex items-center cursor-pointer rounded-lg p-2.5 text-xs font-bold uppercase tracking-tight transition-colors hover:bg-accent focus:bg-accent focus:outline-none">
+                                    <Link href={item.href} className="flex items-center cursor-pointer rounded-lg p-2.5 text-sm font-semibold tracking-tight transition-colors hover:bg-muted focus:bg-muted focus:outline-none">
                                         {item.icon && <item.icon className="mr-3 h-4 w-4 text-muted-foreground" />}
                                         <span>{item.label}</span>
                                         {item.shortcut && (
@@ -251,7 +251,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                         <DropdownMenuItem
                             onClick={onLogout}
                             disabled={isPending}
-                            className="group flex items-center cursor-pointer rounded-lg p-2.5 text-xs font-black uppercase tracking-widest text-destructive transition-colors hover:!bg-destructive/10 focus:!bg-destructive/10 focus:outline-none"
+                            className="group flex items-center cursor-pointer rounded-lg p-2.5 text-sm font-semibold tracking-tight text-destructive transition-colors hover:!bg-destructive/10 focus:!bg-destructive/10 focus:outline-none"
                         >
                             <LogOut className="mr-3 h-4 w-4" />
                             <span>Sign out</span>

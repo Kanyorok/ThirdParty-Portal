@@ -1,45 +1,26 @@
 "use client"
-
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/common/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/common/form"
 import { useProfile } from "@/hooks/use-profile"
-import {
-  Building2,
-  MapPin,
-  Globe,
-  Mail,
-  Phone,
-  Hash,
-  CreditCard,
-  CheckCircle2,
-  Save,
-  X,
-} from "lucide-react"
+import { Building2, MapPin, Globe, Mail, Phone, Hash, CreditCard, CheckCircle2, Save, X } from "lucide-react"
 import { toast } from "sonner"
-import { motion, Variants } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 import { Spinner } from "@/components/common/spinner"
 
 const profileFormSchema = z.object({
-  ThirdPartyName: z.string().min(2, "Company name must be at least 2 characters"),
-  TradingName: z.string().optional().nullable(),
-  Email: z.string().email("Invalid email address").optional().or(z.literal("")).nullable(),
-  Phone: z.string().optional().nullable(),
-  Website: z.string().url("Invalid URL format").optional().or(z.literal("")).nullable(),
-  PhysicalAddress: z.string().optional().nullable(),
-  RegistrationNumber: z.string().optional().nullable(),
-  TaxPIN: z.string().optional().nullable(),
-  BusinessType: z.string().optional().nullable(),
+  thirdPartyName: z.string().min(2, "Company name must be at least 2 characters"),
+  tradingName: z.string().optional().nullable(),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")).nullable(),
+  phone: z.string().optional().nullable(),
+  website: z.string().url("Invalid URL format").optional().or(z.literal("")).nullable(),
+  physicalAddress: z.string().optional().nullable(),
+  registrationNumber: z.string().optional().nullable(),
+  taxPIN: z.string().optional().nullable(),
+  businessType: z.string().optional().nullable(),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -53,8 +34,8 @@ const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.06 }
-  }
+    transition: { staggerChildren: 0.06 },
+  },
 }
 
 const itemVariants: Variants = {
@@ -62,8 +43,8 @@ const itemVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 450, damping: 32 }
-  }
+    transition: { type: "spring", stiffness: 450, damping: 32 },
+  },
 }
 
 export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
@@ -72,34 +53,32 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      ThirdPartyName: thirdPartyDetails?.thirdPartyName || "",
-      TradingName: thirdPartyDetails?.tradingName || "",
-      Email: profile?.email || "",
-      Phone: profile?.phone || "",
-      Website: thirdPartyDetails?.website || "",
-      PhysicalAddress: thirdPartyDetails?.physicalAddress || "",
-      RegistrationNumber: thirdPartyDetails?.registrationNumber || "",
-      TaxPIN: thirdPartyDetails?.taxPIN || "",
-      BusinessType: thirdPartyDetails?.businessType || "",
+      thirdPartyName: thirdPartyDetails?.thirdPartyName || "",
+      tradingName: thirdPartyDetails?.tradingName || "",
+      email: profile?.email || "",
+      phone: profile?.phone || "",
+      website: thirdPartyDetails?.website || "",
+      physicalAddress: thirdPartyDetails?.physicalAddress || "",
+      registrationNumber: thirdPartyDetails?.registrationNumber || "",
+      taxPIN: thirdPartyDetails?.taxPIN || "",
+      businessType: thirdPartyDetails?.businessType || "",
     },
   })
 
   const onSubmit = async (data: ProfileFormValues) => {
-    const cleanedData = Object.fromEntries(
-      Object.entries(data).map(([k, v]) => [k, v === "" ? null : v])
-    )
+    const cleanedData = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v === "" ? null : v]))
 
     toast.promise(
       (async () => {
-        await updateProfile(cleanedData)
+        await updateProfile(cleanedData as any)
         onSuccess?.()
-        return 'Profile updated successfully'
+        return "Profile updated successfully"
       })(),
       {
-        loading: 'Updating profile...',
+        loading: "Updating profile...",
         success: (msg) => msg,
-        error: (e) => e?.message || 'Failed to update profile',
-      }
+        error: (e) => e?.message || "Failed to update profile",
+      },
     )
   }
 
@@ -107,7 +86,7 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
     return (
       <div className="flex justify-center items-center h-96">
         <div className="text-center space-y-4">
-          <Spinner className="animate-spin h-8 w-8 text-primary mx-auto" />
+          <Spinner className="size-8 animate-spin text-primary mx-auto" />
           <p className="text-sm text-muted-foreground">Loading profile data...</p>
         </div>
       </div>
@@ -115,64 +94,50 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
   }
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="w-full space-y-4"
-    >
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="w-full space-y-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <motion.div variants={itemVariants} className="flex items-center justify-between pb-2 border-b">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <motion.div
+            variants={itemVariants}
+            className="flex items-center justify-between pb-6 border-b border-border/30"
+          >
             <div className="space-y-1">
-              <h2 className="text-xl font-bold">Edit Profile</h2>
+              <h2 className="text-2xl font-black uppercase tracking-tight">Edit Profile</h2>
               <p className="text-sm text-muted-foreground">Update your business information and contact details</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onCancel}
-                disabled={isUpdating}
-              >
-                <X className="h-3.5 w-3.5 mr-1" />
+              <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isUpdating}>
+                <X className="size-4 mr-1.5" />
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isUpdating}
-              >
-                {isUpdating ? (
-                  <Spinner className="animate-spin h-3.5 w-3.5 mr-1" />
-                ) : (
-                  <Save className="h-3.5 w-3.5 mr-1" />
-                )}
+              <Button type="submit" size="sm" disabled={isUpdating}>
+                {isUpdating ? <Spinner className="size-4 mr-1.5 animate-spin" /> : <Save className="size-4 mr-1.5" />}
                 Save Changes
               </Button>
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
-            <div className="flex items-center gap-2 mb-4 pb-2 border-b">
-              <Building2 className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold">Business Information</h3>
+          <motion.div variants={itemVariants} className="p-6 border border-border/30 rounded-xl bg-card/50">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/20">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Building2 className="size-4 text-primary" />
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Business Information</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField
                 control={form.control}
-                name="ThirdPartyName"
+                name="thirdPartyName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Legal Company Name</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider">Legal Company Name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value || ""}
                         placeholder="Enter legal company name"
-                        className="h-9 text-sm"
+                        className="h-10 text-sm"
                       />
                     </FormControl>
                     <FormMessage className="text-xs" />
@@ -182,16 +147,16 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
 
               <FormField
                 control={form.control}
-                name="TradingName"
+                name="tradingName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Trading Name</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider">Trading Name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value || ""}
                         placeholder="Trading name (optional)"
-                        className="h-9 text-sm"
+                        className="h-10 text-sm"
                       />
                     </FormControl>
                     <FormMessage className="text-xs" />
@@ -201,16 +166,19 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
 
               <FormField
                 control={form.control}
-                name="RegistrationNumber"
+                name="registrationNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Registration Number</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Hash className="size-3" />
+                      Registration Number
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value || ""}
-                        placeholder="e.g., CR123456"
-                        className="h-9 text-sm font-mono"
+                        placeholder="e.g., PKI-131687"
+                        className="h-10 text-sm font-mono"
                       />
                     </FormControl>
                     <FormMessage className="text-xs" />
@@ -220,16 +188,19 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
 
               <FormField
                 control={form.control}
-                name="TaxPIN"
+                name="taxPIN"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Tax PIN / VAT Number</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <CreditCard className="size-3" />
+                      Tax PIN / VAT Number
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value || ""}
-                        placeholder="e.g., P051234567X"
-                        className="h-9 text-sm font-mono"
+                        placeholder="e.g., P8J3234593F"
+                        className="h-10 text-sm font-mono"
                       />
                     </FormControl>
                     <FormMessage className="text-xs" />
@@ -239,16 +210,16 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
 
               <FormField
                 control={form.control}
-                name="BusinessType"
+                name="businessType"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel className="text-xs">Business Type</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider">Business Type</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value || ""}
                         placeholder="e.g., Limited Company, Sole Proprietorship"
-                        className="h-9 text-sm"
+                        className="h-10 text-sm"
                       />
                     </FormControl>
                     <FormMessage className="text-xs" />
@@ -258,26 +229,28 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
-            <div className="flex items-center gap-2 mb-4 pb-2 border-b">
-              <Mail className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold">Contact Information</h3>
+          <motion.div variants={itemVariants} className="p-6 border border-border/30 rounded-xl bg-card/50">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/20">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Mail className="size-4 text-primary" />
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Contact Information</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField
                 control={form.control}
-                name="Email"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Corporate Email</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider">Corporate Email</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value || ""}
                         type="email"
                         placeholder="contact@company.com"
-                        className="h-9 text-sm"
+                        className="h-10 text-sm"
                       />
                     </FormControl>
                     <FormMessage className="text-xs" />
@@ -287,17 +260,20 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
 
               <FormField
                 control={form.control}
-                name="Phone"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Phone Number</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Phone className="size-3" />
+                      Phone Number
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value || ""}
                         type="tel"
                         placeholder="+254 700 000 000"
-                        className="h-9 text-sm"
+                        className="h-10 text-sm"
                       />
                     </FormControl>
                     <FormMessage className="text-xs" />
@@ -307,17 +283,20 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
 
               <FormField
                 control={form.control}
-                name="Website"
+                name="website"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel className="text-xs">Website URL</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Globe className="size-3" />
+                      Website URL
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value || ""}
                         type="url"
                         placeholder="https://www.yourcompany.com"
-                        className="h-9 text-sm"
+                        className="h-10 text-sm"
                       />
                     </FormControl>
                     <FormMessage className="text-xs" />
@@ -327,24 +306,26 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="p-4 border rounded-lg bg-card">
-            <div className="flex items-center gap-2 mb-4 pb-2 border-b">
-              <MapPin className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold">Physical Location</h3>
+          <motion.div variants={itemVariants} className="p-6 border border-border/30 rounded-xl bg-card/50">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/20">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <MapPin className="size-4 text-primary" />
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Physical Location</h3>
             </div>
 
             <FormField
               control={form.control}
-              name="PhysicalAddress"
+              name="physicalAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Full Physical Address</FormLabel>
+                  <FormLabel className="text-xs font-bold uppercase tracking-wider">Full Physical Address</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       value={field.value || ""}
-                      placeholder="Building, Street, City, Country"
-                      className="h-9 text-sm"
+                      placeholder="123 King Chain Road, Nairobi"
+                      className="h-10 text-sm"
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
@@ -353,26 +334,16 @@ export function ProfileEditForm({ onCancel, onSuccess }: ProfileEditFormProps) {
             />
           </motion.div>
 
-          <motion.div variants={itemVariants} className="flex justify-end gap-2 pt-2 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-              disabled={isUpdating}
-            >
-              <X className="h-3.5 w-3.5 mr-1" />
+          <motion.div variants={itemVariants} className="flex justify-end gap-2 pt-6 border-t border-border/30">
+            <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isUpdating}>
+              <X className="size-4 mr-1.5" />
               Discard
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isUpdating}
-            >
+            <Button type="submit" size="sm" disabled={isUpdating}>
               {isUpdating ? (
-                <Spinner className="animate-spin h-3.5 w-3.5 mr-1" />
+                <Spinner className="size-4 mr-1.5 animate-spin" />
               ) : (
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                <CheckCircle2 className="size-4 mr-1.5" />
               )}
               Save Profile
             </Button>

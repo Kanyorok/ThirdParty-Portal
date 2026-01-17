@@ -3,11 +3,13 @@ import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
 const AUTH_SIGN_IN_PATH = "/signin"
+const AUTH_SIGN_UP_PATH = "/signup"
 const AUTH_REGISTER_PATH = "/register"
 const DEFAULT_AUTH_REDIRECT = "/dashboard"
 
 const PUBLIC_ROUTES = [
     "/api/auth",
+    "/api/countries",
     "/api/v1/countries",
     "/api/third-party-details",
     "/api/currencies",
@@ -39,7 +41,7 @@ export async function proxy(req: NextRequest) {
 
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
     const isAuth = !!token
-    const isAuthPage = pathname === AUTH_SIGN_IN_PATH || pathname === AUTH_REGISTER_PATH
+    const isAuthPage = pathname === AUTH_SIGN_IN_PATH || pathname === AUTH_SIGN_UP_PATH || pathname === AUTH_REGISTER_PATH
 
     if (isAuth && isAuthPage) {
         return createRedirect(req, DEFAULT_AUTH_REDIRECT)
@@ -48,7 +50,7 @@ export async function proxy(req: NextRequest) {
     if (!isAuth && !isAuthPage) {
         if (pathname.startsWith("/dashboard")) {
             return createRedirect(req, AUTH_SIGN_IN_PATH, {
-                callbackUrl: encodeURIComponent(pathname + search)
+                callbackUrl: pathname + search,
             })
         }
         if (pathname.startsWith("/api")) {
@@ -57,15 +59,18 @@ export async function proxy(req: NextRequest) {
     }
 
     if (isAuth && pathname.startsWith("/dashboard/prequalification")) {
-        const isSupplier = token.is_supplier
-        const isApproved = token.is_approved
+        const isSupplier = Boolean((token as any).is_supplier ?? (token as any).isSupplier)
+        const approvalStatus = (token as any).approval_status ?? (token as any).approvalStatus
+        const isApproved =
+            Boolean((token as any).is_approved ?? (token as any).isApproved) ||
+            (typeof approvalStatus === "string" && approvalStatus.toLowerCase() === "approved")
 
         if (!isSupplier) {
             return createRedirect(req, "/dashboard", { error: "AccessDenied" })
         }
 
         if (!isApproved && pathname !== "/dashboard/prequalification/onboarding") {
-            return createRedirect(req, "/dashboard/prequalification/onboarding")
+            return createRedirect(req, "/dashboard/prequalification/onboarding", { error: "AccountNotApproved" })
         }
     }
 

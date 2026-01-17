@@ -76,3 +76,7 @@ export function LeaseActionsList({ initialData }: LeaseActionsListProps) {
         </div>
     )
 }
+
+export default function LeaseActionsPage() {
+    return <LeaseActionsList />
+}

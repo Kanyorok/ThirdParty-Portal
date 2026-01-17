@@ -83,8 +83,6 @@ export default function BankDetailsForm() {
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
     const [bankDetailToDelete, setBankDetailToDelete] = useState<number | null>(null);
 
-    const thirdPartyId = session?.user?.thirdParty?.id;
-
     const form = useForm<BankDetailInputs>({
         resolver: zodResolver(bankDetailSchema),
         defaultValues: {
@@ -111,14 +109,14 @@ export default function BankDetailsForm() {
     };
 
     const fetchBankDetails = async () => {
-        if (!thirdPartyId || status === 'loading') {
+        if (status !== 'authenticated') {
             setIsLoading(false);
             return;
         }
 
         setIsLoading(true);
         try {
-            const r = await fetch(`/api/third-parties-bank-details?thirdPartyId=${thirdPartyId}`);
+            const r = await fetch(`/api/third-parties-bank-details`);
             const res = await r.json();
             if (!r.ok) throw new Error(res.message);
             setBankDetails(Array.isArray(res.data) ? res.data : []);
@@ -137,7 +135,7 @@ export default function BankDetailsForm() {
         } else if (status === 'unauthenticated') {
             setIsLoading(false);
         }
-    }, [status, thirdPartyId]);
+    }, [status]);
 
     const openInlineFormForEdit = (detail?: BankDetail) => {
         setEditingBankDetail(detail || null);
@@ -161,16 +159,14 @@ export default function BankDetailsForm() {
     };
 
     const handleFormSubmit = async (data: BankDetailInputs) => {
-        if (!thirdPartyId || !session?.accessToken) {
+        if (status !== 'authenticated') {
             toast.error('Unauthorized.');
             return;
         }
 
-        const payload = { ...data, thirdPartyId };
+        const payload = data;
         const method = editingBankDetail ? 'PUT' : 'POST';
         const url = editingBankDetail ? `/api/third-parties-bank-details/${editingBankDetail.id}` : '/api/third-parties-bank-details';
-
-        console.log('Submitting bank detail:', { method, url, payload });
 
         toast.promise(
             (async () => {
@@ -178,13 +174,11 @@ export default function BankDetailsForm() {
                     method,
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${session.accessToken}`,
                     },
                     body: JSON.stringify(payload),
                 });
 
                 const res = await r.json();
-                console.log('Response:', { status: r.status, data: res });
 
                 if (!r.ok) {
                     const errorMsg = res.message || res.errors
@@ -211,13 +205,12 @@ export default function BankDetailsForm() {
     };
 
     const handleDelete = async () => {
-        if (!bankDetailToDelete || !session?.accessToken) return;
+        if (!bankDetailToDelete || status !== 'authenticated') return;
 
         toast.promise(
             (async () => {
                 const r = await fetch(`/api/third-parties-bank-details/${bankDetailToDelete}`, {
                     method: 'DELETE',
-                    headers: { Authorization: `Bearer ${session.accessToken}` },
                 });
                 const res = await r.json();
                 if (!r.ok) throw new Error(res.message);

@@ -16,7 +16,7 @@ const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => r
 
 export default function ThirdPartyDashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const { profile, updateProfile, isLoading } = useThirdPartyProfile()
+    const { profile, updateProfile, createProfile, isLoading } = useThirdPartyProfile()
     const { data: countriesData } = useSWR<{ data: CountryOption[] }>("/api/countries", fetcher)
     const countries = countriesData?.data ?? []
 
@@ -25,13 +25,21 @@ export default function ThirdPartyDashboard() {
     })
 
     useEffect(() => { if (profile) form.reset(profile) }, [profile, form])
-    useEffect(() => { if (!profile) setIsModalOpen(true) }, [profile])
+    useEffect(() => {
+        if (!isLoading && !profile) setIsModalOpen(true)
+    }, [isLoading, profile])
 
     const countryName = useMemo(() => countries.find(c => c.id === profile?.countryId)?.name ?? "N/A", [countries, profile?.countryId])
 
     const handleSubmit = async (values: ThirdPartyInputs) => {
-        await updateProfile(values)
-        setIsModalOpen(false)
+        try {
+            if (profile) {
+                await updateProfile(values)
+            } else {
+                await createProfile(values)
+            }
+            setIsModalOpen(false)
+        } catch { }
     }
 
     return (

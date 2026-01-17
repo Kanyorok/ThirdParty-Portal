@@ -65,7 +65,9 @@ function generateSecureToken(): string {
 
 async function sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log(`[EMAIL SEND] To: ${email}, Link: /reset-password?token=${token}`)
+    if (process.env.NODE_ENV !== "production") {
+        console.log(`[EMAIL SEND] To: ${email}, Link: /reset-password?token=${token}`)
+    }
     return true
 }
 

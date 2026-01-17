@@ -8,6 +8,7 @@ export interface NavItemBase {
     readonly url: string
     readonly icon?: LucideIcon
     readonly allowedProfiles: readonly UserProfile[]
+    readonly description?: string
     readonly comingSoon?: boolean
     readonly newTab?: boolean
     readonly badge?: string

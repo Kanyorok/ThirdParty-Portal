@@ -9,7 +9,6 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        profile_type: { label: "Profile Type", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -22,7 +21,6 @@ export const authOptions: NextAuthOptions = {
           body: JSON.stringify({
             email: credentials.email,
             password: credentials.password,
-            profile_type: credentials.profile_type,
           }),
         });
 
@@ -92,6 +90,12 @@ export const authOptions: NextAuthOptions = {
           is_customer: token.is_customer,
           approval_status: token.approval_status,
           profile: token.profile,
+
+          thirdPartyId: token.third_party_id,
+          approvalStatus: token.approval_status,
+          isSupplier: token.is_supplier,
+          isTenant: token.is_tenant,
+          isCustomer: token.is_customer,
         } as any;
         session.accessToken = token.accessToken as string;
       }
