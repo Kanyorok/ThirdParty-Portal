@@ -405,9 +405,9 @@ enum PermissionEnum: string
 
 
     case InventoryHoldReviewView = 'inventoryHoldReview-view';
-    case InventoryHoldReviewUpdate = 'inventoryHoldReview-update';
+    // case InventoryHoldReviewUpdate = 'inventoryHoldReview-update';
     case InventoryHoldReviewCreate = 'inventoryHoldReview-create';
-    case InventoryHoldReviewDestroy = 'inventoryHoldReview-destroy';
+    // case InventoryHoldReviewDestroy = 'inventoryHoldReview-destroy';
 
     case UOMConversionView = 'uomConversion-view';
     case UOMConversionUpdate = 'uomConversion-update';
@@ -1054,7 +1054,7 @@ enum PermissionEnum: string
             [self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval],
 
             [self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval],
-            [self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy],
+            [self::InventoryHoldReviewView, self::InventoryHoldReviewCreate, /*self::InventoryHoldReviewUpdate, self::InventoryHoldReviewDestroy*/],
             [self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
@@ -1267,7 +1267,7 @@ enum PermissionEnum: string
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval,
-            self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy,
+            self::InventoryHoldReviewView, /*self::InventoryHoldReviewUpdate,*/ self::InventoryHoldReviewCreate, /*self::InventoryHoldReviewDestroy,*/
             self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy,
 
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy,
@@ -1472,8 +1472,7 @@ enum PermissionEnum: string
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval => 'Transfer',
 
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => 'Stock Adjustment',
-            //self::InventoryHoldView, self::InventoryHoldUpdate, self::InventoryHoldCreate, self::InventoryHoldDestroy => 'Inventory Hold',
-            self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy => 'Inventory Hold Review',
+            self::InventoryHoldReviewView, /*self::InventoryHoldReviewUpdate,*/ self::InventoryHoldReviewCreate /*, self::InventoryHoldReviewDestroy*/ => 'Stock Defects Review',
             self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy => 'UOM Conversion',
 
             //Fleet Management
