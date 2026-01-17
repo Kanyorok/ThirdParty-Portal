@@ -133,9 +133,10 @@
                 });
             } catch (e) {
             }
-            @if (session('status')) nSuccess('{!! session('status') !!} ');
-            @endif
-            @if (session('success')) nSuccess('{!! session('success') !!} ');
+            @if (session('success'))
+                nSuccess('{!! session('success') !!} ');
+            @elseif (session('status'))
+                nSuccess('{!! session('status') !!} ');
             @endif
             @if(session('fail')) nError('{!!  session('fail') !!}');
             @endif
