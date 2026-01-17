@@ -80,7 +80,7 @@ class ModuleSeeder extends Seeder
             // Submenu: Policy & Training Repository
             // =========================================================
             /* ['ModuleID' => 209400, 'Name' => 'Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 200000, 'Route' => null],
- 
+
              // ['ModuleID' => 209405, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 209400, 'Route' => 'legal.compliance.policies.index'],
              ['ModuleID' => 209410, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 209400, 'Route' => 'legal.compliance.trainings.index'],
              ['ModuleID' => 209415, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 209400, 'Route' => 'legal.compliance.certifications.index'],*/
@@ -599,7 +599,7 @@ class ModuleSeeder extends Seeder
         $moduleIds = $modules->pluck('ModuleID')->toArray();
 
         // 2. Soft-Delete any modules in DB that are NOT in the collection
-        // "Removed even from the database" -> Using Soft Delete (DeletedOn) for safety, 
+        // "Removed even from the database" -> Using Soft Delete (DeletedOn) for safety,
         // as Module model uses SoftDeletes. This effectively removes them from view.
         DB::table('t_Modules')
             ->whereNotIn('ModuleID', $moduleIds)
@@ -700,7 +700,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1103100, 'Name' => 'Bank Registry', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => 'finance.bank.index', 'ParentID' => 1103050, 'RequiredPermission' => PermissionEnum::FinanceCOAView->value],
             ['ModuleID' => 1103200, 'Name' => 'Bank Accounts', 'Icon' => '<i class="fas fa-piggy-bank"></i>', 'Description' => 'Manage organization bank accounts', 'Route' => 'finance.bankaccountsetup.index', 'ParentID' => 1103050, 'RequiredPermission' => PermissionEnum::FinanceCOAView->value],
 
-            //  ['ModuleID' => 1103300, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103050],
+              ['ModuleID' => 1103550, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103000],
             //  ['ModuleID' => 1103400, 'Name' => 'Bank Transfers', 'Icon' => '<i class="fas fa-right-left"></i>', 'Description' => '', 'Route' => 'finance.banktransfers.index', 'ParentID' => 1103050],
             //  ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103050],
 
@@ -710,13 +710,13 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' => null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600, 'RequiredPermission' => PermissionEnum::PaymentProcessingView->value],
 
 
-            //  ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
-            //  ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
+              ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+              ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
+              ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
+              ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
 
             ['ModuleID' => 1104000, 'Name' => 'Tax Management', 'Icon' => '<i class="fas fa-exchange-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000, 'RequiredPermission' => PermissionEnum::FinanceTaxSettingView->value],
             ['ModuleID' => 1104040, 'Name' => 'Jurisdiction Setup', 'Icon' => null, 'Description' => '', 'Route' => 'taxjurisdiction.index', 'ParentID' => 1104000, 'RequiredPermission' => PermissionEnum::FinanceTaxSettingView->value],
@@ -735,7 +735,7 @@ class ModuleSeeder extends Seeder
             //            ['ModuleID' => 1107000, 'Name' => 'Period Management', 'Icon' => '<i class="fas fa-calendar-alt"></i>', 'Description' => '', 'Route' => 'periodmanagement.index', 'ParentID' => 1100000],
 
 
-            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
+//            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
             //            ['ModuleID' => 1108100, 'Name' => 'Account Setup', 'Icon' => null, 'Description' => '', 'Route' => 'bankaccountsetup.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108200, 'Name' => 'Cash Book', 'Icon' => null, 'Description' => '', 'Route' => 'cashbook.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108300, 'Name' => 'Cash Management', 'Icon' => null, 'Description' => '', 'Route' => 'cashmanagement.index', 'ParentID' => 1108000],
