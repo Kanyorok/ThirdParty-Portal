@@ -75,16 +75,16 @@ export function MaintenanceList({ initialData, isLoading }: { initialData?: any,
 
     return (
         <div className="w-full space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/50">
-                                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Ticket Details</th>
-                                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Property & Unit</th>
-                                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Status</th>
-                                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Priority</th>
-                                <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide">Ticket</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide">Property</th>
+                                <th className="px-6 py-4 text-center text-xs font-semibold text-slate-700 tracking-wide">Status</th>
+                                <th className="px-6 py-4 text-center text-xs font-semibold text-slate-700 tracking-wide">Priority</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 tracking-wide">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -99,7 +99,7 @@ export function MaintenanceList({ initialData, isLoading }: { initialData?: any,
                                             <div className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors line-clamp-1">
                                                 {request.title}
                                             </div>
-                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                                            <div className="text-[11px] text-slate-500 font-medium">
                                                 {format(new Date(request.requestedDate), "MMM dd, yyyy")}
                                             </div>
                                         </div>
@@ -121,7 +121,7 @@ export function MaintenanceList({ initialData, isLoading }: { initialData?: any,
                                         <Badge
                                             variant="outline"
                                             className={cn(
-                                                "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tight border shadow-none inline-flex items-center gap-1.5",
+                                                "px-2.5 py-1 rounded-lg text-[11px] font-medium border shadow-none inline-flex items-center gap-1.5",
                                                 getStatusColor(request.status)
                                             )}
                                         >
@@ -133,7 +133,7 @@ export function MaintenanceList({ initialData, isLoading }: { initialData?: any,
                                         <Badge
                                             variant="outline"
                                             className={cn(
-                                                "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tight border shadow-none",
+                                                "px-2.5 py-1 rounded-lg text-[11px] font-medium border shadow-none",
                                                 getPriorityColor(request.priority)
                                             )}
                                         >
@@ -144,7 +144,7 @@ export function MaintenanceList({ initialData, isLoading }: { initialData?: any,
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="h-8 px-3 text-[10px] font-bold uppercase tracking-widest hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-lg border-slate-200 text-slate-600 transition-all"
+                                            className="h-9 px-3 text-xs font-medium hover:bg-slate-50 hover:border-slate-300 rounded-lg border-slate-200 text-slate-700 transition-all"
                                         >
                                             View
                                             <ChevronRight className="ml-1 h-3 w-3" />

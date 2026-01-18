@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest) {
     return proxy(request, "PATCH")
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
     const session = await getServerSession(authOptions)
     const accessToken = (session as any)?.accessToken as string | undefined
 

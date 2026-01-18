@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, AlertCircle, Loader2, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Check, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/common/button';
 
@@ -56,8 +56,7 @@ export default function VerifyEmailPage() {
                     setStatus('error');
                     setMessage(data.message || 'Verification failed.');
                 }
-            } catch (err) {
-
+            } catch {
                 setStatus('error');
                 setMessage('An unexpected error occurred during verification.');
             }

@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-	const apiKey = request.headers.get("x-api-key") || request.headers.get("X-API-Key");
+	const _apiKey = request.headers.get("x-api-key") || request.headers.get("X-API-Key");
 	// if (!SUPPLIER_PORTAL_API_KEY || apiKey !== SUPPLIER_PORTAL_API_KEY) {
 	// 	return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 	// }
@@ -62,5 +62,4 @@ export async function POST(request: NextRequest) {
 	rfqAwards.set(key, { rfqId: body.rfqId, supplierId: body.supplierId, status: "Awarded", awardedOn: body.awardedOn, comments: body.comments });
 	return NextResponse.json({ ok: true });
 }
-
 

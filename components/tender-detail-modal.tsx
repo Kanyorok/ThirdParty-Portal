@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
     X, Calendar, Hash, Building2,
     FileText, ShieldCheck, Clock, ArrowRight
@@ -11,12 +10,10 @@ import { format } from "date-fns";
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
     DialogTitle,
 } from "@/components/common/dialog";
 import { Button } from "@/components/common/button";
 import { Badge } from "@/components/common/badge";
-import { Separator } from "@/components/common/separator";
 
 interface TenderDetailModalProps {
     isOpen: boolean;

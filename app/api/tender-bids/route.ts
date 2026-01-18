@@ -2,42 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 
-interface TenderBid {
-  id: number
-  tenderId: string
-  supplierId: number
-  bidAmount: number
-  currency: string
-  bidDocuments: EncryptedDocument[]
-  technicalProposal?: EncryptedDocument
-  financialProposal?: EncryptedDocument
-  complianceDocuments: EncryptedDocument[]
-  submissionDate: string
-  status: 'draft' | 'submitted' | 'evaluated' | 'awarded' | 'rejected'
-  evaluationScore?: number
-  evaluationNotes?: string
-  bidBond?: EncryptedDocument
-  validityPeriod: number
-  deliveryPeriod: number
-  paymentTerms?: string
-  createdBy: string
-  createdOn: string
-  modifiedBy?: string
-  modifiedOn?: string
-}
-
-interface EncryptedDocument {
-  id: string
-  originalFileName: string
-  encryptedFileName: string
-  fileSize: number
-  mimeType: string
-  documentType: 'technical' | 'financial' | 'compliance' | 'bond' | 'other'
-  encryptionKeyId: string
-  uploadDate: string
-  checksum: string
-}
-
 interface UpdateBidRequest {
   bidId: number
   bidAmount?: number

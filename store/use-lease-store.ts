@@ -29,7 +29,7 @@ export const useLeaseStore = create<LeaseState>((set) => ({
     fetchLeases: async (page = 1, tenantId = 9) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await getLeases(page, tenantId)
+            const response = await getLeases(page, "", tenantId)
             set({
                 leases: response.data,
                 meta: response.meta,

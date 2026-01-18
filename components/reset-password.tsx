@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
@@ -50,15 +50,15 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid },
-        watch,
+        formState: { isValid },
+        control,
     } = useForm<ResetPasswordInputs>({
         resolver: zodResolver(resetPasswordSchema),
         mode: "onChange",
     })
 
-    const watchedPassword = watch("password", "")
-    const watchedConfirmPassword = watch("confirmPassword", "")
+    const watchedPassword = useWatch({ control, name: "password", defaultValue: "" })
+    const watchedConfirmPassword = useWatch({ control, name: "confirmPassword", defaultValue: "" })
 
     useEffect(() => {
         const checkToken = async () => {

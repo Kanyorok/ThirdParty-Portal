@@ -6,12 +6,14 @@ import { InvoicesList } from "@/components/dashboard/property/invoices-listing"
 import { Skeleton } from "@/components/common/skeleton"
 import { SharedPagination } from "@/components/common/shared-pagination"
 import { PaginationProvider } from "@/components/providers/pagination-provider"
-import { AlertCircle, RefreshCw, Search, FileText, Layers } from "lucide-react"
+import { AlertCircle, RefreshCw, Search, FileText, Layers, Sparkles } from "lucide-react"
 import { Input } from "@/components/common/input"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
 import { getInvoices } from "@/lib/api/invoices"
+import { useSession } from "next-auth/react"
+import { resolveTenantIdFromSessionUser } from "@/lib/profile/resolve-tenant-id"
 
 export default function InvoicesRegistry() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -19,11 +21,12 @@ export default function InvoicesRegistry() {
     const searchParams = useSearchParams()
 
     const page = Number(searchParams.get("page")) || 1
-    const tenantId = 9
+    const { data: session } = useSession()
+    const tenantId = resolveTenantIdFromSessionUser(session?.user) ?? 9
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
         queryKey: ['invoices', page, debouncedSearch, tenantId],
-        queryFn: () => getInvoices(page, tenantId),
+        queryFn: () => getInvoices(page, tenantId, debouncedSearch),
         placeholderData: (previousData) => previousData,
     })
 
@@ -49,41 +52,39 @@ export default function InvoicesRegistry() {
     const hasData = !!data?.data && data.data.length > 0;
 
     return (
-        <div className="space-y-10 max-w-[1600px] mx-auto pb-20">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 px-2">
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-sky-600/10 rounded-xl flex items-center justify-center text-sky-600">
-                                <FileText className="h-5 w-5" />
-                            </div>
-                            <h2 className="text-3xl font-black tracking-tight text-foreground uppercase">Invoices Registry</h2>
-                        </div>
-                        <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.3em] ml-[3.25rem]">
-                            Financial Records & Ledger
-                        </p>
+        <div className="w-full space-y-8 antialiased">
+            <header className="space-y-6">
+                <div className="space-y-2.5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                        <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Invoices</span>
                     </div>
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Billing & invoices</h1>
+                    <p className="text-sm text-slate-600">View statements, track status, and download PDFs.</p>
                 </div>
 
-                <div className="relative w-full lg:w-[450px] group">
-                    <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-muted-foreground/60 group-focus-within:text-sky-600 transition-colors" />
-                    </div>
-                    <Input
-                        placeholder="Search by reference, contract or tenant..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-16 pl-14 pr-14 bg-sky-50/50 dark:bg-sky-950/20 border-transparent focus:bg-background focus:border-sky-200 focus:ring-4 focus:ring-sky-500/5 rounded-2xl text-sm font-bold shadow-none transition-all"
-                    />
-                    <div className="absolute inset-y-0 right-5 flex items-center">
-                        {isFetching ? (
-                            <RefreshCw className="h-4 w-4 animate-spin text-sky-600" />
-                        ) : (
-                            <Layers className="h-4 w-4 text-muted-foreground/20" />
-                        )}
+                <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="relative flex-1 group">
+                        <Search
+                            className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+                            strokeWidth={2}
+                        />
+                        <Input
+                            placeholder="Search by invoice number, lease, or month…"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-11 pr-10 h-11 rounded-xl bg-white border border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all text-sm placeholder:text-slate-400"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg flex items-center justify-center">
+                            {isFetching ? (
+                                <RefreshCw className="h-4 w-4 animate-spin text-blue-600" strokeWidth={2} />
+                            ) : (
+                                <Layers className="h-4 w-4 text-slate-300" strokeWidth={2} />
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             {isLoading && !data ? (
                 <div className="rounded-[2.5rem] border border-border/40 bg-background/50 overflow-hidden">
@@ -113,7 +114,7 @@ export default function InvoicesRegistry() {
                             "transition-all duration-700 ease-in-out",
                             isFetching && data ? 'opacity-30 grayscale blur-[3px] pointer-events-none' : 'opacity-100'
                         )}>
-                            <InvoicesList initialData={data} />
+                            <InvoicesList initialData={data} tenantId={tenantId} />
                         </div>
 
                         {hasData && (

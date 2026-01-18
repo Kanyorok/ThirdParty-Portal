@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion, AnimatePresence } from "framer-motion"
 import { Home, Loader2 } from "lucide-react"
@@ -53,12 +53,14 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
     register,
     handleSubmit,
     formState: { errors },
+    control,
     setValue,
-    watch,
   } = useForm<TenantProfileFormData>({
     resolver: zodResolver(tenantProfileSchema),
     defaultValues: {},
   })
+
+  const countryValue = useWatch({ control, name: "country" })
 
   const onSubmit = async (data: TenantProfileFormData) => {
     const profile = await createProfile("tenant", {
@@ -190,7 +192,7 @@ export function CreateTenantModal({ open, onOpenChange, onSuccess }: CreateTenan
                     <Label htmlFor="country">Country *</Label>
                     <Select
                       onValueChange={(value) => setValue("country", value)}
-                      defaultValue={watch("country")}
+                      defaultValue={countryValue}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select country" />

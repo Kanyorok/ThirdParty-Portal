@@ -78,20 +78,12 @@ export default function RoundDetailPage() {
                             </h1>
 
                             <Badge
-                                className="
-    px-4 py-1.5
-    text-xs
-    font-black
-    uppercase
-    tracking-widest
-    rounded-full
-    bg-emerald-100
-    text-emerald-700
-    border border-emerald-200
-    whitespace-nowrap
-  "
+                                className={cn(
+                                    "px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-full whitespace-nowrap",
+                                    currentStatus.class,
+                                )}
                             >
-                                Accepting Applications
+                                {currentStatus.label}
                             </Badge>
                         </div>
 

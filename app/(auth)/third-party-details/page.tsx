@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -11,15 +11,10 @@ import * as z from 'zod';
 import {
     Check,
     AlertCircle,
-    ArrowLeft,
     Loader2,
     Building2,
-    Globe,
-    Mail,
-    Phone,
     MapPin,
     UserCircle,
-    FileText
 } from 'lucide-react';
 
 import { Button } from '@/components/common/button';
@@ -170,13 +165,6 @@ export default function RegisterThirdPartyDetails() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
-    // File upload state (Step 3/4 effectively)
-    const [uploading, setUploading] = useState(false);
-    const [uploadError, setUploadError] = useState<string | null>(null);
-    const [uploadedDocs, setUploadedDocs] = useState<Array<{ id: number; name: string; size?: number; previewUrl?: string; }>>([]);
-    const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-    const [thirdPartyId, setThirdPartyId] = useState<number | null>(null);
-
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -275,14 +263,10 @@ export default function RegisterThirdPartyDetails() {
     //     }
     // }, [userId]);
 
-    const [isSubmitting, setIsSubmitting] = useState(false); // Added for submission state
-
     const onSubmit = async (data: FormData) => {
-        setIsSubmitting(true);
         try {
             if (!userId) {
                 toast.error("User identification missing. Please use the link from your email.");
-                setIsSubmitting(false);
                 return;
             }
 
@@ -313,8 +297,6 @@ export default function RegisterThirdPartyDetails() {
             }
 
             setSuccess(resData.message || 'Details registered successfully!');
-            // Extract created party ID for file upload step if we were to stay on page
-            if (resData.third_party?.Id) setThirdPartyId(resData.third_party.Id);
 
             // Redirect logic
             try {

@@ -1,5 +1,3 @@
-import { cn } from "@/lib/utils"
-
 export function SearchSkeleton() {
     return (
         <div className="space-y-4 p-2 animate-in fade-in duration-500">

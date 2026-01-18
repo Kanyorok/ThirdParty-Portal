@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -73,7 +73,7 @@ const formVariants: Variants = {
 };
 
 export default function BankDetailsForm() {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
 
     const [bankDetails, setBankDetails] = useState<BankDetail[]>([]);
     const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -94,7 +94,7 @@ export default function BankDetailsForm() {
         },
     });
 
-    const fetchCurrencies = async () => {
+    const fetchCurrencies = useCallback(async () => {
         try {
             const r = await fetch('/api/currencies');
             if (!r.ok) throw new Error('Failed to fetch currencies');
@@ -106,9 +106,9 @@ export default function BankDetailsForm() {
         } catch (e: any) {
             toast.error(e.message);
         }
-    };
+    }, [form]);
 
-    const fetchBankDetails = async () => {
+    const fetchBankDetails = useCallback(async () => {
         if (status !== 'authenticated') {
             setIsLoading(false);
             return;
@@ -126,7 +126,7 @@ export default function BankDetailsForm() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [status]);
 
     useEffect(() => {
         if (status === 'authenticated') {
@@ -135,11 +135,10 @@ export default function BankDetailsForm() {
         } else if (status === 'unauthenticated') {
             setIsLoading(false);
         }
-    }, [status]);
+    }, [status, fetchBankDetails, fetchCurrencies]);
 
     const openInlineFormForEdit = (detail?: BankDetail) => {
         setEditingBankDetail(detail || null);
-        const currencyId = detail?.currencyId ?? (currencies[0]?.id || 1);
 
         form.reset({
             bankName: detail?.bankName || '',

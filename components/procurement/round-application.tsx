@@ -23,7 +23,7 @@ export default function RoundApplication({ roundId }: { roundId: number }) {
                 const data = await initializeApplication(roundId)
                 setAppData(data)
                 if (data?.CategoryID) setSelectedCategoryId(String(data.CategoryID))
-            } catch (err) {
+            } catch {
                 toast.error("Failed to initialize application")
             }
         }
@@ -46,7 +46,7 @@ export default function RoundApplication({ roundId }: { roundId: number }) {
             setAppData(result)
             setFiles([])
             toast.success("Progress saved successfully")
-        } catch (e) {
+        } catch {
             toast.error("Failed to save progress")
         }
     }

@@ -39,7 +39,7 @@ function transformToPascalCase(payload: FrontendBankDetailPayload): BackendBankD
     };
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     const session = await getServerSession(authOptions);
     const accessToken = (session as any)?.accessToken as string | undefined
     const thirdPartyId =

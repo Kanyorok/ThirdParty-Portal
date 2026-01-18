@@ -17,7 +17,6 @@ import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items"
 import { useProfileStore } from "@/store/use-profile-store"
 import { NavMain } from "@/app/dashboard/side-nav/nav-main"
 import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
-import { ProfileSwitcher } from "@/components/thirdparty-profile/profile-switcher"
 import { cn } from "@/lib/utils"
 
 function NavItemSkeleton() {
@@ -92,7 +91,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             })
             .map(section => ({
                 id: section.id,
-                label: section.title,
                 allowedProfiles: section.allowedProfiles,
                 items: section.items.filter(item =>
                     activeProfile === 'base' ? true : item.allowedProfiles.includes(activeProfile)
@@ -103,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             primaryNav: filteredMenus.filter(s => s.id !== "utility"),
             utilityNav: filteredMenus.filter(s => s.id === "utility")
         }
-    }, [activeProfile, authorizedRoles, mounted, isHydrated])
+    }, [activeProfile, mounted, isHydrated])
 
     if (!mounted) return null
 
@@ -122,13 +120,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             {CLIENT_APP_NAME_STRING}
                         </span>
                     </div>
-                </div>
-
-                <div className={cn(
-                    "mt-6 transition-all duration-300 ease-in-out",
-                    state === "collapsed" ? "opacity-0 h-0 overflow-hidden translate-y-2" : "opacity-100 h-auto translate-y-0"
-                )}>
-                    <ProfileSwitcher />
                 </div>
             </SidebarHeader>
 

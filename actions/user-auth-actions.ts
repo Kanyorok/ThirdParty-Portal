@@ -34,26 +34,26 @@ const TOKEN_CONFIG = {
 
 const db = {
     users: {
-        findByEmail: async (email: string): Promise<User | null> => {
+        findByEmail: async (_email: string): Promise<User | null> => {
             return null
         },
-        updatePassword: async (userId: string, hashedPassword: string): Promise<void> => {
+        updatePassword: async (_userId: string, _hashedPassword: string): Promise<void> => {
             return
         }
     },
     resetTokens: {
-        save: async (data: ResetTokenData): Promise<void> => {
+        save: async (_data: ResetTokenData): Promise<void> => {
             return
         },
-        findByToken: async (token: string): Promise<ResetTokenData | null> => {
+        findByToken: async (_token: string): Promise<ResetTokenData | null> => {
             return null
         },
-        markAsUsed: async (token: string): Promise<void> => {
+        markAsUsed: async (_token: string): Promise<void> => {
             return
         }
     },
     rateLimit: {
-        check: async (identifier: string): Promise<{ allowed: boolean; message?: string }> => {
+        check: async (_identifier: string): Promise<{ allowed: boolean; message?: string }> => {
             return { allowed: true }
         }
     }

@@ -17,7 +17,7 @@ interface ProcurementState {
     updateApplicationStatus: (roundId: number, status: any) => void
 }
 
-export const useProcurementStore = create<ProcurementState>((set, get) => ({
+export const useProcurementStore = create<ProcurementState>((set, _get) => ({
     rounds: [],
     selectedRound: null,
     isLoading: false,

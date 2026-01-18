@@ -28,12 +28,14 @@ export interface Invoice {
     notes?: string;
 }
 
-export async function getInvoices(page: number = 1, tenantId: number = 9): Promise<PaginatedResponse<Invoice>> {
+export async function getInvoices(page: number = 1, tenantId: number = 9, search: string = ""): Promise<PaginatedResponse<Invoice>> {
     const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/tenant`;
     const params = new URLSearchParams({
         page: page.toString(),
         tenant_id: tenantId.toString()
     });
+
+    if (search) params.set("search", search);
 
     const res = await fetch(`${baseUrl}?${params.toString()}`, {
         method: 'GET',

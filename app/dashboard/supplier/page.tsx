@@ -1,7 +1,7 @@
-import { SupplierDashboard } from "@/components/dashboard/supplier-dashboard/home";
+import { redirect } from "next/navigation"
 
-export default function SupplierDashboardPage() {
-    return (
-        <SupplierDashboard />
-    )
+export const dynamic = "force-dynamic"
+
+export default async function SupplierDashboardPage() {
+    redirect("/dashboard?profile=Supplier")
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { type ChangeEvent, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { z } from "zod"
@@ -8,11 +8,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import {
   Building2,
+  ImageUp,
   Sparkles,
   Mail,
   Phone,
   Save,
   ShieldCheck,
+  Trash2,
   X,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -25,6 +27,7 @@ import { Separator } from "@/components/common/separator"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/common/form"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/common/dialog"
 import { Label } from "@/components/common/label"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 
 import { useProfile } from "@/hooks/use-profile"
 import { useProfileStore, type ProfileType } from "@/store/use-profile-store"
@@ -45,6 +48,23 @@ type ProfileFormValues = z.infer<typeof profileSchema>
 function normalizeString(value: string | null | undefined) {
   const trimmed = (value ?? "").trim()
   return trimmed.length ? trimmed : null
+}
+
+function resolveLogoUrl(profile: any, thirdParty: any, thirdPartyDetails: any) {
+  return (
+    thirdPartyDetails?.logoUrl ??
+    thirdPartyDetails?.logo_url ??
+    thirdPartyDetails?.logo ??
+    thirdParty?.logoUrl ??
+    thirdParty?.logo_url ??
+    thirdParty?.logo ??
+    profile?.logoUrl ??
+    profile?.logo_url ??
+    profile?.imageUrl ??
+    profile?.image_url ??
+    profile?.image ??
+    null
+  )
 }
 
 const inputClassName =
@@ -228,6 +248,12 @@ function LoadingState() {
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
+  const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false)
+  const [optimisticLogoUrl, setOptimisticLogoUrl] = useState<string | null>(null)
+  const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const [isLogoPending, startLogoTransition] = useTransition()
   const { profile, thirdPartyDetails, thirdParty, profileCompletion, isLoading, isUpdating, updateProfile, refetch } = useProfile()
   const router = useRouter()
   const setActiveProfile = useProfileStore((s) => s.setActiveProfile)
@@ -255,6 +281,113 @@ export default function ProfilePage() {
       physicalAddress: thirdPartyDetails.physicalAddress ?? "",
     })
   }, [thirdPartyDetails, form])
+
+  const currentLogoUrl = useMemo(
+    () => optimisticLogoUrl ?? resolveLogoUrl(profile as any, thirdParty as any, thirdPartyDetails as any),
+    [optimisticLogoUrl, profile, thirdParty, thirdPartyDetails],
+  )
+
+  useEffect(() => {
+    if (!isLogoDialogOpen) {
+      setSelectedLogo(null)
+      setLogoPreviewUrl(null)
+      if (logoInputRef.current) logoInputRef.current.value = ""
+      return
+    }
+
+    setLogoPreviewUrl(currentLogoUrl)
+  }, [isLogoDialogOpen, currentLogoUrl])
+
+  useEffect(() => {
+    return () => {
+      if (logoPreviewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(logoPreviewUrl)
+      }
+    }
+  }, [logoPreviewUrl])
+
+  const onLogoFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      setSelectedLogo(null)
+      setLogoPreviewUrl(currentLogoUrl)
+      return
+    }
+
+    const MAX_FILE_SIZE_MB = 5
+    const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.error(`File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`)
+      setSelectedLogo(null)
+      setLogoPreviewUrl(currentLogoUrl)
+      if (logoInputRef.current) logoInputRef.current.value = ""
+      return
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only image files are allowed.")
+      setSelectedLogo(null)
+      setLogoPreviewUrl(currentLogoUrl)
+      if (logoInputRef.current) logoInputRef.current.value = ""
+      return
+    }
+
+    setSelectedLogo(file)
+    setLogoPreviewUrl(URL.createObjectURL(file))
+  }
+
+  const uploadLogo = async () => {
+    if (!selectedLogo) {
+      toast.error("Please select an image to upload.")
+      return
+    }
+
+    const formData = new FormData()
+    formData.append("profileImage", selectedLogo)
+
+    startLogoTransition(async () => {
+      try {
+        const res = await fetch("/api/profile/image", { method: "POST", body: formData })
+        const body = await res.json().catch(() => ({}))
+
+        if (!res.ok) {
+          throw new Error(body?.message || "Failed to upload logo.")
+        }
+
+        const nextUrl = body?.image ?? body?.imageUrl ?? body?.data?.image ?? body?.data?.imageUrl ?? null
+        if (typeof nextUrl === "string" && nextUrl.trim().length) {
+          setOptimisticLogoUrl(nextUrl)
+        }
+
+        toast.success("Logo updated.")
+        await refetch?.()
+        setIsLogoDialogOpen(false)
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to upload logo.")
+      }
+    })
+  }
+
+  const removeLogo = async () => {
+    startLogoTransition(async () => {
+      try {
+        const res = await fetch("/api/profile/image", { method: "DELETE" })
+        const body = await res.json().catch(() => ({}))
+
+        if (!res.ok && res.status !== 204) {
+          throw new Error(body?.message || "Failed to remove logo.")
+        }
+
+        setOptimisticLogoUrl(null)
+        toast.success("Logo removed.")
+        await refetch?.()
+        setIsLogoDialogOpen(false)
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to remove logo.")
+      }
+    })
+  }
 
   const missingFields = useMemo(() => {
     const missing: string[] = []
@@ -523,6 +656,124 @@ export default function ProfilePage() {
           </div>
 
           <aside className="xl:col-span-4 space-y-6 xl:sticky xl:top-6 self-start">
+            <Card className="bg-white rounded-2xl border border-slate-200 shadow-none py-0 gap-0">
+              <CardHeader className="border-b border-slate-200 py-5">
+                <CardTitle className="text-base font-semibold text-slate-900">Branding</CardTitle>
+                <CardDescription className="text-slate-600">Upload a company logo for your portal and exports.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pb-6">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-14 w-14 rounded-2xl border border-slate-200 bg-white">
+                    <AvatarImage src={currentLogoUrl ?? undefined} alt="Company logo" className="object-contain p-2" />
+                    <AvatarFallback className="rounded-2xl bg-slate-50 text-slate-400">
+                      <ImageUp className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-slate-900 truncate">Company logo</div>
+                    <div className="text-xs text-slate-600">Looks more trustworthy and recognizable.</div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => setIsLogoDialogOpen(true)}
+                    className="h-9 px-4 rounded-xl text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white shadow-none transition-colors"
+                  >
+                    {currentLogoUrl ? "Update" : "Add"}
+                  </Button>
+                </div>
+
+                <Dialog open={isLogoDialogOpen} onOpenChange={setIsLogoDialogOpen}>
+                  <DialogContent className="sm:max-w-[460px] bg-white rounded-2xl border border-slate-200 shadow-none">
+                    <DialogHeader>
+                      <DialogTitle className="text-base font-semibold text-slate-900">Update company logo</DialogTitle>
+                      <DialogDescription className="text-slate-600">
+                        Max size 5MB. Recommended: square logo (PNG/SVG).
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-20 w-20 rounded-2xl border border-slate-200 bg-white">
+                          <AvatarImage src={logoPreviewUrl ?? undefined} alt="Company logo preview" className="object-contain p-3" />
+                          <AvatarFallback className="rounded-2xl bg-slate-50 text-slate-400">
+                            <ImageUp className="h-6 w-6" />
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-slate-900">Logo file</div>
+                          <div className="text-xs text-slate-600">
+                            {selectedLogo ? selectedLogo.name : currentLogoUrl ? "Using current logo" : "No logo uploaded"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={onLogoFileChange}
+                        className="hidden"
+                        id="company-logo-upload"
+                        disabled={isLogoPending}
+                      />
+
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <label
+                          htmlFor="company-logo-upload"
+                          className={cn(
+                            "inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-medium text-slate-900 transition-colors",
+                            "hover:bg-slate-50 hover:border-slate-300",
+                            isLogoPending && "pointer-events-none opacity-60",
+                          )}
+                        >
+                          <ImageUp className="mr-2 h-4 w-4 text-blue-500" />
+                          {selectedLogo ? "Change selected" : "Choose file"}
+                        </label>
+
+                        {currentLogoUrl && !selectedLogo && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={removeLogo}
+                            disabled={isLogoPending}
+                            className="h-11 rounded-xl text-xs font-medium border-slate-200 bg-white hover:bg-destructive/5 hover:border-destructive/30 text-destructive shadow-none"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Remove logo
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isLogoPending}
+                          className="h-11 rounded-xl text-xs font-medium border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 shadow-none"
+                        >
+                          Cancel
+                        </Button>
+                      </DialogClose>
+                      <Button
+                        type="button"
+                        onClick={uploadLogo}
+                        disabled={isLogoPending || !selectedLogo}
+                        className="h-11 rounded-xl text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white shadow-none transition-colors"
+                      >
+                        {isLogoPending ? <Loading className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardContent>
+            </Card>
+
             <Card className="bg-white rounded-2xl border border-slate-200 shadow-none py-0 gap-0">
               <CardHeader className="border-b border-slate-200 py-5">
                 <CardTitle className="text-base font-semibold text-slate-900">Profile Completion</CardTitle>

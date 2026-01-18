@@ -59,7 +59,7 @@ export function MaintenanceRequestSheet({
                 setOpen(false)
                 setFormData({ priority: "Medium", category: "Plumbing" })
                 onSuccess?.()
-            } catch (error) {
+            } catch {
                 toast.error("Failed to submit request")
             }
         })
@@ -69,7 +69,7 @@ export function MaintenanceRequestSheet({
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
                 {children || (
-                    <Button className="rounded-xl h-10 px-4 font-bold uppercase tracking-tight text-[11px] bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-sm">
+                    <Button className="rounded-xl h-10 px-4 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white transition-colors shadow-none">
                         <Plus className="h-3.5 w-3.5 mr-2" />
                         New Request
                     </Button>
@@ -84,7 +84,7 @@ export function MaintenanceRequestSheet({
                         <SheetTitle className="text-xl font-bold tracking-tight text-slate-900">
                             Maintenance Request
                         </SheetTitle>
-                        <SheetDescription className="text-xs text-slate-500 font-medium tracking-tight uppercase">
+                        <SheetDescription className="text-xs text-slate-500 font-medium tracking-tight">
                             Submit a new service ticket for your unit
                         </SheetDescription>
                     </SheetHeader>
@@ -93,7 +93,7 @@ export function MaintenanceRequestSheet({
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
                     <div className="space-y-5">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Property <span className="text-rose-500">*</span></Label>
+                            <Label className="text-[11px] font-medium text-slate-600">Property <span className="text-rose-500">*</span></Label>
                             <Select
                                 onValueChange={(val) => setFormData(prev => ({ ...prev, propertyId: parseInt(val) }))}
                             >
@@ -111,7 +111,7 @@ export function MaintenanceRequestSheet({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Issue Title <span className="text-rose-500">*</span></Label>
+                            <Label className="text-[11px] font-medium text-slate-600">Issue title <span className="text-rose-500">*</span></Label>
                             <Input
                                 placeholder="e.g. Kitchen sink blockage"
                                 className="h-11 rounded-lg bg-slate-50 border-slate-200 text-sm focus:ring-1 focus:ring-slate-950"
@@ -122,7 +122,7 @@ export function MaintenanceRequestSheet({
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Category</Label>
+                                <Label className="text-[11px] font-medium text-slate-600">Category</Label>
                                 <Select
                                     defaultValue="Plumbing"
                                     onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
@@ -139,7 +139,7 @@ export function MaintenanceRequestSheet({
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Priority Level</Label>
+                                <Label className="text-[11px] font-medium text-slate-600">Priority</Label>
                                 <Select
                                     defaultValue="Medium"
                                     onValueChange={(val) => setFormData(prev => ({ ...prev, priority: val }))}
@@ -162,7 +162,7 @@ export function MaintenanceRequestSheet({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Detailed Description <span className="text-rose-500">*</span></Label>
+                            <Label className="text-[11px] font-medium text-slate-600">Description <span className="text-rose-500">*</span></Label>
                             <Textarea
                                 placeholder="Please explain the problem clearly..."
                                 className="min-h-[120px] rounded-lg bg-slate-50 border-slate-200 text-sm resize-none p-3 focus:ring-1 focus:ring-slate-950"
@@ -172,14 +172,12 @@ export function MaintenanceRequestSheet({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Attachments</Label>
+                            <Label className="text-[11px] font-medium text-slate-600">Attachments</Label>
                             <div className="border border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-all cursor-pointer group">
                                 <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center mb-2 group-hover:bg-slate-900 transition-colors">
                                     <UploadCloud className="h-4 w-4 text-slate-500 group-hover:text-white" />
                                 </div>
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
-                                    Click to upload media
-                                </p>
+                                <p className="text-xs font-medium text-slate-500">Click to upload media</p>
                             </div>
                         </div>
                     </div>
@@ -189,7 +187,7 @@ export function MaintenanceRequestSheet({
                     <Button
                         type="button"
                         variant="outline"
-                        className="flex-1 h-11 rounded-lg font-bold uppercase tracking-widest text-[10px] border-slate-200 bg-white"
+                        className="flex-1 h-11 rounded-xl text-xs font-semibold border-slate-200 bg-white"
                         onClick={() => setOpen(false)}
                         disabled={isPending}
                     >
@@ -198,7 +196,7 @@ export function MaintenanceRequestSheet({
                     <Button
                         type="submit"
                         onClick={handleSubmit}
-                        className="flex-1 h-11 rounded-lg font-bold uppercase tracking-widest text-[10px] bg-slate-900 hover:bg-slate-800 text-white"
+                        className="flex-1 h-11 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white"
                         disabled={isPending}
                     >
                         {isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}

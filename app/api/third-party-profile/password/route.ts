@@ -36,7 +36,7 @@ export async function PUT(req: NextRequest) {
 
         return NextResponse.json({ message: responseData.message || "Password updated successfully." });
 
-    } catch (error) {
+    } catch {
         return NextResponse.json({ message: "An internal error occurred." }, { status: 500 });
     }
 }

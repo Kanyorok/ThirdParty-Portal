@@ -102,7 +102,7 @@ export default function TenderResponseForm({
         if (responseText.trim()) {
           data = JSON.parse(responseText);
         }
-      } catch (parseError) {
+      } catch {
         data = { parseError: 'Invalid JSON response' };
       }
 
@@ -224,7 +224,6 @@ export default function TenderResponseForm({
   }
 
   const currentStatus = optimisticStatus || invitation?.ResponseStatus || invitation?.responseStatus || 'pending';
-  const isResponseSubmitted = currentStatus !== 'pending';
   const canRespond = currentStatus === 'pending' && isRestrictedTender;
 
   return (

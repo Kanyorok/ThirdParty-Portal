@@ -1,135 +1,175 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card"; // Assuming Shadcn Card components
-import { DollarSign, Mail, CheckCircle, Loader2 } from "lucide-react"; // Icons for each card
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/common/card";
+import { Briefcase, CheckCircle2, FileText, Mail, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-interface SummaryResponse {
-    summary: {
-        activePrequalificationRequests: number;
-        directInvites: number;
-        availableTenders: number;
-        completedRequests: number;
+type DashboardSummaryResponse = {
+    summary?: Record<string, any>;
+};
+
+type SummaryCardItem = {
+    title: string;
+    count: number;
+    icon: React.ElementType;
+    description: string;
+    tone: "primary" | "emerald" | "sky" | "amber";
+};
+
+function resolveCounts(raw?: DashboardSummaryResponse | null) {
+    const summary = raw?.summary ?? {};
+
+    const activePreq =
+        summary.activePreq ??
+        summary.activePrequalificationRequests ??
+        summary.activePrequalification ??
+        0;
+
+    const directInvites =
+        summary.directInvites ??
+        summary.directInvitesCount ??
+        summary.directInvitations ??
+        0;
+
+    const tendersAvailable =
+        summary.tendersAvailable ??
+        summary.availableTenders ??
+        summary.openTenders ??
+        0;
+
+    const completedPreq =
+        summary.completedPreq ??
+        summary.completedRequests ??
+        summary.completed ??
+        0;
+
+    return {
+        activePreq: Number(activePreq) || 0,
+        directInvites: Number(directInvites) || 0,
+        tendersAvailable: Number(tendersAvailable) || 0,
+        completedPreq: Number(completedPreq) || 0,
     };
 }
 
-export function RequestSummaryCards() {
-    const [summaryData, setSummaryData] = useState<{
-        title: string;
-        count: number;
-        icon: React.ElementType;
-        description: string;
-        colorClass: string;
-    }[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+const toneClasses: Record<SummaryCardItem["tone"], { icon: string; chip: string; ring: string }> = {
+    primary: { icon: "text-primary", chip: "bg-primary/5 text-primary border-primary/15", ring: "ring-primary/10" },
+    emerald: { icon: "text-emerald-600", chip: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20", ring: "ring-emerald-500/10" },
+    sky: { icon: "text-sky-600", chip: "bg-sky-500/10 text-sky-700 border-sky-500/20", ring: "ring-sky-500/10" },
+    amber: { icon: "text-amber-600", chip: "bg-amber-500/10 text-amber-700 border-amber-500/20", ring: "ring-amber-500/10" },
+};
+
+export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSummaryResponse | null; isLoading?: boolean }) {
+    const [fetched, setFetched] = useState<DashboardSummaryResponse | null>(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const fetchSummaryData = async () => {
-            setIsLoading(true);
+        if (typeof isLoading !== "undefined") return;
+        if (typeof data !== "undefined") return;
+        let mounted = true;
+        const load = async () => {
+            setLoading(true);
             try {
-                const res = await fetch('/api/dashboard/summary', { cache: 'no-store' });
-                if (!res.ok) throw new Error('Failed to load summary');
-                const data: SummaryResponse = await res.json();
-
-                const items = [
-                    {
-                        title: "Active Requests",
-                        count: data.summary.activePrequalificationRequests ?? 0,
-                        icon: DollarSign,
-                        description: "Applications in progress or under review.",
-                        colorClass: "text-blue-500 dark:text-blue-400",
-                    },
-                    {
-                        title: "Direct Invites",
-                        count: data.summary.directInvites ?? 0,
-                        icon: Mail,
-                        description: "Invitations to apply sent to you.",
-                        colorClass: "text-purple-500 dark:text-purple-400",
-                    },
-                    {
-                        title: "Available Tenders",
-                        count: data.summary.availableTenders ?? 0,
-                        icon: DollarSign,
-                        description: "Open and invited tenders you can apply to.",
-                        colorClass: "text-amber-600 dark:text-amber-400",
-                    },
-                    {
-                        title: "Completed Requests",
-                        count: data.summary.completedRequests ?? 0,
-                        icon: CheckCircle,
-                        description: "Successful applications and prequalifications.",
-                        colorClass: "text-green-500 dark:text-green-400",
-                    },
-                ];
-
-                setSummaryData(items);
-            } catch (e) {
-                setSummaryData([
-                    { title: "Active Requests", count: 0, icon: DollarSign, description: "Applications in progress or under review.", colorClass: "text-blue-500 dark:text-blue-400" },
-                    { title: "Direct Invites", count: 0, icon: Mail, description: "Invitations to apply sent to you.", colorClass: "text-purple-500 dark:text-purple-400" },
-                    { title: "Available Tenders", count: 0, icon: DollarSign, description: "Open and invited tenders you can apply to.", colorClass: "text-amber-600 dark:text-amber-400" },
-                    { title: "Completed Requests", count: 0, icon: CheckCircle, description: "Successful applications and prequalifications.", colorClass: "text-green-500 dark:text-green-400" },
-                ]);
+                const res = await fetch("/api/dashboard/summary", { cache: "no-store" });
+                if (!res.ok) throw new Error("Failed to load summary");
+                const json = (await res.json()) as DashboardSummaryResponse;
+                if (mounted) setFetched(json);
             } finally {
-                setIsLoading(false);
+                if (mounted) setLoading(false);
             }
         };
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, [data, isLoading]);
 
-        fetchSummaryData();
-    }, []);
+    const resolved = useMemo(() => resolveCounts(data ?? fetched), [data, fetched]);
+    const effectiveLoading = Boolean(isLoading ?? loading);
+
+    const cards: SummaryCardItem[] = [
+        {
+            title: "Active prequalification",
+            count: resolved.activePreq,
+            icon: Briefcase,
+            description: "In progress or under review.",
+            tone: "primary",
+        },
+        {
+            title: "Direct invites",
+            count: resolved.directInvites,
+            icon: Mail,
+            description: "Invitations that need your response.",
+            tone: "sky",
+        },
+        {
+            title: "Available tenders",
+            count: resolved.tendersAvailable,
+            icon: FileText,
+            description: "Open tenders you can apply to.",
+            tone: "amber",
+        },
+        {
+            title: "Completed",
+            count: resolved.completedPreq,
+            icon: CheckCircle2,
+            description: "Approved or completed outcomes.",
+            tone: "emerald",
+        },
+    ];
 
     return (
-        <div className="border border-border p-6 md:p-8 transition-colors duration-300">
-            <h2 className="text-2xl font-bold mb-6">Overview</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {effectiveLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                      <Card key={i} className="rounded-2xl border border-border/50 bg-card shadow-none">
+                          <CardContent className="p-5">
+                              <div className="h-10 w-10 rounded-xl bg-muted/40" />
+                              <div className="mt-4 h-3 w-40 rounded bg-muted/40" />
+                              <div className="mt-3 h-8 w-20 rounded bg-muted/40" />
+                              <div className="mt-3 h-3 w-56 rounded bg-muted/40" />
+                          </CardContent>
+                      </Card>
+                  ))
+                : cards.map((item, index) => {
+                      const t = toneClasses[item.tone];
+                      return (
+                          <motion.div
+                              key={item.title}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
+                              className="h-full"
+                          >
+                              <Card className="h-full rounded-2xl border border-border/50 bg-card shadow-none">
+                                  <CardContent className="p-5">
+                                      <div className="flex items-start justify-between gap-3">
+                                          <div
+                                              className={cn(
+                                                  "flex h-10 w-10 items-center justify-center rounded-xl border ring-1 ring-transparent",
+                                                  t.chip,
+                                                  t.ring,
+                                              )}
+                                          >
+                                              <item.icon className={cn("h-5 w-5", t.icon)} />
+                                          </div>
+                                          <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/20 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                              <Sparkles className="h-3.5 w-3.5 text-primary/70" />
+                                              Updated
+                                          </div>
+                                      </div>
 
-            <AnimatePresence mode="wait">
-                {isLoading ? (
-                    <motion.div
-                        key="loading-cards"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center justify-center h-48 text-muted-foreground"
-                    >
-                        <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                        <span>Loading...</span>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="summary-cards"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                    >
-                        {summaryData.map((item, index) => (
-                            <motion.div
-                                key={item.title}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="h-full"
-                            >
-                                <Card className="h-full flex flex-col justify-between border border-border rounded-lg bg-background text-foreground transition-colors duration-300">
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">
-                                            {item.title}
-                                        </CardTitle>
-                                        <item.icon className={`h-5 w-5 ${item.colorClass}`} />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-3xl font-bold">{item.count}</div>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            {item.description}
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                      <div className="mt-4 text-sm font-semibold text-foreground">{item.title}</div>
+                                      <div className="mt-2 text-3xl font-semibold tracking-tight text-foreground tabular-nums">
+                                          {item.count.toLocaleString()}
+                                      </div>
+                                      <div className="mt-2 text-xs text-muted-foreground">{item.description}</div>
+                                  </CardContent>
+                              </Card>
+                          </motion.div>
+                      );
+                  })}
         </div>
     );
 }

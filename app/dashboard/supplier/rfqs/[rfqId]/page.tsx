@@ -242,7 +242,6 @@ export default function RfqDetailPage() {
                     const itAny = it as any;
                     const quoted = (itAny?.quotedPrice ?? itAny?.QuotedPrice ?? itAny?.unitPrice) ?? undefined;
                     const total = (itAny?.totalPayable ?? itAny?.TotalPayable ?? itAny?.totalPrice) ?? (quoted != null ? Number((quoted * l.quantity).toFixed(2)) : undefined);
-                    const perItemLead = itAny?.leadTimeDays ?? itAny?.leadTime ?? undefined;
                     const comments = (itAny?.comments ?? itAny?.Comments ?? "") || "";
 
                     responseMap[l.id] = {
@@ -402,7 +401,7 @@ export default function RfqDetailPage() {
             setClarQuestion("");
             setClarLineId("");
             await loadClarifications();
-        } catch (e) {
+        } catch {
             // noop; error can be shown via setError if needed
         } finally {
             setPostingClar(false);
@@ -714,5 +713,4 @@ export default function RfqDetailPage() {
         </div>
     );
 }
-
 

@@ -57,23 +57,24 @@ export function InvoiceDetailSheet({ id, onClose, tenantId }: InvoiceDetailSheet
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-[500px] bg-background h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 print:shadow-none print:max-w-full print:h-auto">
+            <div className="relative w-full max-w-[560px] bg-background h-full shadow-none flex flex-col animate-in slide-in-from-right duration-500 print:shadow-none print:max-w-full print:h-auto">
                 <div className="flex items-center justify-between p-8 border-b border-border/40 print:p-4">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-sky-600 rounded-xl flex items-center justify-center text-white print:border print:text-black print:bg-white">
+                        <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center text-white print:border print:text-black print:bg-white">
                             <Receipt className="h-5 w-5" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black tracking-tight leading-none uppercase">
+                            <h2 className="text-lg font-semibold tracking-tight leading-none">
                                 {isLoading ? "Fetching..." : invoice?.invoiceNumber}
                             </h2>
+                            <p className="text-xs text-muted-foreground mt-1">Invoice details</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 print:hidden">
-                        <button onClick={handleEmail} className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-secondary transition-colors">
+                        <button onClick={handleEmail} className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-secondary transition-colors">
                             <Mail className="h-5 w-5" />
                         </button>
-                        <button onClick={onClose} className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-secondary transition-colors text-rose-500">
+                        <button onClick={onClose} className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-secondary transition-colors text-rose-500">
                             <X className="h-5 w-5" />
                         </button>
                     </div>
@@ -90,21 +91,21 @@ export function InvoiceDetailSheet({ id, onClose, tenantId }: InvoiceDetailSheet
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="p-5 rounded-3xl bg-secondary/30 border border-border/40">
                                     <Building className="h-4 w-4 text-muted-foreground mb-3" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block mb-1">Contract</span>
+                                    <span className="text-[11px] font-medium tracking-tight text-muted-foreground block mb-1">Contract</span>
                                     <span className="text-sm font-bold text-foreground">
                                         {invoice.lease?.leaseNumber || invoice.leaseNumber}
                                     </span>
                                 </div>
                                 <div className="p-5 rounded-3xl bg-secondary/30 border border-border/40">
                                     <Calendar className="h-4 w-4 text-muted-foreground mb-3" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block mb-1">Month</span>
+                                    <span className="text-[11px] font-medium tracking-tight text-muted-foreground block mb-1">Month</span>
                                     <span className="text-sm font-bold text-foreground">{invoice.billingMonth}</span>
                                 </div>
                             </div>
 
-                            <div className="rounded-[2.5rem] bg-sky-50/50 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/40 p-8 space-y-6 print:border-black print:rounded-none">
-                                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-sky-100 dark:border-sky-900/40 pb-4">
-                                    <span>Invoice Description</span>
+                            <div className="rounded-[2.5rem] bg-blue-50/40 dark:bg-blue-950/10 border border-blue-100 dark:border-blue-900/30 p-8 space-y-6 print:border-black print:rounded-none">
+                                <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground border-b border-blue-100 dark:border-blue-900/30 pb-4">
+                                    <span>Breakdown</span>
                                     <span>Amount</span>
                                 </div>
 
@@ -120,7 +121,7 @@ export function InvoiceDetailSheet({ id, onClose, tenantId }: InvoiceDetailSheet
                                         </div>
                                     ))}
                                     {invoice.tax && (
-                                        <div className="flex justify-between items-center group/item pt-2 border-t border-dashed border-sky-200 dark:border-sky-800">
+                                        <div className="flex justify-between items-center group/item pt-2 border-t border-dashed border-blue-200 dark:border-blue-800">
                                             <span className="text-sm font-bold text-foreground/60 italic">
                                                 Tax ({invoice.tax.rate}%)
                                             </span>
@@ -131,22 +132,22 @@ export function InvoiceDetailSheet({ id, onClose, tenantId }: InvoiceDetailSheet
                                     )}
                                 </div>
 
-                                <div className="pt-6 border-t-2 border-sky-600 dark:border-sky-400 flex justify-between items-center print:border-black">
-                                    <span className="text-xs font-black uppercase tracking-widest">Total Payable</span>
-                                    <span className="text-2xl font-black text-sky-600 print:text-black">
+                                <div className="pt-6 border-t border-blue-200 dark:border-blue-800 flex justify-between items-center print:border-black">
+                                    <span className="text-xs font-semibold tracking-tight">Total</span>
+                                    <span className="text-2xl font-semibold text-blue-700 print:text-black">
                                         {currencyCode} {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="p-6 rounded-3xl border border-dashed border-border flex items-start gap-4 print:border-solid">
-                                <ShieldCheck className="h-5 w-5 text-sky-600 shrink-0 mt-0.5 print:text-black" />
+                                <ShieldCheck className="h-5 w-5 text-blue-600 shrink-0 mt-0.5 print:text-black" />
                                 <div className="space-y-1">
                                     <p className="text-[11px] leading-relaxed text-muted-foreground font-medium">
                                         Record generated on {new Date(invoice.createdOn).toLocaleDateString()}. Payment is due as per the terms of contract {invoice.lease?.leaseNumber || invoice.leaseNumber}.
                                     </p>
                                     {invoice.notes && (
-                                        <p className="text-[10px] text-sky-600/70 font-bold uppercase tracking-tighter italic">Note: {invoice.notes}</p>
+                                        <p className="text-[11px] text-muted-foreground font-medium italic">Note: {invoice.notes}</p>
                                     )}
                                 </div>
                             </div>
@@ -157,13 +158,13 @@ export function InvoiceDetailSheet({ id, onClose, tenantId }: InvoiceDetailSheet
                 <div className="p-8 border-t border-border/40 bg-background grid grid-cols-2 gap-4 print:hidden">
                     <button
                         onClick={handlePrint}
-                        className="h-14 bg-secondary text-foreground rounded-2xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-secondary/80 transition-all"
+                        className="h-11 bg-secondary text-foreground rounded-xl flex items-center justify-center gap-3 text-xs font-semibold hover:bg-secondary/80 transition-all"
                     >
                         <Printer className="h-4 w-4" />
                         Print / PDF
                     </button>
                     <button
-                        className="h-14 bg-foreground text-background rounded-2xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-sky-600 transition-all"
+                        className="h-11 bg-blue-600 text-white rounded-xl flex items-center justify-center gap-3 text-xs font-semibold hover:bg-blue-700 transition-all"
                     >
                         <Share2 className="h-4 w-4" />
                         Share

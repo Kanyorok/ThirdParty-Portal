@@ -1,5 +1,5 @@
 import { getBaseUrl } from "../api-base"
-import { CreateMaintenanceRequestPayload, MaintenanceRequest } from "@/types/maintenance"
+import { CreateMaintenanceRequestPayload } from "@/types/maintenance"
 
 const request = async (
     url: string,

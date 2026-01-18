@@ -20,13 +20,14 @@ import {
 
 interface InvoicesListProps {
     initialData: PaginatedResponse<any>
+    tenantId?: number
 }
 
-export function InvoicesList({ initialData }: InvoicesListProps) {
+export function InvoicesList({ initialData, tenantId }: InvoicesListProps) {
     const { isPending } = usePagination()
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null)
     const invoices = initialData?.data || []
-    const currentTenantId = 9
+    const currentTenantId = tenantId ?? 9
 
     const getStatusDetails = (status: string) => {
         switch (status) {
@@ -67,28 +68,28 @@ export function InvoicesList({ initialData }: InvoicesListProps) {
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
-                                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                                <th className="px-6 py-4 text-left text-xs font-semibold tracking-wide text-slate-700">
                                     <div className="flex items-center gap-2">
                                         <Hash className="h-3.5 w-3.5" strokeWidth={2} />
                                         Invoice
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                                <th className="px-6 py-4 text-left text-xs font-semibold tracking-wide text-slate-700">
                                     <div className="flex items-center gap-2">
                                         <Wallet className="h-3.5 w-3.5" strokeWidth={2} />
                                         Lease
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                                <th className="px-6 py-4 text-left text-xs font-semibold tracking-wide text-slate-700">
                                     Status
                                 </th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-700">
+                                <th className="px-6 py-4 text-right text-xs font-semibold tracking-wide text-slate-700">
                                     <div className="flex items-center justify-end gap-2">
                                         <Coins className="h-3.5 w-3.5" strokeWidth={2} />
                                         Amount
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-700">
+                                <th className="px-6 py-4 text-right text-xs font-semibold tracking-wide text-slate-700">
                                     Actions
                                 </th>
                             </tr>
@@ -164,14 +165,14 @@ export function InvoicesList({ initialData }: InvoicesListProps) {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => setSelectedInvoiceId(invoice.id)}
-                                                    className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all"
+                                                    className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
                                                 >
                                                     <Eye className="h-4 w-4" strokeWidth={2} />
                                                     <span className="text-xs font-medium">View</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleDownload(invoice.id)}
-                                                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all group/btn"
+                                                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all group/btn"
                                                 >
                                                     <Download className="h-4 w-4 transition-transform group-hover/btn:-translate-y-0.5" strokeWidth={2} />
                                                 </button>

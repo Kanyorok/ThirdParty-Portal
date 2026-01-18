@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import {
     Building2, Search, Inbox, Maximize2, Sparkles,
     MapPin, ArrowUpRight, LayoutGrid, ChevronDown, X
@@ -27,13 +27,13 @@ export function RentablePropertiesList({
     const { isPending } = usePagination()
     const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
-    const properties = initialData?.data ?? []
+    const properties = useMemo(() => initialData?.data ?? [], [initialData])
 
-    const resolveLocation = (locId: number | undefined) => {
+    const resolveLocation = useCallback((locId: number | undefined) => {
         if (!locId) return "Nairobi, KE"
         const found = localities.find(l => l.id === locId)
         return found ? found.name : "Nairobi, KE"
-    }
+    }, [localities])
 
     const filteredProperties = useMemo(() => {
         const query = searchQuery.trim().toLowerCase()
@@ -52,7 +52,7 @@ export function RentablePropertiesList({
                 )
             )
         })
-    }, [properties, searchQuery, statusFilter, localities])
+    }, [properties, searchQuery, statusFilter, resolveLocation])
 
     return (
         <div className="w-full space-y-8 antialiased">

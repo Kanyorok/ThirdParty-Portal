@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Shield, Building2, User, Mail, Phone, MapPin, FileText, Lock, Calendar, Briefcase, Heart, UserPlus } from "lucide-react"
+import { AlertCircle, CheckCircle2, Eye, EyeOff, UserPlus } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Spinner } from "@/components/common/spinner"
 import { Button } from "@/components/common/button"
@@ -40,11 +40,11 @@ export default function RegisterForm() {
     if (isSupplier) fields.push("user_SupplierCategoryId")
     if (isTenant) fields.push("user_Remarks")
 
-    const isValid = await form.trigger(fields)
-    if (isValid) {
-      if (!createUser) {
-        handleSubmit(new Event('submit') as any)
-      } else {
+      const isValid = await form.trigger(fields)
+      if (isValid) {
+        if (!createUser) {
+          handleSubmit(new Event('submit') as any)
+        } else {
         setStep(2)
         window.scrollTo({ top: 0, behavior: "smooth" })
       }
@@ -229,8 +229,38 @@ export default function RegisterForm() {
                   <option value="">Gender...</option>
                   {metadata.genders.map((g: any) => <option key={g.value} value={g.value}>{g.description}</option>)}
                 </select>
-                <Input type={showPassword ? "text" : "password"} {...form.register("user_Password")} placeholder="Password" className={inputStyle} />
-                <Input type={showConfirmPassword ? "text" : "password"} {...form.register("user_Password_confirmation")} placeholder="Confirm" className={inputStyle} />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    {...form.register("user_Password")}
+                    placeholder="Password"
+                    className={cn(inputStyle, "pr-11")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    {...form.register("user_Password_confirmation")}
+                    placeholder="Confirm"
+                    className={cn(inputStyle, "pr-11")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
+                    aria-label={showConfirmPassword ? "Hide password confirmation" : "Show password confirmation"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div className="flex gap-4">
                 <Button type="button" onClick={() => setStep(1)} className="h-14 bg-slate-200 text-slate-700 font-bold rounded-lg">Back</Button>

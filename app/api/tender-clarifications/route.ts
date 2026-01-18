@@ -2,31 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-interface TenderClarification {
-  id: number;
-  tenderId: string;
-  supplierId: number;
-  question: string;
-  questionDate: string;
-  response?: string;
-  responseDate?: string;
-  responseBy?: string;
-  status: 'pending' | 'answered' | 'closed';
-  isPublic: boolean;
-  attachments?: string[];
-  createdBy: string;
-  createdOn: string;
-  modifiedBy?: string;
-  modifiedOn?: string;
-}
-
-interface CreateClarificationRequest {
-  tenderId: string;
-  question: string;
-  isPublic?: boolean;
-  attachments?: string[];
-}
-
 const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
 
 async function getAuthSession() {

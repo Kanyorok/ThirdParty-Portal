@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
@@ -66,7 +66,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
   const [isPublic, setIsPublic] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-  const fetchClarifications = async (showLoadingIndicator = true) => {
+  const fetchClarifications = useCallback(async (showLoadingIndicator = true) => {
     if (showLoadingIndicator) {
       setIsLoading(true);
     }
@@ -80,7 +80,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
           console.error('API Error:', { status: response.status, data: errorData });
-        } catch (e) {
+        } catch {
           console.error('API Error (Parse Fail):', response.status, response.statusText);
           errorMessage = `Failed to fetch: ${response.status} ${response.statusText}`;
         }
@@ -102,7 +102,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
         setIsLoading(false);
       }
     }
-  };
+  }, [tenderId]);
 
   // Auto-refresh clarifications every 30 seconds to check for new responses
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
 
       return () => clearInterval(refreshInterval);
     }
-  }, [tenderId]);
+  }, [tenderId, fetchClarifications]);
 
   // Manual refresh function for button
   const handleRefresh = () => {

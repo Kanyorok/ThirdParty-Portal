@@ -40,7 +40,7 @@ function LayoutToggle<T extends string>({
 }: LayoutToggleProps<T>) {
     return (
         <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{label}</Label>
+            <Label className="text-[11px] font-semibold tracking-tight text-muted-foreground">{label}</Label>
             <ToggleGroup
                 className="w-full justify-start gap-1"
                 size="sm"
@@ -53,7 +53,7 @@ function LayoutToggle<T extends string>({
                 {options.map((opt) => (
                     <ToggleGroupItem
                         key={opt.value}
-                        className="flex-1 text-[10px] font-bold uppercase tracking-tight h-8 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:border-primary/20"
+                        className="flex-1 h-8 text-[11px] font-semibold tracking-tight data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:border-primary/20"
                         value={opt.value}
                         aria-label={opt.aria}
                     >
@@ -98,14 +98,14 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
                 setValueFn(newValue);
                 try {
                     await updateLayoutPreference(key, newValue);
-                    toast.success("SYSTEM PREFERENCE UPDATED", {
-                        description: `${key.replace(/_/g, ' ')} successfully synchronized.`,
-                        className: "font-bold text-[10px] uppercase tracking-wider"
+                    toast.success("Preference updated", {
+                        description: `${key.replace(/_/g, " ").toLowerCase()} saved.`,
+                        className: "text-[12px] font-medium tracking-tight",
                     });
-                } catch (error) {
-                    toast.error("SYNCHRONIZATION ERROR", {
-                        description: "Failed to persist layout state.",
-                        className: "font-bold text-[10px] uppercase tracking-wider"
+                } catch {
+                    toast.error("Update failed", {
+                        description: "Couldn't save your layout preference. Please try again.",
+                        className: "text-[12px] font-medium tracking-tight",
                     });
                 }
             });
@@ -117,26 +117,29 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
         <Popover>
             <PopoverTrigger asChild>
                 <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
-                    className="size-8 rounded-lg border-border/40 bg-background/50 hover:bg-accent"
+                    className="size-9 rounded-xl shadow-none hover:bg-accent/50"
                     aria-label="Open layout settings"
                 >
                     <Settings className={cn("size-3.5 transition-transform duration-500", isPending && "animate-spin text-primary")} />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-[320px] p-0 overflow-hidden border border-border/40 bg-background/95 shadow-none backdrop-blur-xl">
+            <PopoverContent
+                align="end"
+                className="w-[320px] p-0 overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-sm backdrop-blur-xl"
+            >
                 <div className="flex flex-col">
-                    <div className="bg-muted/30 p-4 border-b border-border/40">
-                        <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground">Interface Engine</h4>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mt-1">
-                            Hardware Accelerated Layout Controls
+                    <div className="bg-muted/20 p-4 border-b border-border/40">
+                        <h4 className="text-[13px] font-semibold tracking-tight text-foreground">Layout</h4>
+                        <p className="text-[12px] text-muted-foreground mt-1">
+                            Customize sidebar behavior and content width.
                         </p>
                     </div>
 
                     <div className="p-4 space-y-6">
                         <LayoutToggle<SidebarVariant>
-                            label="Sidebar Architecture"
+                            label="Sidebar style"
                             value={currentVariant}
                             onChange={(value) =>
                                 handleValueChange(LayoutKeys.SIDEBAR_VARIANT, value, setCurrentVariant)
@@ -146,7 +149,7 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
                         />
 
                         <LayoutToggle<SidebarCollapsible>
-                            label="State Behavior"
+                            label="Sidebar collapse"
                             value={currentCollapsible}
                             onChange={(value) =>
                                 handleValueChange(LayoutKeys.SIDEBAR_COLLAPSIBLE, value, setCurrentCollapsible)
@@ -156,7 +159,7 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
                         />
 
                         <LayoutToggle<ContentLayout>
-                            label="Viewport Mapping"
+                            label="Content width"
                             value={currentContentLayout}
                             onChange={(value) =>
                                 handleValueChange(LayoutKeys.CONTENT_LAYOUT, value, setCurrentContentLayout)
@@ -167,7 +170,7 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
                     </div>
 
                     <div className="bg-primary/5 px-4 py-2 border-t border-border/40 flex items-center justify-between">
-                        {isPending && <span className="text-[8px] font-black uppercase tracking-widest text-primary animate-pulse">Syncing...</span>}
+                        {isPending && <span className="text-[11px] font-medium tracking-tight text-primary animate-pulse">Saving…</span>}
                     </div>
                 </div>
             </PopoverContent>

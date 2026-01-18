@@ -1,13 +1,17 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
+import {
+    readActiveProfileFromDocumentCookie,
+    writeActiveProfileCookie,
+} from "@/lib/profile/active-profile-cookie"
 
 export type ProfileType = "base" | "Tenant" | "Supplier" | "Customer"
 
 export const PROFILE_HOME_PATHS: Record<ProfileType, string> = {
     base: "/dashboard",
-    Tenant: "/dashboard/tenant",
-    Supplier: "/dashboard/supplier",
-    Customer: "/dashboard/customer",
+    Tenant: "/dashboard",
+    Supplier: "/dashboard",
+    Customer: "/dashboard",
 }
 
 interface ProfileState {
@@ -23,7 +27,7 @@ interface ProfileState {
 export const useProfileStore = create<ProfileState>()(
     persist(
         (set, get) => ({
-            activeProfile: "base",
+            activeProfile: readActiveProfileFromDocumentCookie() ?? "base",
             availableProfiles: ["base"],
             isHydrated: false,
 
@@ -31,6 +35,7 @@ export const useProfileStore = create<ProfileState>()(
 
             setActiveProfile: (profile) => {
                 set({ activeProfile: profile })
+                writeActiveProfileCookie(profile)
                 return PROFILE_HOME_PATHS[profile] || PROFILE_HOME_PATHS.base
             },
 
@@ -45,15 +50,18 @@ export const useProfileStore = create<ProfileState>()(
                         availableProfiles: ["base"],
                         activeProfile: "base",
                     })
+                    writeActiveProfileCookie("base")
                     return
                 }
 
                 const isCurrentlyValid = profiles.includes(currentActive)
+                const nextActive = isCurrentlyValid ? currentActive : profiles[0]
 
                 set({
                     availableProfiles: profiles,
-                    activeProfile: isCurrentlyValid ? currentActive : profiles[0],
+                    activeProfile: nextActive,
                 })
+                writeActiveProfileCookie(nextActive)
             },
         }),
         {
@@ -61,6 +69,10 @@ export const useProfileStore = create<ProfileState>()(
             storage: createJSONStorage(() => localStorage),
             onRehydrateStorage: () => (state) => {
                 state?.setHydrated()
+                const cookieProfile = readActiveProfileFromDocumentCookie()
+                if (cookieProfile && cookieProfile !== state?.activeProfile) {
+                    state?.setActiveProfile(cookieProfile)
+                }
             },
             partialize: (state) => ({
                 activeProfile: state.activeProfile,

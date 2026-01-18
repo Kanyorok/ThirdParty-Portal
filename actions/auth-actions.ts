@@ -40,7 +40,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
                 message: data.message || "Failed to send reset link.",
             };
         }
-    } catch (error) {
+    } catch {
         return {
             success: false,
             error: "INTERNAL_ERROR",
@@ -102,7 +102,7 @@ export async function resetPassword(token: string, newPassword: string, email: s
             message: data.message || "An unexpected error occurred.",
         };
 
-    } catch (error) {
+    } catch {
         return {
             success: false,
             error: "INTERNAL_ERROR",

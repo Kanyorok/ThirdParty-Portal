@@ -3,7 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { Clock, Command as CmdIcon, Eraser, Search, Sparkles, File, AlertCircle } from "lucide-react"
+import { Clock, Eraser, Search, Sparkles, File, AlertCircle } from "lucide-react"
 
 import {
     CommandDialog,
@@ -35,10 +35,10 @@ type RemoteResult = {
 }
 type GroupedItems = { group: string; items: NavItem[] }
 
-const SEARCH_SHORTCUT = { key: "j", display: "⌘J" } as const
+const SEARCH_SHORTCUT = { key: "j" } as const
 const SEARCH_CONFIG = {
-    placeholder: "SEARCH PAGES, ACTIONS, OR DOCUMENTS...",
-    emptyMessage: "No matching records found.",
+    placeholder: "Search pages, actions, or documents…",
+    emptyMessage: "No matching results.",
     debounceMs: 150,
     recentLimit: 6,
     queryHistoryLimit: 5,
@@ -126,15 +126,15 @@ export const SearchButton = memo(({ onClick, className }: { onClick?: () => void
     <Button
         variant="outline"
         className={cn(
-            "h-9 w-full justify-start gap-3 rounded-full border-border/40 bg-background/50 px-3 text-muted-foreground transition-all hover:bg-accent/50 hover:text-foreground sm:w-64",
+            "h-10 w-full justify-start gap-3 rounded-xl border-border/50 bg-background/50 px-3 text-muted-foreground shadow-none transition-colors hover:bg-accent/50 hover:text-foreground sm:w-72",
             className
         )}
         onClick={onClick}
     >
         <Search className="size-3.5" />
-        <span className="text-[10px] font-black uppercase tracking-widest">Search...</span>
-        <kbd className="ml-auto hidden items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[9px] font-black sm:inline-flex">
-            {SEARCH_SHORTCUT.display}
+        <span className="text-[13px] font-medium tracking-tight">Search</span>
+        <kbd className="ml-auto hidden items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground sm:inline-flex">
+            {typeof navigator !== "undefined" && /mac|iphone|ipad|ipod/i.test(navigator.platform) ? "⌘ J" : "Ctrl J"}
         </kbd>
     </Button>
 ))

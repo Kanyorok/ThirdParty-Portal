@@ -1,7 +1,6 @@
 import { ReactNode, Suspense } from "react"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { Separator } from "@/components/common/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/common/sidebar"
 import { getSidebarVariant, getSidebarCollapsible, getContentLayout } from "@/lib/layout-preferences"
 import { cn } from "@/lib/utils"
@@ -48,21 +47,22 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
                     "peer-data-[variant=inset]:m-2 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:border"
                 )}
             >
-                <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border/40 bg-background/80 px-4 backdrop-blur-md lg:px-6">
+                <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b border-border/40 bg-background/70 px-4 backdrop-blur-xl lg:px-6">
                     <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-1 lg:gap-2">
-                            <SidebarTrigger className="-ml-1 size-8 rounded-lg hover:bg-accent transition-transform active:scale-95" />
-                            <Separator orientation="vertical" className="mx-2 h-4 opacity-50" />
+                        <div className="flex items-center gap-2">
+                            <SidebarTrigger className="-ml-1 size-9 rounded-xl hover:bg-accent transition-transform active:scale-95" />
                             <SearchDialog />
                         </div>
                         <div className="flex items-center gap-2">
-                            <LayoutControls
-                                contentLayout={contentLayout}
-                                variant={sidebarVariant}
-                                collapsible={sidebarCollapsible}
+                            <HeaderActions
+                                layoutControls={(
+                                    <LayoutControls
+                                        contentLayout={contentLayout}
+                                        variant={sidebarVariant}
+                                        collapsible={sidebarCollapsible}
+                                    />
+                                )}
                             />
-                            <Separator orientation="vertical" className="mx-1 h-4 opacity-50" />
-                            <HeaderActions />
                         </div>
                     </div>
                 </header>

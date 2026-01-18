@@ -18,7 +18,7 @@ export default function ThirdPartyDashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const { profile, updateProfile, createProfile, isLoading } = useThirdPartyProfile()
     const { data: countriesData } = useSWR<{ data: CountryOption[] }>("/api/countries", fetcher)
-    const countries = countriesData?.data ?? []
+    const countries = useMemo(() => countriesData?.data ?? [], [countriesData?.data])
 
     const form = useForm<ThirdPartyInputs>({
         defaultValues: profile ?? {}

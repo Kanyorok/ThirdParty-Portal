@@ -25,7 +25,7 @@ export async function updateProfile(values: ProfileFormValues) {
         }
 
         return { success: true, message: "Profile updated successfully" };
-    } catch (error) {
+    } catch {
         return { success: false, message: "Connection error" };
     }
 }

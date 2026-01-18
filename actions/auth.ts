@@ -34,7 +34,7 @@ export async function registerUser(data: any) {
         }
 
         return { success: true, data: body, message: body?.message || "Registration successful" }
-    } catch (error: any) {
+    } catch {
         return {
             success: false,
             error: "Registration failed",

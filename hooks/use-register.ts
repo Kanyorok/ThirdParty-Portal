@@ -94,7 +94,7 @@ export const useRegisterForm = () => {
                 maritalStatuses: lData.MaritalStatus || [],
                 occupations: lData.Occupation || [],
             }))
-        } catch (error) {
+        } catch {
             setMetadataError("Initialization failed. Please refresh.")
         } finally {
             setIsLoadingMetadata(false)

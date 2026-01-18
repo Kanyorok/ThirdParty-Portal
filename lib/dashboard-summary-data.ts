@@ -67,7 +67,7 @@ export async function getDashboardData() {
             summary: { activePreq, directInvites: inviteData.length, tendersAvailable, completedPreq },
             breakdowns: { prequalification: preqBreakdown, invitations: inviteBreakdown }
         };
-    } catch (error) {
+    } catch {
         return null;
     }
 }

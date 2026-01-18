@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
+const devPort = process.env.PORT ?? "3000";
+
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['http://127.0.0.1'],
+  allowedDevOrigins: [`http://127.0.0.1:${devPort}`, `http://localhost:${devPort}`],
   output: "standalone",
   cacheComponents: false,
   experimental: {

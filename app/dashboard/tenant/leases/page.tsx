@@ -7,21 +7,25 @@ import { getLeases } from "@/lib/api/leases"
 import { Skeleton } from "@/components/common/skeleton"
 import { SharedPagination } from "@/components/common/shared-pagination"
 import { PaginationProvider } from "@/components/providers/pagination-provider"
-import { AlertCircle, RefreshCw, Search, FileText, Layers } from "lucide-react"
+import { AlertCircle, RefreshCw, Search, FileText, Layers, Sparkles } from "lucide-react"
 import { Input } from "@/components/common/input"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
+import { useSearchParams } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { resolveTenantIdFromSessionUser } from "@/lib/profile/resolve-tenant-id"
 
 export default function LeaseRegistry() {
     const [searchQuery, setSearchQuery] = useState("")
     const debouncedSearch = useDebounce(searchQuery, 400)
-
-    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : "")
+    const searchParams = useSearchParams()
     const page = Number(searchParams.get("page")) || 1
+    const { data: session } = useSession()
+    const tenantId = resolveTenantIdFromSessionUser(session?.user) ?? 9
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['leases', page, debouncedSearch],
-        queryFn: () => getLeases(page),
+        queryKey: ['leases', page, debouncedSearch, tenantId],
+        queryFn: () => getLeases(page, debouncedSearch, tenantId),
         placeholderData: (previousData) => previousData,
     })
 
@@ -36,10 +40,10 @@ export default function LeaseRegistry() {
             </div>
             <button
                 onClick={() => refetch()}
-                className="px-6 py-2.5 bg-background border border-border rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-secondary transition-all flex items-center gap-3 shadow-sm"
+                className="px-6 py-2.5 bg-background border border-border rounded-xl text-[11px] font-semibold tracking-wide hover:bg-secondary transition-all flex items-center gap-3"
             >
                 <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
-                Force Re-connection
+                Retry connection
             </button>
         </div>
     )
@@ -47,39 +51,42 @@ export default function LeaseRegistry() {
     const hasData = !!data?.data && data.data.length > 0;
 
     return (
-        <div className="space-y-8 max-w-[1600px] mx-auto">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 px-1">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                            <FileText className="h-5 w-5" />
-                        </div>
-                        <h2 className="text-3xl font-blue-400 tracking-tight text-foreground">Lease Registry</h2>
+        <div className="w-full space-y-8 antialiased">
+            <header className="space-y-6">
+                <div className="space-y-2.5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                        <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Lease Registry</span>
                     </div>
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Your Leases</h1>
+                    <p className="text-sm text-slate-600">Manage active contracts and actions in one place.</p>
                 </div>
 
-                <div className="relative w-full lg:w-[400px] group">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    </div>
-                    <Input
-                        placeholder="Search by contract, unit or tenant..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-14 pl-12 pr-12 bg-background border-border/60 focus:border-primary/40 focus:ring-primary/5 rounded-[1.25rem] text-sm font-medium shadow-sm transition-all"
-                    />
-                    <div className="absolute inset-y-0 right-4 flex items-center">
-                        {isFetching ? (
-                            <RefreshCw className="h-4 w-4 animate-spin text-primary" />
-                        ) : (
-                            <Layers className="h-4 w-4 text-muted-foreground/40" />
-                        )}
+                <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="relative flex-1 group">
+                        <Search
+                            className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+                            strokeWidth={2}
+                        />
+                        <Input
+                            placeholder="Search by lease number, property, unit, or date…"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-11 pr-10 h-11 rounded-xl bg-white border border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all text-sm placeholder:text-slate-400"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg flex items-center justify-center">
+                            {isFetching ? (
+                                <RefreshCw className="h-4 w-4 animate-spin text-blue-600" strokeWidth={2} />
+                            ) : (
+                                <Layers className="h-4 w-4 text-slate-300" strokeWidth={2} />
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             {isLoading && !data ? (
-                <div className="rounded-[2rem] border border-border/40 bg-background overflow-hidden shadow-sm">
+                <div className="rounded-[2rem] border border-border/40 bg-background overflow-hidden">
                     <div className="h-16 bg-secondary/20 border-b border-border/40 px-8 flex items-center gap-4">
                         <Skeleton className="h-4 w-32" />
                         <Skeleton className="h-4 w-24" />
@@ -106,7 +113,7 @@ export default function LeaseRegistry() {
                             "transition-all duration-500",
                             isFetching && data ? 'opacity-40 grayscale-[0.5] pointer-events-none translate-y-1' : 'opacity-100 translate-y-0'
                         )}>
-                            <LeasesList initialData={data} />
+                            <LeasesList tenantId={tenantId} initialData={data} />
                         </div>
 
                         {hasData && (

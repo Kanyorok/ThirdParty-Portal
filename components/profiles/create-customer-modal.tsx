@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
 import { User, Loader2 } from "lucide-react"
@@ -34,8 +34,8 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
     register,
     handleSubmit,
     formState: { errors },
+    control,
     setValue,
-    watch,
   } = useForm<CustomerFormData>({
     resolver: zodResolver(customerProfileSchema),
     defaultValues: {
@@ -54,6 +54,8 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
       onSuccess?.()
     }
   }
+
+  const countryIdValue = useWatch({ control, name: "country_id" })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -131,7 +133,7 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
                 <Label htmlFor="country_id">Country *</Label>
                 <Select
                   onValueChange={(v) => setValue("country_id", parseInt(v))}
-                  defaultValue={watch("country_id")?.toString()}
+                  defaultValue={countryIdValue?.toString()}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />

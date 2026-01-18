@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -49,7 +49,7 @@ export default function TendersFilter() {
 
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-    const fetchTenders = async (signal?: AbortSignal) => {
+    const fetchTenders = useCallback(async (signal?: AbortSignal) => {
         try {
             setIsSearching(true);
             setError(null);
@@ -80,13 +80,13 @@ export default function TendersFilter() {
         } finally {
             setIsSearching(false);
         }
-    };
+    }, [debouncedSearchTerm, status]);
 
     useEffect(() => {
         const controller = new AbortController();
         fetchTenders(controller.signal);
         return () => controller.abort();
-    }, [debouncedSearchTerm, status]);
+    }, [fetchTenders]);
 
     const handleOpenTender = (tender: any) => {
         setSelectedTender(tender);

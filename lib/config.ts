@@ -11,16 +11,6 @@ interface Config {
   isProduction: boolean;
 }
 
-function validateEnvVar(name: string, value: string | undefined): string {
-  if (!value) {
-    throw new Error(
-      `Missing required environment variable: ${name}\n` +
-      `Please add it to your .env.local file.`
-    );
-  }
-  return value;
-}
-
 function getConfig(): Config {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
   const nextAuthSecret = process.env.NEXTAUTH_SECRET || "";

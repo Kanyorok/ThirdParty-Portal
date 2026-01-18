@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import useSWR from "swr"
 import { useSession } from "next-auth/react"
 import { MaintenanceList } from "@/components/dashboard/maintenance/maintenance-listing"
@@ -8,10 +8,11 @@ import { MaintenanceRequestSheet } from "@/components/dashboard/maintenance/main
 import { PaginationProvider } from "@/components/providers/pagination-provider"
 import { SharedPagination } from "@/components/common/shared-pagination"
 import { Input } from "@/components/common/input"
-import { Search, Hammer, Filter, SlidersHorizontal, AlertCircle } from "lucide-react"
+import { AlertCircle, Hammer, Layers, RefreshCw, Search, Sparkles } from "lucide-react"
 import { Button } from "@/components/common/button"
 import { maintenanceService } from "@/lib/api/maintenance"
 import { useSearchParams } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 export default function MaintenancePage() {
     const { data: session } = useSession()
@@ -19,6 +20,8 @@ export default function MaintenancePage() {
     const searchParams = useSearchParams()
     const page = parseInt(searchParams.get("page") || "1")
     const [searchQuery, setSearchQuery] = useState("")
+    const [statusFilter, setStatusFilter] = useState<string | null>(null)
+    const [priorityFilter, setPriorityFilter] = useState<string | null>(null)
 
     const { data, error, isLoading, mutate } = useSWR(
         accessToken ? [`/api/property/maintenancerequest`, accessToken, page, searchQuery] : null,
@@ -28,51 +31,99 @@ export default function MaintenancePage() {
         }
     )
 
-    return (
-        <div className="w-full space-y-8">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 pb-8">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-200">
-                            <Hammer className="h-5 w-5 text-white" />
-                        </div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Maintenance</h1>
-                    </div>
-                    <p className="text-[13px] text-slate-500 font-medium pl-[52px]">
-                        Track and manage service requests for your units
-                    </p>
-                </div>
+    const filteredData = useMemo(() => {
+        if (!data?.data) return data
+        if (!statusFilter && !priorityFilter) return data
 
-                <div className="flex items-center gap-3">
+        const next = data.data.filter((r: any) => {
+            const okStatus = !statusFilter || String(r.status) === statusFilter
+            const okPriority = !priorityFilter || String(r.priority) === priorityFilter
+            return okStatus && okPriority
+        })
+
+        return { ...data, data: next }
+    }, [data, statusFilter, priorityFilter])
+
+    return (
+        <div className="w-full space-y-8 antialiased">
+            <header className="space-y-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <div className="space-y-2.5">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                            <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Maintenance</span>
+                        </div>
+                        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Service requests</h1>
+                        <p className="text-sm text-slate-600">Create tickets, track progress, and keep your unit running smoothly.</p>
+                    </div>
+
                     <MaintenanceRequestSheet onSuccess={() => mutate()}>
-                        <Button className="rounded-xl h-10 px-4 font-bold uppercase tracking-tight text-[11px] bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm">
-                            New Request
+                        <Button className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 text-xs font-semibold transition-colors shadow-none">
+                            <Hammer className="h-4 w-4 mr-2" />
+                            New request
                         </Button>
                     </MaintenanceRequestSheet>
                 </div>
-            </header>
 
-            <div className="flex flex-col md:flex-row gap-3">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                        placeholder="Search by ticket number, issue or property..."
-                        className="pl-10 h-11 rounded-xl bg-white border-slate-200 text-sm focus:ring-1 focus:ring-blue-500 transition-all shadow-sm"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                <div className="flex flex-col xl:flex-row gap-4">
+                    <div className="relative flex-1 group">
+                        <Search
+                            className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+                            strokeWidth={2}
+                        />
+                        <Input
+                            placeholder="Search by ticket number, issue, or property…"
+                            className="w-full pl-11 pr-10 h-11 rounded-xl bg-white border border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all text-sm placeholder:text-slate-400"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg flex items-center justify-center">
+                            {isLoading ? (
+                                <RefreshCw className="h-4 w-4 animate-spin text-blue-600" strokeWidth={2} />
+                            ) : (
+                                <Layers className="h-4 w-4 text-slate-300" strokeWidth={2} />
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                            {["All", "Open", "In Progress", "Resolved"].map((label) => (
+                                <button
+                                    key={label}
+                                    type="button"
+                                    onClick={() => setStatusFilter(label === "All" ? null : label)}
+                                    className={cn(
+                                        "flex-1 px-4 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+                                        (statusFilter === label || (label === "All" && !statusFilter))
+                                            ? "bg-white text-slate-900"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                                    )}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                            {["All", "Low", "Medium", "High"].map((label) => (
+                                <button
+                                    key={label}
+                                    type="button"
+                                    onClick={() => setPriorityFilter(label === "All" ? null : label)}
+                                    className={cn(
+                                        "flex-1 px-4 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+                                        (priorityFilter === label || (label === "All" && !priorityFilter))
+                                            ? "bg-white text-slate-900"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                                    )}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" className="h-11 px-4 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-600 shadow-sm">
-                        <Filter className="h-3.5 w-3.5 mr-2 text-slate-400" />
-                        Status
-                    </Button>
-                    <Button variant="outline" className="h-11 px-4 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-600 shadow-sm">
-                        <SlidersHorizontal className="h-3.5 w-3.5 mr-2 text-slate-400" />
-                        Priority
-                    </Button>
-                </div>
-            </div>
+            </header>
 
             {error ? (
                 <div className="h-64 flex flex-col items-center justify-center rounded-2xl border border-rose-100 bg-rose-50/30 text-rose-600 p-6 text-center">
@@ -90,7 +141,7 @@ export default function MaintenancePage() {
             ) : (
                 <PaginationProvider meta={data?.meta || { current_page: 1, last_page: 1, total: 0, links: [], per_page: 10, from: 0, to: 0 }}>
                     <div className="space-y-6">
-                        <MaintenanceList initialData={data} isLoading={isLoading} />
+                        <MaintenanceList initialData={filteredData} isLoading={isLoading} />
                         {!isLoading && data?.data?.length > 0 && (
                             <div className="pt-2 border-t border-slate-100">
                                 <SharedPagination />

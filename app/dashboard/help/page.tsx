@@ -35,7 +35,7 @@ export default function HelpPage() {
       } else {
         setSent('Failed to send')
       }
-    } catch (err) {
+    } catch {
       setSent('Network error')
     } finally {
       setSending(false)

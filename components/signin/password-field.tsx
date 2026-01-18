@@ -1,7 +1,7 @@
 import React from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Eye, EyeOff, AlertCircle, CheckCircle, Check, X } from "lucide-react"
+import { Eye, EyeOff, AlertCircle, Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface PasswordFieldProps {

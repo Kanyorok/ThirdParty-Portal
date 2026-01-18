@@ -1,7 +1,7 @@
-import { TenantDashboard } from "@/components/dashboard/tenant-dashboard/home";
+import { redirect } from "next/navigation"
 
-export default function TenantDashboardPage() {
-    return (
-        <TenantDashboard />
-    )
+export const dynamic = "force-dynamic"
+
+export default async function TenantDashboardPage() {
+    redirect("/dashboard?profile=Tenant")
 }

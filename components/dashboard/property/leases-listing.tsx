@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/common/sheet"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
+import { motion } from "framer-motion"
 import {
     RotateCw,
     XOctagon,
@@ -39,7 +40,7 @@ export function LeasesList({ tenantId, initialData: _initialData }: { tenantId?:
         return (
             <div className="flex flex-col items-center justify-center py-32">
                 <div className="relative">
-                    <div className="h-12 w-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin" />
+                    <div className="h-12 w-12 border-4 border-primary/15 border-t-primary rounded-full animate-spin" />
                 </div>
                 <Loading />
             </div>
@@ -48,12 +49,12 @@ export function LeasesList({ tenantId, initialData: _initialData }: { tenantId?:
 
     if (leases.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-24 px-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/40">
-                <div className="h-20 w-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-6">
-                    <Building2 className="h-9 w-9 text-slate-300" strokeWidth={1.5} />
+            <div className="flex flex-col items-center justify-center py-24 px-6 rounded-2xl border border-dashed border-border bg-muted/20">
+                <div className="h-20 w-20 rounded-2xl bg-background border border-border flex items-center justify-center mb-6">
+                    <Building2 className="h-9 w-9 text-muted-foreground/30" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-1.5">No Active Leases</h3>
-                <p className="text-sm text-slate-600 max-w-[300px] text-center leading-relaxed">
+                <h3 className="text-lg font-semibold text-foreground mb-1.5">No leases yet</h3>
+                <p className="text-sm text-muted-foreground max-w-[320px] text-center leading-relaxed">
                     Lease agreements will appear here once they're finalized and activated.
                 </p>
             </div>
@@ -62,16 +63,71 @@ export function LeasesList({ tenantId, initialData: _initialData }: { tenantId?:
 
     return (
         <div className="w-full space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+            <div className="md:hidden rounded-xl border border-border/60 overflow-hidden bg-background">
+                <div className="divide-y divide-border/60">
+                    {leases.map((lease: any) => (
+                        <motion.button
+                            key={lease.id}
+                            type="button"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            onClick={() => setSelectedLease(lease)}
+                            className="w-full px-4 py-4 text-left hover:bg-accent/30 transition-colors"
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                        <p className="text-sm font-semibold text-foreground truncate">{lease.leaseNumber}</p>
+                                    </div>
+                                    <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                                        <MapPin className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+                                        <span className="truncate">{lease.property?.name}</span>
+                                    </div>
+                                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                        <span className="rounded-md border border-border/60 bg-muted/30 px-2 py-1">
+                                            {lease.unit?.code}
+                                        </span>
+                                        <span className="truncate">{lease.block?.name} • {lease.floor?.label}</span>
+                                    </div>
+                                </div>
+                                <div className="shrink-0 text-right space-y-2">
+                                    <Badge
+                                        className={cn(
+                                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border",
+                                            lease.isActive
+                                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
+                                                : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                                        )}
+                                    >
+                                        <span className={cn("h-1.5 w-1.5 rounded-full", lease.isActive ? "bg-emerald-500" : "bg-amber-500")} />
+                                        {lease.isActive ? "Active" : "Pending"}
+                                    </Badge>
+                                    <div className="text-sm font-semibold text-foreground tabular-nums">
+                                        {lease.financials?.currency || "KES"} {lease.financials?.monthlyRent?.toLocaleString()}
+                                    </div>
+                                    <div className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                        <Calendar className="h-3.5 w-3.5" strokeWidth={2} />
+                                        <span className="truncate">{lease.dates?.start} – {lease.dates?.end}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="hidden md:block rounded-xl border border-border/60 bg-background overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Lease Details</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Unit / Asset</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Financials</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wide text-center">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wide">Actions</th>
+                            <tr className="border-b border-border/60 bg-muted/30">
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide">Lease</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide">Unit</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide">Rent</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide text-center">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 tracking-wide">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -99,7 +155,7 @@ export function LeasesList({ tenantId, initialData: _initialData }: { tenantId?:
                                                 <Layers className="h-5 w-5 text-blue-600" strokeWidth={2} />
                                             </div>
                                             <div>
-                                                <div className="font-semibold text-sm text-slate-900 uppercase tracking-tight">
+                                                <div className="font-semibold text-sm text-slate-900 tracking-tight">
                                                     {lease.unit?.code}
                                                 </div>
                                                 <div className="text-xs text-slate-600 mt-0.5">

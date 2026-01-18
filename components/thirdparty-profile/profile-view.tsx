@@ -56,7 +56,7 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
     try {
       await refetch?.()
       toast.success("Identity refreshed")
-    } catch (err) {
+    } catch {
       toast.error("Sync failed")
     } finally {
       setIsRefreshing(false)
