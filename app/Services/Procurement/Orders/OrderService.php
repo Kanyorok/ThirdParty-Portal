@@ -245,6 +245,7 @@ class OrderService
                 $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
                     ->where('t_CodeDetails.CodeID', '=', 'PaymentTerm');
             })
+            ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Orders.BranchID', '=', 't_Branches.Id') // Added Join
             ->where('t_Orders.Id', '=', $id)
             ->select(DB::raw('
                 t_Orders.Id,
@@ -255,6 +256,7 @@ class OrderService
                 t_Orders.CreatedOn,
                 t_Users.Name as CreatedBy,
                 t_Orders.BranchID,
+                CASE WHEN t_Orders.BranchID = 0 THEN \'Head Office\' ELSE t_Branches.Name END as BranchName,
                 SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
                 COUNT(t_OrderLines.Id) as ordercount,
                 t_Orders.AccountID,
@@ -276,6 +278,7 @@ class OrderService
                 't_Orders.CreatedOn',
                 't_Users.Name',
                 't_Orders.BranchID',
+                't_Branches.Name', // Added GroupBy
                 't_Orders.AccountID',
                 't_Orders.OrdTotExcl',
                 't_Orders.OrdTotIncl',
@@ -350,7 +353,7 @@ class OrderService
             ->join('t_Orders as o', 'o.Id', '=', 'ol.iOrderID')
             ->where('o.SourceType', $sourceType)
             ->where('o.SourceId', $sourceId)
-            ->where('o.DocStatus', 'a') 
+            ->whereNotIn('o.DocStatus', ['r', 'c', 'Re', 'Ca']) // Exclude Rejected/Cancelled. Include 'a'(Approved), 's'(Submitted), 'p'(Pending)
             ->groupBy('ol.iStockCodeID')
             ->select('ol.iStockCodeID as ItemCode', DB::raw('SUM(ol.fQuantity) as total_qty'))
             ->get()
@@ -367,10 +370,9 @@ class OrderService
         $orderedQuantities = $this->getOrderedQuantities($sourceType, $sourceId);
         
         // 2. Get original source quantities based on type
-        $originalItems = [];
+        $originalItems = collect([]);
         
         if ($sourceType === 'RFQ') {
-             // Assuming RFQService logic or direct DB
              $originalItems = DB::table('t_RFQLines')
                 ->where('RFQId', $sourceId)
                 ->select('ItemId as itemCode', 'Quantity')
@@ -384,17 +386,50 @@ class OrderService
         } elseif ($sourceType === 'CONTRACT') {
              $contract = DB::table('t_TenderAwards')->where('Id', $sourceId)->first();
              if ($contract && $contract->TenderID) {
-                 return $this->isSourceExhausted('TENDER', $contract->TenderID);
+                 // Check aggregated usage (Tender + Contract)
+                 $originalItems = DB::table('t_TenderItems as ti')
+                    ->join('t_Items as i', 'ti.ItemID', '=', 'i.Id')
+                    ->where('ti.TenderID', $contract->TenderID)
+                    ->select('i.Id as itemCode', 'ti.QtyToTender as Quantity')
+                    ->get();
+
+                 $orderedTender = $this->getOrderedQuantities('TENDER', $contract->TenderID);
+                 $orderedContract = $this->getOrderedQuantities('CONTRACT', $sourceId);
+
+                 // Merge used quantities
+                 $orderedQuantities = [];
+                 foreach ($orderedTender as $code => $qty) {
+                     $orderedQuantities[$code] = $qty;
+                 }
+                 foreach ($orderedContract as $code => $qty) {
+                     $orderedQuantities[$code] = ($orderedQuantities[$code] ?? 0) + $qty;
+                 }
+             } else {
+                 return false;
              }
-             $rfqContract = DB::table('t_RFQAward')->where('Id', $sourceId)->first();
-             if ($rfqContract && $rfqContract->RFQId) {
-                  return $this->isSourceExhausted('RFQ', $rfqContract->RFQId);
-             }
-             return false; 
 
         } elseif ($sourceType === 'CONTRACT-RFQ') {
              $rfqContract = DB::table('t_RFQAward')->where('Id', $sourceId)->first();
-             return $rfqContract ? $this->isSourceExhausted('RFQ', $rfqContract->RFQId) : false;
+             if ($rfqContract && $rfqContract->RFQId) {
+                 $originalItems = DB::table('t_RFQLines')
+                    ->where('RFQId', $rfqContract->RFQId)
+                    ->select('ItemId as itemCode', 'Quantity')
+                    ->get();
+                 
+                 $orderedRFQ = $this->getOrderedQuantities('RFQ', $rfqContract->RFQId);
+                 $orderedContract = $this->getOrderedQuantities('CONTRACT-RFQ', $sourceId);
+                 
+                  // Merge used quantities
+                 $orderedQuantities = [];
+                 foreach ($orderedRFQ as $code => $qty) {
+                     $orderedQuantities[$code] = $qty;
+                 }
+                 foreach ($orderedContract as $code => $qty) {
+                     $orderedQuantities[$code] = ($orderedQuantities[$code] ?? 0) + $qty;
+                 }
+             } else {
+                 return false;
+             }
 
         } elseif ($sourceType === 'PLAN') { 
              $directMethod = DB::table('t_CodeDetails')

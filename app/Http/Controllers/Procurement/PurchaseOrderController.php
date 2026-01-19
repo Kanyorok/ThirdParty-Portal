@@ -12,7 +12,7 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\Order;
 
-use App\Services\Workflow\ApprovalWorkflow;  // Changed from PurchaseOrderWorkflowService
+use App\Services\Workflow\ApprovalWorkflow;  
 use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Orders\OrderService;
@@ -269,6 +269,49 @@ class PurchaseOrderController extends Controller
             $taxes = $validated['tax'] ?? [];
             $firstTaxId = $taxes[0] ?? null;
             if ($firstTaxId === '' || $firstTaxId === '0' || $firstTaxId === 0) $firstTaxId = null;
+
+            // Validate Quantity against Source
+            if ($request->has('SourceType') && $request->has('SourceId')) {
+                $sourceType = $request->input('SourceType');
+                $sourceId = $request->input('SourceId');
+                
+                $availableItems = collect();
+                
+                try {
+                    if ($sourceType === 'CONTRACT') {
+                        $availableItems = $this->orderSourceService->getContractItems($sourceId, 'tender');
+                    } elseif ($sourceType === 'CONTRACT-RFQ') {
+                        $availableItems = $this->orderSourceService->getContractItems($sourceId, 'rfq');
+                    } elseif ($sourceType === 'RFQ') {
+                        $availableItems = $this->orderSourceService->getRFQItems($sourceId);
+                    } elseif ($sourceType === 'TENDER') {
+                         $availableItems = $this->orderSourceService->getTenderItems($sourceId);
+                    } elseif ($sourceType === 'PLAN') {
+                         $availableItems = $this->orderSourceService->getDirectPlanItems($sourceId);
+                    }
+
+                    if ($availableItems->isNotEmpty()) {
+                         $availableMap = $availableItems->pluck('quantity', 'itemCode')->toArray();
+                         $itemMaps = $availableItems->pluck('itemName', 'itemCode')->toArray(); // For error message
+
+                         $reqItemCodes = $validated['itemCode'];
+                         $reqQuantities = $validated['quantity'];
+
+                         foreach ($reqItemCodes as $idx => $code) {
+                             $qty = $reqQuantities[$idx];
+                             if (isset($availableMap[$code])) {
+                                 $remaining = $availableMap[$code];
+                                 if ($qty > $remaining) {
+                                     $name = $itemMaps[$code] ?? $code;
+                                     return back()->withInput()->with('error', "Quantity for item '{$name}' exceeds remaining quantity. Available: {$remaining}, Requested: {$qty}");
+                                 }
+                             }
+                         }
+                    }
+                } catch (\Exception $e) {
+                     Log::warning('Source quantity validation skipped due to error', ['error' => $e->getMessage()]);
+                }
+            }
 
             // Create the PO header using OrderService
             $poResult = $this->orderService->addPO(
