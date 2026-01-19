@@ -90,7 +90,7 @@ export function NotificationsCenter() {
           ) : visibleItems.length === 0 ? (
             <div className="p-10 text-center">
               <div className="text-sm font-semibold text-foreground">Nothing here yet</div>
-              <div className="mt-1 text-[12px] text-muted-foreground">You’re all caught up.</div>
+              <div className="mt-1 text-[12px] text-muted-foreground">You're all caught up.</div>
             </div>
           ) : (
             <div>

@@ -14,7 +14,7 @@ declare module "next-auth" {
       approval_status?: string
       profile?: unknown
 
-      // Common camelCase aliases used in the app
+      // Common camelCase aliases
       thirdPartyId?: number | null
       approvalStatus?: string
       isSupplier?: boolean
@@ -55,7 +55,7 @@ declare module "next-auth/jwt" {
     accessToken?: string
     profile?: unknown
 
-    // Common camelCase aliases used in the app
+    // Common camelCase aliases 
     thirdPartyId?: number | null
     approvalStatus?: string
     isSupplier?: boolean

@@ -3,10 +3,11 @@ import {
     LayoutDashboard, Receipt, FileText,
     ClipboardList, FolderOpen, ShieldCheck, Home, BookOpen,
     Settings, HelpCircle, Send,
-    Construction
+    Construction,
+    LandPlot
 } from "lucide-react"
 
-const allProfiles: readonly UserProfile[] = ["base", "Supplier", "Tenant", "Customer"]
+const allProfiles: readonly UserProfile[] = ["Supplier", "Tenant", "Customer"]
 
 function withProfiles(
     item: Omit<NavMainItem, 'allowedProfiles'> & { allowedProfiles?: readonly UserProfile[] },
@@ -43,6 +44,7 @@ export const sidebarItems: readonly NavSection[] = [
             withProfiles({ title: "Prequalification", url: "/dashboard/procurement/rounds", icon: ShieldCheck, description: "Compliance & onboarding" }, ["Supplier"]),
             withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
             withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText, description: "Explore available tenders" }, ["Supplier"]),
+            withProfiles({ title: "Purchase Orders", url: "/dashboard/supplier/purchase_order", icon: Receipt, description: "Purchase Orders" }, ["Supplier"]),
             withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderOpen, description: "Contracts, files & uploads" }, ["Supplier"]),
         ],
     },
@@ -51,7 +53,7 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Property Management",
         allowedProfiles: ["Tenant"],
         items: [
-            withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: Home, description: "Units, availability & listings" }, ["Tenant"]),
+            withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: LandPlot, description: "Units, availability & listings" }, ["Tenant"]),
             withProfiles({ title: "Leases", url: "/dashboard/tenant/leases", icon: BookOpen, description: "Lease terms & renewals" }, ["Tenant"]),
             withProfiles({ title: "Invoices", url: "/dashboard/tenant/invoices", icon: Receipt, description: "Billing history & payments" }, ["Tenant"]),
             withProfiles({ title: "Maintenance", url: "/dashboard/tenant/maintenance", icon: Construction, description: "Requests & work orders" }, ["Tenant"])

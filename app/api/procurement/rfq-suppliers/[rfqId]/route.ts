@@ -1,51 +1,59 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
 
 export async function GET(request: NextRequest) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.accessToken) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    const session = await getServerSession(authOptions)
+
+    if (!session?.accessToken) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
-    const url = new URL(request.url);
-    // Extract the RFQ ID from the last non-empty path segment
-    const parts = url.pathname.split("/").filter(Boolean);
-    const rfqId = parts[parts.length - 1];
+
+    const segments = request.nextUrl.pathname.split("/").filter(Boolean)
+    const rfqId = segments.at(-1)
+
     if (!rfqId || !/^\d+$/.test(rfqId)) {
-        return NextResponse.json({ message: "Invalid RFQ id" }, { status: 400 });
+        return NextResponse.json({ message: "Invalid RFQ id" }, { status: 400 })
     }
-    const search = request.nextUrl.searchParams.toString();
-    const targetUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/procurement/rfq-suppliers/${encodeURIComponent(rfqId)}${search ? `?${search}` : ""}`;
+
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
+    if (!apiBase) {
+        return NextResponse.json({ message: "API not configured" }, { status: 500 })
+    }
+
+    const query = request.nextUrl.searchParams.toString()
+    const targetUrl = `${apiBase}/api/procurement/rfq-suppliers/${rfqId}${query ? `?${query}` : ""}`
 
     try {
         const res = await fetch(targetUrl, {
-            method: "GET",
             headers: {
                 Accept: "application/json",
                 Authorization: `Bearer ${session.accessToken}`,
             },
             cache: "no-store",
-        });
+        })
 
-        const bodyText = await res.text();
-        const contentType = res.headers.get("content-type") || "";
-        type JsonData = Record<string, unknown>;
-        const data: JsonData | string = contentType.includes("application/json")
-            ? (JSON.parse(bodyText || "{}") as JsonData)
-            : bodyText;
+        const contentType = res.headers.get("content-type") ?? ""
+        const payload = contentType.includes("application/json")
+            ? await res.json()
+            : await res.text()
 
         if (!res.ok) {
-            const obj = typeof data === "string" ? {} : data;
-            const message = (obj["message"] as string) || "Failed to fetch RFQ invitation";
-            const errors = obj["errors"];
-            return NextResponse.json({ message, errors }, { status: res.status });
+            return NextResponse.json(
+                {
+                    message: (payload as any)?.message ?? "Failed to fetch RFQ invitation",
+                    errors: (payload as any)?.errors,
+                },
+                { status: res.status }
+            )
         }
 
-        return NextResponse.json(data);
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Unknown error";
-        return NextResponse.json({ message: "Internal server error", error: message }, { status: 500 });
+        return NextResponse.json(payload)
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error"
+        return NextResponse.json(
+            { message: "Upstream request failed", error: message },
+            { status: 502 }
+        )
     }
 }
-
-

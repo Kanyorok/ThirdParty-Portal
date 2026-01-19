@@ -123,6 +123,6 @@ export async function getCurrentUser(): Promise<ProfileResponse> {
     return apiClient.post<ProfileResponse>('/api/v1/portal/auth/me', {})
 }
 
-export async function getOpenRounds(): Promise<ApiResponse<PrequalificationRound[]>> {
-    return apiClient.get<ApiResponse<PrequalificationRound[]>>('/api/v1/portal/auth/prequalification/rounds/open')
-}
+// export async function getOpenRounds(): Promise<ApiResponse<PrequalificationRound[]>> {
+//     return apiClient.get<ApiResponse<PrequalificationRound[]>>('/api/v1/portal/auth/prequalification/rounds/open')
+// }

@@ -15,6 +15,13 @@ import { toast } from "sonner"
 import { Round } from "@/types/types"
 import { cn } from "@/lib/utils"
 
+type Column = {
+    key: string
+    label: string
+    align?: "left" | "right"
+    render: (round: Round) => React.ReactNode
+}
+
 function formatDateRange(start: string, end: string) {
     return (
         <div className="flex flex-col gap-0.5">
@@ -49,16 +56,16 @@ export default function RoundsTable({
     const [appliedRoundIds, setAppliedRoundIds] = useState<Set<string>>(new Set())
     const [hideApplied, setHideApplied] = useState(false)
 
-    const columns = useMemo(
+    const columns: Column[] = useMemo(
         () => [
             {
                 key: "title",
                 label: "Round Details",
-                render: (r: Round) => (
+                render: (r) => (
                     <div className="flex flex-col gap-1">
                         <span className="text-xs font-black uppercase tracking-tight leading-tight">{r.title}</span>
                         <div className="flex items-center gap-2">
-                            <StatusBadge status={typeof r.status === 'object' ? (r.status.value as any) : (r.status as any)} />
+                            <StatusBadge status={typeof r.status === "object" ? (r.status.value as any) : (r.status as any)} />
                         </div>
                     </div>
                 ),
@@ -66,30 +73,30 @@ export default function RoundsTable({
             {
                 key: "window",
                 label: "Timeline",
-                render: (r: Round) => formatDateRange(r.startDate, r.endDate),
+                render: (r) => formatDateRange(r.startDate, r.endDate),
             },
             {
-                key: 'categories',
-                label: 'Status/Progress',
-                render: (r: Round) => <CategoryApplications round={r} className="justify-start scale-90 origin-left" />
+                key: "categories",
+                label: "Status/Progress",
+                render: (r) => <CategoryApplications round={r} className="justify-start scale-90 origin-left" />,
             },
             {
                 key: "actions",
                 label: "Action",
-                align: "right" as const,
-                render: (r: Round) => {
-                    const appliedCategories = r.categories?.filter(cat => cat.has_applied) || [];
-                    const hasAnyApplication = appliedCategories.length > 0 || appliedRoundIds.has(r.id);
-                    const supplierEligible = r.supplierEligible === false ? false : (r.supplierEligible ?? true);
-                    const isClosed = Boolean(r.isClosed);
-                    const isExpired = Boolean(r.isExpired);
-                    const windowOpen = r.windowOpen !== undefined ? Boolean(r.windowOpen) : true;
-                    const isFutureWindow = Boolean(r.isFutureWindow);
-                    const duplicateWithinRange = Boolean(r.duplicateWithinRange);
-                    const availableCategories = r.categories?.filter(cat => !cat.has_applied) || [];
-                    const canApplyToMore = availableCategories.length > 0;
-                    const backendCanApply = r.canApply !== undefined ? Boolean(r.canApply) : undefined;
-                    const effectiveCanApply = backendCanApply !== undefined ? backendCanApply : true;
+                align: "right",
+                render: (r) => {
+                    const appliedCategories = r.categories?.filter(cat => cat.has_applied) || []
+                    const hasAnyApplication = appliedCategories.length > 0 || appliedRoundIds.has(r.id)
+                    const supplierEligible = r.supplierEligible === false ? false : (r.supplierEligible ?? true)
+                    const isClosed = Boolean(r.isClosed)
+                    const isExpired = Boolean(r.isExpired)
+                    const windowOpen = r.windowOpen !== undefined ? Boolean(r.windowOpen) : true
+                    const isFutureWindow = Boolean(r.isFutureWindow)
+                    const duplicateWithinRange = Boolean(r.duplicateWithinRange)
+                    const availableCategories = r.categories?.filter(cat => !cat.has_applied) || []
+                    const canApplyToMore = availableCategories.length > 0
+                    const backendCanApply = r.canApply !== undefined ? Boolean(r.canApply) : undefined
+                    const effectiveCanApply = backendCanApply !== undefined ? backendCanApply : true
 
                     if (!supplierEligible) {
                         return (
@@ -104,7 +111,7 @@ export default function RoundsTable({
                         return (
                             <div className="flex items-center justify-end gap-1.5 text-[10px] font-black uppercase text-muted-foreground/40">
                                 <Lock className="h-3 w-3" />
-                                <span>{isExpired ? 'Expired' : isClosed ? 'Closed' : 'Locked'}</span>
+                                <span>{isExpired ? "Expired" : isClosed ? "Closed" : "Locked"}</span>
                             </div>
                         )
                     }
@@ -128,7 +135,7 @@ export default function RoundsTable({
                             )}
                             onClick={() => {
                                 if (!accessToken) {
-                                    toast.error('Sign in required')
+                                    toast.error("Sign in required")
                                     return
                                 }
                                 setOpenRoundId(r.id)
@@ -163,12 +170,15 @@ export default function RoundsTable({
             <Table>
                 <TableHeader className="bg-muted/10">
                     <TableRow className="hover:bg-transparent border-none">
-                        {columns.map((c) => (
-                            <TableHead key={c.key} className={cn(
-                                "h-10 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-6",
-                                c.align === "right" && "text-right"
-                            )}>
-                                {c.label}
+                        {columns.map((col) => (
+                            <TableHead
+                                key={col.key}
+                                className={cn(
+                                    "h-10 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-6",
+                                    col.align === "right" && "text-right"
+                                )}
+                            >
+                                {col.label}
                             </TableHead>
                         ))}
                     </TableRow>
@@ -176,12 +186,12 @@ export default function RoundsTable({
                 <TableBody>
                     {visibleRounds.map((r) => (
                         <TableRow key={r.id} className="group border-muted/40 hover:bg-muted/5 transition-colors">
-                            {columns.map((c) => (
-                                <TableCell key={c.key} className={cn(
-                                    "py-4 px-6",
-                                    c.align === "right" && "text-right"
-                                )}>
-                                    {c.render(r)}
+                            {columns.map((col) => (
+                                <TableCell
+                                    key={col.key}
+                                    className={cn("py-4 px-6", col.align === "right" && "text-right")}
+                                >
+                                    {col.render(r)}
                                 </TableCell>
                             ))}
                         </TableRow>

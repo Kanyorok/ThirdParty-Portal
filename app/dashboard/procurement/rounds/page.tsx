@@ -1,17 +1,40 @@
-import { getOpenRounds } from "@/lib/api";
-import { RoundsListClient } from "./rounds-list-client";
+import RoundsView from "@/components/prequalification/rounds-view"
 
-export default async function RoundsPage() {
-    const response = await getOpenRounds();
+export const metadata = {
+    title: "Prequalification Rounds",
+    description:
+        "Discover, track, and manage active and past prequalification rounds with clarity and confidence.",
+}
+
+export default async function Page({
+    searchParams,
+}: {
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+    const resolvedSearchParams = await searchParams
+
+    const normalizedParams: Record<string, string | undefined> = Object.fromEntries(
+        Object.entries(resolvedSearchParams).map(([k, v]) => [
+            k,
+            Array.isArray(v) ? v[0] : v,
+        ])
+    )
 
     return (
-        <div className="container mx-auto py-10 px-4">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight">Prequalification Rounds</h1>
-                <p className="text-muted-foreground">Browse opportunities and register your interest.</p>
-            </div>
+        <main className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+                <header className="space-y-3">
+                    <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+                        Prequalification Management
+                    </h1>
+                    <p className="max-w-3xl text-sm text-muted-foreground leading-relaxed">
+                        Monitor open opportunities, review application progress, and take action
+                        on prequalification rounds in one focused workspace.
+                    </p>
+                </header>
 
-            <RoundsListClient initialData={response.data} />
-        </div>
-    );
+                <RoundsView initialQuery={normalizedParams} />
+            </div>
+        </main>
+    )
 }

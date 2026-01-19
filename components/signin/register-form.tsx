@@ -35,46 +35,76 @@ export default function RegisterForm() {
 
   const createUser = form.watch("createUser")
 
-  const nextStep = async () => {
-    const fields = ["Name", "Email", "Phone", "RegistrationNumber", "TaxPIN", "Country", "Location", "BusinessType", "types"] as any[]
-    if (isSupplier) fields.push("user_SupplierCategoryId")
-    if (isTenant) fields.push("user_Remarks")
-
-      const isValid = await form.trigger(fields)
-      if (isValid) {
-        if (!createUser) {
-          handleSubmit(new Event('submit') as any)
-        } else {
-        setStep(2)
-        window.scrollTo({ top: 0, behavior: "smooth" })
-      }
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e?.preventDefault()
+  const submitDirectly = async () => {
     setAuthError(null)
     try {
-      await onSubmit(e)
+      await onSubmit()
       setSuccess(true)
     } catch (error: any) {
       setAuthError(error.message || "An unexpected error occurred.")
     }
   }
 
-  const inputStyle = "h-12 w-full border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-50"
-  const labelStyle = "text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 block"
-  const errorStyle = "text-xs text-red-600 mt-1.5 flex items-center gap-1"
+  const nextStep = async () => {
+    const fields = ["Name", "Email", "Phone", "RegistrationNumber", "TaxPIN", "Country", "Location", "BusinessType", "types"] as any[]
+    if (isSupplier) fields.push("user_SupplierCategoryId")
+    if (isTenant) fields.push("user_Remarks")
 
-  if (isLoadingMetadata) return <div className="py-20 text-center"><Spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" /></div>
-  if (metadataError) return <div className="py-20 text-center text-red-600">{metadataError}</div>
+    const isValid = await form.trigger(fields)
+    if (!isValid) return
+
+    if (!createUser) {
+      await submitDirectly()
+      return
+    }
+
+    setStep(2)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleFinalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await submitDirectly()
+  }
+
+  const inputStyle =
+    "h-12 w-full border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-50"
+  const labelStyle =
+    "text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 block"
+  const errorStyle =
+    "text-xs text-red-600 mt-1.5 flex items-center gap-1"
+
+  if (isLoadingMetadata)
+    return (
+      <div className="py-20 text-center">
+        <Spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+      </div>
+    )
+
+  if (metadataError)
+    return (
+      <div className="py-20 text-center text-red-600">
+        {metadataError}
+      </div>
+    )
 
   if (success) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto text-center py-20 px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md mx-auto text-center py-20 px-8"
+      >
         <CheckCircle2 className="h-20 w-20 text-green-600 mx-auto mb-6" />
-        <h2 className="text-2xl font-bold mb-3">Registration Complete!</h2>
-        <Button onClick={() => router.push("/signin")} className="w-full h-12 bg-blue-600 text-white font-bold rounded-lg">GO TO SIGN IN</Button>
+        <h2 className="text-2xl font-bold mb-3">
+          Registration Complete!
+        </h2>
+        <Button
+          onClick={() => router.push("/signin")}
+          className="w-full h-12 bg-blue-600 text-white font-bold rounded-lg"
+        >
+          GO TO SIGN IN
+        </Button>
       </motion.div>
     )
   }
@@ -99,7 +129,7 @@ export default function RegisterForm() {
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+      <form onSubmit={handleFinalSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-16">
         <div className="lg:col-span-8">
           {step === 1 ? (
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
@@ -111,7 +141,12 @@ export default function RegisterForm() {
                       key={type.id}
                       type="button"
                       onClick={() => toggleType(type.id)}
-                      className={cn("px-6 h-12 text-[11px] font-bold uppercase border-2 rounded-lg transition-all", selectedTypes?.includes(type.id) ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 text-slate-600")}
+                      className={cn(
+                        "px-6 h-12 text-[11px] font-bold uppercase border-2 rounded-lg transition-all",
+                        selectedTypes?.includes(type.id)
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : "border-slate-200 text-slate-600"
+                      )}
                     >
                       {type.label}
                     </button>
@@ -130,7 +165,7 @@ export default function RegisterForm() {
                   <label className={labelStyle}>Business Type</label>
                   <select {...form.register("BusinessType")} className={cn(inputStyle, errors.BusinessType && "border-red-300")}>
                     <option value="">Select Type...</option>
-                    {metadata.businessTypes.map((bt: any) => (
+                    {metadata.businessTypes.map((bt) => (
                       <option key={bt.value} value={bt.value}>{bt.description}</option>
                     ))}
                   </select>
@@ -147,7 +182,9 @@ export default function RegisterForm() {
                     <label className={labelStyle}>Supplier Category</label>
                     <select {...form.register("user_SupplierCategoryId")} className={inputStyle}>
                       <option value="">Select Category...</option>
-                      {metadata.supplierCategories.map((sc: any) => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
+                      {metadata.supplierCategories.map((sc: any) => (
+                        <option key={sc.id} value={sc.id}>{sc.name}</option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -156,24 +193,32 @@ export default function RegisterForm() {
                   <label className={labelStyle}>Business Email</label>
                   <Input {...form.register("Email")} type="email" className={cn(inputStyle, errors.Email && "border-red-300")} />
                 </div>
+
                 <div>
                   <label className={labelStyle}>Phone Number</label>
                   <Input {...form.register("Phone")} className={cn(inputStyle, errors.Phone && "border-red-300")} />
                 </div>
+
                 <div>
                   <label className={labelStyle}>Country</label>
                   <select {...form.register("Country")} className={inputStyle}>
                     <option value="">Select...</option>
-                    {metadata.countries.map((c: any) => <option key={c.id} value={c.code}>{c.name}</option>)}
+                    {metadata.countries.map((c: any) => (
+                      <option key={c.id} value={c.code}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
+
                 <div>
                   <label className={labelStyle}>City / Locality</label>
                   <select {...form.register("Location")} className={inputStyle} disabled={metadata.localities.length === 0}>
                     <option value="">Select...</option>
-                    {metadata.localities.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    {metadata.localities.map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
                   </select>
                 </div>
+
                 <div>
                   <label className={labelStyle}>Tax PIN</label>
                   <Input {...form.register("TaxPIN")} className={cn(inputStyle, errors.TaxPIN && "border-red-300")} />
@@ -200,7 +245,7 @@ export default function RegisterForm() {
               </div>
 
               <Button type="button" onClick={nextStep} disabled={isSubmitting} className="h-14 bg-blue-600 text-white font-bold uppercase rounded-lg">
-                {createUser ? "Continue to User Details" : (isSubmitting ? "Processing..." : "Finish Registration")}
+                {createUser ? "Continue to User Details" : isSubmitting ? "Processing..." : "Finish Registration"}
               </Button>
             </motion.div>
           ) : (
@@ -214,56 +259,48 @@ export default function RegisterForm() {
                     <Input type="date" {...form.register("user_DateOfBirth")} className={inputStyle} />
                     <select {...form.register("user_MaritalStatus")} className={inputStyle}>
                       <option value="">Marital Status...</option>
-                      {metadata.maritalStatuses.map((m: any) => <option key={m.value} value={m.value}>{m.description}</option>)}
+                      {metadata.maritalStatuses.map((m) => (
+                        <option key={m.value} value={m.value}>{m.description}</option>
+                      ))}
                     </select>
                     <select {...form.register("user_Occupation")} className={inputStyle}>
                       <option value="">Occupation...</option>
-                      {metadata.occupations.map((o: any) => <option key={o.value} value={o.value}>{o.description}</option>)}
+                      {metadata.occupations.map((o) => (
+                        <option key={o.value} value={o.value}>{o.description}</option>
+                      ))}
                     </select>
                   </div>
                 )}
 
                 <Input {...form.register("user_Email")} placeholder="Admin Email" className={inputStyle} />
                 <Input {...form.register("user_Phone")} placeholder="Admin Phone" className={inputStyle} />
+
                 <select {...form.register("user_Gender")} className={inputStyle}>
                   <option value="">Gender...</option>
-                  {metadata.genders.map((g: any) => <option key={g.value} value={g.value}>{g.description}</option>)}
+                  {metadata.genders.map((g) => (
+                    <option key={g.value} value={g.value}>{g.description}</option>
+                  ))}
                 </select>
+
                 <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    {...form.register("user_Password")}
-                    placeholder="Password"
-                    className={cn(inputStyle, "pr-11")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
+                  <Input type={showPassword ? "text" : "password"} {...form.register("user_Password")} placeholder="Password" className={cn(inputStyle, "pr-11")} />
+                  <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+
                 <div className="relative">
-                  <Input
-                    type={showConfirmPassword ? "text" : "password"}
-                    {...form.register("user_Password_confirmation")}
-                    placeholder="Confirm"
-                    className={cn(inputStyle, "pr-11")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
-                    aria-label={showConfirmPassword ? "Hide password confirmation" : "Show password confirmation"}
-                  >
+                  <Input type={showConfirmPassword ? "text" : "password"} {...form.register("user_Password_confirmation")} placeholder="Confirm" className={cn(inputStyle, "pr-11")} />
+                  <button type="button" onClick={() => setShowConfirmPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
+
               <div className="flex gap-4">
-                <Button type="button" onClick={() => setStep(1)} className="h-14 bg-slate-200 text-slate-700 font-bold rounded-lg">Back</Button>
+                <Button type="button" onClick={() => setStep(1)} className="h-14 bg-slate-200 text-slate-700 font-bold rounded-lg">
+                  Back
+                </Button>
                 <Button type="submit" disabled={isSubmitting} className="h-14 flex-1 bg-blue-600 text-white font-bold rounded-lg">
                   {isSubmitting ? "Processing..." : "Register"}
                 </Button>

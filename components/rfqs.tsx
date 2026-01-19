@@ -1,15 +1,14 @@
-"use client";
+"use client"
 
-import { useState, useCallback, useEffect } from "react";
-import { format } from "date-fns";
-import { Search, Loader2, X, ExternalLink } from "lucide-react";
-import Link from "next/link";
-import { useDebounce } from "@/hooks/use-debounce";
-import { axiosInstance } from "@/lib/axios";
-import { Badge } from "@/components/common/badge";
-import { Button } from "@/components/common/button";
-import { Card } from "@/components/common/card";
-import { Input } from "@/components/common/input";
+import { useState, useCallback, useEffect, useMemo } from "react"
+import { format } from "date-fns"
+import { Search, Loader2, X, ExternalLink } from "lucide-react"
+import Link from "next/link"
+import { useDebounce } from "@/hooks/use-debounce"
+import { Badge } from "@/components/common/badge"
+import { Button } from "@/components/common/button"
+import { Card } from "@/components/common/card"
+import { Input } from "@/components/common/input"
 import {
     Table,
     TableBody,
@@ -17,120 +16,150 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/common/table";
-import { motion, AnimatePresence } from "framer-motion";
+} from "@/components/common/table"
+import { motion, AnimatePresence } from "framer-motion"
+
+type InvitationStatus =
+    | "OPEN"
+    | "CLOSED"
+    | "DRAFT"
+    | "CANCELLED"
+    | "SUBMITTED"
+    | "PARTIAL"
+
+interface RfqInvitation {
+    id: number | string
+    title: string
+    reference: string
+    closingDate?: string | null
+    status?: InvitationStatus | string
+}
 
 interface FilterChip {
-    label: string;
-    value: string;
-    type: "status" | "date";
+    label: string
+    value: string
+    type: "status" | "date"
 }
 
-// Helper to safely pick properties from an object (similar to lodash pick/get)
-function pick(obj: any, keys: string[]) {
-    for (const key of keys) {
-        if (obj && Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined && obj[key] !== null) {
-            return obj[key];
-        }
+type ApiResponse =
+    | unknown[]
+    | {
+        data: unknown[]
     }
-    return undefined;
-}
 
-// Type guard
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
+function normalizeInvitation(raw: unknown): RfqInvitation {
+    const obj = raw as Record<string, unknown>
+
+    return {
+        id: (obj.id ?? obj.rfqId ?? obj.RFQID) as number | string,
+        title: (obj.title ?? obj.comments ?? "Untitled RFQ") as string,
+        reference: (obj.referenceNumber ??
+            obj.number ??
+            obj.reference ??
+            "-") as string,
+        closingDate: (obj.submissionDeadline ??
+            obj.closingDate ??
+            null) as string | null,
+        status: (obj.status ?? obj.invitationStatus) as
+            | InvitationStatus
+            | string
+            | undefined,
+    }
 }
 
 export function RfqsFilter() {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [invitations, setInvitations] = useState<any[]>([]);
-    const [activeFilterChips, setActiveFilterChips] = useState<FilterChip[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("")
+    const [invitations, setInvitations] = useState<RfqInvitation[]>([])
+    const [activeFilterChips, setActiveFilterChips] = useState<FilterChip[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
-    const debouncedSearch = useDebounce(searchTerm, 300);
+    const debouncedSearch = useDebounce(searchTerm, 300)
+
+    const queryParams = useMemo(() => {
+        const params = new URLSearchParams()
+        if (debouncedSearch) params.set("q", debouncedSearch)
+        const status = activeFilterChips.find(c => c.type === "status")
+        if (status) params.set("status", status.value)
+        return params.toString()
+    }, [debouncedSearch, activeFilterChips])
 
     const fetchInvitations = useCallback(async () => {
-        setIsSearching(true);
-        setError(null);
+        setIsLoading(true)
+        setError(null)
+
         try {
-            // Build query params
-            const params = new URLSearchParams();
-            if (debouncedSearch) params.append("q", debouncedSearch);
+            const res = await fetch(
+                `/api/procurement/rfqs/invitations${queryParams ? `?${queryParams}` : ""
+                }`,
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                    },
+                    cache: "no-store",
+                }
+            )
 
-            // Add other filters from chips if implemented
-            const statusFilter = activeFilterChips.find(c => c.type === 'status');
-            if (statusFilter) params.append("status", statusFilter.value);
-
-            const response = await axiosInstance.get(`/supplier/rfq-invitations?${params.toString()}`);
-
-            // Handle Laravel API response structure
-            let data = [];
-            if (Array.isArray(response.data)) {
-                data = response.data;
-            } else if (response.data && Array.isArray(response.data.data)) {
-                data = response.data.data;
-            } else if (response.data && typeof response.data === 'object') {
-                // Try to find the array if it's wrapped differently
-                data = response.data.data || [];
+            if (!res.ok) {
+                throw new Error("Request failed")
             }
 
-            console.log("RFQ Invitations fetched:", data);
-            setInvitations(data);
-        } catch (err) {
-            console.error("Failed to fetch RFQ invitations:", err);
-            setError("Failed to load RFQs. Please try again.");
-            setInvitations([]);
+            const payload: ApiResponse = await res.json()
+
+            const raw = Array.isArray(payload)
+                ? payload
+                : Array.isArray(payload.data)
+                    ? payload.data
+                    : []
+
+            setInvitations(raw.map(normalizeInvitation))
+        } catch {
+            setError("Failed to load RFQ invitations.")
+            setInvitations([])
         } finally {
-            setIsSearching(false);
+            setIsLoading(false)
         }
-    }, [debouncedSearch, activeFilterChips]);
+    }, [queryParams])
 
     useEffect(() => {
-        fetchInvitations();
-    }, [fetchInvitations]);
+        fetchInvitations()
+    }, [fetchInvitations])
 
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
-    };
+    const clearFilters = () => {
+        setSearchTerm("")
+        setActiveFilterChips([])
+    }
 
-    const handleClearAllFilters = () => {
-        setSearchTerm("");
-        setActiveFilterChips([]);
-    };
-
-    const handleRemoveFilter = (filterType: string) => {
-        setActiveFilterChips((prev) => prev.filter((chip) => chip.type !== filterType));
-    };
-
-    const resultCount = invitations.length;
+    const removeFilter = (type: FilterChip["type"]) => {
+        setActiveFilterChips(prev => prev.filter(c => c.type !== type))
+    }
 
     return (
         <div className="space-y-4 p-1">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">RFQ Invitations</h1>
+            <div>
+                <h1 className="text-2xl font-semibold">RFQ Invitations</h1>
                 <p className="text-muted-foreground">
                     View and manage your Request for Quotation invitations.
                 </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pt-4">
-                <div className="col-span-full md:col-span-5 lg:col-span-4 relative">
+                <div className="col-span-full md:col-span-5 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search by title or reference..."
                         value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="pl-9 bg-background"
+                        onChange={e => setSearchTerm(e.target.value)}
+                        placeholder="Search by title or reference..."
+                        className="pl-9"
                     />
                 </div>
 
-                <div className="col-span-full md:col-span-1 lg:col-span-1 flex justify-end md:justify-start">
+                <div className="col-span-full md:col-span-2">
                     <Button
                         variant="ghost"
-                        onClick={handleClearAllFilters}
-                        className="text-muted-foreground hover:text-foreground hover:bg-transparent px-0 transition-colors duration-200"
-                        disabled={activeFilterChips.length === 0 && !searchTerm}
+                        onClick={clearFilters}
+                        disabled={!searchTerm && activeFilterChips.length === 0}
                     >
                         Clear filters
                     </Button>
@@ -138,126 +167,101 @@ export function RfqsFilter() {
             </div>
 
             <AnimatePresence mode="wait">
-                {isSearching ? (
-                    <motion.div
-                        key="loading"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center gap-2 text-sm text-muted-foreground"
-                    >
+                {isLoading ? (
+                    <motion.div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Searching...</span>
+                        Searching…
                     </motion.div>
                 ) : (
-                    <motion.div
-                        key="results"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
-                    >
-                        {resultCount !== null && (
-                            <span>
-                                {resultCount} {resultCount === 1 ? "result" : "results"}{" "}
-                                {activeFilterChips.length > 0 && "for"}
-                            </span>
-                        )}
+                    <motion.div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{invitations.length} results</span>
                         <AnimatePresence>
-                            {activeFilterChips.map((filter) => (
+                            {activeFilterChips.map(chip => (
                                 <motion.div
-                                    key={`${filter.type}-${filter.value}`}
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    className="inline-flex items-center rounded-full bg-primary/10 text-primary-foreground px-3 py-1 text-xs font-medium dark:bg-primary/20"
+                                    key={`${chip.type}-${chip.value}`}
+                                    className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs"
                                 >
-                                    {filter.label}
+                                    {chip.label}
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleRemoveFilter(filter.type)}
-                                        className="ml-1 -mr-1 h-4 w-4 rounded-full p-0.5 text-primary-foreground hover:bg-primary/20 dark:hover:bg-primary/30"
+                                        onClick={() => removeFilter(chip.type)}
                                     >
                                         <X className="h-3 w-3" />
-                                        <span className="sr-only">Remove {filter.label} filter</span>
                                     </Button>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
-                        {resultCount === 0 && activeFilterChips.length === 0 && !searchTerm && (
-                            <span className="text-muted-foreground">No filters applied.</span>
-                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <div className="mt-6">
-                {error && (
-                    <div className="text-destructive text-sm mb-4">{error}</div>
-                )}
-                <Card className="p-0 overflow-hidden">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Title</TableHead>
-                                <TableHead>Reference</TableHead>
-                                <TableHead>Closing date</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
+            {error && <div className="text-destructive text-sm">{error}</div>}
+
+            <Card className="overflow-hidden">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Reference</TableHead>
+                            <TableHead>Closing date</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {invitations.map(rfq => (
+                            <TableRow key={String(rfq.id)}>
+                                <TableCell className="max-w-[320px]">
+                                    <div className="font-medium line-clamp-2">{rfq.title}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        ID: {rfq.id}
+                                    </div>
+                                </TableCell>
+                                <TableCell>{rfq.reference}</TableCell>
+                                <TableCell>
+                                    {rfq.closingDate
+                                        ? format(
+                                            new Date(rfq.closingDate),
+                                            "MMM d, yyyy HH:mm"
+                                        )
+                                        : "-"}
+                                </TableCell>
+                                <TableCell>
+                                    {rfq.status ? (
+                                        <Badge
+                                            variant={rfq.status === "OPEN" ? "default" : "outline"}
+                                        >
+                                            {rfq.status}
+                                        </Badge>
+                                    ) : (
+                                        "-"
+                                    )}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Button asChild size="sm">
+                                        <Link href={`/dashboard/rfqs/${rfq.id}`}>
+                                            View & Respond{" "}
+                                            <ExternalLink className="h-4 w-4 ml-1" />
+                                        </Link>
+                                    </Button>
+                                </TableCell>
                             </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {(invitations || []).map((rfq: unknown) => {
-                                const obj = isRecord(rfq) ? rfq : {};
-                                const id = pick(obj, ["id", "rfqId", "RFQID", "rfq_id"]);
-                                // Title: show comments when available
-                                const title = pick(obj, ["comments", "title", "RFQTitle", "name", "referenceName"]) ?? "Untitled RFQ";
-                                // Reference should use 'number' per API
-                                const ref = pick(obj, ["number", "referenceNumber", "reference", "RFQRef", "ref_no", "ref"]) ?? "-";
-                                // Closing date should use 'submissionDeadline' per API
-                                const closing = pick(obj, ["submissionDeadline", "closingDate", "closeDate", "closing_date", "deadline", "endDate"]);
-                                const status = String(pick(obj, ["status", "invitationStatus", "state"]) ?? "").toUpperCase();
-                                return (
-                                    <TableRow key={String(id)}>
-                                        <TableCell className="max-w-[320px]">
-                                            <div className="font-medium text-foreground line-clamp-2">{String(title)}</div>
-                                            <div className="text-xs text-muted-foreground">ID: {String(id)}</div>
-                                        </TableCell>
-                                        <TableCell>{String(ref)}</TableCell>
-                                        <TableCell>{closing ? format(new Date(String(closing)), "MMM d, yyyy HH:mm") : "-"}</TableCell>
-                                        <TableCell>
-                                            {status ? (
-                                                <Badge variant={status === "OPEN" ? "default" : status === "CLOSED" ? "secondary" : "outline"}>{status}</Badge>
-                                            ) : (
-                                                <span className="text-muted-foreground">-</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {id ? (
-                                                <Button asChild size="sm">
-                                                    <Link href={`/dashboard/rfqs/${encodeURIComponent(String(id))}`} className="inline-flex items-center gap-1">
-                                                        View & Respond <ExternalLink className="h-4 w-4" />
-                                                    </Link>
-                                                </Button>
-                                            ) : (
-                                                <span className="text-muted-foreground">N/A</span>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                            {!isSearching && invitations && invitations.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
-                                        No RFQ invitations found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </Card>
-            </div>
+                        ))}
+
+                        {!isLoading && invitations.length === 0 && (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={5}
+                                    className="text-center py-10 text-muted-foreground"
+                                >
+                                    No RFQ invitations found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </Card>
         </div>
-    );
+    )
 }

@@ -2,69 +2,85 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Search, ListFilter, ArrowUpDown } from 'lucide-react'
+import { Search, ListFilter, ArrowUpDown } from "lucide-react"
 import { Input } from "@/components/common/input"
 import { Button } from "@/components/common/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
 import { cn } from "@/lib/utils"
 import type { ToolbarProps, StatusFilter } from "@/types/prequalification-rounds-types"
 
-const SORT_OPTIONS = [
+type SortOption = {
+    value: string
+    label: string
+}
+
+type StatusOption = {
+    value: StatusFilter
+    label: string
+}
+
+const SORT_OPTIONS: readonly SortOption[] = [
     { value: "title", label: "Title" },
     { value: "startDate", label: "Opens" },
-    { value: "endDate", label: "Closes" },
-] as const
+    { value: "endDate", label: "Closes" }
+]
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: readonly StatusOption[] = [
     { value: "all", label: "All Status" },
     { value: "open", label: "Open" },
-    { value: "closed", label: "Closed" },
-] as const
+    { value: "closed", label: "Closed" }
+]
 
-const PAGE_SIZE_OPTIONS = [10, 25, 50] as const
+const PAGE_SIZE_OPTIONS: readonly number[] = [10, 25, 50]
 
 export default function RoundsToolbar({
     defaultQuery = { q: "", status: "all", sortBy: "startDate", sortOrder: "asc", pageSize: 10 },
-    className,
+    className
 }: ToolbarProps) {
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const [isPending, startTransition] = useTransition()
 
-    const [searchQuery, setSearchQuery] = useState(defaultQuery.q ?? "")
+    const [searchQuery, setSearchQuery] = useState<string>(defaultQuery.q ?? "")
     const [status, setStatus] = useState<StatusFilter>(defaultQuery.status ?? "all")
-    const [sortBy, setSortBy] = useState(defaultQuery.sortBy ?? "startDate")
+    const [sortBy, setSortBy] = useState<string>(defaultQuery.sortBy ?? "startDate")
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">(defaultQuery.sortOrder ?? "asc")
-    const [pageSize, setPageSize] = useState(defaultQuery.pageSize ?? 10)
+    const [pageSize, setPageSize] = useState<number>(defaultQuery.pageSize ?? 10)
 
-    const updateUrl = useCallback((updates: Record<string, string | number | undefined>) => {
-        const params = new URLSearchParams(searchParams.toString())
-        params.set("page", "1")
+    const updateUrl = useCallback(
+        (updates: Record<string, string | number | undefined>) => {
+            const params = new URLSearchParams(searchParams.toString())
+            params.set("page", "1")
 
-        const allUpdates = {
-            q: searchQuery,
-            status,
-            sortBy,
-            sortOrder,
-            pageSize: String(pageSize),
-            ...Object.fromEntries(
-                Object.entries(updates).map(([k, v]) => [k, v == null ? undefined : String(v)])
-            ),
-        }
-
-        Object.entries(allUpdates).forEach(([key, value]) => {
-            if (value == null || value === "" || value === "all") {
-                params.delete(key)
-            } else {
-                params.set(key, value)
+            const allUpdates: Record<string, string | undefined> = {
+                q: searchQuery,
+                status,
+                sortBy,
+                sortOrder,
+                pageSize: String(pageSize),
+                ...Object.fromEntries(
+                    Object.entries(updates).map(([k, v]): [string, string | undefined] => [
+                        k,
+                        v == null ? undefined : String(v)
+                    ])
+                )
             }
-        })
 
-        startTransition(() => {
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-        })
-    }, [router, pathname, searchParams, searchQuery, status, sortBy, sortOrder, pageSize])
+            Object.entries(allUpdates).forEach(([key, value]) => {
+                if (!value || value === "all") {
+                    params.delete(key)
+                } else {
+                    params.set(key, value)
+                }
+            })
+
+            startTransition(() => {
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+            })
+        },
+        [router, pathname, searchParams, searchQuery, status, sortBy, sortOrder, pageSize]
+    )
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -84,17 +100,19 @@ export default function RoundsToolbar({
     }
 
     const handleSortOrderToggle = () => {
-        const newOrder = sortOrder === "asc" ? "desc" : "asc"
+        const newOrder: "asc" | "desc" = sortOrder === "asc" ? "desc" : "asc"
         setSortOrder(newOrder)
         updateUrl({ sortOrder: newOrder })
     }
 
     return (
-        <div className={cn(
-            "flex w-full items-center gap-2",
-            isPending && "opacity-60 pointer-events-none",
-            className
-        )}>
+        <div
+            className={cn(
+                "flex w-full items-center gap-2",
+                isPending && "opacity-60 pointer-events-none",
+                className
+            )}
+        >
             <div className="relative flex-1 max-w-[300px]">
                 <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
                 <Input
@@ -114,8 +132,14 @@ export default function RoundsToolbar({
                         </div>
                     </SelectTrigger>
                     <SelectContent align="end" className="border-2">
-                        {STATUS_OPTIONS.map(({ value, label }) => (
-                            <SelectItem key={value} value={value} className="text-[10px] font-bold uppercase">{label}</SelectItem>
+                        {STATUS_OPTIONS.map((opt: StatusOption) => (
+                            <SelectItem
+                                key={opt.value}
+                                value={opt.value}
+                                className="text-[10px] font-bold uppercase"
+                            >
+                                {opt.label}
+                            </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
@@ -126,8 +150,14 @@ export default function RoundsToolbar({
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent align="end" className="border-2">
-                            {SORT_OPTIONS.map(({ value, label }) => (
-                                <SelectItem key={value} value={value} className="text-[10px] font-bold uppercase">{label}</SelectItem>
+                            {SORT_OPTIONS.map((opt: SortOption) => (
+                                <SelectItem
+                                    key={opt.value}
+                                    value={opt.value}
+                                    className="text-[10px] font-bold uppercase"
+                                >
+                                    {opt.label}
+                                </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -140,23 +170,35 @@ export default function RoundsToolbar({
                         onClick={handleSortOrderToggle}
                         className="h-8 w-8 hover:bg-background"
                     >
-                        <ArrowUpDown className={cn(
-                            "h-3 w-3 transition-transform duration-300",
-                            sortOrder === "desc" && "rotate-180 text-primary"
-                        )} />
+                        <ArrowUpDown
+                            className={cn(
+                                "h-3 w-3 transition-transform duration-300",
+                                sortOrder === "desc" && "rotate-180 text-primary"
+                            )}
+                        />
                     </Button>
                 </div>
 
-                <Select value={String(pageSize)} onValueChange={(v) => {
-                    setPageSize(Number(v))
-                    updateUrl({ pageSize: v })
-                }}>
+                <Select
+                    value={String(pageSize)}
+                    onValueChange={(v: string) => {
+                        const size = Number(v)
+                        setPageSize(size)
+                        updateUrl({ pageSize: size })
+                    }}
+                >
                     <SelectTrigger className="h-9 w-[65px] border-none bg-muted/40 text-[10px] font-black focus:ring-0">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent align="end" className="border-2">
-                        {PAGE_SIZE_OPTIONS.map((size) => (
-                            <SelectItem key={size} value={String(size)} className="text-[10px] font-bold">{size}</SelectItem>
+                        {PAGE_SIZE_OPTIONS.map((size: number) => (
+                            <SelectItem
+                                key={size}
+                                value={String(size)}
+                                className="text-[10px] font-bold"
+                            >
+                                {size}
+                            </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>

@@ -6,7 +6,7 @@ import { ProfileEditForm } from "@/components/thirdparty-profile/profile-edit-fo
 import { ThirdPartyProfileView } from "@/components/thirdparty-profile/third-party-profile-view"
 
 
-export default function GeneralSettingsPage() {
+export default function GeneralSettings() {
     const [isEditing, setIsEditing] = useState(false)
 
     return (
