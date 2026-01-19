@@ -11,6 +11,7 @@ use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Http\UploadedFile;
 
 
@@ -28,7 +29,7 @@ class PropertyMaintenanceService
         ?PropertyBlock $Block = null,
         ?PropertyFloor $Floor = null,
         ?PropertyUnit  $Unit = null,
-        string   $ReportedBy,
+        ThirdParties   $ReportedBy,
         CodeDetail   $IssueType,
         CodeDetail   $Priority,
         string   $IssueDescription,
@@ -50,7 +51,7 @@ class PropertyMaintenanceService
                 'Block' => $Block->Id ?? null,
                 'Floor' => $Floor->Id ?? null,
                 'Unit' => $Unit->Id ?? null,
-                'ReportedBy' =>$ReportedBy,
+                'ReportedBy' =>$ReportedBy->Id,
                 'IssueType'  => $IssueType->ID,
                 'Priority'    => $Priority->ID,
                 'IssueDescription' => $IssueDescription,
@@ -77,19 +78,19 @@ class PropertyMaintenanceService
         PropertyBlock    $Block = null,
         PropertyFloor    $Floor = null,
         PropertyUnit     $Unit = null,
-        string $ReportedBy,
-        CodeDetail $IssueType,
-        CodeDetail $Priority,
-        string $IssueDescription,
-        User $user,
-        UploadedFile $document = null
+        ThirdParties     $ReportedBy,
+        CodeDetail       $IssueType,
+        CodeDetail       $Priority,
+        string           $IssueDescription,
+        User             $user,
+        UploadedFile     $document = null
     ): self {
         $maintenancerequest->update([
             'Property' => $Property->Id,
             'Block' => $Block->Id ?? null,
             'Floor' => $Floor->Id ?? null,
             'Unit' => $Unit->Id ?? null,
-            'ReportedBy' => $ReportedBy,
+            'ReportedBy' => $ReportedBy->Id,
             'IssueType' => $IssueType->ID,
             'Priority' => $Priority->ID,
             'IssueDescription' => $IssueDescription,

@@ -28,6 +28,14 @@ return new class extends Migration
         Schema::table('t_BancassuranceClaims', function (Blueprint $table) {
             $table->foreignId('CurrencyId')->nullable()->constraint('t_Currencies', 'Id');
         });
+        Schema::table('t_BancassuranceClaimPayments', function (Blueprint $table) {
+            $table->renameColumn('PaidBy', 'PaidTo');
+        });
+
+        Schema::table('t_BancassurancePremiumPayments', function (Blueprint $table) {
+            $table->foreignId('CurrencyId')->nullable()->constraint('t_Currencies', 'Id');
+        });
+
     }
 
     /**
@@ -56,6 +64,14 @@ return new class extends Migration
         });
 
         Schema::table('t_BancassuranceClaims', function (Blueprint $table) {
+            // $table->dropForeign(['CurrencyId']);
+            $table->dropColumn('CurrencyId');
+        });
+        Schema::table('t_BancassuranceClaimPayments', function (Blueprint $table) {
+            // $table->dropForeign(['CurrencyId']);
+            $table->renameColumn('PaidTo', 'PaidBy');
+        });
+        Schema::table('t_BancassurancePremiumPayments', function (Blueprint $table) {
             // $table->dropForeign(['CurrencyId']);
             $table->dropColumn('CurrencyId');
         });

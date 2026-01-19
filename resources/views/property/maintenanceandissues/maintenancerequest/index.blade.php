@@ -49,7 +49,7 @@
             <td>{{ $loop->iteration }}</td>
             <td>{{ $maintenancerequest->RequestNumber ?? '-' }}</td>
             <td>{{ $maintenancerequest->property->PropertyName ?? '-' }}</td>
-            <td>{{ $maintenancerequest->ReportedBy ?? '-' }}</td>
+            <td>{{ $maintenancerequest->reportedByUser->ThirdPartyName ?? '-' }}</td>
             <td>{{ $maintenancerequest->issueType->Description ?? '-' }}</td>
             <td>{{ $maintenancerequest->priority->Description ?? '-' }}</td>
             <td>
@@ -60,17 +60,16 @@
                   <i class="bi bi-eye"></i>
                 </a>
 
-                <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}"
-                  class="btn btn-sm btn-warning"
-                  title="Edit Request">
-                  <i class="bi bi-pencil-square"></i>
-                </a>
-
                 @if($maintenancerequest->requestId()->exists())
                 <button class="btn btn-sm btn-secondary" title="In Use">
                   <i class="bi bi-lock"></i>
                 </button>
                 @else
+                <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}"
+                  class="btn btn-sm btn-warning"
+                  title="Edit Request">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
                 <form action="{{ route('maintenancerequest.destroy', $maintenancerequest->Id) }}"
                   method="POST"
                   onsubmit="return confirm('Are you sure you want to delete this maintenance request?');"

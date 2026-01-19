@@ -95,11 +95,25 @@
 
                 {{-- Request Details --}}
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    {{-- <div class="col-md-4 mb-3">
                         <label class="form-label">Reported By<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="ReportedBy" placeholder="Optional"
                                value="{{ old('ReportedBy', $maintenancerequest->ReportedBy) }}" required>
+                    </div> --}}
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Reported By<span class="text-danger">*</span></label>
+                        <select class="form-select" name="ReportedBy" required>
+                            <option value="">-- Select Reporter --</option>
+                            @foreach ($thirdparties as $thirdparty)
+                                <option value="{{ $thirdparty->Id }}"
+                                    {{ $thirdparty->Id == old('ReportedBy', $maintenancerequest->reportedByUser->ThirdPartyName ?? '-') ? 'selected' : '' }}>
+                                    {{ $thirdparty->ThirdPartyName }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
+
                     <div class="col-md-4">
                         <label class="form-label">Issue Type<span class="text-danger">*</span></label>
                         <select class="form-select" name="IssueType" required>
