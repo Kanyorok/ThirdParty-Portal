@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/user-dashboard/widgets/save', [DashboardController::class, 'saveLayout'])->name('user-dashboard.widgets.save');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    Route::get('logout', [AuthenticatedSessionController::class, 'destroy']);
     Route::post('timeout', [AuthenticatedSessionController::class, 'timeout'])->name('timeout');
 
     Route::get('user', [ProfileController::class, 'profile'])->name('profile');
