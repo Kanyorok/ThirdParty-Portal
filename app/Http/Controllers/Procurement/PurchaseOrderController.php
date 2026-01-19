@@ -1073,15 +1073,4 @@ class PurchaseOrderController extends Controller
         }
     }
 
-
-    /**
-     * Helper to get previously ordered quantities for a source
-     */
-    /**
-     * Check if a source document is fully exhausted (all items ordered)
-     */
-    /**
-     * Helper to get previously ordered quantities for a source
-     */
-
 }

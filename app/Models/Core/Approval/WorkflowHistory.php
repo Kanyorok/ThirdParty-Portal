@@ -64,7 +64,7 @@ class WorkflowHistory extends Model
 
     public function stage(): BelongsTo
     {
-        return $this->belongsTo(WorkflowStage::class, 'Stage', 'Id');
+        return $this->belongsTo(WorkflowStage::class, 'Stage', 'Order');
     }
 
 }

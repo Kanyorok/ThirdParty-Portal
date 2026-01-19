@@ -615,7 +615,7 @@ public function reject(Request $request, $id)
     ]);
 
     // Load RFQ responses (supplier quotations) with items and supplier info for printing
-    $rfqResponses = RFQResponse::with(['items.uom', 'supplier.supplierMaster.thirdParty'])
+    $rfqResponses = RFQResponse::with(['items.uom', 'supplier.supplierMaster.party'])
         ->where('RFQId', $rfq->Id)
         ->get();
 

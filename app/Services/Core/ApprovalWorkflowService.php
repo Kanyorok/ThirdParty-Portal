@@ -765,7 +765,7 @@ abstract class ApprovalWorkflowService
         $table = (new $class)->getTable();
 
         $submitterId = DB::table('t_WorkFlowHistory')
-            ->where('Source', $table)
+            ->where('Source', $table) 
             ->where('SourceID', (string)$sourceId)
             ->whereNull('DeletedOn')
             ->orderBy('CreatedOn', 'asc')
