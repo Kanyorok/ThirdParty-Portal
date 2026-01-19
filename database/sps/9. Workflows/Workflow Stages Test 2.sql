@@ -1,19 +1,9 @@
-USE [BR_ERP]
-GO
-
-/****** Object:  StoredProcedure [dbo].[p_ProcessWorkflowStagesTest2]    Script Date: 1/6/2026 11:42:46 AM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE   PROCEDURE [dbo].[p_ProcessWorkflowStagesTest2]
+CREATE OR ALTER PROCEDURE [dbo].[p_ProcessWorkflowStagesTest2]
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE 
+    DECLARE
         @SystemUserId BIGINT,
         @Now DATETIME = GETDATE(),
         @ApprovedStatusId BIGINT,
@@ -49,12 +39,12 @@ BEGIN
     -- PHASE 1: Process ACTIVE pending items (check if they're complete)
     -- ===================================================================
     PRINT CHAR(13) + '--- PHASE 1: Processing Active Pending Items ---';
-    
+
     DECLARE @SourceTable NVARCHAR(255);
-    
+
     DECLARE source_cursor CURSOR LOCAL FAST_FORWARD FOR
-    SELECT DISTINCT Source 
-    FROM t_WorkFlowPendingTest 
+        SELECT DISTINCT Source
+        FROM t_WorkFlowPendingTest
     WHERE DeletedOn IS NULL
     ORDER BY Source;
 
@@ -64,18 +54,17 @@ BEGIN
     WHILE @@FETCH_STATUS = 0
     BEGIN
         PRINT 'Processing Source: ' + @SourceTable;
-        
+
         DECLARE @SourceProcessed INT = 0, @SourceMoved INT = 0;
-        
+
         -- Process each item in this source table
         DECLARE @SourceID NVARCHAR(100), @CurrentStageId BIGINT;
-        
+
         DECLARE item_cursor CURSOR LOCAL FAST_FORWARD FOR
-        SELECT DISTINCT 
-            SourceID, 
+            SELECT DISTINCT SourceID,
             CAST(Stage AS BIGINT) as StageId
-        FROM t_WorkFlowPendingTest 
-        WHERE Source = @SourceTable 
+            FROM t_WorkFlowPendingTest
+            WHERE Source = @SourceTable
           AND DeletedOn IS NULL
         ORDER BY SourceID;
 
@@ -85,15 +74,14 @@ BEGIN
         WHILE @@FETCH_STATUS = 0
         BEGIN
             SET @SourceProcessed = @SourceProcessed + 1;
-            
+
             DECLARE @CurrentOrder INT, @PermissionId BIGINT, @WorkflowType NVARCHAR(100),
                     @Count INT, @ActualApprovals INT, @RequiredApprovals INT,
                     @NextStageId BIGINT, @ErrorMessage NVARCHAR(MAX);
 
             BEGIN TRY
                 -- Get current stage metadata
-                SELECT 
-                    @CurrentOrder = s.[Order], 
+                SELECT @CurrentOrder = s.[Order],
                     @PermissionId = s.PermissionId,
                     @WorkflowType = wt.TypeID,
                     @Count = ISNULL(s.[Count], 0)
@@ -135,16 +123,16 @@ BEGIN
                     FROM t_Users u
                     WHERE u.DeletedOn IS NULL
                       AND u.Id IN (SELECT Id FROM f_getUserWithPermission(@PermissionId));
-                    
+
                     SET @RequiredApprovals = CEILING(@TotalUsers * 1.0 / 2);
                 END
 
                 -- Debug output
-                PRINT '  Item: ' + @SourceID + 
-                      ' | Stage: ' + CAST(@CurrentStageId AS NVARCHAR(10)) + 
+                PRINT '  Item: ' + @SourceID +
+                      ' | Stage: ' + CAST(@CurrentStageId AS NVARCHAR(10)) +
                       ' (Order: ' + CAST(@CurrentOrder AS NVARCHAR(10)) + ')' +
                       ' | Type: ' + @WorkflowType +
-                      ' | Actual: ' + CAST(@ActualApprovals AS NVARCHAR(10)) + 
+                      ' | Actual: ' + CAST(@ActualApprovals AS NVARCHAR(10)) +
                       ' | Required: ' + CAST(@RequiredApprovals AS NVARCHAR(10));
 
                 -- If enough approvals, move to next stage
@@ -161,7 +149,7 @@ BEGIN
                     IF @NextStageId IS NULL
                     BEGIN
                         PRINT '    → WORKFLOW COMPLETE for ' + @SourceTable + ' ID: ' + @SourceID;
-                        
+
                         -- Mark current pending as deleted
                         UPDATE t_WorkFlowPendingTest
                         SET DeletedOn = @Now,
@@ -170,7 +158,7 @@ BEGIN
                           AND SourceID = @SourceID
                           AND Stage = CAST(@CurrentStageId AS NVARCHAR(50))
                           AND DeletedOn IS NULL;
-                          
+
                         SET @SourceMoved = @SourceMoved + 1;
                         SET @TotalMoved = @TotalMoved + 1;
                     END
@@ -179,7 +167,7 @@ BEGIN
                         -- Get next stage metadata
                         DECLARE @NextPermissionId BIGINT, @NextWorkflowType NVARCHAR(100),
                                 @NextCount INT, @NextStageApproversNeeded INT;
-                        
+
                         SELECT TOP 1
                             @NextPermissionId = s2.PermissionId,
                             @NextWorkflowType = wt2.TypeID,
@@ -193,9 +181,9 @@ BEGIN
                         SET @NextStageApproversNeeded = @NextCount;
 
                         -- Ensure valid count
-                        IF @NextStageApproversNeeded < 1 
+                        IF @NextStageApproversNeeded < 1
                             SET @NextStageApproversNeeded = 1;
-                        IF @NextStageApproversNeeded > 10 
+                        IF @NextStageApproversNeeded > 10
                             SET @NextStageApproversNeeded = 10;
 
                         -- FIX: Check if next stage is already complete before creating tasks
@@ -208,7 +196,7 @@ BEGIN
                           AND h.IsApproved = 1
                           AND h.DeletedOn IS NULL;
 
-                        PRINT '    Checking Next Stage ' + CAST(@NextStageId AS NVARCHAR(10)) + 
+                        PRINT '    Checking Next Stage ' + CAST(@NextStageId AS NVARCHAR(10)) +
                               ': Required=' + CAST(@NextStageApproversNeeded AS NVARCHAR(10)) +
                               ', Actual=' + CAST(@NextStageActualApprovals AS NVARCHAR(10));
 
@@ -219,21 +207,20 @@ BEGIN
                             INSERT INTO t_WorkFlowPendingTest (
                                 Source, SourceID, Stage, UserId, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn
                             )
-                            SELECT TOP (@NextStageApproversNeeded)
-                                @SourceTable, 
-                                @SourceID, 
-                                CAST(@NextStageId AS NVARCHAR(50)), 
-                                u.Id, 
-                                @SystemUserId, 
-                                @Now, 
-                                @SystemUserId, 
+                            SELECT TOP (@NextStageApproversNeeded) @SourceTable,
+                                                                   @SourceID,
+                                                                   CAST(@NextStageId AS NVARCHAR(50)),
+                                                                   u.Id,
+                                                                   @SystemUserId,
+                                                                   @Now,
+                                                                   @SystemUserId,
                                 @Now
                             FROM t_Users u
                             WHERE u.DeletedOn IS NULL
                               AND u.Id IN (SELECT Id FROM f_getUserWithPermission(@NextPermissionId))
                               AND NOT EXISTS (
                                   -- Exclude users who already approved this item
-                                  SELECT 1 
+                                SELECT 1
                                   FROM t_WorkFlowHistoryTest h
                                   WHERE h.Source = @SourceTable
                                     AND h.SourceID = @SourceID
@@ -251,11 +238,11 @@ BEGIN
                               )
                               AND u.Id != 1  -- Don't assign to system user
                             ORDER BY u.Id;
-                            
+
                             DECLARE @RowsInserted INT = @@ROWCOUNT;
                             SET @TotalCreated = @TotalCreated + @RowsInserted;
-                            
-                            PRINT '    → MOVED to Stage ' + CAST(@NextStageId AS NVARCHAR(10)) + 
+
+                            PRINT '    → MOVED to Stage ' + CAST(@NextStageId AS NVARCHAR(10)) +
                                   ' (Order: ' + CAST(@CurrentOrder + 1 AS NVARCHAR(10)) + ')' +
                                   ' (' + CAST(@RowsInserted AS NVARCHAR(10)) + ' users assigned)';
                         END
@@ -263,7 +250,7 @@ BEGIN
                         BEGIN
                             PRINT '    → Next stage already complete, skipping task creation';
                         END
-                        
+
                         -- Mark current pending as deleted
                         UPDATE t_WorkFlowPendingTest
                         SET DeletedOn = @Now,
@@ -272,7 +259,7 @@ BEGIN
                           AND SourceID = @SourceID
                           AND Stage = CAST(@CurrentStageId AS NVARCHAR(50))
                           AND DeletedOn IS NULL;
-                          
+
                         SET @SourceMoved = @SourceMoved + 1;
                         SET @TotalMoved = @TotalMoved + 1;
                     END
@@ -294,10 +281,10 @@ BEGIN
         CLOSE item_cursor;
         DEALLOCATE item_cursor;
 
-        PRINT '  Source ' + @SourceTable + ': ' + 
-              CAST(@SourceProcessed AS NVARCHAR(10)) + ' items processed, ' + 
+        PRINT '  Source ' + @SourceTable + ': ' +
+              CAST(@SourceProcessed AS NVARCHAR(10)) + ' items processed, ' +
               CAST(@SourceMoved AS NVARCHAR(10)) + ' moved to next stage';
-        
+
         SET @TotalProcessed = @TotalProcessed + @SourceProcessed;
 
         FETCH NEXT FROM source_cursor INTO @SourceTable;
@@ -310,9 +297,9 @@ BEGIN
     -- PHASE 2: Create INITIAL tasks for items with history but no pending
     -- ===================================================================
     PRINT CHAR(13) + '--- PHASE 2: Creating Initial Tasks for Orphaned Items ---';
-    
+
     DECLARE @InitialCreated INT = 0;
-    
+
     -- Create a temp table to store items that need next stage tasks
     CREATE TABLE #ItemsNeedingTasks (
         Source NVARCHAR(255),
@@ -325,10 +312,10 @@ BEGIN
         NextPermissionId BIGINT,
         RowNum INT
     );
-    
+
     -- Find items where the LATEST completed stage is complete but no next stage tasks exist
     INSERT INTO #ItemsNeedingTasks
-    SELECT 
+    SELECT
         comp.Source,
         comp.SourceID,
         comp.CurrentStageId,
@@ -340,7 +327,7 @@ BEGIN
         ROW_NUMBER() OVER (PARTITION BY comp.Source, comp.SourceID ORDER BY comp.CurrentOrder DESC) as RowNum
     FROM (
         -- Get completed stages for each item
-        SELECT 
+             SELECT
             h.Source,
             h.SourceID,
             s.Id as CurrentStageId,
@@ -348,7 +335,7 @@ BEGIN
             s.PermissionId
         FROM (
             -- Get approval counts per stage
-            SELECT 
+                 SELECT
                 Source,
                 SourceID,
                 Stage,
@@ -372,7 +359,7 @@ BEGIN
     ) ns
     WHERE NOT EXISTS (
         -- No pending tasks for this item
-        SELECT 1 
+        SELECT 1
         FROM t_WorkFlowPendingTest p
         WHERE p.Source = comp.Source
           AND p.SourceID = comp.SourceID
@@ -380,7 +367,7 @@ BEGIN
     )
     AND NOT EXISTS (
         -- No pending tasks for the next stage
-        SELECT 1 
+        SELECT 1
         FROM t_WorkFlowPendingTest p
         WHERE p.Source = comp.Source
           AND p.SourceID = comp.SourceID
@@ -390,8 +377,7 @@ BEGIN
     -- CRITICAL FIX: Check that the next stage is NOT already complete
     AND NOT EXISTS (
         SELECT 1
-        FROM (
-            SELECT 
+        FROM (SELECT
                 Source,
                 SourceID,
                 Stage,
@@ -407,12 +393,12 @@ BEGIN
           AND s2.Id = ns.Id
           AND h2.ApprovalCount >= s2.[Count]  -- Next stage is already complete
     );
-    
+
     -- Create next stage tasks only for the LATEST completed stage of each item
     INSERT INTO t_WorkFlowPendingTest (
         Source, SourceID, Stage, UserId, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn
     )
-    SELECT 
+    SELECT
         t.Source,
         t.SourceID,
         CAST(t.NextStageId AS NVARCHAR(50)),
@@ -427,8 +413,7 @@ BEGIN
         FROM t_Users u
         WHERE u.DeletedOn IS NULL
           AND u.Id IN (SELECT Id FROM f_getUserWithPermission(t.NextPermissionId))
-          AND NOT EXISTS (
-              SELECT 1 
+          AND NOT EXISTS (SELECT 1
               FROM t_WorkFlowHistoryTest h
               WHERE h.Source = t.Source
                 AND h.SourceID = t.SourceID
@@ -436,8 +421,7 @@ BEGIN
                 AND h.IsApproved = 1
                 AND h.DeletedOn IS NULL
           )
-          AND NOT EXISTS (
-              SELECT 1 
+          AND NOT EXISTS (SELECT 1
               FROM t_WorkFlowPendingTest p
               WHERE p.Source = t.Source
                 AND p.SourceID = t.SourceID
@@ -450,21 +434,21 @@ BEGIN
     ) u
     WHERE t.RowNum = 1  -- Only take the LATEST completed stage for each item
       AND t.NextStageId IS NOT NULL;  -- Only if next stage exists
-    
+
     SET @InitialCreated = @@ROWCOUNT;
     SET @TotalCreated = @TotalCreated + @InitialCreated;
-    
+
     DROP TABLE #ItemsNeedingTasks;
-    
+
     PRINT 'Created ' + CAST(@InitialCreated AS NVARCHAR(10)) + ' initial tasks for orphaned items';
 
     -- ===================================================================
     -- PHASE 3: Clean up - Mark completed items as deleted
     -- ===================================================================
     PRINT CHAR(13) + '--- PHASE 3: Cleaning Up Completed Items ---';
-    
+
     DECLARE @CleanedUp INT = 0;
-    
+
     -- Mark as deleted any pending tasks where the stage is already complete
     UPDATE p
     SET p.DeletedOn = @Now,
@@ -483,9 +467,9 @@ BEGIN
           GROUP BY h.Source, h.SourceID, h.Stage
           HAVING COUNT(DISTINCT h.CreatedBy) >= s.[Count]
       );
-    
+
     SET @CleanedUp = @@ROWCOUNT;
-    
+
     PRINT 'Cleaned up ' + CAST(@CleanedUp AS NVARCHAR(10)) + ' completed pending tasks';
 
     PRINT CHAR(13) + '=== PROCESSING COMPLETED ===';
