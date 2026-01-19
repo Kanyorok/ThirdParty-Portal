@@ -140,8 +140,20 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         );
 
         // 2. Construct the Frontend URL
+        // Dynamic detection: Try to get URL from request headers (Origin or Referer)
+        $detectedUrl = null;
+        if (request()->hasHeader('Origin')) {
+            $detectedUrl = request()->header('Origin');
+        } elseif (request()->hasHeader('Referer')) {
+            $parsed = parse_url(request()->header('Referer'));
+            if (isset($parsed['scheme']) && isset($parsed['host'])) {
+                $port = isset($parsed['port']) ? ':' . $parsed['port'] : '';
+                $detectedUrl = $parsed['scheme'] . '://' . $parsed['host'] . $port;
+            }
+        }
+
         // Use dynamically provided base URL if available, otherwise fallback to config
-        $frontendUrl = $this->verificationBaseUrl ?? config('app.frontend_url', config('app.nextauth_url', 'http://localhost:3000'));
+        $frontendUrl = $this->verificationBaseUrl ?? $detectedUrl ?? config('app.frontend_url', config('app.nextauth_url', 'http://localhost:3000'));
         $frontendUrl = rtrim($frontendUrl, '/');
 
         $url = $frontendUrl . '/verify-email?verify_url=' . urlencode($backendSignedUrl);
@@ -264,8 +276,20 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
 
     public function sendPasswordResetNotification($token): void
     {
-        $baseUrl = config('app.nextauth_url') ?? config('app.frontend_url') ?? config('app.url');
-        $url = $baseUrl . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
+        // Dynamic detection: Try to get URL from request headers (Origin or Referer)
+        $detectedUrl = null;
+        if (request()->hasHeader('Origin')) {
+            $detectedUrl = request()->header('Origin');
+        } elseif (request()->hasHeader('Referer')) {
+            $parsed = parse_url(request()->header('Referer'));
+            if (isset($parsed['scheme']) && isset($parsed['host'])) {
+                $port = isset($parsed['port']) ? ':' . $parsed['port'] : '';
+                $detectedUrl = $parsed['scheme'] . '://' . $parsed['host'] . $port;
+            }
+        }
+
+        $baseUrl = $detectedUrl ?? config('app.nextauth_url') ?? config('app.frontend_url') ?? config('app.url');
+        $url = rtrim($baseUrl, '/') . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
         
         $subject = 'Reset Password Notification';
         $body = "
