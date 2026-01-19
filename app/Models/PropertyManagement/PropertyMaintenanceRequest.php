@@ -4,6 +4,7 @@ namespace App\Models\PropertyManagement;
 
 
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -64,6 +65,10 @@ class PropertyMaintenanceRequest extends Model
     public function priority()
     {
         return $this->belongsTo(CodeDetail::class, 'Priority', 'ID');
+    }
+    public function reportedByUser()
+    {
+        return $this->belongsTo(ThirdParties::class, 'ReportedBy', 'Id');
     }
 
     public function createdByUser()

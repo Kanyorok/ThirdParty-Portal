@@ -2,6 +2,7 @@
 
 namespace App\Services\Insurance\PremiumManagement;
 
+use App\Models\Core\Currency;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Auth\User;
@@ -24,6 +25,7 @@ class BancassurancePremiumPaymentsService
         DateTime            $PaymentDate,
         DateTime            $NextPaymentDate,
         string              $Amount,
+        Currency            $CurrencyId,
         CodeDetail          $PaymentMode,
         string              $ReferenceNumber,
         ?string              $Notes = null,
@@ -37,6 +39,7 @@ class BancassurancePremiumPaymentsService
             'PaymentDate' => $PaymentDate,
             'NextPaymentDate' => $NextPaymentDate,
             'Amount' => $Amount,
+            'CurrencyId' => $CurrencyId->Id,
             'PaymentMode' => $PaymentMode->ID,
             'ReferenceNumber' => $ReferenceNumber,
             'Notes' => $Notes ?? null,

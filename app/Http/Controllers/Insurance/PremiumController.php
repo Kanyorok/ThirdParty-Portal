@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Core\Currency;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Insurance\PremiumManagement\BancassurancePremiumPaymentsRequest;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,7 @@ class PremiumController extends Controller
         $payment = BancassurancePremiumPayments::all();
         $policies = BancassurancePolicy::where('Status', InsurancePolicyStatus::Issued)->get();
         $balances = [];
+        $currencies = Currency::all();
         $filteredPolicies = $policies->filter(function ($policy) use (&$balances) {
             $totalPaid = BancassurancePremiumPayments::where('PolicyID', $policy->Id)->sum('Amount');
             $riderPremium = 0;
@@ -42,6 +44,7 @@ class PremiumController extends Controller
             'paymentModes' => $paymentModes,
             'payment' => $payment,
             'balances' => $balances,
+            'currencies' => $currencies,
         ]);
     }
 
@@ -54,6 +57,8 @@ class PremiumController extends Controller
         $PaymentMode = CodeDetail::findOrFail($validated['PaymentMode']);
         $PaymentDate = new \DateTime($validated['PaymentDate']);
         $NextPaymentDate = new \DateTime($validated['NextPaymentDate']);
+        $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
+
 
         $customer = BancassurancePremiumPaymentsService::create(
             $PolicyID,
@@ -62,6 +67,7 @@ class PremiumController extends Controller
             $PaymentDate,
             $NextPaymentDate,
             $validated['Amount'],
+            $CurrencyId,
             $PaymentMode,
             $validated['ReferenceNumber'],
             $validated['Notes'] ?? '',
