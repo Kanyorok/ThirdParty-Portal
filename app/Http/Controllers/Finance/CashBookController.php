@@ -7,6 +7,7 @@ use App\Models\Core\Currency;
 use App\Models\Finance\BankAccount;
 use App\Models\Finance\Cashbook;
 use App\Models\Finance\CashbookLine;
+use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLMapping;
 use App\Models\Finance\FinanceTransactionTypes;
 use Illuminate\Http\Request;
@@ -43,8 +44,9 @@ class CashBookController extends Controller
 
     protected function buildCreateView(?string $presetType)
     {
-        $bankAccounts = BankAccount::with(['bank'])->orderBy('AccountNumber')->get();
+        $bankAccounts = BankAccount::with(['bank', 'glAccount'])->orderBy('AccountNumber')->get();
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name', 'Symbol', 'DecimalDigits']);
+        $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->orderBy('GLCode')->get();
 
         // Only show txn types that have active mapping for this module; fallback to all active types if none mapped yet
         $mappedTxnIds = FinanceGLMapping::where('ModuleID', self::CASHBOOK_MODULE_ID)
@@ -58,7 +60,7 @@ class CashBookController extends Controller
             ? $txnQuery->whereIn('Id', $mappedTxnIds)->orderBy('Name')->get(['Id', 'Code', 'Name', 'Description'])
             : $txnQuery->orderBy('Name')->get(['Id', 'Code', 'Name', 'Description']);
 
-        return view('finance.cashbook.create', compact('bankAccounts', 'currencies', 'presetType', 'txnTypes'));
+        return view('finance.cashbook.create', compact('bankAccounts', 'currencies', 'presetType', 'txnTypes', 'gls'));
     }
 
     public function store(Request $request)
@@ -72,6 +74,11 @@ class CashBookController extends Controller
             'Amount' => 'required|numeric|min:0.01',
             'TransactionTypeID' => 'nullable|integer|exists:t_FinanceTransactionTypes,Id',
             'UseAutoGL' => 'nullable|boolean',
+            'PartyType' => 'nullable|in:VENDOR,TENANT,OTHER',
+            'PartyID' => 'nullable|integer',
+            'PartyName' => 'nullable|string|max:255',
+            'PartyContact' => 'nullable|string|max:120',
+            'PartyEmail' => 'nullable|email|max:120',
             // optional manual lines
             'lines.*.GLAccountID' => 'nullable|integer',
             'lines.*.Description' => 'nullable|string|max:300',
@@ -91,6 +98,12 @@ class CashBookController extends Controller
             }
             if ($this->columnExists($hdr->getTable(), 'UseAutoGL')) {
                 $hdr->UseAutoGL = $request->boolean('UseAutoGL', true);
+            }
+            if ($this->columnExists($hdr->getTable(), 'PartyContact')) {
+                $hdr->PartyContact = $request->input('PartyContact');
+            }
+            if ($this->columnExists($hdr->getTable(), 'PartyEmail')) {
+                $hdr->PartyEmail = $request->input('PartyEmail');
             }
 
             $hdr->AmountBase = round($hdr->Amount * ($hdr->ExchangeRate ?: 1), 2);
@@ -131,8 +144,10 @@ class CashBookController extends Controller
                 ]);
             }
 
-            return redirect()->route('cashbook.show', $hdr->CashbookID)
-                ->with('success', 'Cashbook entry saved (Draft).');
+            $msg = strtoupper((string)$hdr->EntryType) === 'PAYMENT'
+                ? 'Cashbook payment saved as Draft.'
+                : 'Cashbook entry saved as Draft.';
+            return redirect()->route('cashbook.index')->with('success', $msg);
         });
     }
 
@@ -149,8 +164,9 @@ class CashBookController extends Controller
             return redirect()->route('cashbook.show', $entry->CashbookID)->with('error', 'Only Draft entries can be edited.');
         }
 
-        $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
+        $bankAccounts = BankAccount::with(['bank', 'glAccount'])->orderBy('AccountNumber')->get();
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name', 'Symbol', 'DecimalDigits']);
+        $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->orderBy('GLCode')->get();
 
         $mappedTxnIds = FinanceGLMapping::where('ModuleID', self::CASHBOOK_MODULE_ID)
             ->where('IsActive', 1)
@@ -161,7 +177,7 @@ class CashBookController extends Controller
             ? $txnQuery->whereIn('Id', $mappedTxnIds)->orderBy('Name')->get(['Id', 'Code', 'Name', 'Description'])
             : $txnQuery->orderBy('Name')->get(['Id', 'Code', 'Name', 'Description']);
 
-        return view('finance.cashbook.edit', compact('entry', 'bankAccounts', 'currencies', 'txnTypes'));
+        return view('finance.cashbook.edit', compact('entry', 'bankAccounts', 'currencies', 'txnTypes', 'gls'));
     }
 
     public function update(Request $request, $id)
@@ -178,6 +194,11 @@ class CashBookController extends Controller
             'Amount' => 'required|numeric|min:0.01',
             'TransactionTypeID' => 'nullable|integer|exists:t_FinanceTransactionTypes,Id',
             'UseAutoGL' => 'nullable|boolean',
+            'PartyType' => 'nullable|in:VENDOR,TENANT,OTHER',
+            'PartyID' => 'nullable|integer',
+            'PartyName' => 'nullable|string|max:255',
+            'PartyContact' => 'nullable|string|max:120',
+            'PartyEmail' => 'nullable|email|max:120',
         ]);
 
         return DB::transaction(function () use ($request, $entry) {
@@ -191,6 +212,12 @@ class CashBookController extends Controller
             }
             if ($this->columnExists($entry->getTable(), 'UseAutoGL')) {
                 $entry->UseAutoGL = $request->boolean('UseAutoGL', true);
+            }
+            if ($this->columnExists($entry->getTable(), 'PartyContact')) {
+                $entry->PartyContact = $request->input('PartyContact');
+            }
+            if ($this->columnExists($entry->getTable(), 'PartyEmail')) {
+                $entry->PartyEmail = $request->input('PartyEmail');
             }
 
             $entry->AmountBase = round($entry->Amount * ($entry->ExchangeRate ?: 1), 2);
@@ -230,6 +257,86 @@ class CashBookController extends Controller
             return redirect()->route('cashbook.show', $entry->CashbookID)
                 ->with('success', 'Cashbook entry updated.');
         });
+    }
+
+    /**
+     * AJAX: Select2 vendors from Supplier Master -> Third Parties
+     */
+    public function partyVendors(Request $request)
+    {
+        $q = trim((string)$request->query('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $vendors = DB::table('t_SupplierMaster as sm')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
+            ->where(function ($query) use ($q) {
+                $query->where('tp.ThirdPartyName', 'like', "%{$q}%")
+                    ->orWhere('tp.TradingName', 'like', "%{$q}%")
+                    ->orWhere('tp.RegistrationNumber', 'like', "%{$q}%")
+                    ->orWhere('tp.Email', 'like', "%{$q}%")
+                    ->orWhere('tp.Phone', 'like', "%{$q}%");
+            })
+            ->select('tp.Id as ThirdPartyId', 'tp.ThirdPartyName', 'tp.TradingName', 'tp.RegistrationNumber', 'tp.Email')
+            ->orderBy('tp.ThirdPartyName')
+            ->limit(20)
+            ->get();
+
+        $results = $vendors->map(function ($v) {
+            $name = $v->TradingName ?: $v->ThirdPartyName;
+            $text = trim($name) !== '' ? $name : 'Unknown Vendor';
+            return [
+                'id' => $v->ThirdPartyId,
+                'text' => $text,
+                'meta' => [
+                    'registration' => $v->RegistrationNumber,
+                    'email' => $v->Email,
+                ],
+            ];
+        });
+
+        return response()->json(['results' => $results]);
+    }
+
+    /**
+     * AJAX: Select2 tenants from Tenant Master -> Third Parties
+     */
+    public function partyTenants(Request $request)
+    {
+        $q = trim((string)$request->query('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $tenants = DB::table('t_TenantMaster as tm')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 'tm.ThirdPartyId')
+            ->where(function ($query) use ($q) {
+                $query->where('tp.ThirdPartyName', 'like', "%{$q}%")
+                    ->orWhere('tp.TradingName', 'like', "%{$q}%")
+                    ->orWhere('tp.RegistrationNumber', 'like', "%{$q}%")
+                    ->orWhere('tp.Email', 'like', "%{$q}%")
+                    ->orWhere('tp.Phone', 'like', "%{$q}%");
+            })
+            ->select('tp.Id as ThirdPartyId', 'tp.ThirdPartyName', 'tp.TradingName', 'tp.RegistrationNumber', 'tp.Email')
+            ->orderBy('tp.ThirdPartyName')
+            ->limit(20)
+            ->get();
+
+        $results = $tenants->map(function ($t) {
+            $name = $t->TradingName ?: $t->ThirdPartyName;
+            $text = trim($name) !== '' ? $name : 'Unknown Tenant';
+            return [
+                'id' => $t->ThirdPartyId,
+                'text' => $text,
+                'meta' => [
+                    'registration' => $t->RegistrationNumber,
+                    'email' => $t->Email,
+                ],
+            ];
+        });
+
+        return response()->json(['results' => $results]);
     }
 
     public function destroy($id)

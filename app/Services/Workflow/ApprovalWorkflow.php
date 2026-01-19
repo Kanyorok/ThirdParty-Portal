@@ -224,8 +224,10 @@ class ApprovalWorkflow extends ApprovalWorkflowService
     public function canApproveModel($model, User $user): bool
     {
         try {
+            $source = method_exists($model, 'getMorphClass') ? $model->getMorphClass() : get_class($model);
+
             $canApprove = parent::canApprove(
-                get_class($model),
+                $source,
                 $model->getKey(),
                 $user
             );
