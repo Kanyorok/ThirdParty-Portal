@@ -172,11 +172,13 @@ class OrderSourceService
                 )
                 ->get();
 
-             $ordered = $this->orderService->getOrderedQuantities('CONTRACT-RFQ', $contractId);
+             $orderedContract = $this->orderService->getOrderedQuantities('CONTRACT-RFQ', $contractId);
+             $orderedRFQ = $this->orderService->getOrderedQuantities('RFQ', $contract->RFQId);
 
-             return $items->map(function ($item) use ($ordered) {
-                 $prev = $ordered[$item->itemCode] ?? 0;
-                 $item->quantity = max(0, $item->quantity - $prev);
+             return $items->map(function ($item) use ($orderedContract, $orderedRFQ) {
+                 $prevContract = $orderedContract[$item->itemCode] ?? 0;
+                 $prevRFQ = $orderedRFQ[$item->itemCode] ?? 0;
+                 $item->quantity = max(0, $item->quantity - $prevContract - $prevRFQ);
                  $item->lineTotal = $item->quantity * $item->unitPrice;
                  return $item;
              })->filter(function ($item) {
@@ -191,7 +193,17 @@ class OrderSourceService
             }
 
             if (!empty($contract->TenderID)) {
-                return $this->getTenderItems($contract->TenderID);
+                $items = $this->getTenderItems($contract->TenderID);
+                $orderedContract = $this->orderService->getOrderedQuantities('CONTRACT', $contractId);
+
+                return $items->map(function ($item) use ($orderedContract) {
+                    $prev = $orderedContract[$item->itemCode] ?? 0;
+                    $item->quantity = max(0, $item->quantity - $prev);
+                    $item->lineTotal = $item->quantity * $item->unitPrice;
+                    return $item;
+                })->filter(function ($item) {
+                    return $item->quantity > 0;
+                })->values();
             }
             
              return collect([]);
@@ -314,17 +326,25 @@ class OrderSourceService
     
     public function getDirectPlanItems($planId)
     {
+        // specific lookup to avoid matching 'Tender' or other methods containing 'D'
         $directMethod = DB::table('t_CodeDetails')
             ->where('CodeID', 'ProcurementMethod')
             ->where(function ($q) {
-                $q->where('Description', 'LIKE', '%Direct Purchase%')
-                  ->orWhere('Value', 'Like', '%D%');
+                $q->where('Description', 'LIKE', 'Direct Purchase%')
+                  ->orWhere('Description', 'LIKE', 'Direct Procurement%');
             })
             ->value('ID');
 
+        // Fallback if not found (try strictly 'Direct')
+        if (!$directMethod) {
+             $directMethod = DB::table('t_CodeDetails')
+                ->where('CodeID', 'ProcurementMethod')
+                ->where('Description', 'Direct')
+                ->value('ID');
+        }
+
         $items = DB::table('t_PlanLineItem as pli')
             ->join('t_Items as i', 'pli.ItemID', '=', 'i.Id')
-            ->leftJoin('t_Pricing as ip', 'i.Id', '=', 'ip.ItemID')
             ->where('pli.PlanID', $planId)
             ->where('pli.ProcurementMethod', $directMethod)
             ->whereNull('pli.DeletedOn')
@@ -332,7 +352,7 @@ class OrderSourceService
                 'i.Id as itemCode',
                 'i.ItemName as itemName',
                 'pli.MergedQty as quantity',
-                DB::raw('COALESCE(ip.ActualPrice, 0) as unitPrice'), // Assuming price available in master/pricing
+                DB::raw('COALESCE(i.ItemPrice, 0) as unitPrice'),
                  'i.ItemDescription as description',
                  'i.UOM as uom',
                  'i.ItemType as itemType'

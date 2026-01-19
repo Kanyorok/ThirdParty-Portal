@@ -29,7 +29,10 @@ class TenderSubmissionController extends Controller
     public function create()
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
-        $tenders = Tender::select('TenderNo', 'Title')->get();
+        // Exclude tenders that already have submissions
+        $tenders = Tender::select('TenderNo', 'Title')
+            ->doesntHave('submissions')
+            ->get();
 
         // Fix: Get supplier names from the related ThirdParty table
         $suppliers = Supplier::select('t_Suppliers.Id')
@@ -88,6 +91,16 @@ class TenderSubmissionController extends Controller
             ->whereNull('t_Suppliers.DeletedOn')
             ->select('t_Suppliers.Id')
             ->first();
+
+        if ($supplier) {
+            $existingSubmission = BidSubmission::where('TenderRef', $request->tender_ref)
+                ->where('SupplierId', $supplier->Id)
+                ->exists();
+
+            if ($existingSubmission) {
+                return redirect()->back()->withErrors(['supplier_name' => 'A submission for this tender and supplier already exists.'])->withInput();
+            }
+        }
 
         DB::beginTransaction();
         try {

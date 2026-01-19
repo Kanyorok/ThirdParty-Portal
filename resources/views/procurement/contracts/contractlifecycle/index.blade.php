@@ -40,7 +40,7 @@
                         <div class="card bg-success text-white">
                             <div class="card-body text-center">
                                 <i class="fas fa-handshake fa-2x mb-2"></i>
-                                <h5>{{ $contracts->where('ContractStatus', 'Executed')->count() }}</h5>
+                                <h5>{{ $counts->active ?? 0 }}</h5>
                                 <small>Active Contracts</small>
                             </div>
                         </div>
@@ -49,7 +49,7 @@
                         <div class="card bg-warning text-white">
                             <div class="card-body text-center">
                                 <i class="fas fa-clock fa-2x mb-2"></i>
-                                <h5>{{ $contracts->where('ContractStatus', 'Approved')->count() }}</h5>
+                                <h5>{{ $counts->pending ?? 0 }}</h5>
                                 <small>Pending Execution</small>
                             </div>
                         </div>
@@ -58,7 +58,7 @@
                         <div class="card bg-danger text-white">
                             <div class="card-body text-center">
                                 <i class="fas fa-times-circle fa-2x mb-2"></i>
-                                <h5>{{ $contracts->where('ContractStatus', 'Terminated')->count() }}</h5>
+                                <h5>{{ $counts->terminated ?? 0 }}</h5>
                                 <small>Terminated</small>
                             </div>
                         </div>
@@ -67,7 +67,7 @@
                         <div class="card bg-info text-white">
                             <div class="card-body text-center">
                                 <i class="fas fa-chart-line fa-2x mb-2"></i>
-                                <h5>{{ $contracts->total() }}</h5>
+                                <h5>{{ $counts->total ?? 0 }}</h5>
                                 <small>Total Contracts</small>
                             </div>
                         </div>

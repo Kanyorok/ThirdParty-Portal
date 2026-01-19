@@ -143,15 +143,15 @@
                                     </tr>
                                     <tr>
                                         <td><strong>Contact Person:</strong></td>
-                                        <td>{{ $contract->winningSupplier->thirdParty->ContactPerson ?? 'N/A' }}</td>
+                                        <td>{{ $contract->winningSupplier->supplierMaster->party->ContactPerson ?? 'N/A' }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Email:</strong></td>
-                                        <td>{{ $contract->winningSupplier->thirdParty->Email ?? 'N/A' }}</td>
+                                        <td>{{ $contract->winningSupplier->supplierMaster->party->Email ?? 'N/A' }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Phone:</strong></td>
-                                        <td>{{ $contract->winningSupplier->thirdParty->PhoneNumber ?? ($contract->winningSupplier->thirdParty->Mobile ?? 'N/A') }}</td>
+                                        <td>{{ $contract->winningSupplier->supplierMaster->party->Phone ?? ($contract->winningSupplier->supplierMaster->party->Mobile ?? 'N/A') }}</td>
                                     </tr>
                                 </table>
                             </div>

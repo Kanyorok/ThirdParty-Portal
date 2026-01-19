@@ -66,120 +66,80 @@
                         </div>
                     </div>
 
-            <!-- RFQ Selection -->
-            <div class="row mb-4 source-rfq d-none">
-                    <div class="col-md-4">
-                    <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
-                    <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
-                        <option selected disabled>Select RFQ</option>
-                        @foreach($awardedRfqs as $ar)
-                            @php
-                                $rfqNumber = trim((string)($ar->RFQNumber ?? ''));
-                                $isConvertedId = in_array($ar->Id, $convertedRFQIds ?? []);
-                                $isUsedRef = in_array($rfqNumber, $usedReferenceNumbers ?? []);
-                            @endphp
-                            {{-- Skip RFQs that are already converted by id or by reference number in ExtOrdNum --}}
-                            @if($isConvertedId || $isUsedRef)
-                                @continue
-                            @endif
-                            <option value="{{ $ar->RFQNumber }}"
-                                    data-rfq-id="{{ $ar->Id }}"
-                                    data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
-                                    data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
-                                    data-supplier-legacy-id="{{ $ar->SupplierId }}"
-                                    data-supplier-name="{{ $ar->SupplierName ?? '' }}"
-                                    data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }}</option>
-                        @endforeach
-                        {{-- Only awarded RFQs must be listed (no non-awarded options) --}}
-                        </select>
-                    @error('refNo')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                    </div>
-                <div class="col-md-4">
-                    <label>LPO Number <span class="text-danger">*</span></label>
-                    <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
-                    @error('LPONo')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="col-md-4">
-                    <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
-                    @error('pODate')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-
-            <!-- Tender Selection -->
-            <div class="row mb-4 source-tender d-none">
-                <div class="col-md-4">
-                    <label>Tender No <span class="text-danger">*</span></label>
-                    <select class="form-control" id="tenderNo">
-                        <option selected disabled>Select Tender</option>
-                        @foreach(($awardedTenders ?? []) as $t)
-                            @php
-                                $tenderNo = trim((string)($t->TenderNo ?? ''));
-                                $isConvertedTenderId = in_array($t->Id, ($convertedTenderIds ?? []));
-                                $isUsedTenderRef = in_array($tenderNo, $usedReferenceNumbers ?? []);
-                            @endphp
-                            {{-- Skip Tenders already converted by id or whose TenderNo appears in ExtOrdNum --}}
-                            @if($isConvertedTenderId || $isUsedTenderRef)
-                                @continue
-                            @endif
-                            <option value="{{ $t->TenderNo }}"
-                                    data-tender-id="{{ $t->Id }}"
-                                    data-supplier-id="{{ $t->SupplierId }}"
-                                    data-thirdparty-id="{{ $t->ThirdPartyId ?? 0 }}"
-                                    data-supplier-name="{{ $t->SupplierName ?? '' }}"
-                                    data-address="{{ $t->Address ?? '' }}">{{ $t->TenderNo }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label>LPO Number <span class="text-danger">*</span></label>
-                    <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
-                </div>
-                <div class="col-md-4">
-                    <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
-                </div>
-            </div>
-
-            <!-- Contract Selection -->
-            <div class="row mb-4 source-contract d-none">
-                    <div class="col-md-4">
-                    <label>Contract Ref <span class="text-danger">*</span></label>
-                    <select class="form-control" id="contractRef">
-                        <option selected disabled>Select Active Contract</option>
-                        @foreach(($contracts ?? []) as $c)
-                            <option value="{{ $c->ContractRef }}"
-                                    data-contract-id="{{ $c->Id }}"
-                                    data-award-type="{{ $c->AwardType ?? 'tender' }}"
-                                    data-supplier-id="{{ $c->SupplierId }}"
-                                    data-supplier-name="{{ $c->SupplierName ?? '' }}"
-                                    data-address="{{ $c->Address }}">
-                                {{ $c->ContractRef }} - {{ $c->SupplierName }} [{{ $c->ContractStatus }}]
-                            </option>
-                        @endforeach
-                        </select>
-                </div>
-                <div class="col-md-4">
-                    <label>LPO Number <span class="text-danger">*</span></label>
-                    <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
-                </div>
-                <div class="col-md-4">
-                    <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
-                </div>
-            </div>
-
-            <!-- Supplier & Details -->
+            <!-- Consolidated Document & Supplier Row -->
             <div class="row mb-4 supplier-row">
                 <div class="col-md-6">
-                    <!-- Host for supplier driver (non-direct) and plan driver (direct) -->
-                    <div id="supplierDriverHost"></div>
+                    <!-- RFQ Selection -->
+                    <div class="source-rfq d-none mb-3">
+                        <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
+                        <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
+                            <option selected disabled>Select RFQ</option>
+                            @foreach($awardedRfqs as $ar)
+                                @php
+                                    $rfqNumber = trim((string)($ar->RFQNumber ?? ''));
+                                    $isConvertedId = in_array($ar->Id, $convertedRFQIds ?? []);
+                                    $isUsedRef = in_array($rfqNumber, $usedReferenceNumbers ?? []);
+                                @endphp
+                                @if($isConvertedId || $isUsedRef)
+                                    @continue
+                                @endif
+                                <option value="{{ $ar->RFQNumber }}"
+                                        data-rfq-id="{{ $ar->Id }}"
+                                        data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
+                                        data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
+                                        data-supplier-legacy-id="{{ $ar->SupplierId }}"
+                                        data-supplier-name="{{ $ar->SupplierName ?? '' }}"
+                                        data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }}</option>
+                            @endforeach
+                        </select>
+                        @error('refNo')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Tender Selection -->
+                    <div class="source-tender d-none mb-3">
+                        <label>Tender No <span class="text-danger">*</span></label>
+                        <select class="form-control" id="tenderNo">
+                            <option selected disabled>Select Tender</option>
+                            @foreach(($awardedTenders ?? []) as $t)
+                                @php
+                                    $tenderNo = trim((string)($t->TenderNo ?? ''));
+                                    $isConvertedTenderId = in_array($t->Id, ($convertedTenderIds ?? []));
+                                    $isUsedTenderRef = in_array($tenderNo, $usedReferenceNumbers ?? []);
+                                @endphp
+                                @if($isConvertedTenderId || $isUsedTenderRef)
+                                    @continue
+                                @endif
+                                <option value="{{ $t->TenderNo }}"
+                                        data-tender-id="{{ $t->Id }}"
+                                        data-supplier-id="{{ $t->SupplierId }}"
+                                        data-thirdparty-id="{{ $t->ThirdPartyId ?? 0 }}"
+                                        data-supplier-name="{{ $t->SupplierName ?? '' }}"
+                                        data-address="{{ $t->Address ?? '' }}">{{ $t->TenderNo }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Contract Selection -->
+                    <div class="source-contract d-none mb-3">
+                        <label>Contract Ref <span class="text-danger">*</span></label>
+                        <select class="form-control" id="contractRef">
+                            <option selected disabled>Select Active Contract</option>
+                            @foreach(($contracts ?? []) as $c)
+                                <option value="{{ $c->ContractRef }}"
+                                        data-contract-id="{{ $c->Id }}"
+                                        data-award-type="{{ $c->AwardType ?? 'tender' }}"
+                                        data-supplier-id="{{ $c->SupplierId }}"
+                                        data-supplier-name="{{ $c->SupplierName ?? '' }}"
+                                        data-address="{{ $c->Address }}">
+                                    {{ $c->ContractRef }} - {{ $c->SupplierName }} [{{ $c->ContractStatus }}]
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Plan Selection (Direct) -->
                     <div id="planDriver" class="plan-driver d-none">
                         <label>Approved Procurement Plan (Direct) <span class="text-danger">*</span></label>
                         <select id="directPlanSelect" class="form-control">
@@ -188,9 +148,28 @@
                         <small class="text-muted">These are approved plans whose method is Direct Purchase.</small>
                     </div>
                 </div>
+
                 <div class="col-md-6">
                     <label>Address</label>
                     <input type="text" class="form-control" name="address" placeholder="Supplier address" readonly/>
+                </div>
+            </div>
+
+            <!-- Common LPO and Date -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label>LPO Number <span class="text-danger">*</span></label>
+                    <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
+                    @error('LPONo')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6">
+                    <label>Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
+                    @error('pODate')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
@@ -364,13 +343,16 @@
         function buildItemOptions(items) {
             let options = '<option value="" disabled selected>Select Item</option>';
             items.forEach(item => {
+                const max = (item.quantity !== undefined && item.quantity !== null) ? item.quantity : '';
+                const label = item.itemName + (max !== '' ? ` (Avail: ${max})` : '');
                 options += `<option value="${item.itemCode}"
                                    data-name="${item.itemName}"
                                    data-description="${item.description || item.itemName}"
                                    data-price="${item.unitPrice || 0}"
                                    data-type="${item.itemType || ''}"
-                                   data-category="${item.categoryName || ''}">
-                               ${item.itemName}
+                                   data-category="${item.categoryName || ''}"
+                                   data-max="${max}">
+                               ${label}
                            </option>`;
             });
             return options;
@@ -420,7 +402,11 @@
                 $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
 
                 // Other fields
-                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${it.quantity ?? ''}"></td>`);
+                const maxQty = it.quantity || 0;
+                $tr.append(`<td class="text-start">
+                    <input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${maxQty}" max="${maxQty}">
+                    <small class="text-muted d-block" style="font-size: 0.75rem;">Available: ${maxQty}</small>
+                </td>`);
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
                 // Tax Dropdown
                 const taxOptions = buildTaxOptions(it.tax || ''); // passing existing tax ID if any
@@ -1079,9 +1065,32 @@
             const itemName = $option.data('name') || $option.text();
             const itemDescription = $option.data('description') || itemName;
             const unitPrice = $option.data('price') || 0;
+            const max = $option.data('max');
+
             // Update description and price
             $row.find('.itemDescription').val(itemDescription);
             $row.find('.unit-price').val(unitPrice);
+            
+            // Update Quantity max and availability text
+            const $qtyInput = $row.find('.quantity');
+            const $availText = $qtyInput.siblings('small');
+            
+            if (max !== undefined && max !== '' && max !== null) {
+                $qtyInput.attr('max', max);
+                $qtyInput.val(max); // Default to max available
+                if ($availText.length) {
+                    $availText.text(`Available: ${max}`);
+                } else {
+                    $qtyInput.after(`<small class="text-muted d-block" style="font-size: 0.75rem;">Available: ${max}</small>`);
+                }
+            } else {
+                $qtyInput.removeAttr('max');
+                $qtyInput.val(''); 
+                if ($availText.length) {
+                    $availText.remove();
+                }
+            }
+
             // Recalculate totals
             recalcRow($row);
             updateTotals();
