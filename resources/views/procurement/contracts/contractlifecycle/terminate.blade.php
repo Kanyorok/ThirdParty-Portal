@@ -3,7 +3,7 @@
 
 @section('content')
     <div class="container mt-4">
-        <h4>🚫 Terminate Contract – {{ $contract->ContractNo ?? 'Contract #' . $contract->id }}</h4>
+        <h4>🚫 Terminate Contract – {{ $contract->ContractNo ?? 'Contract #' . $contract->Id }}</h4>
 
         <!-- Summary -->
         <div class="card shadow-sm mb-4">
@@ -20,7 +20,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-danger text-white">⚠️ Termination Details</div>
             <div class="card-body">
-                <form action="{{ route('contracts.lifecycle.terminate.submit', $contract->id) }}" method="POST">
+                <form action="{{ route('contracts.lifecycle.terminate.submit', $contract->Id) }}" method="POST">
                     @csrf
                     
                     <div class="mb-3">
