@@ -150,6 +150,7 @@ export const authOptions: NextAuthOptions = {
     error: "/signin",
   },
   secret: NEXTAUTH_SECRET,
+  trustHost: true, // Automatically detect URL from request headers
 }
 
 function parseResponse(text: string): Partial<AuthResponse> | null {
