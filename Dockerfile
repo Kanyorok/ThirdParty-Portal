@@ -50,6 +50,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy .env for runtime environment variables
+COPY --from=builder --chown=nextjs:nodejs /app/.env ./.env
+
 USER nextjs
 
 EXPOSE 3000
