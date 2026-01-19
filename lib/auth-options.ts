@@ -23,11 +23,10 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        profile_type: { label: "Profile Type", type: "text" },
       },
       async authorize(credentials): Promise<User | null> {
-        if (!credentials?.email || !credentials?.password || !credentials?.profile_type) {
-          throw new Error("MISSING_FIELDS: Email, password, and profile type are required")
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("MISSING_FIELDS: Email and password are required")
         }
 
         if (!baseUrl) {
@@ -47,7 +46,6 @@ export const authOptions: NextAuthOptions = {
             body: JSON.stringify({
               email: credentials.email,
               password: credentials.password,
-              profile_type: credentials.profile_type,
             }),
           })
           text = await res.text()
@@ -150,7 +148,6 @@ export const authOptions: NextAuthOptions = {
     error: "/signin",
   },
   secret: NEXTAUTH_SECRET,
-  trustHost: true, // Automatically detect URL from request headers
 }
 
 function parseResponse(text: string): Partial<AuthResponse> | null {

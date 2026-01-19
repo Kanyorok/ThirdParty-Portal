@@ -16,9 +16,6 @@ import { FormField } from "@/components/signin/form-fields/login-fields"
 import { PasswordField } from "@/components/signin/form-fields/pwd"
 
 const signInSchema = z.object({
-    profile_type: z.enum(["Supplier", "Tenant", "Customer"], {
-        required_error: "Please select a profile type.",
-    }),
     email: z.string().email("Please enter a valid email address."),
     password: z.string().min(1, "Password is required."),
 })
@@ -70,9 +67,6 @@ function SignInFormComponent() {
     } = useForm<SignInFormInputs>({
         resolver: zodResolver(signInSchema),
         mode: "onTouched",
-        defaultValues: {
-            profile_type: "Supplier",
-        },
     })
 
     const watchedFields = watch(['email', 'password'])
@@ -99,7 +93,6 @@ function SignInFormComponent() {
                 redirect: false,
                 email: data.email,
                 password: data.password,
-                profile_type: data.profile_type,
                 callbackUrl: callbackUrl,
             })
 
@@ -190,26 +183,6 @@ function SignInFormComponent() {
                     </div>
                 )}
                 <form className="space-y-6 mt-8" onSubmit={handleSubmit(onSubmit)}>
-                    <FormField
-                        status={errors.profile_type ? "error" : "default"}
-                        label="Profile Type"
-                        required
-                        error={errors.profile_type?.message}
-                        id="profile_type"
-                    >
-                        <select
-                            id="profile_type"
-                            className={`w-full py-4 px-4 text-base border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white dark:bg-zinc-900 ${errors.profile_type
-                                ? "border-red-300 dark:border-red-700"
-                                : "border-gray-200 hover:border-gray-300 dark:border-zinc-700 dark:hover:border-zinc-600"
-                                }`}
-                            {...register("profile_type")}
-                        >
-                            <option value="Supplier">Supplier</option>
-                            <option value="Tenant">Tenant</option>
-                            <option value="Customer">Customer</option>
-                        </select>
-                    </FormField>
                     <FormField
                         status={fieldStatuses.email}
                         label="Email Address"
