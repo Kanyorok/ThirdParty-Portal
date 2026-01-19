@@ -93,8 +93,8 @@
                         <label for="DocType">Document Type <span class="text-danger">*</span></label>
                         <select name="DocType" id="DocType" class="form-control select2" required>
                             <option value="">-- Select --</option>
-                            @foreach($sourceOptions as $alias => $class)
-                            <option value="{{ $alias }}">{{ class_basename($class) }}</option>
+                            @foreach($labeledSourceOptions as $option)
+                            <option value="{{ $option['alias'] }}">{{ $option['label'] }}</option>
                             @endforeach
                         </select>
                     </div>

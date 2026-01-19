@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Middleware\TransformApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\TransformApiResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,6 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'auth.thirdparty' => \App\Http\Middleware\AuthenticateThirdPartyToken::class,
+        ]);
+
+        $middleware->trimStrings(except: [
+            'reports/*',
         ]);
 
         // Ensure CORS middleware is prepended to API group

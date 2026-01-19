@@ -253,15 +253,23 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::APPROVED)
+                                @php
+                                    try {
+                                        $approvalStatus = $tender->ApprovalStatus;
+                                    } catch (\Throwable $e) {
+                                        $approvalStatus = null;
+                                    }
+                                @endphp
+                                
+                                @if ($approvalStatus === \App\Enums\TenderApprovalStatusEnum::APPROVED)
                                 <span class="badge rounded-pill bg-success text-white">
                                     Approved
                                 </span>
-                                @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::REJECTED)
+                                @elseif ($approvalStatus === \App\Enums\TenderApprovalStatusEnum::REJECTED)
                                 <span class="badge rounded-pill bg-danger text-white">
                                     Rejected
                                 </span>
-                                @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::PENDING)
+                                @elseif ($approvalStatus === \App\Enums\TenderApprovalStatusEnum::PENDING)
                                 <span class="badge rounded-pill bg-warning text-dark">
                                     Pending
                                 </span>
@@ -272,7 +280,14 @@
                                 @endif
                             </td>
                             <td class="action-buttons">
-                                @php $hasActions = false; @endphp
+                                @php 
+                                    $hasActions = false;
+                                    try {
+                                        $approvalStatus = $tender->ApprovalStatus;
+                                    } catch (\Throwable $e) {
+                                        $approvalStatus = null;
+                                    }
+                                @endphp
                                 @canRead('tender')
                                 @php $hasActions = true; @endphp
                                 <a href="{{ route('initiatetender.show', $tender->Id) }}"
@@ -282,13 +297,13 @@
                                 </a>
                                 @endcanRead
 
-                                @if ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::APPROVED)
+                                @if ($approvalStatus === \App\Enums\TenderApprovalStatusEnum::APPROVED)
                                     {{-- APPROVED: View button only --}}
 
-                                @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::PENDING)
+                                @elseif ($approvalStatus === \App\Enums\TenderApprovalStatusEnum::PENDING)
                                     {{-- PENDING APPROVAL: View button only --}}
 
-                                @elseif ($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::REJECTED)
+                                @elseif ($approvalStatus === \App\Enums\TenderApprovalStatusEnum::REJECTED)
                                 @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
                                 @canUpdate('tender')
                                 @php $hasActions = true; @endphp

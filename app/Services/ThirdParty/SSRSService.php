@@ -4,6 +4,7 @@ namespace App\Services\ThirdParty;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\Settings\APICredential;
 use DOMDocument;
 use DOMXPath;
@@ -25,6 +26,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SSRSService
 {
+    public const string UserParameter = 'LoginUser';
+
     protected PendingRequest $_query;
 
     protected string $_serverAPIUrl;
@@ -141,13 +144,18 @@ class SSRSService
         return null;
     }
 
-    public static function queryParams(array $parameters): string
+    public static function queryParams(array $parameters, bool $encode = true): string
     {
         $params = '';
         foreach ($parameters as $index => $value) {
             if (is_array($value)) {
                 foreach ($value as $val) {
-                    $params .= "&$index=$val";
+                    if ($encode) {
+                        $params .= "&{$index}[]=$val";
+                    } else {
+                        $params .= "&$index=$val";
+                    }
+
                 }
             } else {
                 $params .= "&$index=$value";
@@ -162,7 +170,7 @@ class SSRSService
     public function exportReport(string $path, array $parameters = [], string $format = 'XML', bool $content = false): StreamedResponse|string
     {
         $response = $this->_query
-            ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters));
+            ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters, false));
 
         if (!$response->successful()) {
             throw new ConnectionException(
@@ -177,7 +185,11 @@ class SSRSService
         $contentType = $this->getContentType($format);
         $extension = $this->getFileExtension($format);
 
+
         return response()->streamDownload(function () use ($response) {
+            if (ob_get_length()) {
+                ob_end_clean();
+            }
             echo $response->body();
         }, basename($path) . $extension, [
             'Content-Type' => $contentType,
@@ -187,95 +199,13 @@ class SSRSService
 
 
     /**
+     * Parse SSRS XML report output into a standardized format.
+     * Handles flat tables, parent-child, and grandparent-parent-child hierarchies.
+     *
      * @throws ErroredException
      */
-    /* public function parseReportXml(string $xmlString): Collection
-     {
-         // Suppress errors for malformed XML
-         libxml_use_internal_errors(true);
-
-         try {
-             $dom = new DOMDocument();
-             $dom->loadXML($xmlString);
-             $xpath = new DOMXPath($dom);
-
-             // 1. Extract Header Data (Root Attributes)
-             // In SSRS, the <Report> tag contains the title and parameters
-             $header = [];
-             $root = $dom->documentElement;
-             if ($root->hasAttributes()) {
-                 foreach ($root->attributes as $attr) {
-                     // Skip any attributes starting with 'xsi:'
-                     if (!str_starts_with($attr->nodeName, 'xsi:')) {
-                         $header[$attr->nodeName] = $attr->nodeValue;
-                     }
-                 }
-             }
-
-             // 2. Extract Data Records with Group Attributes
-             $dataRows = [];
-
-             // Find all group/collection parent elements
-             $groupNodes = $xpath->query('//node()[local-name() != "Details"]/*[starts-with(local-name(), "Details_Collection")]/..');
-
-             if ($groupNodes->length === 0) {
-                 // Fallback: If no group structure, look for Details directly under any parent
-                 $groupNodes = $xpath->query('//*[*[starts-with(local-name(), "Details")]]');
-             }
-
-             foreach ($groupNodes as $groupNode) {
-                 // Extract group attributes
-                 $groupAttributes = [];
-                 if ($groupNode->hasAttributes()) {
-                     foreach ($groupNode->attributes as $attr) {
-                         if (!str_starts_with($attr->nodeName, 'xsi:')) {
-                             $groupAttributes[$attr->nodeName] = $attr->nodeValue;
-                         }
-                     }
-                 }
-
-                 // Find all Details elements within this group
-                 $detailsNodes = $xpath->query('.//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]', $groupNode);
-
-                 foreach ($detailsNodes as $detailNode) {
-                     $row = array_merge($groupAttributes, []);
-
-                     // Add detail attributes
-                     if ($detailNode->hasAttributes()) {
-                         foreach ($detailNode->attributes as $attr) {
-                             $row[$attr->nodeName] = $attr->nodeValue;
-                         }
-                     }
-
-                     if (!empty($row)) {
-                         $dataRows[] = $row;
-                     }
-                 }
-             }
-
-             libxml_clear_errors();
-
-             // 3. Return as a Collection with Header and Nested Data
-             return collect([
-                 'error' => null,
-                 'header' => $header,
-                 'data'   => $dataRows
-             ]);
-
-     } catch (Exception $e) {
-         libxml_clear_errors();
-         return collect([
-             'error' => $e->getMessage(),
-             'header' => [],
-             'data'   => []
-         ]);
-     }
- }*/
-
-
     public function parseReportXml(string $xmlString): Collection
     {
-        // Suppress errors for malformed XML
         libxml_use_internal_errors(true);
 
         try {
@@ -294,107 +224,47 @@ class SSRSService
                 }
             }
 
-            // 2. Find all Details elements
+            // 2. Find all Details elements (the leaf nodes with actual data)
             $allDetailsNodes = $xpath->query('//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]');
 
-            // 3. Detect if report has grouping
-            $groupedData = [];
-            $ungroupedData = [];
-            $groupKeyAttribute = null;
-            $hasGrouping = false;
-
-            // Try to find group/collection parent elements
-            $groupNodes = $xpath->query('//node()[local-name() != "Details"]/*[starts-with(local-name(), "Details_Collection")]/..');
-
-            if ($groupNodes->length === 0) {
-                // Fallback: If no group structure, look for Details directly under any parent
-                $groupNodes = $xpath->query('//*[*[starts-with(local-name(), "Details")]]');
+            if ($allDetailsNodes->length === 0) {
+                libxml_clear_errors();
+                return collect([
+                    'error' => null,
+                    'header' => $header,
+                    'data' => [],
+                    'columns' => [],
+                    'groupLevels' => [],
+                    'hierarchyDepth' => 0,
+                ]);
             }
 
-            foreach ($groupNodes as $groupNode) {
-                // Extract group attributes
-                $groupAttributes = [];
-                if ($groupNode->hasAttributes()) {
-                    foreach ($groupNode->attributes as $attr) {
-                        if (!str_starts_with($attr->nodeName, 'xsi:')) {
-                            $groupAttributes[$attr->nodeName] = $attr->nodeValue;
-                        }
-                    }
-                }
+            // 3. Determine hierarchy depth by analyzing the path from Details to the tablix container
+            $hierarchyInfo = $this->detectHierarchy($xpath, $allDetailsNodes->item(0));
+            $groupLevels = $hierarchyInfo['groupLevels'];
+            $hierarchyDepth = count($groupLevels);
 
-                // Determine the group key
-                $groupKey = null;
-                foreach ($groupAttributes as $attrName => $attrValue) {
-                    if (!$groupKeyAttribute) {
-                        $groupKeyAttribute = $attrName;
-                    }
-                    // Check if this attribute is different from Details attributes (indicates it's a group attribute)
-                    if (strpos($attrName, '1') !== false || strpos($attrName, '2') !== false) {
-                        $groupKey = $attrValue;
-                        $hasGrouping = true;
-                        break;
-                    }
-                }
-
-                // If no group key found but we have group attributes, use the first one
-                if (!$groupKey && !empty($groupAttributes)) {
-                    $groupKey = reset($groupAttributes);
-                    $groupKeyAttribute = key($groupAttributes);
-                    $hasGrouping = true;
-                }
-
-                // Find all Details elements within this group
-                $detailsNodes = $xpath->query('.//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]', $groupNode);
-
-                foreach ($detailsNodes as $detailNode) {
-                    $row = [];
-
-                    // Add detail attributes
-                    if ($detailNode->hasAttributes()) {
-                        foreach ($detailNode->attributes as $attr) {
-                            $row[$attr->nodeName] = $attr->nodeValue;
-                        }
-                    }
-
-                    if (!empty($row)) {
-                        if ($hasGrouping && $groupKey) {
-                            if (!isset($groupedData[$groupKey])) {
-                                $groupedData[$groupKey] = [];
-                            }
-                            $groupedData[$groupKey][] = $row;
-                        } else {
-                            $ungroupedData[] = $row;
-                        }
-                    }
+            // 4. Extract columns from the first Details element
+            $columns = [];
+            $firstDetail = $allDetailsNodes->item(0);
+            if ($firstDetail !== null && $firstDetail->hasAttributes()) {
+                foreach ($firstDetail->attributes as $attr) {
+                    $columns[] = $attr->nodeName;
                 }
             }
 
-            // If no groups were found, treat all details as ungrouped
-            if (empty($groupedData) && empty($ungroupedData)) {
-                foreach ($allDetailsNodes as $detailNode) {
-                    $row = [];
-                    if ($detailNode->hasAttributes()) {
-                        foreach ($detailNode->attributes as $attr) {
-                            $row[$attr->nodeName] = $attr->nodeValue;
-                        }
-                    }
-                    if (!empty($row)) {
-                        $ungroupedData[] = $row;
-                    }
-                }
-            }
+            // 5. Build the data structure based on hierarchy depth
+            $data = $this->extractHierarchicalData($xpath, $groupLevels, $columns);
 
             libxml_clear_errors();
-
-            // 3. Return as a Collection with appropriate format
-            $data = $hasGrouping && !empty($groupedData) ? $groupedData : $ungroupedData;
 
             return collect([
                 'error' => null,
                 'header' => $header,
                 'data' => $data,
-                'groupKeyAttribute' => $groupKeyAttribute,
-                'isGrouped' => $hasGrouping && !empty($groupedData)
+                'columns' => $columns,
+                'groupLevels' => $groupLevels,
+                'hierarchyDepth' => $hierarchyDepth,
             ]);
 
         } catch (Exception $e) {
@@ -403,9 +273,149 @@ class SSRSService
                 'error' => $e->getMessage(),
                 'header' => [],
                 'data' => [],
-                'groupKeyAttribute' => null,
-                'isGrouped' => false
+                'columns' => [],
+                'groupLevels' => [],
+                'hierarchyDepth' => 0,
             ]);
+        }
+    }
+
+    /**
+     * Detect the hierarchy structure by traversing from Details element up to the tablix.
+     */
+    private function detectHierarchy(DOMXPath $xpath, \DOMNode $detailNode): array
+    {
+        $groupLevels = [];
+        $current = $detailNode->parentNode; // Start from Details_Collection
+
+        while ($current && $current->nodeName !== 'Report') {
+            $nodeName = $current->nodeName;
+
+            // Skip collection nodes and tablix containers
+            if (str_ends_with($nodeName, '_Collection') || str_starts_with($nodeName, 'Tablix') || str_starts_with($nodeName, 'Textbox')) {
+                $current = $current->parentNode;
+                continue;
+            }
+
+            // This is a grouping element - extract its key attribute (first attribute)
+            if ($current->hasAttributes() && $current->attributes->length > 0) {
+                $firstAttr = $current->attributes->item(0);
+                if ($firstAttr !== null) {
+                    $groupLevels[] = [
+                        'element' => $nodeName,
+                        'attribute' => $firstAttr->nodeName,
+                    ];
+                }
+            }
+
+            $current = $current->parentNode;
+        }
+
+        // Reverse to get from outermost to innermost grouping
+        return [
+            'groupLevels' => array_reverse($groupLevels),
+        ];
+    }
+
+    /**
+     * Extract data with hierarchical grouping information.
+     * Returns a flat array of rows, each row containing group context and detail data.
+     */
+    private function extractHierarchicalData(DOMXPath $xpath, array $groupLevels, array $columns): array
+    {
+        $data = [];
+        $hierarchyDepth = count($groupLevels);
+
+        if ($hierarchyDepth === 0) {
+            // Flat table - no grouping
+            $detailsNodes = $xpath->query('//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]');
+            foreach ($detailsNodes as $detailNode) {
+                $row = ['_groups' => [], '_depth' => 0];
+                if ($detailNode->hasAttributes()) {
+                    foreach ($detailNode->attributes as $attr) {
+                        $row[$attr->nodeName] = $attr->nodeValue;
+                    }
+                }
+                $data[] = $row;
+            }
+            return $data;
+        }
+
+        // Build XPath query for the outermost grouping element
+        $outermostGroup = $groupLevels[0];
+        $groupQuery = "//*[local-name()='{$outermostGroup['element']}']";
+        $outerGroupNodes = $xpath->query($groupQuery);
+
+        foreach ($outerGroupNodes as $outerGroupNode) {
+            $this->extractGroupData($xpath, $outerGroupNode, $groupLevels, 0, [], $data);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Recursively extract grouped data.
+     */
+    private function extractGroupData(DOMXPath $xpath, \DOMNode $groupNode, array $groupLevels, int $currentLevel, array $parentGroups, array &$data): void
+    {
+        $currentGroup = $groupLevels[$currentLevel] ?? null;
+
+        if (!$currentGroup) {
+            return;
+        }
+
+        // Extract the group key value
+        $groupValue = '';
+        if ($groupNode->hasAttributes()) {
+            foreach ($groupNode->attributes as $attr) {
+                if ($attr->nodeName === $currentGroup['attribute']) {
+                    $groupValue = $attr->nodeValue;
+                    break;
+                }
+            }
+            // If specific attribute not found, use the first attribute
+            if (empty($groupValue) && $groupNode->attributes->length > 0) {
+                $groupValue = $groupNode->attributes->item(0)->nodeValue;
+            }
+        }
+
+        $currentGroups = array_merge($parentGroups, [
+            [
+                'level' => $currentLevel,
+                'name' => $currentGroup['element'],
+                'attribute' => $currentGroup['attribute'],
+                'value' => $groupValue,
+            ]
+        ]);
+
+        $nextLevel = $currentLevel + 1;
+
+        // Check if there are more grouping levels
+        if ($nextLevel < count($groupLevels)) {
+            $nextGroup = $groupLevels[$nextLevel];
+            $childGroupNodes = $xpath->query(".//*[local-name()='{$nextGroup['element']}']", $groupNode);
+
+            foreach ($childGroupNodes as $childGroupNode) {
+                $this->extractGroupData($xpath, $childGroupNode, $groupLevels, $nextLevel, $currentGroups, $data);
+            }
+        } else {
+            // We're at the deepest grouping level, now extract Details
+            $detailsNodes = $xpath->query(".//node()[starts-with(local-name(), 'Details') and local-name() != 'Details_Collection']", $groupNode);
+
+            foreach ($detailsNodes as $detailNode) {
+                $row = [
+                    '_groups' => $currentGroups,
+                    '_depth' => count($currentGroups),
+                ];
+
+                if ($detailNode->hasAttributes()) {
+                    foreach ($detailNode->attributes as $attr) {
+                        $row[$attr->nodeName] = $attr->nodeValue;
+                    }
+                }
+
+                $data[] = $row;
+            }
         }
     }
 
@@ -429,7 +439,7 @@ class SSRSService
     // Example usage with device info
 
     /**
-     * Get file extension based on export format
+     * Get file extension based on the export format
      */
     protected function getFileExtension(string $format): string
     {
@@ -499,12 +509,17 @@ class SSRSService
      * @throws ConnectionException
      * @throws ErroredException
      */
-    public function getReportParametersValidated(string $id, array $requestParameters): Collection
+    public function getReportParametersValidated(string $id, array $requestParameters, ?User $actor): Collection
     {
         $finalParameters = collect();
         $parameters = $this->getReportParameters($id);
 
         foreach ($parameters as $parameter) {
+            if ($parameter['Name'] === self::UserParameter && $actor instanceof User) {
+                $finalParameters->put($parameter['Name'], $actor->UserID);
+                continue;
+            }
+
             if (isset($requestParameters[$parameter['Name']])) {
                 $value = $requestParameters[$parameter['Name']];
                 if ($parameter['ParameterType'] === 'DateTime') {
@@ -539,6 +554,7 @@ class SSRSService
                         }
 
                         $finalParameters->put($parameter['Name'], $value);
+
                         continue;
                     }
 
@@ -643,7 +659,7 @@ class SSRSService
     }
 
     private function _getRoute(string $path): string
-    { //reports/report/BRERP/Admin/Permissions?rs:embed=true
+    {
         return $this->serverURL . "{$this->path}/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
     }
 

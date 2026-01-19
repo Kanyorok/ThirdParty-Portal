@@ -19,8 +19,10 @@
                         <div class="col-10">
                             <div class="row">
                                 @foreach($parameters as $parameter)
+
                                     @if($parameter['ParameterType'] === 'DateTime')
-                                        <div class="col-md-4 col-4 mb-3">
+                                        <div
+                                            class="col-md-4 col-4 mb-3" {{ ($parameter['ParameterVisibility'] === 'Hidden')?'d-none':'' }}>
                                             <label for="{{ $parameter['Name'] }}"
                                                    class="form-label">{{ $parameter['Prompt'] }} {!! (!$parameter['Nullable'] && !$parameter['AllowBlank']) ? '<span class="text-danger" title="required">*</span>' : '' !!}</label>
                                             <input
@@ -36,7 +38,8 @@
                                             @endif
                                         </div>
                                     @elseif($parameter['ParameterType'] === 'String')
-                                        <div class="col-md-4 col-4 mb-3">
+                                        <div
+                                            class="col-md-4 col-4 mb-3 {{ ($parameter['ParameterVisibility'] === 'Hidden')?'d-none':'' }}">
                                             <label for="{{ $parameter['Name'] }}"
                                                    class="form-label">{{ $parameter['Prompt'] }} {!! (!$parameter['Nullable'] && !$parameter['AllowBlank']) ? '<span class="text-danger" title="required">*</span>' : '' !!}</label>
                                             @if($parameter['MultiValue'] && !$parameter['ValidValuesIsNull'] && count($parameter['ValidValues']) > 0)
@@ -82,7 +85,8 @@
                                             @endif
                                         </div>
                                     @elseif($parameter['ParameterType'] === 'Boolean')
-                                        <div class="col-md-4 col-4 mb-3">
+                                        <div
+                                            class="col-md-4 col-4 mb-3 {{ ($parameter['ParameterVisibility'] === 'Hidden')?'d-none':'' }}">
                                             <label for="{{ $parameter['Name'] }}"
                                                    class="form-label">{{ $parameter['Prompt'] }} {!! (!$parameter['Nullable'] && !$parameter['AllowBlank']) ? '<span class="text-danger" title="required">*</span>' : '' !!}</label>
                                             <div class="form-check">
@@ -115,7 +119,8 @@
                                             @endif
                                         </div>
                                     @elseif($parameter['ParameterType'] === 'Float')
-                                        <div class="col-md-4 col-4 mb-3">
+                                        <div
+                                            class="col-md-4 col-4 mb-3 {{ ($parameter['ParameterVisibility'] === 'Hidden')?'d-none':'' }}">
                                             <label for="{{ $parameter['Name'] }}"
                                                    class="form-label">{{ $parameter['Prompt'] }} {!! (!$parameter['Nullable'] && !$parameter['AllowBlank']) ? '<span class="text-danger" title="required">*</span>' : '' !!}</label>
                                             <input
@@ -134,7 +139,8 @@
                                             @endif
                                         </div>
                                     @elseif($parameter['ParameterType'] === 'Integer')
-                                        <div class="col-md-4 col-4 mb-3">
+                                        <div
+                                            class="col-md-4 col-4 mb-3 {{ ($parameter['ParameterVisibility'] === 'Hidden')?'d-none':'' }}">
                                             <label for="{{ $parameter['Name'] }}"
                                                    class="form-label">{{ $parameter['Prompt'] }} {!! (!$parameter['Nullable'] && !$parameter['AllowBlank']) ? '<span class="text-danger" title="required">*</span>' : '' !!}</label>
                                             <input
@@ -153,7 +159,8 @@
                                             @endif
                                         </div>
                                     @else
-                                        <div class="col-md-4 col-4 mb-3">
+                                        <div
+                                            class="col-md-4 col-4 mb-3 {{ ($parameter['ParameterVisibility'] === 'Hidden')?'d-none':'' }}">
                                             Unknown parameter type
                                         </div>
                                     @endif
@@ -201,7 +208,7 @@
 
             $('.select-option[multiple]').siblings('.select2-container').append('<span class="select-all"></span>');
 
-            $(document).on('click', '.select-all', function (e) {
+            $(document).on('click', '.select-all', function () {
                 selectAllSelect2($(this).siblings('.selection').find('.select2-search__field'));
             });
 
