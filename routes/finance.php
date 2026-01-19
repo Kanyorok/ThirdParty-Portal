@@ -343,6 +343,8 @@ Route::prefix('finance')->middleware(['auth','module:1100000'])->group(function 
     Route::get('cashbook/create/payment', [CashBookController::class, 'createPayment'])->name('cashbook.create.payment');
     Route::post('cashbook/{id}/post', [CashBookController::class, 'post'])->name('cashbook.post');
     Route::post('cashbook/{id}/void', [CashBookController::class, 'void'])->name('cashbook.void');
+    Route::get('cashbook/party/vendors', [CashBookController::class, 'partyVendors'])->name('cashbook.party.vendors');
+    Route::get('cashbook/party/tenants', [CashBookController::class, 'partyTenants'])->name('cashbook.party.tenants');
 
     // NEW: mapping preview for auto-GL
     Route::get('cashbook/txntype/{id}/mapping', [CashBookController::class, 'txnTypeMapping'])

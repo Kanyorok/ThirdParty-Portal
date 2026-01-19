@@ -208,7 +208,11 @@
                     </div>
                 </div>
             </div>
-            @include('layouts._partials._alerts')
+            @if (View::hasSection('page-alerts'))
+                @yield('page-alerts')
+            @else
+                @include('layouts._partials._alerts')
+            @endif
             @yield('content')
         </div>
     </div>

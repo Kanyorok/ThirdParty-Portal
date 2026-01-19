@@ -1,8 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Invoice • '.$invoice->InvoiceNumber)
 
-@section('content')
-
+@section('page-alerts')
     {{-- Success/Error Messages --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3 mb-3" role="alert">
@@ -29,6 +28,9 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+@endsection
+
+@section('content')
 
     <div class="card shadow rounded-4 border-0 invoice-page" id="invoice-print-section">
         <!-- Header -->
