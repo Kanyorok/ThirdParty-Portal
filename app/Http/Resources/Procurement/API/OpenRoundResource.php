@@ -1,34 +1,50 @@
-<?php 
+<?php
 
 namespace App\Http\Resources\Procurement\API;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
 
 class OpenRoundResource extends JsonResource
 {
     public function toArray($request): array
     {
+        $startDate = $this->StartDate ? Carbon::parse($this->StartDate) : null;
+        $endDate = $this->EndDate ? Carbon::parse($this->EndDate) : null;
+
         return [
             'id' => $this->RoundID,
             'title' => $this->Title,
             'description' => $this->Description,
             'dates' => [
-                'start' => $this->StartDate,
-                'end' => $this->EndDate,
-                'is_closing_soon' => now()->diffInDays($this->EndDate) < 5,
+                'start' => $startDate?->toISOString(),
+                'end' => $endDate?->toISOString(),
+                'is_open' => $endDate?->isFuture() ?? false,
+                'is_closing_soon' => $endDate
+                    ? $endDate->isFuture() && $endDate->diffInDays(now()) <= 5
+                    : false,
             ],
             'status' => $this->Status,
-            'targeted_categories' => $this->supplierCategories->map(function ($cat) {
-                return [
-                    'id' => $cat->SupplierCategoryID,
-                    'name' => $cat->Name,
+            'targeted_categories' => $this->whenLoaded(
+                'supplierCategories',
+                fn () => $this->supplierCategories->map(fn ($cat) => [
+                    'id' => (int) $cat->SupplierCategoryID,
+                    'name' => $cat->CategoryName,
                     'code' => $cat->Code ?? null,
-                ];
-            }),
-            'metadata' => [
+                ])->values()
+            ),
+
+            'limits' => [
                 'max_vendors' => $this->MaxVendors,
-                'created_at' => $this->CreatedOn,
-            ]
+            ],
+            'timestamps' => [
+                'created_at' => $this->CreatedOn
+                    ? Carbon::parse($this->CreatedOn)->toISOString()
+                    : null,
+                'modified_at' => $this->ModifiedOn
+                ? Carbon::parse($this->ModifiedOn)->toISOString()
+                : null,
+            ],
         ];
     }
 }
