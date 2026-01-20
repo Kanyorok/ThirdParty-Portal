@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\Workflow\CodeDetail;
 use Illuminate\Http\Request;
 
 class PropertyMaintenanceDashboardController extends Controller
@@ -14,6 +15,7 @@ class PropertyMaintenanceDashboardController extends Controller
     public function index(Request $request)
     {
         // Summary
+        $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
         $totalRequests = PropertyMaintenanceRequest::count();
         $inProgress = PropertyMaintenanceAssign::where('Status', PostingEnum::Pending)->count();
         $completed  = PropertyMaintenanceAssign::where('Status', PostingEnum::Completed)->count();
@@ -55,7 +57,8 @@ class PropertyMaintenanceDashboardController extends Controller
             'inProgress',
             'completed',
             'requests',
-            'properties'
+            'properties',
+            'priorities'
         ));
     }
 }

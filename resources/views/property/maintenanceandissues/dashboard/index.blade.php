@@ -50,9 +50,12 @@
         <div class="col-md-3">
             <select name="priority" class="form-select">
                 <option value="">All Priorities</option>
-                <option value="High" {{ request('priority') == 'High' ? 'selected' : '' }}>High</option>
-                <option value="Medium" {{ request('priority') == 'Medium' ? 'selected' : '' }}>Medium</option>
-                <option value="Low" {{ request('priority') == 'Low' ? 'selected' : '' }}>Low</option>
+                @foreach($priorities as $priority)
+                    <option value="{{ $priority->Description }}"
+                        {{ request('priority') == $priority->Description ? 'selected' : '' }}>
+                        {{ $priority->Description ?? 'N/A'}}
+                    </option>
+                @endforeach
             </select>
         </div>
 
@@ -154,7 +157,12 @@
                             ?? $assign->prequalifiedVendor->TradingName
                             ?? '-' }}
                     </td>
-                    <td>{{ optional($assign->AssignmentDate)->format('d M Y') }}</td>
+                    <td>
+                        {{ $assign->AssignmentDate 
+                            ? \Carbon\Carbon::parse($assign->AssignmentDate)->format('d M Y') 
+                            : '' 
+                        }}
+                    </td>
                 </tr>
             @empty
                 <tr>
