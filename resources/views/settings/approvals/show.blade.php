@@ -163,68 +163,70 @@
     {{-- Added Stages Table --}}
     <div class="mt-5">
         <h5 class="mb-3">🧾 Added Stages</h5>
-        <table class="table table-bordered">
-            <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Role</th>
-                    <th>Cut-off</th>
-                    <th>Final</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="stagesTable">
-                @forelse ($stages as $index => $stage)
-                @php
-                // Check if this is the last stage (final stage)
-                $isLastStage = $index === count($stages) - 1;
-                $isFinalStage = $approval->IsFinalStage && $isLastStage;
-                @endphp
-                <tr id="stage-{{ $stage->Id }}" class="{{ $isFinalStage ? 'final-stage-row' : '' }}">
-                    <td>{{ $index + 1 }}</td>
-                    <td>
-                        {{ $stage->StageName }}
-                        @if($isFinalStage)
-                        <span class="badge bg-success ms-2">FINAL</span>
-                        @endif
-                    </td>
-                    <td>{{ $stage->type_name->Name ?? $stage->type_name->TypeID ?? '-' }}</td>
-                    {{-- uses ?-> to safely access properties --}}
-                    <td>
-                        <div class="d-flex flex-wrap gap-1">
-                            @forelse($stage->permission?->roles ?? [] as $role)
-                                <span class="badge bg-info text-dark">{{ $role->name }}</span>
-                            @empty
-                                -
-                            @endforelse
-                        </div>
-                    </td>
-                    <td>{{ $stage->EscalationLimit ?? '-' }}</td>
-                    <td>
-                        <span class="badge {{ $isFinalStage ? 'bg-success' : 'bg-secondary' }}">
-                            {{ $isFinalStage ? 'Yes' : 'No' }}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="d-flex">
-                            <button type="button" class="btn btn-sm btn-info view-approvers me-1" data-id="{{ $stage->Id }}" title="View Approvers">👀</button>
-                            <form class="deleteStageForm" data-id="{{ $stage->Id }}" data-is-final="{{ $isFinalStage ? '1' : '0' }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr id="noStages">
-                    <td colspan="7" class="text-center text-muted">No stages added yet.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Role</th>
+                        <th>Cut-off</th>
+                        <th>Final</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="stagesTable">
+                    @forelse ($stages as $index => $stage)
+                    @php
+                    // Check if this is the last stage (final stage)
+                    $isLastStage = $index === count($stages) - 1;
+                    $isFinalStage = $approval->IsFinalStage && $isLastStage;
+                    @endphp
+                    <tr id="stage-{{ $stage->Id }}" class="{{ $isFinalStage ? 'final-stage-row' : '' }}">
+                        <td>{{ $index + 1 }}</td>
+                        <td>
+                            {{ $stage->StageName }}
+                            @if($isFinalStage)
+                            <span class="badge bg-success ms-2">FINAL</span>
+                            @endif
+                        </td>
+                        <td>{{ $stage->type_name->Name ?? $stage->type_name->TypeID ?? '-' }}</td>
+                        {{-- uses ?-> to safely access properties --}}
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                @forelse($stage->permission?->roles ?? [] as $role)
+                                    <span class="badge bg-info text-dark">{{ $role->name }}</span>
+                                @empty
+                                    -
+                                @endforelse
+                            </div>
+                        </td>
+                        <td>{{ $stage->EscalationLimit ?? '-' }}</td>
+                        <td>
+                            <span class="badge {{ $isFinalStage ? 'bg-success' : 'bg-secondary' }}">
+                                {{ $isFinalStage ? 'Yes' : 'No' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <button type="button" class="btn btn-sm btn-info view-approvers me-1" data-id="{{ $stage->Id }}" title="View Approvers">👀</button>
+                                <form class="deleteStageForm" data-id="{{ $stage->Id }}" data-is-final="{{ $isFinalStage ? '1' : '0' }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr id="noStages">
+                        <td colspan="7" class="text-center text-muted">No stages added yet.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection
