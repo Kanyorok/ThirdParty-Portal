@@ -16,9 +16,11 @@
                 <div class="card-header">
                     <h5 class="card-title mb-0">Branches</h5>
                     <div class="card-actions float-end">
+                        @can(App\Enums\Core\PermissionEnum::BranchCreate->value)
                         <button class="btn btn-primary ms-2  modal-create-branch" type="button">
                             <i class="fas fa-plus"></i> Add a Branch
                         </button>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body pt-0">
@@ -50,6 +52,44 @@
                             aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                     <!-- View Branch Modal Content -->
+                    <div class="onboarding-content with-gradient d-none modal-item" id="viewBranchModal">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Branch Name</label>
+                                <p class="form-control-plaintext" id="view_Name"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Branch ID</label>
+                                <p class="form-control-plaintext" id="view_BranchID"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Address Line 1</label>
+                                <p class="form-control-plaintext" id="view_Address"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Address Line 2</label>
+                                <p class="form-control-plaintext" id="view_Address2"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Phone</label>
+                                <p class="form-control-plaintext" id="view_Phone"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <p class="form-control-plaintext" id="view_Email"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Manager</label>
+                                <p class="form-control-plaintext" id="view_Manager"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Operation</label>
+                                <p class="form-control-plaintext" id="view_Operation"></p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="onboarding-content with-gradient d-none modal-item" id="createBranchModal">
                         <form action="{{ route('branches.store') }}" method="post" id="createBranchForm"
                               class="row"> @csrf
@@ -376,6 +416,76 @@
             }
         }
 
+        // Create Action (ensure full reset)
+        $(document).on('click', '.modal-create-branch', function () {
+            $('#createBranchForm')[0].reset();
+            $('#createBranchForm').attr('action', '{{ route('branches.store') }}');
+            $('input[name="_method"]').remove();
+            $('#BranchID').val(''); // Clear ID
+            $('#branchesActionsModal').modal('show');
+            $('.modal-title').text('Add Branch');
+            $('.modal-item').addClass('d-none');
+            $('#createBranchModal').removeClass('d-none');
+            
+            // Trigger auto-gen cleanup if needed
+            if (typeof updateBranchId === 'function') updateBranchId(); 
+        });
+
+        // Update Action
+        $(document).on('click', '.branch-action-update', function () {
+            $('.modal-title').text('Update Branch');
+            $('.modal-item').addClass('d-none');
+            $('#createBranchModal').removeClass('d-none');
+
+            let info = $(this).data('info');
+            // let manager = $(this).data('manager');
+            // let operation = $(this).data('operation');
+            let route = $(this).data('route');
+            
+            $('#createBranchForm').attr('action', route);
+            if ($('input[name="_method"]').length === 0) {
+                 $('#createBranchForm').append('<input type="hidden" name="_method" value="PUT">');
+            }
+            
+            let parts = info.split('~');
+            $('#BranchID').val(parts[0]);
+            $('#Name').val(parts[1]);
+            $('#Address').val(parts[2]);
+            $('#Address2').val(parts[3]);
+            $('#Phone').val(parts[4]);
+            $('#Email').val(parts[5]);
+
+            $('#branchesActionsModal').modal('show');
+        });
+
+        // View Action
+        $(document).on('click', '.branch-action-view', function () {
+            $('.modal-title').text('Branch Details');
+            $('.modal-item').addClass('d-none');
+            $('#viewBranchModal').removeClass('d-none');
+
+            let info = $(this).data('info');
+            let manager = $(this).data('manager');
+            let operation = $(this).data('operation');
+
+            let parts = info.split('~');
+            // info format: BranchID~Name~Address~Address2~Phone~Email
+            $('#view_BranchID').text(parts[0] || 'N/A');
+            $('#view_Name').text(parts[1] || 'N/A');
+            $('#view_Address').text(parts[2] || 'N/A');
+            $('#view_Address2').text(parts[3] || 'N/A');
+            $('#view_Phone').text(parts[4] || 'N/A');
+            $('#view_Email').text(parts[5] || 'N/A');
+
+            let mgrParts = manager ? manager.split('~') : [];
+            $('#view_Manager').text(mgrParts[1] || 'N/A'); 
+
+            let opParts = operation ? operation.split('~') : [];
+            $('#view_Operation').text(opParts[1] || 'N/A'); 
+
+            $('#branchesActionsModal').modal('show');
+        });
+
         // --- Auto-generate BranchID based on Branch Name ---
         const nameInput = document.getElementById('Name');
         const branchIdInput = document.getElementById('BranchID');
@@ -453,14 +563,7 @@
         }, 300);
 
         // Bind events when create modal opens and on input
-        $(document).on('click', '.modal-create-branch', function () {
-            // Clear previous values
-            if (branchIdInput) branchIdInput.value = '';
-            if (nameInput) {
-                // Trigger generation if name already typed somehow
-                updateBranchId();
-            }
-        });
+
         if (nameInput) nameInput.addEventListener('input', updateBranchId);
     </script>
 @endsection

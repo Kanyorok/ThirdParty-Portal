@@ -106,7 +106,11 @@ enum PermissionEnum: string
     case ListsView = 'lists-view';
     case ListsUpdate = 'lists-update';
     case Teams = 'teams';
-    case Branches = 'branches';
+    case Branches = 'branches'; // Legacy/General
+    case BranchView = 'branch-view';
+    case BranchCreate = 'branch-create';
+    case BranchUpdate = 'branch-update';
+    case BranchDelete = 'branch-delete';
     case Users = 'users'; //set branch manager.
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
@@ -1192,6 +1196,7 @@ enum PermissionEnum: string
             [self::ComplianceFilingView, self::ComplianceFilingCreate, self::ComplianceFilingUpdate, self::ComplianceFilingDelete],
             [self::CompliancePolicyView, self::CompliancePolicyCreate, self::CompliancePolicyUpdate, self::CompliancePolicyDelete],
             [self::ComplianceGenericView],
+            [self::BranchView, self::BranchCreate, self::BranchUpdate, self::BranchDelete],
 
 
         ]);
@@ -1245,7 +1250,8 @@ enum PermissionEnum: string
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate,
-            self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete
+            self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete,
+            self::BranchView, self::BranchCreate, self::BranchUpdate, self::BranchDelete,
             => ModulesEnum::Settings,
 
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
@@ -1608,6 +1614,7 @@ enum PermissionEnum: string
             self::CompliancePolicyView, self::CompliancePolicyCreate, self::CompliancePolicyUpdate, self::CompliancePolicyDelete => 'Compliance Policies',
             self::ComplianceGenericView => 'Compliance Analytic',
             self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete => 'GlobalWorkflow',
+            self::BranchView, self::BranchCreate, self::BranchUpdate, self::BranchDelete => 'Branch',
 
             default      => 'System Codes' // Fallback to System Codes or specific category if unknown, but better to be explicit.
         };
