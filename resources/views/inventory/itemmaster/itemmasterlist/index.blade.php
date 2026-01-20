@@ -127,7 +127,7 @@
                                 <td>{{ $item->ItemCode }}</td>
                                 <td>{{ $item->BarCode }}</td>
                                 <td>{{ $item->ItemName }}</td>
-                                <td>{{ optional($item->price)->ActualPrice ?? '—' }}</td>
+                                <td>{{ optional($item->price)->ActualPrice ? number_format(optional($item->price)->ActualPrice, 2) : '—' }}</td>
                                 <td>{{ optional($item->category)->Name ?? 'Uncategorized' }}</td>
                                 <td>{{ optional(optional($item->category)->parent)->Name ?? '—' }}</td>
                                 <td>{{ optional($item->itemType)->type->Description ?? 'N/A' }}</td>

@@ -112,7 +112,7 @@
                         <td>{{ $price->PriceID }}</td>
                         <td>{{ $price->item->ItemName ?? $price->item->ItemCode ?? '-' }}</td>
                         <td>{{ $price->uom->Code ?? '-' }}</td>
-                        <td>{{ number_format($price->ActualPrice, 2) }}</td>
+                        <td>{{ $price->ActualPrice ? number_format($price->ActualPrice, 2) : '0.00' }}</td>
                         <td>{{ $price->currency->Code ?? '-' }}</td>
                         {{-- <td>{{ $price->EffectiveFrom ? \Carbon\Carbon::parse($price->EffectiveFrom)->format('Y-m-d') : '—' }}</td>
                         <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
