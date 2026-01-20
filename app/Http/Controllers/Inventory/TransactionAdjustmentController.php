@@ -137,7 +137,9 @@ class TransactionAdjustmentController extends Controller
             $adjItem->current_stock_qty = $currentStocksInBranch->get($adjItem->Item, 0);
         });
 
-        return view('inventory.transactions.adjustments.show', compact('adjustment'));
+        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+
+        return view('inventory.transactions.adjustments.show', compact('adjustment', 'reasons'));
     }
 
     public function destroy(StockAdjustment $stockAdjustment)
