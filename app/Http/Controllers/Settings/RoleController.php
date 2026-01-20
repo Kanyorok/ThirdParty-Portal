@@ -166,6 +166,7 @@ class RoleController extends Controller
                 );
 
                 activity()->causedBy($actor)->performedOn($role)->event('update')->log('update role ' . $role->name);
+                app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
             });
 
             // Clear navbar cache for all users assigned to this role so menu reflects new permissions immediately
