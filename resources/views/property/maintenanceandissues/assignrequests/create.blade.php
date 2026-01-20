@@ -155,8 +155,8 @@
 
         {{-- Notes --}}
         <div class="mb-3">
-            <label class="form-label">Instructions / Notes</label>
-            <textarea class="form-control" name="InstructionNotes" rows="3">{{ old('InstructionNotes') }}</textarea>
+            <label class="form-label">Instructions / Notes <span class="text-danger">*</span></label>
+            <textarea class="form-control" name="InstructionNotes" rows="3" required>{{ old('InstructionNotes') }}</textarea>
             @error('InstructionNotes') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 

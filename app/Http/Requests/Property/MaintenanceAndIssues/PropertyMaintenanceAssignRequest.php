@@ -32,7 +32,7 @@ class PropertyMaintenanceAssignRequest extends FormRequest
             'ExpectedStartDate' => 'required|date|after_or_equal:today',
             'ExpectedCompletion' => 'required|date|after_or_equal:ExpectedStartDate',
             'PriorityLevel' => 'required|exists:t_CodeDetails,Id',
-            'InstructionNotes' => 'nullable|string|max:100',
+            'InstructionNotes' => 'required|string|max:100',
         ];
     }
 
