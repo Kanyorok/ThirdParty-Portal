@@ -24,15 +24,39 @@ class PropertyMaintananceAssignController extends Controller
         return view('property.maintenanceandissues.assignrequests.index', compact('assignments'));
     }
 
-    public function create(){
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
-        $maintenancerequests = PropertyMaintenanceRequest::all();
+    public function create()
+    {
+        $this->authorize(
+            PermissionEnum::PropertyMaintenanceAssignCreate,
+            PropertyMaintenanceAssign::class
+        );
+
+        $assignedRequestIds = PropertyMaintenanceAssign::pluck('RequestNumber');
+
+        $maintenancerequests = PropertyMaintenanceRequest::whereNotIn(
+            'Id',
+            $assignedRequestIds
+        )->get();
+
         $employees = Employee::all();
+
         $suppliers = SupplierMaster::where('IsPrequalified', true)
-            ->select('ThirdPartyId')->get();
+            ->select('ThirdPartyId')
+            ->get();
+
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
-        $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
-        return view('property.maintenanceandissues.assignrequests.create', compact('maintenancerequests', 'employees', 'suppliers', 'priorityLevels','assignmentTypes'));
+        $priorityLevels  = CodeDetail::where('CodeID', 'PriorityLevel')->get();
+
+        return view(
+            'property.maintenanceandissues.assignrequests.create',
+            compact(
+                'maintenancerequests',
+                'employees',
+                'suppliers',
+                'priorityLevels',
+                'assignmentTypes'
+            )
+        );
     }
 
     public function show($Id)

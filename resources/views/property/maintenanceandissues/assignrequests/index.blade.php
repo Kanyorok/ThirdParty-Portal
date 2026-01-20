@@ -136,17 +136,16 @@
                                             <i class="bi bi-eye"></i>
                                         </a>
 
-                                        <a href="{{ route('assignrequest.edit', $assignment->Id) }}"
-                                           class="btn btn-sm btn-warning"
-                                           title="Edit">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-
                                         @if($assignment->taskcompletion()->exists())
                                             <button class="btn btn-sm btn-secondary" title="In Use" disabled>
                                                 <i class="bi bi-lock"></i>
                                             </button>
                                         @else
+                                          <a href="{{ route('assignrequest.edit', $assignment->Id) }}"
+                                           class="btn btn-sm btn-warning"
+                                           title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                          </a>
                                             <form action="{{ route('assignrequest.destroy', $assignment->Id) }}"
                                                   method="POST"
                                                   class="d-inline"
