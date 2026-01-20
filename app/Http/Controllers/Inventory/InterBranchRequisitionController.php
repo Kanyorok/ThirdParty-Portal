@@ -215,6 +215,10 @@ public function index(Request $request)
     if (!$currentBranch instanceof Branch) {
         return redirect()->back()->with('fail', 'Current user branch not found.');
     }
+
+   $isHeadOffice = $currentBranch->IsHQ;
+
+
     $this->authorize('update', InterBranchRequisition::class);
 
     $item = InterBranchRequisition::with([
@@ -251,7 +255,9 @@ public function index(Request $request)
         'categories',
         'subcategories',
         'items',
-        'fromBranch'
+        'fromBranch',
+        'isHeadOffice',
+        'currentBranch'
     ));
 }
 
