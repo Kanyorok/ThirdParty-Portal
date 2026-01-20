@@ -17,8 +17,9 @@ class PropertyMaintenanceDashboardController extends Controller
         // Summary
         $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
         $totalRequests = PropertyMaintenanceRequest::count();
-        $inProgress = PropertyMaintenanceAssign::where('Status', PostingEnum::Pending)->count();
+        $inProgress = PropertyMaintenanceAssign::where('Status', '!=', PostingEnum::Completed)->count();
         $completed  = PropertyMaintenanceAssign::where('Status', PostingEnum::Completed)->count();
+        $unassigned = $totalRequests - $totalAssignedRequests = PropertyMaintenanceAssign::count();
 
         // Base query
         $query = PropertyMaintenanceAssign::with([
@@ -58,7 +59,8 @@ class PropertyMaintenanceDashboardController extends Controller
             'completed',
             'requests',
             'properties',
-            'priorities'
+            'priorities',
+            'unassigned'
         ));
     }
 }
