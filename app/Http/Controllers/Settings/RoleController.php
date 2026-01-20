@@ -147,6 +147,12 @@ class RoleController extends Controller
         $name = $request->getName($role);
         $actor = $request->user();
 
+        // Security check: Prevent user from modifying a role they are assigned to
+        $assignedRoleIds = $actor->branchRoles()->pluck('role_id')->toArray();
+        if (in_array($role->id, $assignedRoleIds)) {
+             return $this->errored('You cannot alter permissions for a role you are currently assigned to.');
+        }
+
         try {
             DB::transaction(function () use ($role, $actor, $name, $permissions) {
                 $role->update([
