@@ -77,7 +77,14 @@
     <div class="d-flex gap-2 mt-3">
         <a href="{{ route('itemmaster.index') }}" class="btn btn-secondary">Back</a>
 
-        <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">Edit Item</a>
+        @if ($item->inUse())
+            <button class="btn btn-warning" disabled title="Item is in use and cannot be edited">
+                <i class="bi bi-pencil"></i> Edit Item
+            </button>
+        @else
+            <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">Edit Item</a>
+        @endif
+
         @if ($item->inUse())
             <button class="btn btn-info" disabled title="Item is in use and cannot be deleted">
                 <i class="bi bi-lock"></i> Item In Use
