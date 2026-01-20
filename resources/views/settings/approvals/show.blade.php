@@ -24,7 +24,12 @@
 
 @section('content')
 <div class="card shadow p-4 rounded-4">
-    <h4 class="mb-4">View Approval Workflow</h4>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">View Approval Workflow</h4>
+        <a href="{{ route('settings.workflows.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
 
     <dl class="row">
         <dt class="col-sm-3">Name</dt>
@@ -187,7 +192,15 @@
                     </td>
                     <td>{{ $stage->type_name->Name ?? $stage->type_name->TypeID ?? '-' }}</td>
                     {{-- uses ?-> to safely access properties --}}
-                    <td>{{ $stage->permission?->roles?->pluck('name')->implode(', ') ?? '-' }}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            @forelse($stage->permission?->roles ?? [] as $role)
+                                <span class="badge bg-info text-dark">{{ $role->name }}</span>
+                            @empty
+                                -
+                            @endforelse
+                        </div>
+                    </td>
                     <td>{{ $stage->EscalationLimit ?? '-' }}</td>
                     <td>
                         <span class="badge {{ $isFinalStage ? 'bg-success' : 'bg-secondary' }}">
@@ -289,15 +302,24 @@ $(document).ready(function() {
                 '<span class="badge bg-secondary">No</span>';
             
             const typeText = stage.type ? (stage.type.Name || stage.type.TypeID || '-') : '-';
-            const roleNameText = stage.role_name || '-';
             const escalationText = stage.EscalationLimit || '-';
-            
+            let roleDisplay = '-';
+            if (stage.role_name && stage.role_name !== '-') {
+                roleDisplay = '<div class="d-flex flex-wrap gap-1">';
+                stage.role_name.split(',').forEach(function(r) {
+                    if(r.trim() !== '') {
+                        roleDisplay += '<span class="badge bg-info text-dark">' + r.trim() + '</span>';
+                    }
+                });
+                roleDisplay += '</div>';
+            }
+
             tbody.append(
                 '<tr id="stage-' + stage.Id + '" class="' + rowClass + '">' +
                 '<td>' + (index + 1) + '</td>' +
                 '<td>' + stage.StageName + ' ' + finalBadge + '</td>' +
                 '<td>' + typeText + '</td>' +
-                '<td>' + roleNameText + '</td>' +
+                '<td>' + roleDisplay + '</td>' +
                 '<td>' + escalationText + '</td>' +
                 '<td>' + finalBadgeCell + '</td>' +
                 '<td>' +
