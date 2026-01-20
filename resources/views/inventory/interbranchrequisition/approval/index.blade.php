@@ -14,6 +14,19 @@
 <div class="container mt-4">
     <h3>Inter-Branch Requisition Approval</h3>
 
+    {{-- Approval Restrictions Info --}}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Approval Restrictions:</strong>
+        <ul class="mb-0 mt-2">
+            <li><strong>Maker-Checker Policy:</strong> You cannot approve requisitions that you initiated yourself.</li>
+            <li><strong>Workflow Configuration:</strong> Requisitions require proper workflow setup and user permissions.</li>
+            <li><strong>Branch Authorization:</strong> You can only approve requisitions destined for your assigned branch.</li>
+            <li><strong>Status Validation:</strong> Only pending requisitions can be approved or rejected.</li>
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -30,9 +43,12 @@
                 @foreach($pendingRequisitions as $requisitionOption)
                     <option 
                         value="{{ $requisitionOption->Id }}" 
-                        {{ request('ReqId') == $requisitionOption->Id ? 'selected' : '' }}>
+                        {{ request('ReqId') == $requisitionOption->Id ? 'selected' : '' }}
+                        {{ $requisitionOption->canApprove ? '' : 'disabled' }}
+                        title="{{ $requisitionOption->canApprove ? '' : 'Cannot approve: Workflow restriction or maker-checker policy' }}">
                         {{ $requisitionOption->ReqNo }} ({{ $requisitionOption->fromBranch?->Name ?? '?' }}
                         → {{ $requisitionOption->toBranch?->Name ?? '?' }})
+                        {{ $requisitionOption->canApprove ? '' : ' [Cannot Approve]' }}
                     </option>
                 @endforeach
             </select>
@@ -142,7 +158,12 @@
 
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{{ route('interbranchrequisitionapproval.index') }}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Submit Decision</button>
+                        <button type="submit" 
+                                class="btn btn-primary {{ $requisition->canApprove ? '' : 'disabled' }}" 
+                                title="{{ $requisition->canApprove ? 'Submit your approval decision' : 'Cannot submit: Workflow restriction or maker-checker policy' }}"
+                                {{ $requisition->canApprove ? '' : 'disabled' }}>
+                            Submit Decision
+                        </button>
                     </div>
                 </form>
             </div>
@@ -172,6 +193,17 @@
 @endpush
 
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 <script>
     // Client-side validation for the approval form
     document.addEventListener('DOMContentLoaded', function() {

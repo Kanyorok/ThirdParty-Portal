@@ -46,6 +46,13 @@ class InterBranchRequisitionApprovalController extends Controller
             ->orderBy('CreatedOn', 'desc')
             ->get();
         
+        // Add approval capability check for each requisition
+        $user = Auth::user();
+        $pendingRequisitions = $pendingRequisitions->map(function ($requisition) use ($user) {
+            $requisition->canApprove = $this->workflow->canApproveModel($requisition, $user);
+            return $requisition;
+        });
+        
         $requisition = null;
         
         if ($request->filled('ReqId')) {
@@ -55,6 +62,11 @@ class InterBranchRequisitionApprovalController extends Controller
             if ($requisition && $requisition->ToBranch != $branchId) {
                 return redirect()->route('interbranchrequisitionapproval.index')
                     ->with('error', 'You can only view requisitions for your branch.');
+            }
+            
+            // Add approval capability check for selected requisition
+            if ($requisition) {
+                $requisition->canApprove = $this->workflow->canApproveModel($requisition, $user);
             }
         }
 

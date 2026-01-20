@@ -92,6 +92,13 @@ class TransactionApprovalController extends Controller
             'branch_id' => $branchId
         ]);
 
+        // Add approval capability check for each record
+        $user = Auth::user();
+        $records = $records->map(function ($record) use ($user) {
+            $record->canApprove = $this->workflow->canApproveModel($record, $user);
+            return $record;
+        });
+
         return view('inventory.transactions.transactionsapprovals.index', [
             'transactionType' => $transactionType,
             'records' => $records,

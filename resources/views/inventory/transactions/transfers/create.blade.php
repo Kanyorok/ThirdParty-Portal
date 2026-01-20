@@ -21,6 +21,16 @@
             </div>
         @endif
 
+        {{-- Specific Workflow Error --}}
+        @if($errors->has('workflow'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Workflow Configuration Required:</strong>
+                {{ $errors->first('workflow') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         {{-- Branch Information Banner --}}
         @php
             $currentBranch = auth()->user()->branch ?? null;
@@ -42,6 +52,22 @@
                         <i class="fas fa-info-circle text-info me-1"></i>
                         <strong>GRN Tracking Required:</strong> You can only transfer items that have GRN ledger entries at your branch.
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Workflow Configuration Info --}}
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-start">
+                <i class="fas fa-cogs me-2 mt-1"></i>
+                <div>
+                    <strong>Workflow Configuration Required</strong>
+                    <div class="small mt-2">
+                        <i class="fas fa-info-circle text-info me-1"></i>
+                        <strong>Approval Process:</strong> Transfers require approval based on configured workflow rules.
+                        Ensure that approval groups and workflow configurations are properly set up for your organization.
+                    </div>
+
                 </div>
             </div>
         </div>
