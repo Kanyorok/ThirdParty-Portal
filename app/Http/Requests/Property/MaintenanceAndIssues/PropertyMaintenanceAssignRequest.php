@@ -25,14 +25,17 @@ class PropertyMaintenanceAssignRequest extends FormRequest
             'RequestNumber' => 'required|exists:t_MaintenanceRequest,Id',
             'AssignmentDate' => 'required|date|after_or_equal:today|before_or_equal:ExpectedCompletion',
             'AssignmentType' => 'required|exists:t_CodeDetails,Id',
-            'InternalTechnician' => 'nullable|exists:t_Employees,Id',
-            'PrequalifiedVendor' => 'nullable|exists:t_SupplierMaster,Id',
+
+            'InternalTechnician' => 'nullable|exists:t_Employees,Id|required_without:PrequalifiedVendor',
+            'PrequalifiedVendor' => 'nullable|exists:t_SupplierMaster,Id|required_without:InternalTechnician',
+
             'ExpectedStartDate' => 'required|date|after_or_equal:today',
             'ExpectedCompletion' => 'required|date|after_or_equal:ExpectedStartDate',
             'PriorityLevel' => 'required|exists:t_CodeDetails,Id',
             'InstructionNotes' => 'nullable|string|max:100',
         ];
     }
+
 
     public function messages()
     {
@@ -41,6 +44,8 @@ class PropertyMaintenanceAssignRequest extends FormRequest
             'ExpectedCompletion.after_or_equal' => 'Expected completion must be after or equal to the expected start date.',
             'AssignmentDate.after_or_equal' => 'Assignment date must be today or later.',
             'AssignmentDate.before_or_equal' => 'Assignment date must be before or equal to the expected completion date.',
+            'InternalTechnician.required_without' => 'Please assign either an internal technician or a prequalified vendor.',
+            'PrequalifiedVendor.required_without' => 'Please assign either an internal technician or a prequalified vendor.',
         ];
     }
 
