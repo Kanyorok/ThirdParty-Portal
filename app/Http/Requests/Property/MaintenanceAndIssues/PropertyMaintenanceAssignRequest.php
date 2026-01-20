@@ -23,12 +23,12 @@ class PropertyMaintenanceAssignRequest extends FormRequest
     {
         return [
             'RequestNumber' => 'required|exists:t_MaintenanceRequest,Id',
-            'AssignmentDate' => 'required|date|after_or_equal:today|before:ExpectedCompletion',
+            'AssignmentDate' => 'required|date|after_or_equal:today|before_or_equal:ExpectedCompletion',
             'AssignmentType' => 'required|exists:t_CodeDetails,Id',
             'InternalTechnician' => 'nullable|exists:t_Employees,Id',
             'PrequalifiedVendor' => 'nullable|exists:t_SupplierMaster,Id',
             'ExpectedStartDate' => 'required|date|after_or_equal:today',
-            'ExpectedCompletion' => 'required|date|after:ExpectedStartDate',
+            'ExpectedCompletion' => 'required|date|after_or_equal:ExpectedStartDate',
             'PriorityLevel' => 'required|exists:t_CodeDetails,Id',
             'InstructionNotes' => 'nullable|string|max:100',
         ];
@@ -38,9 +38,9 @@ class PropertyMaintenanceAssignRequest extends FormRequest
     {
         return [
             'ExpectedStartDate.after_or_equal' => 'Expected start date must be today or a future date.',
-            'ExpectedCompletion.after' => 'Expected completion must be after the expected start date.',
+            'ExpectedCompletion.after_or_equal' => 'Expected completion must be after or equal to the expected start date.',
             'AssignmentDate.after_or_equal' => 'Assignment date must be today or later.',
-            'AssignmentDate.before' => 'Assignment date must be before the expected completion date.',
+            'AssignmentDate.before_or_equal' => 'Assignment date must be before or equal to the expected completion date.',
         ];
     }
 
