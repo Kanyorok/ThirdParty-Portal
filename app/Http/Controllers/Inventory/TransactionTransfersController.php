@@ -92,54 +92,39 @@ class TransactionTransfersController extends Controller
     }
 
     public function store(TransactionTransferRequest $request)
-{
-    $this->authorize('create', TransactionTransfer::class);
+    {
+        $this->authorize('create', TransactionTransfer::class);
 
-    $validatedData = $request->validated();
-    $items = $validatedData['items'] ?? [];
-    unset($validatedData['items']);
+        $validatedData = $request->validated();
+        $items = $validatedData['items'] ?? [];
+        unset($validatedData['items']);
 
-    DB::beginTransaction();
+        DB::beginTransaction();
 
-    try {
-        // Create transfer and items
-        $transfer = $this->service->createTransfer($validatedData);
-        $this->service->createTransferItems($transfer, $items);
+        try {
+            // Create transfer and items
+            $transfer = $this->service->createTransfer($validatedData);
+            $this->service->createTransferItems($transfer, $items);
 
-        DB::commit();
+            DB::commit();
 
-        $message = 'Transfer created successfully.';
+            $message = 'Transfer created successfully.';
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'redirect' => route('transactionstransfers.index')
-            ], 200);
+            return redirect()
+                ->route('transactionstransfers.index')
+                ->with('success', $message);
+                
+        } catch (Throwable $e) {
+            DB::rollBack();
+            
+            $errorMessage = 'Error creating transfer: ' . $e->getMessage();
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', $errorMessage);
         }
-
-        return redirect()
-            ->route('transactionstransfers.index')
-            ->with('success', $message);
-    } catch (Throwable $e) {
-        DB::rollBack();
-        
-        $errorMessage = 'Error creating transfer: ' . $e->getMessage();
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => $errorMessage,
-                'errors' => ['general' => [$errorMessage]]
-            ], 422);
-        }
-
-        return redirect()
-            ->back()
-            ->withInput()
-            ->with('error', $errorMessage);
     }
-}
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);

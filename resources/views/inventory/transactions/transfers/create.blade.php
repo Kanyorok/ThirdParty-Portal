@@ -7,6 +7,20 @@
     <div class="container bg-white shadow rounded p-4">
         <h4 class="mb-4">Create Transaction Transfer</h4>
 
+        {{-- Validation Errors --}}
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Please fix the following errors:</strong>
+                <ul class="mb-0 mt-2">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         {{-- Branch Information Banner --}}
         @php
             $currentBranch = auth()->user()->branch ?? null;
@@ -256,6 +270,9 @@
 
                         {{-- Error Alert --}}
                         <div id="ajax-error" class="alert alert-danger d-none"></div>
+
+                        {{-- Success Alert --}}
+                        <div id="ajax-success" class="alert alert-success d-none"></div>
 
                         {{-- Warning Alert for GRN Requirement --}}
                         <div id="grnWarning" class="alert alert-warning d-none">
@@ -610,43 +627,13 @@
                     })
                     .catch(error => {
                         console.error('Error loading requisition details:', error);
-                        showError('Failed to load requisition details: ' + error.message);
                         requisitionIdHidden.value = '';
                         itemsBody.innerHTML = '<tr><td colspan="' + (isHQ ? '8' : '9') + '" class="text-center text-danger py-4">Failed to load requisition items</td></tr>';
                     });
             });
 
-            // Form submission handler
+            // Form validation on submit
             transferForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                
-                // Update button state
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Submitting...';
-                submitBtn.disabled = true;
-
-                // Prepare form data based on requisition type
-                const formData = new FormData(this);
-
-                // For procurement, we need to manually add the ToBranch value from dropdown
-                if (selectedType === 'procurement') {
-                    if (!toBranchSelect.value) {
-                        showError('Please select a To Branch for procurement transfer');
-                        toBranchSelect.focus();
-                        resetSubmitButton();
-                        return;
-                    }
-                    // Remove any existing ToBranch value and add the selected one
-                    formData.delete('ToBranch');
-                    formData.append('ToBranch', toBranchSelect.value);
-                } else {
-                    // For interbranch, validate hidden field
-                    if (!toBranchHidden.value) {
-                        showError('Invalid To Branch configuration for interbranch transfer');
-                        resetSubmitButton();
-                        return;
-                    }
-                }
-
                 // Validate dispatched quantities
                 const dispatchedInputs = document.querySelectorAll('input[name*="dispatched_qty"]');
                 let hasInvalidQuantity = false;
@@ -656,22 +643,23 @@
                     const value = parseFloat(input.value);
 
                     if (value > max) {
-                        showError(`Dispatched quantity cannot exceed approved quantity (${max})`);
+                        alert(`Dispatched quantity cannot exceed approved quantity (${max})`);
                         input.focus();
                         hasInvalidQuantity = true;
+                        e.preventDefault();
                         return;
                     }
 
                     if (value <= 0) {
-                        showError('Dispatched quantity must be greater than 0');
+                        alert('Dispatched quantity must be greater than 0');
                         input.focus();
                         hasInvalidQuantity = true;
+                        e.preventDefault();
                         return;
                     }
                 });
 
                 if (hasInvalidQuantity) {
-                    resetSubmitButton();
                     return;
                 }
 
@@ -685,79 +673,39 @@
                         const dispatchedQty = parseFloat(document.getElementById(`dispatchedQty${index}`).value);
                         
                         if (!input.value) {
-                            showError(`Item ${index + 1}: GRN batch selection is required`);
+                            alert(`Item ${index + 1}: GRN batch selection is required`);
                             missingAllocation = true;
+                            e.preventDefault();
                             return;
                         }
                         
                         const allocation = JSON.parse(input.value || '[]');
                         const allocatedQty = allocation.reduce((sum, batch) => sum + parseFloat(batch.quantity), 0);
                         
-                        if (allocatedQty !== dispatchedQty) {
-                            showError(`Item ${index + 1}: Allocated quantity (${allocatedQty}) must equal dispatched quantity (${dispatchedQty})`);
+                        if (Math.abs(allocatedQty - dispatchedQty) > 0.001) {
+                            alert(`Item ${index + 1}: Allocated quantity (${allocatedQty}) must equal dispatched quantity (${dispatchedQty})`);
                             hasInvalidAllocation = true;
+                            e.preventDefault();
                             return;
                         }
                     });
                     
                     if (missingAllocation || hasInvalidAllocation) {
-                        resetSubmitButton();
                         return;
                     }
                 }
 
-                // Submit using fetch to handle the FormData properly
-                fetch(this.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
+                // For procurement, ensure ToBranch is selected
+                if (selectedType === 'procurement') {
+                    const toBranchSelect = document.getElementById('toBranchSelect');
+                    if (!toBranchSelect || !toBranchSelect.value) {
+                        alert('Please select a To Branch for procurement transfer');
+                        toBranchSelect.focus();
+                        e.preventDefault();
+                        return;
                     }
-                })
-                .then(response => {
-                    // Check if response is a redirect (302 or other 3xx)
-                    if (response.redirected) {
-                        // Follow the redirect
-                        window.location.href = response.url;
-                    } else if (response.ok) {
-                        // Handle JSON response if needed
-                        return response.json().then(data => {
-                            if (data.redirect) {
-                                window.location.href = data.redirect;
-                            } else {
-                                window.location.href = "{{ route('transactionstransfers.index') }}";
-                            }
-                        });
-                    } else {
-                        return response.json().then(data => {
-                            throw new Error(data.message || 'Submission failed');
-                        });
-                    }
-                })
-                .catch(error => {
-                    showError('Submission failed: ' + error.message);
-                    resetSubmitButton();
-                });
+                }
             });
-
-            // Helper function to reset submit button
-            function resetSubmitButton() {
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Submit Transfer for Approval';
-                submitBtn.disabled = false;
-            }
-
-            // Helper function to show errors
-            function showError(message) {
-                const errorDiv = document.getElementById('ajax-error');
-                errorDiv.textContent = message;
-                errorDiv.classList.remove('d-none');
-
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    errorDiv.classList.add('d-none');
-                }, 5000);
-            }
 
             // Initialize based on current branch
             @if($currentBranch && !$currentBranch->IsHQ)
