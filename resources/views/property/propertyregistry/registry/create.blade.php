@@ -201,11 +201,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 localities.forEach(loc => {
                     const option = document.createElement('option');
                     option.value = loc.ID;
-                    option.textContent = loc.Name;
-                    if (selectedLocality && selectedLocality == loc.ID) option.selected = true;
+                    option.textContent = loc.LocationType
+                        ? `${loc.Name} (${loc.LocationType})`
+                        : loc.Name;
+
+                    if (selectedLocality && selectedLocality == loc.ID) {
+                        option.selected = true;
+                    }
+
                     localitySelect.appendChild(option);
                 });
-            });
+            })
+            .catch(err => console.error('Error loading localities:', err));
     }
 
     countrySelect.addEventListener('change', () => {

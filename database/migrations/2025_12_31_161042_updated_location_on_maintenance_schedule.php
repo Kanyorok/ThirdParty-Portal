@@ -20,7 +20,7 @@ return new class extends Migration {
     {
         Schema::table('t_FleetMaintenanceSchedules', function (Blueprint $table) {
 
-            $table->dropForeign('VendorID');
+            $table->dropForeign(['VendorID']);
             $table->dropColumn('VendorID');
             
         });

@@ -59,6 +59,10 @@ class InsurancePricingRuleRequest extends FormRequest
             ],
 
             /* ================= PREMIUM ================= */
+            'CurrencyId' => [
+                'Required',
+                'exists:t_Currencies,Id',
+            ],
             'PremiumRate' => [
                 'required',
                 'numeric',

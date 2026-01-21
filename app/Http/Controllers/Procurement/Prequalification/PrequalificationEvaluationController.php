@@ -128,7 +128,8 @@ class PrequalificationEvaluationController extends Controller
             return back()->with('error', "Round $roundId not found. Please provide a valid RoundID.");
         }
         // Get applications with passed decision
-        $passedApps = PrequalificationApplication::with('result')
+        // Eager load supplier to access ThirdPartyId
+        $passedApps = PrequalificationApplication::with(['result', 'supplier'])
             ->where('RoundID', $roundId)
             ->whereHas('result', fn($q) => $q->where('Decision', 'Passed'))
             ->get();
@@ -142,9 +143,20 @@ class PrequalificationEvaluationController extends Controller
 
         DB::transaction(function () use ($passedApps, $roundId, $now, $userId) {
             foreach ($passedApps as $app) {
+                // Resolve ThirdPartyId from SupplierMaster (supplier relationship)
+                $thirdPartyId = $app->supplier?->ThirdPartyId;
+                
+                if (!$thirdPartyId) {
+                    Log::warning('Bulk prequalify skipped: No ThirdPartyId for SupplierMaster', [
+                         'supplierMasterId' => $app->SupplierID,
+                         'applicationId' => $app->ApplicationID
+                    ]);
+                    continue;
+                }
+
                 Log::info('Bulk prequalify processing', [
                     'roundId' => $roundId,
-                    'thirdPartyId' => $app->SupplierID,
+                    'thirdPartyId' => $thirdPartyId,
                     'categoryId' => $app->CategoryID,
                     'applicationId' => $app->ApplicationID,
                     'userId' => $userId,
@@ -153,7 +165,7 @@ class PrequalificationEvaluationController extends Controller
                 DB::table('t_PrequalificationRoundSupplierCategory')->updateOrInsert(
                     [
                         'RoundID' => $roundId,
-                        'ThirdPartyID' => $app->SupplierID,
+                        'ThirdPartyID' => $thirdPartyId, // Corrected from $app->SupplierID
                         'SupplierCategoryID' => $app->CategoryID,
                     ],
                     [

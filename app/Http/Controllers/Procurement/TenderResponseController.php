@@ -24,7 +24,17 @@ class TenderResponseController extends Controller
             ->select('Id', 'TenderNo', 'Title')
             ->get();
 
-        $suppliers = [];
+    
+    $suppliers = Supplier::with('supplierMaster.thirdParty')
+        ->whereNull('DeletedOn')
+        ->get()
+        ->map(function($supplier) {
+            return (object) [
+                'Id' => $supplier->Id,
+                'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName 
+                    ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
+            ];
+        });
 
     return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create', compact('tenders', 'suppliers'));
     }

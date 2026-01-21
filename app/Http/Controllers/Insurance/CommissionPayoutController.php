@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
 use App\Models\Insurance\BancassuranceCommissionPayout;
+use App\Models\Insurance\BancassuranceCommissionRule;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Http\Requests\Insurance\BancassuranceCommissionPayoutRequest;
 use App\Services\Insurance\BancassuranceCommissionPayoutService;
@@ -20,6 +22,7 @@ class CommissionPayoutController extends Controller
         $paymentmodes = CodeDetail::where('CodeID', 'PaymentMode')->get();
         $policies = BancassurancePolicy::all();
         $payouts = BancassuranceCommissionPayout::all();
+        
 
         return view('bancassurance.commissions.payouts.index', compact('payouts', 'policies', 'paymentmodes'));
     }
@@ -28,8 +31,10 @@ class CommissionPayoutController extends Controller
         $paymentmodes = CodeDetail::where('CodeID', 'PaymentModes')->get();
         $policies = BancassurancePolicy::all();
         $payout = BancassuranceCommissionPayout::all();
-        $paidBy = User::all();
-        return view('bancassurance.commissions.payouts.pay', compact('payout', 'policies', 'paymentmodes', 'paidBy'));
+        $currencies = Currency::all();
+        $commissionRules = BancassuranceCommissionRule::all();
+        $PaidTo = User::all();
+        return view('bancassurance.commissions.payouts.pay', compact('payout', 'policies', 'paymentmodes', 'PaidTo', 'currencies', 'commissionRules'));
 
     }
 
@@ -39,18 +44,22 @@ class CommissionPayoutController extends Controller
         $validated = $request->validated();
 
         $PolicyId = BancassurancePolicy::findOrFail($validated['PolicyId']);
+        $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
+        $CommissionRuleId = BancassuranceCommissionRule::findOrFail($validated['CommissionRuleId']);
         $PaymentMode = CodeDetail::findOrFail($validated['PaymentMode']);
-        $PaidBy = Auth::user();
+        $PaidTo = Auth::user();
         $PaymentDate = new \DateTime($validated['PaymentDate']);
 
         $customer = BancassuranceCommissionPayoutService::create(
             $PolicyId,
             $validated['PayoutReference'],
             $validated['PaidAmount'],
+            $CurrencyId,
+            $CommissionRuleId,
             $PaymentDate,
             $PaymentMode,
             $validated['Remarks'],
-            $PaidBy,
+            $PaidTo,
             Auth::user(),
         );
 

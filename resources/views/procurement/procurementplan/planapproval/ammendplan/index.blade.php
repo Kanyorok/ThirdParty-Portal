@@ -99,7 +99,7 @@
                        value="{{ $item->EstimatedUnitCost }}" min="0" step="0.01">
             </td>
             <td>
-                <span class="text-muted">{{ number_format($item->MergedQty * $item->EstimatedUnitCost) }}</span>
+                <span class="text-muted">{{ number_format($item->MergedQty * $item->EstimatedUnitCost, 2) }}</span>
             </td>
               <td class="d-none">
                 <textarea name="remarks_{{ $item->LineItemID }}" class="form-control form-control-sm"

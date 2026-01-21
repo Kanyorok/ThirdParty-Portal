@@ -26,3 +26,7 @@ yarn-error.log
 /storage/debugbar/
 
 !/storage/fonts/
+
+# Test Routes
+/testroutes.php
+/SupplierRFQTestController.php'6666666

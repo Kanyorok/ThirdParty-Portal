@@ -3,14 +3,16 @@
 namespace App\Models\Insurance;
 
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
 use App\Models\Insurance\BancassurancePolicy;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassuranceClaim extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -19,7 +21,7 @@ class BancassuranceClaim extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'PolicyId', 'ClaimType', 'ClaimReason', 'ClaimAmount', 'ClaimDate', 'Status',
+        'PolicyId', 'ClaimType', 'ClaimReason', 'ClaimAmount', 'CurrencyId', 'ClaimDate', 'Status',
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
@@ -42,6 +44,11 @@ class BancassuranceClaim extends Model
     public function status()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
     }
 
 }

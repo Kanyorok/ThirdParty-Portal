@@ -604,20 +604,26 @@ enum PermissionEnum: string
     case BancassurancePremiumPaymentsUpdate = 'bancassurancepremiumpayments-update';
     case BancassurancePremiumPaymentsDelete = 'bancassurancepremiumpayments-delete';
 
-        //Bancasurance Underwriting
+    //Bancasurance Underwriting
     case BancassuranceUnderwritingView = 'bancassuranceunderwriting-view';
     case BancassuranceUnderwritingCreate = 'bancassuranceunderwriting-create';
     case BancassuranceUnderwritingUpdate = 'bancassuranceunderwriting-update';
     case BancassuranceUnderwritingDelete = 'bancassuranceunderwriting-delete';
 
 
-        //Bancasurance Claim
+    //Bancasurance Claim
     case BancassuranceClaimView = 'bancassuranceclaim-view';
     case BancassuranceClaimCreate = 'bancassuranceclaim-create';
     case BancassuranceClaimDelete = 'bancassuranceclaim-delete';
     case BancassuranceClaimUpdate = 'bancassuranceclaim-update';
 
-        //Bancasurance payment
+    //Bancasurance claim assessment
+    case BancassuranceClaimAssessmentView = 'bancassuranceclaimassessment-view';
+    case BancassuranceClaimAssessmentCreate = 'bancassuranceclaimassessment-create';
+    case BancassuranceClaimAssessmentDelete = 'bancassuranceclaimassessment-delete';
+    case BancassuranceClaimAssessmentUpdate = 'bancassuranceclaimassessment-update';
+
+    //Bancasurance claim payment
     case BancassurancePaymentView = 'bancassurancepayment-view';
     case BancassurancePaymentCreate = 'bancassurancepayment-create';
     case BancassurancePaymentDelete = 'bancassurancepayment-delete';
@@ -849,14 +855,14 @@ enum PermissionEnum: string
     case FinanceCreditManagementDelete = 'financeCreditManagement-delete';
 
         //Posting
-    case FinanceJournalPosting = 'financeJournal-financeJournal';
-    case FinanceAPInvoicePosting = 'financeAPInvoice-financeAPInvoice';
-    case FinanceARInvoicePosting = 'financeARInvoice-financeARInvoice'; // AR Account Receivables
-    case FinanceCreditNotePosting = 'financeCreditNote-financeCreditNote';
-    case FinanceDebitNotePosting = 'financeDebitNote-financeDebitNote';
-    case FinanceVoucherPosting = 'financeVoucher-financeVoucher';
-    case FinancePaymentProcessingPosting = 'financePaymentProcessing-financePaymentProcessing';
-    case FinanceReceiptPosting = 'financeReceipt-financeReceipt';
+    case FinanceJournalPosting = 'financeJournal-posting';
+    case FinanceAPInvoicePosting = 'financeAPInvoice-posting';
+    case FinanceARInvoicePosting = 'financeARInvoice-posting'; // AR Account Receivables
+    case FinanceCreditNotePosting = 'financeCreditNote-posting';
+    case FinanceDebitNotePosting = 'financeDebitNote-posting';
+    case FinanceVoucherPosting = 'financeVoucher-posting';
+    case FinancePaymentProcessingPosting = 'financePaymentProcessing-posting';
+    case FinanceReceiptPosting = 'financeReceipt-posting';
 
 
         /*
@@ -1057,6 +1063,8 @@ enum PermissionEnum: string
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
 
+    
+
             //Inventory
             [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
             [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy],
@@ -1165,6 +1173,7 @@ enum PermissionEnum: string
             [self::BancassurancePremiumPaymentsView, self::BancassurancePremiumPaymentsCreate, self::BancassurancePremiumPaymentsUpdate, self::BancassurancePremiumPaymentsDelete],
             [self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete],
             [self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete],
+            [self::BancassuranceClaimAssessmentView, self::BancassuranceClaimAssessmentCreate, self::BancassuranceClaimAssessmentUpdate, self::BancassuranceClaimAssessmentDelete],
             [self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete],
             [self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete],
             [self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete],
@@ -1365,6 +1374,7 @@ enum PermissionEnum: string
             self::InsurancePricingRuleView, self::InsurancePricingRuleCreate, self::InsurancePricingRuleUpdate, self::InsurancePricingRuleDelete,
             self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete,
             self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete,
+            self::BancassuranceClaimAssessmentView, self::BancassuranceClaimAssessmentCreate, self::BancassuranceClaimAssessmentUpdate, self::BancassuranceClaimAssessmentDelete,
             self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete,
             self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete,
             self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete,
@@ -1572,6 +1582,7 @@ enum PermissionEnum: string
             self::BancassurancePremiumPaymentsView, self::BancassurancePremiumPaymentsCreate, self::BancassurancePremiumPaymentsUpdate, self::BancassurancePremiumPaymentsDelete => 'Insurance Premium Payments',
             self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete => 'Insurance Under Writting',
             self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete => 'Insurance Claim',
+            self::BancassuranceClaimAssessmentView, self::BancassuranceClaimAssessmentCreate, self::BancassuranceClaimAssessmentUpdate, self::BancassuranceClaimAssessmentDelete => 'Insurance Claim Assessment',
             self::BancassurancePaymentView, self::BancassurancePaymentCreate, self::BancassurancePaymentDelete, self::BancassurancePaymentUpdate => 'Insurance Payment',
             self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete => 'Medical Fund',
             self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete => 'Medical Fund Contribution',
