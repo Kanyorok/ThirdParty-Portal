@@ -73,10 +73,17 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 'S'
     ],
 
+    'FinanceJournalEntryId' => [
+        'Approved' => 'posted',
+        'Rejected' => 'rejected',
+        'Pending' => 'draft',
+        'Submitted for Approval' => 'draft',
+    ],
+
     'tender' => [
         'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED->value, // Will now be 'Ap'
         'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED->value, // Will now be 'R'
-        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,
+        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
     ],
     'LeaseTerminationId' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'

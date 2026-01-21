@@ -8,10 +8,21 @@
         <!-- Summary Card -->
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Supply of Office Furniture</h5>
-                <p class="mb-1">Vendor: <strong>OfficePro Ltd</strong></p>
-                <p class="mb-1">Contract Period: <strong>01-Jul-2025 to 31-Dec-2025</strong></p>
-                <p class="mb-0">Contract Value: <strong>KES 1,500,000</strong></p>
+                <h5 class="card-title">{{ $contract->tender->Title ?? 'Contract' }}</h5>
+                <p class="mb-1">Vendor: <strong>{{ $contract->winningSupplier->supplierMaster->party->ThirdPartyName ?? $contract->winningSupplier->supplierMaster->party->TradingName ?? 'N/A' }}</strong></p>
+                <p class="mb-1">Contract Period: <strong>{{ $contract->ContractStartDate ? $contract->ContractStartDate->format('d-M-Y') : 'N/A' }} to {{ $contract->ContractEndDate ? $contract->ContractEndDate->format('d-M-Y') : 'N/A' }}</strong></p>
+                <p class="mb-2">Contract Value: <strong>{{ $contract->tender->Currency->Code ?? 'KES' }} {{ number_format($contract->ContractValue, 2) }}</strong></p>
+
+                @if($contract->ContractStatus === 'Approved')
+                    <form action="{{ route('contracts.lifecycle.execution.submit', $contract->Id) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to execute this contract? This marks it as Active.')">
+                            <i class="fas fa-check-circle me-1"></i> Confirm Execution / Activate
+                        </button>
+                    </form>
+                @else
+                    <span class="badge bg-success">Active / Executed</span>
+                @endif
             </div>
         </div>
 

@@ -78,8 +78,8 @@ class ProcurementPlanMaintainController extends Controller
 
     public function show($id)
     {
-        $this->authorize('view', ConsolidatedProcurementPlan::class);
         $plan = ConsolidatedProcurementPlan::with(['lineItems.departmentNeed', 'lineItems.item', 'lineItems.budgetLine', 'lineItems.procurementMode', 'createdBy'])->findOrFail($id);
+        $this->authorize('view', $plan);
 
         return view('procurement.procurementplan.procurementplanmaintenance.show', compact('plan'));
     }

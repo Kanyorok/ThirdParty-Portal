@@ -165,6 +165,7 @@ class CodeDetailSeeder extends Seeder
                 'Value' => $tenderAwardStatusEnum->value,
                 'Description' => $tenderAwardStatusEnum->name,
                 'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
             ]);
         }
 
@@ -318,8 +319,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
+            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
+            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
             ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],
@@ -418,13 +419,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'Decision', 'Description' => 'Approved', 'Value' => 'A'],
             ['CodeID' => 'Decision', 'Description' => 'Decline', 'Value' => 'D'],
             ['CodeID' => 'Decision', 'Description' => 'More Information Needed', 'Value' => 'M'],
-
-            //Insurance Claim type
-            ['CodeID' => 'ClaimType', 'Description' => 'Death', 'Value' => 'D'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Accident', 'Value' => 'A'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Loss', 'Value' => 'L'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Medical', 'Value' => 'M'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Other', 'Value' => 'O'],
 
             //Insurance Cover Type
             ['CodeID' => 'CoverType', 'Description' => 'Comprehensive', 'Value' => 'C'],
@@ -755,6 +749,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Approved', 'Value' => 'ap', 'DisplayOrder' => 3],
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Posting', 'Value' => 'ps', 'DisplayOrder' => 4],
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
+
+            //tender Approval Status
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value'=> 'P','DisplayOrder' => 53],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value'=> 'A','DisplayOrder' => 54],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value'=> 'R','DisplayOrder' => 55],
 
 
 

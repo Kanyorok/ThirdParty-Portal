@@ -133,9 +133,10 @@
                 });
             } catch (e) {
             }
-            @if (session('status')) nSuccess('{!! session('status') !!} ');
-            @endif
-            @if (session('success')) nSuccess('{!! session('success') !!} ');
+            @if (session('success'))
+                nSuccess('{!! session('success') !!} ');
+            @elseif (session('status'))
+                nSuccess('{!! session('status') !!} ');
             @endif
             @if(session('fail')) nError('{!!  session('fail') !!}');
             @endif
@@ -282,6 +283,25 @@
                             inputEl.type = 'text';
                         }
 
+                        flatpickr(inputEl, opts);
+                    });
+
+                    var dateTimeInputs = document.querySelectorAll('input.flatpickr-datetime');
+                    dateTimeInputs.forEach(function (inputEl) {
+                        if (inputEl._flatpickr) {
+                            return; // already initialized
+                        }
+                        var opts = {
+                            enableTime: true,
+                            dateFormat: 'Y-m-d H:i',
+                            altInput: true,
+                            altFormat: 'd M Y H:i',
+                            allowInput: true,
+                            time_24hr: true
+                        };
+                         if (inputEl.dataset && inputEl.dataset.disablePast && String(inputEl.dataset.disablePast) === 'true') {
+                             opts.minDate = 'today';
+                         }
                         flatpickr(inputEl, opts);
                     });
                 }

@@ -37,7 +37,7 @@
                         <td>{{ $payment->CustomerID ?? 'N/A' }}</td>
                         <td>{{ $payment->PaymentFrequency ?? '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d M Y') }}</td>
-                        <td class="text-end">{{ number_format($payment->Amount, 2) }}</td>
+                        <td class="text-end">{{ $payment->currency->SymbolNative ?? 'cu' }} {{ number_format($payment->Amount, 2) }}</td>
                         <td class="text-center">
                             <div class="d-inline-flex gap-1">
                                 <a href="{{ route('bancassurance.premiums.show', $payment->Id) }}" class="btn btn-sm btn-info" title="View">

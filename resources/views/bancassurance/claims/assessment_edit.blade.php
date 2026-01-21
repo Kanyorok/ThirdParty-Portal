@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container mt-5" style="max-width: 850px;">
-    <form action="{{ route('bancassurance.claims.assessment_update', $assessment->Id) }}" method="POST">
+    <form action="{{ route('bancassurance.claims.assessment_update', $assessment->Id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -61,6 +61,37 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                </div>
+
+                {{-- ================= SUPPORTING DOCUMENTS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Submitted Documents</h6>
+
+                    <div class="p-3 border rounded-3 bg-light">
+                        @forelse($assessment->claim->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                            {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted small">No documents attached.</span>
+                        @endforelse
+                    </div>
+                </div>
+
+                {{-- ================= ASSESSMENT DOCUMENTS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Assessment Documents</h6>
+
+                    <div class="col-md-8">
+                        <label class="form-label small ">
+                            Upload File
+                        </label>
+                        <small class="text-muted d-block mb-1">
+                            PDF, JPG, PNG, DOCX, XLSX · Max 25MB
+                        </small>
+                        <input type="file"
+                               name="file[]"
+                               class="form-control form-control-sm"
+                               accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
                     </div>
                 </div>
 
@@ -156,4 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+@endsection
+@section('scripts')
+@include('snippets.actions.preview-files')
 @endsection
