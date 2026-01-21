@@ -13,6 +13,7 @@ use App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
 
 use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationRoundController;
 use App\Http\Controllers\Procurement\Prequalification\Api\PreqApplicationController;
+use App\Http\Controllers\API\Procurement\SupplierRFQController;
 
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 
@@ -100,4 +101,14 @@ Route::middleware(['auth.thirdparty'])->group(function () {
         Route::get('applications', [PreqApplicationController::class, 'apiIndex'])->name('applications.index');
         Route::post('applications', [PreqApplicationController::class, 'store'])->name('applications.store');
     });
+});
+
+Route::middleware(['auth.thirdparty'])->group(function () {
+    Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
+        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
+        
+        // Protected RFQ actions (submit, clarifying)
+        Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
+        Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
 });

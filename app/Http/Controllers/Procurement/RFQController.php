@@ -554,11 +554,11 @@ class RFQController extends Controller
         // Gather item category IDs from RFQ lines and include ancestors and descendants
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
         $allCategoryIds = collect();
+
         foreach ($itemCategoryIds as $catId) {
-            $cat = \App\Models\Inventory\ItemCategories::find($catId);
+            $cat = ItemCategories::find($catId);
             if ($cat) {
                 $allCategoryIds->push($cat->Id);
-                // include ancestors so if classification includes a parent, subcategory items still qualify
                 $parent = $cat->parent;
                 while ($parent) {
                     $allCategoryIds->push($parent->Id);
@@ -599,7 +599,7 @@ class RFQController extends Controller
             ->whereNull('tp.DeletedOn')
             ->where('sm.ApprovalStatus', 'A') // Only approved suppliers
             ->select(
-                'sm.Id', // Use SupplierMaster Id
+                'sm.Id',
                 'sm.ThirdPartyId',
                 'tp.TradingName as SupplierName',
                 'tp.BusinessType',
@@ -610,8 +610,7 @@ class RFQController extends Controller
 
         Log::info('Suppliers fetched for RFQ', [
             'rfq_id' => $rfq->Id,
-            'supplier_count' => $suppliers->count(),
-            'suppliers' => $suppliers->toArray()
+            'supplier_count' => $suppliers->count()
         ]);
 
         // Load RFQ responses (supplier quotations) with items and supplier info for printing
@@ -623,6 +622,7 @@ class RFQController extends Controller
         $canApprove = false;
         $history = collect();
         $pendingApprovals = [];
+
         try {
             $canApprove = $this->workflowService->canUserApprove($rfq, Auth::user());
             $history = $this->workflowService->getHistory($rfq);
@@ -642,8 +642,12 @@ class RFQController extends Controller
             ]);
         }
 
-        return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses', 'canApprove', 'history', 'pendingApprovals'));
+        return view(
+            'procurement.rfqs.show',
+            compact('rfq', 'suppliers', 'rfqResponses', 'canApprove', 'history', 'pendingApprovals')
+        );
     }
+
 
     /**
      * Show the form for editing the specified resource.

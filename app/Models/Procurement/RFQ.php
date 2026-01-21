@@ -27,18 +27,14 @@ class RFQ extends Model
         parent::boot();
 
         static::created(function ($rfq) {
-            $workflowService = app(\App\Services\Procurement\RFQ\RFQWorkflowService::class);
-            $user = \Illuminate\Support\Facades\Auth::user();
-            if ($user) {
-                Log::info('RFQ created, submitting to workflow', [
-                    'rfq_id' => $rfq->Id,
-                    'rfq_number' => $rfq->RFQNumber,
-                    'user_id' => $user->Id
-                ]);
-                
-                // Use the convenience method with proper type hints
-                $workflowService->submitRFQ($rfq, $user, 'RFQ Created');
+            $user = Auth::user();
+
+            if (!$user instanceof \App\Models\Auth\User) {
+                return;
             }
+
+            app(\App\Services\Procurement\RFQ\RFQWorkflowService::class)
+                ->submitRFQ($rfq, $user, 'RFQ Created');
         });
     }
 

@@ -83,29 +83,6 @@ class ThirdPartyAuthController extends Controller
                 ], 403);
             }
 
-            $profileType = $request->input('profile_type');
-            $isAuthorized = false;
-
-            if ($profileType === 'Supplier') {
-                $isAuthorized = SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
-                    ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value)
-                    ->exists();
-            } elseif ($profileType === 'Tenant') {
-                $isAuthorized = PropertyNewTenant::where('ThirdPartyId', $user->ThirdPartyId)
-                    ->where('IsActive', true)
-                    ->exists();
-            } elseif ($profileType === 'Customer') {
-                $isAuthorized = BancassuranceCustomer::where('ThirdPartyId', $user->ThirdPartyId)->exists();
-            } else {
-                return response()->json(['message' => 'Profile type is required and must be valid.'], 403);
-            }
-
-            if (!$isAuthorized) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your account is not authorized for the selected profile type.'
-                ], 403);
-            }
 
             $user->tokens()->delete();
 

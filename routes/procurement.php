@@ -783,6 +783,7 @@ Route::prefix('contracts/lifecycle')->name('contracts.lifecycle.')->group(functi
     Route::get('{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('terminate')->where('id', '[0-9]+');
     Route::post('{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('terminate.submit')->where('id', '[0-9]+');
     Route::get('{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('execution')->where('id', '[0-9]+');
+    Route::post('{id}/execute', [ContractsLifecycleController::class, 'executeAction'])->name('execution.submit')->where('id', '[0-9]+');
 });
 
 
