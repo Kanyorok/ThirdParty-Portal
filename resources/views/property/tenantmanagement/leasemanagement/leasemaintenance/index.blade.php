@@ -37,7 +37,7 @@
     @if($newleases->count())
         <div class="card shadow-sm">
             <div class="card-body">
-                <div class="table-responsive" style="overflow-x: auto;">
+                <div class="table-responsive">
                     <table id="leaseagreement"
                            class="table table-bordered table-striped table-hover align-middle mb-0" style="min-width: 1200px;">
                     <thead class="table-light">
