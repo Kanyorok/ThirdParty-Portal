@@ -12,7 +12,7 @@ BEGIN
         FinInv.ModuleID,
         FinInv.CurrencyID,
         FinInv.CustomerID,
-        FinInv.InvoiceAmount,
+        FinInv.TotalAmount,
         FinRec.AmountReceived
     FROM t_RentInvoice AS ProInv
     LEFT JOIN t_FinanceInvoices AS FinInv
