@@ -34,6 +34,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\ReturnContentFragment::class,
+            \App\Http\Middleware\EnsureFreshPermissions::class, // Force fresh permission check after cache clear
         ],
 
         'api' => [

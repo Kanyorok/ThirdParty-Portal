@@ -112,9 +112,7 @@ class User extends Authenticatable
 
     public function hasPermissionTo($permission, $guardName = null): bool
     {
-        if ($this->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) { //todo fix this
-            return true;
-        }
+        // No special bypass - admin role gets permissions like any other role
         return $this->getPermissionsViaRoles()->contains('name', $permission);
     }
 
@@ -173,6 +171,18 @@ class User extends Authenticatable
 
     // Keep this as is - used for routing
     public function getRouteKeyName(): string
+    {
+        return 'UserID';
+    }
+
+    /**
+     * Get the morph class for the model.
+     * This must return 'UserID' to match the morphMap and database model_type column.
+     * 
+     * Without this override, Spatie Permission looks for model_type = 'App\Models\Auth\User'
+     * but the database has model_type = 'UserID' as defined in the morphMap.
+     */
+    public function getMorphClass()
     {
         return 'UserID';
     }

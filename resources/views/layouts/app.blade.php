@@ -309,13 +309,24 @@
 
             async function ajaxNavigate(url, addToHistory = true) {
                 try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]');
                     const res = await fetch(url, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-Partial': '1'
+                            'X-Partial': '1',
+                            'X-CSRF-TOKEN': csrfToken ? csrfToken.content : ''
                         }
                     });
+                    
+                    // Handle 419 Session Expired error
+                    if (res.status === 419) {
+                        console.warn('Session expired (419), redirecting to login');
+                        window.location.href = '/login?expired=1';
+                        return;
+                    }
+                    
                     if (!res.ok) {
+                        console.warn('AJAX navigate failed with status:', res.status);
                         window.location.href = url;
                         return;
                     }
