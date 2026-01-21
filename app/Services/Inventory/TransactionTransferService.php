@@ -5,8 +5,6 @@ namespace App\Services\Inventory;
 use App\Enums\Inventory\Transfers;
 use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Core\Workflow;
 use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\TransactionTransfer;
@@ -15,14 +13,24 @@ use App\Models\Procurement\GoodsReceipt;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\Inventory\StockTransaction;
-
+use App\Services\Workflow\ApprovalWorkflow;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Services\Finance\TransactionService;
 use Throwable;
 
 class TransactionTransferService
 {
-public function getHQBranchId(): int
+    protected ApprovalWorkflow $workflow;
+    protected TransactionService $transactionService; // Add this property
+
+    public function __construct(ApprovalWorkflow $workflow, TransactionService $transactionService)
+    {
+        $this->workflow = new ApprovalWorkflow('TransferStatus','Status');
+        $this->transactionService = $transactionService; // Initialize it
+    }
+
+    public function getHQBranchId(): int
     {
         $hqBranch = Branch::where('IsHQ', 1)->first();
         if (!$hqBranch) {
@@ -30,85 +38,60 @@ public function getHQBranchId(): int
         }
         return $hqBranch->Id;
     }
+    
+    protected function generateTransferId(TransactionTransfer $transfer): string
+    {
+        $year = now()->format('Y');
+        return 'TRF-' . $year . '-' . str_pad($transfer->Id, 4, '0', STR_PAD_LEFT);
+    }
 
-   public function createTransfer(array $data): TransactionTransfer
-{
-        // Resolve CodeDetail IDs for transfer statuses
-        $pendingStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Pending')->value('ID');
-        $inTransitStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
-        $rejectedStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Rejected')->value('ID');
-        $deliveredStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Delivered')->value('ID');
-
-        $data['Status'] = $pendingStatusId ?? $data['Status'] ?? null;
+    public function createTransfer(array $data): TransactionTransfer
+    {
+        $data['Status'] = Transfers::Pending->value;
 
         if ($data['RequisitionType'] === 'procurement') {
             $requisition = GoodsReceipt::findOrFail($data['RequisitionId']);
             $fromBranch = $this->getHQBranchId();
-            $toBranch = $data['ToBranch']; // branch from form
+            $toBranch = $data['ToBranch']; 
         } else {
-            $requisition = \App\Models\Inventory\InterBranchRequisition::findOrFail($data['RequisitionId']);
+            $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
             $fromBranch = $requisition->FromBranch;
             $toBranch = $requisition->ToBranch;
         }
 
-    // Debug: Check what values we're getting
-    Log::info('Transfer creation data:', [
-        'RequisitionType' => $data['RequisitionType'],
-        'FromBranch' => $fromBranch,
-        'ToBranch' => $toBranch,
-        'Form_ToBranch' => $data['ToBranch'] ?? 'NOT SET'
-    ]);
+        if (empty($data['TransferDate'])) {
+            throw new Exception('TransferDate is required.');
+        }
 
-    if (empty($data['TransferDate'])) {
-        throw new Exception('TransferDate is required.');
-    }
-
-    $transfer = new TransactionTransfer([
-        'TransferDate' => $data['TransferDate'],
-        'TransferredBy' => $data['TransferredBy'],
-        'RequisitionId' => $data['RequisitionId'],
-        'FromBranch' => $fromBranch,
-        'ToBranch' => $toBranch,
-        'RequisitionType' => $data['RequisitionType'],
-        'Status' => $data['Status'],
-        'CreatedBy' => Auth::id(),
-        'ModifiedBy' => Auth::id(),
-        'CreatedOn' => now(),
-        'ModifiedOn' => now(),
-    ]);
-    $transfer->save();
-
-    $transfer->TransferId = $this->generateTransferId($transfer);
-    $transfer->save();
-
-        // Use CodeDetail value/label in workflows
-        $code = CodeDetail::find($data['Status']);
-        $statusValue = $code->Value ?? $code->CodeValue ?? $code->Description ?? null;
-
-        Workflow::create([
-            'Source' => 'TransactionTransfer',
-            'SourceID' => $transfer->Id,
-            'Stage' => $data['Status'],
-            'Status' => $statusValue,
-            'Notes' => 'Transaction Transfer created (Pending)',
+        $transfer = new TransactionTransfer([
+            'TransferDate' => $data['TransferDate'],
+            'TransferredBy' => $data['TransferredBy'],
+            'RequisitionId' => $data['RequisitionId'],
+            'FromBranch' => $fromBranch,
+            'ToBranch' => $toBranch,
+            'RequisitionType' => $data['RequisitionType'],
+            'Status' => Transfers::Pending->value,
             'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
+            'CreatedOn' => now(),
             'ModifiedOn' => now(),
         ]);
+        $transfer->save();
 
-        PendingWorkflow::updateOrCreate(
-            ['Source' => 'TransactionTransfer', 'SourceID' => $transfer->Id],
-            [
-                'Stage' => $data['Status'],
-                'Status' => $statusValue,
-                'UserId' => Auth::id(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]
-        );
+        $transfer->TransferId = $this->generateTransferId($transfer);
+        $transfer->save();
+
+        try {
+            // Create workflow instance and submit for approval
+            $this->workflow->submit(
+                $transfer,
+                Auth::user(),
+                Transfers::Pending,
+                'Transaction Transfer Submitted for Approval'
+            );
+        } catch (Exception $e) {
+            throw $e;
+        }
 
         activity()->performedOn($transfer)->causedBy(Auth::user())
             ->withProperties(['attributes' => $transfer->toArray()])
@@ -116,27 +99,16 @@ public function getHQBranchId(): int
 
         return $transfer;
     }
-
+    
     public function createTransferItems(TransactionTransfer $transfer, array $items): void
     {
         foreach ($items as $itemData) {
-
             $itemId = $itemData['item'];
             $dispatchedQty = $itemData['dispatched_qty'];
 
             $fromBranch = $transfer->RequisitionType === 'procurement'
                 ? $this->getHQBranchId()
                 : $transfer->FromBranch;
-
-            // $stock = StockItem::where('ItemID', $itemId)
-            //     ->where('Branch', $fromBranch)
-            //     ->first();
-
-            // if (!$stock || $stock->CurrentQty < $dispatchedQty) {
-            //     throw new Exception("Insufficient stock for ItemID {$itemId} in Branch {$fromBranch}.");
-            // }
-
-
 
             $created = TransactionTransferItem::create([
                 'TransferId' => $transfer->Id,
@@ -159,68 +131,75 @@ public function getHQBranchId(): int
     }
 
     public function update(TransactionTransfer $transfer, array $data): void
-{
-    DB::transaction(function () use ($transfer, $data) {
+    {
+        DB::transaction(function () use ($transfer, $data) {
+            $transfer->TransferDate = $data['TransferDate'] ?? $transfer->TransferDate;
+            $transfer->TransferredBy = $data['TransferredBy'] ?? $transfer->TransferredBy;
+            
+            if ($transfer->RequisitionType === 'procurement' && isset($data['ToBranch'])) {
+                $transfer->ToBranch = $data['ToBranch'];
+            }
+            
+            $transfer->ModifiedBy = auth()->id();
+            $transfer->ModifiedOn = now();
+            $transfer->save();
 
-        // Update main transfer fields
-        $transfer->TransferDate = $data['TransferDate'] ?? $transfer->TransferDate;
-        $transfer->TransferredBy = $data['TransferredBy'] ?? $transfer->TransferredBy;
-        
-        // FIX: Update ToBranch if it's provided in the data
-        // Only allow ToBranch update for procurement transfers
-        if ($transfer->RequisitionType === 'procurement' && isset($data['ToBranch'])) {
-            $transfer->ToBranch = $data['ToBranch'];
-        }
-        
-        $transfer->ModifiedBy = auth()->id();
-        $transfer->ModifiedOn = now();
-        $transfer->save();
+            if (!empty($data['items'])) {
+                foreach ($data['items'] as $itemData) {
+                    $transferItem = $transfer->items()->where('Item', $itemData['item'])->first();
 
-        // Update transfer items
-        if (!empty($data['items'])) {
+                    if ($transferItem) {
+                        $transferItem->ApprovedQty = $itemData['approved_qty'];
+                        $transferItem->DispatchedQty = $itemData['dispatched_qty'];
+                        $transferItem->Remarks = $itemData['remarks'] ?? null;
+                        $transferItem->UnitCost = $itemData['unit_cost'] ?? $transferItem->UnitCost;
+                        $transferItem->ModifiedBy = auth()->id();
+                        $transferItem->ModifiedOn = now();
+                        $transferItem->save();
 
-            foreach ($data['items'] as $itemData) {
-
-                $transferItem = $transfer->items()->where('Item', $itemData['item'])->first();
-
-                if ($transferItem) {
-                    $transferItem->ApprovedQty = $itemData['approved_qty'];
-                    $transferItem->DispatchedQty = $itemData['dispatched_qty'];
-                    $transferItem->Remarks = $itemData['remarks'] ?? null;
-                    $transferItem->UnitCost = $itemData['unit_cost'] ?? $transferItem->UnitCost;
-                    $transferItem->ModifiedBy = auth()->id();
-                    $transferItem->ModifiedOn = now();
-                    $transferItem->save();
-
-                    activity()->performedOn($transferItem)
-                        ->causedBy(auth()->user())
-                        ->withProperties(['attributes' => $itemData])
-                        ->log('Updated Transaction Transfer Item');
+                        activity()->performedOn($transferItem)
+                            ->causedBy(auth()->user())
+                            ->withProperties(['attributes' => $itemData])
+                            ->log('Updated Transaction Transfer Item');
+                    }
                 }
             }
-        }
 
-        activity()->performedOn($transfer)
-            ->causedBy(auth()->user())
-            ->withProperties(['attributes' => $data])
-            ->log('Updated Transaction Transfer');
-    });
-}
-       public function approve(int $id): void
+            activity()->performedOn($transfer)
+                ->causedBy(auth()->user())
+                ->withProperties(['attributes' => $data])
+                ->log('Updated Transaction Transfer');
+        });
+    }
+
+    public function approve(int $id, string $comments = null): void
 {
     DB::beginTransaction();
 
     try {
         $transfer = TransactionTransfer::with('items')->findOrFail($id);
+        $user = Auth::user();
+        $svc = $this->transactionService; // use injected service
 
-        $inTransitStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
+        // Approve workflow
+        $this->workflow->approve(
+            $transfer,
+            $user,
+            Transfers::InTransit,
+            $comments ?? 'Transfer Approved',
+            'Status'
+        );
 
-        $transfer->Status = $inTransitStatusId;
-        $transfer->ModifiedBy = Auth::id();
+        // Update transfer status to In Transit
+        $transfer->Status = Transfers::InTransit->value;
+        $transfer->ModifiedBy = $user->Id;
         $transfer->ModifiedOn = now();
         $transfer->save();
 
+        $totalCost = 0;
+
         foreach ($transfer->items as $item) {
+            // Check stock availability
             $stockFrom = StockItem::where('ItemID', $item->Item)
                 ->where('Branch', $transfer->FromBranch)
                 ->first();
@@ -229,20 +208,25 @@ public function getHQBranchId(): int
                 throw new Exception("No stock found for Item {$item->Item} in branch {$transfer->FromBranch}");
             }
 
+            if ($stockFrom->CurrentQty < $item->DispatchedQty) {
+                throw new Exception("Insufficient stock for Item {$item->Item}. Available: {$stockFrom->CurrentQty}, Required: {$item->DispatchedQty}");
+            }
+
+            // Get last balance
             $lastBalance = StockTransaction::where('ItemID', $item->Item)
                 ->where('BranchID', $transfer->FromBranch)
                 ->orderByDesc('TransactionDate')
                 ->orderByDesc('id')
-                ->value('BalanceQty');
-
-            if ($lastBalance === null) {
-                $lastBalance = $stockFrom->CurrentQty ?? 0;
-            }
+                ->value('BalanceQty') ?? $stockFrom->CurrentQty ?? 0;
 
             $dispatchedQty = $item->DispatchedQty;
             $newBalance = $lastBalance - $dispatchedQty;
-            $totalCost = ($item->UnitCost ?? 0) * $dispatchedQty * -1;
 
+            $unitCost = $item->UnitCost ?? 0;
+            $itemTotalCost = $unitCost * $dispatchedQty;
+            $totalCost += $itemTotalCost;
+
+            // Generate SKU ID
             $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
                 ->orderByDesc('id')
                 ->value('SKUID');
@@ -253,141 +237,127 @@ public function getHQBranchId(): int
 
             $skuId = 'SKU' . $nextNumber;
 
+            // Transaction type
+            $transactionTypeId = CodeDetail::where('CodeID', 'Source')
+                ->where('Description', 'Transaction Transfer')->value('ID');
+
             StockTransaction::create([
                 'SKUID' => $skuId,
-                'TransactionType' => CodeDetail::where('CodeID', 'Source')
-                    ->where('Description', 'Transaction Transfer')->value('ID'),
+                'TransactionType' => $transactionTypeId,
                 'ItemID' => $item->Item,
                 'StoreID' => $stockFrom->Store ?? null,
                 'BranchID' => $transfer->FromBranch,
-                'UnitCost' => $item->UnitCost,
+                'UnitCost' => $unitCost,
                 'UOMID' => $item->uom->Id ?? null,
                 'QuantityIn' => 0,
                 'QuantityOut' => $dispatchedQty,
                 'BalanceQty' => $newBalance,
-                'TotalCost' => $totalCost,
+                'TotalCost' => $itemTotalCost * -1,
                 'TransactionDate' => now(),
                 'ReferenceID' => $transfer->Id,
                 'Remarks' => 'Transfer to Branch ID ' . $transfer->ToBranch,
-                'CreatedBy' => Auth::id(),
+                'CreatedBy' => $user->Id,
                 'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
+                'ModifiedBy' => $user->Id,
                 'ModifiedOn' => now(),
             ]);
 
+            // Update stock item
             $stockFrom->CurrentQty = $newBalance;
-            $stockFrom->ModifiedBy = Auth::id();
+            $stockFrom->ModifiedBy = $user->Id;
             $stockFrom->ModifiedOn = now();
             $stockFrom->save();
+
+            // Create inventory hold
+            $reasonId = CodeDetail::where('CodeID', 'AdjustmentReason')
+                ->where('Description', 'In Transit')->value('ID');
+            $sourceId = CodeDetail::where('CodeID', 'Source')
+                ->where('Description', 'Transaction Transfer')->value('ID');
 
             InventoryHold::create([
                 'ItemID' => $item->Item,
                 'BranchID' => $transfer->ToBranch,
                 'Quantity' => $dispatchedQty,
-                'Reason' => CodeDetail::where('CodeID', 'AdjustmentReason')
-                    ->where('Description', 'In Transit')->value('ID'),
-                'Source' => CodeDetail::where('CodeID', 'Source')
-                    ->where('Description', 'Transaction Transfer')->value('ID'),
+                'Reason' => $reasonId,
+                'Source' => $sourceId,
                 'SourceID' => $transfer->Id,
-                'Status' => $inTransitStatusId,
+                'Status' => Transfers::InTransit->value,
                 'Remarks' => $item->Remarks,
-                'CreatedBy' => Auth::id(),
+                'CreatedBy' => $user->Id,
                 'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
+                'ModifiedBy' => $user->Id,
                 'ModifiedOn' => now(),
             ]);
         }
 
-        // workflow using CodeDetail info
-        $code = CodeDetail::find($inTransitStatusId);
-        $statusValue = $code->Value ?? $code->CodeValue ?? $code->Description ?? null;
+        // Post financial transaction if total cost > 0
+        if ($totalCost > 0) {
+            $payload = [
+                'ModuleID'          => 400000,
+                'TransactionTypeID' =>  5,
+                'TransactionType'   => 'InterBranch Inventory Transfer',
+                'ReferenceNumber'   => $transfer->TransferID,
+                'TransactionDate'   => now()->toDateString(),
+                'Amount'            => $totalCost,
+                'TaxAmount'         => 0,
+                'BranchID'          => $transfer->FromBranch,
+                'DepartmentID'      => null,
+                'CurrencyID'        => 56,
+                'CurrencyCode'      => 'KES',
+                'ExchangeRate'      => 1,
+                'Narration'         => 'Transfer of inventory to branch ' . $transfer->ToBranch . ' via ' . $transfer->TransferId,
+                'SourceTable'       => 't_Transfers',
+                'SystemDescription' => 'Inventory Transfer ' . $transfer->TransferId,
+            ];
 
-        Workflow::create([
-            'Source' => 'TransactionTransfer',
-            'SourceID' => $transfer->Id,
-            'Stage' => $inTransitStatusId,
-            'Status' => $statusValue,
-            'Notes' => 'Transaction Transfer Approved: stock deducted from origin branch',
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
+            $result = $svc->postFromTypeMapping($payload);
 
-        PendingWorkflow::where('Source', 'TransactionTransfer')
-            ->where('SourceID', $transfer->Id)
-            ->update([
-                'Stage' => $inTransitStatusId,
-                'Status' => $statusValue,
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]);
+            activity()->performedOn($transfer)->causedBy($user)
+                ->withProperties(['financial_post' => $result])
+                ->log('Financial transaction posted for transfer');
+        } else {
+            activity()->performedOn($transfer)->causedBy($user)
+                ->log('Transfer approved with $0 total cost, no financial transaction posted');
+        }
 
-        activity()->performedOn($transfer)->causedBy(Auth::user())
+        activity()->performedOn($transfer)->causedBy($user)
             ->withProperties(['attributes' => $transfer->toArray()])
             ->log('Approved Transaction Transfer: stock deducted and transaction recorded');
 
         DB::commit();
     } catch (Throwable $th) {
         DB::rollBack();
-        Log::error('Transfer approval failed: ' . $th->getMessage(), [
-            'transfer_id' => $id,
-            'user_id' => Auth::id(),
-            'exception' => $th,
-        ]);
         throw $th;
     }
 }
 
-    public function reject(int $id): void
+    public function reject(int $id, string $comments = null): void
     {
-        $transfer = TransactionTransfer::findOrFail($id);
-        $rejectedStatusId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'Rejected')->value('ID');
+        try {
+            $transfer = TransactionTransfer::findOrFail($id);
+            $user = Auth::user();
 
-        $transfer->Status = $rejectedStatusId;
-        $transfer->ModifiedBy = Auth::id();
-        $transfer->ModifiedOn = now();
-        $transfer->save();
+            // Use workflow to reject
+            $this->workflow->reject($transfer, $user, Transfers::Rejected, $comments ?? 'Transfer Rejected', 'Status');
 
-        $code = CodeDetail::find($rejectedStatusId);
-        $statusValue = $code->Value ?? $code->CodeValue ?? $code->Description ?? null;
+            // Update transfer status to Rejected
+            $transfer->Status = Transfers::Rejected->value;
+            $transfer->ModifiedBy = $user->Id;
+            $transfer->ModifiedOn = now();
+            $transfer->save();
 
-        Workflow::create([
-            'Source' => 'TransactionTransfer',
-            'SourceID' => $transfer->Id,
-            'Stage' => $rejectedStatusId,
-            'Status' => $statusValue,
-            'Notes' => 'Transaction Transfer Rejected',
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
-
-        PendingWorkflow::where('Source', 'TransactionTransfer')
-            ->where('SourceID', $transfer->Id)
-            ->update(['Stage' => $rejectedStatusId, 'Status' => $statusValue]);
-
-        activity()->performedOn($transfer)->causedBy(Auth::user())
-            ->withProperties(['attributes' => $transfer->toArray()])
-            ->log('Rejected Transaction Transfer');
+            activity()->performedOn($transfer)->causedBy($user)
+                ->withProperties(['attributes' => $transfer->toArray()])
+                ->log('Rejected Transaction Transfer');
+        } catch (Throwable $th) {
+            throw $th;
+        }
     }
-
-    protected function generateTransferId(TransactionTransfer $transfer): string
-    {
-        $year = now()->format('Y');
-        return 'TRF-' . $year . '-' . str_pad($transfer->Id, 4, '0', STR_PAD_LEFT);
-    }
-
 
     public function getApprovedTransfers()
     {
-        $inTransitId = CodeDetail::where('CodeID', 'TransferStatus')->where('Description', 'In Transit')->value('ID');
-
-        return TransactionTransfer::where('Status', $inTransitId)
+        return TransactionTransfer::where('Status', Transfers::InTransit->value)
             ->orderByDesc('CreatedOn')
             ->get(['Id', 'TransferId', 'TransferDate', 'FromBranch', 'ToBranch']);
     }
-
-
 }

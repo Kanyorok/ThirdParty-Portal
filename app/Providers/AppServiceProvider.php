@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\Authenticate;
 use App\Models\Auth\ModelRole;
 use App\Models\Auth\PersonalAccessToken as CustomPersonalAccessToken;
 use App\Models\Auth\Team;
@@ -9,7 +10,6 @@ use App\Models\Auth\User;
 use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
-use App\Services\Workflow\ApprovalWorkflow;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;
@@ -102,10 +102,8 @@ use App\Models\Fleet\FleetTripLog;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetVehicleInspection;
 use App\Models\Fleet\FleetVehicleRequest;
-use App\Models\FleetManagement\DriverManagement;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
-// use App\Models\FleetManagement\VehicleRegistry;
 use App\Models\HRM\Committee;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
@@ -131,7 +129,9 @@ use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\Store;
+use App\Models\Inventory\StockTake;
 use App\Models\Inventory\TransactionReceipt;
+use App\Models\Procurement\Tender;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\UOMConversion;
@@ -147,6 +147,7 @@ use App\Models\Legal\LegalSearchRequest;
 use App\Models\Legal\LegalTemplate;
 use App\Models\Legal\LoanSecurity;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\ProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItem;
@@ -179,6 +180,7 @@ use App\Models\Settings\WorkFlowLimit;
 use App\Models\Settings\WorkFlowStage;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
+use App\Models\ThirdParty\SupplierMaster;
 use App\Policies\CrmBranchPolicy;
 use App\Policies\DMS\DMSSignaturePolicy;
 use App\Policies\DMS\DMSTagPolicy;
@@ -220,6 +222,7 @@ use App\Policies\Inventory\ItemMasterListPolicy;
 use App\Policies\Inventory\ItemTypePolicy;
 use App\Policies\Inventory\PriceManagementPolicy;
 use App\Policies\Inventory\StockAdjustmentPolicy;
+use App\Policies\Inventory\StockTakePolicy;
 use App\Policies\Inventory\StockItemPolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\TransactionReceiptPolicy;
@@ -230,6 +233,7 @@ use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
+use App\Policies\Procurement\SupplierPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
@@ -254,12 +258,44 @@ use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
-
 use App\Policies\RolePolicy;
+use App\Policies\Procurement\ProcurementPlanPolicy;
+use App\Policies\Procurement\DepartmentNeedPolicy;
+use App\Policies\Procurement\ConsolidatedProcurementPlanPolicy;
+use App\Policies\Procurement\PlanLineItemPolicy;
+use App\Policies\Procurement\TenderSubmissionPolicy;
+use App\Policies\Procurement\TenderInvitationPolicy;
+use App\Policies\Procurement\BidOpeningPolicy;
+use App\Policies\Procurement\RFQResponsePolicy;
+use App\Policies\Procurement\ContractPolicy;
+use App\Policies\Procurement\PurchaseOrderPolicy;
+use App\Policies\Procurement\GoodsReceiptPolicy;
+use App\Models\Procurement\BidSubmission;
+use App\Models\Procurement\TenderInvitation;
+use App\Models\Procurement\RFQResponse;
+use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\Order as ProcurementOrder;
+use App\Models\Procurement\GoodsReceipt;
+use App\Models\Core\ApprovalGroup;
+use App\Models\Procurement\Criteria;
+use App\Models\Procurement\ProcurementMode;
+use App\Models\Procurement\ProcurementPeriod;
+use App\Policies\Procurement\ApprovalSetupPolicy;
+use App\Policies\Procurement\EvaluationCriteriaPolicy;
+use App\Policies\Procurement\ProcurementSectionPolicy;
+use App\Policies\Procurement\ProcurementConfigurationPolicy;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Http\Controllers\Finance\JournalEntryController;
+use App\Http\Controllers\Finance\PostingController;
+use App\Http\Controllers\Procurement\TenderController;
+use App\Http\Controllers\Procurement\RequisitionsController;
+use App\Http\Controllers\Procurement\AwardsController;
+use App\Http\Controllers\Procurement\PurchaseOrderController;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
 
@@ -273,13 +309,56 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register():void 
+    public function register(): void
 
     {
-         $this->app->bind(ApprovalWorkflow::class, function ($app) {
-        return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
-    });
-    
+        $this->app->bind(ApprovalWorkflow::class, function ($app) {
+            return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
+        });
+
+        // Bind Finance Journal workflows
+        $this->app->when(PostingController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'ApprovalStatus',
+                    'ApprovalStatus'
+                );
+            });
+
+        $this->app->when(JournalEntryController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'ApprovalStatus',
+                    'ApprovalStatus'
+                );
+            });
+
+        // 🔥 FIX: Bind Tender Workflow using contextual binding
+        $this->app->when(TenderController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'TenderStatus',      // CodeID for tender approval workflow
+                    'ApprovalStatus'     // Status column name - THIS WAS WRONG
+                );
+            });
+
+        // Bind Requisition Workflow Service
+        $this->app->singleton(RequisitionWorkflowService::class, function ($app) {
+            return new RequisitionWorkflowService();
+        });
+        // TODO: Profile Management repositories
+        $this->app->bind(
+            \App\Repositories\ThirdParty\Contracts\ThirdPartyRepositoryInterface::class,
+            \App\Repositories\ThirdParty\ThirdPartyRepository::class
+        );
+
+        $this->app->bind(
+            \App\Repositories\ThirdParty\Contracts\SupplierRepositoryInterface::class,
+            \App\Repositories\ThirdParty\SupplierRepository::class
+        );
     }
 
     /**
@@ -287,6 +366,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->singleton(
+            \Illuminate\Auth\Middleware\Authenticate::class,
+            Authenticate::class
+        );
+
+
+
         \Illuminate\Support\Facades\Blade::if('canRead', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
             if (!$user) return false;
@@ -358,7 +444,7 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
-          
+            Tender::getPrimaryKey() => Tender::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
@@ -370,6 +456,8 @@ class AppServiceProvider extends ServiceProvider
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,
             ConsolidatedProcurementPlan::getPrimaryKey() => ConsolidatedProcurementPlan::class,
             PlanLineItem::getPrimaryKey() => PlanLineItem::class,
+            \App\Models\Procurement\TenderAward::getPrimaryKey() => \App\Models\Procurement\TenderAward::class,
+            \App\Models\Procurement\RFQAward::getPrimaryKey() => \App\Models\Procurement\RFQAward::class,
 
             //iINVENTORY
             ItemMasterList::getPrimaryKey() => ItemMasterList::class,
@@ -385,6 +473,8 @@ class AppServiceProvider extends ServiceProvider
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             UOMConversion::getPrimaryKey() => UOMConversion::class,
+            StockTake::getPrimaryKey() => StockTake::class,
+            \App\Models\Inventory\StockConsumption::getPrimaryKey() => \App\Models\Inventory\StockConsumption::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -447,10 +537,13 @@ class AppServiceProvider extends ServiceProvider
             LegalHold::getPrimaryKey() => LegalHold::class,
             Repository::getPrimaryKey() => Repository::class,
 
+
             //Third Parties
             // Allow resolving morph type 'ThirdParty' used by legacy data
             'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
+            'ThirdPartyUser' => \App\Models\ThirdParty\ThirdPartyUser::class,
+            \App\Models\ThirdParty\SupplierMaster::getPrimaryKey() => \App\Models\ThirdParty\SupplierMaster::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,
@@ -526,16 +619,8 @@ class AppServiceProvider extends ServiceProvider
 
         ]);
 
-        // Super-admin bypass: Admin roles can perform any ability
-        Gate::before(function ($user, string $ability = null, $arguments = null) {
-            try {
-                if ($user->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) {
-                    return true;
-                }
-            } catch (\Throwable $e) {
-            }
-            return null;
-        });
+        // Permission checks now go through standard role/permission system
+        // Admin role has all permissions assigned in database, no special bypass needed
 
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
@@ -551,10 +636,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RFQ::class, RFQPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
-        Gate::policy(DepartmentNeed::class, DepartmentNeedsPolicy::class);
+
         Gate::policy(ProcurementMethod::class, ProcurementMethodPolicy::class);
         Gate::policy(ItemMasterList::class, ItemMasterListPolicy::class);
         Gate::policy(ItemCategories::class, ItemCategoryPolicy::class);
+        Gate::policy(StockTake::class, StockTakePolicy::class);
         Gate::policy(ItemType::class, ItemTypePolicy::class);
         Gate::policy(StockItem::class, StockItemPolicy::class);
         Gate::policy(InventoryType::class, InventoryTypePolicy::class);
@@ -583,6 +669,20 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
         Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
+        Gate::policy(SupplierMaster::class, SupplierPolicy::class);
+        Gate::policy(ProcurementPlan::class, ProcurementPlanPolicy::class);
+        Gate::policy(DepartmentNeed::class, DepartmentNeedPolicy::class);
+        Gate::policy(ConsolidatedProcurementPlan::class, ConsolidatedProcurementPlanPolicy::class);
+        Gate::policy(PlanLineItem::class, PlanLineItemPolicy::class);
+        Gate::policy(BidSubmission::class, TenderSubmissionPolicy::class);
+        Gate::policy(TenderInvitation::class, TenderInvitationPolicy::class);
+        Gate::policy(RFQResponse::class, RFQResponsePolicy::class);
+
+        // Batch 3: Contracts & Orders
+        Gate::policy(TenderAward::class, ContractPolicy::class);
+        Gate::policy(ProcurementOrder::class, PurchaseOrderPolicy::class);
+        Gate::policy(GoodsReceipt::class, GoodsReceiptPolicy::class);
+        Gate::policy(\App\Http\Controllers\Procurement\BidOpeningCeremonyController::class, BidOpeningPolicy::class); // Virtual policy binding
         Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
         // Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
@@ -615,6 +715,18 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
         Gate::policy(FleetRepairLog::class, FleetRepairLogPolicy::class);
         Gate::policy(FleetVehicleInspection::class, FleetVehicleInspectionPolicy::class);
+
+        Gate::policy(\App\Models\Procurement\Prequalification\PrequalificationRound::class, \App\Policies\Procurement\Prequalification\PrequalificationRoundPolicy::class);
+        Gate::policy(\App\Models\ThirdParty\ThirdParties::class, \App\Policies\ThirdParty\ThirdPartyPolicy::class);
+        Gate::policy(\App\Models\Inventory\StockConsumption::class, \App\Policies\Inventory\StockConsumptionPolicy::class);
+        Gate::policy(\App\Models\Settings\WorkFlow::class, \App\Policies\WorkflowPolicy::class);
+
+        // Batch 4: Settings & Setup
+        Gate::policy(ApprovalGroup::class, ApprovalSetupPolicy::class);
+        Gate::policy(Criteria::class, EvaluationCriteriaPolicy::class);
+        Gate::policy(Section::class, ProcurementSectionPolicy::class);
+        Gate::policy(ProcurementMode::class, ProcurementConfigurationPolicy::class);
+        Gate::policy(ProcurementPeriod::class, ProcurementConfigurationPolicy::class);
 
         Sanctum::usePersonalAccessTokenModel(CustomPersonalAccessToken::class);
 

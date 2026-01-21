@@ -20,7 +20,7 @@ class BancassuranceClaimPayment extends Model
 
     protected $fillable = [
         'ClaimId', 'PaymentDate', 'PaymentAmount', 'PaymentReference', 'Note',
-        'PaidBy', 'PaymentMethod', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'PaidTo', 'PaymentMethod', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     public static function getPrimaryKey(): string

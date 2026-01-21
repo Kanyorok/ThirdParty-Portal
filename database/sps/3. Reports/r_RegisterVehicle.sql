@@ -35,7 +35,7 @@ BEGIN
            f.FuelName       AS Fuel,
            cd.Description   AS [Status],
            b.Name           AS Branch,
-           v.IsActive
+           'yes'
     FROM t_FleetVehicles AS v
              JOIN t_FleetBrands AS br ON br.Id = v.Make
              JOIN t_FleetModels AS m ON m.Id = v.Model

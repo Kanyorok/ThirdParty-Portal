@@ -14,6 +14,7 @@ use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\Finance\InvoiceTax;
 use App\Services\Finance\TransactionService;
 use App\Services\Finance\CreditCalculationService;
+use App\Services\ThirdParties\ThirdPartyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -264,19 +265,31 @@ class InvoiceGenerationController extends Controller
         // Make sure these exist in t_Modules and t_FinanceTransactionTypes
         $MODULE_ID = 1100000;
         $TRANSACTION_TYPEID = 16;    // "AR Invoice"
-        $THIRDPARTYTYPEID = 1; // "Tenant"
 
         try {
-            return DB::transaction(function () use ($id, $validated, $svc, $MODULE_ID, $TRANSACTION_TYPEID, $THIRDPARTYTYPEID) {
+            return DB::transaction(function () use ($id, $validated, $svc, $MODULE_ID, $TRANSACTION_TYPEID) {
 
                 // Load the invoice with the same relations, and lock row for update
                 $invoice = FinanceInvoice::with([
                     'customer:Id,ThirdPartyName',
+                    'customer.types:TypeId,Code,Description',
                     'currency:Id,Name,Code,Symbol',
                     'createdBy:Id,Name',
                 ])
                     ->lockForUpdate()
                     ->findOrFail($id);
+
+                // Resolve ThirdPartyTypeID dynamically from the customer types.
+                // Avoid hardcoding numeric IDs, since TypeId values vary per environment/seed data.
+                $thirdPartyTypeId = null;
+                if ($invoice->customer && $invoice->customer->relationLoaded('types')) {
+                    $type =
+                        $invoice->customer->types->firstWhere('Code', ThirdPartyService::TypeTenant)
+                        ?? $invoice->customer->types->firstWhere('Code', ThirdPartyService::TypeCustomer)
+                        ?? $invoice->customer->types->first();
+
+                    $thirdPartyTypeId = $type?->TypeId;
+                }
 
                 // Guard: already posted?
                 if (strtolower((string)$invoice->ApprovalStatus) === 'posted') {
@@ -287,12 +300,13 @@ class InvoiceGenerationController extends Controller
                 $payload = [
                     'ModuleID'          => $MODULE_ID,
                     'ThirdPartyID'      => $invoice->CustomerID,
-                    'ThirdPartyTypeID'  => $THIRDPARTYTYPEID ?? 1,
+                    // Nullable is OK; TransactionService validates existence only if value is present.
+                    'ThirdPartyTypeID'  => $thirdPartyTypeId,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,
                     'TransactionType' => 'Account Receivables Invoice',
                     'ReferenceNumber' => $invoice->InvoiceNumber,
                     'TransactionDate' => $invoice->InvoiceDate ?? now()->toDateString(),
-                    'Amount' => (float)($invoice->TotalAmount ?? 0),   // net (excl. tax) if that's your model
+                    'Amount' => (float)($invoice->TotalAmount ?? 0) - (float)($invoice->TaxAmount ?? 0),   //
                     'TaxAmount' => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
                     'BranchID' => session('LoginBranchId', 1),
                     'DepartmentID' => $invoice->DepartmentID ?? null,

@@ -10,6 +10,7 @@ use App\Models\CRM\Discussion;
 use App\Models\CRM\DiscussionUser;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Meeting;
+use App\Models\CRM\MeetingRoom;
 use App\Models\CRM\Notes;
 use App\Models\CRM\Schedule;
 use App\Models\ThirdParies\Board;
@@ -87,7 +88,7 @@ trait MeetingTrait
         });
     }
 
-    public function startLeadMeeting(Lead $lead, string $title, string $location, Carbon $start, User $actor, Meeting $meeting = null, Schedule $schedule = null): Meeting
+    public function startLeadMeeting(Lead $lead, string $title, string|MeetingRoom $location, Carbon $start, User $actor, Meeting $meeting = null, Schedule $schedule = null): Meeting
     {
         return DB::transaction(static function () use ($location, $title, $lead, $schedule, $start, $actor, $meeting) {
             $service = ($meeting instanceof Meeting)

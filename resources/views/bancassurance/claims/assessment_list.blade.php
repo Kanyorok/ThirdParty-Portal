@@ -93,8 +93,7 @@
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td>{{ $assessment->ClaimId ?? '-' }} _ {{ $assessment->claim->policy->PolicyNumber ?? '-' }}</td>
                             <td>{{ $assessment->assessedby->Name ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($assessment->AssessmentDate)->format('d/m/Y') }}</td>
-                            <td>{{ number_format($assessment->AssessmentAmount, 2) }}</td>
+                            <td>{{ \Carbon\Carbon::parse($assessment->AssessmentDate)->format('d M Y') }}</td>                           <td>{{ number_format($assessment->AssessmentAmount, 2) }}</td>
                             <td class="text-center">
                                 <span class="badge bg-primary">
                                     {{ $assessment->decision->Description ?? '-' }}
@@ -105,7 +104,7 @@
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}"
                                         class="btn btn-outline-info rounded-pill px-2" title="View">
-                                        <i class="bi bi-eye"></i> View
+                                        <i class="bi bi-eye"></i>
                                     </a>
 
                                     @if($assessment->claimpaiyments()->exists())

@@ -39,7 +39,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Country of Origin</label>
                     <input type="text" class="form-control bg-light"
-                           value="{{ $newtenant->thirdParty->Country ?? '-' }}" readonly>
+                           value="{{ $newtenant->thirdParty->Country->Name ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -81,13 +81,12 @@
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-muted">
             <div>
                 Created by: <strong>{{ $newtenant->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $newtenant->CreatedOn ? \Carbon\Carbon::parse($newtenant->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $newtenant->CreatedOn ? \Carbon\Carbon::parse($newtenant->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by: <strong>{{ $newtenant->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $newtenant->ModifiedOn ? \Carbon\Carbon::parse($newtenant->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $newtenant->ModifiedOn ? \Carbon\Carbon::parse($newtenant->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
 
             <div>
-                <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-sm btn-primary">Edit</a>
                 <a href="{{ route('addtenant.index') }}" class="btn btn-sm btn-secondary">Back</a>
             </div>
         </div>

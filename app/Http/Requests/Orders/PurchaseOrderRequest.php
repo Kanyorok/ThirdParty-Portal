@@ -28,6 +28,9 @@ class PurchaseOrderRequest extends FormRequest
             'refNo' => ['nullable'],
             'terms' => ['required', 'exists:t_CodeDetails,ID,CodeID,PaymentTerm'],
 
+            'SourceType' => ['nullable', 'string'],
+            'SourceId' => ['nullable'],
+
             // For unified origination forms
             'origination_type' => ['nullable', 'in:rfq,award,contract,direct'],
             'award_id' => ['nullable', 'integer'],

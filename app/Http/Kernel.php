@@ -11,7 +11,7 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         // Laravel's default global middleware
-        // \App\Http\Middleware\TrustProxies::class,
+        \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         // \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
@@ -34,6 +34,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\ReturnContentFragment::class,
+            \App\Http\Middleware\EnsureFreshPermissions::class, // Force fresh permission check after cache clear
         ],
 
         'api' => [
@@ -49,13 +50,13 @@ class Kernel extends HttpKernel
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
-    'canAction' => \App\Http\Middleware\CanAction::class,
+        'canAction' => \App\Http\Middleware\CanAction::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'thirdparty' => \App\Http\Middleware\EnforceThirdPartyUser::class,
+        'auth.thirdparty' => \App\Http\Middleware\AuthenticateThirdPartyToken::class,
         'thirdparty.approved' => \App\Http\Middleware\CheckThirdPartyApprovalStatus::class,
         'verified.user' => \App\Http\Middleware\VerifiedUser::class,
         'license' => \App\Http\Middleware\RequireLicense::class,

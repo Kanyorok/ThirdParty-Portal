@@ -11,6 +11,12 @@
             gap: 0.4rem;
             align-items: center;
         }
+
+        .invoice-table-wrapper {
+            max-width: 100%;
+            max-height: 65vh;
+            overflow: auto;
+        }
     </style>
 @endsection
 
@@ -31,75 +37,84 @@
     @if($invoices->count())
         <div class="card shadow-sm">
             <div class="card-body">
-                <table id="InvoicesTable" class="table table-bordered table-striped table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th>Invoice No.</th>
-                            <th>Tenant</th>
-                            <th>Lease</th>
-                            <th>Billing Period</th>
-                            <th>Invoice Date</th>
-                            <th class="text-end">Rent Amount</th>
-                            <th>Status</th>
-                            <th style="width: 20%">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($invoices as $invoice)
+                <div class="invoice-table-wrapper">
+                    <table id="InvoicesTable" class="table table-bordered table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $invoice->InvoiceNumber ?? '-' }}</td>
-                                <td>{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
-                                <td>{{ $invoice->lease->LeaseNumber ?? '-' }}</td>
-                                <td>{{ $invoice->BillingMonth ? \Carbon\Carbon::parse($invoice->BillingMonth)->format('m/Y') : '-' }}</td>
-                                <td>{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '-' }}</td>
-                                <td class="text-end">{{ number_format($invoice->RentAmount, 2) ?? '-' }}</td>
-                                <td>
-                                    @if($invoice->Status instanceof \App\Enums\Property\PropertyInvoiceEnum)
-                                        <span class="badge bg-{{ $invoice->Status->badgeColor() }}">
-                                            {{ $invoice->Status->label() }}
-                                        </span>
-                                    @else
-                                        <span class="badge bg-secondary">{{ $invoice->Status }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <a href="{{ route('rentinvoice.show', $invoice->Id) }}" 
-                                           class="btn btn-sm btn-info text-white" 
-                                           title="View Invoice">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-
-                                        @if($invoice->receipts()->exists())
-                                            <button class="btn btn-sm btn-secondary" title="Invoice In Use">
-                                                <i class="bi bi-lock"></i>
-                                            </button>
-                                        @else
-                                            {{-- <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" 
-                                               class="btn btn-sm btn-warning" 
-                                               title="Edit Invoice">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a> --}}
-
-                                            <form action="{{ route('rentinvoice.destroy', $invoice->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this invoice?');" 
-                                                  class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger" title="Delete Invoice">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
+                                <th style="width: 5%">#</th>
+                                <th>Invoice No.</th>
+                                <th>Tenant</th>
+                                <th>Lease</th>
+                                <th>Billing Period</th>
+                                <th>Invoice Date</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-end">Amount Paid</th>
+                                <th>Status</th>
+                                <th style="width: 20%">Actions</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($invoices as $invoice)
+                                @php
+                                    $totalAmount = ($invoice->RentAmount ?? 0) + ($invoice->ServicesCharge ?? 0) + ($invoice->ParkingFee ?? 0) + ($invoice->OtherCharges ?? 0);
+                                    $paidAmount = $invoice->DerivedPaid ?? 0;
+                                    $status = $invoice->DerivedStatus ?? 'Pending';
+                                @endphp
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $invoice->InvoiceNumber ?? '-' }}</td>
+                                    <td>{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
+                                    <td>{{ $invoice->lease->LeaseNumber ?? '-' }}</td>
+                                    <td>{{ $invoice->BillingMonth ? \Carbon\Carbon::parse($invoice->BillingMonth)->format('m/Y') : '-' }}</td>
+                                    <td>{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y') : '-' }}</td>
+                                    <td class="text-end fw-semibold">KES {{ number_format($totalAmount, 2) }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success px-3 py-2">
+                                            KES {{ number_format($paidAmount, 2) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ $status == 'Fully Paid' ? 'success' : ($status == 'Partial Paid' ? 'warning' : 'danger') }} px-3 py-2">
+                                            {{ $status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ route('rentinvoice.show', $invoice->Id) }}" 
+                                               class="btn btn-sm btn-info text-white" 
+                                               title="View Invoice">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+
+                                            @if($invoice->receipts()->exists())
+                                                <button class="btn btn-sm btn-secondary" title="Invoice In Use">
+                                                    <i class="bi bi-lock"></i>
+                                                </button>
+                                            @else
+                                                {{-- <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" 
+                                                   class="btn btn-sm btn-warning" 
+                                                   title="Edit Invoice">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </a> --}}
+
+                                                <form action="{{ route('rentinvoice.destroy', $invoice->Id) }}" 
+                                                      method="POST" 
+                                                      onsubmit="return confirm('Are you sure you want to delete this invoice?');" 
+                                                      class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button class="btn btn-sm btn-danger" title="Delete Invoice">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     @else

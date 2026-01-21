@@ -85,7 +85,7 @@
         <hr>
         <div class="mt-4">
             <button type="button" class="btn btn-secondary float-start"
-                    data-bs-dismiss="modal">
+                    onclick="window.bsOffcanvas.hide()">
                 cancel
             </button>
             <button class="btn btn-primary float-end" id="createFilterBtn" type="submit"><i

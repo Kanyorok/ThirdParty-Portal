@@ -16,10 +16,10 @@ BEGIN
     )
     INSERT INTO #SupplierListing
     select S.Id,
-           S.SupplierName,
-           S.ContactEmail,
-           S.ContactPhone,
-           S.Address,
+           'S.SupplierName',
+           'S.ContactEmail',
+           'S.ContactPhone',
+           'S.Address',
            I.Name as CategoryId,
            U.Name as CreatedBy,
            U.Name as ModifiedBy,

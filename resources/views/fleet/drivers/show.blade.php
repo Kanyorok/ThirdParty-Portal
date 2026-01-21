@@ -169,8 +169,7 @@
                                         <tr data-id="{{ $assignment->Id }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $assignment->vehicle?->RegistrationNo?? '' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') }}</td>
-                                            <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d M Y') }}</td>                                           <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d M Y') : '—' }}</td>
                                             <td>{{ $assignment->Purpose ?: '—' }}</td>
                                             <td>{{ $assignment->assignedBy?->LastName ?? '—' }}</td>
                                             <td>{{ $assignment->Notes ?: '—' }}</td>
@@ -242,13 +241,13 @@
                             </table>
                         @endif
                             </div>
-                        
+
                 </div>
             </div>
         </div>
     </div>
     </div>
-    </div> 
+    </div>
     {{-- Add License Modal --}}
 
     <div class="modal fade" id="addLicenseModal" tabindex="-1">
@@ -384,8 +383,9 @@
                     <div class="modal-body">
                         <label class="form-label">Vehicle</label>
                         <select name="VehicleID" id="editAssignmentVehicle" class="form-control" required>
+                            <option value="">-- Select Vehicle --</option>
                             @foreach($vehicles as $vehicle)
-                                <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
+                                <option value="{{ old('VehicleID', $vehicle->Id) }}">{{ $vehicle->RegistrationNo }}</option>
                             @endforeach
                         </select>
                         <label class="form-label mt-2">Assignment Date</label>

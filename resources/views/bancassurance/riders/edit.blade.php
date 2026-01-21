@@ -68,6 +68,19 @@
                                class="form-control" step="0.01" min="0"
                                value="{{ old('AdditionalPremium', $rider->AdditionalPremium) }}" required>
                     </div>
+                    <div class="col-md-6 mt-3">
+                        <label for="CurrencyId" class="form-label">
+                            Currency <span class="text-danger">*</span>
+                        </label>
+                        <select name="CurrencyId" id="CurrencyId" class="form-select" required>
+                            <option value="">-- Select --</option>
+                            @foreach($currencies as $currency)
+                                <option value="{{ $currency->Id }}"
+                                    {{ $currency->Id == $rider->CurrencyId ? 'selected' : '' }}>
+                                    {{ $currency->Code }} - {{ $currency->SymbolNative }}
+                                </option>
+                            @endforeach
+                        </select>
                 </div>
 
                 <!-- Description -->

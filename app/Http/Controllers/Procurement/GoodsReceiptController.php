@@ -10,13 +10,14 @@ use App\Models\Procurement\GoodsReceipt;
 use App\Models\Inventory\StockItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Core\Branch;
 
 class GoodsReceiptController extends Controller
 {
 
     public function index()
     {
-
+        $this->authorize('viewAny', GoodsReceipt::class);
         // Get only POs not used in GoodsReceipts
 
         $goodsReceipts = GoodsReceipt::with('receiver', 'supplier')
@@ -34,41 +35,34 @@ class GoodsReceiptController extends Controller
 
     public function create()
     {
+        $this->authorize('create', GoodsReceipt::class);
         $usedOrderNos = DB::connection('sqlsrv')
             ->table('t_GoodsReceipts')
             ->distinct()
             ->pluck('POID');
 
-        // Fetch candidate POs not yet used in GRNs, include totals for approval check
+        // Fetch approved POs not yet used in GRNs
         $Orders = DB::connection('sqlsrv')
             ->table('t_Orders')
             ->whereNotIn('OrderNo', $usedOrderNos)
+            ->where(function($query) {
+                $query->where('DocStatus', 'A')  // Approved
+                      ->orWhere('DocStatus', 'a'); // Handle case variations
+            })
             ->select('Id', 'OrderNo', 'ExtOrdNum', 'AccountID', 'OrdTotIncl')
             ->orderByDesc('CreatedOn')
             ->get();
 
-        // Keep only fully approved POs using the centralized ApprovalService
-        try {
-            $approvalService = app(\App\Services\Core\ApprovalService::class);
-            $Orders = $Orders->filter(function ($order) use ($approvalService) {
-                $poId = (int)($order->Id ?? 0);
-                $amount = (float)($order->OrdTotIncl ?? 0);
-                return $poId > 0 && $approvalService->isFullyApproved('purchase_order', $poId, $amount);
-            })->values();
-        } catch (\Throwable $e) {
-            // If approval check fails, fall back to showing none rather than unapproved POs
-            Log::error('GRN create: approval filter failed', ['error' => $e->getMessage()]);
-            $Orders = collect();
-        }
-
         $OrderLines = DB::connection('sqlsrv')->table('t_OrderLines as ol')
             ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
+            ->leftJoin('t_CodeDetails as cd', 'i.InventoryType', '=', 'cd.Id')
             ->select(
                 'ol.Id',
                 'ol.iOrderID',
                 'ol.iStockCodeID',
                 'ol.fQuantity',
-                'i.InventoryType',
+                'ol.fUnitPriceExcl',
+                'cd.Description as InventoryType',
                 'i.ItemName',
                 'i.ItemDescription',
                 'i.Category',
@@ -78,103 +72,132 @@ class GoodsReceiptController extends Controller
 
 
         $linesGrouped = $OrderLines->groupBy('iOrderID');
+        
+        Log::info('GRN Create Debug', [
+            'total_orders' => $Orders->count(),
+            'total_lines' => $OrderLines->count(),
+            'grouped_keys' => $linesGrouped->keys()->toArray()
+        ]);
+        
         foreach ($Orders as $order) {
             $order->OrderLines = $linesGrouped[$order->Id] ?? collect();
+            Log::info('Order Lines Attached', [
+                'order_id' => $order->Id,
+                'order_no' => $order->OrderNo,
+                'lines_count' => $order->OrderLines->count()
+            ]);
         }
+        
+        // Fetch all active stores
+        $stores = DB::connection('sqlsrv')->table('t_Stores')->select('Id', 'StoreName')->get();
 
-        return view('procurement.goodreceipts.create', compact('Orders'));
+        return view('procurement.goodreceipts.create', compact('Orders', 'stores'));
     }
 
 
     public function store(Request $request)
-{
-    $authUser = Auth::user();
-    Log::info('Store method reached');
-    Log::info('Request data:', $request->all());
+    {
+        $this->authorize('create', GoodsReceipt::class);
+        $authUser = Auth::user();
+        Log::info('Store method reached');
+        Log::info('Request data:', $request->all());
 
-    $request->validate([
-        'GRNID' => 'required|string',
-        'POID' => 'required|string',
-        'items' => 'required|array',
-        'SupplierID' => 'required',
-    ]);
+        $request->validate([
+            'GRNID' => 'required|string',
+            'POID' => 'required|string',
+            'items' => 'required|array',
+            'SupplierID' => 'required',
+        ]);
 
-    DB::beginTransaction();
-    try {
-        foreach ($request->items as $item) {
-
-            $grn = GoodsReceipt::create([
-                'GRNID'            => $request->GRNID,
-                'ReceivedDate'     => now(),
-                'ReceivedBy'       => Auth::id(),
-                'POID'             => $request->POID,
-                'SupplierId'       => $request->SupplierID,
-                'ItemNo'           => $item['ItemNo'],
-                'StoreID'          => $item['StoreID'] ?? '2',
-                'TransferTo'       => $item['TransferTo'] ?? null,
-                'TransferStatus'   => $item['TransferTo'] ?? null,
-                'POQTY'            => $item['POQTY'] ?? 0,
-                'ReceivedQTY'      => $item['ReceivedQTY'] ?? 0,
-                'TagRequired'      => isset($item['TagRequired']) ? 1 : 0,
-                'InspectionStatus' => PostingEnum::Draft,
-                'CreatedBy'        => Auth::id(),
-                'ModifiedBy'       => Auth::id(),
-            ]);
-
-            $existingStock = StockItem::where('ItemID', $grn->ItemNo)
-                ->where('Store', $grn->StoreID)
-                ->first();
-
-            if ($existingStock) {
-                $existingStock->CurrentQty += (int) $grn->ReceivedQTY;
-                $existingStock->LastReceived = now();
-                $existingStock->ModifiedBy = Auth::id();
-                $existingStock->save();
-
-                Log::info("Stock updated for ItemID {$grn->ItemNo}, new qty: {$existingStock->CurrentQty}");
-            } else {
-                StockItem::create([
-                    'SKUCode'      => 'SKU-' . $grn->ItemNo . '-' . time(),
-                    'ItemID'       => $grn->ItemNo,
-                    'UOM'          => optional($grn->item)->UOM,
-                    'UnitCost'     => optional($grn->item)->UnitCost ?? 0,
-                    'Store'        => $grn->StoreID,
-                    'Branch'       => $grn->TransferTo ?? $authUser->BranchId ?? null,
-                    'CurrentQty'   => (int) $grn->ReceivedQTY,
-                    'Min'          => 0,
-                    'Reorder'      => 0,
-                    'Max'          => 0,
-                    'LastReceived' => now(),
-                    'Status'       => true,
-                    'CreatedBy'    => Auth::id(),
-                    'CreatedOn'    => now(),
-                    'ModifiedBy'   => Auth::id(),
-                    'ModifiedOn'   => now(),
-                ]);
-
-                Log::info("New StockItem created for ItemID {$grn->ItemNo}");
-            }
+        // Get a valid default store
+        $defaultStoreId = DB::connection('sqlsrv')->table('t_Stores')->where('Id', 1)->exists() ? 1 : DB::connection('sqlsrv')->table('t_Stores')->value('Id');
+        
+        // If no stores exist, return error - cannot create GRN without a valid store
+        if (!$defaultStoreId) {
+            return back()->withErrors([
+                'error' => 'Cannot create GRN: No stores are configured in the system. Please create at least one store before creating goods receipts.'
+            ])->withInput();
         }
 
-        DB::commit();
+        // Get HQ Branch
+        $hqBranch = Branch::where('IsHQ', 1)->first();
 
-        return redirect()
-            ->route('procurementreceipts.index')
-            ->with('success', 'Goods receipt saved and stock updated successfully.');
+        DB::beginTransaction();
+        try {
+            foreach ($request->items as $item) {
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error creating Goods Receipt: ' . $e->getMessage());
-        return back()->withErrors(['error' => 'Failed to save GRN: ' . $e->getMessage()]);
+                $grn = GoodsReceipt::create([
+                    'GRNID'            => $request->GRNID,
+                    'ReceivedDate'     => now(),
+                    'ReceivedBy'       => Auth::id(),
+                    'POID'             => $request->POID,
+                    'SupplierId'       => $request->SupplierID,
+                    'ItemNo'           => $item['ItemNo'],
+                    'StoreID'          => $item['StoreID'] ?? $defaultStoreId,
+                    'TransferTo'       => $hqBranch ? $hqBranch->Id : null,
+                    'TransferStatus'   => $item['TransferTo'] ?? null,
+                    'POQTY'            => $item['POQTY'] ?? 0,
+                    'ReceivedQTY'      => $item['ReceivedQTY'] ?? 0,
+                    'UnitPrice'        => $item['UnitPrice'] ?? 0,
+                    'TagRequired'      => isset($item['TagRequired']) ? 1 : 0,
+                    'InspectionStatus' => PostingEnum::Draft,
+                    'CreatedBy'        => Auth::id(),
+                    'ModifiedBy'       => Auth::id(),
+                ]);
+
+                $existingStock = StockItem::where('ItemID', $grn->ItemNo)
+                    ->where('Store', $grn->StoreID)
+                    ->first();
+
+                if ($existingStock) {
+                    $existingStock->CurrentQty += (int) $grn->ReceivedQTY;
+                    $existingStock->LastReceived = now();
+                    $existingStock->ModifiedBy = Auth::id();
+                    $existingStock->save();
+
+                    Log::info("Stock updated for ItemID {$grn->ItemNo}, new qty: {$existingStock->CurrentQty}");
+                } else {
+                    StockItem::create([
+                        'SKUCode'      => 'SKU-' . $grn->ItemNo . '-' . time(),
+                        'ItemID'       => $grn->ItemNo,
+                        'UOM'          => optional($grn->item)->UOM,
+                        'UnitCost'     => optional($grn->item)->UnitCost ?? 0,
+                        'Store'        => $grn->StoreID,
+                        'Branch'       => $authUser->BranchId ?? null,
+                        'CurrentQty'   => (int) $grn->ReceivedQTY,
+                        'Min'          => 0,
+                        'Reorder'      => 0,
+                        'Max'          => 0,
+                        'LastReceived' => now(),
+                        'Status'       => true,
+                        'CreatedBy'    => Auth::id(),
+                        'CreatedOn'    => now(),
+                        'ModifiedBy'   => Auth::id(),
+                        'ModifiedOn'   => now(),
+                    ]);
+
+                    Log::info("New StockItem created for ItemID {$grn->ItemNo}");
+                }
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('procurementreceipts.index')
+                ->with('success', 'Goods receipt saved and stock updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating Goods Receipt: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to save GRN: ' . $e->getMessage()]);
+        }
     }
-}
 
 
     public function fetchLinesByGRN($grnId, $poId)
     {
         $items = GoodsReceipt::where('GRNID', $grnId)
-                    ->where('POID', $poId)
-                    ->get();
+            ->where('POID', $poId)
+            ->get();
 
         return response()->json($items);
     }
@@ -204,11 +227,11 @@ class GoodsReceiptController extends Controller
     public function destroy($grnId, $poId)
     {
         $deleted = GoodsReceipt::where('GRNID', $grnId)
-                ->where('POID', $poId)
-                ->update([
-                    'DeletedBy' => Auth::id(),
-                    'DeletedOn' => now(),
-                ]);
+            ->where('POID', $poId)
+            ->update([
+                'DeletedBy' => Auth::id(),
+                'DeletedOn' => now(),
+            ]);
 
         if ($deleted) {
             return redirect()->route('procurementreceipts.index')->with('success', 'GRN items soft-deleted successfully.');
@@ -252,7 +275,4 @@ class GoodsReceiptController extends Controller
 
         return response()->json(['message' => 'Receipt posted and transactions recorded.']);
     }
-
-
-
 }

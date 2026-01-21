@@ -13,24 +13,57 @@ class ContractsLifecycleController extends Controller
     /**
      * Display list of active contracts for lifecycle management
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Load signed/executed contracts
-        $contracts = TenderAward::with(['tender', 'winningSupplier'])
-            ->whereIn('ContractStatus', ['Approved', 'Executed'])
-            ->orderBy('ContractApprovedOn', 'desc')
-            ->paginate(15);
+        $this->authorize('viewAny', TenderAward::class);
 
-        return view('procurement.contracts.contractlifecycle.index', compact('contracts'));
+        // Calculate counts
+        $counts = TenderAward::selectRaw("
+            count(case when ContractStatus = 'Approved' then 1 end) as pending,
+            count(case when ContractStatus = 'Executed' then 1 end) as active,
+            count(case when ContractStatus = 'Terminated' then 1 end) as terminated,
+            count(*) as total
+        ")->first();
+
+        // Base query
+        $query = TenderAward::with(['tender', 'winningSupplier'])
+            ->whereIn('ContractStatus', ['Approved', 'Executed', 'Terminated']);
+
+        // Apply Status Filter
+        if ($request->filled('status_filter')) {
+            $query->where('ContractStatus', $request->status_filter);
+        }
+
+        // Apply Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('ContractRef', 'like', "%{$search}%")
+                  ->orWhere('Title', 'like', "%{$search}%") // Assuming Title exists or similar
+                  ->orWhereHas('winningSupplier.supplierMaster.party', function ($q) use ($search) {
+                      $q->where('ThirdPartyName', 'like', "%{$search}%")
+                        ->orWhere('TradingName', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('tender', function ($q) use ($search) {
+                      $q->where('TenderNo', 'like', "%{$search}%")
+                        ->orWhere('Title', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $contracts = $query->orderBy('ContractApprovedOn', 'desc')->paginate(15);
+
+        return view('procurement.contracts.contractlifecycle.index', compact('contracts', 'counts'));
     }
 
     /**
      * View detailed contract information
      */
-    public function view($id)
+    public function view($Id)
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
-            ->findOrFail($id);
+            ->findOrFail($Id);
+        $this->authorize('view', $contract);
 
         return view('procurement.contracts.contractlifecycle.view', compact('contract'));
     }
@@ -42,6 +75,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
+        $this->authorize('view', $contract);
 
         return view('procurement.contracts.contractlifecycle.execution', compact('contract'));
     }
@@ -53,6 +87,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
+        $this->authorize('update', $contract);
 
         return view('procurement.contracts.contractlifecycle.amend', compact('contract'));
     }
@@ -70,6 +105,7 @@ class ContractsLifecycleController extends Controller
         ]);
 
         $contract = TenderAward::findOrFail($id);
+        $this->authorize('update', $contract);
 
         // TODO: Create amendment record and update contract
         // For now, just redirect with success message
@@ -85,6 +121,7 @@ class ContractsLifecycleController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
+        $this->authorize('update', $contract);
 
         return view('procurement.contracts.contractlifecycle.terminate', compact('contract'));
     }
@@ -112,5 +149,28 @@ class ContractsLifecycleController extends Controller
 
         return redirect()->route('contracts.lifecycle.index')
             ->with('success', 'Contract terminated successfully.');
+    }
+
+    /**
+     * Execute/Activate the contract
+     */
+    public function executeAction(Request $request, $id)
+    {
+        $contract = TenderAward::findOrFail($id);
+        $this->authorize('update', $contract);
+
+        if ($contract->ContractStatus !== 'Approved') {
+            return redirect()->back()->with('error', 'Only approved contracts can be executed.');
+        }
+
+        $contract->update([
+            'ContractStatus' => 'Executed',
+            'ModifiedBy' => Auth::id(),
+            // Ensure dates are set if they were missing or verify them?
+            // Assuming dates were set during contract creation/management.
+        ]);
+
+        return redirect()->route('contracts.lifecycle.index')
+            ->with('success', 'Contract executed and is now Active.');
     }
 }

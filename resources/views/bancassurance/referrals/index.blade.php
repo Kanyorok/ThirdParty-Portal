@@ -74,7 +74,7 @@
                         @forelse ($referrals as $referral)
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
-                                <td>{{ $referral->ClientName ?? '-' }}</td>
+                                <td>{{ $referral->customerreferral->thirdParty->ThirdPartyName ?? '-' }}</td>
                                 <td>{{ $referral->insuranceProduct->Name ?? '-' }}</td>
                                 <td>{{ $referral->preferredInsurer->Name ?? '-' }}</td>
                                 <td class="text-center">
@@ -83,7 +83,7 @@
                                     </span>
                                 </td>
                                 <td>{{ $referral->assignedToUser->Name ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') ?? '-' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d M Y') ?? '-' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm" role="group">
                                         {{-- View --}}
@@ -123,12 +123,6 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="8" class="text-center text-muted py-3">
-                                    <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                    No referrals found.
-                                </td>
-                            </tr>
                         @endforelse
                     </tbody>
                 </table>

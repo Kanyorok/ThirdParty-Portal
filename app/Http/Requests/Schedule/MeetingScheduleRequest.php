@@ -23,31 +23,13 @@ class MeetingScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'meeting_title'    => [
-                                       'required',
-                                       'string',
-                                       'max:250',
-                                      ],
-                'meeting_location' => [
-                                       'required',
-                                       'string',
-                                       'max:250',
-                                      ],
-                'meeting_start'    => 'required|date_format:"Y-m-d H:i"|before:meeting_end',
-                'meeting_end'      => 'required|date_format:"Y-m-d H:i"|after:meeting_start',
-                'meeting_users'    => [
-                                       'required',
-                                       'array',
-                                       'min:1',
-                                       'max:30',
-                                      ],
-                'meeting_notes'    => [
-                                       'required',
-                                       'min:1',
-                                       'max:250',
-                                       'string',
-                                      ],
-               ];
+            'meeting_title' => ['required', 'string', 'max:250'],
+            'meeting_location' => ['required', 'string', 'max:250'],
+            'meeting_start' => 'required|date_format:"Y-m-d H:i"|before:meeting_end',
+            'meeting_end' => 'required|date_format:"Y-m-d H:i"|after:meeting_start',
+            'meeting_users' => ['required', 'array', 'min:1', 'max:30'],
+            'meeting_notes' => ['required', 'min:1', 'max:250', 'string'],
+        ];
     }
 
     public function getNotes(): string

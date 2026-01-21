@@ -2,22 +2,26 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BusinessTypeEnum;
 use App\Enums\CampaignStatusEnum;
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\DMS\DocumentCheckOutStatusEnum;
 use App\Enums\LeadStatusEnum;
+use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Enums\Procurement\PrequalificationApplicationEnum;
+use App\Enums\Procurement\PrequalificationRoundEnum;
+use App\Enums\Procurement\PrequalificationStatusEnum;
+use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
-use App\Enums\Procurement\DepartmentNeedsEnum;
-use App\Enums\Procurement\SchedulePlanEnum;
+use App\Enums\TenderApprovalStatusEnum;
+use App\Enums\TenderCategoryEnum;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\TicketStatusEnum;
-use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\ThirdPartyStatusEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Enums\Procurement\PrequalificationStatusEnum;
-use App\Enums\Procurement\PrequalificationRoundEnum;
-use App\Enums\Procurement\PrequalificationApplicationEnum;
-use App\Enums\BusinessTypeEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
 use Illuminate\Database\Seeder;
@@ -111,6 +115,15 @@ class CodeDetailSeeder extends Seeder
             ]);
         }
 
+        foreach (InterBranchRequisitionEnum::cases() as $index => $interBranchRequisitionEnum) {
+            $entries->push([
+                'CodeID' => 'InterBranchRequisitionStatus',
+                'Value' => $interBranchRequisitionEnum->value,
+                'Description' => $interBranchRequisitionEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
         foreach (ThirdPartyTypeEnum::cases() as $index => $thirdPartyTypeEnum) {
             $entries->push([
                 'CodeID' => 'ThirdPartyType',
@@ -128,6 +141,34 @@ class CodeDetailSeeder extends Seeder
                 'DisplayOrder' => $index + 1,
             ]);
         }
+        foreach (TenderApprovalStatusEnum::cases() as $index => $TenderApprovalStatusEnum) {
+            $entries->push([
+                'CodeID' => 'TenderApprovalStatus',
+                'Value' => $TenderApprovalStatusEnum->value,
+                'Description' => $TenderApprovalStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (TenderCategoryEnum::cases() as $index => $tenderCategoryEnum) {
+            $entries->push([
+                'CodeID' => 'TenderCategory',
+                'Value' => $tenderCategoryEnum->value,
+                'Description' => $tenderCategoryEnum->displayName(),
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (\App\Enums\TenderAwardStatusEnum::cases() as $index => $tenderAwardStatusEnum) {
+            $entries->push([
+                'CodeID' => 'TenderAwardStatus',
+                'Value' => $tenderAwardStatusEnum->value,
+                'Description' => $tenderAwardStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
+            ]);
+        }
+
 
         foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
             $entries->push([
@@ -174,11 +215,21 @@ class CodeDetailSeeder extends Seeder
             ]);
         }
 
+        foreach (ApprovalEnum::cases() as $index => $approvalEnum) {
+            $entries->push([
+                'CodeID' => 'ApprovalStatus',
+                'Value' => $approvalEnum->value,
+                'Description' => $approvalEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
         // STATIC ENTRIES (from various modules)
         $static = [
             //ThirdPartyType
             ['CodeID' => 'PartyType', 'Description' => 'Individual', 'Value' => 'IN'],
             ['CodeID' => 'PartyType', 'Description' => 'Cooperate', 'Value' => 'CO'],
+
 
             // Requisition Status
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
@@ -218,6 +269,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'Source', 'Description' => 'Stock Adjustment', 'Value' => 'Sa'],
             ['CodeID' => 'Source', 'Description' => 'Transaction Transfer', 'Value' => 'Tt'],
 
+            //procurement plan status
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Draft', 'Value' => 'Dr'],
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'ProcurementPlanStatus', 'Description' => 'Submitted for Approval', 'Value' => 'Su'],
+
             // Defects Condition
             ['CodeID' => 'DefectsCondition', 'Description' => 'Contaminated', 'Value' => 'C'],
             ['CodeID' => 'DefectsCondition', 'Description' => 'Irreparable', 'Value' => 'Ir'],
@@ -251,6 +309,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'TenderStatus', 'Description' => 'Closed', 'Value' => 'cl'],
             ['CodeID' => 'TenderStatus', 'Description' => 'Opening In Progress', 'Value' => 'opening_in_progress'],
             ['CodeID' => 'TenderStatus', 'Description' => 'Awarded', 'Value' => 'aw'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending Approval', 'Value' => 'P'], // Added missing status
             ['CodeID' => 'TerminationReason', 'Description' => 'Relocation', 'Value' => 'R'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],
@@ -260,12 +319,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
+            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
+            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
-            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PR', 'Description' => 'Requisition'],
-            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value'=>'PO', 'Description' => 'Purchase Order'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],
+            ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PO', 'Description' => 'Purchase Order'],
 
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
@@ -361,21 +420,14 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'Decision', 'Description' => 'Decline', 'Value' => 'D'],
             ['CodeID' => 'Decision', 'Description' => 'More Information Needed', 'Value' => 'M'],
 
-            //Insurance Claim type
-            ['CodeID' => 'ClaimType', 'Description' => 'Death', 'Value' => 'D'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Accident', 'Value' => 'A'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Loss', 'Value' => 'L'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Medical', 'Value' => 'M'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Other', 'Value' => 'O'],
-
             //Insurance Cover Type
-            ['CodeID' => 'CoverType','Description' => 'Comprehensive', 'Value' => 'C'],
-            ['CodeID' => 'CoverType','Description' => 'InPatient', 'Value' => 'I'],
-            ['CodeID' => 'CoverType','Description' => 'OutPatient', 'Value' => 'O'],
+            ['CodeID' => 'CoverType', 'Description' => 'Comprehensive', 'Value' => 'C'],
+            ['CodeID' => 'CoverType', 'Description' => 'InPatient', 'Value' => 'I'],
+            ['CodeID' => 'CoverType', 'Description' => 'OutPatient', 'Value' => 'O'],
 
             //Insurance Contributor Types
-            ['CodeID' => 'ContributorType','Description' => 'Employee', 'Value' => 'I'],
-            ['CodeID' => 'ContributorType','Description' => 'Employer', 'Value' => 'C'],
+            ['CodeID' => 'ContributorType', 'Description' => 'Employee', 'Value' => 'I'],
+            ['CodeID' => 'ContributorType', 'Description' => 'Employer', 'Value' => 'C'],
 
             //Insurance Claim Status
             ['CodeID' => 'ClaimStatus', 'Description' => 'Initiated', 'Value' => 'I'],
@@ -385,10 +437,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimStatus', 'Description' => 'Paid', 'Value' => 'P'],
 
             //MedicalContributorStatus
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Active', 'Value' => 'A'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Inactive', 'Value' => 'I'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Pending', 'Value' => 'P'],
-            ['CodeID' => 'MedicalContributorStatus','Description' => 'Suspended', 'Value' => 'S'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Active', 'Value' => 'A'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Inactive', 'Value' => 'I'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'MedicalContributorStatus', 'Description' => 'Suspended', 'Value' => 'S'],
 
             // Beneficiary Relationship
             ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Spouse', 'Value' => 'S'],
@@ -498,10 +550,14 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
 
 
-            ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'PE'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'IT'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'DE'],
-            ['CodeID' => 'TransferStatus', 'Description' => 'Rejected', 'Value' => 'RJ'],
+
+            ['CodeID' => 'TransferStatus', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'In Transit', 'Value' => 'it'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Delivered', 'Value' => 'de'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
+            ['CodeID' => 'TransferStatus', 'Description' => 'Returned', 'Value' => 'rt'],
+
 
             // Fleet Management
 
@@ -605,12 +661,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetRepairType', 'Description' => 'Emergency', 'Value' => 'EM'],
 
             //Trip Statuses
-            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'AP'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'RE'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'OG'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'CO'],
-            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'CA'],
+
+            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'Sc'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Rejected', 'Value' => 'R'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'Og'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'Co'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'Ca'],
 
             //Maintenance Status
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
@@ -671,6 +728,46 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed', 'Value' => 'A'],
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Dismissed', 'Value' => 'D'],
 
+            //Finance Cheque Management
+            //Cheque Leaf Status
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Available', 'Value' => 'A', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Issued', 'Value' => 'I', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Used', 'Value' => 'U', 'DisplayOrder' => 3],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Posted', 'Value' => 'P', 'DisplayOrder' => 4],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Post-Dated Cheque', 'Value' => 'PD', 'DisplayOrder' => 5],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Presented', 'Value' => 'PR', 'DisplayOrder' => 6], // optional
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Cleared', 'Value' => 'C', 'DisplayOrder' => 7],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Bounced', 'Value' => 'B', 'DisplayOrder' => 8],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Void', 'Value' => 'V', 'DisplayOrder' => 9],
+            ['CodeID' => 'ChequeLeafStatus', 'Description' => 'Spoiled', 'Value' => 'S', 'DisplayOrder' => 10],
+
+            //Cheque Book Status
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Active', 'Value' => 'A', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Completed', 'Value' => 'C', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeBookStatus', 'Description' => 'Cancelled', 'Value' => 'Ca', 'DisplayOrder' => 3],
+
+            //Cheque Book Sizes (25, 50, 100 only per business rules)
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '25', 'Value' => '25', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '50', 'Value' => '50', 'DisplayOrder' => 2],
+            ['CodeID' => 'ChequeBookSizes', 'Description' => '100', 'Value' => '100', 'DisplayOrder' => 3],
+
+            //Cheque Party Type
+            ['CodeID' => 'ChequePartyType', 'Description' => 'Vendor', 'Value' => 'V', 'DisplayOrder' => 1],
+            ['CodeID' => 'ChequePartyType', 'Description' => 'Tenant', 'Value' => 'T', 'DisplayOrder' => 2],
+
+
+            //Finance Approval Status
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Draft', 'Value' => 'dr','DisplayOrder' => 1],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Pending', 'Value' => 'pe', 'DisplayOrder' => 2],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Approved', 'Value' => 'ap', 'DisplayOrder' => 3],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Posting', 'Value' => 'ps', 'DisplayOrder' => 4],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
+
+            //tender Approval Status
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value'=> 'P','DisplayOrder' => 53],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value'=> 'A','DisplayOrder' => 54],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value'=> 'R','DisplayOrder' => 55],
+
 
 
         ];
@@ -696,6 +793,4 @@ class CodeDetailSeeder extends Seeder
             }
         }
     }
-
-
 }

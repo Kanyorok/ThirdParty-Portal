@@ -29,7 +29,7 @@ class FleetInspectionScheduleRequest extends FormRequest
             'DueDate' => 'required|date|after_or_equal:InspectionDate',
             'Inspector' => 'required|integer|exists:t_Employees,Id',
             'Status' => 'required|integer|exists:t_CodeDetails,ID',
-            'Remarks' => 'nullable|string',
+            'Remarks' => 'required|string',
             //
         ];
     }

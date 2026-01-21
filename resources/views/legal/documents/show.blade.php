@@ -71,9 +71,19 @@
                                     <dt class="col-5">Source ID</dt>
                                     <dd class="col-7">{{ $doc->SourceID ?: '—' }}</dd>
 
+                                    <dt class="col-5">Due Date</dt>
+                                    <dd class="col-7">
+                                        {{ $doc->DueDate ? \Carbon\Carbon::parse($doc->DueDate)->format('d M Y') : '—' }}
+                                    </dd>
+
+                                    <dt class="col-5">Expiry Date</dt>
+                                    <dd class="col-7">
+                                        {{ $doc->ExpiryDate ? \Carbon\Carbon::parse($doc->ExpiryDate)->format('d M Y') : '—' }}
+                                    </dd>
+
                                     <dt class="col-5">Sign-off Date</dt>
                                     <dd class="col-7">
-                                        {{ $doc->SignOffDate ? \Carbon\Carbon::parse($doc->SignOffDate)->format('d/m/Y H:i') : '—' }}
+                                        {{ $doc->SignOffDate ? \Carbon\Carbon::parse($doc->SignOffDate)->format('d M Y H:i') : '—' }}
                                     </dd>
                                 </dl>
                             </div>
@@ -94,7 +104,7 @@
 
                                     <dt class="col-5">Created On</dt>
                                     <dd class="col-7">
-                                        {{ $doc->CreatedOn ? \Carbon\Carbon::parse($doc->CreatedOn)->format('d/m/Y H:i') : '—' }}
+                                        {{ $doc->CreatedOn ? \Carbon\Carbon::parse($doc->CreatedOn)->format('d M Y H:i') : '—' }}
                                     </dd>
 
                                     <dt class="col-5">Modified By</dt>
@@ -102,7 +112,7 @@
 
                                     <dt class="col-5">Modified On</dt>
                                     <dd class="col-7">
-                                        {{ $doc->ModifiedOn ? \Carbon\Carbon::parse($doc->ModifiedOn)->format('d/m/Y H:i') : '—' }}
+                                        {{ $doc->ModifiedOn ? \Carbon\Carbon::parse($doc->ModifiedOn)->format('d M Y H:i') : '—' }}
                                     </dd>
                                 </dl>
                             </div>

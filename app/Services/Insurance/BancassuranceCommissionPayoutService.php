@@ -2,9 +2,11 @@
 
 namespace App\Services\Insurance;
 
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Currency;
 use App\Models\Insurance\BancassuranceCommissionPayout;
+use App\Models\Insurance\BancassuranceCommissionRule;
 use App\Models\Insurance\BancassurancePolicy;
 use DateTime;
 
@@ -21,10 +23,12 @@ class BancassuranceCommissionPayoutService
         BancassurancePolicy $PolicyId,
         string              $PayoutReference,
         float               $PaidAmount,
+        Currency            $CurrencyId,
+        BancassuranceCommissionRule $CommissionRuleId,
         DateTime            $PaymentDate,
         CodeDetail          $PaymentMode,
         string              $Remarks,
-        User                $PaidBy,
+        User                $PaidTo,
         User                $user
 
     ): self
@@ -34,10 +38,12 @@ class BancassuranceCommissionPayoutService
             'PolicyId' => $PolicyId->Id,
             'PayoutReference' => $PayoutReference,
             'PaidAmount' => $PaidAmount,
+            'CurrencyId' => $CurrencyId->Id,
+            'CommissionRuleId' => $CommissionRuleId ? $CommissionRuleId->Id : null,
             'PaymentDate' => $PaymentDate,
             'PaymentMode' => $PaymentMode->ID,
             'Remarks' => $Remarks,
-            'PaidBy' => $PaidBy->Id,
+            'PaidTo' => $PaidTo->Id,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

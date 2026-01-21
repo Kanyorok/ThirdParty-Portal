@@ -28,6 +28,7 @@ class BancassurancePremiumPaymentsRequest extends FormRequest
             'PaymentDate' => 'required|date',
             'NextPaymentDate' => 'required|date',
             'Amount' => 'required|numeric|min:1',
+            'CurrencyId' => 'required|exists:t_Currencies,Id',
             'PaymentMode' => 'required|exists:t_CodeDetails,ID',
             'ReferenceNumber' => 'nullable|string|max:100',
             'Notes' => 'nullable|string|max:255',

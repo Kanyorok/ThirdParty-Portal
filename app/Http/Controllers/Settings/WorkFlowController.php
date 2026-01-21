@@ -12,11 +12,13 @@ use App\Models\Settings\WorkFlow;
 use App\Models\Core\Approval\WorkflowStage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Enums\Core\ModulesEnum;
 
 class WorkFlowController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', \App\Models\Settings\WorkFlow::class);
         $morphMap = Relation::morphMap();
 
         $workFlowGroups = WorkFlow::all();
@@ -37,7 +39,70 @@ class WorkFlowController extends Controller
             })
             ->toArray();
 
-        return view('settings.approvals.sections', compact('workFlowGroups', 'sourceOptions', 'tableToAlias'));
+        // Fetch all modules
+        $allModules = DB::table('t_Modules')
+            ->select('ModuleID', 'Name', 'ParentID')
+            ->orderBy('Name')
+            ->get();
+
+        // Build tree
+        $moduleTree = [];
+        foreach ($allModules as $m) {
+            $moduleTree[$m->ParentID ?? 0][] = $m;
+        }
+
+        // Flatten recursively
+        $modules = collect();
+        $flatten = function ($parentId = 0, $depth = 0) use (&$flatten, $moduleTree, &$modules) {
+            if (isset($moduleTree[$parentId])) {
+                foreach ($moduleTree[$parentId] as $module) {
+                    $module->indentation = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $depth);
+                    $modules->push($module);
+                    $flatten($module->ModuleID, $depth + 1);
+                }
+            }
+        };
+
+        // Start with root items (ParentID is null or 0)
+        // Note: DB dump showed ParentID as null for roots, but let's handle 0 just in case
+        $flatten(0);
+        // Also handle null explicitly if 0 didn't catch them (depends on how we keyed the array)
+        if (isset($moduleTree[''])) { // null key often casts to empty string in PHP arrays or needs special handling
+            // Actually, let's be safer with the keying
+        }
+
+        // Re-doing the tree building to be safer with nulls
+        $moduleTree = [];
+        foreach ($allModules as $m) {
+            $pid = $m->ParentID ?? 'root';
+            $moduleTree[$pid][] = $m;
+        }
+
+        $modules = collect();
+        $flatten = function ($parentId = 'root', $depth = 0) use (&$flatten, $moduleTree, &$modules) {
+            if (isset($moduleTree[$parentId])) {
+                // Sort by Name within the level
+                usort($moduleTree[$parentId], fn($a, $b) => strcmp($a->Name, $b->Name));
+
+                foreach ($moduleTree[$parentId] as $module) {
+                    $module->indentation = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $depth);
+                    $modules->push($module);
+                    $flatten($module->ModuleID, $depth + 1);
+                }
+            }
+        };
+        $flatten('root');
+
+        // Create labeled options for better UX
+        $labeledSourceOptions = collect($sourceOptions)->map(function($class, $alias) {
+            return [
+                'alias' => $alias,
+                'class' => $class,
+                'label' => $this->getDocumentTypeLabel($class)
+            ];
+        })->sortBy('label')->values();
+
+        return view('settings.approvals.sections', compact('workFlowGroups', 'labeledSourceOptions', 'tableToAlias', 'modules'));
     }
 
     public function create()
@@ -47,6 +112,7 @@ class WorkFlowController extends Controller
 
     public function store(WorkFlowRequest $request)
     {
+        $this->authorize('create', \App\Models\Settings\WorkFlow::class);
         $validated = $request->validated();
         $user = Auth::user();
 
@@ -58,12 +124,25 @@ class WorkFlowController extends Controller
                 throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
             }
 
-            $moduleId = DB::table(table: 't_ModuleSources')
+            $moduleId = DB::table('t_ModuleSources')
                 ->where('DocumentType', $tableName)
                 ->value('ModuleID');
 
             if (!$moduleId) {
-                Log::warning("No module found for document type: {$tableName}");
+                if ($request->filled('ModuleID')) {
+                    $moduleId = $request->input('ModuleID');
+                    DB::table('t_ModuleSources')->insert([
+                        'DocumentType' => $tableName,
+                        'ModuleID' => $moduleId,
+                        'CreatedBy' => Auth::id(),
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
+                    ]);
+                    Log::info("Inserted new module source mapping for {$tableName} -> {$moduleId}");
+                } else {
+                    Log::warning("No module found for document type: {$tableName}");
+                }
             }
 
             $workFlow = WorkFlow::create([
@@ -104,6 +183,7 @@ class WorkFlowController extends Controller
 
     public function update(Request $request, string $id)
     {
+        $this->authorize('update', \App\Models\Settings\WorkFlow::class);
         $validated = $request->validate([
             'Name' => ['required', 'string', 'max:255'],
             'Description' => ['required', 'string', 'max:1000'],
@@ -149,31 +229,63 @@ class WorkFlowController extends Controller
 
     public function show($id)
     {
-        // Force fresh data from database
-        $approval = WorkFlow::findOrFail($id);
-        $approval->refresh(); // Ensure we have the latest data
+        $this->authorize('view', \App\Models\Settings\WorkFlow::class);
+        // Clear any cached data
+        \Illuminate\Support\Facades\Cache::forget("workflow_{$id}");
+        \Illuminate\Support\Facades\Cache::forget("workflow_stages_{$id}");
+
+        // Force fresh query from database
+        $approval = WorkFlow::where('Id', $id)->first();
+
+        if (!$approval) {
+            abort(404, 'Workflow not found');
+        }
+
+        // Clear model cache
+        $approval->refresh();
+
+        Log::info('Displaying workflow', [
+            'workflow_id' => $id,
+            'final_stage' => $approval->FinalStage,
+            'has_final' => !empty($approval->FinalStage)
+        ]);
 
         $sourceOptions = array_flip(Relation::morphMap());
         $approvalTypes = DB::table('t_WorkFlowTypes')->get();
         $permissions = DB::table('t_Permissions')->get();
         $workflowLimits = DB::table('t_WorkflowLimits')->select('Id', 'WorkFlowStageId')->get();
 
-        // Get stages with fresh data
-        $stages = WorkflowStage::where('WorkFlowId', $id)
-            ->with(['type_name', 'workflow'])
+        // Get stages with fresh query - NO CACHE
+        $stages = DB::table('t_WorkflowStages')
+            ->where('WorkFlowId', $id)
+            ->whereNull('DeletedOn')
             ->orderBy('Order')
             ->get();
 
-        // Force disable caching
-        return response()
-            ->view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'))
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
-    }
+        // Convert to collection and load relationships manually
+        $stageIds = $stages->pluck('Id')->toArray();
 
+        $stagesCollection = \App\Models\Core\Approval\WorkflowStage::whereIn('Id', $stageIds)
+            ->with(['type_name', 'workflow', 'permission.roles'])
+            ->orderBy('Order')
+            ->get();
+
+        Log::info('Loaded workflow stages', [
+            'workflow_id' => $id,
+            'stage_count' => $stagesCollection->count(),
+            'stages' => $stagesCollection->pluck('StageName')->toArray()
+        ]);
+
+        // Force no caching on response
+        return response()
+            ->view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits') + ['stages' => $stagesCollection])
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+    }
     public function destroy(string $id)
     {
+        $this->authorize('delete', \App\Models\Settings\WorkFlow::class);
         DB::beginTransaction();
 
         try {
@@ -217,6 +329,56 @@ class WorkFlowController extends Controller
         }
     }
 
+    private function getDocumentTypeLabel(string $class): string
+    {
+        $basename = class_basename($class);
+        
+        // Map class names to user-friendly labels with module context
+        $labelMap = [
+            // Procurement
+            'Requisitions' => 'Purchase Requisition (Procurement)',
+            'RequisitionLine' => 'Purchase Requisition Line Items (Procurement)',
+            'PurchaseOrder' => 'Purchase Order / LPO (Procurement)',
+            'GoodsReceipt' => 'Goods Receipt Note / GRN (Procurement)',
+            'Tender' => 'Tender (Procurement)',
+            'Contract' => 'Contract (Procurement)',
+            'Award' => 'Award (Procurement)',
+            'Supplier' => 'Supplier (Procurement)',
+            'ThirdParty' => 'Third Party / Supplier (Procurement)',
+            'ConsolidatedProcurementPlan' => 'Consolidated Procurement Plan (Procurement)',
+            'DepartmentNeeds' => 'Department Needs (Procurement)',
+            'PrequalificationRound' => 'Prequalification Round (Procurement)',
+            
+            // Inventory
+            'InterBranchRequisition' => 'Inter-Branch Requisition (Inventory)',
+            'InterBranchRequisitionItem' => 'Inter-Branch Requisition Items (Inventory)',
+            'StockAdjustment' => 'Stock Adjustment (Inventory)',
+            'TransactionTransfer' => 'Stock Transfer (Inventory)',
+            'StockTake' => 'Stock Take (Inventory)',
+            'StockConsumption' => 'Stock Consumption (Inventory)',
+            
+            // Property Management
+            'PropertyLease' => 'Property Lease (Property Management)',
+            'PropertyLeaseRenewal' => 'Lease Renewal (Property Management)',
+            'PropertyLeaseTermination' => 'Lease Termination (Property Management)',
+            'PropertyNewLease' => 'New Lease (Property Management)',
+            
+            // Budget
+            'Budget' => 'Budget (Budget & Analytics)',
+            'BudgetReallocation' => 'Budget Reallocation (Budget & Analytics)',
+            
+            // Finance
+            'PaymentVoucher' => 'Payment Voucher (Finance)',
+            'CreditNote' => 'Credit Note (Finance)',
+            'DebitNote' => 'Debit Note (Finance)',
+            
+            // HR
+            'Employee' => 'Employee (Human Resources)',
+        ];
+        
+        return $labelMap[$basename] ?? $basename . ' (Other)';
+    }
+
     private function resolveSelectedToTable(?string $selection): ?string
     {
         if (!$selection) return null;
@@ -239,9 +401,9 @@ class WorkFlowController extends Controller
             $workflow = WorkFlow::findOrFail($id);
             $workflow->refresh();
 
-            // Get all stages with proper relationships
+                // Get all stages with proper relationships
             $stagesCollection = WorkflowStage::where('WorkFlowId', $id)
-                ->with(['type_name', 'workflow'])
+                ->with(['type_name', 'workflow', 'permission.roles'])
                 ->orderBy('Order')
                 ->get();
 
@@ -259,7 +421,7 @@ class WorkFlowController extends Controller
                         'TypeID' => $stage->type_name->TypeID,
                         'Name' => $stage->type_name->Name,
                     ] : null,
-                    'role_name' => $stage->role_name ?? '-',
+                    'role_name' => $stage->permission?->roles?->pluck('name')->implode(',') ?? '-',
                     'MaxAmount' => $stage->MaxAmount ?? '-',
                     'Count' => $stage->Count ?? null,
                     'IsFinalStage' => $isFinalStage,
@@ -291,5 +453,26 @@ class WorkFlowController extends Controller
                 'message' => 'Failed to fetch workflow state: ' . $e->getMessage(),
             ], 500);
         }
+    }
+    /**
+     * Get approvers for a specific stage
+     */
+    public function getApprovers($stageId)
+    {
+        $stage = \App\Models\Core\Approval\WorkflowStage::find($stageId);
+        if (!$stage || !$stage->PermissionId) {
+            return response()->json(['users' => []]);
+        }
+
+        // Use the SP logic via DB select
+        $userIds = collect(DB::select('SELECT * FROM f_getUserWithPermission(?)', [$stage->PermissionId]))
+            ->pluck('Id')
+            ->toArray();
+
+        $users = \App\Models\Auth\User::whereIn('Id', $userIds)
+            ->select('Id', 'Name', 'Email')
+            ->get();
+
+        return response()->json(['users' => $users]);
     }
 }

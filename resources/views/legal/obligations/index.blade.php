@@ -22,6 +22,7 @@
                         <th>Obligation</th>
                         <th>Source</th>
                         <th>Due Date</th>
+                        <th>Expiry Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -33,6 +34,7 @@
                         <td>{{ $obligation->Title }}</td>
                         <td>{{ $obligation->SourceType }}</td>
                         <td>{{ \Carbon\Carbon::parse($obligation->DueDate)->format('d-m-Y') }}</td>
+                        <td>{{ $obligation->ExpiryDate ? \Carbon\Carbon::parse($obligation->ExpiryDate)->format('d-m-Y') : '-' }}</td>
                         <td>
                             @if($obligation->Status == 'Pending')
                             <span class="badge bg-warning text-dark">Pending</span>
@@ -133,6 +135,14 @@
                             </div>
 
                             <div class="col-md-6">
+                                <label for="ExpiryDate" class="form-label">Expiry Date</label>
+                                <input type="date" name="ExpiryDate" class="form-control"
+                                    value="{{ old('ExpiryDate', $item->ExpiryDate ? \Carbon\Carbon::parse($item->ExpiryDate)->format('Y-m-d') : '') }}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
                                 <label for="Status" class="form-label">Status</label>
                                 <select name="Status" class="form-select" required>
                                     <option

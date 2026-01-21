@@ -76,7 +76,19 @@ class RoleController extends Controller
 
     public function create(): View
     {
-        return view('settings.roles.create');
+        
+    // Get all permissions from DB
+    $allPermissions = \Spatie\Permission\Models\Permission::all();
+
+    // Get permissions from Enum
+    $enumPermissions = collect(\App\Enums\Core\PermissionEnum::cases())->map(fn($p) => $p->value)->toArray();
+
+    // Filter dynamic permissions (those not in Enum)
+    $dynamicPermissions = $allPermissions->reject(function ($perm) use ($enumPermissions) {
+        return in_array($perm->name, $enumPermissions);
+    });
+
+    return view('settings.roles.create', compact('dynamicPermissions'));
     }
 
     public function store(RoleRequest $request): JsonResponse
@@ -114,7 +126,19 @@ class RoleController extends Controller
     public function edit(Role $role): View
     {
         $permissions = $role->permissions()->pluck('name')->toArray();
-        return view('settings.roles.edit', compact('role', 'permissions'));
+
+        // Get all permissions from DB
+        $allPermissions = \Spatie\Permission\Models\Permission::all();
+
+        // Get permissions from Enum
+        $enumPermissions = collect(\App\Enums\Core\PermissionEnum::cases())->map(fn($p) => $p->value)->toArray();
+
+        // Filter dynamic permissions (those not in Enum)
+        $dynamicPermissions = $allPermissions->reject(function ($perm) use ($enumPermissions) {
+            return in_array($perm->name, $enumPermissions);
+        });
+
+        return view('settings.roles.edit', compact('role', 'permissions', 'dynamicPermissions'));
     }
 
     public function update(RoleRequest $request, Role $role): JsonResponse
@@ -122,6 +146,12 @@ class RoleController extends Controller
         $permissions = $request->getPermissions();
         $name = $request->getName($role);
         $actor = $request->user();
+
+        // Security check: Prevent user from modifying a role they are assigned to
+        $assignedRoleIds = $actor->branchRoles()->pluck('role_id')->toArray();
+        if (in_array($role->id, $assignedRoleIds)) {
+             return $this->errored('You cannot alter permissions for a role you are currently assigned to.');
+        }
 
         try {
             DB::transaction(function () use ($role, $actor, $name, $permissions) {
@@ -136,6 +166,7 @@ class RoleController extends Controller
                 );
 
                 activity()->causedBy($actor)->performedOn($role)->event('update')->log('update role ' . $role->name);
+                app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
             });
 
             // Clear navbar cache for all users assigned to this role so menu reflects new permissions immediately
@@ -170,12 +201,26 @@ class RoleController extends Controller
                 foreach ($role->users as $user) {
                     ModuleService::clearNavbarCache($user);
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
         } catch (Exception $e) {
             Log::error('Error deleting role: ' . $e->getMessage());
             return $this->errored('Unexpected error, try again later.');
         }
 
         return $this->succeeded('Role deleted successfully');
+    }
+
+    public function seedPermissions(Request $request): JsonResponse
+    {
+        try {
+            $seeder = new \Database\Seeders\RolePermissionSeeder();
+            $seeder->run();
+
+            return $this->succeeded('Permissions synced successfully. All permissions (including dynamic ones) have been assigned to the Admin role.');
+        } catch (\Throwable $e) {
+            Log::error('Error seeding permissions: ' . $e->getMessage());
+            return $this->errored('Failed to sync permissions: ' . $e->getMessage());
+        }
     }
 }

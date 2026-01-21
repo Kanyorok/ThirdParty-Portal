@@ -1,17 +1,17 @@
 @extends('layouts.app')
-@section('title', 'Evidence for ' . $case->CaseTitle)
+{{-- <!-- @section('title', 'Documents for ' . $case->CaseTitle) --> --}}
 
 @section('content')
 <div class="card p-4 shadow rounded-4 border-0 mb-0">
     <div class="card-header bg-light px-3 py-2 d-flex justify-content-between align-items-center mb-1">
-        <h4 class="text-info mb-0"><i class="fas fa-folder-open text-warning"></i> Evidence(s)</h4>
+        <h4 class="text-info mb-0"><i class="fas fa-folder-open text-warning"></i>Case Documents(s)</h4>
         <a href="{{ route('legal.cases.evidence.create', $case->Id) }}" class="btn btn-info">
-            <i class="fas fa-plus me-1"></i> Link New Evidence
+            <i class="fas fa-plus me-1"></i> Link New Document
         </a>
     </div>
 
     <div class="card-body">
-        <p class="text-muted">A list of all evidence linked to this legal case.</p>
+        <p class="text-muted">A list of all documents linked to this legal case.</p>
 
         @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -25,9 +25,9 @@
                 style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
                 <thead>
                     <tr>
-                        <th>Evidence Title</th>
+                        <th>Document Title</th>
                         <th>Description</th>
-                        <th>DMS Doc ID</th>
+                        <!-- <th>DMS Doc ID</th> -->
                         <th>External Link</th>
                         <th>Uploaded On</th>
                         <td>Is Active</td>
@@ -40,7 +40,7 @@
                     <tr>
                         <td>{{ $item->EvidenceTitle }}</td>
                         <td>{{ $item->Description }}</td>
-                        <td>{{ $item->DMSDocumentID ?? '-' }}</td>
+                        <!-- <td>{{ $item->DMSDocumentID ?? '-' }}</td> -->
                         <td>
                             @if($item->ExternalLink)
                             <a href="{{ $item->ExternalLink }}" target="_blank">View</a>
@@ -79,11 +79,11 @@
                             <div class="text-center p-4 border rounded-3 bg-light">
                                 <p class="mb-3 text-muted fs-5">
                                     <i class="fas fa-info-circle me-2 text-info"></i>
-                                    <i>No evidence linked to this case yet.</i>
+                                    <i>No documents linked to this case yet.</i>
                                 </p>
                                 <a href="{{ route('legal.cases.evidence.create', $case->Id) }}"
                                     class="btn btn-info px-4 py-2">
-                                    <i class="fas fa-plus-circle me-2"></i> Link Evidence
+                                    <i class="fas fa-plus-circle me-2"></i> Link Document
                                 </a>
                             </div>
                         </td>

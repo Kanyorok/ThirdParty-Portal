@@ -45,19 +45,19 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">Client Name</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientName ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->customerreferral->thirdParty->ThirdPartyName ?? '-' }}" readonly>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold text-muted">ID Number</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientIDNumber ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->customerreferral->thirdParty->RegistrationNumber ?? '-' }}" readonly>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold text-muted">Phone</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientPhone ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->customerreferral->thirdParty->Phone ?? '-' }}" readonly>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-muted">Email</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientEmail ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->customerreferral->thirdParty->Email ?? '-' }}" readonly>
                 </div>
             </div>
 
@@ -75,7 +75,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-muted">Referral Date</label>
-                    <input type="text" class="form-control bg-light" value="{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d M Y') }}" readonly>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-muted">Referred By</label>
@@ -119,13 +119,13 @@
                 <div>
                     <strong>Created By:</strong> {{ $referral->createdByUser->Name ?? '-' }}
                     <span class="ms-3">
-                        <strong>Created On:</strong> {{ \Carbon\Carbon::parse($referral->CreatedOn)->format('d/m/Y') }}
+                        <strong>Created On:</strong> {{ \Carbon\Carbon::parse($referral->CreatedOn)->format('d M Y') }}
                     </span>
                 </div>
                 <div>
                     <strong>Modified By:</strong> {{ $referral->modifiedByUser->Name ?? '-' }}
                     <span class="ms-3">
-                        <strong>Modified On:</strong> {{ \Carbon\Carbon::parse($referral->ModifiedOn)->format('d/m/Y') }}
+                        <strong>Modified On:</strong> {{ \Carbon\Carbon::parse($referral->ModifiedOn)->format('d M Y') }}
                     </span>
                 </div>
             </div>

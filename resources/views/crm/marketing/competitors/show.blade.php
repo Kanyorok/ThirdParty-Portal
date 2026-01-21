@@ -21,18 +21,19 @@
         <div class="col-md-4 col-xl-3">
             <div class="card">
                 <div class="card-body row">
-                    <div class="col-12 col-md-4 text-center">
-                        {!! $competitor->getImage('alt=".." class="img-fluid me-2"',true) !!}
+                    <div class="col-12 text-center">
+                        {!! $competitor->getImage('alt=".." class="img-thumbnail rounded" style="max-width="200px"',true) !!}
                     </div>
-                    <div class="col-12 col-md-8">
+                    <div class="col-12 mt-2">
                         <h3>{{ $competitor->CompetitorName }} </h3>
+                        @if(!empty($competitor->Website))
                         <p><a href="{{ ($competitor->Website)??'#' }}"
-                              target="_blank">{{ ($competitor->Website)??'www.' }}</a></p>
+                              target="_blank">{{ ($competitor->Website)??'' }}</a></p>
+                        @endif
                         <p>{{ ($competitor->Phone) }}
                             <span class="float-end">{{ $competitor->Email }}</span>
                         </p>
                     </div>
-
                     <div class="col-12 my-2">
                         <ul class="list-unstyled mb-0">
                             <li class="mb-3"><i class="align-middle" data-feather="pie-chart"></i>&nbsp;<span>Market Share : </span>
@@ -109,19 +110,21 @@
                             </button>
                         </h3>
                         <hr class="mt-0 mb-2">
-                        <table id="competitorProductsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Loan Limit</th>
-                                <th>Interest Rate</th>
-                                <th>No of Clients</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table id="competitorProductsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Loan Limit</th>
+                                    <th>Interest Rate</th>
+                                    <th>No of Clients</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="tab-pane m-2" id="tab-1" role="tabpanel">
                         <h3 class="mb-1 mt-2"><a href="#" id="FetchStrength" onclick="fetchCompetitorStrengths()">Strengths</a>
@@ -225,12 +228,13 @@
                               method="post" id="CreateProductForm">
                             <div class="mb-3"> @csrf
                                 <label class="form-label" for="Name">Name <span class="text-danger">*</span></label>
-                                <input type="text" id="Name" name="Name" required class="form-control">
+                                <input type="text" id="Name" name="Name" required class="form-control" maxlength="200">
                                 <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="Limit">Limit <span class="text-danger">*</span></label>
-                                <input type="number" id="Limit" name="Limit" required class="form-control">
+                                <input type="number" id="Limit" name="Limit" required class="form-control"
+                                       max="10000000" step="0.01">
                                 <p id="Limit_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class=" mb-3">
@@ -240,14 +244,14 @@
                                     <input type="number" id="InterestRate" name="InterestRate" required step="0.01"
                                            min="0" max="100" class="form-control">
                                     <span class="input-group-text">%</span></div>
-                                <p id="InterestRate_error" class="invalid-feedback d-none error col-12"
+                                <p id="InterestRate_error" class="text-danger d-none error col-12"
                                    role="alert"></p>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="OtherCharges">Other Charges <span
                                         class="text-danger">*</span></label>
                                 <input type="number" id="OtherCharges" name="OtherCharges" required class="form-control"
-                                       min="0" value="0">
+                                       min="0" value="0" max="10000000" step="0.01">
                                 <p id="OtherCharges_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
@@ -258,12 +262,13 @@
                                     <input type="number" id="RepaymentPeriod" name="RepaymentPeriod" required step="1"
                                            min="1" value="1" class="form-control">
                                     <span class="input-group-text">Weeks</span></div>
-                                <p id="RepaymentPeriod_error" class="invalid-feedback d-none error col-12"
+                                <p id="RepaymentPeriod_error" class="d-none error text-danger col-12"
                                    role="alert"></p>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="SecurityRequired">Security Required </label>
-                                <input type="text" id="SecurityRequired" name="SecurityRequired" class="form-control">
+                                <input type="text" id="SecurityRequired" name="SecurityRequired" class="form-control"
+                                       maxlength="200">
                                 <p id="SecurityRequired_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </div>
@@ -271,7 +276,7 @@
                                 <label class="form-label" for="Clients"> Clients <span
                                         class="text-danger">*</span></label>
                                 <input type="number" id="Clients" name="Clients" required class="form-control" min="0"
-                                       value="0">
+                                       value="0" max="999999999999999">
                                 <p id="Clients_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3">
@@ -417,7 +422,7 @@
                                     <label for="Location" class="form-label">Location <span
                                             class="text-danger">*</span></label>
                                     <select class="form-control locations" name="Location" id="Location"
-                                            required disabled>
+                                            required>
                                         <option selected
                                                 value="{{ $competitor->LocationID }}">{{ $location }}</option>
                                     </select>
@@ -435,7 +440,7 @@
                                     <label class="form-label" for="CoreBusiness">Core Business <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="MarketShare" name="CoreBusiness"
-                                           placeholder="Market Share" required value="{{ $competitor->CoreBusiness }}">
+                                           placeholder="Core Business" required value="{{ $competitor->CoreBusiness }}">
                                     <p id="CoreBusiness_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
@@ -614,13 +619,11 @@
                     }
                 });
             });
-            $('#Location').select2();
-
-            {{-- $('#Location').select2({
+            $('#Location').val('{{ $competitor->LocationID }}').select2({
                 placeholder: "Select a Town/City", minimumInputLength: 2,
                 dropdownParent: $Modal,
                 ajax: {
-                    url: "{{ route('locality.select2') }}?type={{ LocalityTypeEnum::City->value }}",
+                    url: "{{ route('locality.select2',['country'=>$competitor->country?->CountryCode]) }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
@@ -635,7 +638,7 @@
                     },
                     cache: true
                 }
-            }); --}}
+            });
             $("#Upload_image").change(function () {
                 $('.avatar-change').removeClass('d-none');
                 $('.avatar-changed').addClass('d-none');

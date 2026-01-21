@@ -119,6 +119,7 @@ class TransactionService
             'BatchNumber'     => $payload['BatchNumber'] ?? null,
             'IdempotencyKey'  => 'JRN:'.$payload['ModuleID'].':'.$payload['TransactionTypeID'].':'.$payload['ReferenceNumber'],
             'CurrencyID'      => $payload['CurrencyID'],
+            'ModuleID'        => $payload['ModuleID'], // Add ModuleID to header for createJournal
         ];
 
         $journalResult =$this->createJournal($journalHeader, $lines);
@@ -488,7 +489,7 @@ class TransactionService
             $journal = FinanceJournalEntry::create([
                 'Date'           => $header['Date'],
                 'Type'=> $header['IsScheduled']?'recurring':'normal',
-                'SourceModule'   => $payload['ModuleID'] ?? '1100000', // Default to Finance module if not specified
+                'SourceModule'   => $header['ModuleID'] ?? '1100000', // Use ModuleID from header, default to Finance module if not specified
                 'Description'    => $header['Description'] ?? null,
                 'SystemDescription'=>$header['Description'] ?? null,
                 'Reference'      => $header['ReferenceNumber'] ?? null, // if your table has a Reference column
@@ -498,6 +499,7 @@ class TransactionService
                 'TotalCredit'    => $totalCredit ?? null,
                 'CurrencyID'     => $header['CurrencyID'] ?? null,
                 'ApprovalStatus'=>'posted',
+                'Status'=>'posted',
                 'ApprovalReason'=>'System Generated Approval.',
                 'CreatedBy'      => 1,
                 'ModifiedBy'     => 1,

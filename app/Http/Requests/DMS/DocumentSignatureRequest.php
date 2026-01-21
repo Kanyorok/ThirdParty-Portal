@@ -19,9 +19,10 @@ class DocumentSignatureRequest extends FormRequest
      */
     public function rules(): array
     {
+        $size = (int)bcmul(config('app.dms.file_size'), 1024, 0);
         return [
             'file' => [
-                'nullable', Rule::file()->types(ExtensionsEnum::Png->getMimeType())->max(9000),//todo filesize
+                'nullable', Rule::file()->types(ExtensionsEnum::Png->getMimeType())->max($size),
             ],
             "Name" => ['required', 'string', 'max:200'],
             'Visibility' => ['required', Rule::enum(VisibilityEnum::class)],

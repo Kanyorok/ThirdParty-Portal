@@ -47,9 +47,7 @@
                     <td>{{ $trip->parentTripType->Description ?? '—' }}</td>
                     <td>{{ $trip->parentVehicleType->Description ?? '—' }}</td>
                     <td>{{ $trip->parentLoadType->Description ?? '—' }}</td>
-                    <td>{{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') }}</td>
-                    <td>
+                    <td>{{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d M Y') }}</td>                   <td>{{ \Carbon\Carbon::parse($trip->TripEndDate)->format('d M Y') }}</td>                   <td>
                         @php
                             $statusDesc = $trip->statusDetail->Description ?? 'Unknown';
                             $statusClass = match(strtolower($statusDesc)) {
@@ -76,19 +74,19 @@
                         @endif
                     </td>
                     <td class="text-center">
-                        <a href="{{ route('fleet.trip_logs.show', $trip->Id) }}" 
-                        class="btn btn-sm btn-success me-1" 
-                        data-bs-toggle="tooltip" 
-                        data-bs-placement="top" 
+                        <a href="{{ route('fleet.trip_logs.show', $trip->Id) }}"
+                        class="btn btn-sm btn-success me-1"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
                         title="View Trip Details">
                             👁️
                         </a>
 
                         @if(!$trip->ParentTripID)
-                            <a href="{{ route('fleet.trip_logs.create', ['parentTripId' => $trip->Id]) }}" 
-                            class="btn btn-sm btn-primary" 
-                            data-bs-toggle="tooltip" 
-                            data-bs-placement="top" 
+                            <a href="{{ route('fleet.trip_logs.create', ['parentTripId' => $trip->Id]) }}"
+                            class="btn btn-sm btn-primary"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
                             title="Add Child Trips">
                                 ➕
                             </a>

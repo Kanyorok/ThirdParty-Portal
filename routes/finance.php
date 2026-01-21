@@ -3,19 +3,27 @@
 use App\Http\Controllers\Finance\AgingReportARController;
 use App\Http\Controllers\Finance\AgingReportController;
 use App\Http\Controllers\Finance\BalanceSheetController;
+use App\Http\Controllers\Finance\BankAccountSetupController;
+use App\Http\Controllers\Finance\BankBranchController;
+use App\Http\Controllers\Finance\BankController;
 use App\Http\Controllers\Finance\BankReconciliationController;
+use App\Http\Controllers\Finance\BankTransactionController;
+use App\Http\Controllers\Finance\BankTransferController;
+use App\Http\Controllers\Finance\CashBookController;
 use App\Http\Controllers\Finance\CashFlowStatementController;
 use App\Http\Controllers\Finance\CashManagementController;
 use App\Http\Controllers\Finance\ChartOfAccountsController;
+use App\Http\Controllers\Finance\ChequeBookController;
+use App\Http\Controllers\Finance\ChequeController;
 use App\Http\Controllers\Finance\ChequeManagementController;
 use App\Http\Controllers\Finance\COASegmentController;
 use App\Http\Controllers\Finance\ConsolidationReportsController;
-use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditAdjustmentController;
+use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditNoteController;
-use App\Http\Controllers\Finance\DebitNoteController;
 use App\Http\Controllers\Finance\CustomerMasterController;
 use App\Http\Controllers\Finance\CustomerStatementController;
+use App\Http\Controllers\Finance\DebitNoteController;
 use App\Http\Controllers\Finance\FinanceTaxTypeController;
 use App\Http\Controllers\Finance\GLDynamicController;
 use App\Http\Controllers\Finance\GLMappingController;
@@ -33,11 +41,14 @@ use App\Http\Controllers\Finance\PaymentAndReceiptsController;
 use App\Http\Controllers\Finance\PaymentProcessingController;
 use App\Http\Controllers\Finance\PaymentVoucherController;
 use App\Http\Controllers\Finance\PeriodManagementController;
+use App\Http\Controllers\Finance\PettyCashController;
+use App\Http\Controllers\Finance\PettyCashFloatController;
 use App\Http\Controllers\Finance\POInvoiceSyncController;
 use App\Http\Controllers\Finance\ReceiptsPostingController;
 use App\Http\Controllers\Finance\ReconDashboardController;
 use App\Http\Controllers\Finance\ReconUploadController;
 use App\Http\Controllers\Finance\RecurrentJournalController;
+use App\Http\Controllers\Finance\ReportsController;
 use App\Http\Controllers\Finance\ReversingJournalController;
 use App\Http\Controllers\Finance\SalaryJournalTemplateController;
 use App\Http\Controllers\Finance\TaxEfillingController;
@@ -48,33 +59,13 @@ use App\Http\Controllers\Finance\TaxRuleController;
 use App\Http\Controllers\Finance\TaxSummaryReportController;
 use App\Http\Controllers\Finance\TransactionTypesController;
 use App\Http\Controllers\Finance\TrialBalanceController;
-use App\Http\Controllers\Finance\ReportsController;
 use App\Http\Controllers\Finance\VendorMasterController;
-
-
-use App\Http\Controllers\Finance\BankController;
-use App\Http\Controllers\Finance\BankBranchController;
-use App\Http\Controllers\Finance\BankAccountSetupController;
-use App\Http\Controllers\Finance\CashBookController;
-use App\Http\Controllers\Finance\BankTransferController;
-use App\Http\Controllers\Finance\BankTransactionController;
-use App\Http\Controllers\Finance\ChequeBookController;
-use App\Http\Controllers\Finance\ChequeController;
-use App\Http\Controllers\Finance\PettyCashFloatController;
-use App\Http\Controllers\Finance\PettyCashController;
-
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Support\Facades\Route;
 
 // Newly added
 
 Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
-
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
-    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'finance-reports.index',
-        'show' => 'finance-reports.show'
-    ]);
-
     Route::resource('journalbatch', JournalBatchController::class);
     Route::resource('ledgeraccounts', LedgerAccountsController::class);
     Route::resource('transactiontypes', TransactionTypesController::class);
@@ -169,12 +160,12 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
 
     Route::get('agingreportar/customers/search', [AgingReportARController::class, 'customerLookup'])->name('agingreportar.customers.lookup');
     Route::resource('agingreportar', AgingReportARController::class);
-    
+
     // Customer Statement Select2 API and custom routes
     Route::get('api/thirdparties/select2', [CustomerStatementController::class, 'select2ThirdParties'])->name('thirdparties.select2');
     Route::get('customerstatement/{thirdPartyId}', [CustomerStatementController::class, 'statement'])->name('customerstatement.statement');
     Route::resource('customerstatement', CustomerStatementController::class)->only(['index']);
-    
+
     Route::resource('paymentvoucher', PaymentVoucherController::class);
     Route::resource('cashmanagement', CashManagementController::class);
     Route::resource('chequemanagement', ChequeManagementController::class);
@@ -292,11 +283,10 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::post('/finance/ar/invoices/{id}/reject', [InvoiceGenerationController::class, 'reject'])->name('ar.invoice.reject');
 
 
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
-    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'finance-reports.index',
-        'show' => 'finance-reports.show'
-    ]);
+    Route::withoutMiddleware(TrimStrings::class)->name('finance-')->group(function () {
+        Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('reports.export');
+        Route::resource('reports', ReportsController::class)->only(['index', 'show']);
+    });
 });
 
 // Receipts Posting routes
@@ -353,6 +343,8 @@ Route::prefix('finance')->middleware(['auth','module:1100000'])->group(function 
     Route::get('cashbook/create/payment', [CashBookController::class, 'createPayment'])->name('cashbook.create.payment');
     Route::post('cashbook/{id}/post', [CashBookController::class, 'post'])->name('cashbook.post');
     Route::post('cashbook/{id}/void', [CashBookController::class, 'void'])->name('cashbook.void');
+    Route::get('cashbook/party/vendors', [CashBookController::class, 'partyVendors'])->name('cashbook.party.vendors');
+    Route::get('cashbook/party/tenants', [CashBookController::class, 'partyTenants'])->name('cashbook.party.tenants');
 
     // NEW: mapping preview for auto-GL
     Route::get('cashbook/txntype/{id}/mapping', [CashBookController::class, 'txnTypeMapping'])
@@ -397,6 +389,10 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     Route::get('chequebooks/next-range/{bankAccountId}', [ChequeBookController::class, 'nextRange'])
         ->name('chequebooks.next-range');
 
+    // Get available leaves for a cheque book
+    Route::get('chequebooks/{id}/leaves', [ChequeBookController::class, 'getAvailableLeaves'])
+        ->name('chequebooks.leaves');
+
     Route::resource('chequebooks', ChequeBookController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->names([
@@ -428,6 +424,7 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     Route::post('cheques/{id}/clear', [ChequeController::class, 'clear'])->name('cheques.clear');     // both
     Route::post('cheques/{id}/bounce', [ChequeController::class, 'bounce'])->name('cheques.bounce');   // both
     Route::post('cheques/{id}/cancel', [ChequeController::class, 'cancel'])->name('cheques.cancel');   // Draft/Issued/OnHand
+    Route::post('cheques/{id}/issue', [ChequeController::class, 'issueCheque'])->name('cheques.issue');  // Draft -> Issued/Rejected
 
     // Optional: spoil a specific unused leaf (mark as not usable)
     Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function ($book, $leaf) {

@@ -3,6 +3,7 @@
 namespace App\Services\Insurance\ProviderAndProducts;
 
 use App\Models\Auth\User;
+use App\Models\Core\Currency;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProvider;
 use App\Models\Insurance\InsurancePricingRule;
@@ -23,6 +24,7 @@ class InsurancePricingRuleService
         float             $CoverageAmountMin,
         float             $CoverageAmountMax,
         float             $PremiumRate,
+        Currency          $CurrencyId,
         int               $AgeMin,
         int               $AgeMax,
         int               $TenureMin,
@@ -39,6 +41,7 @@ class InsurancePricingRuleService
             'CoverageAmountMin' => $CoverageAmountMin,
             'CoverageAmountMax' => $CoverageAmountMax,
             'PremiumRate' => $PremiumRate,
+            'CurrencyId' => $CurrencyId->Id,
             'AgeMin' => $AgeMin,
             'AgeMax' => $AgeMax,
             'TenureMin' => $TenureMin,

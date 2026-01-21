@@ -22,10 +22,10 @@
                     </span>
                 </div>
                 <div class="col-md-4">
-                    <strong>Start Date:</strong><br>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}
+                    <strong>Start Date:</strong><br>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d M Y') }}
                 </div>
                 <div class="col-md-4">
-                    <strong>End Date:</strong><br>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}
+                    <strong>End Date:</strong><br>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}
                 </div>
             </div>
         </div>
@@ -64,7 +64,7 @@
                 <div class="col-md-4"><strong>Installment Amount:</strong><br>{{ number_format($policy->InstallmentAmount ?? 0, 2) }}</div>
                 <div class="col-md-4"><strong>Next Due Date:</strong><br>
                     @if($nextInstallment && $nextInstallment->NextPaymentDate)
-                        {{ \Carbon\Carbon::parse($nextInstallment->NextPaymentDate)->format('d/m/Y') }}
+                        {{ \Carbon\Carbon::parse($nextInstallment->NextPaymentDate)->format('d M Y') }}
                     @else
                         -
                     @endif
@@ -107,7 +107,7 @@
                     @forelse($installments as $row)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ \Carbon\Carbon::parse($row->PaymentDate)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($row->PaymentDate)->format('d M Y') }}</td>
                             <td>KES {{ number_format($row->Amount, 2) }}</td>
                             <td>{{ $row->paymentModes->Description ?? '-' }}</td>
                             <td>{{ $row->ReferenceNumber ?? '-' }}</td>

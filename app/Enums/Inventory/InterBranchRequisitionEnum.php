@@ -12,12 +12,12 @@ enum InterBranchRequisitionEnum: string
 
     case Rejected = 'Re';
 
-    case Submitted = 'su';
+    case Pending = 'P';
 
     public function label(): string
     {
         return match ($this) {
-            self::Submitted => 'Pending',
+            self::Pending => 'Pending',
             self::Rejected => 'Rejected',
             self::Approved => 'Approved',
         };
@@ -26,7 +26,7 @@ enum InterBranchRequisitionEnum: string
     public function badgeColor(): string
     {
         return match ($this) {
-            self::Submitted => 'warning',
+            self::Pending => 'warning',
             self::Approved => 'success',
             self::Rejected => 'danger',
         };

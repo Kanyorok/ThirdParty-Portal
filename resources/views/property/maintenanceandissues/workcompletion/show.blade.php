@@ -26,7 +26,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Completion Date</label>
                         <input type="text" class="form-control bg-light text-dark"
-                               value="{{ $workCompletion->CompletionDate ? \Carbon\Carbon::parse($workCompletion->CompletionDate)->format('d/m/Y') : '—' }}"
+                               value="{{ $workCompletion->CompletionDate ? \Carbon\Carbon::parse($workCompletion->CompletionDate)->format('d M Y') : '—' }}"
                                readonly>
                     </div>
 
@@ -74,10 +74,10 @@
                     <div class="text-muted">
                         Created by <strong>{{ $workCompletion->CreatedBy->Name ?? '—' }}</strong>
                         on
-                        <strong>{{ $workCompletion->CreatedOn ? \Carbon\Carbon::parse($workCompletion->CreatedOn)->format('d/m/Y H:i') : '—' }}</strong>
+                        <strong>{{ $workCompletion->CreatedOn ? \Carbon\Carbon::parse($workCompletion->CreatedOn)->format('d M Y H:i') : '—' }}</strong>
                         | Modified by <strong>{{ $workCompletion->modifiedByUser->Name ?? '—' }}</strong>
                         on
-                        <strong>{{ $workCompletion->ModifiedOn ? \Carbon\Carbon::parse($workCompletion->ModifiedOn)->format('d/m/Y H:i') : '—' }}</strong>
+                        <strong>{{ $workCompletion->ModifiedOn ? \Carbon\Carbon::parse($workCompletion->ModifiedOn)->format('d M Y H:i') : '—' }}</strong>
                     </div>
                     <div class="text-md-end">
                         <a href="{{ route('workcompletion.index') }}" class="btn btn-sm btn-outline-secondary">⬅ Back to

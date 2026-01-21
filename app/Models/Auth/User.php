@@ -112,6 +112,7 @@ class User extends Authenticatable
 
     public function hasPermissionTo($permission, $guardName = null): bool
     {
+        // No special bypass - admin role gets permissions like any other role
         return $this->getPermissionsViaRoles()->contains('name', $permission);
     }
 
@@ -131,13 +132,28 @@ class User extends Authenticatable
                 ? $role
                 : Role::where('name', $role)->firstOrFail();
 
-            ModelRole::create([
+            // Prevent duplicate assignment using updateOrCreate logic or check-then-create
+            // We use firstOrCreate to avoid duplicates if run multiple times
+            ModelRole::firstOrCreate([
                 'model_id' => $this->Id,  // Explicitly use Id
                 'model_type' => self::getPrimaryKey(),
-                'role_id' => $roleModel->id,
                 'BranchId' => $branchId,
+            ], [
+                'role_id' => $roleModel->id,
                 'CreatedOn' => now(),
                 'ModifiedOn' => now(),
+            ]);
+
+            // If the role was different, we might want to update it, but requirements say "syncRolesWithBranch" usually implies setting THE role for that branch.
+            // If we strictly want to overwrite the role for that branch:
+            ModelRole::where([
+                'model_id' => $this->Id,
+                'model_type' => self::getPrimaryKey(),
+                'BranchId' => $branchId,
+            ])->update([
+                'role_id' => $roleModel->id,
+                'ModifiedOn' => now(),
+                'DeletedOn' => null, // Restore if soft deleted
             ]);
         }
     }
@@ -155,6 +171,18 @@ class User extends Authenticatable
 
     // Keep this as is - used for routing
     public function getRouteKeyName(): string
+    {
+        return 'UserID';
+    }
+
+    /**
+     * Get the morph class for the model.
+     * This must return 'UserID' to match the morphMap and database model_type column.
+     * 
+     * Without this override, Spatie Permission looks for model_type = 'App\Models\Auth\User'
+     * but the database has model_type = 'UserID' as defined in the morphMap.
+     */
+    public function getMorphClass()
     {
         return 'UserID';
     }

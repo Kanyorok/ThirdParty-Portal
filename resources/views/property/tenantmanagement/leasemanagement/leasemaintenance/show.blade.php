@@ -12,6 +12,11 @@
             <h6 class="mb-3 text-dark">Lease Information</h6>
             <hr>
             <div class="row g-3 text-dark">
+                <a href="{{ route('addlease.offer', $newlease->Id) }}" class="btn btn-primary mt-3">
+                    Generate Lease Offer Letter
+                </a>
+
+
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Lease Number</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->LeaseNumber ?? '-' }}" readonly>
@@ -46,14 +51,14 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Start Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d/m/Y') : '-' }}"
+                           value="{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d/m/Y') : '-' }}"
+                           value="{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
@@ -68,34 +73,33 @@
                 </div>
             </div><br>
 
-
             {{-- Financial Information --}}
             <h6 class="mb-3 text-dark">Financial Information</h6>
             <hr>
             <div class="row g-3 text-dark">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Rent Amount</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->MonthlyRent, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->MonthlyRent, 2) }} {{ $newlease->currency->Symbol ?? ''}}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Deposit</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->Deposit, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->Deposit, 2) }} {{ $newlease->currency->Symbol ?? ''}}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Service Charge</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ServiceCharge, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ServiceCharge, 2) }} {{ $newlease->currency->Symbol ?? ''}}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Parking Fee</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ParkingFee, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ParkingFee, 2) }} {{ $newlease->currency->Symbol ?? '' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Other Charges</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->OtherCharges, 2) }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->OtherCharges, 2) }} {{ $newlease->currency->Symbol ?? ''}}" readonly>
                 </div>
             </div>
 
@@ -122,12 +126,11 @@
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
             <div>
                 Created by <strong>{{ $newlease->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $newlease->CreatedOn ? Carbon::parse($newlease->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $newlease->CreatedOn ? Carbon::parse($newlease->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by <strong>{{ $newlease->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $newlease->ModifiedOn ? Carbon::parse($newlease->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $newlease->ModifiedOn ? Carbon::parse($newlease->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
             <div>
-                <a href="{{ route('addlease.edit', $newlease->Id) }}" class="btn btn-sm btn-dark">Edit</a>
                 <a href="{{ route('addlease.index') }}" class="btn btn-sm btn-dark">Back</a>
             </div>
         </div>

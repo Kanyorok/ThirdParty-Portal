@@ -7,9 +7,11 @@ use App\Enums\TenderCategoryEnum;
 use App\Enums\TenderStatusEnum;
 use App\Enums\TenderTypeEnum;
 use App\Models\ThirdParies\Supplier;
+use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -22,6 +24,10 @@ use App\Models\Procurement\TenderItems;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\TenderSection;
 use App\Models\Procurement\TenderSupplier;
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\Workflow;
+use App\Models\DMS\Document;
+use App\Models\Core\Approval\WorkflowPending;
 use App\Traits\Model\UserActorTrait;
 use App\Traits\Model\DocumentsTrait;
 use Carbon\Carbon;
@@ -47,23 +53,21 @@ class Tender extends Model
         'SubmissionDeadline',
         'OpeningDate',
         'Status',
-        //'RelatedPRID',
         'ProcurementModeId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
         'StartDate',
         'CurrencyId',
-        // 'TenderCategory',
         'ApprovalRemarks',
-        'ApprovalStatus', // 1 for approved, 2 for rejected, 0 for pending
+        'ApprovalStatus',
+        'ItemCategoryId', // Added this field
     ];
 
     protected $casts = [
         'TenderType' => TenderTypeEnum::class,
         'Status' => TenderStatusEnum::class,
         'ApprovalStatus' => TenderApprovalStatusEnum::class,
-        // 'TenderCategory' => TenderCategoryEnum::class,
         'SubmissionDeadline' => 'datetime',
         'OpeningDate' => 'datetime',
         'ModifiedOn' => 'datetime',
@@ -78,6 +82,7 @@ class Tender extends Model
     {
         return $this->belongsTo(TenderCategory::class, 'TenderCategory', 'Id');
     }
+
     public function procurementMode(): BelongsTo
     {
         return $this->belongsTo(ProcurementMode::class, 'ProcurementModeId');
@@ -94,15 +99,6 @@ class Tender extends Model
     {
         return $this->belongsTo(ItemCategories::class, 'ItemCategoryId', 'Id');
     }
-
-    //TODO: with tenderinvitations
-    // public function suppliers(): BelongsToMany
-    // {
-    //     return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'SupplierID')
-    //         ->using(TenderVendor::class)
-    //         ->withPivot('InvitationStatus', 'InvitationDate', 'ResponseDate')
-    //         ->withTimestamps('CreatedOn', 'ModifiedOn', 'DeletedOn');
-    // }
 
     public function invitations(): HasMany
     {
@@ -122,6 +118,7 @@ class Tender extends Model
                 'ConfirmationAttachment'
             ]);
     }
+
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
@@ -133,15 +130,12 @@ class Tender extends Model
     }
 
     public function procurementPlan(): BelongsTo
-    {
-        return $this->belongsTo(ProcurementPlan::class, 'RelatedPRID');
-    }
-
-    public function documents(): HasMany
-    {
-        return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
-    }
-
+{
+    return $this->belongsTo(ConsolidatedProcurementPlan::class, 'ProcurementModeId', 'PlanID');
+}
+/**
+ * Returns all submissions for a tender given by its tender reference.
+ */
     public function submissions(): HasMany
     {
         return $this->hasMany(\App\Models\Procurement\BidSubmission::class, 'TenderRef', 'TenderNo');
@@ -162,7 +156,6 @@ class Tender extends Model
      */
     public function getEvaluationReadiness()
     {
-        // Use DB-backed checks to avoid false negatives from lazy or filtered relations
         $activeSectionsCount = TenderSection::where('TenderID', $this->Id)
             ->where('IsActive', true)
             ->count();
@@ -195,11 +188,6 @@ class Tender extends Model
         ];
     }
 
-    // public function creator(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class, 'CreatedBy');
-    // }
-
     public function modifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
@@ -208,7 +196,6 @@ class Tender extends Model
     // Scopes
     public function scopeActiveTenders($query)
     {
-        // Active if published and deadline is today or later (inclusive day)
         return $query->where('Status', TenderStatusEnum::Published->value)
             ->whereDate('SubmissionDeadline', '>=', Carbon::now()->toDateString());
     }
@@ -278,15 +265,60 @@ class Tender extends Model
         return $this->hasMany(TenderItems::class, 'TenderID', 'Id');
     }
 
+    /**
+     * Get the primary key for workflow (morph alias)
+     * This returns the string identifier for the workflow system
+     */
     public static function getPrimaryKey(): string
     {
-        return (new self())->getRouteKeyName();
+        return 'tender'; // This is the morph alias for workflow, not the database column
     }
+    // public function workflows()
+    // {
+    //     return $this->morphMany(
+    //         Workflow::class,
+    //         'source',
+    //         'Source',   // morph type column
+    //         'SourceID'  // morph id column
+    //     );
+    // }
 
+    /**
+     * Keep your existing route key name to avoid breaking other modules
+     */
     public function getRouteKeyName(): string
     {
-        return 'TenderID';
+        return 'TenderID'; // Keep this as is for your routes
     }
+
+    /**
+     * Workflow history relationship - FIXED
+     * The morphMany relationship should use 'source' as the method name in WorkflowHistory
+     */
+   public function workflowHistory()
+    {
+        return $this->hasMany(WorkflowHistory::class, 'SourceID', 'Id')
+            ->where('Source', 'tender')
+            ->whereNull('DeletedOn');
+            
+    }
+
+    
+    public function workflowPending()
+    {
+        return $this->hasMany(WorkflowPending::class, 'SourceID', 'Id')
+            ->where('Source', 'tender')
+            ->whereNull('DeletedOn');
+    }
+    
+    
+
+public function currentStage()
+{
+    return $this->workflowHistory()
+        ->orderBy('CreatedOn', 'desc')
+        ->first();
+}
 
     /**
      * Get all awards for this tender (HasMany relationship)
@@ -303,4 +335,34 @@ class Tender extends Model
     {
         return $this->hasOne(TenderAward::class, 'TenderID', 'Id');
     }
+
+     /**
+     * Check if tender is approved
+     */
+    public function isApproved(): bool
+    {
+        return $this->ApprovalStatus === TenderApprovalStatusEnum::APPROVED;
+    }
+
+     /**
+     * Check if tender is rejected
+     */
+    public function isRejected(): bool
+    {
+        return $this->ApprovalStatus === TenderApprovalStatusEnum::REJECTED;
+    }
+
+    /**
+     * Get approval status badge color
+     */
+    public function getApprovalStatusBadgeAttribute(): string
+    {
+        return match($this->ApprovalStatus) {
+            TenderApprovalStatusEnum::PENDING => 'warning',
+            TenderApprovalStatusEnum::APPROVED => 'success',
+            TenderApprovalStatusEnum::REJECTED => 'danger',
+            default => 'secondary',
+        };
+    }
+
 }

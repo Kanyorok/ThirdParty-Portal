@@ -110,7 +110,7 @@
                             <td>{{ $rule->product->Name ?? '-' }}</td>
                             <td>{{ $rule->policytypes->Description ?? '-' }}</td>
                             <td class="text-end">{{ $rule->CommissionRate ?? '-' }}</td>
-                            <td class="text-end">{{ $rule->FixedAmount ?? '-' }}</td>
+                            <td class="text-end">{{ $rule->currency->SymbolNative ?? 'cu' }} {{ $rule->FixedAmount ?? '-' }}</td>
                             <td>{{ $rule->appliesto->Description ?? '-' }}</td>
                             <td class="text-center">
                                 @if($rule->IsActive)
@@ -137,12 +137,6 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                No commission rules found.
-                            </td>
-                        </tr>
                         @endforelse
                     </tbody>
                 </table>

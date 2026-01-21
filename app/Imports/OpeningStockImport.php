@@ -16,6 +16,20 @@ class OpeningStockImport implements ToModel, WithHeadingRow
 {
     public function model(array $row)
     {
+        // 🔐 REQUIRED EXCEL COLUMNS VALIDATION
+        $requiredColumns = [
+            'itemcode', 'branchname', 'storename', 'uom',
+            'itemprice', 'qty', 'minstocklevel',
+            'reorderqty', 'maxstocklevel'
+        ];
+
+        foreach ($requiredColumns as $col) {
+            if (!array_key_exists($col, $row)) {
+                \Log::error("❌ Missing required column: {$col}");
+                throw new \Exception("The uploaded file is not a valid Opening Stock Template. Missing column: {$col}");
+            }
+        }
+
         // ✅ Find Item
         $item = ItemMasterList::where('ItemCode', $row['itemcode'])->first();
         if (!$item) {

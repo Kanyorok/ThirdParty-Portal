@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
@@ -24,6 +25,32 @@ class PropertyInvoiceController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
         $invoices = PropertyInvoice::all();
+        
+        // Map Finance invoices by RequestID (Property-side reads only)
+        $requestIds = $invoices->pluck('RequestID')->filter()->unique()->values();
+        $financeByReq = collect();
+        if ($requestIds->isNotEmpty()) {
+            $financeByReq = collect(DB::table('t_FinanceInvoices')
+                ->whereIn('RequestID', $requestIds)
+                ->get())->keyBy('RequestID');
+        }
+
+        // Derive due/paid/status per Property invoice from Finance amounts
+        $invoices->each(function ($inv) use ($financeByReq) {
+            $due = (float)($inv->RentAmount ?? 0)
+                + (float)($inv->ServicesCharge ?? 0)
+                + (float)($inv->ParkingFee ?? 0)
+                + (float)($inv->OtherCharges ?? 0);
+
+            $fin = $inv->RequestID ? $financeByReq->get($inv->RequestID) : null;
+            $paid = $fin ? (float)($fin->AmountPaid ?? 0) : 0.0;
+
+            $inv->DerivedDue = $due;
+            $inv->DerivedPaid = $paid;
+            $inv->DerivedStatus = $due <= 0 ? 'Pending'
+                : ($paid >= $due ? 'Fully Paid' : ($paid > 0 ? 'Partial Paid' : 'Pending'));
+        });
+        
         return view('property.billingandreceipting.invoicing.index', compact('invoices'));
     }
 
@@ -33,6 +60,7 @@ class PropertyInvoiceController extends Controller
 
         $newleases = PropertyNewLease::where('IsActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
+            ->where('ApprovalStatus', ApprovalEnum::Approved)
             ->with('tenant')
             ->get();
 

@@ -16,6 +16,7 @@ use App\Models\Communication\EmailConversation;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Ticket;
 use App\Models\DMS\Image;
+use App\Services\CRM\TicketService;
 use App\Traits\Controller\TicketsTrait;
 use Carbon\Carbon;
 use Exception;
@@ -40,7 +41,7 @@ class LeadTicketController extends Controller
      */
     public function index(Lead $lead): JsonResponse
     {
-        return $this->tickets($lead->tickets()->where('t_Tickets.Status', TicketStatusEnum::Active));
+        return $this->tickets($lead->tickets()->where('t_Tickets.StatusId', TicketService::codeDetail(TicketStatusEnum::Active, 'TicketStatus')->ID));
     }
 
     /**
@@ -55,7 +56,7 @@ class LeadTicketController extends Controller
         $start = $request->getStart();
         $end = ($start instanceof Carbon) ? $request->getEnd($start) : null;
         $assignee = $request->getAssignee();
-        $exists = $lead->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.Status', TicketStatusEnum::Active->value)->first();
+        $exists = $lead->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.StatusId', TicketService::codeDetail(TicketStatusEnum::Active, 'TicketStatus')->ID)->first();
         if ($exists instanceof Ticket) {
             return $this->errored('Ticket <a href="' . route('tickets.show', [$exists->TicketID]) . '" class="fw-bold text-white">' . $exists->TicketID . '</a> of the same category already exists.');
         }

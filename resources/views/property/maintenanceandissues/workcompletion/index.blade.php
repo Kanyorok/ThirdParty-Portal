@@ -50,7 +50,7 @@
                   <td>{{ $loop->iteration }}</td>
                   <td>{{ $workCompletion->request->request->RequestNumber ?? '-' }}</td>
                   <td>
-                    {{ $workCompletion->CompletionDate ? Carbon::parse($workCompletion->CompletionDate)->format('d/m/Y') : '-' }}
+                    {{ $workCompletion->CompletionDate ? Carbon::parse($workCompletion->CompletionDate)->format('d M Y') : '-' }}
                   </td>
                   <td>{{ Str::limit($workCompletion->WorkDoneSummary ?? '-', 60) }}</td>
                   <td>
@@ -76,18 +76,18 @@
                   </td>
                   <td class="text-center">
                     <div class="action-buttons">
-                      <a href="{{ route('workcompletion.show', $workCompletion->Id) }}" 
-                         class="btn btn-sm btn-primary" 
+                      <a href="{{ route('workcompletion.show', $workCompletion->Id) }}"
+                         class="btn btn-sm btn-primary"
                          title="View Details">
                         <i class="bi bi-eye"></i>
                       </a>
-                      <a href="{{ route('workcompletion.edit', $workCompletion->Id) }}" 
-                         class="btn btn-sm btn-warning" 
+                      {{-- <a href="{{ route('workcompletion.edit', $workCompletion->Id) }}"
+                         class="btn btn-sm btn-warning"
                          title="Edit Record">
                         <i class="bi bi-pencil-square"></i>
                       </a>
-                      <form action="{{ route('workcompletion.destroy', $workCompletion->Id) }}" 
-                            method="POST" 
+                      <form action="{{ route('workcompletion.destroy', $workCompletion->Id) }}"
+                            method="POST"
                             class="d-inline"
                             onsubmit="return confirm('Are you sure you want to delete this work completion record?');">
                         @csrf
@@ -95,7 +95,7 @@
                         <button type="submit" class="btn btn-sm btn-danger" title="Delete Record">
                           <i class="bi bi-trash"></i>
                         </button>
-                      </form>
+                      </form> --}}
                     </div>
                   </td>
                 </tr>

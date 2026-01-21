@@ -111,7 +111,7 @@
               @foreach($contributions as $i => $c)
                 <tr>
                   <td>{{ $loop->iteration}}</td>
-                  <td>{{ $c->ContributionDate ? \Carbon\Carbon::parse($c->ContributionDate)->format('d/m/Y') : '-' }}</td>
+                  <td>{{ $c->ContributionDate ? \Carbon\Carbon::parse($c->ContributionDate)->format('d M Y') : '-' }}</td>
                   <td>{{ $c->contributor->thirdParty->ThirdPartyName ?? '—' }}</td>
                   {{-- <td>
                     {{-- Prefer a human-friendly description from the contribution's type relation, fallback to raw value --}}
@@ -121,20 +121,23 @@
                   <td>{{ $c->Notes ?? '—' }}</td>
                   <td class="text-end">
                     @php $qs = request()->getQueryString(); @endphp
-                    <div class="btn-group">
-                      <a class="btn btn-sm btn-outline-primary"
+                    <div class="d-flex gap-2 justify-content-end">
+                      <a class="btn btn-sm btn-primary"
                          href="{{ route('bancassurance.contributions.edit', $c->Id) }}{{ $qs ? ('?'.$qs) : '' }}">
-                        Edit
+                        <i class="bi bi-pencil me-1"></i>Edit
                       </a>
                       <form action="{{ route('bancassurance.contributions.destroy', $c->Id) }}"
                             method="POST"
-                            onsubmit="return confirm('Delete this contribution?');">
+                            onsubmit="return confirm('Delete this contribution?');"
+                            class="d-inline">
                         @csrf
                         @method('DELETE')
                         @if($qs)
                           <input type="hidden" name="redirect_query" value="{{ $qs }}">
                         @endif
-                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        <button class="btn btn-sm btn-danger" type="submit">
+                          <i class="bi bi-trash me-1"></i>Delete
+                        </button>
                       </form>
                     </div>
                   </td>

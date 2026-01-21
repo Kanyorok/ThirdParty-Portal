@@ -76,6 +76,8 @@
                             <th>Title</th>
                             <th>Type</th>
                             <th>Source</th>
+                            <th>Due Date</th>
+                            <th>Expiry Date</th>
                             {{--                            <th>Review</th>--}}
                             <th>Execution</th>
                             <th>Created</th>
@@ -88,6 +90,8 @@
                                 <td class="fw-semibold">{{ $doc->DocumentTitle }}</td>
                                 <td>{{ $doc->DocumentType }}</td>
                                 <td>{{ $doc->SourceModule }}</td>
+                                <td>{{ $doc->DueDate ? \Carbon\Carbon::parse($doc->DueDate)->format('d-m-Y') : '-' }}</td>
+                                <td>{{ $doc->ExpiryDate ? \Carbon\Carbon::parse($doc->ExpiryDate)->format('d-m-Y') : '-' }}</td>
                                 {{--                                <td>--}}
                                 {{--                                    @php--}}
                                 {{--                                        $review = $doc->ReviewStatus;--}}
@@ -114,7 +118,7 @@
                                 </td>
                                 <td>
                                     @if($doc->CreatedOn)
-                                        {{ \Carbon\Carbon::parse($doc->CreatedOn)->format('d/m/Y H:i') }}
+                                        {{ \Carbon\Carbon::parse($doc->CreatedOn)->format('d M Y H:i') }}
                                     @else
                                         —
                                     @endif

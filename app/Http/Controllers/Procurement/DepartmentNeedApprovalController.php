@@ -44,22 +44,56 @@ class DepartmentNeedApprovalController extends Controller
     {
         $this->authorize('view', $department_need);
 
-    // Load relations
-    $need = $department_need->load(['item.category', 'item.uom', 'creator']);
+        // Load relations
+        $need = $department_need->load(['item.category', 'item.uom', 'creator']);
 
-    // Current user
-    $user = Auth::user();
+        // Current user
+        $user = Auth::user();
 
-    // Maker-checker: can this user approve?
-    $canApprove = $this->workflow->canApproveModel($need, $user);
+        // Maker-checker: can this user approve?
+        $canApprove = $this->workflow->canApproveModel($need, $user);
 
-    Log::info("Can approve for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
+        // Fetch detailed workflow status
+        $workflowStatus = $this->workflow->getStatus($need);
 
-    return view('procurement.procurementplan.departmentneeds.approval.show', [
-        'need'       => $need,
-        'canApprove' => $canApprove,
-        'history'    => $this->workflow->historyForModel($need),
-    ]);
+        // Determine reason if cannot approve
+        $cantApproveReason = null;
+        if (!$canApprove) {
+            if ($need->CreatedBy == $user->Id) {
+                $cantApproveReason = "You cannot approve your own request (Maker-Checker policy).";
+            } else {
+                // Check if user has already approved in the current stage
+                $currentStageId = $workflowStatus['currentStage']['id'] ?? null;
+                $hasApproved = false;
+
+                if ($currentStageId) {
+                    $hasApproved = $this->workflow->historyForModel($need)
+                        ->where('CreatedBy', $user->Id)
+                        ->where('Stage', (string)$currentStageId)
+                        ->filter(function ($history) {
+                            return $history->status && $history->status->Description === 'Approved';
+                        })
+                        ->isNotEmpty();
+                }
+
+                if ($hasApproved) {
+                    $cantApproveReason = "You have already approved this request.";
+                } else {
+                    $stageName = $workflowStatus['currentStage']['name'] ?? 'Unknown Stage';
+                    $cantApproveReason = "You are not authorized to approve at the current stage: {$stageName}.";
+                }
+            }
+        }
+
+        Log::info("Can approve for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
+
+        return view('procurement.procurementplan.departmentneeds.approval.show', data: [
+            'need'              => $need,
+            'canApprove'        => $canApprove,
+            'cantApproveReason' => $cantApproveReason,
+            'workflowStatus'    => $workflowStatus,
+            'history'           => $this->workflow->historyForModel($need),
+        ]);
     }
 
     /**

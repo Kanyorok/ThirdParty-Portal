@@ -224,7 +224,6 @@ class LicensingService
                 'EventAt' => now('UTC')->toDateTimeString(),
             ]);
         } catch (\Throwable $e) {
-            Log::debug('License audit failed: ' . $e->getMessage());
         }
     }
 }

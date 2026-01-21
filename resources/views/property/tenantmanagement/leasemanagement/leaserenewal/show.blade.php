@@ -40,21 +40,21 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date of Current Lease</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('d/m/Y') : '-' }}"
+                           value="{{ $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">New Start Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('d/m/Y') : '-' }}"
+                           value="{{ $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">New End Date</label>
                     <input type="text" class="form-control bg-light text-dark"
-                           value="{{ $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('d/m/Y') : '-' }}"
+                           value="{{ $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('d M Y') : '-' }}"
                            readonly>
                 </div>
 
@@ -82,6 +82,25 @@
                         value="{{ $leaserenewal->OtherCharges ? number_format($leaserenewal->OtherCharges, 2) : '-' }}" readonly>
                 </div>
             </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Attached Documents</label>
+                    <div class="p-3 border rounded bg-light text-dark">
+                        @forelse(
+                            $leaserenewal->documents()
+                                ->select(
+                                    't_Documents.Id as Id',
+                                    't_Documents.DocumentId as DocumentId',
+                                    't_Documents.MimeType',
+                                    't_Documents.Name'
+                                )->get()
+                            as $document
+                        )
+                            {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted">No documents attached.</span>
+                        @endforelse
+                    </div>
+                </div>
 
             {{-- Remarks --}}
             <h6 class="mt-4 mb-2 text-dark">Remarks</h6>
@@ -91,20 +110,24 @@
                 </textarea>
             </div>
         </div>
+        
 
         {{-- Footer with Audit Info + Actions --}}
         <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
             <div>
                 Created by <strong>{{ $leaserenewal->createdByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $leaserenewal->CreatedOn ? Carbon::parse($leaserenewal->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $leaserenewal->CreatedOn ? Carbon::parse($leaserenewal->CreatedOn)->format('d M Y') : '-' }}</strong>
                 | Modified by <strong>{{ $leaserenewal->modifiedByUser->Name ?? '-' }}</strong>
-                on <strong>{{ $leaserenewal->ModifiedOn ? Carbon::parse($leaserenewal->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                on <strong>{{ $leaserenewal->ModifiedOn ? Carbon::parse($leaserenewal->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
             <div>
-                <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-dark">Edit</a>
                 <a href="{{ route('renewlease.index') }}" class="btn btn-sm btn-dark">Back</a>
             </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

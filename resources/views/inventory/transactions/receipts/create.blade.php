@@ -24,37 +24,48 @@
                     </div>
                 @endif
 
-      <div class="row mb-3">
-          <div class="col">
-              <label class="form-label">Transfer Ref <span class="text-danger">*</span></label>
-              <select id="transferId" name="TransferID" class="form-select" required>
-                  <option value="">Select Transfer</option>
-                  @foreach($transfers as $transfer)
-                      <option value="{{ $transfer->Id }}" {{ old('TransferID') == $transfer->Id ? 'selected' : '' }}>
-                          {{ $transfer->TransferID }}
-                      </option>
-                  @endforeach
-              </select>
-        </div>
 
-          <div class="col">
-              <label class="form-label">Received By <span class="text-danger">*</span></label>
-              <select name="ReceivedBy" class="form-select select2" required>
-                  <option value="">-- Select User --</option>
-                  @foreach ($users as $user)
-                      <option value="{{ $user->Id }}" {{ old('ReceivedBy') == $user->Id ? 'selected' : '' }}>
-                          {{ $user->Name }}
-                      </option>
-                  @endforeach
-              </select>
-          </div>
 
-          <div class="col">
-              <label class="form-label">Receive Date <span class="text-danger">*</span></label>
-              <input type="date" name="ReceivedDate" class="form-control"
-                     value="{{ old('ReceivedDate', date('Y-m-d')) }}" required>
-        </div>
-      </div>
+          <div class="row mb-3">
+                <div class="col">
+                    <label class="form-label">Transfer Ref <span class="text-danger">*</span></label>
+                    <select id="transferId" name="TransferID" class="form-select" required>
+                        <option value="">Select Transfer</option>
+                        @foreach($transfers as $transfer)
+                            <option value="{{ $transfer->Id }}" {{ old('TransferID') == $transfer->Id ? 'selected' : '' }}>
+                                {{ $transfer->TransferID }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('TransferID')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col">
+                    <label class="form-label">Received By <span class="text-danger">*</span></label>
+                    {{-- Hidden field for form submission --}}
+                    <input type="hidden" name="ReceivedBy" value="{{ $currentUser->Id ?? auth()->id() }}">
+                    {{-- Display-only field for user visibility --}}
+                    <input type="text" class="form-control" value="{{ $currentUser->Name ?? auth()->user()->Name }}" readonly>
+                    <small class="text-muted">Current user</small>
+                    @error('ReceivedBy')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col">
+                    <label class="form-label">Receive Date <span class="text-danger">*</span></label>
+                    {{-- Hidden field for form submission with proper format --}}
+                    <input type="hidden" id="receivedDateHidden" name="ReceivedDate" value="{{ now()->format('Y-m-d') }}">
+                    {{-- Display-only field for user visibility --}}
+                    <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
+                    <small class="text-muted">Current date (non-editable)</small>
+                    @error('ReceivedDate')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
 
                 <div class="mb-3">
                     <label class="form-label">Items Received</label>

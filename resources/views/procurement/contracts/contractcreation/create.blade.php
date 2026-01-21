@@ -11,7 +11,7 @@
                         @if($award)
                             <p class="text-muted mb-0">
                                 Creating contract from approved award:
-                                <strong>{{ $award->tender->TenderNo ?? 'N/A' }}</strong>
+                                <strong>{{ $award->tender?->TenderNo ?? 'N/A' }}</strong>
                             </p>
                         @endif
                     </div>
@@ -42,15 +42,15 @@
                                     <table class="table table-sm table-borderless">
                                         <tr>
                                             <td><strong>Tender Reference:</strong></td>
-                                            <td>{{ $award->tender->TenderNo ?? 'N/A' }}</td>
+                                            <td>{{ $award->tender?->TenderNo ?? 'N/A' }}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>Tender Title:</strong></td>
-                                            <td>{{ $award->tender->Title ?? 'N/A' }}</td>
+                                            <td>{{ $award->tender?->Title ?? 'N/A' }}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>Winning Supplier:</strong></td>
-                                            <td>{{ $award->winningSupplier->SupplierName ?? 'N/A' }}</td>
+                                            <td>{{ $award->winningSupplier?->thirdParty?->TradingName ?? $award->winningSupplier?->supplierMaster?->party?->TradingName ?? $award->winningSupplier?->SupplierName ?? 'N/A' }}</td>
                                         </tr>
                                     </table>
                                 </div>
@@ -58,7 +58,7 @@
                                     <table class="table table-sm table-borderless">
                                         <tr>
                                             <td><strong>Awarded Amount:</strong></td>
-                                            <td>{{ number_format($award->AwardedAmount ?? 0, 2) }} {{ is_object($award->tender->Currency) ? $award->tender->Currency->Code : ($award->tender->Currency ?? 'KES') }}</td>
+                                            <td>{{ number_format($award->AwardedAmount ?? 0, 2) }} {{ optional($award->tender?->Currency)->Code ?? $award->tender?->Currency ?? 'KES' }}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>Award Date:</strong></td>
@@ -87,6 +87,7 @@
                             <form action="{{ route('contracts.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="award_id" value="{{ $award->Id }}">
+                                <input type="hidden" name="award_type" value="{{ $awardType ?? 'tender' }}">
 
                                 <!-- Contract Type Selection -->
                                 <div class="mb-4">
@@ -134,7 +135,7 @@
                                         <label class="form-label">Contract Title <span
                                                 class="text-danger">*</span></label>
                                         <input type="text" name="contract_title" class="form-control"
-                                               value="{{ old('contract_title', $award->tender->Title ?? '') }}"
+                                               value="{{ old('contract_title', $award->tender?->Title ?? '') }}"
                                                placeholder="Enter contract title">
                 </div>
                 <div class="col-md-6">
@@ -144,7 +145,7 @@
                                value="{{ old('contract_value', $award->AwardedAmount ?? '') }}"
                                step="0.01" min="0" placeholder="0.00">
                         <span
-                            class="input-group-text">{{ is_object($award->tender->Currency) ? $award->tender->Currency->Code : ($award->tender->Currency ?? 'KES') }}</span>
+                            class="input-group-text">{{ optional($award->tender?->Currency)->Code ?? $award->tender?->Currency ?? 'KES' }}</span>
                     </div>
                 </div>
             </div>
@@ -152,7 +153,7 @@
             <div class="mb-3">
                 <label class="form-label">Contract Description <span class="text-danger">*</span></label>
                 <textarea name="contract_description" class="form-control" rows="3"
-                          placeholder="Provide detailed description of contract scope and deliverables">{{ old('contract_description', $award->tender->Description ?? '') }}</textarea>
+                          placeholder="Provide detailed description of contract scope and deliverables">{{ old('contract_description', $award->tender?->Description ?? '') }}</textarea>
             </div>
 
                                 <!-- Contract Duration -->

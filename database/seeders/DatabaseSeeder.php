@@ -20,16 +20,16 @@ class DatabaseSeeder extends Seeder
         $this->call(SysFilterSeeder::class);
         $this->call(DocumentValidationTypeSeeder::class);
         $this->call(CurrencySeeder::class);
-        //$this->call(LocalitySeeder::class);
+        $this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
-        $this->call(CommitteeSeeder::class);
+        //$this->call(CommitteeSeeder::class);
         $this->call(DepartmentSeeder::class);
         $this->call(JobGradeSeeder::class);
         $this->call(EmployeeSeeder::class);
         $this->call(ItemCategoriesSeeder::class);
         $this->call(UnitOfMeasureSeeder::class);
-        $this->call(ItemMasterListSeeder::class);
+        //$this->call(ItemMasterListSeeder::class);
         // $this->call(DepartmentNeedsSeeder::class);
         // $this->call(SupplierSeeder::class);
         $this->call(BudgetMasterSeeder::class);
@@ -56,7 +56,6 @@ class DatabaseSeeder extends Seeder
         //        $this->call(BudgetDriverProjectionsDataSeeder::class);
         $this->call(CategoryMasterSeeder::class);
         $this->call(PropertyTypeSeeder::class);
-        // $this->call(PropertyRegistrySeeder::class);
         $this->call(PropertyBlockSeeder::class);
         $this->call(PropertyFloorSeeder::class);
         $this->call(PropertyUnitSeeder::class);
@@ -107,6 +106,7 @@ class DatabaseSeeder extends Seeder
         $this->call(financeroleseeder::class);
         $this->call(ThirdPartyTypesSeeder::class);
         $this->call(MedicalFundsCatalogSeeder::class);
+        $this->call(WorkFlowTypesSeeder::class);
         // $this->call(GRNPOSeeder::class);
         $this->call(KpiSeeder::class);
         $this->call(StatutorySeeder::class);

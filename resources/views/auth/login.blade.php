@@ -4,23 +4,22 @@
 
 @section('content')
     <div class="auth-wrapper v2">
-        <div class="auth-form">
-            <div class="card my-5">
-                <form method="POST" action="{{ route('login') }}" class="card-body">@csrf
+        <div class="auth-form ">
+            <div class="card my-5 border border-primary border-1 shadow-lg">
+                <form method="POST" action="{{ route('login') }}" class="card-body" id="LoginForm">@csrf
                     @php
                         $org = \App\Models\Settings\APICredential::query()->where('Integration', \App\Enums\Core\IntegrationsEnum::Organization->value)->latest('Id')->first();
                         $branding = $org?->Configuration;
-                        $logo = is_object($branding) && isset($branding->logo) ? $branding->logo : 'assets/img/BRERP_Logo.png';
-                      
+                        $logo = is_object($branding) && isset($branding->logo) ? $branding->logo : 'assets/img/BRERP_Logo_small.png';
+
                     @endphp
                     <div class="text-center mb-4">
                         <img src="{{ asset($logo) }}" alt="Logo" style="max-width: 100%; height: auto; max-height: 120px; object-fit: contain; margin-bottom: 12px;">
                     </div>
-                    <h4 class="text-center f-w-500 mb-3">Login with your USERID or Email </h4>
-                    {{-- Branch Selection FIRST --}}
+                    <h4 class="text-center f-w-500 mb-3">Welcome Back Sign In </h4>
                     <div class="mb-3">
                         <label for="branch" class="form-label">Login Branch <span class="text-danger">*</span></label>
-                        <select class="form-control @error('branch') is-invalid @enderror" id="branch" name="branch"
+                        <select class="form-control" id="branch" name="branch"
                                 required>
                             <option disabled {{ old('branch') ? '' : 'selected' }}>-- Select Branch --</option>
                             @foreach ($branches as $branch)
@@ -30,52 +29,45 @@
                                 </option>
                             @endforeach
                         </select>
-                        @error('branch')
-                        <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
-                        @enderror
+                        <p id="branch_error" class="invalid-feedback d-none fs-5 error col-12" role="alert"></p>
                     </div>
                     <div class="mb-3">
-                        <input id="UserID" type="text" class="form-control @error('UserID') is-invalid @enderror"
+                        <label for="UserID" class="form-label">UserID or Email Address <span
+                                class="text-danger">*</span></label>
+                        <input id="UserID" type="text" class="form-control"
                                name="UserID" value="{{ old('UserID') }}" required autocomplete="UserID" autofocus
                                style="text-transform: uppercase;" placeholder="UserID or Email Address">
-                        @error('UserID')
-                        <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong> </span>
-                        @enderror
+                        <p id="UserID_error" class="invalid-feedback d-none error fs-5 col-12" role="alert"></p>
                     </div>
                     <div class="mb-3">
+                        <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input id="password" type="password"
-                                   class="form-control @error('password') is-invalid @enderror"
+                                   class="form-control"
                                    name="password" required autocomplete="current-password" placeholder="Password">
                             <button type="button" id="togglePassword" class="btn btn-outline-secondary" aria-label="Show password">
                                 <i class="fas fa-eye" aria-hidden="true"></i>
                             </button>
                         </div>
+                        <p id="password_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                     </div>
-                    {{--<div class="d-flex mt-1 justify-content-between align-items-center">
-                        <div class="form-check">
-                            <input class="form-check-input input-primary" type="checkbox"
-                                                       id="customCheckc1" checked=""> <label
-                                class="form-check-label text-muted" for="customCheckc1">Remember me?</label></div>
-                        <h6 class="text-secondary f-w-400 mb-0"><a href="forgot-password-v2.html">Forgot Password?</a>
-                        </h6>
-                    </div>--}}
-                    <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-primary">Login</button>
+                    <div class="d-grid my-4">
+                        <button type="submit" class="btn btn-primary" id="LoginBtn">Login</button>
                     </div>
-                    <div class="text-center mt-4">
-                        <img src="{{ asset('assets/img/BRERP_Logo.png') }}" alt="BRERP Logo" style="max-width: 200px; height: auto; object-fit: contain; opacity: 0.8;">
-                    </div>
-                    {{--<div class="d-flex justify-content-between align-items-end mt-4"><h6 class="f-w-500 mb-0">Don't have
-                            an Account?</h6><a href="register-v2.html" class="link-primary">Create Account</a></div>--}}
                 </form>
             </div>
         </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            $('form#LoginForm').submit(async function (e) {
+                e.preventDefault();
+                await saveForm($(this), $('#LoginBtn'), true, true, true);
+            });
+
             const pwd = document.getElementById('password');
             const btn = document.getElementById('togglePassword');
             if (!pwd || !btn) return;

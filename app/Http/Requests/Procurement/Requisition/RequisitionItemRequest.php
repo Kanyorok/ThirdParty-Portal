@@ -18,7 +18,7 @@ class RequisitionItemRequest extends FormRequest
         return [
 
             'RequisitionID' => ['required', 'integer'],
-            'Type' => ['required', 'string'],
+            'Type' => ['nullable', 'string'],
             'Item' => ['required', 'integer'],
             'Quantity' => ['required', 'numeric', 'min:1'],
             'Urgency' => ['required', 'integer'],
@@ -41,25 +41,48 @@ class RequisitionItemRequest extends FormRequest
             if ($requisitionId && $itemId && $requestedQty) {
                 // Fetch PlanRef from requisition
                 $planId = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
+                
+                \Illuminate\Support\Facades\Log::info('RequisitionItemRequest Validation', [
+                    'requisitionId' => $requisitionId,
+                    'itemId' => $itemId,
+                    'requestedQty' => $requestedQty,
+                    'planId' => $planId
+                ]);
 
                 if ($planId) {
-                    // Fetch original plan quantity
-                    $originalQty = DB::table('t_PlanLineItem')
+                    // Fetch plan line item details
+                    $planLineItem = DB::table('t_PlanLineItem')
                         ->where('PlanID', $planId)
                         ->where('ItemID', $itemId)
-                        ->value('OriginalQty');
+                        ->where('IsDeleted', 0)
+                        ->select('LineItemID', 'MergedQty', 'OriginalQTY')
+                        ->first();
 
-                    // Sum of already requisitioned quantities for this item and plan
-                    $alreadyUsedQty = DB::table('t_RequisitionLines as rl')
-                        ->join('t_Requisitions as r', 'rl.RequisitionID', '=', 'r.Id')
-                        ->where('r.PlanRef', $planId)
-                        ->where('rl.Item', $itemId)
-                        ->sum('rl.Quantity');
+                    \Illuminate\Support\Facades\Log::info('Plan Line Item Found', ['planLineItem' => $planLineItem]);
 
-                    $remainingQty = $originalQty - $alreadyUsedQty;
+                    if ($planLineItem) {
+                        $totalPlanQty = $planLineItem->MergedQty; // Use MergedQty as the main quantity
 
-                    if ($requestedQty > $remainingQty) {
-                        $v->errors()->add('Quantity', "Requested quantity ($requestedQty) exceeds remaining quantity ($remainingQty) from the plan.");
+                        // Sum of already requisitioned quantities for this plan line item
+                        $alreadyUsedQty = DB::table('t_RequisitionLines')
+                            ->where('PlanLineRef', $planLineItem->LineItemID)
+                            ->whereNull('DeletedOn')
+                            ->sum('Quantity');
+
+                        $remainingQty = $totalPlanQty - $alreadyUsedQty;
+                        
+                        \Illuminate\Support\Facades\Log::info('Quantity Calculation', [
+                            'totalPlanQty' => $totalPlanQty,
+                            'alreadyUsedQty' => $alreadyUsedQty,
+                            'remainingQty' => $remainingQty,
+                            'requestedQty' => $requestedQty
+                        ]);
+
+                        if ($requestedQty > $remainingQty) {
+                            $v->errors()->add('Quantity', "Requested quantity ($requestedQty) exceeds remaining quantity ($remainingQty) from the plan.");
+                        }
+                    } else {
+                        \Illuminate\Support\Facades\Log::warning('Plan Line Item NOT Found', ['PlanID' => $planId, 'ItemID' => $itemId]);
                     }
                 }
             }

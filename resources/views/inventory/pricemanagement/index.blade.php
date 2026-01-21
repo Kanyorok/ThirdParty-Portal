@@ -67,17 +67,14 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Currency</label>
-                    <input type="text" class="form-control" name="CurrencyCode" value="KES" required>
-                </div>
-                <div class="row">
-                    {{-- <div class="col-md-6">
-                        <label class="form-label">Effective From</label>
-                        <input type="date" class="form-control" name="EffectiveFrom" required>
-                    </div> --}}
-                    {{-- <div class="col-md-6">
-                        <label class="form-label">Effective To</label>
-                        <input type="date" class="form-control" name="EffectiveTo">
-                    </div> --}}
+                    <select class="form-select" name="CurrencyCode" required>
+                        <option selected disabled>-- Select Currency --</option>
+                        @foreach($currencies ?? [] as $currenc)
+                        <option value="{{ $currenc->Id }}">
+                            {{ $currenc->Code }} - {{ $currenc->Name }}
+                        </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="form-check mt-3">
                     <input class="form-check-input" type="checkbox" name="IsDefault" id="isDefault" value="1">
@@ -116,7 +113,7 @@
                         <td>{{ $price->item->ItemName ?? $price->item->ItemCode ?? '-' }}</td>
                         <td>{{ $price->uom->Code ?? '-' }}</td>
                         <td>{{ number_format($price->ActualPrice, 2) }}</td>
-                        <td>{{ $price->CurrencyCode }}</td>
+                        <td>{{ $price->currency->Code ?? '-' }}</td>
                         {{-- <td>{{ $price->EffectiveFrom ? \Carbon\Carbon::parse($price->EffectiveFrom)->format('Y-m-d') : '—' }}</td>
                         <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
                         <td>{!! $price->IsDefault ? '✔️' : '' !!}</td> --}}

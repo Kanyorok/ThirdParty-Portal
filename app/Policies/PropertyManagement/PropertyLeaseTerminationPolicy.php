@@ -34,4 +34,14 @@ class PropertyLeaseTerminationPolicy
     {
         return $user->can(PermissionEnum::PropertyLeaseTerminationDelete->value);
     }
+
+    public function approve(User $user): bool
+    {
+        return $user->can(PermissionEnum::PropertyLeaseTerminationApproval->value);
+    }
+
+    public function reject(User $user): bool
+    {
+        return $user->can(PermissionEnum::PropertyLeaseTerminationApproval->value);
+    }
 }

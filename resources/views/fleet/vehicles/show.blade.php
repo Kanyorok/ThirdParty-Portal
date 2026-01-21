@@ -114,7 +114,7 @@
                         <td>{{ $trip->EndLocation ?? '-' }}</td>
                         <td>
                             @if($trip->TripStartDate)
-                                {{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') }}
+                                {{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d M Y') }}
                                 @if($trip->StartTime)
                                     <br><small class="text-muted">{{ $trip->StartTime }}</small>
                                 @endif
@@ -124,7 +124,7 @@
                         </td>
                         <td>
                             @if($trip->TripEndDate)
-                                {{ \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') }}
+                                {{ \Carbon\Carbon::parse($trip->TripEndDate)->format('d M Y') }}
                                 @if($trip->EndTime)
                                     <br><small class="text-muted">{{ $trip->EndTime }}</small>
                                 @endif
@@ -215,9 +215,9 @@
                                             <td>{{ $record->insurance->ProviderName ?? '-' }}</td>
                                             <td>{{ number_format($record->PremiumAmount, 2) }}</td>
                                             <td>
-                                                {{ \Carbon\Carbon::parse($record->CoverageStartDate)->format('d/m/Y') }}
+                                                {{ \Carbon\Carbon::parse($record->CoverageStartDate)->format('d M Y') }}
                                                 &rarr;
-                                                {{ $record->CoverageEndDate ? \Carbon\Carbon::parse($record->CoverageEndDate)->format('d/m/Y') : '—' }}
+                                                {{ $record->CoverageEndDate ? \Carbon\Carbon::parse($record->CoverageEndDate)->format('d M Y') : '—' }}
                                             </td>
                                             <td>{{ $record->insuranceStatus->Description ?? '-' }}</td>
                                         </tr>
@@ -252,8 +252,8 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $inspection->InspectionNo ?? '-' }}</td>
                                             <td>{{ $inspection->InspectionType ?? '-' }}</td>
-                                            <td>{{ $inspection->InspectionDate ? \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') : '-' }}</td>
-                                            <td>{{ $inspection->DueDate ? \Carbon\Carbon::parse($inspection->DueDate)->format('d/m/Y') : '-' }}</td>
+                                            <td>{{ $inspection->InspectionDate ? \Carbon\Carbon::parse($inspection->InspectionDate)->format('d M Y') : '-' }}</td>
+                                            <td>{{ $inspection->DueDate ? \Carbon\Carbon::parse($inspection->DueDate)->format('d M Y') : '-' }}</td>
                                             <td>{{ $inspection->inspectionStatus->Description ?? '-' }}</td>
                                         </tr>
                                     @empty
@@ -287,7 +287,7 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $log->ScheduleID }}</td>
                                             <td>{{ $log->maintenanceType->Description ?? '-' }}</td>
-                                            <td>{{ $log->ScheduledDate ? \Carbon\Carbon::parse($log->ScheduledDate)->format('d/m/Y') : '-' }}</td>
+                                            <td>{{ $log->ScheduledDate ? \Carbon\Carbon::parse($log->ScheduledDate)->format('d M Y') : '-' }}</td>
                                             <td>{{ $log->ScheduledMileage ?? '-' }}</td>
                                             <td>{{ $log->maintenanceStatus->Description ?? '-' }}
 
@@ -322,7 +322,7 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $repair->repairType->Description ?? '-' }}</td>
-                                            <td>{{ $repair->RepairDate ? \Carbon\Carbon::parse($repair->RepairDate)->format('d/m/Y') : '-' }}</td>
+                                            <td>{{ $repair->RepairDate ? \Carbon\Carbon::parse($repair->RepairDate)->format('d M Y') : '-' }}</td>
                                             <td>{{ $repair->Vendor ?? '-' }}</td>
                                             <td>{{ number_format($repair->Cost, 2) }}</td>
                                         </tr>

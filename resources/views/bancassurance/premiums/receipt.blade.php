@@ -181,13 +181,13 @@
         </div>
         <div class="col-md-6">
           <div class="section-title">Transaction Info</div>
-          <p><strong>Payment Date:</strong> {{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d/m/Y') }}</p>
+          <p><strong>Payment Date:</strong> {{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d M Y') }}</p>
           <p><strong>Payment Mode:</strong> {{ $payment->paymentmodes->Description }}</p>
         </div>
       </div>
 
       <div class="amount-box">
-        <h2>{{ number_format((float)$payment->Amount, 2) }}</h2>
+        <h2>{{ $payment->currency->SymbolNative ?? 'cu' }} {{ number_format((float)$payment->Amount, 2) }}</h2>
         <p>Amount Paid</p>
       </div>
 

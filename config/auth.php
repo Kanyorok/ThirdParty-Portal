@@ -42,9 +42,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'thirdparty' => [
+        'third_party' => [
             'driver' => 'sanctum',
-            'provider' => 'thirdparties',
+            // 'provider' => 'thirdparties',
+            'provider' => 'thirdparty_users',
         ]
     ],
 
@@ -70,7 +71,7 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
-        'thirdparties' => [
+        'thirdparty_users' => [
             'driver' => 'eloquent',
             'model' => App\Models\ThirdParty\ThirdPartyUser::class,
         ],
@@ -107,6 +108,16 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+        'thirdparties' => [
+            'provider' => 'thirdparty_users',
+            'table' => 't_ThirdPartyPasswordResets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+    ],
+
+    'verification' => [
+        'expire' => 60,
     ],
 
     /*

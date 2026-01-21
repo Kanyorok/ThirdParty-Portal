@@ -7,7 +7,7 @@
             <div class="d-flex gap-2">
             {{-- Pass the model directly so route-model-binding provides the correct parameter regardless of attribute name casing --}}
             <a href="{{ route('bancassurance.medicalfunds.disbursements.create', $medical_fund) }}" class="btn btn-primary">New Disbursement</a>
-            <a href="{{ route('bancassurance.medicalfunds.edit', $medical_fund) }}" class="btn btn-outline-secondary">Back to Fund</a>
+            <a href="{{ route('bancassurance.contributors.show', $contributor) }}" class="btn btn-outline-secondary">Back to Contributor</a>
         </div>
     </div>
 
@@ -43,20 +43,23 @@
                         @foreach($disbursements as $i => $d)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ optional($d->DisbursementDate)->format('d/m/Y') }}</td>
-                                <td>{{ optional($d->beneficiary)->FullName ?? '—' }}</td>
+                                <td>{{ optional($d->DisbursementDate)->format('d M Y') }}</td>                               <td>{{ optional($d->beneficiary)->FullName ?? '—' }}</td>
                                 <td>{{ $d->Purpose ?? '—' }}</td>
                                 <td class="text-end">{{ number_format((float)$d->Amount,2) }}</td>
                                 <td>{{ $d->ApprovedBy ?? '—' }}</td>
                                 <td>{{ optional($d->ApprovedOn)->format('Y-m-d H:i') ?? '—' }}</td>
                                 <td class="text-end">
-                                    <div class="btn-group">
-                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('bancassurance.disbursements.edit', $d->Id) }}">Edit </a>
-                                        <form action="{{ route('bancassurance.disbursements.destroy', $d->Id) }}" method="POST" onsubmit="return confirm('Delete this disbursement?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
-</form>
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <a class="btn btn-sm btn-primary" href="{{ route('bancassurance.disbursements.edit', $d->Id) }}">
+                                            <i class="bi bi-pencil me-1"></i>Edit
+                                        </a>
+                                        <form action="{{ route('bancassurance.disbursements.destroy', $d->Id) }}" method="POST" onsubmit="return confirm('Delete this disbursement?');" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger" type="submit">
+                                                <i class="bi bi-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

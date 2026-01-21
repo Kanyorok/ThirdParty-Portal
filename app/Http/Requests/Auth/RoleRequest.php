@@ -8,6 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log;
 
 class RoleRequest extends FormRequest
 {
@@ -19,12 +20,12 @@ class RoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'RoleName' => [
-                               'required',
-                               'string',
-                               'max:200',
-                              ],
-               ];
+            'RoleName' => [
+                'required',
+                'string',
+                'max:200',
+            ],
+        ];
     }
 
     /**
@@ -49,21 +50,38 @@ class RoleRequest extends FormRequest
      */
     public function getPermissions(): array
     {
-        $roles = collect();
+        $allPermissions = Permission::all();
+        $selectedIds = [];
 
-        foreach (PermissionEnum::getAll() as $permission) {
-            if ($this->get($permission->value) === 'on') {
-                $roles->push($permission);
+        foreach ($allPermissions as $permission) {
+            // Normalize DB permission name and request keys to lowercase for comparison
+            $dbName = strtolower($permission->name);
+            $dbKey = str_replace([' ', '.'], '_', $dbName);
+
+            // Check if any input key matches the normalized DB key
+            $inputKeys = collect($this->all())->keys()->map(fn($k) => str_replace([' ', '.'], '_', strtolower($k)));
+            
+            // Direct check (optimization)
+            if ($this->has($permission->name) || $this->has(str_replace([' ', '.'], '_', $permission->name))) {
+                 $selectedIds[] = $permission->id;
+                 continue;
+            }
+
+            // Case-insensitive fallback
+            foreach ($this->all() as $key => $value) {
+                if ($value !== 'on') continue;
+                $normalizedKey = str_replace([' ', '.'], '_', strtolower($key));
+                if ($normalizedKey === $dbKey) {
+                    $selectedIds[] = $permission->id;
+                    break;
+                }
             }
         }
-        if ($roles->isEmpty()) {
-            throw ValidationException::withMessages(['permissions' => 'select at least one permission']);
-        }
-        $permissions = Permission::query()->whereIn('name', $roles->toArray())->select('id')->pluck('id')->toArray();
-        if (empty($permissions)) {
+
+        if (empty($selectedIds)) {
             throw ValidationException::withMessages(['permissions' => 'select at least one permission']);
         }
 
-        return $permissions;
+        return $selectedIds;
     }
 }

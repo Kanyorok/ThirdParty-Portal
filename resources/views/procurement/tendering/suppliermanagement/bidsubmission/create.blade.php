@@ -32,7 +32,7 @@
                             <select class="form-select @error('tender_ref') is-invalid @enderror" id="tenderSelect" name="tender_ref" required>
                                 <option selected disabled>-- Select Tender --</option>
                                 @foreach ($tenders as $tender)
-                                    <option value="{{ $tender->TenderNo }}">{{ $tender->TenderNo }}</option>
+                                    <option value="{{ $tender->TenderNo }}">{{ $tender->Title }}--{{ $tender->TenderNo }}</option>
                                 @endforeach
                             </select>
                             @error('tender_ref')
@@ -79,7 +79,7 @@
                         <!-- Date & Time Received -->
                         <div class="col-md-4 mb-3">
                             <label for="receivedDate" class="form-label">Date & Time Received</label>
-                            <input type="datetime-local" class="form-control @error('received_at') is-invalid @enderror" id="receivedDate" name="received_at" required>
+                            <input type="text" class="form-control flatpickr-datetime @error('received_at') is-invalid @enderror" id="receivedDate" name="received_at" required>
                             @error('received_at')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

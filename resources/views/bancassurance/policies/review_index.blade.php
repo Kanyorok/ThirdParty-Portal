@@ -42,20 +42,14 @@
                                     {{ $p->Status->label() }}
                                 </span>
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($p->IssuedDate)->format('d/m/Y') }}</td>
-                            <td class="text-center">
-                                <a href="{{ route('bancassurance.policies.review', $p->Id) }}" 
+                            <td>{{ \Carbon\Carbon::parse($p->IssuedDate)->format('d M Y') }}</td>                           <td class="text-center">
+                                <a href="{{ route('bancassurance.policies.review', $p->Id) }}"
                                    class="btn btn-sm btn-outline-info">
                                     <i class="bi bi-eye me-1"></i> Review
                                 </a>
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="8" class="text-center text-muted py-3">
-                                No proposals available for review.
-                            </td>
-                        </tr>
                     @endforelse
                 </tbody>
             </table>

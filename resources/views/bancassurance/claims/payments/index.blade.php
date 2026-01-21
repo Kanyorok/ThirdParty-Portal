@@ -72,16 +72,9 @@
                             <td>{{ $pay->claim->policy->customer->ThirdParty->ThirdPartyName ?? '-'}}</td>
                             <td>{{ $pay->claim->claimtype->Description ?? '-'}}</td>
                             <td class="text-end">{{ number_format($pay->PaymentAmount, 2) ?? '-'}}</td>
-                            <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d/m/Y') }}</td>
-                            <td>{{ $pay->PaymentReference ?? '-'}}</td>
+                            <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d M Y') }}</td>                           <td>{{ $pay->PaymentReference ?? '-'}}</td>
                         </tr>
                         @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                No payments found.
-                            </td>
-                        </tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use App\Models\Auth\User;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\ThirdParty\Supplier;
+use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -204,4 +205,59 @@ class Order extends Model
         $total = $this->orderLines()->sum('LineTotal');
         $this->update(['TotalAmount' => $total]);
     }
+
+    /**
+     * Workflow history relationship
+     */
+    public function workflowHistory()
+    {
+        // ApprovalWorkflowService uses the table name (t_Orders) as Source, not the morph alias
+        return $this->hasMany(\App\Models\Core\Approval\WorkflowHistory::class, 'SourceID', 'Id')
+            ->where('Source', $this->getTable())
+            ->whereNull('DeletedOn');
+    }
+
+     /**
+     * Check if order is approved
+     */
+    public function isApproved(): bool
+    {
+        return $this->DocStatus === 'a';
+    }
+
+    /**
+     * Check if order is pending
+     */
+    public function isPending(): bool
+    {
+        return $this->DocStatus === 'p' || $this->DocStatus === null;
+    }
+
+    /**
+     * Check if order is rejected
+     */
+    public function isRejected(): bool
+    {
+        return $this->DocStatus === 'r';
+    }
+
+    /**
+     * Scope for approved orders
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('DocStatus', 'a');
+    }
+
+    /**
+     * Scope for pending orders
+     */
+    public function scopePending($query)
+    {
+        return $query->where(function($q) {
+            $q->where('DocStatus', 'p')
+              ->orWhereNull('DocStatus');
+        });
+    }
+
 }

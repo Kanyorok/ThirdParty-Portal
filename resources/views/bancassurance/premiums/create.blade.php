@@ -2,139 +2,246 @@
 @section('title', 'Record Premium Payment')
 
 @section('content')
-<div class="container mt-4">
-    <form method="POST" action="{{ route('bancassurance.premiums.store') }}">
-        @csrf
 
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Select Policy</label>
-            <select id="request-select" name="PolicyID" class="form-select" required>
-                <option value="">-- Select Policy --</option>
-                @foreach ($policies as $policy)
-                    <option
-                        value="{{ $policy->Id }}"
-                        data-paymentfrequency="{{ $policy->paymentfrequency->Description ?? '-'}}"
-                        data-customerid="{{ $policy->customer->thirdParty->ThirdPartyName ?? '-'}}"
-                        data-balance="{{ isset($balances[$policy->Id]) ? $balances[$policy->Id] : 0 }}">
-                        {{ $policy->PolicyNumber }}
-                        (Pending: {{ isset($balances[$policy->Id]) ? number_format($balances[$policy->Id], 2) : '0.00' }}
-                        )
-                    </option>
-                @endforeach
-            </select>
+{{-- ================= STYLES ================= --}}
+<style>
+    .section-title {
+        color: #000;
+        font-weight: 600;
+        font-size: .9rem;
+        padding-bottom: .35rem;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container mt-4" style="max-width: 900px;">
+    <div class="card shadow-lg border-0 rounded-4">
+
+        {{-- Header --}}
+        <div class="card-header bg-primary border-bottom rounded-top-4">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-cash-coin me-2"></i>
+                Record Premium Payment
+            </h5>
         </div>
 
-            <div class="row g-3 mb-3">
-                <div class="col-md-3">
-                    <label class="form-label">Customer ID</label>
-                    <input type="text" id="customer-id-display" class="form-control" readonly>
-                    <input type="hidden" name="CustomerID" id="customer-id" value="{{ old('CustomerID') }}">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ route('bancassurance.premiums.store') }}">
+                @csrf
+
+                {{-- ================= POLICY ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Policy Information</h6>
+
+                    <label class="form-label small ">
+                        Select Policy <span class="text-danger">*</span>
+                    </label>
+                    <select id="request-select"
+                            name="PolicyID"
+                            class="form-select form-select-sm"
+                            required>
+                        <option value="">-- Select Policy --</option>
+                        @foreach ($policies as $policy)
+                            <option
+                                value="{{ $policy->Id }}"
+                                data-paymentfrequency="{{ $policy->paymentfrequency->Description ?? '-' }}"
+                                data-customerid="{{ $policy->customer->thirdParty->ThirdPartyName ?? '-' }}"
+                                data-balance="{{ $balances[$policy->Id] ?? 0 }}">
+                                {{ $policy->PolicyNumber }}
+                                (Pending: {{ number_format($balances[$policy->Id] ?? 0, 2) }})
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Payment Frequency</label>
-                    <input type="text" id="payment-frequency-display" class="form-control" readonly>
-                    <input type="hidden" name="PaymentFrequency" id="payment-frequency-id"
-                           value="{{ old('PaymentFrequency') }}">
+
+                {{-- ================= AUTO DETAILS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Auto-filled Details</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">Customer</label>
+                            <input type="text"
+                                   id="customer-id-display"
+                                   class="form-control form-control-sm bg-light"
+                                   readonly>
+                            <input type="hidden" name="CustomerID" id="customer-id">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small ">Payment Frequency</label>
+                            <input type="text"
+                                   id="payment-frequency-display"
+                                   class="form-control form-control-sm bg-light"
+                                   readonly>
+                            <input type="hidden" name="PaymentFrequency" id="payment-frequency-id">
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="mb-3">
-                <label class="form-label">Payment Date</label>
-                <input type="date" name="PaymentDate" id="payment-date" class="form-control" required>
-            </div>
+                {{-- ================= DATES ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Payment Dates</h6>
 
-            <div class="mb-3">
-                <label class="form-label">Next Payment Date</label>
-                <input type="date" name="NextPaymentDate" id="next-payment-date" class="form-control" required>
-            </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Payment Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date"
+                                   name="PaymentDate"
+                                   id="payment-date"
+                                   class="form-control form-control-sm"
+                                   required>
+                        </div>
 
-            <div class="mb-3">
-                <label class="form-label">Amount Paid</label> <small id="pending-balance-label"></small>
-                <input type="number" name="Amount" step="0.01" class="form-control" required>
-            </div>
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Next Payment Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date"
+                                   name="NextPaymentDate"
+                                   id="next-payment-date"
+                                   class="form-control form-control-sm"
+                                   required>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Payment Mode</label>
-                <select name="PaymentMode" class="form-select">
-                    <option value="">--Select PaymentMode--</option>
-                    @foreach ($paymentModes as $paymentMode)
-                        <option value="{{ $paymentMode->ID }}">
-                            {{ $paymentMode->Description }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+                {{-- ================= PAYMENT ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Payment Details</h6>
 
-            <div class="mb-3">
-                <label class="form-label">Reference Number</label>
-                <input type="text" name="ReferenceNumber" class="form-control">
-            </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">Currency</label>
+                            <select name="CurrencyId" class="form-select form-select-sm">
+                                <option value="">-- Select Currency --</option>
+                                @foreach ($currencies as $currency)
+                                    <option value="{{ $currency->Id }}">
+                                        {{ $currency->Description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-            <div class="mb-3">
-                <label class="form-label">Notes (optional)</label>
-                <textarea name="Notes" class="form-control" rows="2"></textarea>
-            </div>
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Amount Paid <span class="text-danger">*</span>
+                                <small class="text-muted ms-2" id="pending-balance-label"></small>
+                            </label>
+                            <input type="number"
+                                   step="0.01"
+                                   name="Amount"
+                                   class="form-control form-control-sm text-end"
+                                   placeholder="0.00"
+                                   required>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="text-end">
-            <button type="submit" class="btn btn-success">Record Payment</button>
+                {{-- ================= MODE & REFERENCE ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Mode & Reference</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">Payment Mode</label>
+                            <select name="PaymentMode" class="form-select form-select-sm">
+                                <option value="">-- Select Payment Mode --</option>
+                                @foreach ($paymentModes as $paymentMode)
+                                    <option value="{{ $paymentMode->ID }}">
+                                        {{ $paymentMode->Description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small ">Reference Number</label>
+                            <input type="text"
+                                   name="ReferenceNumber"
+                                   class="form-control form-control-sm"
+                                   placeholder="Transaction / Receipt number">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ================= NOTES ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Notes</h6>
+
+                    <textarea name="Notes"
+                              class="form-control form-control-sm"
+                              rows="3"
+                              placeholder="Additional remarks..."></textarea>
+                </div>
+
+                {{-- ================= ACTIONS ================= --}}
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <a href="{{ url()->previous() }}"
+                       class="btn btn-sm btn-outline-secondary px-4">
+                        Back
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-sm btn-success px-4">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Record Payment
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 
-    {{-- JavaScript --}}
-    <script>
-        const frequencyMap = {
-            'Monthly': 1,
-            'Quarterly': 3,
-            'Semi-Annually': 6,
-            'Annually': 12
-        };
+{{-- ================= JS (unchanged) ================= --}}
+<script>
+    const frequencyMap = {
+        'Monthly': 1,
+        'Quarterly': 3,
+        'Semi-Annually': 6,
+        'Annually': 12
+    };
 
-        document.getElementById('request-select').addEventListener('change', function () {
-            const selected = this.options[this.selectedIndex];
-            const frequency = selected.getAttribute('data-paymentfrequency');
-            const customerId = selected.getAttribute('data-customerid');
-            const balance = selected.getAttribute('data-balance');
+    document.getElementById('request-select').addEventListener('change', function () {
+        const selected  = this.options[this.selectedIndex];
+        const frequency = selected.dataset.paymentfrequency;
+        const customer  = selected.dataset.customerid;
+        const balance   = selected.dataset.balance;
 
-            // Fill customer
-            document.getElementById('customer-id-display').value = customerId || '';
-            document.getElementById('customer-id').value = customerId || '';
+        document.getElementById('customer-id-display').value = customer || '';
+        document.getElementById('customer-id').value = customer || '';
 
-            // Fill frequency
-            document.getElementById('payment-frequency-display').value = frequency || '';
-            document.getElementById('payment-frequency-id').value = frequency || '';
+        document.getElementById('payment-frequency-display').value = frequency || '';
+        document.getElementById('payment-frequency-id').value = frequency || '';
 
-            // Show pending balance
-            document.getElementById('pending-balance-label').innerText = balance !== null ? `Pending: ${parseFloat(balance).toFixed(2)}` : '';
+        document.getElementById('pending-balance-label').innerText =
+            balance ? `Pending: ${parseFloat(balance).toFixed(2)}` : '';
 
-            // Reset next payment date if payment date is already filled
-            autoCalculateNextPaymentDate();
-        });
+        autoCalculateNextPaymentDate();
+    });
 
-        document.getElementById('payment-date').addEventListener('change', autoCalculateNextPaymentDate);
+    document.getElementById('payment-date').addEventListener('change', autoCalculateNextPaymentDate);
 
-        // Trigger change event on page load to show balance if a policy is preselected
-        document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('request-select').dispatchEvent(new Event('change'));
-        });
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('request-select').dispatchEvent(new Event('change'));
+    });
 
-        function autoCalculateNextPaymentDate() {
-            const paymentDateInput = document.getElementById('payment-date');
-            const frequency = document.getElementById('payment-frequency-display').value;
-            const nextDateInput = document.getElementById('next-payment-date');
+    function autoCalculateNextPaymentDate() {
+        const paymentDate = document.getElementById('payment-date').value;
+        const frequency   = document.getElementById('payment-frequency-display').value;
+        const nextDate    = document.getElementById('next-payment-date');
 
-            if (!paymentDateInput.value || !frequencyMap[frequency]) {
-                nextDateInput.value = '';
-                return;
-            }
-
-            const monthsToAdd = frequencyMap[frequency];
-            const date = new Date(paymentDateInput.value);
-            date.setMonth(date.getMonth() + monthsToAdd);
-
-            // Format to yyyy-mm-dd
-            const nextDateStr = date.toISOString().split('T')[0];
-            nextDateInput.value = nextDateStr;
+        if (!paymentDate || !frequencyMap[frequency]) {
+            nextDate.value = '';
+            return;
         }
-    </script>
+
+        const date = new Date(paymentDate);
+        date.setMonth(date.getMonth() + frequencyMap[frequency]);
+        nextDate.value = date.toISOString().split('T')[0];
+    }
+</script>
 @endsection

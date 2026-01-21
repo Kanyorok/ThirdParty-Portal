@@ -141,7 +141,7 @@
                         @forelse($logs as $log)
                         <tr>
                             <td>{{ $log->customers->thirdParty->ThirdPartyName ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($log->ContactDate)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($log->ContactDate)->format('d M Y') }}</td>
                             <td>{{ $log->contacttypes->Description ?? '-' }}</td>
                             <td>{{ $log->Summary ?? '-' }}</td>
                             <td>{{ $log->employees->FirstName ?? '-' }}</td>
@@ -169,12 +169,6 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                No communication logs found.
-                            </td>
-                        </tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -13,7 +13,7 @@ class FleetRoutePlan extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'TripName',
+        'TripNo',
         'VehicleID',
         'Waypoints',
         'CreatedBy',

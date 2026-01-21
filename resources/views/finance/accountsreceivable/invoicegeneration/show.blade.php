@@ -1,8 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Invoice • '.$invoice->InvoiceNumber)
 
-@section('content')
-
+@section('page-alerts')
     {{-- Success/Error Messages --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3 mb-3" role="alert">
@@ -29,6 +28,9 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+@endsection
+
+@section('content')
 
     <div class="card shadow rounded-4 border-0 invoice-page" id="invoice-print-section">
         <!-- Header -->
@@ -110,21 +112,40 @@
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">Summary</h6>
+                            @php
+                                $subtotal =(float) ($invoice->InvoiceAmount ?? ($subtotal + $taxAmount));
+                                $taxAmount = (float) ($invoice->TaxAmount ?? 0);
+                                $taxRate = $invoice->TaxPercentage;
+                                $grandTotal = (float) ($invoice->TotalAmount ?? 0);
+                            @endphp
                             <table class="table align-middle mb-0 mt-2 summary-table">
                                 <tbody>
                                 <tr>
                                     <td class="text-muted">Subtotal</td>
-                                    <td class="text-end"><strong>{{ $invoice->currency->Symbol }} {{ number_format($invoice->TotalAmount, 2) }}</strong></td>
+                                    <td class="text-end"><strong>{{ $invoice->currency->Symbol }} {{ number_format($subtotal, 2) }}</strong></td>
                                 </tr>
+                                @if($taxAmount !== 0)
+                                    <tr>
+                                        <td class="text-muted">
+                                            Tax
+                                            @if(!is_null($taxRate))
+                                                <span class="small text-uppercase">({{ rtrim(rtrim(number_format($taxRate, 4), '0'), '.') }}%)</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end">
+                                            {{ $invoice->currency->Symbol }} {{ number_format($taxAmount, 2) }}
+                                        </td>
+                                    </tr>
+                                @endif
                                 <tr class="table-light">
-                                    <td class="fw-semibold">Total</td>
-                                    <td class="text-end fw-semibold">{{ $invoice->currency->Symbol }} {{ number_format($invoice->TotalAmount, 2) }}</td>
+                                    <td class="fw-semibold">Grand Total</td>
+                                    <td class="text-end fw-semibold">{{ $invoice->currency->Symbol }} {{ number_format($grandTotal, 2) }}</td>
                                 </tr>
                                 @if($invoice->UseCredit ?? false)
                                     <tr class="table-success">
                                         <td><i class="fas fa-credit-card me-1"></i> Credit Applied</td>
                                         <td class="text-end text-success">
-                                            <strong>{{ $invoice->currency->Symbol }} {{ number_format($invoice->TotalAmount, 2) }}</strong>
+                                            <strong>{{ $invoice->currency->Symbol }} {{ number_format($subtotal, 2) }}</strong>
                                         </td>
                                     </tr>
                                 @endif
@@ -208,11 +229,11 @@
             <!-- Items -->
             <div class="card mt-3 border-0 shadow-sm rounded-4 avoid-break">
                 <div class="card-body py-3">
-                    <h6 class="mb-0">Items</h6>
+                            <h6 class="mb-0">Items</h6>
                     <table class="table table-hover align-middle mt-2 invoice-items-table">
                         <thead class="table-light">
                         <tr>
-                            <th>#</th>
+                            <th></th>
                             <th>Item</th>
                             <th>Description</th>
                             <th class="text-end">Qty</th>
@@ -227,7 +248,7 @@
                         @forelse($invoice->lines as $line)
                             @php $totalTax += $line->TaxAmount; @endphp
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td></td>
                                 <td class="fw-semibold">{{ $line->InvoiceLineName }}</td>
                                 <td class="small text-muted">{{ $line->Description }}</td>
                                 <td class="text-end">{{ number_format($line->Quantity, 2) }}</td>
@@ -245,9 +266,19 @@
                         @endforelse
                         </tbody>
                         <tfoot class="table-light">
+                        @php
+                            $taxName = optional($invoice->taxRule?->taxType)->TaxTypeName;
+                            $displayTax = !is_null($invoice->TaxAmount) ? (float) $invoice->TaxAmount : $totalTax;
+                        @endphp
                         <tr>
-                            <th colspan="7" class="text-end">Total Tax</th>
-                            <th class="text-end">{{ $invoice->currency->Symbol }} {{ number_format($totalTax, 2) }}</th>
+                            <th colspan="6"></th>
+                            <th class="text-end">
+                                <div>Tax</div>
+                                @if($taxName)
+                                    <div class="small text-muted">{{ $taxName }}</div>
+                                @endif
+                            </th>
+                            <th class="text-end">{{ $invoice->currency->Symbol }} {{ number_format($displayTax, 2) }}</th>
                         </tr>
                         <tr>
                             <th colspan="7" class="text-end">Grand Total</th>

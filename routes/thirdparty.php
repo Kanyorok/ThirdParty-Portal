@@ -1,20 +1,16 @@
 <?php
 
-use App\Http\Controllers\Web\ThirdParty\ThirdPartyWebController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('thirdparty')->name('thirdparty.')->group(function () {
-    Route::resource('parties', ThirdPartyWebController::class)
-        ->only([
-            'index',
-            'show',
-            'edit',
-            'store',
-            'create',
-            'update',
-            'destroy'
-        ]);
+Route::namespace('ThirdParty')->prefix('thirdparty')->name('thirdparty.')->group(function () {
+    Route::post('parties/bulk-action', 'ThirdPartyWebController@bulkAction')->name('parties.bulk-action');
+    Route::get('parties/search-existing', 'ThirdPartyController@searchExisting')->name('parties.search-existing');
+    Route::post('parties/add-role', 'ThirdPartyController@addRole')->name('parties.add-role');
+    Route::post('parties/{id}/deactivate', 'ThirdPartyController@deactivate')->name('parties.deactivate');
 
-    // Bulk actions route
-    Route::post('parties/bulk-action', [ThirdPartyWebController::class, 'bulkAction'])->name('parties.bulk-action');
+
+    Route::prefix('parties/{parties}')->name('parties.')->group(function () {
+        Route::resource('banks', 'ThirdPartiesBankController');
+    });
+    Route::resource('parties', 'ThirdPartyController');
 });

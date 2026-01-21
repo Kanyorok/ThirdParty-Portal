@@ -24,6 +24,7 @@ class InsurancePricingRule extends Model
         'CoverageAmountMax',
         'CoverageAmountMin',
         'PremiumRate',
+        'CurrencyId',
         'AgeMin',
         'AgeMax',
         'TenureMin',

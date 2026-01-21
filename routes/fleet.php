@@ -34,7 +34,7 @@ use App\Http\Controllers\FleetManagement\InventoryOfSparePartsController;
 use App\Http\Controllers\FleetManagement\LicensingController;
 use App\Http\Controllers\FleetManagement\ReportsController;
 use App\Http\Controllers\FleetManagement\ServiceTrackingController;
-use App\Http\Controllers\FleetManagement\TripManagementController;
+// use App\Http\Controllers\FleetManagement\TripManagementController;
 use App\Http\Controllers\FleetManagement\UtilizationController;
 use App\Http\Controllers\FleetManagement\VehicleManagementController;
 use Illuminate\Support\Facades\Route;
@@ -51,7 +51,7 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::post('/route-planner', [FleetRoutePlannerController::class, 'store'])->name('fleet.route_planner.store');*/
 
 
-    Route::resource('tripmanagement', TripManagementController::class);
+    // Route::resource('tripmanagement', TripManagementController::class);
     Route::resource('fuelmanagement', FuelManagementController::class);
 
     // Route::resource('drivermanagement', DriverManagementController::class);
@@ -219,6 +219,7 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::get('fleet/contracted_drivers/available', [FleetTripLogController::class, 'getAvailableContractedDrivers'])->name('fleet.contracted_drivers.available');
     Route::patch('fleet/trip-logs/{Id}/approve', [FleetTripLogController::class, 'approve'])->name('fleet.trip_logs.approve');
     Route::patch('fleet/trip-logs/{Id}/reject', [FleetTripLogController::class, 'reject'])->name('fleet.trip_logs.reject');
+    
 
 
 

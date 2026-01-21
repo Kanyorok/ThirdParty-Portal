@@ -7,10 +7,12 @@ use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\RFQEvaluation;
+use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\TenderSupplier;
 use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\BidResponsiveness;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,19 +21,26 @@ use App\Services\Procurement\TenderScoringService;
 
 class AwardsController extends Controller
 {
+
+    protected ApprovalWorkflow $workflow;
+
+    public function __construct()
+    {
+        // Initialize workflow with tender_award CodeID and AwardStatus column
+        $this->workflow = new ApprovalWorkflow('TenderAwardStatus', 'AwardStatus');
+    }
     /**
      * Display a listing of awards
      */
-    public function index(Request $request)
+  public function index(Request $request)
     {
-        $statusFilter = $request->get('status_filter'); // Expected: 'Pending' | 'Awarded' | null
+        $statusFilter = $request->get('status_filter');
         $search = $request->get('search');
 
-        // Build Tender entries
-        $tenderAwards = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
+        // Build Tender entries with workflow status
+        $tenderAwards = TenderAward::with(['tender', 'winningSupplier.supplierMaster.party'])
             ->get()
             ->map(function ($award) {
-                // Use actual AwardStatus from database
                 $status = $award->AwardStatus;
                 $statusClass = match($status) {
                     'Pending' => 'bg-warning text-dark',
@@ -43,15 +52,12 @@ class AwardsController extends Controller
 
                 return [
                     'type' => 'tender',
-                    // show TenderNo and Title together in the Ref column
                     'ref_no' => trim((($award->tender->TenderNo ?? '') . ' - ' . ($award->tender->Title ?? ''))) ?: 'N/A',
                     'title' => $award->tender->Title ?? 'N/A',
                     'status' => $status,
                     'status_class' => $statusClass,
-                    'winning_bidder' => $award->winningSupplier->thirdParty->TradingName
-                        ?? '--',
+                    'winning_bidder' => $award->winningSupplier->supplierMaster->party->TradingName ?? '--',
                     'award_date' => optional($award->AwardDate)->format('Y-m-d') ?? ($award->CreatedOn?->format('Y-m-d') ?? '--'),
-                    // IDs
                     'tender_id' => $award->tender->Id ?? $award->TenderID,
                     'award_id' => $award->Id,
                 ];
@@ -59,7 +65,7 @@ class AwardsController extends Controller
             ->values()
             ->toBase();
 
-        // Tenders with consolidated evaluations but no award yet => Pending
+        // Tenders with evaluations but no award yet => Pending
         $tendersWithEval = Tender::whereHas('submissions', function ($q) {
                 $q->where('IsResponsive', true)->whereIn('BidStatus', ['responsive', 'evaluated']);
             })
@@ -87,24 +93,21 @@ class AwardsController extends Controller
             ->toBase();
 
         // RFQ awarded entries
-        $rfqAwards = RFQAward::with(['rfq', 'supplier.thirdParty'])
+        $rfqAwards = RFQAward::with(['rfq', 'supplier.supplierMaster.party'])
             ->get()
             ->map(function ($award) {
                 return [
                     'type' => 'rfq',
-                    // keep top-level ref_no/title for backward compatibility
                     'ref_no' => $award->rfq->RFQNumber ?? 'N/A',
                     'title' => $award->rfq->Subject ?? ($award->rfq->Comments ?? 'N/A'),
-                    // provide the raw t_RFQ shape expected by the blade
                     't_RFQ' => [
                         'RefNo' => $award->rfq->RFQNumber ?? '',
                         'Comments' => $award->rfq->Comments ?? ($award->rfq->Subject ?? ''),
                     ],
                     'status' => 'Awarded',
                     'status_class' => 'bg-success',
-                    'winning_bidder' => $award->supplier->thirdParty->TradingName ?? '--',
+                    'winning_bidder' => $award->supplier->supplierMaster->party->TradingName ?? '--',
                     'award_date' => ($award->CreatedOn?->format('Y-m-d')) ?? '--',
-                    // IDs
                     'rfq_id' => $award->RFQId ?? ($award->rfq->Id ?? null),
                     'award_id' => $award->Id,
                 ];
@@ -112,7 +115,7 @@ class AwardsController extends Controller
             ->values()
             ->toBase();
 
-        // RFQs with consolidated evaluations but no award => Pending
+        // RFQs with evaluations but no award => Pending
         $rfqsWithEval = RFQEvaluation::select('RFQId')
             ->distinct()
             ->get()
@@ -162,18 +165,40 @@ class AwardsController extends Controller
             })->values();
         }
 
-        // Apply simplified status filter
+        // Apply status filter
         if ($statusFilter === 'Pending') {
             $items = $items->where('status', 'Pending')->values();
         } elseif ($statusFilter === 'Awarded') {
-            // Map "Awarded" filter to "Approved" status for compatibility
             $items = $items->where('status', 'Approved')->values();
         }
 
-        // Sort by award_date desc, then ref_no
+        // Sort by award_date desc
         $items = $items->sortByDesc(function($row){
             return $row['award_date'] === '--' ? '' : $row['award_date'];
         })->values();
+
+        // Add permission checks for tender awards
+        $user = Auth::user();
+        
+        // If user is not authenticated, redirect to login
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please log in to access this page.');
+        }
+        
+        $items = $items->map(function ($row) use ($user) {
+            if ($row['type'] === 'tender' && isset($row['award_id'])) {
+                $award = TenderAward::find($row['award_id']);
+                if ($award) {
+                    // Check if user can approve this award at current workflow level
+                    $row['can_approve'] = $this->workflow->canApproveModel($award, $user);
+                } else {
+                    $row['can_approve'] = false;
+                }
+            } else {
+                $row['can_approve'] = false;
+            }
+            return $row;
+        });
 
         return view('procurement.awards.index', [
             'items' => $items,
@@ -184,7 +209,7 @@ class AwardsController extends Controller
     /**
      * Show unified awards page for both Tenders and RFQs
      */
-    public function view_tender($id)
+     public function view_tender($id)
     {
         return $this->showUnifiedAward($id, 'tender');
     }
@@ -192,7 +217,7 @@ class AwardsController extends Controller
     /**
      * Show RFQ award page (redirects to unified interface)
      */
-    public function view_rfq($id)
+     public function view_rfq($id)
     {
         return $this->showUnifiedAward($id, 'rfq');
     }
@@ -202,26 +227,83 @@ class AwardsController extends Controller
      */
     public function showUnifiedAward($id, $type = null)
     {
-        $tender = Tender::findOrFail($id);
-        // Prefer the most recent award record for display (latest by Id)
-        $existingAward = TenderAward::where('TenderID', $id)
-            ->orderByDesc('Id')
-            ->first();
+        $tender = null;
+        $existingAward = null;
 
-        // Determine the type if not specified
-        if (!$type) {
+        if ($type === 'rfq') {
+            $rfq = RFQ::findOrFail($id);
+            // Map RFQ to Tender-like structure for the view
+            $rfq->TenderNo = $rfq->RFQNumber;
+            $rfq->Title = $rfq->Subject ?? ($rfq->Comments ?? 'RFQ Award');
+            $tender = $rfq;
+
+            $existingAward = RFQAward::where('RFQId', $id)
+                ->with(['supplier.supplierMaster.party'])
+                ->orderByDesc('Id')
+                ->first();
+        } else {
+            $tender = Tender::findOrFail($id);
+            
+            // Get most recent award
+            $existingAward = TenderAward::where('TenderID', $id)
+                ->with(['winningSupplier.supplierMaster.party'])
+                ->orderByDesc('Id')
+                ->first();
+        }
+
+        // Check if user can approve
+        $canApprove = false;
+        $isSubmitter = false;
+        $showApprovalButtons = false;
+
+        if ($existingAward) {
+            $isSubmitter = $existingAward->CreatedBy == Auth::id();
+            
+            // Only check approval permissions if award is pending
+            // Note: RFQAward doesn't have AwardStatus column by default in some versions, 
+            // but if it does or if we treat existence as awarded, we need to be careful.
+            // Assuming standard workflow for TenderAward. For RFQAward, it's usually created as approved/final in this system.
+            
+            $status = $existingAward->AwardStatus ?? 'Approved'; // Default to Approved for RFQ if column missing
+
+            if ($status === 'Pending') {
+                $currentUser = Auth::user();
+                if ($currentUser) {
+                    $canApprove = $this->workflow->canApproveModel($existingAward, $currentUser);
+                    
+                    // User who submitted cannot approve their own award
+                    if ($isSubmitter) {
+                        $canApprove = false;
+                    }
+                }
+                
+                $showApprovalButtons = $canApprove && !$isSubmitter;
+            }
+        }
+
+        // Determine type if not specified (fallback for Tenders)
+        if (!$type && $tender instanceof Tender) {
             $type = $this->determineTenderType($tender);
         }
 
-        // Get appropriate data based on type
+        // Get evaluation data
         $evaluationData = [];
         if ($type === 'rfq') {
-            $evaluationData = $this->getResponsiveSuppliers($id);
+            $evaluationData = $this->getResponsiveRFQSuppliers($id);
         } else {
             $evaluationData = $this->getConsolidatedScores($id);
         }
 
-        // Get list of similar tenders/RFQs for type switching
+        // Get workflow history if award exists
+        $workflowHistory = [];
+        if ($existingAward) {
+            try {
+                $workflowHistory = $this->workflow->historyForModel($existingAward);
+            } catch (\Exception $e) {
+                Log::warning("Failed to load workflow history: " . $e->getMessage());
+            }
+        }
+
         $availableItems = $this->getAvailableItemsForAward();
 
         return view('procurement.awards.unified_award', compact(
@@ -229,7 +311,11 @@ class AwardsController extends Controller
             'existingAward',
             'evaluationData',
             'type',
-            'availableItems'
+            'availableItems',
+            'canApprove',
+            'showApprovalButtons',
+            'isSubmitter',
+            'workflowHistory'
         ));
     }
 
@@ -307,14 +393,16 @@ class AwardsController extends Controller
         DB::beginTransaction();
 
         try {
-            // Check if an active award exists (Pending/Approved)
+            // Check if active award exists
             $hasActiveAward = TenderAward::where('TenderID', $request->tender_id)
-                ->whereIn('AwardStatus', [TenderAward::STATUS_PENDING, TenderAward::STATUS_APPROVED])
+                ->whereIn('AwardStatus', ['Pending', 'Approved'])
                 ->exists();
+                
             if ($hasActiveAward) {
                 return redirect()->back()->with('error', 'An active award already exists for this tender.');
             }
 
+            // Create award in Pending status
             $award = TenderAward::create([
                 'TenderID' => $request->tender_id,
                 'WinningSupplierID' => $request->winning_supplier_id,
@@ -327,7 +415,7 @@ class AwardsController extends Controller
                 'FinancialScore' => $request->financial_score,
                 'TotalScore' => $request->total_score,
                 'NotifyUnsuccessfulBidders' => $request->boolean('notify_unsuccessful', true),
-                'AwardStatus' => TenderAward::STATUS_PENDING,
+                'AwardStatus' => 'Pending', // Start as pending (Draft not allowed by CHECK constraint)
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
             ]);
@@ -341,32 +429,158 @@ class AwardsController extends Controller
 
             DB::commit();
 
-            return redirect()->route('procawards.index')
-                ->with('success', 'Tender award created successfully and is pending approval.');
+            return redirect()->route('awards.tender', $request->tender_id)
+                ->with('success', 'Tender award created successfully. Please review and submit for approval.');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Award creation error: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Failed to create award: ' . $e->getMessage())
                 ->withInput();
         }
     }
 
+     public function submitForApproval($id)
+    {
+        try {
+            DB::beginTransaction();
+            
+            $award = TenderAward::findOrFail($id);
+            $user = Auth::user();
+
+            // Validation: Must be in Draft or Pending status
+            if (!in_array($award->AwardStatus, [TenderAward::STATUS_DRAFT, TenderAward::STATUS_PENDING])) {
+                return redirect()->back()->with('error', 'Only draft or pending awards can be submitted for approval.');
+            }
+
+            // Submit to workflow
+            $submitted = $this->workflow->submit(
+                $award, 
+                $user, 
+                \App\Enums\TenderAwardStatusEnum::SUBMITTED,  // Use enum instead of string
+                'Award submitted for approval'
+            );
+
+            if (!$submitted) {
+                throw new \Exception('Failed to submit award to workflow');
+            }
+
+            // Manually update award status (workflow service doesn't auto-update the model)
+            $award->update([
+                'AwardStatus' => TenderAward::STATUS_SUBMITTED,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
+            ]);
+
+            DB::commit();
+
+            activity()
+                ->performedOn($award)
+                ->causedBy($user)
+                ->withProperties(['action' => 'submit_for_approval'])
+                ->log('Submitted award for approval: Award ID ' . $award->Id);
+
+            return redirect()->route('procawards.index')
+                ->with('success', 'Award submitted for approval successfully.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Award Submit Error: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return redirect()->back()->with('error', 'Failed to submit award: ' . $e->getMessage());
+        }
+    }
+
+
     /**
      * Approve award
      */
-    public function approve(Request $request, TenderAward $award)
+public function approve(Request $request)
     {
         $request->validate([
-            'approval_remarks' => 'nullable|string|max:500',
+            'award_id' => 'required|exists:t_TenderAwards,Id',
+            'remarks' => 'required|string|max:1000',
         ]);
 
-        $award->approve(Auth::user(), $request->approval_remarks);
+        try {
+            DB::beginTransaction();
 
-        // TODO: Send notifications to suppliers
+            $award = TenderAward::findOrFail($request->award_id);
+            $user = Auth::user();
 
-        return redirect()->route('procawards.index')
-            ->with('success', 'Award approved successfully.');
+            Log::info("Starting award approval", [
+                'award_id' => $award->Id,
+                'user_id' => $user->Id,
+                'current_status' => $award->AwardStatus,
+            ]);
+
+            // Check if user can approve
+            if (!$this->workflow->canApproveModel($award, $user)) {
+                Log::warning("User not authorized to approve award", [
+                    'award_id' => $award->Id,
+                    'user_id' => $user->Id,
+                ]);
+                return redirect()->back()->with('error', 'You are not authorized to approve this award at this stage.');
+            }
+
+            // Validate award is in submitted/under review status
+            if (!in_array($award->AwardStatus, [TenderAward::STATUS_SUBMITTED, TenderAward::STATUS_UNDER_REVIEW])) {
+                return redirect()->back()->with('error', 'Only submitted awards can be approved.');
+            }
+
+            // Use workflow to approve
+            $approved = $this->workflow->approve(
+                $award,
+                $user,
+                \App\Enums\TenderAwardStatusEnum::APPROVED,
+                $request->remarks,
+                'AwardStatus' // Specify the status column
+            );
+
+            if (!$approved) {
+                throw new \Exception('Workflow approval failed');
+            }
+
+            Log::info("Workflow approval successful", [
+                'award_id' => $award->Id,
+            ]);
+
+            // Update award status
+            $award->refresh();
+            $award->update([
+                'AwardStatus' => 'Approved',
+                'ApprovedBy' => $user->Id,
+                'ApprovedOn' => now(),
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
+            ]);
+
+            // Send notifications to unsuccessful bidders if requested
+            if ($award->NotifyUnsuccessfulBidders) {
+                $this->notifyUnsuccessfulBidders($award);
+            }
+
+            activity()
+                ->performedOn($award)
+                ->causedBy($user)
+                ->withProperties([
+                    'action' => 'approve',
+                    'approval_remarks' => $request->remarks,
+                ])
+                ->log('Award approved: Award ID ' . $award->Id);
+
+            DB::commit();
+
+            return redirect()->route('procawards.index')
+                ->with('success', 'Award approved successfully.');
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error("--- APPROVE AWARD ERROR --- " . $th->getMessage());
+            Log::error($th->getTraceAsString());
+            return redirect()->back()->with('error', 'Failed to approve award: ' . $th->getMessage());
+        }
     }
 
     /**
@@ -460,36 +674,138 @@ class AwardsController extends Controller
     /**
      * Reject award
      */
-    public function reject(Request $request, TenderAward $award)
+    public function reject(Request $request)
     {
         $request->validate([
-            'rejection_reason' => 'required|string|max:500',
+            'award_id' => 'required|exists:t_TenderAward,Id',
+            'reason' => 'required|string|max:1000',
         ]);
 
-        $award->reject(Auth::user(), $request->rejection_reason);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('procawards.index')
-            ->with('success', 'Award rejected successfully.');
+            $award = TenderAward::findOrFail($request->award_id);
+            $user = Auth::user();
+
+            Log::info("Starting award rejection", [
+                'award_id' => $award->Id,
+                'user_id' => $user->Id,
+            ]);
+
+            // Check if user can approve (same permission for reject)
+            if (!$this->workflow->canApproveModel($award, $user)) {
+                return redirect()->back()->with('error', 'You are not authorized to reject this award.');
+            }
+
+            // Validate award is in submitted/under review status
+            if (!in_array($award->AwardStatus, [TenderAward::STATUS_SUBMITTED, TenderAward::STATUS_UNDER_REVIEW])) {
+                return redirect()->back()->with('error', 'Only submitted awards can be rejected.');
+            }
+
+            // Use workflow to reject
+            $rejected = $this->workflow->reject(
+                $award,
+                $user,
+                \App\Enums\TenderAwardStatusEnum::REJECTED,
+                $request->reason,
+                'AwardStatus'
+            );
+
+            if (!$rejected) {
+                throw new \Exception('Workflow rejection failed');
+            }
+
+            // Update award status
+            $award->refresh();
+            $award->update([
+                'AwardStatus' => 'Rejected',
+                'RejectionReason' => $request->reason,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
+            ]);
+
+            activity()
+                ->performedOn($award)
+                ->causedBy($user)
+                ->withProperties([
+                    'action' => 'reject',
+                    'rejection_reason' => $request->reason,
+                ])
+                ->log('Award rejected: Award ID ' . $award->Id);
+
+            DB::commit();
+
+            return redirect()->route('procawards.index')
+                ->with('success', 'Award rejected successfully.');
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error("--- REJECT AWARD ERROR --- " . $th->getMessage());
+            return redirect()->back()->with('error', 'Failed to reject award: ' . $th->getMessage());
+        }
     }
+
 
     /**
      * Cancel a pending award (re-open tender for re-award)
      */
-    public function cancel(Request $request, TenderAward $award)
+   public function workflowHistory($id)
+    {
+        $award = TenderAward::findOrFail($id);
+        
+        try {
+            $history = $this->workflow->historyForModel($award);
+            
+            return view('procurement.awards.workflow-history', compact(
+                'award',
+                'history'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch workflow history: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to load workflow history.');
+        }
+    }
+
+    public function cancel(Request $request, $id)
     {
         $request->validate([
             'cancel_reason' => 'required|string|max:500',
         ]);
 
-        // Only allow cancel for non-approved awards
-        if ($award->AwardStatus === TenderAward::STATUS_APPROVED) {
-            return back()->with('error', 'Approved awards cannot be cancelled.');
+        try {
+            DB::beginTransaction();
+
+            $award = TenderAward::findOrFail($id);
+
+            // Only allow cancel for non-approved awards
+            if ($award->AwardStatus === 'Approved') {
+                return back()->with('error', 'Approved awards cannot be cancelled.');
+            }
+
+            $award->update([
+                'AwardStatus' => 'Cancelled',
+                'RejectionReason' => $request->cancel_reason,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            activity()
+                ->performedOn($award)
+                ->causedBy(Auth::user())
+                ->withProperties(['cancel_reason' => $request->cancel_reason])
+                ->log('Award cancelled: Award ID ' . $award->Id);
+
+            DB::commit();
+
+            return back()->with('success', 'Award cancelled successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Award cancel error: ' . $e->getMessage());
+            return back()->with('error', 'Failed to cancel award: ' . $e->getMessage());
         }
-
-        $award->cancel(Auth::user(), $request->cancel_reason);
-
-        return back()->with('success', 'Award cancelled. You can proceed to create a new award.');
     }
+
 
     /**
      * Get consolidated scores for tender award (using same logic as BidScoreConsolidationController)
@@ -757,6 +1073,27 @@ class AwardsController extends Controller
     }
 
     /**
+     * Get responsive suppliers for RFQ
+     */
+    protected function getResponsiveRFQSuppliers($rfqId)
+    {
+        return RFQResponse::where('RFQId', $rfqId)
+            ->get()
+            ->map(function ($response) {
+                return [
+                    'id' => $response->SupplierId,
+                    'name' => $response->SupplierName ?? 'Unknown Supplier',
+                    'quoted_amount' => $response->TotalPayable ?? 0,
+                    'delivery_time' => $response->DurationDays . ' Days',
+                    'payment_terms' => 'N/A', // Not in RFQResponse directly
+                    'is_responsive' => true, // Assuming responsive if response exists for now
+                ];
+            })
+            ->unique('id')
+            ->values();
+    }
+
+    /**
      * Direct redirect from consolidated scores to award page
      */
     public function createFromConsolidation($tenderId)
@@ -796,4 +1133,11 @@ class AwardsController extends Controller
 
         return view('procurement.awards.create', compact('tenders'));
     }
+
+     protected function notifyUnsuccessfulBidders($award)
+    {
+        // TODO: Implement notification logic
+        Log::info("Sending notifications to unsuccessful bidders for award: " . $award->Id);
+    }
+
 }

@@ -11,8 +11,8 @@
             <p><strong>Vehicle:</strong> {{ $inspection->vehicle->RegistrationNo ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
-            <p><strong>Driver:</strong> {{ $inspection->driver->FullName ?? 'N/A' }}</p>
-            <p><strong>Fuel Type:</strong> {{ $inspection->fuel->FuelName ?? 'N/A' }}</p>
+            <p><strong>Driver:</strong> {{ $inspection->driver?->FullName ?? $inspection->contractedDriver?->FullName }}</p>
+            <p><strong>Fuel Type:</strong> {{ $inspection->fuelType?->FuelName ?? 'N/A' }}</p>
         </div>
     </div>
 </div>
@@ -26,14 +26,14 @@
                 <table class="table table-sm table-bordered">
                     <tr>
                         <th>Inspection Date</th>
-                        <td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d M Y') }}</td>
                     </tr>
                     <tr>
                         <th>Mileage</th>
                         <td>{{ $inspection->Mileage }} Km/h</td>
                     </tr>
                     <tr>
-                        <th>Fuel (Litres)</th>
+                        <th>Fuel (bars)</th>
                         <td>{{ $inspection->fuel->Description }} </td>
                     </tr>
                     <tr>
@@ -91,6 +91,13 @@
             @forelse($inspection->postTrips as $postTrip)
             <div class="mb-4 border rounded p-3">
                 <table class="table table-sm table-bordered">
+<<<<<<< bugfix/dateformat
+                    <tr><th>Inspection Date</th><td>{{ \Carbon\Carbon::parse($postTrip->InspectionDate)->format('d M Y') }}</td></tr>
+                    <tr><th>Mileage</th><td>{{ $postTrip->Mileage }} Km/h</td></tr>
+                    <tr><th>Fuel</th><td>{{ $postTrip->Fuel }} Ltr</td></tr>
+                    <tr><th>Engine Oil</th><td>{{ $postTrip->EngineOil }} Ltr</td></tr>
+                    <tr><th>Coolant</th><td>{{ $postTrip->Coolant }} Ltr</td></tr>
+=======
                     <tr>
                         <th>Inspection Date</th>
                         <td>{{ \Carbon\Carbon::parse($postTrip->InspectionDate)->format('d/m/Y') }}</td>
@@ -111,6 +118,7 @@
                         <th>Coolant</th>
                         <td>{{ $postTrip->Coolant }} Ltr</td>
                     </tr>
+>>>>>>> dev
                 </table>
 
                 <h6 class="mt-2">🛡 Safety Equipment</h6>

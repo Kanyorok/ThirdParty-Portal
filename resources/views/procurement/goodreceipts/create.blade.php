@@ -21,6 +21,7 @@
         <option value="">-- Select PO --</option>
         @foreach($Orders as $po)
               <option value="{{ $po->OrderNo }}"
+                      data-id="{{ $po->Id }}"
                       data-OrderNo="{{ $po->OrderNo }}"
                       data-remarks="{{ $po->ExtOrdNum }}"
                       data-account-id="{{ $po->AccountID }}"
@@ -53,6 +54,7 @@
             <th>UOM</th>
             <th>PO Qty</th>
             <th>Received Qty</th>
+            <th>Unit Price</th>
             <th>Transfer To</th>
             <th>Tag Required?</th>
           </tr>
@@ -80,8 +82,9 @@ function handleFormSubmit() {
     return false;
   }
 
-  // Manually set the hidden input with the selected PO RequisitionNo
-  document.getElementById("poIDInput").value = selectedOption.value;
+  // Set the hidden input with the PO Id (not OrderNo)
+  const poId = selectedOption.getAttribute("data-id");
+  document.getElementById("poIDInput").value = poId;
 
   return true;
 }
@@ -102,12 +105,12 @@ function startNewReceipt() {
 function populatePODetails() {
   const select = document.getElementById("poSelect");
   const selectedOption = select.options[select.selectedIndex];
-  const poId = selectedOption.value;
+  const poId = selectedOption.getAttribute("data-id");  // Use Id, not OrderNo
   const remarks = selectedOption.getAttribute("data-remarks");
     const accountId = selectedOption.getAttribute("data-account-id"); // <-- new
   const lines = JSON.parse(selectedOption.getAttribute("data-lines"));
 
-  document.getElementById("poIDInput").value = poId;
+  document.getElementById("poIDInput").value = poId;  // Set to Id
     document.getElementById("supplierIdInput").value = accountId; // <-- set hidden input
   document.getElementById("poDesc").textContent = remarks || "--";
 
@@ -124,6 +127,7 @@ function populatePODetails() {
         <td>${item.UOM}</td>
         <td><input type="number" class="form-control" name="items[${index}][POQTY]" value="${item.fQuantity}" readonly></td>
         <td><input type="number" class="form-control" name="items[${index}][ReceivedQTY]" value="${item.fQuantity}"></td>
+        <td><input type="number" class="form-control" name="items[${index}][UnitPrice]" value="${item.fUnitPriceExcl || 0}" readonly></td>
         <td><input type="text" class="form-control" name="items[${index}][TransferTo]" value="${item.InventoryType}" readonly></td>
         <td><input type="hidden" name="items[${index}][TagRequired]" value="0">
         <input type="checkbox" name="items[${index}][TagRequired]" value="1"></td>

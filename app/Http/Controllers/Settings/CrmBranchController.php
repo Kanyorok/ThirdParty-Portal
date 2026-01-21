@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\BranchRequest;
 
@@ -37,9 +38,19 @@ class CrmBranchController extends Controller
         if ($request->ajax()) {
             return Datatables::of(Branch::query()->select('*'))->addIndexColumn()
                 ->addColumn('action', function (Branch $branch) {
-                    return '<button type="button" class="btn btn-primary btn-sm branch-action-update" data-info="' . $branch->BranchID . '~' . $branch->Name . '~' . $branch->Address . '~' . $branch->Address2 . '~' . $branch->Phone . '~' . $branch->Email . '"
-                       data-manager="' . $branch->manager?->UserID . '~' . $branch->manager?->Name . '" data-operation="' . $branch->operation?->UserID . '~' . $branch->operation?->Name . '" data-route="' . route('branches.update', [$branch->Id]) . '" ><i class="fas fa-edit"></i> edit</button>
-                         <button type="button" class="btn btn-danger btn-sm  branch-action-trash" data-info="' . $branch->BranchID . '~' . $branch->Name . '"  data-route="' . route('branches.destroy', [$branch->Id]) . '"><i class="fas fa-trash"></i> trash</button>';
+                    $actions = '';
+                    if (auth()->user()->can(PermissionEnum::BranchView->value)) {
+                        $actions .= '<button type="button" class="btn btn-info btn-sm me-1 branch-action-view" data-info="' . $branch->BranchID . '~' . $branch->Name . '~' . $branch->Address . '~' . $branch->Address2 . '~' . $branch->Phone . '~' . $branch->Email . '"
+                       data-manager="' . $branch->manager?->UserID . '~' . $branch->manager?->Name . '" data-operation="' . $branch->operation?->UserID . '~' . $branch->operation?->Name . '"><i class="fas fa-eye"></i> View</button>';
+                    }
+                    if (auth()->user()->can(PermissionEnum::BranchUpdate->value)) {
+                        $actions .= '<button type="button" class="btn btn-primary btn-sm branch-action-update me-1" data-info="' . $branch->BranchID . '~' . $branch->Name . '~' . $branch->Address . '~' . $branch->Address2 . '~' . $branch->Phone . '~' . $branch->Email . '"
+                       data-manager="' . $branch->manager?->UserID . '~' . $branch->manager?->Name . '" data-operation="' . $branch->operation?->UserID . '~' . $branch->operation?->Name . '" data-route="' . route('branches.update', [$branch->Id]) . '" ><i class="fas fa-edit"></i> Edit</button>';
+                    }
+                    if (auth()->user()->can(PermissionEnum::BranchDelete->value)) {
+                        $actions .= '<button type="button" class="btn btn-danger btn-sm branch-action-trash" data-info="' . $branch->BranchID . '~' . $branch->Name . '"  data-route="' . route('branches.destroy', [$branch->Id]) . '"><i class="fas fa-trash"></i> Trash</button>';
+                    }
+                    return $actions;
                 })->addColumn('Manager', function (Branch $branch) {
                     return $branch->manager?->Name;
                 })->editColumn('Address', function (Branch $branch) {
@@ -59,6 +70,7 @@ class CrmBranchController extends Controller
      */
     public function store(BranchRequest $request): JsonResponse
     {
+        $this->authorize('create', Branch::class);
         $userID = $request->getManager()?->Id ?? null;
         $Operation = $request->getOperation()?->Id ?? null;
         $branchID = $request->getBranchID();
@@ -81,9 +93,8 @@ class CrmBranchController extends Controller
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmBranch->refresh())->event('create')->log('created a branch ' . $crmBranch->BranchID);
-
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -93,6 +104,7 @@ class CrmBranchController extends Controller
 
     public function update(BranchRequest $request, Branch $crmBranch): JsonResponse
     {
+        $this->authorize('update', $crmBranch);
         $userID = $request->getManager()?->Id ?? null;
         $Operation = $request->getOperation()?->Id ?? null;
         $actor = $request->user();
@@ -111,9 +123,8 @@ class CrmBranchController extends Controller
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmBranch)->event('update')->log('updated branch ' . $crmBranch->BranchID);
-
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error updating branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -123,6 +134,7 @@ class CrmBranchController extends Controller
 
     public function destroy(Request $request, Branch $crmBranch): JsonResponse
     {
+        $this->authorize('delete', $crmBranch);
         try {
             DB::transaction(static function () use ($request, $crmBranch) {
                 $crmBranch->forceFill([
@@ -130,7 +142,7 @@ class CrmBranchController extends Controller
                     'DeletedBy' => $request->user()->Id,
                 ])->save();
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error trashing branch failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }

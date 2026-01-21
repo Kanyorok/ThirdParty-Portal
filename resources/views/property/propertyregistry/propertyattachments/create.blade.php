@@ -56,9 +56,12 @@
         <label class="form-label">Description / Notes </label>
           <textarea class="form-control" rows="2" placeholder="Optional notes..." name="Description"></textarea>
       </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <a href="{{ route('attachments.index') }}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-success"
-                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Upload Document
+          onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Upload Document
         </button>
+            </div>
     </form>
     </div>
   </div>

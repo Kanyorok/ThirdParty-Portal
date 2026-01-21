@@ -37,8 +37,9 @@
     @if($newleases->count())
         <div class="card shadow-sm">
             <div class="card-body">
-                <table id="leaseagreement"
-                       class="table table-bordered table-striped table-hover align-middle mb-0">
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table id="leaseagreement"
+                           class="table table-bordered table-striped table-hover align-middle mb-0" style="min-width: 1200px;">
                     <thead class="table-light">
                     <tr>
                         <th style="width: 5%">#</th>
@@ -59,14 +60,14 @@
                             <td>{{ $newlease->LeaseNumber ?? '-' }}</td>
                             <td>{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                             <td>{{ $newlease->property->PropertyName ?? '-' }}</td>
-                            <td>{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d/m/Y') : '-' }}</td>
-                            <td>{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d/m/Y') : '-' }}</td>
+                            <td>{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d M Y') : '-' }}</td>
+                            <td>{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d M Y') : '-' }}</td>
                             <td>{{ $newlease->code->Description ?? '-' }}</td>
                             <td>{{ $newlease->DueDay ?? '-' }}</td>
                             <td>
                                 <div class="action-buttons">
                                     @if ($newlease->IsActive === false || $newlease->IsActive === 'Inactive')
-                                        <button class="btn btn-sm btn-secondary" title="Inactive Lease" disabled>
+                                        <button class="btn btn-sm btn-secondary" title="Inactive Lease">
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     @else
@@ -76,10 +77,16 @@
                                         </a>
                                     @endif
 
-                                    <a href="{{ route('addlease.edit', $newlease->Id) }}"
-                                       class="btn btn-sm btn-warning" title="Edit Lease">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
+                                    @if($newlease->ApprovalStatus === App\Enums\Core\ApprovalEnum::Approved->value)
+                                        <button class="btn btn-sm btn-secondary" title="Offer letter has been approved - Lease Locked" >
+                                            <i class="bi bi-lock"></i>
+                                        </button>
+                                    @else
+                                        <a href="{{ route('addlease.edit', $newlease->Id) }}"
+                                           class="btn btn-sm btn-warning" title="Edit Lease">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                    @endif
 
                                     @if($newlease->invoices()->exists())
                                         <button class="btn btn-sm btn-secondary" title="In Use">
@@ -102,11 +109,12 @@
                     @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     @else
         <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle me-2"></i> No lease agreements registered yet.
+            <i class="bi bi-info-circle me-2"></i> No lease agreements registered yet. Kindly Ensure You Have The WORKFLOW Set Up For Lease Agreements In Settings.
         </div>
     @endif
 

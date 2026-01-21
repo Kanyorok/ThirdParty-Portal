@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Core\Approval\CodeDetail;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 
 
 
@@ -136,6 +138,21 @@ class PlanLineItem extends Model
         : ($this->EstimatedUnitCost ?? 0);
 
     return (float) $quantity * (float) $unitCost;
+    }
+    public function tenderItems()
+    {
+        return $this->hasMany(TenderItems::class, 'PlanItemID', 'LineItemID');
+    }
+      /**
+     * Get the procurement plan this line item belongs to
+     */
+    public function procurementPlan(): BelongsTo
+    {
+        return $this->belongsTo(
+            ConsolidatedProcurementPlan::class,
+            'PlanID',      // Foreign key in t_PlanLineItems
+            'PlanID'       // Primary key in t_ConsolidatedProcurementPlans (or whatever your table is)
+        );
     }
 
 }

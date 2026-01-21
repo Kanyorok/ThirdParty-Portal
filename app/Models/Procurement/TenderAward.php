@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use App\Enums\TenderStatusEnum;
 use App\Models\Auth\User;
 use App\Models\ThirdParies\Supplier;
+use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,7 +24,10 @@ class TenderAward extends Model
     protected $primaryKey = 'Id';
 
     // Award Status Enums
+    const STATUS_DRAFT = 'Draft';
     const STATUS_PENDING = 'Pending';
+    const STATUS_SUBMITTED = 'Submitted for Approval';
+    const STATUS_UNDER_REVIEW = 'Under Review';
     const STATUS_APPROVED = 'Approved';
     const STATUS_REJECTED = 'Rejected';
     const STATUS_CANCELLED = 'Cancelled';
@@ -100,7 +104,7 @@ class TenderAward extends Model
     public function winningThirdParty()
     {
         return $this->hasOneThrough(
-            \App\Models\ThirdParies\ThirdParty::class,
+            \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParies\Supplier::class,
             'Id', // Foreign key on suppliers table
             'Id', // Foreign key on third_parties table
@@ -139,7 +143,10 @@ class TenderAward extends Model
     public function getStatusBadgeAttribute()
     {
         return match ($this->AwardStatus) {
+            self::STATUS_DRAFT => ['text' => 'Draft', 'class' => 'bg-secondary'],
             self::STATUS_PENDING => ['text' => 'Pending', 'class' => 'bg-warning text-dark'],
+            self::STATUS_SUBMITTED => ['text' => 'Submitted', 'class' => 'bg-info'],
+            self::STATUS_UNDER_REVIEW => ['text' => 'Under Review', 'class' => 'bg-primary'],
             self::STATUS_APPROVED => ['text' => 'Approved', 'class' => 'bg-success'],
             self::STATUS_REJECTED => ['text' => 'Rejected', 'class' => 'bg-danger'],
             self::STATUS_CANCELLED => ['text' => 'Cancelled', 'class' => 'bg-secondary'],
@@ -160,12 +167,13 @@ class TenderAward extends Model
     public function getContractStatusBadgeAttribute()
     {
         return match ($this->ContractStatus) {
-            'Draft Created' => ['text' => 'Draft', 'class' => 'bg-info'],
-            'Under Review' => ['text' => 'Under Review', 'class' => 'bg-warning text-dark'],
-            'Approved' => ['text' => 'Contract Approved', 'class' => 'bg-success'],
+            'Draft Created', 'Dr' => ['text' => 'Draft', 'class' => 'bg-info'],
+            'Under Review', 'rv' => ['text' => 'Under Review', 'class' => 'bg-warning text-dark'],
+            'Approved', 'Ap' => ['text' => 'Contract Approved', 'class' => 'bg-success'],
             'Sent to Legal' => ['text' => 'With Legal', 'class' => 'bg-primary'],
             'Executed' => ['text' => 'Executed', 'class' => 'bg-dark'],
             'Terminated' => ['text' => 'Terminated', 'class' => 'bg-danger'],
+            'Rejected', 'Re' => ['text' => 'Rejected', 'class' => 'bg-danger'],
             default => ['text' => 'Pending Contract', 'class' => 'bg-secondary'],
         };
     }
@@ -208,7 +216,7 @@ class TenderAward extends Model
             'ModifiedBy' => $user->Id,
         ]);
     }
-
+   
     public function cancel(User $user, string $reason)
     {
         $this->update([
@@ -220,6 +228,20 @@ class TenderAward extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id';
+        return 'tender_award';
+    }
+
+     /**
+     * Workflow history relationship
+     */
+    public function workflowHistory()
+    {
+        return $this->morphMany(
+            WorkflowHistory::class,
+            'source',
+            'Source',
+            'SourceID',
+            'Id'
+        );
     }
 }

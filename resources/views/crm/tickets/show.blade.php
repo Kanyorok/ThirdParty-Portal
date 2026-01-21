@@ -1,4 +1,4 @@
-@php use App\Enums\Core\ExtensionsEnum;use App\Enums\TicketSourceEnum;use App\Enums\TicketStatusEnum;use App\Helpers\SystemHelper;use App\Models\Auth\Team;use App\Models\Auth\User;use App\Models\BR\Client;use App\Models\CRM\Lead;use App\Services\TicketService; @endphp
+@php use App\Enums\Core\ExtensionsEnum;use App\Enums\TicketSourceEnum;use App\Enums\TicketStatusEnum;use App\Helpers\SystemHelper;use App\Models\Auth\Team;use App\Models\Auth\User;use App\Models\BR\Client;use App\Models\CRM\Lead;use App\Services\CRM\TicketService; @endphp
 @php @endphp
 @php @endphp
 @php @endphp
@@ -130,7 +130,7 @@
                                 <tr>
                                     <th>No.</th>
                                     <th>Stage</th>
-                                    <th>Status</th>
+                                    {{-- <th>Status</th>--}}
                                     <th>Dated</th>
                                     <th>By</th>
                                 </tr>
@@ -174,7 +174,7 @@
         </div>
         <div class="col-md-4 col-xxl-3">
             <div class="card">
-                <div class="card-body">
+                <div class="card-body px-2">
                     @if($party instanceof Client)
                         @include('snippets.client_summary', ['client'=>$party,'show_summary'=>true])
                     @elseif($party instanceof Lead)
@@ -185,27 +185,27 @@
                         <h3>Unknown party</h3>
                     @endif
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Status: <b class="float-end">{{ $ticket->Status->name }}</b></li>
-                        <li class="list-group-item">Priority:
-                            <form class="float-end" id="ticketPriorityForm"
+                        <li class="list-group-item">Status: <b class="float-end">{{ $ticket->status->Description }}</b>
+                        </li>
+                        <li class="list-group-item">Priority: <br>
+                            <form class="w-100" id="ticketPriorityForm"
                                   action="{{ route('tickets.priority',[$ticket->TicketID]) }}">
                                 @csrf
                                 <span class="d-none" id="ticketPriorityMsg"></span>@method('put')
-                                <select class="form-control text-center" name="ticket_priority" id="ticket_priority"
+                                <select class="form-control form-control-sm w-100" name="ticket_priority"
+                                        id="ticket_priority"
                                         required>
                                     @foreach(App\Enums\TicketPriorityEnum::cases() as $priority)
                                         <option
                                             value="{{ $priority->value }}" {{ ($priority->value===$ticket->Priority->value)?'selected':'' }}>{{ $priority->name }}</option>
                                     @endforeach
-
-
                                 </select>
                                 <p id="ticket_priority_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
                             </form>
                         </li>
-                        <li class="list-group-item">Assignee:
-                            <form class="float-end" id="ticketAssigneeForm"
+                        <li class="list-group-item">Assignee: <br>
+                            <form class="w-100" id="ticketAssigneeForm"
                                   action="{{ route('ticket.assignee',[$ticket->TicketID]) }}">
                                 @csrf
                                 <span class="d-none" id="ticketAssigneeMsg"></span>@method('put')
@@ -218,7 +218,8 @@
                                         @else
                                             <option value="{{ $ticket->assignee->UserID }}" selected
                                                     id="ticketAssignee">
-                                                {{ $ticket->assignee->Name }} - {{ $ticket->assignee->UserID }} (user)
+                                                {{-- {{ $ticket->assignee->Name }} - --}}{{ $ticket->assignee->UserID }}
+                                                (user)
                                             </option>
                                         @endif
                                     @elseif($ticket->assignee instanceof Team)
@@ -504,6 +505,7 @@
     </div>
 @endsection
 @section('scripts')
+    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
     <script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
@@ -610,12 +612,14 @@
             flatpickr("#ticket_start", {
                 enableTime: false,
                 altInput: true,
+                minDate: moment().add(10, 'm').format('YYYY-MM-DD'),
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
             });
             flatpickr("#ticket_end", {
                 enableTime: false,
                 altInput: true,
+                minDate: moment().add(10, 'm').format('YYYY-MM-DD'),
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
             });
@@ -637,6 +641,7 @@
 
             $('#ticket_user').select2({
                 placeholder: "Select assignee", minimumInputLength: 2,
+                width: '100%',
                 ajax: {
                     url: '{!! route('users.select2',['add_none'=>'rzr.co.ke','with_teams'=>'rzr.co.ke']) !!}',
                     dataType: 'json',
@@ -647,7 +652,7 @@
                     processResults: function (data) {
                         return {
                             results: $.map(data, function (item) {
-                                return {text: item.Name, id: item.UserID}
+                                return {text: item.UserID, id: item.UserID}
                             })
                         };
                     },
@@ -794,7 +799,7 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    "order": [[3, 'asc']],
+                    "order": [[2, 'asc']],
                     /*"columnDefs": [
                         {"className": "text-center", "targets": [2]}
                     ],
@@ -808,7 +813,7 @@
                     columns: [
                         {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
                         {data: 'Status', name: 'Status'},
-                        {data: 'Stage', name: 'Stage'},
+                        /* {data: 'Stage', name: 'Stage'},*/
                         {data: 'CreatedOn', name: 'CreatedOn'},
                         {data: 'creator.Name', name: 'creator.Name'},
                     ], "oLanguage": {

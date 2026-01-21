@@ -86,7 +86,7 @@
 
                 {{-- Notes --}}
                 <div class="col-md-12">
-                    <label for="Notes" class="form-label">Notes</label>
+                    <label for="Notes" class="form-label">Notes<span class="text-danger">*</span></label>
                     <textarea name="Notes" class="form-control" rows="2">{{ old('Notes') }}</textarea>
                 </div>
 

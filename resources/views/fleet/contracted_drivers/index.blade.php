@@ -35,11 +35,11 @@
                         <td>{{ $driver->FullName }}</td>
                         <td>{{ $driver->NationalID ?? '—' }}</td>
                         <td>{{ $driver->Phone ?? '—' }}</td>
-                        <td>{{ $driver->company->ThirdPartyName ?? '—' }}</td>
+                        <td>{{ $driver->company->party->ThirdPartyName ?? 'N/A' }}</td>
                         <td>
                             @if($driver->ContractStartDate && $driver->ContractEndDate)
-                                {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d/m/Y') }} -
-                                {{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d/m/Y') }}
+                                {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }} -
+                                {{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}
                             @else
                                 —
                             @endif

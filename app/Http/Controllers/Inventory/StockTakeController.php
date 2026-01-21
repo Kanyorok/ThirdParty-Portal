@@ -13,28 +13,31 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Inventory\StockTake;
+use App\Providers\Inventory\StockTakePolicy;
 use App\Models\Inventory\StockItem;
 use App\Models\Core\Branch;
 use App\Models\Inventory\Store;
+use App\Enums\Core\PermissionEnum;
 
 
 class StockTakeController extends Controller
 {
-    //
+    
     public function index()
     {
+        $this->authorize(PermissionEnum::StockTakeView, StockTake::class);
         $stocks = StockTake::with('branch', 'store', 'createdby', 'countedby')->get();
         return view('inventory.stockmanagement.stocktake.index', compact('stocks'));
     }
 
     public function create()
     {
+        $this->authorize(PermissionEnum::StockTakeCreate, StockTake::class);
         $branches = Branch::all();
         $users = User::all();
         $stocks = collect();
         return view('inventory.stockmanagement.stocktake.create', compact('branches', 'stocks', 'users'));
     }
-
 
     public function getStoreByBranch($storeId)
     {
@@ -55,6 +58,7 @@ class StockTakeController extends Controller
 
     public function store(StockTakeRequest $request)
     {
+        $this->authorize(PermissionEnum::StockTakeCreate, StockTake::class);
         $branch = Branch::findOrFail($request->BranchId);
         $store = Store::findOrFail($request->StoreId);
         $countedBy = $request->CountedBy;
@@ -78,6 +82,7 @@ class StockTakeController extends Controller
 
     public function show($id)
     {
+         $this->authorize(PermissionEnum::StockTakeView, StockTake::class);
         $stock = StockTake::with(['branch', 'store', 'lines.item.item'])->findOrFail($id);
         return view('inventory.stockmanagement.stocktake.show', compact('stock'));
     }
@@ -85,6 +90,7 @@ class StockTakeController extends Controller
 
     public function edit($id)
     {
+        $this->authorize(PermissionEnum::StockTakeUpdate, StockTake::class);
         $stock = StockTake::with('branch', 'store')->findOrFail($id);
         $branches = Branch::all();
         $stores = Store::all();
@@ -95,6 +101,7 @@ class StockTakeController extends Controller
 
     public function update(Request $request, $id)
     {
+         $this->authorize(PermissionEnum::StockTakeUpdate, StockTake::class);
         $validated = $request->validate([
             'BranchId' => 'required|exists:t_Branches,Id',
             'StoreId' => 'required|exists:t_Stores,Id',
@@ -152,6 +159,7 @@ class StockTakeController extends Controller
 
     public function destroy($id)
     {
+         $this->authorize(PermissionEnum::StockTakeDestroy, StockTake::class);
         //Check if user has permission to delete property categories
         //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
         try {

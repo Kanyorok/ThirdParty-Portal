@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
+use App\Models\ThirdParty\SupplierMaster;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceAssignRequest;
@@ -23,17 +24,39 @@ class PropertyMaintananceAssignController extends Controller
         return view('property.maintenanceandissues.assignrequests.index', compact('assignments'));
     }
 
-    public function create(){
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
-        $maintenancerequests = PropertyMaintenanceRequest::all();
+    public function create()
+    {
+        $this->authorize(
+            PermissionEnum::PropertyMaintenanceAssignCreate,
+            PropertyMaintenanceAssign::class
+        );
+
+        $assignedRequestIds = PropertyMaintenanceAssign::pluck('RequestNumber');
+
+        $maintenancerequests = PropertyMaintenanceRequest::whereNotIn(
+            'Id',
+            $assignedRequestIds
+        )->get();
+
         $employees = Employee::all();
-        $suppliers = Supplier::where('Active_Status', true)
-            ->select('ThirdPartyID')
-            ->distinct()
+
+        $suppliers = SupplierMaster::where('IsPrequalified', true)
+            ->select('ThirdPartyId')
             ->get();
+
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
-        $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
-        return view('property.maintenanceandissues.assignrequests.create', compact('maintenancerequests', 'employees', 'suppliers', 'priorityLevels','assignmentTypes'));
+        $priorityLevels  = CodeDetail::where('CodeID', 'PriorityLevel')->get();
+
+        return view(
+            'property.maintenanceandissues.assignrequests.create',
+            compact(
+                'maintenancerequests',
+                'employees',
+                'suppliers',
+                'priorityLevels',
+                'assignmentTypes'
+            )
+        );
     }
 
     public function show($Id)
@@ -84,7 +107,8 @@ class PropertyMaintananceAssignController extends Controller
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
         $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
         $technicians = Employee::all();
-        $vendors = Supplier::all();
+        $vendors = SupplierMaster::where('IsPrequalified', true)
+            ->select('ThirdPartyId')->get();
         return view('property.maintenanceandissues.assignrequests.edit', compact('assignment','assignmentTypes', 'priorityLevels', 'technicians', 'vendors'));
     }
 

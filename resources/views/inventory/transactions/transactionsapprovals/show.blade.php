@@ -36,7 +36,7 @@
                         </tr>
                         <tr>
                             <th>Date</th>
-                            <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
+                            <td>{{ Carbon::parse($record->CreatedOn)->format('d M Y H:i') }}</td>
                         </tr>
                         <tr>
                             <th>Status</th>
@@ -65,7 +65,7 @@
                         </tr>
                         <tr>
                             <th>Date</th>
-                            <td>{{ Carbon::parse($record->CreatedOn)->format('d/m/Y H:i') }}</td>
+                            <td>{{ Carbon::parse($record->CreatedOn)->format('d M Y H:i') }}</td>
                         </tr>
                         <tr>
                             <th>Status</th>

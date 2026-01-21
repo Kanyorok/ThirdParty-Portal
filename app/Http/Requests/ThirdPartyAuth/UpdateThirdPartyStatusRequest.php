@@ -2,16 +2,12 @@
 
 namespace App\Http\Requests\ThirdPartyAuth;
 
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\ThirdPartyStatusEnum;
 
 class UpdateThirdPartyStatusRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        return true; // TODO: Add policy for authorization 
-    }
 
     public function rules(): array
     {

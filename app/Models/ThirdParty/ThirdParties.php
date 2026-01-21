@@ -2,31 +2,39 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Enums\ThirdPartyApprovalStatusEnum;
-use App\Enums\ThirdPartyStatusEnum;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Enums\BusinessTypeEnum;
+use App\Models\Core\Locality;
 use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\ImageTrait;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\Insurance\BancassuranceCustomer;
 
 class ThirdParties extends Model
 {
-    use SoftDeletes, DocumentsTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait, ImageTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-
     protected $table = 't_ThirdParties';
     protected $primaryKey = 'Id';
 
     public static function getPrimaryKey(): string
     {
-        return 'ThirdPartyId';
+        return 'Id';
+    }
+
+    public function getMorphClass(): string
+    {
+        return 'ThirdParties';
     }
 
     protected $fillable = [
@@ -37,16 +45,14 @@ class ThirdParties extends Model
         'TaxPIN',
         'VATNumber',
         'CountryId',
+        'LocationId',
         'PhysicalAddress',
         'Email',
         'Phone',
+        'ImageId',
         'Website',
         'Status',
-        'ThirdPartyType', //legacy column deprecated (kept temporarily for backward compatibility)
-        'IsPrequalified',
-        'ApprovalStatus',
-        'IDNumber',
-        'PassportNo',
+        'Extra',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -57,69 +63,53 @@ class ThirdParties extends Model
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
         'CreatedBy' => 'integer',
-        'BusinessType' => BusinessTypeEnum::class,
-        'Status' => ThirdPartyStatusEnum::class,
-        'ApprovalStatus' => ThirdPartyApprovalStatusEnum::class,
+        'Extra' => 'array',
     ];
 
-    protected static function booted()
+    public function types(): BelongsToMany
     {
-        static::saving(function ($model) {
-            if (!is_null($model->IsPrequalified)) {
-                // Ensure at least one pivot type has supplier code pattern when marking prequalified
-                $model->loadMissing('types');
-                $isSupplier = $model->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'SU-'));
-                if (!$isSupplier) {
-                    throw new \LogicException("Only supplier third parties (with SU-* type) can be marked as prequalified.");
-                }
-            }
-        });
-
-        static::creating(function ($model) {
-            $model->ApprovalStatus = ThirdPartyApprovalStatusEnum::Pending;
-            $model->Status = ThirdPartyStatusEnum::Inactive;
-        });
-    }
-
-    public function setIsPrequalifiedAttribute($value)
-    {
-        $this->attributes['IsPrequalified'] = $value;
-    }
-
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(ThirdPartyUser::class, 't_ThirdPartyUser_ThirdParty', 'third_party_id', 'third_party_user_id');
-    }
-
-    public function getLabelAttribute(): string
-    {
-        return $this->ThirdPartyName ?: $this->TradingName ?: "Unnamed #{$this->Id}";
-    }
-
-    public function scopeSuppliers($query)
-    {
-        return $query->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'));
-    }
-
-    public function getKRANoAttribute(): string
-    {
-        return $this->TaxPIN ?: $this->RegistrationNumber;
-    }
-
-    public function bankDetails(): HasMany
-    {
-        return $this->hasMany(ThirdPartiesBankDetails::class, 'ThirdPartyId', 'Id');
+        return $this->belongsToMany(
+            ThirdPartyType::class,
+            't_ThirdPartyType_ThirdParties',
+            'ThirdPartyId',
+            'TypeId',
+            'Id',
+            'TypeId'
+        )
+            ->withPivot('PartyType', 'PartyID', 'CreatedBy')
+            ->withTimestamps('CreatedOn', 'ModifiedOn');
     }
 
     public function categories(): BelongsToMany
     {
-        // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
         return $this->belongsToMany(
             SupplierCategory::class,
             't_ThirdParty_SupplierCategory',
             'third_party_id',
-            'supplier_category_id'
+            'supplier_category_id',
+            'Id',
+            'SupplierCategoryID'
         );
+    }
+
+    public function supplierMaster(): HasOne
+    {
+        return $this->hasOne(SupplierMaster::class, 'ThirdPartyId', 'Id');
+    }
+
+    public function tenantProfile(): HasOne
+    {
+        return $this->hasOne(\App\Models\PropertyManagement\PropertyNewTenant::class, 'ThirdPartyId', 'Id');
+    }
+
+    public function customerProfile(): HasOne
+    {
+        return $this->hasOne(\App\Models\Insurance\BancassuranceCustomer::class, 'ThirdPartyId', 'Id');
+    }
+
+    public function businessType(): BelongsTo
+    {
+        return $this->belongsTo(CodeDetail::class, 'BusinessType', 'Id');
     }
 
     public function country(): BelongsTo
@@ -127,55 +117,114 @@ class ThirdParties extends Model
         return $this->belongsTo(Country::class, 'CountryId', 'Id');
     }
 
-    // New pivot relationship to multiple types
-    public function types(): BelongsToMany
+    public function location(): BelongsTo
     {
-        return $this->belongsToMany(
-            \App\Models\ThirdParty\ThirdPartyType::class,
-            't_ThirdPartyType_ThirdParties',
-            'ThirdPartyId',
-            'TypeId'
-        );
+        return $this->belongsTo(Locality::class, 'LocationId', 'ID');
     }
 
-    // Finance relationships
-    public function wallet()
+    public function status(): BelongsTo
     {
-        return $this->hasOne(\App\Models\Finance\CustomerWallet::class, 'CustomerID', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'Status', 'Id');
     }
 
-    public function creditProfiles()
+    public function scopeSuppliers($query)
     {
-        return $this->hasMany(\App\Models\Finance\FinanceCreditManagement::class, 'CustomerID', 'Id');
+        return $query->whereHas('types', function ($q) {
+            $q->where('t_ThirdPartyType_ThirdParties.PartyType', SupplierMaster::getPrimaryKey());
+        });
     }
 
-    public function invoices()
+    // public function isSupplier(): bool
+    // {
+    //     return $this->types()->wherePivot('PartyType', 'SupplierId')->exists();
+    // }
+
+    // public function isTenant(): bool
+    // {
+    //     return $this->types()->where('t_ThirdPartyTypes.TypeId', 4)->exists();
+    // }
+
+    // public function isCustomer(): bool
+    // {
+    //     return $this->types()->where('t_ThirdPartyTypes.TypeId', 6)->exists();
+    // }
+
+    protected function getImageName(): string
+    {
+        return $this->ThirdPartyName ?? 'third-party';
+    }
+
+    public function invoices(): HasMany
     {
         return $this->hasMany(\App\Models\Finance\FinanceInvoice::class, 'CustomerID', 'Id');
     }
 
-    public function receipts()
+    public function receipts(): HasMany
     {
         return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
     }
+
+
+    /**
+     * =======================================| TODO: Upto there the rest to be removed or moved to appropriate classes  |======================================
+     */
+
+
+    // public function categories(): BelongsToMany
+    // {
+    //     // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
+    //     //todo move to supplier master model
+    //     return $this->belongsToMany(
+    //         SupplierCategory::class,
+    //         't_ThirdParty_SupplierCategory',
+    //         'third_party_id',
+    //         'supplier_category_id'
+    //     );
+    // }
+
 
     /**
      * Legacy category mappings (t_ThirdPartiesCategories -> CodeDetail) used by prequalification screen.
      */
     public function legacyCategories()
-    {
+    {  //todo move to supplier master model
         return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
             ->whereNull('DeletedOn')
             ->with('category');
     }
-
-    /**
-     * Prequalification applications submitted by this supplier.
-     */
-    public function prequalificationApplications()
+    public function isApproved(): bool
     {
-        return $this->hasMany(\App\Models\Procurement\Prequalification\PrequalificationApplication::class, 'SupplierID', 'Id')
-            ->whereNull('DeletedOn')
-            ->with('category');
+        return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
+    }
+
+    public function isSupplier(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return (isset($type->Code) && str_starts_with($type->Code, 'SU'))
+                    || (isset($type->pivot->PartyType) && $type->pivot->PartyType === SupplierMaster::getPrimaryKey());
+            });
+        }
+        return $this->ThirdPartyType === \App\Enums\ThirdParty\ThirdPartyTypeEnum::Supplier;
+    }
+
+    public function isTenant(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return isset($type->pivot->PartyType) && $type->pivot->PartyType === PropertyNewTenant::getPrimaryKey();
+            });
+        }
+        return false;
+    }
+
+    public function isCustomer(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return isset($type->pivot->PartyType) && $type->pivot->PartyType === BancassuranceCustomer::getPrimaryKey();
+            });
+        }
+        return false;
     }
 }

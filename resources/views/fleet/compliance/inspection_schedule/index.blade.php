@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'License & Inspection Schedule')
+@section('title', 'Fleet Inspection Schedule')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
@@ -36,8 +36,7 @@
                         <td>{{ $schedule->InspectionNo ?? '-' }}</td>
                         <td>{{ $schedule->vehicle->RegistrationNo ?? '-' }}</td>
                         <td>{{ $schedule->InspectionType }}</td>
-                        <td>{{ \Carbon\Carbon::parse($schedule->InspectionDate)->format('d/m/Y') }}</td>
-                        <td>{{ $schedule->DueDate ? \Carbon\Carbon::parse($schedule->DueDate)->format('d/m/Y') : '-' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($schedule->InspectionDate)->format('d M Y') }}</td>                       <td>{{ $schedule->DueDate ? \Carbon\Carbon::parse($schedule->DueDate)->format('d M Y') : '-' }}</td>
 
                         @php
                             $statusColor = match(strtolower($schedule->inspectionStatus->Description ?? '')) {

@@ -32,7 +32,7 @@ BEGIN
     SELECT t.TripNo,
            v.RegistrationNo,
            d.DriverNo,
-           dt.Description AS DriverType,
+           ' dt.Description' AS DriverType,
            t.TripStartDate,
            t.TripEndDate,
            t.StartLocation,
@@ -44,12 +44,12 @@ BEGIN
     FROM t_TripLogs AS t
              join t_FleetVehicles AS v on v.Id = v.Id
              join t_ContractedDrivers AS d on d.Id = d.Id
-             join t_CodeDetails AS dt on dt.ID = t.DriverType
+    -- join t_CodeDetails AS dt on dt.ID = t.DriverType
 
 
     WHERE @Status IS NULL
        OR @Status = 'ALL'
-       OR dt.Description IN (SELECT value FROM STRING_SPLIT(@Status, ','))
+    --OR dt.Description IN (SELECT value FROM STRING_SPLIT(@Status, ','))
 
 
     SELECT * FROM #TripLogs;

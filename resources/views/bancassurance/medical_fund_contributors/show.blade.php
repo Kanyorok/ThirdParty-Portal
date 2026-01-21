@@ -58,12 +58,12 @@
                                 <dt class="col-sm-4 text-muted">Effective</dt>
                                 <dd class="col-sm-8">
                                     @if($contributor->EffectiveFrom)
-                                        {{ \Carbon\Carbon::parse($contributor->EffectiveFrom)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($contributor->EffectiveFrom)->format('d M Y') }}
                                     @else
                                         —
                                     @endif
                                     @if($contributor->EffectiveTo)
-                                        — {{ \Carbon\Carbon::parse($contributor->EffectiveTo)->format('d/m/Y') }}
+                                        — {{ \Carbon\Carbon::parse($contributor->EffectiveTo)->format('d M Y') }}
                                     @endif
                                 </dd>
                             </dl>
@@ -132,7 +132,7 @@
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td class="fw-semibold">{{ $beneficiary->FullName }}</td>
                                                     <td>{{ $beneficiary->relationship_display ?? '—' }}</td>
-                                                    <td>{{ $beneficiary->DateOfBirth ? \Carbon\Carbon::parse($beneficiary->DateOfBirth)->format('d/m/Y') : '—' }}</td>
+                                                    <td>{{ $beneficiary->DateOfBirth ? \Carbon\Carbon::parse($beneficiary->DateOfBirth)->format('d M Y') : '—' }}</td>
                                                     <td>{{ $beneficiary->NationalID ?? '—' }}</td>
                                                     <td>{{ $beneficiary->Contact ?? '—' }}</td>
                                                     <td>

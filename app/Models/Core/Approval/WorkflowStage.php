@@ -9,7 +9,7 @@ use App\Models\Settings\WorkFlowLimit;
 use App\Models\Settings\WorkFlowType;
 use Spatie\Permission\Models\Permission;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Settings\Workflow;
+use App\Models\Core\Approval\Workflow;
 
 class WorkflowStage extends Model
 {

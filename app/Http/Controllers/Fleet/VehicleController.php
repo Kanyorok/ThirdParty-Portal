@@ -22,6 +22,7 @@ use App\Models\Fleet\FleetInsuranceTracker;
 use App\Models\Fleet\FleetInspectionSchedule;
 use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Fleet\FleetRepairLog;
+use Illuminate\Support\Collection;
 
 class VehicleController extends Controller
 {
@@ -74,7 +75,7 @@ class VehicleController extends Controller
         $imageFile = $request->file('ImageFile');
 
         // Automatically set the vehicle status to "Active"
-        $activeStatus = \App\Models\Core\CodeDetail::where('CodeID', 'VehicleStatus')
+        $activeStatus = CodeDetail::where('CodeID', 'VehicleStatus')
             ->where('Description', 'Active')
             ->value('ID');
 
@@ -88,61 +89,135 @@ class VehicleController extends Controller
             ->with('success', 'Vehicle registered successfully and set to Active.');
     }
 
-
     /**
      * Show vehicle details.
      */
     public function show($id)
-{
-    $vehicle = FleetVehicle::with(['vehicleType', 'fuelType', 'branch', 'brand', 'model'])
-        ->findOrFail($id);
+    {
+        $vehicle = FleetVehicle::with([
+            'vehicleType', 
+            'fuelType', 
+            'branch', 
+            'brand', 
+            'model',
+            'vehicleStatus'
+        ])->findOrFail($id);
 
-    $this->authorize('view', $vehicle);
+        $this->authorize('view', $vehicle);
 
-    // Get assignment TripNos for this vehicle
-    $assignmentTripNos = FleetVehicleAssignment::where('VehicleID', $vehicle->Id)
-        ->pluck('TripNo')
-        ->map(function ($tripNo) {
-            // Convert to string to match t_TripLogs.TripNo data type
-            return (string) $tripNo;
-        })
-        ->toArray();
+        // Get assignments for this vehicle
+        $assignments = FleetVehicleAssignment::where('VehicleID', $vehicle->Id)
+            ->with(['trip' => function($query) {
+                $query->with(['parentTripType', 'parentVehicleType', 'statusDetail']);
+            }])
+            ->get();
 
-    // Get trips using the converted TripNos
-    $trips = FleetTripLog::with(['statusDetail', 'parentTripType', 'parentVehicleType'])
-        ->whereIn('TripNo', $assignmentTripNos)
-        ->orderByDesc('TripStartDate')
-        ->get();
+        // Extract trips from assignments
+        $trips = $assignments->pluck('trip')->filter()->unique('Id');
 
-    // Rest of your code remains the same...
-    $driverList = $this->getVehicleDrivers($vehicle->Id);
-    $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-    $fuelTypes = FuelType::all();
-    $branches = Branch::all();
-    $brands = FleetMake::all();
-    $fleetModels = FleetModel::all();
-    $insuranceRecords = FleetInsuranceTracker::with(['insurance', 'insuranceStatus'])
-        ->where('VehicleID', $vehicle->Id)
-        ->orderByDesc('CoverageEndDate')
-        ->get();
-    $inspections = FleetInspectionSchedule::with(['inspectionStatus', 'inspector'])
-        ->where('VehicleID', $vehicle->Id)
-        ->orderByDesc('InspectionDate')
-        ->get();
-    $maintenanceLogs = FleetMaintenanceSchedule::with(['maintenanceType', 'maintenanceStatus'])
-        ->where('VehicleID', $vehicle->Id)
-        ->orderByDesc('ScheduledDate')
-        ->get();
-    $repairLogs = FleetRepairLog::with(['repairType', 'schedule'])
-        ->where('VehicleID', $vehicle->Id)
-        ->orderByDesc('RepairDate')
-        ->get();
+        // Get driver assignments for this vehicle
+        $driverList = $this->getVehicleDrivers($vehicle->Id);
+        
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+        $fuelTypes = FuelType::all();
+        $branches = Branch::all();
+        $brands = FleetMake::all();
+        $fleetModels = FleetModel::all();
+        
+        // Get other related records
+        $insuranceRecords = FleetInsuranceTracker::with(['insurance', 'insuranceStatus'])
+            ->where('VehicleID', $vehicle->Id)
+            ->orderByDesc('CoverageEndDate')
+            ->get();
+            
+        $inspections = FleetInspectionSchedule::with(['inspectionStatus', 'inspector'])
+            ->where('VehicleID', $vehicle->Id)
+            ->orderByDesc('InspectionDate')
+            ->get();
+            
+        $maintenanceLogs = FleetMaintenanceSchedule::with(['maintenanceType', 'maintenanceStatus'])
+            ->where('VehicleID', $vehicle->Id)
+            ->orderByDesc('ScheduledDate')
+            ->get();
+            
+        $repairLogs = FleetRepairLog::with(['repairType', 'schedule'])
+            ->where('VehicleID', $vehicle->Id)
+            ->orderByDesc('RepairDate')
+            ->get();
 
-    return view('fleet.vehicles.show', compact(
-        'vehicle', 'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 
-        'driverList', 'insuranceRecords', 'inspections', 'repairLogs', 'maintenanceLogs', 'trips'
-    ));
-}
+        return view('fleet.vehicles.show', compact(
+            'vehicle', 
+            'vehicleTypes', 
+            'fuelTypes', 
+            'branches', 
+            'brands', 
+            'fleetModels', 
+            'driverList', 
+            'insuranceRecords', 
+            'inspections', 
+            'repairLogs', 
+            'maintenanceLogs', 
+            'trips'
+        ));
+    }
+
+    /**
+     * Merge trips and assignments to get all drivers with period.
+     */
+    private function getVehicleDrivers(int $vehicleId)
+    {
+        // Permanent assignments
+        $assignedDrivers = FleetDriverAssignment::where('VehicleID', $vehicleId)
+            ->get(['DriverID', 'AssignmentDate', 'UnassignmentDate'])
+            ->map(function ($assignment) {
+                return [
+                    'Id' => $assignment->DriverID,
+                    'DriverType' => 'Permanent Driver',
+                    'Source' => 'Assignment',
+                    'Period' => $assignment->AssignmentDate
+                        ? \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') .
+                        ' → ' .
+                        ($assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—')
+                        : null,
+                ];
+            });
+
+        // Contracted assignments
+        $contractedDrivers = FleetContractedDriverAssignment::where('VehicleID', $vehicleId)
+            ->get(['DriverID', 'AssignmentDate', 'UnassignmentDate'])
+            ->map(function ($assignment) {
+                return [
+                    'Id' => $assignment->DriverID,
+                    'DriverType' => 'Contracted Driver',
+                    'Source' => 'ContractedAssignment',
+                    'Period' => $assignment->AssignmentDate
+                        ? \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') .
+                        ' → ' .
+                        ($assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—')
+                        : null,
+                ];
+            });
+
+        // Merge all and attach driver names
+        $allDrivers = $assignedDrivers->concat($contractedDrivers)->filter();
+
+        $driverIds = $allDrivers->pluck('Id')->unique()->filter();
+
+        $permanentDrivers = FleetDriver::whereIn('Id', $driverIds)->get()->keyBy('Id');
+        $contractedDrivers = ContractedDriver::whereIn('Id', $driverIds)->get()->keyBy('Id');
+
+        return $allDrivers->map(function ($item) use ($permanentDrivers, $contractedDrivers) {
+            $driver = $permanentDrivers->get($item['Id']) ?? $contractedDrivers->get($item['Id']);
+            return [
+                'Id' => $item['Id'],
+                'Name' => $driver?->FullName,
+                'DriverType' => $item['DriverType'],
+                'Source' => $item['Source'],
+                'Period' => $item['Period'],
+            ];
+        });
+    }
+
     /**
      * Show edit form.
      */
@@ -179,9 +254,6 @@ class VehicleController extends Controller
         return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle updated successfully.');
     }
 
-    /**
-     * Deactivate vehicle.
-     */
     public function deactivate($id)
     {
         $vehicle = FleetVehicle::findOrFail($id);
@@ -192,10 +264,6 @@ class VehicleController extends Controller
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
-
-        // Log workflow as inactive
-        $statusId = $this->vehicleService->getStatusId('Inactive');
-        $this->vehicleService->logWorkflow('VehicleAvailability', $vehicle->Id, $statusId, 'Vehicle deregistered');
 
         return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle deregistered successfully.');
     }
@@ -220,78 +288,5 @@ class VehicleController extends Controller
     {
         $models = FleetModel::where('BrandID', $Id)->get();
         return response()->json($models);
-    }
-
-    /**
-     * Merge trips and assignments to get all drivers with period.
-     */
-    private function getVehicleDrivers(int $vehicleId)
-    {
-        // // Trip drivers
-        // $tripDrivers = FleetTripLog::with('driverType')
-        //     ->where('VehicleID', $vehicleId)
-        //     ->get(['DriverID', 'DriverType', 'TripStartDate', 'TripEndDate'])
-        //     ->map(function ($trip) {
-        //         return [
-        //             'Id' => $trip->DriverID,
-        //             'DriverType' => $trip->driverType?->Description,
-        //             'Source' => 'TripLog',
-        //             'Period' => $trip->TripStartDate
-        //                 ? \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') .
-        //                   ' → ' .
-        //                   ($trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') : '—')
-        //                 : null,
-        //         ];
-        //     });
-
-        // Permanent assignments
-        $assignedDrivers = FleetDriverAssignment::where('VehicleID', $vehicleId)
-            ->get(['DriverID', 'AssignmentDate', 'UnassignmentDate'])
-            ->map(function ($assignment) {
-                return [
-                    'Id' => $assignment->DriverID,
-                    'DriverType' => 'Permanent Driver',
-                    'Source' => 'Assignment',
-                    'Period' => $assignment->AssignmentDate
-                        ? \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') .
-                        ' → ' .
-                        ($assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—')
-                        : null,
-                ];
-            });
-
-        // Contracted assignments
-        $contractedDrivers = FleetContractedDriverAssignment::where('VehicleID', $vehicleId)
-            ->get(['DriverID', 'AssignmentDate', 'UnassignmentDate'])
-            ->map(function ($assignment) {
-                return [
-                    'Id' => $assignment->DriverID,
-                    'DriverType' => 'Contracted Driver',
-                    'Source' => 'ContractedAssignment',
-                    'Period' => $assignment->AssignmentDate
-                        ? \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') .
-                        ' → ' .
-                        ($assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—')
-                        : null,
-                ];
-            });
-
-        // Merge all and attach driver names
-        $allDrivers = $assignedDrivers->merge($contractedDrivers)->filter();
-        $driverIds = $allDrivers->pluck('Id')->unique()->filter();
-
-        $permanentDrivers = FleetDriver::whereIn('Id', $driverIds)->get()->keyBy('Id');
-        $contractedDrivers = ContractedDriver::whereIn('Id', $driverIds)->get()->keyBy('Id');
-
-        return $allDrivers->map(function ($item) use ($permanentDrivers, $contractedDrivers) {
-            $driver = $permanentDrivers->get($item['Id']) ?? $contractedDrivers->get($item['Id']);
-            return [
-                'Id' => $item['Id'],
-                'Name' => $driver?->FullName,
-                'DriverType' => $item['DriverType'],
-                'Source' => $item['Source'],
-                'Period' => $item['Period'],
-            ];
-        });
     }
 }

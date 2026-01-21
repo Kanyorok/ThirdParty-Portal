@@ -40,7 +40,7 @@ trait UserActorTrait
     public function deleter(): ?BelongsTo
     {
         return (in_array("DeletedBy", $this->fillable, true))
-            ? $this->belongsTo(User::class, 'DeletedOn', 'Id')->withTrashed() : null;
+            ? $this->belongsTo(User::class, 'DeletedBy', 'Id')->withTrashed() : null;
     }
 
     /**

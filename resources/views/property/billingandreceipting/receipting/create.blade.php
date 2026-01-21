@@ -25,7 +25,7 @@
                   data-invoicenumber="{{ $invoice->InvoiceNumber ?? 'N/A' }}"
                         data-tenantid-name="{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
                   data-billingmonth-name="{{ $invoice->BillingMonth ?? 'N/A' }}"
-                        data-invoicedate-display="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '' }}"
+                        data-invoicedate-display="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y') : '' }}"
                         data-invoicedate-id="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : '' }}"
                         data-rentamount="{{ $invoice->RentAmount ?? '0' }}"
                         data-servicescharge="{{ $invoice->ServicesCharge ?? '0' }}"

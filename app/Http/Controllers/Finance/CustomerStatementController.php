@@ -68,6 +68,8 @@ class CustomerStatementController extends Controller
      */
     public function statement($thirdPartyId)
     {
+        //For ERP it will be a detailed statement
+        $Type = 'Detailed';
         try {
             // Fetch customer details from t_ThirdParties
             $customerData = DB::table('t_ThirdParties')
@@ -88,8 +90,8 @@ class CustomerStatementController extends Controller
                 ->pluck('tt.Description')
                 ->toArray();
 
-            // Execute stored procedure to get statement
-            $transactions = DB::select('EXEC p_GetClientStatement @ThirdPartyID = ?', [$thirdPartyId]);
+            // Execute stored procedure to get statement add another parameter to get the statement for Detailed or Summary
+            $transactions = DB::select('EXEC p_GetClientStatement @ThirdPartyID = ?, @Type = ?', [$thirdPartyId, $Type]);
 
             // Group transactions by ThirdPartyType
             $tenantTransactions = [];

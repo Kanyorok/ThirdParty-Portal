@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +31,8 @@ class PropertyMaintenanceRequestController extends Controller
         $properties = PropertyRegistry::all()->where('IsActive', True);
         $issuetypes = CodeDetail::where('CodeID', 'IssueType')->get();
         $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
-        return view('property.maintenanceandissues.maintenancerequest.create', compact('properties','issuetypes','priorities'));
+        $Users = ThirdParties::all();
+        return view('property.maintenanceandissues.maintenancerequest.create', compact('properties','issuetypes','priorities','Users'));
     }
 
     public function show($Id)
@@ -69,6 +72,7 @@ class PropertyMaintenanceRequestController extends Controller
         $Unit     = !empty($validated['Unit']) ? PropertyUnit::find($validated['Unit']) : null;
         $IssueType = CodeDetail::findOrFail($validated['IssueType']);
         $Priority  = CodeDetail::findOrFail($validated['Priority']);
+        $ReportedBy = ThirdParties::findOrFail($validated['ReportedBy']);
 
         $uploadedFile = $request->file('Document')[0] ?? null;
 
@@ -77,7 +81,7 @@ class PropertyMaintenanceRequestController extends Controller
                     $Block,
                     $Floor,
                     $Unit,
-                    $validated['ReportedBy']?? '--',
+                    $ReportedBy,
                     $IssueType,
                     $Priority,
                     $validated['IssueDescription']?? '--',
@@ -106,7 +110,8 @@ class PropertyMaintenanceRequestController extends Controller
         $properties = PropertyRegistry::all();
         $issuetypes = CodeDetail::where('CodeID', 'IssueType')->get();
         $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
-        return view('property.maintenanceandissues.maintenancerequest.edit', compact('maintenancerequest', 'properties','issuetypes','priorities'));
+        $thirdparties = ThirdParties::all();
+        return view('property.maintenanceandissues.maintenancerequest.edit', compact('maintenancerequest', 'properties','issuetypes','priorities','thirdparties'));
     }
 
     public function update(MaintenanceRequest $request, $Id)
@@ -125,6 +130,7 @@ class PropertyMaintenanceRequestController extends Controller
             $Unit     = !empty($validated['Unit']) ? PropertyUnit::find($validated['Unit']) : null;
             $IssueType = CodeDetail::findOrFail($validated['IssueType']);
             $Priority  = CodeDetail::findOrFail($validated['Priority']);
+            $ThirdParties = ThirdParties::findOrFail($validated['ReportedBy']);
 
             PropertyMaintenanceService::update(
                 $maintenancerequest,
@@ -132,7 +138,7 @@ class PropertyMaintenanceRequestController extends Controller
                 $Block,
                 $Floor,
                 $Unit,
-                $validated['ReportedBy'],
+                $ThirdParties,
                 $IssueType,
                 $Priority,
                 $validated['IssueDescription'],
@@ -146,7 +152,7 @@ class PropertyMaintenanceRequestController extends Controller
                 $Block,
                 $Floor,
                 $Unit,
-                $validated['ReportedBy'],
+                $ThirdParties,
                 $IssueType,
                 $Priority,
                 $validated['IssueDescription'],
