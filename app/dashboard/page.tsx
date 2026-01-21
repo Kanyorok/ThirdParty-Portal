@@ -1,5 +1,4 @@
-import { cookies } from "next/headers"
-
+import { cookies, headers } from "next/headers"
 import { getDashboardData } from "@/lib/dashboard-summary-data"
 import {
   ACTIVE_PROFILE_COOKIE_NAME,
@@ -14,7 +13,9 @@ function resolveFirstName(user: any): string {
   const first =
     user?.first_name ??
     user?.firstName ??
-    String(user?.full_name ?? user?.fullName ?? user?.name ?? "User").trim().split(" ")[0]
+    String(user?.full_name ?? user?.fullName ?? user?.name ?? "User")
+      .trim()
+      .split(" ")[0]
   return String(first || "User")
 }
 
@@ -26,34 +27,57 @@ function getAuthorizedProfiles(user: any): ProfileType[] {
   return roles
 }
 
-function pickInitialProfile(cookieValue: string | undefined, authorized: ProfileType[]): ProfileType {
+function pickInitialProfile(
+  cookieValue: string | undefined,
+  authorized: ProfileType[]
+): ProfileType {
   const cookieProfile = parseActiveProfileCookie(cookieValue)
-  if (cookieProfile && cookieProfile !== "base" && authorized.includes(cookieProfile)) return cookieProfile
+  if (
+    cookieProfile &&
+    cookieProfile !== "base" &&
+    authorized.includes(cookieProfile)
+  ) {
+    return cookieProfile
+  }
   return authorized[0] ?? "base"
 }
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams?: { profile?: string | string[] }
-}) {
+async function getProfileFromRequest(): Promise<string | undefined> {
+  const h = await headers()
+  const url = h.get("x-url") ?? h.get("referer")
+  if (!url) return undefined
+  try {
+    const parsed = new URL(url, "http://localhost")
+    return parsed.searchParams.get("profile") ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
+export default async function Dashboard() {
   const { getServerSession } = await import("next-auth")
   const { authOptions } = await import("@/lib/auth-options")
-  const session = await getServerSession(authOptions)
 
+  const session = await getServerSession(authOptions)
   const user = (session as any)?.user
-  const authorized = getAuthorizedProfiles(user)
+
+  const authorizedProfiles = getAuthorizedProfiles(user)
 
   const cookieStore = await cookies()
   const cookieValue = cookieStore.get(ACTIVE_PROFILE_COOKIE_NAME)?.value
-  const requestedParam = Array.isArray(searchParams?.profile) ? searchParams?.profile[0] : searchParams?.profile
+
+  const requestedParam = await getProfileFromRequest()
   const requestedProfile = parseActiveProfileCookie(requestedParam)
+
   const initialProfile =
-    requestedProfile && requestedProfile !== "base" && authorized.includes(requestedProfile)
+    requestedProfile &&
+      requestedProfile !== "base" &&
+      authorizedProfiles.includes(requestedProfile)
       ? requestedProfile
-      : pickInitialProfile(cookieValue, authorized)
+      : pickInitialProfile(cookieValue, authorizedProfiles)
 
   const dashboardData = await getDashboardData()
+
   return (
     <MasterDashboardClient
       firstName={resolveFirstName(user)}

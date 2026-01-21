@@ -10,15 +10,25 @@ export function ThemeProvider({
     ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
     const { activeProfile } = useProfileStore()
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const roleThemeClass = React.useMemo(() => {
+        if (!mounted) return "theme-base"
         switch (activeProfile) {
-            case "Supplier": return "theme-supplier"
-            case "Tenant": return "theme-tenant"
-            case "Customer": return "theme-customer"
-            default: return "theme-base"
+            case "Supplier":
+                return "theme-supplier"
+            case "Tenant":
+                return "theme-tenant"
+            case "Customer":
+                return "theme-customer"
+            default:
+                return "theme-base"
         }
-    }, [activeProfile])
+    }, [activeProfile, mounted])
 
     return (
         <NextThemesProvider {...props}>

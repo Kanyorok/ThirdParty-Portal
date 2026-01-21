@@ -35,7 +35,6 @@ export function MasterDashboardClient({
 
   useEffect(() => {
     if (initialProfile && initialProfile !== activeProfile) setActiveProfile(initialProfile)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProfile])
 
   const registry = useMemo(() => getDashboardRegistryEntry(activeProfile), [activeProfile])

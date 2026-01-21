@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -22,8 +22,8 @@
   --color-muted: #F1F5F9;
   --color-muted-foreground: #64748B;
 
-  --color-accent: #EFF6FF;
-  --color-accent-foreground: #1D4ED8;
+  --color-accent: #10B981;
+  --color-accent-foreground: #FFFFFF;
 
   --color-destructive: #dc2626;
   --color-destructive-foreground: #FFFFFF;
@@ -48,10 +48,6 @@
 
   --spacing-sidebar-width: 17rem;
   --spacing-sidebar-width-icon: 4.25rem;
-
-  --supplier-color: #2563EB;
-  --tenant-color: #1D4ED8;
-  --customer-color: #0EA5E9;
 }
 
 :root {
@@ -61,15 +57,15 @@
 }
 
 .theme-supplier {
-  --primary: var(--supplier-color);
+  --primary: #2563EB;
 }
 
 .theme-tenant {
-  --primary: var(--tenant-color);
+  --primary: #1D4ED8;
 }
 
 .theme-customer {
-  --primary: var(--customer-color);
+  --primary: #0EA5E9;
 }
 
 .dark {
@@ -83,6 +79,8 @@
   --color-secondary-foreground: #E2E8F0;
   --color-muted: #111C30;
   --color-muted-foreground: #94A3B8;
+  --color-accent: #059669;
+  --color-accent-foreground: #E2E8F0;
   --color-border: #1E293B;
   --color-input: #1E293B;
   --color-sidebar: #0B1220;
