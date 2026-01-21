@@ -401,9 +401,9 @@ class WorkFlowController extends Controller
             $workflow = WorkFlow::findOrFail($id);
             $workflow->refresh();
 
-            // Get all stages with proper relationships
+                // Get all stages with proper relationships
             $stagesCollection = WorkflowStage::where('WorkFlowId', $id)
-                ->with(['type_name', 'workflow'])
+                ->with(['type_name', 'workflow', 'permission.roles'])
                 ->orderBy('Order')
                 ->get();
 
@@ -421,7 +421,7 @@ class WorkFlowController extends Controller
                         'TypeID' => $stage->type_name->TypeID,
                         'Name' => $stage->type_name->Name,
                     ] : null,
-                    'role_name' => $stage->role_name ?? '-',
+                    'role_name' => $stage->permission?->roles?->pluck('name')->implode(',') ?? '-',
                     'MaxAmount' => $stage->MaxAmount ?? '-',
                     'Count' => $stage->Count ?? null,
                     'IsFinalStage' => $isFinalStage,

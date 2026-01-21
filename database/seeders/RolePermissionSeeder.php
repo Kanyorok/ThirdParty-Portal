@@ -41,27 +41,37 @@ class RolePermissionSeeder extends Seeder
             ['CreatedBy' => $actor->Id ?? 1, 'ModifiedBy' => $actor->Id ?? 1]
         );
 
-        // --- Build permission rows (only those missing) ---
+        // --- Build permission rows ---
         $table = config('permission.table_names.permissions');
 
-        $existing = DB::table($table)
-            ->where('guard_name', $guard)
-            ->pluck('name')
-            ->all();
-        $existing = array_flip($existing); // for O(1) existence checks
-
-        $rows = [];
+        // 1. Get all valid permission names from Enum
+        $validPermissions = [];
         foreach (PermissionEnum::cases() as $perm) {
-            $name = $perm->value;
-            if (!isset($existing[$name])) {
-                $rows[] = [
-                    'name' => $name,
-                    'ModuleId' => $perm->module()->value,
-                    'guard_name' => $guard,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
+            $validPermissions[] = $perm->value;
+        }
+
+        // 2. Delete permissions in DB that are NOT in Enum (for this guard)
+        //    Soft-deletes/hard-deletes depend on schema, but we want them GONE or disabled.
+        //    migration shows NO DeletedOn, so we proceed with DELETE.
+        DB::table($table)
+            ->where('guard_name', $guard)
+            ->whereNotIn('name', $validPermissions)
+            ->delete();
+
+        // 3. Prepare rows for Upsert
+        $rows = [];
+        // We re-fetch existing to know what to insert? No, upsert handles it.
+        // Actually, upsert needs all columns. 
+        // Let's just build the full list from Enum.
+        
+        foreach (PermissionEnum::cases() as $perm) {
+            $rows[] = [
+                'name' => $perm->value,
+                'ModuleId' => $perm->module()->value,
+                'guard_name' => $guard,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
 
         // --- Upsert permissions in chunks to avoid 2100-param limit ---

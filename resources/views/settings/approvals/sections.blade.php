@@ -6,8 +6,9 @@
 @endsection
 
 @section('content')
-<div class="mb-3">
-    <button class="btn btn-primary float-end modal-create-approval" type="button">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Approval Configuration</h4>
+    <button class="btn btn-primary modal-create-approval" type="button">
         <i class="fas fa-plus-circle"></i> New Approval WorkFlow
     </button>
 </div>
@@ -16,50 +17,54 @@
     <div class="col-12">
         <div class="card mb-3">
             <div class="card-body">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-secondary">
-                        <tr>
-                            <th>#</th>
-                            <th>Section Name</th>
-                            <th>Description</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($workFlowGroups as $group)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $group->Name }}</td>
-                            <td>{{ $group->Description }}</td>
-                            <td>
-                                <a href="{{ route('settings.workflows.show', $group->Id) }}" class="btn btn-sm btn-outline-success">
-                                    👁️ View
-                                </a>
-                                <button class="btn btn-sm btn-outline-primary btn-edit"
-                                    data-id="{{ $group->Id }}"
-                                    data-name="{{ $group->Name }}"
-                                    data-description="{{ $group->Description }}"
-                                    data-doc="{{ $tableToAlias[$group->Source] ?? '' }}">
-                                    ✏️ Edit
-                                </button>
-                                <form method="POST" action="{{ route('settings.workflows.destroy', $group->Id) }}" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Delete this approval group?')">
-                                        🗑️ Delete
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                        @if($workFlowGroups->isEmpty())
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">No approval workflows configured yet.</td>
-                        </tr>
-                        @endif
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>#</th>
+                                <th>Section Name</th>
+                                <th>Description</th>
+                                <th style="width: 150px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($workFlowGroups as $group)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $group->Name }}</td>
+                                <td>{{ $group->Description }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ route('settings.workflows.show', $group->Id) }}" class="btn btn-outline-secondary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-primary btn-edit"
+                                            data-id="{{ $group->Id }}"
+                                            data-name="{{ $group->Name }}"
+                                            data-description="{{ $group->Description }}"
+                                            data-doc="{{ $tableToAlias[$group->Source] ?? '' }}" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <form method="POST" action="{{ route('settings.workflows.destroy', $group->Id) }}" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete"
+                                                onclick="return confirm('Delete this approval group?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                            @if($workFlowGroups->isEmpty())
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No approval workflows configured yet.</td>
+                            </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
