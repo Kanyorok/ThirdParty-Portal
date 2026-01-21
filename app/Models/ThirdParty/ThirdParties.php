@@ -92,6 +92,11 @@ class ThirdParties extends Model
         );
     }
 
+    public function users(): HasMany
+    {
+        return $this->hasMany(ThirdPartyUser::class, 'ThirdPartyId', 'Id');
+    }
+
     public function supplierMaster(): HasOne
     {
         return $this->hasOne(SupplierMaster::class, 'ThirdPartyId', 'Id');

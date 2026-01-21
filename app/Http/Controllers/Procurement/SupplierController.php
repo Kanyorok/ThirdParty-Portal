@@ -117,6 +117,40 @@ class SupplierController extends Controller
         return view('procurement.suppliers.index');
     }
 
+    public function search(Request $request)
+    {
+        $term = $request->get('q');
+        
+        $query = SupplierMaster::query()
+            ->with('party')
+            ->where('IsPrequalified', true)
+            ->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved);
+
+        if (!empty($term)) {
+            $query->whereHas('party', function ($q) use ($term) {
+                $q->where('ThirdPartyName', 'like', "%{$term}%")
+                  ->orWhere('TradingName', 'like', "%{$term}%")
+                  ->orWhere('RegistrationNumber', 'like', "%{$term}%");
+            });
+        }
+        
+        \Illuminate\Support\Facades\Log::info('Supplier Search Term: ' . $term);
+
+        $suppliers = $query->limit(20)->get()->map(function ($supplier) {
+            return [
+                'id' => $supplier->Id,
+                'text' => $supplier->party->ThirdPartyName ?? 'Unknown', // Select2 expects 'text' field
+                'company_name' => $supplier->party->ThirdPartyName ?? 'Unknown',
+                'registration_number' => $supplier->party->RegistrationNumber ?? 'N/A',
+                // Add status for clarity in UI if needed, but Select2 text is simple
+            ];
+        })->values();
+
+        \Illuminate\Support\Facades\Log::info('Supplier Search Result Count: ' . $suppliers->count());
+
+        return response()->json($suppliers);
+    }
+
     public function create()
     {
         $countries = \App\Models\Core\Country::all();

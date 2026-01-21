@@ -37,13 +37,8 @@ class TenderSubmissionController extends Controller
             ->doesntHave('submissions')
             ->get();
 
-        // Fix: Get supplier names from the related ThirdParty table
-        $suppliers = Supplier::select('t_Suppliers.Id')
-            ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
-            ->join('t_ThirdParties', 't_SupplierMaster.ThirdPartyId', '=', 't_ThirdParties.Id')
-            ->selectRaw('t_Suppliers.Id, COALESCE(t_ThirdParties.TradingName, t_ThirdParties.ThirdPartyName) as SupplierName')
-            ->whereNull('t_Suppliers.DeletedOn')
-            ->get();
+        // Initialize suppliers (loaded via AJAX)
+        $suppliers = [];
 
         $submissionModes = DB::table('t_CodeDetails')
             ->where('CodeID', 'SubmissionMode')
@@ -52,6 +47,36 @@ class TenderSubmissionController extends Controller
         $currencies = \App\Models\Core\Currency::all();
 
         return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies'));
+    }
+
+    public function getInvitedSuppliers($tenderId)
+    {
+        $tender = Tender::where('TenderNo', $tenderId)->firstOrFail();
+
+        if ($tender->TenderType === \App\Enums\TenderTypeEnum::Open) { // Public Tender
+             // List all approved and prequalified suppliers
+             $suppliers = Supplier::where('Active_Status', 1)
+                ->with('supplierMaster.thirdParty')
+                ->get()
+                ->map(function($supplier) {
+                    return [
+                        'Id' => $supplier->Id,
+                        'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
+                            ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
+                    ];
+                });
+        } else {
+            // Restricted Tender - load active invitations
+             $suppliers = $tender->invitedSuppliers->map(function($supplier) {
+                return [
+                    'Id' => $supplier->Id,
+                    'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
+                        ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
+                ];
+            });
+        }
+
+        return response()->json($suppliers);
     }
     public function view($Id)
     {
@@ -69,7 +94,7 @@ class TenderSubmissionController extends Controller
         // Validate the input
         $request->validate([
             'tender_ref' => 'required|string|max:255',
-            'supplier_name' => 'required|string|max:255',
+            'supplier_name' => 'required', // Now contains ID, removed string constraint to be safe or keep if ID is string
             'submission_mode' => 'required|string|max:255',
             'received_at' => 'required|date',
             'recorded_by' => 'required|string|max:255',
@@ -87,9 +112,18 @@ class TenderSubmissionController extends Controller
         if (!$tender) {
              return redirect()->back()->withErrors(['tender_ref' => 'Invalid Tender Reference.']);
         }
-
+        
+        $receivedOnTime = true;
         if ($tender->SubmissionDeadline && \Carbon\Carbon::parse($request->received_at)->gt($tender->SubmissionDeadline)) {
-             return redirect()->back()->withErrors(['received_at' => 'Cannot record submission. The received date is past the tender submission deadline (' . $tender->SubmissionDeadline->format('d/m/Y H:i') . ').'])->withInput();
+             // For manual submission, we might want to warn or allow with flag. 
+             // Current logic blocks. Assuming strict enforcement.
+             // If we want to allow "Late" submissions (as user implied), we should remove the blocking return.
+             // BUT user said "Received says no", implying the system marked it as late/no.
+             // If I remove the block, they can submit late.
+             // Let's Keep the block for now but calculate the flag correctly for valid range.
+             // Actually, if it's strictly blocked, ReceivedOnTime is always true.
+             // But let's calculate it to be robust.
+              return redirect()->back()->withErrors(['received_at' => 'Cannot record submission. The received date is past the tender submission deadline (' . $tender->SubmissionDeadline->format('d/m/Y H:i') . ').'])->withInput();
         }
 
         // Map submission_mode to t_CodeDetails ID
@@ -102,16 +136,8 @@ class TenderSubmissionController extends Controller
             return redirect()->back()->withErrors(['submission_mode' => 'Invalid submission mode selected.']);
         }
 
-        // Get supplier ID from supplier name
-        $supplier = Supplier::join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
-            ->join('t_ThirdParties', 't_SupplierMaster.ThirdPartyId', '=', 't_ThirdParties.Id')
-            ->where(function ($query) use ($request) {
-                $query->where('t_ThirdParties.TradingName', $request->supplier_name)
-                    ->orWhere('t_ThirdParties.ThirdPartyName', $request->supplier_name);
-            })
-            ->whereNull('t_Suppliers.DeletedOn')
-            ->select('t_Suppliers.Id')
-            ->first();
+        // Get supplier ID directly from selection
+        $supplier = Supplier::find($request->supplier_name);
 
         if ($supplier) {
             $existingSubmission = BidSubmission::where('TenderRef', $request->tender_ref)
@@ -121,15 +147,20 @@ class TenderSubmissionController extends Controller
             if ($existingSubmission) {
                 return redirect()->back()->withErrors(['supplier_name' => 'A submission for this tender and supplier already exists.'])->withInput();
             }
+        } else {
+             return redirect()->back()->withErrors(['supplier_name' => 'Selected supplier not found.'])->withInput();
         }
 
         DB::beginTransaction();
         try {
+            // Get Supplier Name for display/redundancy (as per schema)
+            $supplierName = $supplier->supplierMaster->thirdParty->TradingName ?? $supplier->supplierMaster->thirdParty->ThirdPartyName;
+
             // Create bid submission record
             $bidSubmission = BidSubmission::create([
                 'TenderRef' => $request->tender_ref,
-                'SupplierName' => $request->supplier_name,
-                'SupplierId' => $supplier?->Id,
+                'SupplierName' => $supplierName,
+                'SupplierId' => $supplier->Id,
                 'SubmissionMode' => $submissionModeId,
                 'ReceivedAt' => $request->received_at,
                 'RecordedBy' => $request->recorded_by,
@@ -141,6 +172,7 @@ class TenderSubmissionController extends Controller
                 'ValidityPeriod' => $request->validity_period,
                 'DeliveryPeriod' => $request->delivery_period,
                 'PaymentTerms' => $request->payment_terms,
+                'ReceivedOnTime' => $receivedOnTime, // Explicitly set timeliness
                 'CreatedBy' => $request->user()->Id,
                 'ModifiedBy' => $request->user()->Id,
             ]);

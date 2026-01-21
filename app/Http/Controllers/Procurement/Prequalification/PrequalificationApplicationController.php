@@ -632,4 +632,106 @@ class PrequalificationApplicationController extends Controller
                 ->with('error', 'Failed to delete application. Please try again.');
         }
     }
+    public function create(Request $request): View
+    {
+        $roundId = $request->get('round_id');
+        $prequalificationRound = null;
+        if ($roundId) {
+            $prequalificationRound = PrequalificationRound::find($roundId);
+        }
+
+        $rounds = PrequalificationRound::where('Status', PrequalificationRoundEnum::Open)
+            ->where(function ($q) {
+                // Ensure current date is within range
+                $now = now();
+                $q->where(fn($q2) => $q2->whereNull('StartDate')->orWhere('StartDate', '<=', $now))
+                  ->where(fn($q2) => $q2->whereNull('EndDate')->orWhere('EndDate', '>=', $now));
+            })
+            ->orderByDesc('CreatedOn')
+            ->get();
+        
+        // If specific round requested but not in "Open" list, fetch it separately to allow manual override?
+        // For now, let's stick to only open rounds unless specifically requested
+        if ($prequalificationRound && !$rounds->contains('RoundID', $prequalificationRound->RoundID)) {
+            $rounds->push($prequalificationRound);
+        }
+
+        return view('procurement.suppliers.prequalification.supplier-applications.create', compact('prequalificationRound', 'rounds'));
+    }
+
+    public function storeManual(Request $request)
+    {
+        $validated = $request->validate([
+            'round_id' => 'required|exists:t_PrequalificationRounds,RoundID',
+            'supplier_id' => 'required|exists:t_SupplierMaster,Id',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'exists:t_SupplierCategories,SupplierCategoryID',
+        ]);
+
+        $roundId = $validated['round_id'];
+        $supplierId = $validated['supplier_id'];
+        $categoryIds = array_unique($validated['category_ids']);
+
+        // Check Duplicates
+        $existing = PrequalificationApplication::where('SupplierID', $supplierId)
+            ->where('RoundID', $roundId)
+            ->whereIn('CategoryID', $categoryIds)
+            ->whereNull('DeletedOn')
+            ->pluck('CategoryID')
+            ->toArray();
+
+        if (!empty($existing)) {
+            $dupNames = \App\Models\ThirdParty\SupplierCategory::whereIn('SupplierCategoryID', $existing)
+                ->pluck('CategoryName')
+                ->implode(', ');
+            return back()->withInput()->with('error', 'Supplier has already applied for the following categories in this round: ' . $dupNames);
+        }
+
+        // Validate Round Status
+        $round = PrequalificationRound::findOrFail($roundId);
+        // Note: For manual admin entry, we might want to bypass some strict checks (like date window) 
+        // but generally should enforce status. Let's enforce standard rules for now.
+        $now = now();
+        $isClosed = $round->Status === PrequalificationRoundEnum::Closed;
+        // Allow if Draft? Probably not.
+        if ($isClosed) {
+             return back()->withInput()->with('error', 'Applications are closed for this round.');
+        }
+
+        // Check Max Vendors
+        if ($round->MaxVendors && $round->MaxVendors > 0) {
+              $distinctSuppliers = PrequalificationApplication::where('RoundID', $roundId)
+                ->whereNull('DeletedOn')
+                ->distinct()
+                ->pluck('SupplierID')
+                ->toArray();
+            
+             if (!in_array($supplierId, $distinctSuppliers) && count($distinctSuppliers) >= $round->MaxVendors) {
+                 return back()->withInput()->with('error', 'This round has reached the maximum number of allowed vendors.');
+             }
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($categoryIds as $cid) {
+                PrequalificationApplication::create([
+                    'RoundID' => $roundId,
+                    'SupplierID' => $supplierId,
+                    'CategoryID' => $cid,
+                    'Status' => PrequalificationApplicationEnum::Submitted,
+                    'SubmittedOn' => now(),
+                    'CreatedBy' => Auth::id(),
+                ]);
+            }
+            DB::commit();
+
+            return redirect()->route('prequalification.prequalification-rounds.show', $round)
+                ->with('success', 'Application submitted successfully.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Manual prequalification application failed', ['error' => $e->getMessage()]);
+            return back()->withInput()->with('error', 'Failed to save application. Please try again.');
+        }
+    }
 }

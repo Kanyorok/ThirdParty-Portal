@@ -22,8 +22,12 @@ Route::prefix('prequalification')
         Route::get('sections/{section}/criteria', [CriteriaController::class, 'fetchAll'])
             ->name('sections.criteria.fetch');
 
+        // Manual Store Route for Admin
+        Route::post('applications/manual', [PrequalificationApplicationController::class, 'storeManual'])
+            ->name('applications.store-manual');
+
         Route::resource('applications', PrequalificationApplicationController::class)
-            ->except(['create', 'store', 'evaluate']);
+            ->except(['store', 'evaluate']);
 
         // Evaluation Routes (for form display and submission)
         Route::controller(PrequalificationEvaluationController::class)->group(function () {

@@ -180,4 +180,75 @@
             </div>
         </form>
     </div>
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
+@endsection
+
+@section('scripts')
+<script src="{{ asset('assets/js/select2.min.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2
+        $('#tenderSelect').select2({
+            placeholder: '-- Select Tender --',
+            allowClear: true,
+            width: '100%'
+        });
+
+        $('#supplierSelect').select2({
+            placeholder: '-- Select Supplier --',
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Handle Tender Selection Change
+        $('#tenderSelect').on('change', function() {
+            const tenderId = $(this).val();
+            const supplierSelect = $('#supplierSelect');
+
+            // Clear existing options
+            supplierSelect.empty().append('<option selected disabled>Loading...</option>');
+            supplierSelect.trigger('change');
+
+            if (tenderId) {
+                // Show loading state
+                supplierSelect.empty().append('<option selected disabled>Loading...</option>');
+                
+                fetch(`{{ url('procurement/tendersubmission/invited-suppliers') }}/${tenderId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        supplierSelect.empty();
+                        supplierSelect.append('<option selected disabled>-- Select Supplier --</option>');
+
+                        if (Array.isArray(data) && data.length === 0) {
+                            supplierSelect.append('<option disabled>No suppliers found for this tender</option>');
+                        } else if (Array.isArray(data)) {
+                            data.forEach(supplier => {
+                                const option = new Option(supplier.SupplierName, supplier.Id, false, false);
+                                supplierSelect.append(option);
+                            });
+                        } else {
+                            throw new Error('Invalid data format received');
+                        }
+                        supplierSelect.trigger('change');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        supplierSelect.empty().append('<option selected disabled>Error fetching suppliers</option>');
+                        supplierSelect.trigger('change');
+                        alert('❌ Failed to load suppliers. Please check your connection or try again.');
+                    });
+            } else {
+                supplierSelect.empty().append('<option selected disabled>-- Select Supplier --</option>');
+                supplierSelect.trigger('change');
+            }
+        });
+    });
+</script>
+@endsection
 @endsection

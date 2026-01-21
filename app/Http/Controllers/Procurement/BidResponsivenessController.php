@@ -58,7 +58,7 @@ class BidResponsivenessController extends Controller
         $this->authorize(PermissionEnum::BidSubmissionRead);
         
         $submission = BidSubmission::with([
-            'supplier.supplierMaster.thirdParty', // Correct path to ThirdParty details
+            'supplier.supplierMaster.thirdParty.users', // Correct path to ThirdParty details and Users
             'tender', 
             'openedByUser', 
             'responsivenessCheckedByUser'
@@ -113,6 +113,7 @@ class BidResponsivenessController extends Controller
 
         // Get supplier details - fix relationship traversal
         $thirdParty = $submission->supplier->supplierMaster->thirdParty ?? null;
+        $primaryUser = $thirdParty?->users->sortByDesc('CreatedOn')->first();
         
         $supplierDetails = [
             'supplier_name' => $submission->SupplierName,
@@ -120,9 +121,9 @@ class BidResponsivenessController extends Controller
             'third_party_name' => $thirdParty->ThirdPartyName ?? 'N/A',
             'trading_name' => $thirdParty->TradingName ?? 'N/A',
             'registration_number' => $thirdParty->RegistrationNumber ?? 'N/A',
-            'contact_person' => $thirdParty->ContactPerson ?? 'N/A',
-            'email' => $thirdParty->EmailAddress ?? 'N/A',
-            'phone' => $thirdParty->PhoneNumber ?? 'N/A',
+            'contact_person' => $primaryUser?->fullName ?? 'N/A',
+            'email' => $primaryUser?->Email ?? ($thirdParty->Email ?? 'N/A'),
+            'phone' => $primaryUser?->Phone ?? ($thirdParty->Phone ?? 'N/A'),
             'address' => $thirdParty->PhysicalAddress ?? 'N/A'
         ];
 

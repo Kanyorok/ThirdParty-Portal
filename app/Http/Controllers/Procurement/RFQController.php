@@ -598,6 +598,7 @@ public function reject(Request $request, $id)
         ->whereNull('sm.DeletedOn')
         ->whereNull('tp.DeletedOn')
         ->where('sm.ApprovalStatus', 'A') // Only approved suppliers
+        ->where('sm.IsPrequalified', 1)   // Only prequalified suppliers
         ->select(
             'sm.Id', // Use SupplierMaster Id
             'sm.ThirdPartyId',
