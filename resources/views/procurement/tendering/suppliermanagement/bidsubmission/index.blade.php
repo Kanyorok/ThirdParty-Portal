@@ -44,7 +44,12 @@ use Illuminate\Support\Facades\Storage;
                 @forelse ($submissions as $index => $submission)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $submission->TenderRef }}</td>
+                    <td>
+                        <div>{{ $submission->TenderRef }}</div>
+                        @if($submission->tender)
+                            <div class="text-muted small">{{ $submission->tender->Title }}</div>
+                        @endif
+                    </td>
                     <td>
                         @if($submission->supplier && $submission->supplier->supplierMaster && $submission->supplier->supplierMaster->party)
                         {{ $submission->supplier->supplierMaster->party->TradingName ?? $submission->supplier->supplierMaster->party->ThirdPartyName }}

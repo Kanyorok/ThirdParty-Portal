@@ -135,7 +135,7 @@ class TenderController extends Controller
         $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'BranchID', 'DepartmentID', 'ProcurementMethod')
             ->with([
                 'item' => function ($query) {
-                    $query->select('Id', 'ItemName');
+                    $query->select('Id', 'ItemName', 'Category');
                 },
                 'procurementMode',
                 'departmentNeed' => function ($q) {
@@ -181,6 +181,10 @@ class TenderController extends Controller
 
             $needId = optional($lineItem->departmentNeed)->NeedID;
 
+             // Resolve top-level category
+             $catId = $item->Category;
+             $topLevelCatId = $categoryToTopLevel[$catId] ?? $catId;
+ 
             $entry = [
                 'id' => $planId,
                 'planLineItemId' => $lineItem->LineItemID,
@@ -190,6 +194,7 @@ class TenderController extends Controller
                 'usedQty' => $usedQty,
                 'remainingQty' => round($remainingQty, 2), // Round for display
                 'needId' => $needId,
+                'categoryId' => $topLevelCatId,
             ];
 
             $procurementPlansOutput[$planId][] = $entry;

@@ -380,7 +380,7 @@ class BidSubmission extends Model
             'overall_responsive' => $this->IsResponsive,
             'overall_remarks' => $this->ResponsivenessRemarks,
             'checked_at' => $this->ResponsivenessCheckedAt,
-            'checked_by' => $this->responsivenessCheckedByUser?->name ?? 'Unknown'
+            'checked_by' => $this->responsivenessCheckedByUser?->Name ?? 'Unknown'
         ];
     }
 

@@ -61,7 +61,54 @@
                     <strong>📄 Submission Details</strong>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                     <!-- Financial & Terms -->
+                     <h6 class="text-muted border-bottom pb-2 mb-3">Financials & Terms</h6>
+                     <div class="row">
+                        <!-- Currency -->
+                        <div class="col-md-4 mb-3">
+                            <label for="currency" class="form-label">Currency</label>
+                            <select class="form-select @error('currency') is-invalid @enderror" id="currency" name="currency" required>
+                                <option selected disabled>-- Select --</option>
+                                @foreach ($currencies as $currency)
+                                    <option value="{{ $currency->Code }}">{{ $currency->Code }} - {{ $currency->Name }}</option>
+                                @endforeach
+                            </select>
+                            @error('currency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <!-- Bid Amount -->
+                        <div class="col-md-4 mb-3">
+                            <label for="bidAmount" class="form-label">Bid Amount</label>
+                            <input type="number" step="0.01" class="form-control @error('bid_amount') is-invalid @enderror" id="bidAmount" name="bid_amount" required>
+                            @error('bid_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <!-- Payment Terms -->
+                        <div class="col-md-4 mb-3">
+                            <label for="paymentTerms" class="form-label">Payment Terms</label>
+                            <input type="text" class="form-control @error('payment_terms') is-invalid @enderror" id="paymentTerms" name="payment_terms" placeholder="e.g. 30 Days Net">
+                            @error('payment_terms') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                     </div>
+
+                     <div class="row">
+                        <!-- Validity Period -->
+                        <div class="col-md-6 mb-3">
+                            <label for="validityPeriod" class="form-label">Bid Validity Period (Days)</label>
+                            <input type="number" class="form-control @error('validity_period') is-invalid @enderror" id="validityPeriod" name="validity_period" required>
+                            @error('validity_period') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <!-- Delivery Period -->
+                        <div class="col-md-6 mb-3">
+                            <label for="deliveryPeriod" class="form-label">Delivery Period (Days)</label>
+                            <input type="number" class="form-control @error('delivery_period') is-invalid @enderror" id="deliveryPeriod" name="delivery_period" required>
+                            @error('delivery_period') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                     </div>
+                     
+                     <h6 class="text-muted border-bottom pb-2 mb-3 mt-2">Logistics</h6>
+                     <div class="row">
                         <!-- Mode of Submission -->
                         <div class="col-md-4 mb-3">
                             <label for="submissionMode" class="form-label">Mode of Submission</label>

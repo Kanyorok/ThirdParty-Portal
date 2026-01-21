@@ -19,7 +19,8 @@ class TenderSubmissionController extends Controller
         $submissions = BidSubmission::with([
             'submissionMode',
             'createdByUser',
-            'supplier.supplierMaster.party'
+            'supplier.supplierMaster.party',
+            'tender'
         ])
             ->orderBy('CreatedOn', 'desc')
             ->get();
@@ -29,8 +30,10 @@ class TenderSubmissionController extends Controller
     public function create()
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
-        // Exclude tenders that already have submissions
+        // Exclude tenders that already have submissions & filter by Published status
         $tenders = Tender::select('TenderNo', 'Title')
+            ->where('Status', \App\Enums\TenderStatusEnum::Published->value)
+            ->where('ApprovalStatus', '!=', \App\Enums\TenderApprovalStatusEnum::REJECTED->value)
             ->doesntHave('submissions')
             ->get();
 
@@ -45,7 +48,10 @@ class TenderSubmissionController extends Controller
         $submissionModes = DB::table('t_CodeDetails')
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
+        
+        $currencies = \App\Models\Core\Currency::all();
+
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies'));
     }
     public function view($Id)
     {
@@ -69,7 +75,22 @@ class TenderSubmissionController extends Controller
             'recorded_by' => 'required|string|max:255',
             'remarks' => 'nullable|string',
             'bid_files' => 'required|file|mimes:zip,pdf|max:10240', // Max 10MB
+            'currency' => 'required|string|exists:t_Currencies,Code',
+            'bid_amount' => 'required|numeric|min:0',
+            'validity_period' => 'required|integer|min:1',
+            'delivery_period' => 'required|integer|min:1',
+            'payment_terms' => 'nullable|string',
         ]);
+
+        // Check if tender exists and submission is within deadline
+        $tender = Tender::where('TenderNo', $request->tender_ref)->first();
+        if (!$tender) {
+             return redirect()->back()->withErrors(['tender_ref' => 'Invalid Tender Reference.']);
+        }
+
+        if ($tender->SubmissionDeadline && \Carbon\Carbon::parse($request->received_at)->gt($tender->SubmissionDeadline)) {
+             return redirect()->back()->withErrors(['received_at' => 'Cannot record submission. The received date is past the tender submission deadline (' . $tender->SubmissionDeadline->format('d/m/Y H:i') . ').'])->withInput();
+        }
 
         // Map submission_mode to t_CodeDetails ID
         $submissionModeId = DB::table('t_CodeDetails')
@@ -115,6 +136,11 @@ class TenderSubmissionController extends Controller
                 'Remarks' => $request->remarks,
                 'SubmissionSource' => 'manual',
                 'DocumentsAccessible' => false, // Sealed until bid opening
+                'Currency' => $request->currency,
+                'BidAmount' => $request->bid_amount,
+                'ValidityPeriod' => $request->validity_period,
+                'DeliveryPeriod' => $request->delivery_period,
+                'PaymentTerms' => $request->payment_terms,
                 'CreatedBy' => $request->user()->Id,
                 'ModifiedBy' => $request->user()->Id,
             ]);

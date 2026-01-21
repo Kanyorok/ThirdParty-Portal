@@ -25,6 +25,9 @@ class TenderOpeningController extends Controller
             })
             ->where('OpeningDate', '<=', now()) // Only tenders where opening date has passed
             ->where('SubmissionDeadline', '<=', now()) // Ensure submission deadline has also passed
+            ->where('Status', '!=', \App\Enums\TenderStatusEnum::Draft->value)
+            ->where('ApprovalStatus', '!=', \App\Enums\TenderApprovalStatusEnum::REJECTED->value)
+            ->where('ApprovalStatus', '!=', \App\Enums\TenderApprovalStatusEnum::PENDING->value)
             ->select('Id', 'TenderNo', 'Title', 'Status', 'OpeningDate', 'SubmissionDeadline')
             ->orderBy('OpeningDate', 'desc')
             ->get();
@@ -85,6 +88,9 @@ class TenderOpeningController extends Controller
             })
             ->where('OpeningDate', '<=', now())
             ->where('SubmissionDeadline', '<=', now())
+            ->where('Status', '!=', \App\Enums\TenderStatusEnum::Draft->value)
+            ->where('ApprovalStatus', '!=', \App\Enums\TenderApprovalStatusEnum::REJECTED->value)
+            ->where('ApprovalStatus', '!=', \App\Enums\TenderApprovalStatusEnum::PENDING->value)
             ->select('Id', 'TenderNo', 'Title', 'Status', 'OpeningDate')
             ->orderBy('OpeningDate', 'desc')
             ->get();
@@ -303,7 +309,7 @@ class TenderOpeningController extends Controller
                 ],
                 'opening_details' => [
                     'opened_at' => $submission->OpenedAt->format('d/m/Y H:i:s'),
-                    'opened_by' => $submission->openedByUser->name ?? 'Unknown',
+                    'opened_by' => $submission->openedByUser->Name ?? 'Unknown',
                     'ceremony_type' => ucfirst($submission->CeremonyType ?? 'Unknown'),
                     'read_out_summary' => $submission->ReadOutSummary
                 ],
@@ -359,7 +365,7 @@ class TenderOpeningController extends Controller
                 ],
                 'ceremony_info' => [
                     'opened_at' => $submission->OpenedAt->format('d/m/Y H:i:s'),
-                    'opened_by' => $submission->openedByUser->name ?? 'Unknown',
+                    'opened_by' => $submission->openedByUser->Name ?? 'Unknown',
                     'ceremony_type' => ucfirst($submission->CeremonyType ?? 'Public'),
                     'officers_present' => $submission->OfficersPresent
                 ],
