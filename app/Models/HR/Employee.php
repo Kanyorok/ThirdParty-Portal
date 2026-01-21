@@ -7,6 +7,7 @@ use App\Models\HR\EmployeeContact;
 use App\Models\HR\EmployeeDocument;
 use App\Models\HR\EmployeeSalaryHistory;
 use App\Models\HR\EmployeeEducation;
+use App\Models\HR\EmployeeWorkingDaySetting;
 
 class Employee extends Model
 {
@@ -22,6 +23,7 @@ class Employee extends Model
         'Email',
         'Phone',
         'Gender',
+        'Religion',
         'DateOfBirth',
         'Address',
         'PhotoPath',
@@ -128,5 +130,10 @@ class Employee extends Model
     public function education()
     {
         return $this->hasMany(EmployeeEducation::class, 'EmployeeID')->whereNull('DeletedOn');
+    }
+
+    public function workingDayOverrides()
+    {
+        return $this->hasMany(EmployeeWorkingDaySetting::class, 'EmployeeID');
     }
 }

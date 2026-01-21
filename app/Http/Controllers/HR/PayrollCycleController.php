@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HR\PayrollCycle;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PayrollCycleController extends Controller
 {
@@ -27,6 +28,14 @@ class PayrollCycleController extends Controller
             'Month' => ['required','integer','min:1','max:12', Rule::unique('t_HRPayrollCycles')->where(fn($q) => $q->where('Year', $request->Year))],
             'Notes' => ['nullable','string','max:500'],
         ]);
+
+        $openCycle = PayrollCycle::whereIn('Status', ['Open', 'Reopened'])->first();
+        if ($openCycle) {
+            $period = str_pad((string)$openCycle->Month, 2, '0', STR_PAD_LEFT) . '/' . $openCycle->Year;
+            throw ValidationException::withMessages([
+                'Year' => 'Payroll cycle ' . $period . ' is still open. Close it before opening another cycle.',
+            ]);
+        }
 
         $data['Status'] = 'Open';
         $data['OpenedOn'] = now();

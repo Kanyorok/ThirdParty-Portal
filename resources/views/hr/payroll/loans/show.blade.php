@@ -29,6 +29,10 @@
                     <div class="fw-semibold">{{ number_format($loan->Principal, 2) }}</div>
                 </div>
                 <div class="col-md-4">
+                    <div class="text-muted small">Balance</div>
+                    <div class="fw-semibold">{{ number_format((float)($loan->Balance ?? 0), 2) }}</div>
+                </div>
+                <div class="col-md-4">
                     <div class="text-muted small">Interest Rate</div>
                     <div class="fw-semibold">{{ number_format($loan->InterestRate ?? 0, 4) }}%</div>
                 </div>
@@ -53,27 +57,31 @@
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-header bg-white">Loan Repayment Deductions</div>
+        <div class="card-header bg-white">Loan Repayment Schedule</div>
         <div class="card-body p-0">
             <table class="table mb-0">
                 <thead>
                     <tr>
                         <th>Period</th>
-                        <th>Deduction</th>
-                        <th>Amount</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>Total Due</th>
                         <th>Status</th>
+                        <th>Paid On</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($deductions as $row)
+                    @forelse($schedule as $row)
                         <tr>
-                            <td>{{ str_pad($row->Month, 2, '0', STR_PAD_LEFT) }}/{{ $row->Year }}</td>
-                            <td>{{ $row->deduction?->Name ?? $row->Name }}</td>
-                            <td>{{ number_format($row->Amount, 2) }}</td>
+                            <td>{{ optional($row->DueDate)->format('m/Y') ?? '-' }}</td>
+                            <td>{{ number_format((float)($row->PrincipalComponent ?? 0), 2) }}</td>
+                            <td>{{ number_format((float)($row->InterestComponent ?? 0), 2) }}</td>
+                            <td>{{ number_format((float)($row->TotalDue ?? 0), 2) }}</td>
                             <td>{{ $row->Status }}</td>
+                            <td>{{ optional($row->PaidOn)->format('Y-m-d') ?? '-' }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="text-center text-muted py-3">No repayment deductions found.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-3">No repayment schedule found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -81,4 +89,3 @@
     </div>
 </div>
 @endsection
-

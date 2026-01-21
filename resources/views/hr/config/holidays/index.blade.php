@@ -41,6 +41,7 @@
                             <th>Name</th>
                             <th>Date</th>
                             <th>Region</th>
+                            <th>Religion</th>
                             <th>Recurring</th>
                             <th>Status</th>
                             <th></th>
@@ -51,7 +52,14 @@
                             <tr>
                                 <td>{{ $holiday->Name }}</td>
                                 <td>{{ \Illuminate\Support\Carbon::parse($holiday->HolidayDate)->format('Y-m-d') }}</td>
-                                <td>{{ $holiday->Region ?? '-' }}</td>
+                                <td>
+                                    @php
+                                        $scope = $holiday->RegionScope ?? 'Global';
+                                        $countryName = $countries[$holiday->CountryId]->Name ?? null;
+                                    @endphp
+                                    {{ $scope === 'Regional' ? ($countryName ?: 'Regional') : 'Global' }}
+                                </td>
+                                <td>{{ $holiday->AppliesToReligion ?? '-' }}</td>
                                 <td>{{ $holiday->IsRecurring ? 'Yes' : 'No' }}</td>
                                 <td>{{ $holiday->Status }}</td>
                                 <td class="text-end">
@@ -70,7 +78,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center">No holidays found.</td></tr>
+                            <tr><td colspan="7" class="text-center">No holidays found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

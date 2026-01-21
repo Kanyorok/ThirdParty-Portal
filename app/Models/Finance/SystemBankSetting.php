@@ -14,7 +14,7 @@ class SystemBankSetting extends Model
     protected $fillable = [
         'BankName','ShortName','BankCode','SwiftCode','ClearingCode','Address1','Address2',
         'CityID','CountryID','ZipCode','Phone1','Phone2','Mobile','Fax','EmailID','Website',
-        'BankRegNumber','AuditedDate','BankTypeID','ImageID','IsActive','CreatedBy','ModifiedBy',
+        'BankRegNumber','EmployerTaxPIN','AuditedDate','BankTypeID','ImageID','IsActive','CreatedBy','ModifiedBy',
         'SupervisedBy','SupervisedOn'
     ];
 

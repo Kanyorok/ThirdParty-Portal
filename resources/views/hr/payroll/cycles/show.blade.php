@@ -7,7 +7,11 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Payroll Cycle {{ $cycle->Month }}/{{ $cycle->Year }}</h2>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-primary" href="{{ route('hr.payroll.runs.create') }}">Generate Payroll</a>
+            @if($cycle->Status !== 'Closed')
+                <a class="btn btn-outline-primary" href="{{ route('hr.payroll.runs.create') }}">Generate Payroll</a>
+            @else
+                <span class="text-muted align-self-center">Cycle closed</span>
+            @endif
             <a class="btn btn-outline-secondary" href="{{ route('hr.payroll.cycles.index') }}">Back</a>
         </div>
     </div>

@@ -7,6 +7,8 @@ use App\Models\HR\Employee;
 use App\Models\HR\MonthlyDeduction;
 use App\Models\HR\PayrollDeduction;
 use App\Models\HR\StaffLoan;
+use App\Models\HR\StaffLoanSchedule;
+use App\Services\HR\StaffLoanService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -27,13 +29,14 @@ class StaffLoanController extends Controller
     public function show($id)
     {
         $loan = StaffLoan::with('employee')->findOrFail($id);
-        $deductions = MonthlyDeduction::with('deduction')
-            ->where('StaffLoanID', $loan->Id)
-            ->orderBy('Year')
-            ->orderBy('Month')
+        if ($loan->Status === 'Approved') {
+            app(StaffLoanService::class)->ensureSchedule($loan);
+        }
+        $schedule = StaffLoanSchedule::where('StaffLoanID', $loan->Id)
+            ->orderBy('InstallmentNo')
             ->get();
 
-        return view('hr.payroll.loans.show', compact('loan', 'deductions'));
+        return view('hr.payroll.loans.show', compact('loan', 'schedule'));
     }
 
     public function store(Request $request)
@@ -91,6 +94,7 @@ class StaffLoanController extends Controller
             'ModifiedOn' => now(),
         ]);
 
+        app(StaffLoanService::class)->ensureSchedule($loan);
         $this->generateLoanRepaymentDeductions($loan);
 
         return redirect()->route('hr.payroll.loans.index')->with('success', 'Loan approved and loan repayment deductions generated.');
@@ -123,15 +127,24 @@ class StaffLoanController extends Controller
             ]);
         }
 
-        $start = \Carbon\Carbon::parse($loan->StartDate)->startOfMonth();
-        $tenure = (int)$loan->TenureMonths;
-        $amount = (float)$loan->InstallmentAmount;
+        $schedules = StaffLoanSchedule::where('StaffLoanID', $loan->Id)
+            ->orderBy('InstallmentNo')
+            ->get();
+        if ($schedules->isEmpty()) {
+            return;
+        }
 
-        for ($i = 0; $i < $tenure; $i++) {
-            $m = $start->copy()->addMonths($i);
-            $month = (int)$m->month;
-            $year = (int)$m->year;
-
+        foreach ($schedules as $schedule) {
+            $dueDate = $schedule->DueDate;
+            if (!$dueDate) {
+                continue;
+            }
+            $month = (int)$dueDate->month;
+            $year = (int)$dueDate->year;
+            $amount = (float)($schedule->TotalDue ?? $loan->InstallmentAmount ?? 0);
+            if ($amount <= 0) {
+                continue;
+            }
             $exists = MonthlyDeduction::where('EmployeeID', $loan->EmployeeID)
                 ->where('DeductionID', $deduction->Id)
                 ->where('StaffLoanID', $loan->Id)

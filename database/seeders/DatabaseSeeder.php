@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call(RolePermissionSeeder::class);
         $this->call(CommitteeSeeder::class);
         $this->call(DepartmentSeeder::class);
+        $this->call(JobGradeSeeder::class);
         $this->call(EmployeeSeeder::class);
         $this->call(ItemCategoriesSeeder::class);
         $this->call(UnitOfMeasureSeeder::class);
@@ -110,5 +111,9 @@ class DatabaseSeeder extends Seeder
         $this->call(KpiSeeder::class);
         $this->call(StatutorySeeder::class);
         $this->call(LeaveTypeSeeder::class);
+        $this->call(ExitSeeder::class);
+        $this->call(HRSharedDocumentsSeeder::class);
+        $this->call(HRTrainingSeeder::class);
+        $this->call(HROvertimeSeeder::class);
     }
 }

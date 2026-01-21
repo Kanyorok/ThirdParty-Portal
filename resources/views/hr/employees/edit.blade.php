@@ -77,6 +77,15 @@
                         </select>
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label">Religion</label>
+                        <select name="Religion" class="form-select">
+                            <option value="">Select</option>
+                            @foreach($religions ?? [] as $religion)
+                                <option value="{{ $religion->Name }}" @selected(old('Religion', $employee->Religion) == $religion->Name)>{{ $religion->Name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">Date of Birth</label>
                         <input type="date" name="DateOfBirth" class="form-control"
                                value="{{ old('DateOfBirth', optional($employee->DateOfBirth)->format('Y-m-d')) }}">
@@ -118,11 +127,11 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Grade</label>
-                        <select name="GradeID" class="form-select">
+                        <select name="GradeID" id="GradeID" class="form-select">
                             <option value="">Select Grade</option>
                             @foreach($grades as $grade)
                                 <option value="{{ $grade->Id }}"
-                                        @selected(old('GradeID', $employee->GradeID) == $grade->Id)>
+                                    @selected(old('GradeID', $employee->GradeID) == $grade->Id)>
                                     {{ $grade->Name }}
                                 </option>
                             @endforeach
@@ -130,10 +139,10 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Role</label>
-                        <select name="RoleID" class="form-select">
+                        <select name="RoleID" id="RoleID" class="form-select">
                             <option value="">Select Role</option>
                             @foreach($roles as $role)
-                                <option value="{{ $role->Id }}"
+                                <option value="{{ $role->Id }}" data-grade-id="{{ $role->GradeID ?? '' }}"
                                         @selected(old('RoleID', $employee->RoleID) == $role->Id)>
                                     {{ $role->Name }}
                                 </option>
@@ -162,14 +171,27 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Employment Type</label>
-                        <input type="text" name="EmploymentType" class="form-control"
-                               value="{{ old('EmploymentType', $employee->EmploymentType) }}"
-                               placeholder="Permanent, Contract...">
+                        <select name="EmploymentType" class="form-select">
+                            <option value="">Select Employment Type</option>
+                            @foreach($employmentTypes ?? [] as $type)
+                                <option value="{{ $type->Description }}"
+                                        @selected(old('EmploymentType', $employee->EmploymentType) == $type->Description)>
+                                    {{ $type->Description }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Contract Type</label>
-                        <input type="text" name="ContractType" class="form-control"
-                               value="{{ old('ContractType', $employee->ContractType) }}">
+                        <select name="ContractType" class="form-select">
+                            <option value="">Select Contract Type</option>
+                            @foreach($contractTypes ?? [] as $contractType)
+                                <option value="{{ $contractType->Description }}"
+                                        @selected(old('ContractType', $employee->ContractType) == $contractType->Description)>
+                                    {{ $contractType->Description }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     {{-- Statutory --}}
@@ -278,39 +300,50 @@
                     @endphp
                     @for($i=0; $i<2; $i++)
                         @php $contact = $contactData[$i] ?? null; @endphp
-                        <div class="col-md-4">
-                            <label class="form-label">Name</label>
-                            <input type="text" name="contact_name[]" class="form-control" value="{{ $contact['Name'] ?? $contact->Name ?? '' }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Relation</label>
-                            <input type="text" name="contact_relation[]" class="form-control" value="{{ $contact['Relation'] ?? $contact->Relation ?? '' }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Phone</label>
-                            <input type="text" name="contact_phone[]" class="form-control" value="{{ $contact['Phone'] ?? $contact->Phone ?? '' }}">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-center gap-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="contact_is_next_of_kin[{{ $i }}]" value="1"
-                                       @checked($contact['IsNextOfKin'] ?? $contact->IsNextOfKin ?? false)>
-                                <label class="form-check-label">Next of Kin</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="contact_is_primary[{{ $i }}]" value="1"
-                                       @checked($contact['IsPrimary'] ?? $contact->IsPrimary ?? false)>
-                                <label class="form-check-label">Primary</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="contact_email[]" class="form-control" value="{{ $contact['Email'] ?? $contact->Email ?? '' }}">
-                        </div>
-                        <div class="col-md-3 d-flex align-items-center">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="contact_is_emergency[{{ $i }}]" value="1"
-                                       @checked($contact['IsEmergency'] ?? $contact->IsEmergency ?? true)>
-                                <label class="form-check-label">Emergency Contact</label>
+                        <div class="col-12">
+                            <div class="border rounded p-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-secondary me-2">{{ $i + 1 }}</span>
+                                    <span class="fw-semibold">Contact</span>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Name</label>
+                                        <input type="text" name="contact_name[]" class="form-control" value="{{ $contact['Name'] ?? $contact->Name ?? '' }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Relation</label>
+                                        <input type="text" name="contact_relation[]" class="form-control" value="{{ $contact['Relation'] ?? $contact->Relation ?? '' }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Phone</label>
+                                        <input type="text" name="contact_phone[]" class="form-control" value="{{ $contact['Phone'] ?? $contact->Phone ?? '' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" name="contact_email[]" class="form-control" value="{{ $contact['Email'] ?? $contact->Email ?? '' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Flags</label>
+                                        <div class="d-flex flex-wrap gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="contact_is_next_of_kin[{{ $i }}]" value="1"
+                                                       @checked($contact['IsNextOfKin'] ?? $contact->IsNextOfKin ?? false)>
+                                                <label class="form-check-label">Next of Kin</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="contact_is_primary[{{ $i }}]" value="1"
+                                                       @checked($contact['IsPrimary'] ?? $contact->IsPrimary ?? false)>
+                                                <label class="form-check-label">Primary</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="contact_is_emergency[{{ $i }}]" value="1"
+                                                       @checked($contact['IsEmergency'] ?? $contact->IsEmergency ?? true)>
+                                                <label class="form-check-label">Emergency Contact</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endfor
@@ -355,29 +388,39 @@
                     @endphp
                     @for($i=0; $i<2; $i++)
                         @php $edu = $eduData[$i] ?? null; @endphp
-                        <div class="col-md-3">
-                            <label class="form-label">Level</label>
-                            <input type="text" name="edu_level[]" class="form-control" value="{{ $edu['Level'] ?? $edu->Level ?? '' }}" placeholder="Bachelor, Diploma">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Institution</label>
-                            <input type="text" name="edu_institution[]" class="form-control" value="{{ $edu['Institution'] ?? $edu->Institution ?? '' }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Course</label>
-                            <input type="text" name="edu_course[]" class="form-control" value="{{ $edu['Course'] ?? $edu->Course ?? '' }}">
-                        </div>
-                        <div class="col-md-1">
-                            <label class="form-label">From</label>
-                            <input type="text" name="edu_year_from[]" class="form-control" value="{{ $edu['YearFrom'] ?? $edu->YearFrom ?? '' }}" placeholder="YYYY">
-                        </div>
-                        <div class="col-md-1">
-                            <label class="form-label">To</label>
-                            <input type="text" name="edu_year_to[]" class="form-control" value="{{ $edu['YearTo'] ?? $edu->YearTo ?? '' }}" placeholder="YYYY">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Grade</label>
-                            <input type="text" name="edu_grade[]" class="form-control" value="{{ $edu['Grade'] ?? $edu->Grade ?? '' }}">
+                        <div class="col-12">
+                            <div class="border rounded p-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-secondary me-2">{{ $i + 1 }}</span>
+                                    <span class="fw-semibold">Education</span>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Level</label>
+                                        <input type="text" name="edu_level[]" class="form-control" value="{{ $edu['Level'] ?? $edu->Level ?? '' }}" placeholder="Bachelor, Diploma">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Institution</label>
+                                        <input type="text" name="edu_institution[]" class="form-control" value="{{ $edu['Institution'] ?? $edu->Institution ?? '' }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Course</label>
+                                        <input type="text" name="edu_course[]" class="form-control" value="{{ $edu['Course'] ?? $edu->Course ?? '' }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">From</label>
+                                        <input type="text" name="edu_year_from[]" class="form-control" value="{{ $edu['YearFrom'] ?? $edu->YearFrom ?? '' }}" placeholder="YYYY">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">To</label>
+                                        <input type="text" name="edu_year_to[]" class="form-control" value="{{ $edu['YearTo'] ?? $edu->YearTo ?? '' }}" placeholder="YYYY">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">Grade</label>
+                                        <input type="text" name="edu_grade[]" class="form-control" value="{{ $edu['Grade'] ?? $edu->Grade ?? '' }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @endfor
                 </div>
@@ -401,30 +444,59 @@
     document.addEventListener('DOMContentLoaded', function () {
         const bankSelect = document.getElementById('BankID');
         const branchSelect = document.getElementById('BankBranchID');
-        if (!bankSelect || !branchSelect) return;
+        if (bankSelect && branchSelect) {
+            const allBranchOptions = Array.from(branchSelect.options);
 
-        const allBranchOptions = Array.from(branchSelect.options);
+            const filterBranches = () => {
+                const bankId = bankSelect.value;
+                branchSelect.innerHTML = '';
+                allBranchOptions.forEach((opt) => {
+                    if (!opt.value) {
+                        branchSelect.appendChild(opt);
+                        return;
+                    }
+                    if (!bankId || opt.getAttribute('data-bank-id') === bankId) {
+                        branchSelect.appendChild(opt);
+                    }
+                });
+            };
 
-        const filterBranches = () => {
-            const bankId = bankSelect.value;
-            branchSelect.innerHTML = '';
-            allBranchOptions.forEach((opt) => {
-                if (!opt.value) {
-                    branchSelect.appendChild(opt);
-                    return;
-                }
-                if (!bankId || opt.getAttribute('data-bank-id') === bankId) {
-                    branchSelect.appendChild(opt);
-                }
+            bankSelect.addEventListener('change', () => {
+                filterBranches();
+                branchSelect.value = '';
             });
-        };
 
-        bankSelect.addEventListener('change', () => {
             filterBranches();
-            branchSelect.value = '';
-        });
+        }
 
-        filterBranches();
+        const gradeSelect = document.getElementById('GradeID');
+        const roleSelect = document.getElementById('RoleID');
+        if (gradeSelect && roleSelect) {
+            const allRoleOptions = Array.from(roleSelect.options);
+
+            const filterRoles = () => {
+                const gradeId = gradeSelect.value;
+                const currentValue = roleSelect.value;
+                roleSelect.innerHTML = '';
+                allRoleOptions.forEach((opt) => {
+                    if (!opt.value) {
+                        roleSelect.appendChild(opt);
+                        return;
+                    }
+                    const roleGrade = opt.getAttribute('data-grade-id') || '';
+                    if (!gradeId || roleGrade === gradeId) {
+                        roleSelect.appendChild(opt);
+                    }
+                });
+                if (currentValue) {
+                    const stillThere = Array.from(roleSelect.options).some((opt) => opt.value === currentValue);
+                    roleSelect.value = stillThere ? currentValue : '';
+                }
+            };
+
+            gradeSelect.addEventListener('change', filterRoles);
+            filterRoles();
+        }
     });
 </script>
 @endpush

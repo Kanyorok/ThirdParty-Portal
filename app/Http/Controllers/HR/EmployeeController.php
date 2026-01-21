@@ -14,11 +14,25 @@ use App\Models\HR\EmployeeContact;
 use App\Models\HR\EmployeeDocument;
 use App\Models\HR\EmployeeSalaryHistory;
 use App\Models\HR\EmployeeEducation;
+use App\Models\HR\Religion;
+use App\Models\HR\MonthlyAllowance;
+use App\Models\HR\MonthlyDeduction;
+use App\Models\HR\PayrollRunLine;
+use App\Models\HR\SalaryHistory;
+use App\Models\HR\StaffLoan;
 use App\Services\HR\PayrollMandatoryAllocator;
+use App\Services\StaticListsService;
+use App\Models\HR\TrainingCertificate;
+use App\Models\HR\TrainingSessionParticipant;
+use App\Models\HR\KpiGoal;
+use App\Models\HR\KpiAppraisal;
+use App\Models\HR\KpiRatingScale;
+use App\Models\HR\Discipline\DisciplinaryCase;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class EmployeeController extends Controller
 {
@@ -70,10 +84,13 @@ class EmployeeController extends Controller
         $supervisors = Employee::where('IsActive', 1)->orderBy('FirstName')->get(['Id', 'FirstName', 'LastName']);
         $banks = Bank::where('IsActive', 1)->orderBy('BankName')->get(['BankID', 'BankName']);
         $bankBranches = BankBranch::where('IsActive', 1)->orderBy('BranchName')->get(['BranchID', 'BankID', 'BranchName', 'BranchCode']);
+        $religions = Religion::where('IsActive', 1)->orderBy('Name')->get(['Name']);
+        $employmentTypes = StaticListsService::getList(StaticListsService::EmploymentTypes);
+        $contractTypes = StaticListsService::getList(StaticListsService::ContractTypes);
 
         $statusList = self::STATUSES;
 
-        return view('hr.employees.create', compact('grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'bankBranches', 'statusList'));
+        return view('hr.employees.create', compact('grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'bankBranches', 'statusList', 'religions', 'employmentTypes', 'contractTypes'));
     }
 
     public function store(Request $request)
@@ -85,6 +102,7 @@ class EmployeeController extends Controller
             'Email'           => 'nullable|email|max:150',
             'Phone'           => 'nullable|string|max:50',
             'Gender'          => ['nullable', Rule::in(['Male','Female','Other'])],
+            'Religion'        => 'nullable|string|max:100',
             'DateOfBirth'     => 'nullable|date',
             'BranchID'        => 'required|integer',
             'DepartmentID'    => 'required|integer',
@@ -126,6 +144,15 @@ class EmployeeController extends Controller
             'documents_category.*' => 'nullable|string|max:100',
             'documents_description.*' => 'nullable|string|max:255',
         ]);
+
+        if (!empty($data['RoleID']) && !empty($data['GradeID'])) {
+            $role = JobRole::find($data['RoleID']);
+            if ($role && (int)$role->GradeID !== (int)$data['GradeID']) {
+                throw ValidationException::withMessages([
+                    'RoleID' => 'Selected role does not belong to the selected grade.',
+                ]);
+            }
+        }
 
         $this->syncBankNames($data);
 
@@ -165,18 +192,128 @@ class EmployeeController extends Controller
         $employee = Employee::with(['branch', 'department', 'grade', 'role', 'supervisor', 'bank', 'bankBranch', 'contacts', 'documents', 'salaryHistory'])
             ->findOrFail($id);
 
+        $payrollLines = PayrollRunLine::with(['run.cycle'])
+            ->where('EmployeeID', $employee->Id)
+            ->orderByDesc('PayrollRunID')
+            ->limit(12)
+            ->get();
+
+        $latestCycle = $payrollLines->first()?->run?->cycle;
+        $payrollPeriodMonth = $latestCycle?->Month ?? now()->month;
+        $payrollPeriodYear = $latestCycle?->Year ?? now()->year;
+        $payrollPeriodLabel = Carbon::create($payrollPeriodYear, $payrollPeriodMonth, 1)->format('F Y');
+        $payrollPeriodSource = $latestCycle ? 'Latest payroll run' : 'Current month';
+
+        $payrollAllowances = MonthlyAllowance::with('allowance')
+            ->where('EmployeeID', $employee->Id)
+            ->where('Month', $payrollPeriodMonth)
+            ->where('Year', $payrollPeriodYear)
+            ->orderBy('Status')
+            ->orderBy('Name')
+            ->get();
+
+        $payrollDeductions = MonthlyDeduction::with('deduction')
+            ->where('EmployeeID', $employee->Id)
+            ->where('Month', $payrollPeriodMonth)
+            ->where('Year', $payrollPeriodYear)
+            ->orderBy('Status')
+            ->orderBy('Name')
+            ->get();
+
+        $staffLoans = StaffLoan::where('EmployeeID', $employee->Id)
+            ->orderByDesc('Id')
+            ->get();
+
+        $legacySalaryHistory = SalaryHistory::where('EmployeeID', $employee->Id)
+            ->orderByDesc('EffectiveDate')
+            ->get();
+
+        $salaryTimeline = $employee->salaryHistory
+            ->map(function ($row) {
+                return (object) [
+                    'EffectiveDate' => $row->EffectiveFrom,
+                    'BasicSalary' => $row->BasicSalary,
+                    'Notes' => $row->Notes,
+                    'CreatedOn' => $row->CreatedOn,
+                ];
+            })
+            ->merge($legacySalaryHistory->map(function ($row) {
+                return (object) [
+                    'EffectiveDate' => $row->EffectiveDate,
+                    'BasicSalary' => $row->BasicSalary,
+                    'Notes' => $row->Reason,
+                    'CreatedOn' => $row->CreatedOn,
+                ];
+            }))
+            ->sortByDesc(function ($row) {
+                $date = $row->EffectiveDate ?? $row->CreatedOn;
+                return $date instanceof \DateTimeInterface ? $date->getTimestamp() : 0;
+            })
+            ->values();
+
         $attendanceSummary = $employee->attendanceDaily()
             ->where('WorkDate', '>=', now()->subDays(30)->toDateString())
             ->selectRaw("COUNT(*) as days, SUM(CASE WHEN Status = 'Present' THEN 1 ELSE 0 END) as present_days, SUM(CASE WHEN Status != 'Present' THEN 1 ELSE 0 END) as other_days, SUM(COALESCE(OvertimeHours,0)) as overtime_hours")
             ->first();
 
-        return view('hr.employees.show', compact('employee', 'attendanceSummary'));
+        $trainingHistory = TrainingSessionParticipant::with(['session.program', 'session.trainer'])
+            ->where('EmployeeID', $employee->Id)
+            ->orderByDesc('EnrolledOn')
+            ->get();
+        $trainingCertificates = TrainingCertificate::where('EmployeeID', $employee->Id)
+            ->get()
+            ->keyBy('SessionID');
+
+        $kpiGoals = KpiGoal::with('period')
+            ->where('EmployeeID', $employee->Id)
+            ->orderByDesc('Id')
+            ->limit(5)
+            ->get();
+        $kpiAppraisals = KpiAppraisal::with(['period','goal','items'])
+            ->where('EmployeeID', $employee->Id)
+            ->orderByDesc('Id')
+            ->limit(5)
+            ->get();
+        $ratingScaleMap = KpiRatingScale::where('IsActive', 1)
+            ->orderBy('MinScore')
+            ->pluck('MaxScore', 'Id')
+            ->map(fn ($value) => (float)$value)
+            ->toArray();
+
+        $disciplinaryCases = DisciplinaryCase::with(['offence', 'policy'])
+            ->where('EmployeeID', $employee->Id)
+            ->orderByDesc('ReportedDate')
+            ->limit(10)
+            ->get();
+
+        return view('hr.employees.show', compact(
+            'employee',
+            'attendanceSummary',
+            'payrollLines',
+            'payrollAllowances',
+            'payrollDeductions',
+            'payrollPeriodLabel',
+            'payrollPeriodSource',
+            'staffLoans',
+            'salaryTimeline',
+            'trainingHistory',
+            'trainingCertificates',
+            'kpiGoals',
+            'kpiAppraisals',
+            'ratingScaleMap',
+            'disciplinaryCases'
+        ));
 
     }
 
     public function edit($id)
     {
         $employee = Employee::findOrFail($id);
+        if ($employee->Status === 'Exited') {
+            return redirect()
+                ->route('hr.employees.show', $employee->Id)
+                ->withErrors(['status' => 'Exited employees are read-only.']);
+        }
         $grades   = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
         $roles    = JobRole::where('IsActive', 1)->orderBy('Name')->get();
         $branches = Branch::whereNull('DeletedOn')->orderBy('Name')->get();
@@ -184,14 +321,22 @@ class EmployeeController extends Controller
         $supervisors = Employee::where('IsActive', 1)->orderBy('FirstName')->get(['Id', 'FirstName', 'LastName']);
         $banks = Bank::where('IsActive', 1)->orderBy('BankName')->get(['BankID', 'BankName']);
         $bankBranches = BankBranch::where('IsActive', 1)->orderBy('BranchName')->get(['BranchID', 'BankID', 'BranchName', 'BranchCode']);
+        $religions = Religion::where('IsActive', 1)->orderBy('Name')->get(['Name']);
+        $employmentTypes = StaticListsService::getList(StaticListsService::EmploymentTypes);
+        $contractTypes = StaticListsService::getList(StaticListsService::ContractTypes);
         $statusList = self::STATUSES;
 
-        return view('hr.employees.edit', compact('employee', 'grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'bankBranches', 'statusList'));
+        return view('hr.employees.edit', compact('employee', 'grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'bankBranches', 'statusList', 'religions', 'employmentTypes', 'contractTypes'));
     }
 
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
+        if ($employee->Status === 'Exited') {
+            return redirect()
+                ->route('hr.employees.show', $employee->Id)
+                ->withErrors(['status' => 'Exited employees cannot be updated.']);
+        }
 
         $data = $request->validate([
             'FirstName'       => 'required|string|max:100',
@@ -199,6 +344,7 @@ class EmployeeController extends Controller
             'Email'           => 'nullable|email|max:150',
             'Phone'           => 'nullable|string|max:50',
             'Gender'          => ['nullable', Rule::in(['Male','Female','Other'])],
+            'Religion'        => 'nullable|string|max:100',
             'DateOfBirth'     => 'nullable|date',
             'BranchID'        => 'required|integer',
             'DepartmentID'    => 'required|integer',
@@ -240,6 +386,15 @@ class EmployeeController extends Controller
             'documents_category.*' => 'nullable|string|max:100',
             'documents_description.*' => 'nullable|string|max:255',
         ]);
+
+        if (!empty($data['RoleID']) && !empty($data['GradeID'])) {
+            $role = JobRole::find($data['RoleID']);
+            if ($role && (int)$role->GradeID !== (int)$data['GradeID']) {
+                throw ValidationException::withMessages([
+                    'RoleID' => 'Selected role does not belong to the selected grade.',
+                ]);
+            }
+        }
 
         $this->syncBankNames($data);
 

@@ -48,6 +48,16 @@
                         Product Dev. Stages
                     </a>
                     <a class="list-group-item list-group-item-action" data-bs-toggle="list"
+                       href="#EmploymentTypesTab"
+                       onclick="fetchEmploymentTypes();" role="tab">
+                        Employment Types
+                    </a>
+                    <a class="list-group-item list-group-item-action" data-bs-toggle="list"
+                       href="#ContractTypesTab"
+                       onclick="fetchContractTypes();" role="tab">
+                        Contract Types
+                    </a>
+                    <a class="list-group-item list-group-item-action" data-bs-toggle="list"
                        href="#MeetingRoomsTab"
                        onclick="fetchMeetingRoomsTable();" role="tab">
                         Meeting Rooms
@@ -246,6 +256,60 @@
                         </div>
                         <div class="card-body">
                             <table id="ProductDevelopmentStagesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>ID</th>
+                                    <th>Order</th>
+                                    <th>Description</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="EmploymentTypesTab" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-actions float-end">
+                                <button type="button" class="btn btn-sm btn-primary list-action-add"
+                                        data-type="EmploymentTypes"><i class="fas fa-plus-circle"></i> add
+                                </button>
+                            </div>
+                            <h5 class="card-title mb-0">Employment Types</h5>
+                        </div>
+                        <div class="card-body">
+                            <table id="EmploymentTypesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>ID</th>
+                                    <th>Order</th>
+                                    <th>Description</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="ContractTypesTab" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-actions float-end">
+                                <button type="button" class="btn btn-sm btn-primary list-action-add"
+                                        data-type="ContractTypes"><i class="fas fa-plus-circle"></i> add
+                                </button>
+                            </div>
+                            <h5 class="card-title mb-0">Contract Types</h5>
+                        </div>
+                        <div class="card-body">
+                            <table id="ContractTypesTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                 <thead>
                                 <tr>
@@ -506,7 +570,7 @@
     <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/rowReorder.dataTables.js"></script>
     <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-    <script>let IndustriesTable = null, MarketingModes = null, CustomerResponses = null, LeadLossReason = null, CustomerTypes = null, CountyTable = null, TicketCategoriesTable = null, CityTable = null, LocationIn = null, ELocationIn = null, ProductDevelopmentStages = null, isBusy = false, testWindow = null;
+    <script>let IndustriesTable = null, MarketingModes = null, CustomerResponses = null, LeadLossReason = null, CustomerTypes = null, CountyTable = null, TicketCategoriesTable = null, CityTable = null, LocationIn = null, ELocationIn = null, ProductDevelopmentStages = null, EmploymentTypes = null, ContractTypes = null, isBusy = false, testWindow = null;
         const $Modal = $('#listActionsModal'), Type = $('#listType'), ListUrl = "{{ route('code-lists.index') }}",
             LocationUrl = "{{ route('localities.index') }}";
         $(function () {
@@ -736,6 +800,22 @@
                 ProductDevelopmentStages = fetchLists('ProductDevelopmentStages');
             } else {
                 ProductDevelopmentStages.ajax.reload();
+            }
+        }
+
+        function fetchEmploymentTypes() {
+            if (EmploymentTypes === null) {
+                EmploymentTypes = fetchLists('EmploymentTypes');
+            } else {
+                EmploymentTypes.ajax.reload();
+            }
+        }
+
+        function fetchContractTypes() {
+            if (ContractTypes === null) {
+                ContractTypes = fetchLists('ContractTypes');
+            } else {
+                ContractTypes.ajax.reload();
             }
         }
 

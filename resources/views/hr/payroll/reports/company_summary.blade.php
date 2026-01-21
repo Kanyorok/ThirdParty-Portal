@@ -6,7 +6,11 @@
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Company Summary Register</h2>
-        <a class="btn btn-outline-secondary" href="{{ route('hr.payroll.runs.show', $run->Id) }}">Back</a>
+        <div class="d-flex gap-2 d-print-none">
+            <a class="btn btn-outline-primary" href="{{ route('hr.payroll.reports.summary.export', $run->Id) }}">Download Excel</a>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Print</button>
+            <a class="btn btn-outline-secondary" href="{{ route('hr.payroll.runs.show', $run->Id) }}">Back</a>
+        </div>
     </div>
 
     <div class="card shadow-sm mb-3">

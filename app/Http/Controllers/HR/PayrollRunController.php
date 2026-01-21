@@ -13,8 +13,8 @@ use App\Models\HR\MonthlyDeduction;
 use App\Models\HR\EmployeeActingAssignment;
 use App\Models\HR\AttendanceDaily;
 use App\Models\HR\OvertimeRequest;
+use App\Models\HR\OvertimeRate;
 use App\Models\HR\LeaveRequest;
-use App\Models\HR\WorkingDaySetting;
 use App\Models\HR\Holiday;
 use App\Models\HR\PayrollEmployerContribution;
 use App\Models\HR\GratuityAccrual;
@@ -23,14 +23,20 @@ use App\Models\HR\Gratuity;
 use App\Models\HR\StatutoryRelief;
 use App\Models\HR\PayrollDeduction;
 use App\Models\HR\PayrollDeductionRule;
+use App\Exports\HR\StatutoryReturnExport;
 use App\Models\Finance\SystemBankSetting;
 use App\Models\Finance\BankAccount;
+use App\Models\Core\Branch;
+use App\Models\Core\Country;
 use App\Services\HR\PayrollMandatoryAllocator;
 use App\Services\HR\PayrollFinancePostingService;
+use App\Services\HR\StaffLoanService;
+use App\Services\HR\WorkingDayResolver;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PayrollRunController extends Controller
 {
@@ -46,7 +52,10 @@ class PayrollRunController extends Controller
 
     public function create()
     {
-        $cycles = PayrollCycle::orderByDesc('Year')->orderByDesc('Month')->get();
+        $cycles = PayrollCycle::whereIn('Status', ['Open', 'Reopened'])
+            ->orderByDesc('Year')
+            ->orderByDesc('Month')
+            ->get();
         return view('hr.payroll.runs.create', compact('cycles'));
     }
 
@@ -56,6 +65,13 @@ class PayrollRunController extends Controller
             'PayrollCycleID' => ['required','exists:t_HRPayrollCycles,Id'],
             'Notes' => ['nullable','string','max:500'],
         ]);
+
+        $cycle = PayrollCycle::findOrFail($data['PayrollCycleID']);
+        if (strcasecmp((string)($cycle->Status ?? ''), 'Closed') === 0) {
+            throw ValidationException::withMessages([
+                'PayrollCycleID' => 'This payroll cycle is closed. Reopen it before generating payroll.',
+            ]);
+        }
 
         $existingRun = PayrollRun::where('PayrollCycleID', $data['PayrollCycleID'])->first();
         if ($existingRun) {
@@ -74,9 +90,12 @@ class PayrollRunController extends Controller
             'CreatedBy' => auth()->id(),
         ]);
 
-        $cycle = PayrollCycle::find($data['PayrollCycleID']);
-
-        $employees = Employee::all(['Id','FirstName','LastName','GradeID','BasicSalary']);
+        $employees = Employee::where('IsActive', 1)
+            ->whereNull('DeletedOn')
+            ->where(function ($q) {
+                $q->whereNull('Status')->orWhere('Status', '!=', 'Exited');
+            })
+            ->get(['Id','FirstName','LastName','GradeID','BasicSalary']);
         foreach ($employees as $emp) {
             $lineData = $this->buildPayrollLineData($cycle, $emp, $run);
             PayrollRunLine::create([
@@ -167,10 +186,99 @@ class PayrollRunController extends Controller
         return view('hr.payroll.reports.company_summary', compact('run', 'totals', 'allowanceTotals', 'deductionTotals'));
     }
 
+    public function companySummaryExport($id)
+    {
+        $run = PayrollRun::with(['cycle','lines.employee.branch','lines.employee.department'])->findOrFail($id);
+        $totals = [
+            'Basic' => $run->lines->sum('BasicSalary'),
+            'Allowances' => $run->lines->sum('TotalAllowances'),
+            'Deductions' => $run->lines->sum('TotalDeductions'),
+            'Net' => $run->lines->sum('NetPay'),
+        ];
+
+        $allowanceTotals = collect();
+        $deductionTotals = collect();
+        if ($run->cycle?->Month && $run->cycle?->Year) {
+            $allowanceTotals = MonthlyAllowance::where('Month', $run->cycle->Month)
+                ->where('Year', $run->cycle->Year)
+                ->where('Status', 'Approved')
+                ->groupBy('Name')
+                ->selectRaw('Name, SUM(Amount) as Total')
+                ->orderBy('Name')
+                ->get();
+
+            $deductionTotals = MonthlyDeduction::where('Month', $run->cycle->Month)
+                ->where('Year', $run->cycle->Year)
+                ->where('Status', 'Approved')
+                ->groupBy('Name')
+                ->selectRaw('Name, SUM(Amount) as Total')
+                ->orderBy('Name')
+                ->get();
+        }
+
+        $rows = [
+            ['Section' => 'Totals', 'Name' => 'Total Basic', 'Amount' => (float)($totals['Basic'] ?? 0)],
+            ['Section' => 'Totals', 'Name' => 'Total Allowances', 'Amount' => (float)($totals['Allowances'] ?? 0)],
+            ['Section' => 'Totals', 'Name' => 'Total Deductions', 'Amount' => (float)($totals['Deductions'] ?? 0)],
+            ['Section' => 'Totals', 'Name' => 'Total Net', 'Amount' => (float)($totals['Net'] ?? 0)],
+        ];
+
+        foreach ($allowanceTotals as $row) {
+            $rows[] = ['Section' => 'Allowances', 'Name' => (string)$row->Name, 'Amount' => (float)$row->Total];
+        }
+        foreach ($deductionTotals as $row) {
+            $rows[] = ['Section' => 'Deductions', 'Name' => (string)$row->Name, 'Amount' => (float)$row->Total];
+        }
+
+        $columns = [
+            ['key' => 'Section', 'label' => 'Section'],
+            ['key' => 'Name', 'label' => 'Name'],
+            ['key' => 'Amount', 'label' => 'Amount'],
+        ];
+
+        $month = (int)($run->cycle?->Month ?? now()->month);
+        $year = (int)($run->cycle?->Year ?? now()->year);
+        $filename = "company_summary_{$month}_{$year}.xlsx";
+
+        return Excel::download(new StatutoryReturnExport($columns, $rows), $filename);
+    }
+
     public function masterRegister($id)
     {
         $run = PayrollRun::with(['cycle','lines.employee.branch','lines.employee.department'])->findOrFail($id);
         return view('hr.payroll.reports.master_register', compact('run'));
+    }
+
+    public function masterRegisterExport($id)
+    {
+        $run = PayrollRun::with(['cycle','lines.employee.branch','lines.employee.department'])->findOrFail($id);
+        $rows = $run->lines->map(function ($line) {
+            return [
+                'Employee' => trim(($line->employee?->FirstName ?? '') . ' ' . ($line->employee?->LastName ?? '')),
+                'Branch' => $line->employee?->branch?->Name ?? '-',
+                'Department' => $line->employee?->department?->Name ?? '-',
+                'Basic' => (float)$line->BasicSalary,
+                'Allowances' => (float)$line->TotalAllowances,
+                'Deductions' => (float)$line->TotalDeductions,
+                'NetPay' => (float)$line->NetPay,
+            ];
+        })->toArray();
+
+        $columns = [
+            ['key' => 'Employee', 'label' => 'Employee'],
+            ['key' => 'Branch', 'label' => 'Branch'],
+            ['key' => 'Department', 'label' => 'Department'],
+            ['key' => 'Basic', 'label' => 'Basic'],
+            ['key' => 'Allowances', 'label' => 'Allowances'],
+            ['key' => 'Deductions', 'label' => 'Deductions'],
+            ['key' => 'NetPay', 'label' => 'Net Pay'],
+        ];
+
+        $month = (int)($run->cycle?->Month ?? now()->month);
+        $year = (int)($run->cycle?->Year ?? now()->year);
+        $filename = "master_register_{$month}_{$year}.xlsx";
+
+        return Excel::download(new StatutoryReturnExport($columns, $rows), $filename);
     }
 
     public function branchSummary($id)
@@ -182,6 +290,51 @@ class PayrollRunController extends Controller
         return view('hr.payroll.reports.branch_summary', compact('run', 'groups'));
     }
 
+    public function branchSummaryExport($id)
+    {
+        $run = PayrollRun::with(['cycle','lines.employee.branch'])->findOrFail($id);
+        $groups = $run->lines->groupBy(function ($line) {
+            return $line->employee?->branch?->Name ?? 'Unassigned';
+        });
+
+        $rows = [];
+        foreach ($groups as $branch => $lines) {
+            foreach ($lines as $line) {
+                $rows[] = [
+                    'Branch' => $branch,
+                    'Employee' => trim(($line->employee?->FirstName ?? '') . ' ' . ($line->employee?->LastName ?? '')),
+                    'Basic' => (float)$line->BasicSalary,
+                    'Allowances' => (float)$line->TotalAllowances,
+                    'Deductions' => (float)$line->TotalDeductions,
+                    'NetPay' => (float)$line->NetPay,
+                ];
+            }
+            $rows[] = [
+                'Branch' => $branch,
+                'Employee' => 'Totals',
+                'Basic' => (float)$lines->sum('BasicSalary'),
+                'Allowances' => (float)$lines->sum('TotalAllowances'),
+                'Deductions' => (float)$lines->sum('TotalDeductions'),
+                'NetPay' => (float)$lines->sum('NetPay'),
+            ];
+        }
+
+        $columns = [
+            ['key' => 'Branch', 'label' => 'Branch'],
+            ['key' => 'Employee', 'label' => 'Employee'],
+            ['key' => 'Basic', 'label' => 'Basic'],
+            ['key' => 'Allowances', 'label' => 'Allowances'],
+            ['key' => 'Deductions', 'label' => 'Deductions'],
+            ['key' => 'NetPay', 'label' => 'Net Pay'],
+        ];
+
+        $month = (int)($run->cycle?->Month ?? now()->month);
+        $year = (int)($run->cycle?->Year ?? now()->year);
+        $filename = "branch_summary_{$month}_{$year}.xlsx";
+
+        return Excel::download(new StatutoryReturnExport($columns, $rows), $filename);
+    }
+
     public function departmentSummary($id)
     {
         $run = PayrollRun::with(['cycle','lines.employee.department'])->findOrFail($id);
@@ -189,6 +342,51 @@ class PayrollRunController extends Controller
             return $line->employee?->department?->Name ?? 'Unassigned';
         });
         return view('hr.payroll.reports.department_summary', compact('run', 'groups'));
+    }
+
+    public function departmentSummaryExport($id)
+    {
+        $run = PayrollRun::with(['cycle','lines.employee.department'])->findOrFail($id);
+        $groups = $run->lines->groupBy(function ($line) {
+            return $line->employee?->department?->Name ?? 'Unassigned';
+        });
+
+        $rows = [];
+        foreach ($groups as $department => $lines) {
+            foreach ($lines as $line) {
+                $rows[] = [
+                    'Department' => $department,
+                    'Employee' => trim(($line->employee?->FirstName ?? '') . ' ' . ($line->employee?->LastName ?? '')),
+                    'Basic' => (float)$line->BasicSalary,
+                    'Allowances' => (float)$line->TotalAllowances,
+                    'Deductions' => (float)$line->TotalDeductions,
+                    'NetPay' => (float)$line->NetPay,
+                ];
+            }
+            $rows[] = [
+                'Department' => $department,
+                'Employee' => 'Totals',
+                'Basic' => (float)$lines->sum('BasicSalary'),
+                'Allowances' => (float)$lines->sum('TotalAllowances'),
+                'Deductions' => (float)$lines->sum('TotalDeductions'),
+                'NetPay' => (float)$lines->sum('NetPay'),
+            ];
+        }
+
+        $columns = [
+            ['key' => 'Department', 'label' => 'Department'],
+            ['key' => 'Employee', 'label' => 'Employee'],
+            ['key' => 'Basic', 'label' => 'Basic'],
+            ['key' => 'Allowances', 'label' => 'Allowances'],
+            ['key' => 'Deductions', 'label' => 'Deductions'],
+            ['key' => 'NetPay', 'label' => 'Net Pay'],
+        ];
+
+        $month = (int)($run->cycle?->Month ?? now()->month);
+        $year = (int)($run->cycle?->Year ?? now()->year);
+        $filename = "department_summary_{$month}_{$year}.xlsx";
+
+        return Excel::download(new StatutoryReturnExport($columns, $rows), $filename);
     }
 
     public function statutoryReturns($id)
@@ -202,7 +400,55 @@ class PayrollRunController extends Controller
     {
         $run = PayrollRun::with('cycle')->findOrFail($id);
         $deduction = PayrollDeduction::where('Code', $code)->firstOrFail();
+        $data = $this->buildStatutoryReturnData($run, $deduction);
 
+        return view('hr.payroll.reports.statutory_return', [
+            'run' => $run,
+            'deduction' => $deduction,
+            'rows' => $data['rows'],
+            'total' => $data['total'],
+            'returnPayload' => $data['returnPayload'],
+        ]);
+    }
+
+    public function statutoryReturnExport($id, $code)
+    {
+        $run = PayrollRun::with('cycle')->findOrFail($id);
+        $deduction = PayrollDeduction::where('Code', $code)->firstOrFail();
+
+        $data = $this->buildStatutoryReturnData($run, $deduction);
+        $returnPayload = $data['returnPayload'];
+
+        if (!empty($returnPayload)) {
+            $columns = $returnPayload['columns'];
+            $rows = $returnPayload['rows'];
+        } else {
+            $columns = [
+                ['key' => 'Employee', 'label' => 'Employee'],
+                ['key' => 'EmployeeNo', 'label' => 'Employee No'],
+                ['key' => 'KraPin', 'label' => 'KRA PIN'],
+                ['key' => 'Amount', 'label' => 'Amount'],
+            ];
+            $rows = $data['rows']->map(function ($row) {
+                return [
+                    'Employee' => trim(($row->employee?->FirstName ?? '') . ' ' . ($row->employee?->LastName ?? '')),
+                    'EmployeeNo' => $row->employee?->EmployeeNo ?? '',
+                    'KraPin' => $row->employee?->KRAPIN ?? '',
+                    'Amount' => (float)($row->Amount ?? 0),
+                ];
+            })->toArray();
+        }
+
+        $month = (int)($run->cycle?->Month ?? now()->month);
+        $year = (int)($run->cycle?->Year ?? now()->year);
+        $safeCode = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string)$deduction->Code);
+        $filename = "statutory_{$safeCode}_{$month}_{$year}.xlsx";
+
+        return Excel::download(new StatutoryReturnExport($columns, $rows), $filename);
+    }
+
+    private function buildStatutoryReturnData(PayrollRun $run, PayrollDeduction $deduction): array
+    {
         $rows = collect();
         if ($run->cycle?->Month && $run->cycle?->Year) {
             $rows = MonthlyDeduction::with('employee')
@@ -215,12 +461,217 @@ class PayrollRunController extends Controller
         }
         $total = $rows->sum('Amount');
 
-        return view('hr.payroll.reports.statutory_return', compact('run', 'deduction', 'rows', 'total'));
+        $returnPayload = null;
+        if ($run->cycle?->Month && $run->cycle?->Year && $rows->isNotEmpty()) {
+            $month = (int)$run->cycle->Month;
+            $year = (int)$run->cycle->Year;
+            $employeeIds = $rows->pluck('EmployeeID')->unique()->values();
+
+            $employees = Employee::whereIn('Id', $employeeIds)->get()->keyBy('Id');
+            $allowancesByEmployee = MonthlyAllowance::where('Month', $month)
+                ->where('Year', $year)
+                ->where('Status', 'Approved')
+                ->get()
+                ->groupBy('EmployeeID');
+            $deductionsByEmployee = MonthlyDeduction::with('deduction')
+                ->where('Month', $month)
+                ->where('Year', $year)
+                ->where('Status', 'Approved')
+                ->get()
+                ->groupBy('EmployeeID');
+            $linesByEmployee = PayrollRunLine::where('PayrollRunID', $run->Id)
+                ->whereIn('EmployeeID', $employeeIds)
+                ->get()
+                ->keyBy('EmployeeID');
+
+            $sumDeduction = function ($deductions, array $needles): float {
+                if ($deductions->isEmpty()) {
+                    return 0.0;
+                }
+                $needles = array_map('strtoupper', $needles);
+                return $deductions->filter(function ($row) use ($needles) {
+                    $code = strtoupper(trim((string)($row->deduction?->Code ?? $row->Name ?? '')));
+                    $name = strtoupper(trim((string)($row->Name ?? $row->deduction?->Name ?? '')));
+                    foreach ($needles as $needle) {
+                        if ($needle === '') {
+                            continue;
+                        }
+                        if (str_contains($code, $needle) || str_contains($name, $needle)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })->sum('Amount');
+            };
+
+            $returnCode = strtoupper((string)$deduction->Code);
+            $rowsPayload = [];
+            $columns = [];
+
+            if ($returnCode === 'PAYE') {
+                $columns = [
+                    ['key' => 'KraPin', 'label' => 'EMPLOYEE KRA PIN'],
+                    ['key' => 'Name', 'label' => 'EMPLOYEE NAME'],
+                    ['key' => 'ResidentStatus', 'label' => 'RESIDENT STATUS'],
+                    ['key' => 'EmployeeType', 'label' => 'TYPE OF EMPLOYEE'],
+                    ['key' => 'PWD', 'label' => 'PWD'],
+                    ['key' => 'Blank1', 'label' => 'BLANK'],
+                    ['key' => 'GrossPay', 'label' => 'GROSS PAY', 'align' => 'end'],
+                    ['key' => 'Zero1', 'label' => 'ZERO', 'align' => 'end'],
+                    ['key' => 'Zero2', 'label' => 'ZERO', 'align' => 'end'],
+                    ['key' => 'Zero3', 'label' => 'ZERO', 'align' => 'end'],
+                    ['key' => 'HousingType', 'label' => 'TYPE OF HOUSING'],
+                    ['key' => 'Blank2', 'label' => 'BLANK'],
+                    ['key' => 'Zero4', 'label' => 'ZERO', 'align' => 'end'],
+                    ['key' => 'Blank3', 'label' => 'BLANK'],
+                    ['key' => 'Shif', 'label' => 'SHIF', 'align' => 'end'],
+                    ['key' => 'NssfTier1', 'label' => 'NSSF TIER 1', 'align' => 'end'],
+                    ['key' => 'Pension', 'label' => 'PENSION', 'align' => 'end'],
+                    ['key' => 'Blank4', 'label' => ''],
+                    ['key' => 'Blank5', 'label' => ''],
+                    ['key' => 'HousingLevy', 'label' => 'HOUSING LEVY', 'align' => 'end'],
+                ];
+
+                foreach ($employeeIds as $employeeId) {
+                    $employee = $employees->get($employeeId);
+                    if (!$employee) {
+                        continue;
+                    }
+                    $line = $linesByEmployee->get($employeeId);
+                    $allowances = $allowancesByEmployee->get($employeeId, collect());
+                    $grossPay = (float)($line?->GrossPay ?? (($line?->BasicSalary ?? 0) + $allowances->sum('Amount')));
+                    $deductions = $deductionsByEmployee->get($employeeId, collect());
+                    $shif = $sumDeduction($deductions, ['SHIF', 'SHA', 'NHIF']);
+                    $housingLevy = $sumDeduction($deductions, ['HOUSING LEVY', 'AHL']);
+                    $nssfTier1 = $sumDeduction($deductions, ['NSSF', 'TIER 1']);
+                    if ($nssfTier1 <= 0) {
+                        $nssfTier1 = $sumDeduction($deductions, ['NSSF']);
+                    }
+                    $pension = $sumDeduction($deductions, ['PENSION']);
+
+                    $rowsPayload[] = [
+                        'KraPin' => $employee->KRAPIN ?? '-',
+                        'Name' => trim(($employee->FirstName ?? '').' '.($employee->LastName ?? '')),
+                        'ResidentStatus' => 'Resident',
+                        'EmployeeType' => $employee->EmploymentType ?: 'Primary Employee',
+                        'PWD' => 'No',
+                        'Blank1' => '',
+                        'GrossPay' => $grossPay,
+                        'Zero1' => 0,
+                        'Zero2' => 0,
+                        'Zero3' => 0,
+                        'HousingType' => 'benefit not given',
+                        'Blank2' => '',
+                        'Zero4' => 0,
+                        'Blank3' => '',
+                        'Shif' => $shif,
+                        'NssfTier1' => $nssfTier1,
+                        'Pension' => $pension,
+                        'Blank4' => '',
+                        'Blank5' => '',
+                        'HousingLevy' => $housingLevy,
+                    ];
+                }
+                $returnPayload = ['type' => 'paye', 'columns' => $columns, 'rows' => $rowsPayload];
+            } elseif (str_contains($returnCode, 'NSSF')) {
+                $columns = [
+                    ['key' => 'PayrollNo', 'label' => 'PAYROLL NUMBER'],
+                    ['key' => 'Surname', 'label' => 'SURNAME'],
+                    ['key' => 'OtherNames', 'label' => 'OTHER NAMES'],
+                    ['key' => 'IdNo', 'label' => 'ID NO'],
+                    ['key' => 'KraPin', 'label' => 'KRA PIN'],
+                    ['key' => 'NssfNo', 'label' => 'NSSF NO'],
+                    ['key' => 'GrossPay', 'label' => 'GROSS PAY', 'align' => 'end'],
+                    ['key' => 'Voluntary', 'label' => 'VOLUNTARY', 'align' => 'end'],
+                ];
+                foreach ($employeeIds as $employeeId) {
+                    $employee = $employees->get($employeeId);
+                    if (!$employee) {
+                        continue;
+                    }
+                    $line = $linesByEmployee->get($employeeId);
+                    $allowances = $allowancesByEmployee->get($employeeId, collect());
+                    $grossPay = (float)($line?->GrossPay ?? (($line?->BasicSalary ?? 0) + $allowances->sum('Amount')));
+                    $deductions = $deductionsByEmployee->get($employeeId, collect());
+                    $voluntary = $sumDeduction($deductions, ['VOLUNTARY']);
+                    $rowsPayload[] = [
+                        'PayrollNo' => $employee->EmployeeNo ?? '-',
+                        'Surname' => $employee->LastName ?? '-',
+                        'OtherNames' => trim(($employee->FirstName ?? '').' '.($employee->OtherNames ?? '')),
+                        'IdNo' => $employee->EmployeeNo ?? '-',
+                        'KraPin' => $employee->KRAPIN ?? '-',
+                        'NssfNo' => $employee->NSSFNo ?? '-',
+                        'GrossPay' => $grossPay,
+                        'Voluntary' => $voluntary,
+                    ];
+                }
+                $returnPayload = ['type' => 'nssf', 'columns' => $columns, 'rows' => $rowsPayload];
+            } elseif (str_contains($returnCode, 'SHIF') || str_contains($returnCode, 'SHA') || str_contains($returnCode, 'NHIF')) {
+                $columns = [
+                    ['key' => 'PayrollNo', 'label' => 'PAYROLL NO'],
+                    ['key' => 'FirstName', 'label' => 'FIRST NAME'],
+                    ['key' => 'LastName', 'label' => 'LAST NAME'],
+                    ['key' => 'IdType', 'label' => 'IDENTITY TYPE'],
+                    ['key' => 'IdNo', 'label' => 'ID NO'],
+                    ['key' => 'KraPin', 'label' => 'KRA PIN'],
+                    ['key' => 'NhifNo', 'label' => 'NHIF / SHIF No'],
+                    ['key' => 'Contribution', 'label' => 'CONTRIBUTION AMOUNT', 'align' => 'end'],
+                    ['key' => 'Phone', 'label' => 'PHONE NUMBER'],
+                ];
+                foreach ($employeeIds as $employeeId) {
+                    $employee = $employees->get($employeeId);
+                    if (!$employee) {
+                        continue;
+                    }
+                    $rowsPayload[] = [
+                        'PayrollNo' => $employee->EmployeeNo ?? '-',
+                        'FirstName' => $employee->FirstName ?? '-',
+                        'LastName' => $employee->LastName ?? '-',
+                        'IdType' => 'National ID',
+                        'IdNo' => $employee->EmployeeNo ?? '-',
+                        'KraPin' => $employee->KRAPIN ?? '-',
+                        'NhifNo' => $employee->NHIFNo ?? '-',
+                        'Contribution' => (float)$rows->firstWhere('EmployeeID', $employeeId)?->Amount ?? 0,
+                        'Phone' => $employee->Phone ?? '-',
+                    ];
+                }
+                $returnPayload = ['type' => 'shif', 'columns' => $columns, 'rows' => $rowsPayload];
+            } elseif (str_contains($returnCode, 'HOUSING') || str_contains($returnCode, 'AHL')) {
+                $columns = [
+                    ['key' => 'IdNo', 'label' => 'EMPLOYEE ID NO'],
+                    ['key' => 'Name', 'label' => 'NAME'],
+                    ['key' => 'KraPin', 'label' => 'EMPLOYEE KRA PIN NO'],
+                    ['key' => 'GrossPay', 'label' => 'GROSS PAY', 'align' => 'end'],
+                ];
+                foreach ($employeeIds as $employeeId) {
+                    $employee = $employees->get($employeeId);
+                    if (!$employee) {
+                        continue;
+                    }
+                    $line = $linesByEmployee->get($employeeId);
+                    $allowances = $allowancesByEmployee->get($employeeId, collect());
+                    $grossPay = (float)($line?->GrossPay ?? (($line?->BasicSalary ?? 0) + $allowances->sum('Amount')));
+                    $rowsPayload[] = [
+                        'IdNo' => $employee->EmployeeNo ?? '-',
+                        'Name' => trim(($employee->FirstName ?? '').' '.($employee->LastName ?? '')),
+                        'KraPin' => $employee->KRAPIN ?? '-',
+                        'GrossPay' => $grossPay,
+                    ];
+                }
+                $returnPayload = ['type' => 'housing', 'columns' => $columns, 'rows' => $rowsPayload];
+            }
+        }
+
+        return [
+            'rows' => $rows,
+            'total' => $total,
+            'returnPayload' => $returnPayload,
+        ];
     }
 
     public function approve($id)
     {
-        $run = PayrollRun::findOrFail($id);
+        $run = PayrollRun::with('cycle')->findOrFail($id);
         if ($run->Status === 'Approved') {
             return redirect()->route('hr.payroll.runs.show', $run->Id)->with('success', 'Payroll run already approved.');
         }
@@ -234,6 +685,18 @@ class PayrollRunController extends Controller
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
+        if ($run->cycle?->Month && $run->cycle?->Year) {
+            app(StaffLoanService::class)->applyRepaymentsForMonth((int)$run->cycle->Month, (int)$run->cycle->Year, auth()->id());
+        }
+        if ($run->cycle && $run->cycle->Status !== 'Closed') {
+            $run->cycle->update([
+                'Status' => 'Closed',
+                'ClosedOn' => now(),
+                'ClosedBy' => auth()->id(),
+                'ModifiedOn' => now(),
+                'ModifiedBy' => auth()->id(),
+            ]);
+        }
         return redirect()->route('hr.payroll.runs.show', $run->Id)->with('success', 'Payroll run approved.');
     }
 
@@ -343,6 +806,40 @@ class PayrollRunController extends Controller
         $employee = Employee::with(['branch', 'department', 'grade', 'bank', 'bankBranch'])->findOrFail($employeeId);
         $company = SystemBankSetting::query()->orderByDesc('Id')->first();
 
+        $allowances = MonthlyAllowance::where('EmployeeID', $employeeId)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->get();
+        $allowancesByMonth = $allowances->groupBy('Month');
+        $taxableAllowancesByMonth = $allowances->where('IsTaxable', 1)->groupBy('Month');
+
+        $deductionsByMonth = MonthlyDeduction::with('deduction')
+            ->where('EmployeeID', $employeeId)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->get()
+            ->groupBy('Month');
+
+        $sumDeduction = function ($rows, array $needles): float {
+            if ($rows->isEmpty()) {
+                return 0.0;
+            }
+            $needles = array_map('strtoupper', $needles);
+            return $rows->filter(function ($row) use ($needles) {
+                $code = strtoupper(trim((string)($row->deduction?->Code ?? $row->Name ?? '')));
+                $name = strtoupper(trim((string)($row->Name ?? $row->deduction?->Name ?? '')));
+                foreach ($needles as $needle) {
+                    if ($needle === '') {
+                        continue;
+                    }
+                    if (str_contains($code, $needle) || str_contains($name, $needle)) {
+                        return true;
+                    }
+                }
+                return false;
+            })->sum('Amount');
+        };
+
         $runsByMonth = PayrollRun::with('cycle')
             ->whereHas('cycle', function ($q) use ($year) {
                 $q->where('Year', $year);
@@ -355,12 +852,22 @@ class PayrollRunController extends Controller
         $rows = [];
         $totals = [
             'Basic' => 0,
-            'TaxableAllowances' => 0,
-            'TaxablePay' => 0,
+            'BenefitsNonCash' => 0,
+            'ValueOfQuarters' => 0,
+            'GrossPay' => 0,
+            'PensionE1' => 0,
+            'PensionE2' => 0,
+            'PensionE3' => 0,
+            'HousingLevy' => 0,
+            'SHIF' => 0,
+            'PRMF' => 0,
+            'OwnerInterest' => 0,
+            'TotalDeductions' => 0,
+            'ChargeablePay' => 0,
             'TaxCharged' => 0,
             'PersonalRelief' => 0,
+            'InsuranceRelief' => 0,
             'PAYE' => 0,
-            'Net' => 0,
         ];
 
         foreach (range(1, 12) as $month) {
@@ -371,61 +878,93 @@ class PayrollRunController extends Controller
                 : null;
 
             $basic = (float)($line?->BasicSalary ?? 0);
-            $taxableAllowances = MonthlyAllowance::where('EmployeeID', $employeeId)
-                ->where('Month', $month)
-                ->where('Year', $year)
-                ->where('Status', 'Approved')
-                ->where('IsTaxable', 1)
-                ->sum('Amount');
-            $allAllowances = MonthlyAllowance::where('EmployeeID', $employeeId)
-                ->where('Month', $month)
-                ->where('Year', $year)
-                ->where('Status', 'Approved')
-                ->sum('Amount');
-            $taxablePay = $basic + (float)$taxableAllowances;
+            $monthAllowances = $allowancesByMonth->get($month, collect());
+            $taxableAllowances = $taxableAllowancesByMonth->get($month, collect())->sum('Amount');
+            $allAllowances = $monthAllowances->sum('Amount');
+            $benefitsNonCash = (float)$taxableAllowances;
+            $valueOfQuarters = 0.0;
+            $grossPay = $basic + $benefitsNonCash + $valueOfQuarters;
+
+            $monthDeductions = $deductionsByMonth->get($month, collect());
+            $pensionActual = (float)$sumDeduction($monthDeductions, ['NSSF', 'PENSION', 'RETIREMENT']);
+            $housingLevy = (float)$sumDeduction($monthDeductions, ['HOUSING LEVY', 'AHL']);
+            $shif = (float)$sumDeduction($monthDeductions, ['SHIF', 'SHA', 'NHIF']);
+            $prmf = (float)$sumDeduction($monthDeductions, ['PRMF']);
+            $ownerInterest = (float)$sumDeduction($monthDeductions, ['OWNER OCCUPIED', 'OWNER-OCCUPIED', 'MORTGAGE']);
+            $pensionE1 = round($basic * 0.30, 2);
+            $pensionE3 = 30000.00;
+            $totalDeductions = $pensionActual + $housingLevy + $shif + $prmf + $ownerInterest;
+            $chargeablePay = max(0, $grossPay - $totalDeductions);
 
             $taxCharged = 0.0;
             $personalRelief = 0.0;
+            $insuranceRelief = 0.0;
+            $postTaxReliefTotal = 0.0;
             $payeTax = 0.0;
             if ($cycle) {
                 $gross = $basic + (float)$allAllowances;
-                $taxCharged = $this->calculatePayeTaxCharged($taxablePay, $gross, $cycle, $employeeId);
+                $taxCharged = $this->calculatePayeTaxCharged($grossPay, $gross, $cycle, $employeeId);
                 $activeReliefs = $this->getActiveReliefs($cycle);
-                $personalReliefs = $activeReliefs->filter(function ($relief) {
+                $postTaxReliefs = $activeReliefs->filter(function ($relief) {
                     if (strcasecmp((string)($relief->ApplyStage ?? 'PostTax'), 'PostTax') !== 0) {
                         return false;
                     }
+                    return true;
+                });
+                $personalReliefs = $postTaxReliefs->filter(function ($relief) {
                     if (strcasecmp((string)($relief->Code ?? ''), 'PERS') === 0) {
                         return true;
                     }
                     return stripos((string)($relief->Name ?? ''), 'personal') !== false;
                 });
-                foreach ($personalReliefs as $relief) {
-                    $personalRelief += $this->calculateReliefAmount($relief, $gross, $taxablePay, $cycle, $employeeId);
+                foreach ($postTaxReliefs as $relief) {
+                    $postTaxReliefTotal += $this->calculateReliefAmount($relief, $gross, $grossPay, $cycle, $employeeId);
                 }
-                $payeTax = max(0, $taxCharged - $personalRelief);
+                foreach ($personalReliefs as $relief) {
+                    $personalRelief += $this->calculateReliefAmount($relief, $gross, $grossPay, $cycle, $employeeId);
+                }
+                $insuranceRelief = max(0, $postTaxReliefTotal - $personalRelief);
+                $payeTax = max(0, $taxCharged - $postTaxReliefTotal);
             }
-
-            $net = (float)($line?->NetPay ?? 0);
 
             $rows[] = [
                 'Month' => Carbon::create($year, $month, 1)->format('M'),
                 'Basic' => $basic,
-                'TaxableAllowances' => (float)$taxableAllowances,
-                'TaxablePay' => $taxablePay,
+                'BenefitsNonCash' => $benefitsNonCash,
+                'ValueOfQuarters' => $valueOfQuarters,
+                'GrossPay' => $grossPay,
+                'PensionE1' => $pensionE1,
+                'PensionE2' => $pensionActual,
+                'PensionE3' => $pensionE3,
+                'HousingLevy' => $housingLevy,
+                'SHIF' => $shif,
+                'PRMF' => $prmf,
+                'OwnerInterest' => $ownerInterest,
+                'TotalDeductions' => $totalDeductions,
+                'ChargeablePay' => $chargeablePay,
                 'TaxCharged' => (float)$taxCharged,
                 'PersonalRelief' => (float)$personalRelief,
+                'InsuranceRelief' => (float)$insuranceRelief,
                 'PAYE' => (float)$payeTax,
-                'Net' => $net,
             ];
 
             $totals['Basic'] += $basic;
-            $totals['TaxableAllowances'] += (float)$taxableAllowances;
-            $totals['TaxablePay'] += $taxablePay;
+            $totals['BenefitsNonCash'] += $benefitsNonCash;
+            $totals['ValueOfQuarters'] += $valueOfQuarters;
+            $totals['GrossPay'] += $grossPay;
+            $totals['PensionE1'] += $pensionE1;
+            $totals['PensionE2'] += $pensionActual;
+            $totals['PensionE3'] += $pensionE3;
+            $totals['HousingLevy'] += $housingLevy;
+            $totals['SHIF'] += $shif;
+            $totals['PRMF'] += $prmf;
+            $totals['OwnerInterest'] += $ownerInterest;
+            $totals['TotalDeductions'] += $totalDeductions;
+            $totals['ChargeablePay'] += $chargeablePay;
             $totals['TaxCharged'] += (float)$taxCharged;
             $totals['PersonalRelief'] += (float)$personalRelief;
+            $totals['InsuranceRelief'] += (float)$insuranceRelief;
             $totals['PAYE'] += (float)$payeTax;
-            $totals['Net'] += $net;
         }
 
         $pdf = app('dompdf.wrapper');
@@ -880,61 +1419,69 @@ class PayrollRunController extends Controller
         $year = (int)($cycle->Year ?? now()->year);
         $periodStart = Carbon::create($year, $month, 1)->startOfMonth();
         $periodEnd = Carbon::create($year, $month, 1)->endOfMonth();
-        $workingMap = $this->getWorkingMap();
-        $holidays = $this->getHolidaySet($periodStart, $periodEnd);
-        $workingTotals = $this->getWorkingTotals($periodStart, $periodEnd, $workingMap, $holidays);
+        $workingMap = $this->getWorkingMap($emp->Id);
+        $holidays = $this->getHolidaySet($periodStart, $periodEnd, $emp->Id);
+        $workingTotals = $this->getWorkingTotals($periodStart, $periodEnd, $workingMap, $holidays, $emp->Id);
 
         $basic = (float)($emp->BasicSalary ?? 0);
         $dailyRate = $workingTotals['fractions'] > 0 ? $basic / $workingTotals['fractions'] : 0.0;
-        $hourlyRate = $workingTotals['hours'] > 0 ? $basic / $workingTotals['hours'] : 0.0;
+        $baseHourlyRate = $workingTotals['hours'] > 0 ? $basic / $workingTotals['hours'] : 0.0;
+        $overtimeMultiplier = $this->resolveOvertimeMultiplier($emp->GradeID, $periodEnd);
+        $overtimeHourlyRate = $baseHourlyRate * $overtimeMultiplier;
 
-        // Ensure mandatory allowances/deductions exist for this employee and month/year.
-        app(PayrollMandatoryAllocator::class)->syncForEmployee($emp, $month, $year);
+        $eligibleForPayroll = (int)($emp->IsActive ?? 1) === 1
+            && (string)($emp->Status ?? '') !== 'Exited'
+            && $emp->DeletedOn === null;
 
-        // Auto-create acting allowance (percentage of acting reference)
-        $acting = EmployeeActingAssignment::where('EmployeeID', $emp->Id)
-            ->where('Status', 'Approved')
-            ->where(function($q) use ($periodStart) {
-                $q->whereNull('EndDate')->orWhere('EndDate','>=', $periodStart->toDateString());
-            })
-            ->where('StartDate','<=', $periodEnd->toDateString())
-            ->first();
-        if ($acting) {
-            $actingAllowance = PayrollAllowance::with(['rules' => function($q){
-                $q->where('IsActive',1)->orderByDesc('EffectiveFrom');
-            }])->where('Code','ACTING')->first();
-            if ($actingAllowance) {
-                $ruleRate = optional($actingAllowance->rules->first())->Rate ?? ($acting->ActingAllowanceRate ?? 0);
-                $exists = MonthlyAllowance::where('EmployeeID', $emp->Id)
-                    ->where('AllowanceID', $actingAllowance->Id)
-                    ->where('Month', $month)
-                    ->where('Year', $year)
-                    ->exists();
-                if (!$exists) {
-                    $reference = $acting->ActingReferenceSalary ?? ($emp->BasicSalary ?? 0);
-                    $rate = ($ruleRate ?? 0) / 100;
-                    $amount = max(0, $reference * $rate);
-                    MonthlyAllowance::create([
-                        'EmployeeID' => $emp->Id,
-                        'AllowanceID' => $actingAllowance->Id,
-                        'Name' => $actingAllowance->Name,
-                        'Amount' => $amount,
-                        'Month' => $month,
-                        'Year' => $year,
-                        'IsTaxable' => $actingAllowance->IsTaxable,
-                        'Status' => 'Approved',
-                        'IsRecurring' => 0,
-                        'CreatedBy' => auth()->id(),
-                        'CreatedOn' => now(),
-                        'ApprovedBy' => auth()->id(),
-                        'ApprovedOn' => now(),
-                    ]);
+        if ($eligibleForPayroll) {
+            // Ensure mandatory allowances/deductions exist for this employee and month/year.
+            app(PayrollMandatoryAllocator::class)->syncForEmployee($emp, $month, $year);
+
+            // Auto-create acting allowance (percentage of acting reference)
+            $acting = EmployeeActingAssignment::where('EmployeeID', $emp->Id)
+                ->where('Status', 'Approved')
+                ->where(function($q) use ($periodStart) {
+                    $q->whereNull('EndDate')->orWhere('EndDate','>=', $periodStart->toDateString());
+                })
+                ->where('StartDate','<=', $periodEnd->toDateString())
+                ->first();
+            if ($acting) {
+                $actingAllowance = PayrollAllowance::with(['rules' => function($q){
+                    $q->where('IsActive',1)->orderByDesc('EffectiveFrom');
+                }])->where('Code','ACTING')->first();
+                if ($actingAllowance) {
+                    $ruleRate = optional($actingAllowance->rules->first())->Rate ?? ($acting->ActingAllowanceRate ?? 0);
+                    $exists = MonthlyAllowance::where('EmployeeID', $emp->Id)
+                        ->where('AllowanceID', $actingAllowance->Id)
+                        ->where('Month', $month)
+                        ->where('Year', $year)
+                        ->exists();
+                    if (!$exists) {
+                        $reference = $acting->ActingReferenceSalary ?? ($emp->BasicSalary ?? 0);
+                        $rate = ($ruleRate ?? 0) / 100;
+                        $amount = max(0, $reference * $rate);
+                        MonthlyAllowance::create([
+                            'EmployeeID' => $emp->Id,
+                            'AllowanceID' => $actingAllowance->Id,
+                            'Name' => $actingAllowance->Name,
+                            'Amount' => $amount,
+                            'Month' => $month,
+                            'Year' => $year,
+                            'IsTaxable' => $actingAllowance->IsTaxable,
+                            'Status' => 'Approved',
+                            'IsRecurring' => 0,
+                            'CreatedBy' => auth()->id(),
+                            'CreatedOn' => now(),
+                            'ApprovedBy' => auth()->id(),
+                            'ApprovedOn' => now(),
+                        ]);
+                    }
                 }
             }
-        }
 
-        // Carry forward recurring monthly deductions for this period
-        $this->carryForwardRecurringDeductions($emp->Id, $month, $year);
+            // Carry forward recurring monthly deductions for this period
+            $this->carryForwardRecurringDeductions($emp->Id, $month, $year);
+        }
 
         // Calculate gross, taxable income, deductions, and net
         $approvedAllowances = MonthlyAllowance::where('EmployeeID', $emp->Id)
@@ -950,7 +1497,7 @@ class PayrollRunController extends Controller
             ->where('Year', $year)
             ->sum('Amount');
 
-        $overtimeAmount = $this->calculateOvertimeAmount($emp->Id, $periodStart, $periodEnd, $hourlyRate);
+        $overtimeAmount = $this->calculateOvertimeAmount($emp->Id, $periodStart, $periodEnd, $overtimeHourlyRate);
         $attendanceAdjustment = $this->calculateAttendanceAdjustment($emp->Id, $periodStart, $periodEnd, $dailyRate, $workingMap, $holidays);
         $leaveAdjustment = $this->calculateUnpaidLeaveAdjustment($emp->Id, $periodStart, $periodEnd, $dailyRate, $workingMap, $holidays);
 
@@ -1184,63 +1731,46 @@ class PayrollRunController extends Controller
         return 'Regular';
     }
 
-    private function getWorkingMap(): array
+    private function getWorkingMap(?int $employeeId = null): array
     {
-        if (!empty($this->workingMapCache)) {
-            return $this->workingMapCache;
+        $cacheKey = $employeeId ?? 0;
+        if (isset($this->workingMapCache[$cacheKey])) {
+            return $this->workingMapCache[$cacheKey];
         }
 
-        $map = [];
-        $records = WorkingDaySetting::all()->keyBy('DayOfWeek');
-        foreach (range(0, 6) as $dow) {
-            $rec = $records[$dow] ?? null;
-            $defaultWorking = ($dow >= 1 && $dow <= 5);
-            $workingFlag = $rec ? (bool)$rec->IsWorking : $defaultWorking;
-            $fraction = $rec
-                ? (float)($rec->DayFraction ?? ($workingFlag ? 1.0 : 0.0))
-                : ($workingFlag ? 1.0 : 0.0);
-            if ($workingFlag && $fraction <= 0) {
-                $fraction = 0.5;
-            }
-
-            $hours = 0.0;
-            if ($workingFlag) {
-                $hours = $this->hoursFromTimes($rec?->StartTime, $rec?->EndTime);
-                if ($hours <= 0) {
-                    $hours = 8.0;
-                }
-                $hours = $hours * $fraction;
-            }
-
-            $map[$dow] = [
-                'working' => $workingFlag,
-                'fraction' => $fraction,
-                'hours' => $hours,
-            ];
-        }
-
-        $this->workingMapCache = $map;
+        $map = app(WorkingDayResolver::class)->getWorkingMap($employeeId);
+        $this->workingMapCache[$cacheKey] = $map;
         return $map;
     }
 
-    private function getHolidaySet(Carbon $start, Carbon $end): array
+    private function getHolidaySet(Carbon $start, Carbon $end, ?int $employeeId = null): array
     {
+        $employeeKey = $employeeId ?? 0;
         $key = $start->format('Y-m');
-        if (isset($this->holidayCache[$key])) {
-            return $this->holidayCache[$key];
+        if (isset($this->holidayCache[$employeeKey][$key])) {
+            return $this->holidayCache[$employeeKey][$key];
         }
+
+        $employeeReligion = $this->getEmployeeReligion($employeeId);
+        $employeeCountry = $this->getEmployeeCountry($employeeId);
 
         $rows = Holiday::whereNull('DeletedOn')
             ->where('IsActive', 1)
             ->where('Status', 'Approved')
             ->whereBetween('HolidayDate', [$start->toDateString(), $end->toDateString()])
-            ->get();
+            ->get()
+            ->filter(function ($holiday) use ($employeeReligion, $employeeCountry) {
+                return $this->holidayAppliesToEmployee($employeeReligion, $employeeCountry, $holiday);
+            });
 
         $recurring = Holiday::whereNull('DeletedOn')
             ->where('IsActive', 1)
             ->where('Status', 'Approved')
             ->where('IsRecurring', 1)
-            ->get();
+            ->get()
+            ->filter(function ($holiday) use ($employeeReligion, $employeeCountry) {
+                return $this->holidayAppliesToEmployee($employeeReligion, $employeeCountry, $holiday);
+            });
 
         $dates = [];
         for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
@@ -1254,15 +1784,118 @@ class PayrollRunController extends Controller
             }
         }
 
-        $this->holidayCache[$key] = $dates;
+        $this->holidayCache[$employeeKey][$key] = $dates;
         return $dates;
     }
 
-    private function getWorkingTotals(Carbon $start, Carbon $end, array $workingMap, array $holidays): array
+    private function getEmployeeReligion(?int $employeeId): ?string
+    {
+        if (!$employeeId) {
+            return null;
+        }
+        $religion = Employee::where('Id', $employeeId)->value('Religion');
+        return $this->normalizeReligion($religion);
+    }
+
+    private function getEmployeeCountry(?int $employeeId): ?string
+    {
+        if (!$employeeId) {
+            return null;
+        }
+        $branchId = Employee::where('Id', $employeeId)->value('BranchID');
+        if (!$branchId) {
+            return null;
+        }
+        $country = Branch::where('Id', $branchId)->value('Country');
+        return $this->normalizeCountry($country);
+    }
+
+    private function holidayAppliesToEmployee(?string $employeeReligion, ?string $employeeCountry, Holiday $holiday): bool
+    {
+        return $this->holidayAppliesToReligion($employeeReligion, $holiday->AppliesToReligion ?? null)
+            && $this->holidayAppliesToRegion($employeeCountry, $holiday->RegionScope ?? null, $holiday->CountryId ?? null);
+    }
+
+    private function holidayAppliesToReligion(?string $employeeReligion, ?string $holidayReligion): bool
+    {
+        $holiday = $this->normalizeReligion($holidayReligion);
+        if (!$holiday) {
+            return true;
+        }
+        if (!$employeeReligion) {
+            return false;
+        }
+        return $holiday === $employeeReligion;
+    }
+
+    private function holidayAppliesToRegion(?string $employeeCountry, ?string $regionScope, ?int $holidayCountryId): bool
+    {
+        $scope = strtolower(trim((string)($regionScope ?? '')));
+        if ($scope === '' || $scope === 'global') {
+            return true;
+        }
+        if ($scope !== 'regional') {
+            return true;
+        }
+        if (!$employeeCountry || !$holidayCountryId) {
+            return false;
+        }
+
+        $countries = $this->getCountryLookup();
+        $country = $countries[$holidayCountryId] ?? null;
+        if (!$country) {
+            return false;
+        }
+
+        $employee = $this->normalizeCountry($employeeCountry);
+        if (!$employee) {
+            return false;
+        }
+
+        $candidates = [
+            $this->normalizeCountry($country->Name ?? null),
+            $this->normalizeCountry($country->CountryCode ?? null),
+            $this->normalizeCountry($country->Iso3 ?? null),
+            $this->normalizeCountry((string)$holidayCountryId),
+        ];
+
+        return in_array($employee, array_filter($candidates), true);
+    }
+
+    private function getCountryLookup(): array
+    {
+        static $lookup = null;
+        if ($lookup !== null) {
+            return $lookup;
+        }
+        $lookup = Country::select(['Id', 'Name', 'CountryCode', 'Iso3'])->get()->keyBy('Id')->all();
+        return $lookup;
+    }
+
+    private function normalizeReligion(?string $value): ?string
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return null;
+        }
+        return strtolower($value);
+    }
+
+    private function normalizeCountry(?string $value): ?string
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return null;
+        }
+        return strtolower($value);
+    }
+
+    private function getWorkingTotals(Carbon $start, Carbon $end, array $workingMap, array $holidays, ?int $employeeId = null): array
     {
         $key = $start->format('Y-m');
-        if (isset($this->workingTotalsCache[$key])) {
-            return $this->workingTotalsCache[$key];
+        $employeeKey = $employeeId ?? 0;
+        if (isset($this->workingTotalsCache[$employeeKey][$key])) {
+            return $this->workingTotalsCache[$employeeKey][$key];
         }
 
         $fractions = 0.0;
@@ -1281,37 +1914,30 @@ class PayrollRunController extends Controller
         }
 
         $totals = ['fractions' => $fractions, 'hours' => $hours];
-        $this->workingTotalsCache[$key] = $totals;
+        $this->workingTotalsCache[$employeeKey][$key] = $totals;
         return $totals;
     }
 
-    private function hoursFromTimes($start, $end): float
+    private function resolveOvertimeMultiplier(?int $gradeId, Carbon $periodEnd): float
     {
-        $start = $this->normalizeTime($start);
-        $end = $this->normalizeTime($end);
-        if (!$start || !$end) {
-            return 0.0;
+        if (!$gradeId) {
+            return 1.0;
         }
-        $startTime = Carbon::createFromFormat('H:i:s', $start);
-        $endTime = Carbon::createFromFormat('H:i:s', $end);
-        $minutes = $endTime->diffInMinutes($startTime, false);
-        if ($minutes <= 0) {
-            return 0.0;
-        }
-        return round($minutes / 60, 2);
-    }
 
-    private function normalizeTime($time): ?string
-    {
-        if ($time === null) {
-            return null;
-        }
-        $value = trim((string)$time);
-        if ($value === '') {
-            return null;
-        }
-        $value = explode('.', $value)[0];
-        return $value;
+        $rate = OvertimeRate::where('GradeID', $gradeId)
+            ->where('IsActive', 1)
+            ->where(function ($q) use ($periodEnd) {
+                $q->whereNull('EffectiveFrom')
+                    ->orWhere('EffectiveFrom', '<=', $periodEnd->toDateString());
+            })
+            ->where(function ($q) use ($periodEnd) {
+                $q->whereNull('EffectiveTo')
+                    ->orWhere('EffectiveTo', '>=', $periodEnd->toDateString());
+            })
+            ->orderByDesc('EffectiveFrom')
+            ->value('RateMultiplier');
+
+        return $rate !== null ? (float)$rate : 1.0;
     }
 
     private function calculateOvertimeAmount(int $employeeId, Carbon $start, Carbon $end, float $hourlyRate): float
@@ -1325,12 +1951,6 @@ class PayrollRunController extends Controller
             ->sum('HoursRequested');
 
         $hours = (float)$approvedRequests;
-        if ($hours <= 0) {
-            $hours = (float)AttendanceDaily::where('EmployeeID', $employeeId)
-                ->whereBetween('WorkDate', [$start->toDateString(), $end->toDateString()])
-                ->sum('OvertimeHours');
-        }
-
         return round($hours * $hourlyRate, 2);
     }
 
@@ -1479,6 +2099,3 @@ class PayrollRunController extends Controller
         return $dates;
     }
 }
-
-
-

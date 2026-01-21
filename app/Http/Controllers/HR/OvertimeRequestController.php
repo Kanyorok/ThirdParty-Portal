@@ -5,6 +5,8 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use App\Models\HR\OvertimeRequest;
 use App\Models\HR\Employee;
+use App\Models\HR\AttendanceDaily;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -25,7 +27,7 @@ class OvertimeRequestController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'EmployeeID' => 'required|integer',
+            'EmployeeID' => 'required|integer|exists:t_HREmployees,Id',
             'WorkDate' => 'required|date',
             'HoursRequested' => 'required|numeric|min:0',
             'Reason' => 'nullable|string|max:255',
@@ -61,5 +63,55 @@ class OvertimeRequestController extends Controller
             'ApprovalComment' => $request->input('ApprovalComment'),
         ]);
         return redirect()->route('hr.attendance.overtime.index')->with('success', 'Overtime rejected.');
+    }
+
+    public function syncFromAttendance(Request $request)
+    {
+        $data = $request->validate([
+            'FromDate' => ['required', 'date'],
+            'ToDate' => ['required', 'date', 'after_or_equal:FromDate'],
+        ]);
+
+        $start = Carbon::parse($data['FromDate'])->startOfDay();
+        $end = Carbon::parse($data['ToDate'])->endOfDay();
+
+        $attendanceRows = AttendanceDaily::whereBetween('WorkDate', [$start->toDateString(), $end->toDateString()])
+            ->where('OvertimeHours', '>', 0)
+            ->get(['EmployeeID', 'WorkDate', 'OvertimeHours']);
+
+        if ($attendanceRows->isEmpty()) {
+            return redirect()->route('hr.attendance.overtime.index')
+                ->with('success', 'No overtime hours found in attendance logs.');
+        }
+
+        $existingKeys = OvertimeRequest::whereBetween('WorkDate', [$start->toDateString(), $end->toDateString()])
+            ->get(['EmployeeID', 'WorkDate'])
+            ->map(fn ($row) => $row->EmployeeID . '|' . $row->WorkDate->toDateString())
+            ->flip();
+
+        $now = now();
+        $created = 0;
+        foreach ($attendanceRows as $row) {
+            $key = $row->EmployeeID . '|' . $row->WorkDate->toDateString();
+            if ($existingKeys->has($key)) {
+                continue;
+            }
+
+            OvertimeRequest::create([
+                'EmployeeID' => $row->EmployeeID,
+                'WorkDate' => $row->WorkDate->toDateString(),
+                'HoursRequested' => (float)$row->OvertimeHours,
+                'Status' => 'Pending',
+                'Reason' => 'Auto from attendance logs',
+                'RequestedBy' => auth()->id(),
+                'RequestedOn' => $now,
+                'CreatedBy' => auth()->id(),
+                'CreatedOn' => $now,
+            ]);
+            $created++;
+        }
+
+        return redirect()->route('hr.attendance.overtime.index')
+            ->with('success', $created ? "Synced {$created} overtime requests." : 'No new overtime requests were created.');
     }
 }

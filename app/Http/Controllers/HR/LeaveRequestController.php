@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\HR\LeaveRequest;
 use App\Models\HR\LeaveType;
 use App\Models\HR\Employee;
+use App\Models\Core\Branch;
+use App\Models\Core\Country;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\HR\LeaveBalance;
 use App\Models\HR\AttendanceDaily;
-use App\Models\HR\WorkingDaySetting;
 use App\Models\HR\Holiday;
+use App\Services\HR\WorkingDayResolver;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
@@ -38,6 +40,13 @@ class LeaveRequestController extends Controller
         return view('hr.leave.requests.create', compact('employees','types'));
     }
 
+    public function eligibleTypes(Request $request)
+    {
+        $employeeId = $request->query('employee_id');
+        $types = $this->eligibleLeaveTypesForEmployee($employeeId);
+        return response()->json($types);
+    }
+
     public function store(Request $request)
     {
         $data = $this->validateData($request, true);
@@ -46,7 +55,12 @@ class LeaveRequestController extends Controller
         $data['RequestedOn'] = now();
         $data['CreatedBy'] = auth()->id();
         $data['CreatedOn'] = now();
-        $data['TotalDays'] = $this->calculateDays($data['StartDate'], $data['EndDate'], $request->input('TotalDays'));
+        $data['TotalDays'] = $this->calculateDays(
+            $data['StartDate'],
+            $data['EndDate'],
+            $request->input('TotalDays'),
+            $data['EmployeeID'] ?? null
+        );
         if (empty($data['RelieverID'])) {
             $data['RelieverID'] = null;
         }
@@ -58,7 +72,7 @@ class LeaveRequestController extends Controller
     public function approve($id, Request $request)
     {
         $leave = LeaveRequest::findOrFail($id);
-        $totalDays = $leave->TotalDays ?? $this->calculateDays($leave->StartDate, $leave->EndDate);
+        $totalDays = $leave->TotalDays ?? $this->calculateDays($leave->StartDate, $leave->EndDate, null, $leave->EmployeeID);
         $leave->update([
             'Status' => 'Approved',
             'ApprovedBy' => auth()->id(),
@@ -87,7 +101,7 @@ class LeaveRequestController extends Controller
     public function cancel($id)
     {
         $leave = LeaveRequest::findOrFail($id);
-        $totalDays = $leave->TotalDays ?? $this->calculateDays($leave->StartDate, $leave->EndDate);
+        $totalDays = $leave->TotalDays ?? $this->calculateDays($leave->StartDate, $leave->EndDate, null, $leave->EmployeeID);
         $leave->update([
             'Status' => 'Cancelled',
             'CancelledBy' => auth()->id(),
@@ -118,8 +132,14 @@ class LeaveRequestController extends Controller
                 'StartDate' => 'required|date',
                 'EndDate'   => 'required|date|after_or_equal:StartDate',
                 'TotalDays' => 'nullable|numeric|min:0',
+                'EmployeeID' => 'nullable|integer',
             ]);
-            $days = $this->calculateDays($data['StartDate'], $data['EndDate'], $request->input('TotalDays'));
+            $days = $this->calculateDays(
+                $data['StartDate'],
+                $data['EndDate'],
+                $request->input('TotalDays'),
+                $data['EmployeeID'] ?? null
+            );
             return response()->json(['days' => $days]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
@@ -172,12 +192,12 @@ class LeaveRequestController extends Controller
         return $data;
     }
 
-    private function calculateDays($start, $end, $requestedSingleDay = null): float
+    private function calculateDays($start, $end, $requestedSingleDay = null, ?int $employeeId = null): float
     {
         $s = Carbon::parse($start);
         $e = Carbon::parse($end);
-        $working = $this->workingMap();
-        $holidays = $this->holidaysBetween($s, $e);
+        $working = $this->workingMap($employeeId);
+        $holidays = $this->holidaysBetween($s, $e, $employeeId);
 
         if ($s->isSameDay($e)) {
             $fraction = $working[$s->dayOfWeek]['fraction'] ?? 0;
@@ -223,42 +243,33 @@ class LeaveRequestController extends Controller
         return round($total, 2);
     }
 
-    private function workingMap(): array
+    private function workingMap(?int $employeeId = null): array
     {
-        $map = [];
-        $records = WorkingDaySetting::all()->keyBy('DayOfWeek');
-        foreach (range(0, 6) as $dow) {
-            $rec = $records[$dow] ?? null;
-            $defaultWorking = ($dow >= 1 && $dow <= 5);
-            $workingFlag = $rec ? (bool)$rec->IsWorking : $defaultWorking;
-            $fraction = $rec
-                ? (float)($rec->DayFraction ?? ($workingFlag ? 1.0 : 0.0))
-                : ($workingFlag ? 1.0 : 0.0);
-            // Guard against legacy bad data where half-days were saved as 0
-            if ($workingFlag && $fraction <= 0) {
-                $fraction = 0.5;
-            }
-            $map[$dow] = [
-                'working' => $workingFlag,
-                'fraction' => $fraction,
-            ];
-        }
-        return $map;
+        return app(WorkingDayResolver::class)->getWorkingMap($employeeId);
     }
 
-    private function holidaysBetween(Carbon $start, Carbon $end)
+    private function holidaysBetween(Carbon $start, Carbon $end, ?int $employeeId = null)
     {
+        $employeeReligion = $this->getEmployeeReligion($employeeId);
+        $employeeCountry = $this->getEmployeeCountry($employeeId);
+
         $rows = Holiday::whereNull('DeletedOn')
             ->where('IsActive', 1)
             ->where('Status', 'Approved')
             ->whereBetween('HolidayDate', [$start->toDateString(), $end->toDateString()])
-            ->get();
+            ->get()
+            ->filter(function ($holiday) use ($employeeReligion, $employeeCountry) {
+                return $this->holidayAppliesToEmployee($employeeReligion, $employeeCountry, $holiday);
+            });
 
         $recurring = Holiday::whereNull('DeletedOn')
             ->where('IsActive', 1)
             ->where('Status', 'Approved')
             ->where('IsRecurring', 1)
-            ->get();
+            ->get()
+            ->filter(function ($holiday) use ($employeeReligion, $employeeCountry) {
+                return $this->holidayAppliesToEmployee($employeeReligion, $employeeCountry, $holiday);
+            });
 
         $dates = collect();
         for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
@@ -272,6 +283,108 @@ class LeaveRequestController extends Controller
             }
         }
         return $dates->unique();
+    }
+
+    private function getEmployeeReligion(?int $employeeId): ?string
+    {
+        if (!$employeeId) {
+            return null;
+        }
+        $religion = Employee::where('Id', $employeeId)->value('Religion');
+        return $this->normalizeReligion($religion);
+    }
+
+    private function getEmployeeCountry(?int $employeeId): ?string
+    {
+        if (!$employeeId) {
+            return null;
+        }
+        $branchId = Employee::where('Id', $employeeId)->value('BranchID');
+        if (!$branchId) {
+            return null;
+        }
+        $country = Branch::where('Id', $branchId)->value('Country');
+        return $this->normalizeCountry($country);
+    }
+
+    private function holidayAppliesToEmployee(?string $employeeReligion, ?string $employeeCountry, Holiday $holiday): bool
+    {
+        return $this->holidayAppliesToReligion($employeeReligion, $holiday->AppliesToReligion ?? null)
+            && $this->holidayAppliesToRegion($employeeCountry, $holiday->RegionScope ?? null, $holiday->CountryId ?? null);
+    }
+
+    private function holidayAppliesToReligion(?string $employeeReligion, ?string $holidayReligion): bool
+    {
+        $holiday = $this->normalizeReligion($holidayReligion);
+        if (!$holiday) {
+            return true;
+        }
+        if (!$employeeReligion) {
+            return false;
+        }
+        return $holiday === $employeeReligion;
+    }
+
+    private function holidayAppliesToRegion(?string $employeeCountry, ?string $regionScope, ?int $holidayCountryId): bool
+    {
+        $scope = strtolower(trim((string)($regionScope ?? '')));
+        if ($scope === '' || $scope === 'global') {
+            return true;
+        }
+        if ($scope !== 'regional') {
+            return true;
+        }
+        if (!$employeeCountry || !$holidayCountryId) {
+            return false;
+        }
+
+        $countries = $this->getCountryLookup();
+        $country = $countries[$holidayCountryId] ?? null;
+        if (!$country) {
+            return false;
+        }
+
+        $employee = $this->normalizeCountry($employeeCountry);
+        if (!$employee) {
+            return false;
+        }
+
+        $candidates = [
+            $this->normalizeCountry($country->Name ?? null),
+            $this->normalizeCountry($country->CountryCode ?? null),
+            $this->normalizeCountry($country->Iso3 ?? null),
+            $this->normalizeCountry((string)$holidayCountryId),
+        ];
+
+        return in_array($employee, array_filter($candidates), true);
+    }
+
+    private function getCountryLookup(): array
+    {
+        static $lookup = null;
+        if ($lookup !== null) {
+            return $lookup;
+        }
+        $lookup = Country::select(['Id', 'Name', 'CountryCode', 'Iso3'])->get()->keyBy('Id')->all();
+        return $lookup;
+    }
+
+    private function normalizeReligion(?string $value): ?string
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return null;
+        }
+        return strtolower($value);
+    }
+
+    private function normalizeCountry(?string $value): ?string
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return null;
+        }
+        return strtolower($value);
     }
 
     private function eligibleLeaveTypesForEmployee(?int $employeeId)

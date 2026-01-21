@@ -21,13 +21,18 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
+            @if($cycles->isEmpty())
+                <div class="alert alert-warning">
+                    No open payroll cycles available. Open or reopen a cycle before generating payroll.
+                </div>
+            @endif
             <form method="POST" action="{{ route('hr.payroll.runs.store') }}">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Payroll Cycle *</label>
-                        <select name="PayrollCycleID" class="form-select" required>
-                            <option value="">Select cycle</option>
+                        <select name="PayrollCycleID" class="form-select" required @disabled($cycles->isEmpty())>
+                            <option value="">{{ $cycles->isEmpty() ? 'No open cycles' : 'Select cycle' }}</option>
                             @foreach($cycles as $cycle)
                                 <option value="{{ $cycle->Id }}" @selected(old('PayrollCycleID') == $cycle->Id)>
                                     {{ $cycle->Month }}/{{ $cycle->Year }} ({{ $cycle->Status }})
@@ -41,7 +46,7 @@
                     </div>
                 </div>
                 <div class="mt-4 d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary">Generate Payroll</button>
+                    <button type="submit" class="btn btn-primary" @disabled($cycles->isEmpty())>Generate Payroll</button>
                 </div>
             </form>
         </div>

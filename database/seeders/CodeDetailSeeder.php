@@ -539,6 +539,19 @@ class CodeDetailSeeder extends Seeder
             //Driver Employment Type
             ['CodeID' => 'EmploymentType', 'Description' => 'Permanent', 'Value' => 'PR'],
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
+            // Employment Types maintained in system configuration
+            ['CodeID' => 'EmploymentTypes', 'Description' => 'Permanent', 'Value' => 'Permanent'],
+            ['CodeID' => 'EmploymentTypes', 'Description' => 'Contract', 'Value' => 'Contract'],
+            ['CodeID' => 'EmploymentTypes', 'Description' => 'Temporary', 'Value' => 'Temporary'],
+            ['CodeID' => 'EmploymentTypes', 'Description' => 'Internship', 'Value' => 'Internship'],
+            ['CodeID' => 'EmploymentTypes', 'Description' => 'Casual', 'Value' => 'Casual'],
+
+            // Contract Types maintained in system configuration
+            ['CodeID' => 'ContractTypes', 'Description' => 'Fixed Term', 'Value' => 'Fixed Term'],
+            ['CodeID' => 'ContractTypes', 'Description' => 'Open Ended', 'Value' => 'Open Ended'],
+            ['CodeID' => 'ContractTypes', 'Description' => 'Probationary', 'Value' => 'Probationary'],
+            ['CodeID' => 'ContractTypes', 'Description' => 'Internship', 'Value' => 'Internship'],
+            ['CodeID' => 'ContractTypes', 'Description' => 'Volunteer', 'Value' => 'Volunteer'],
 
 
             ['CodeID' => 'FleetUOM', 'Description' => 'Sufficient', 'Value' => 'SU'],

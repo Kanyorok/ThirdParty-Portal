@@ -25,7 +25,51 @@
 
     <div class="card shadow-sm mb-3">
         <div class="card-body">
-            <form action="{{ route('hr.discipline.cases.hearing.store', $case->Id) }}" method="POST">
+            <h5 class="mb-3">Investigation Summary</h5>
+            @if($investigation)
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <strong>Status:</strong>
+                        <div>{{ $investigation->Status ?? '-' }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Investigator:</strong>
+                        <div>
+                            @if($investigation->InvestigatorType === 'External')
+                                {{ $investigation->InvestigatorName ?? '-' }}
+                            @else
+                                {{ $investigation->investigator?->FirstName }} {{ $investigation->investigator?->LastName }}
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Dates:</strong>
+                        <div>
+                            {{ $investigation->StartDate?->format('Y-m-d') ?? '-' }}
+                            @if($investigation->EndDate)
+                                to {{ $investigation->EndDate->format('Y-m-d') }}
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <strong>Findings Summary:</strong>
+                        <div>{{ $investigation->FindingsSummary ?? '-' }}</div>
+                    </div>
+                    @if($investigation->reportDocument)
+                        <div class="col-12">
+                            <a href="{{ route('file.preview', ['document' => $investigation->reportDocument->DocumentId]) }}" target="_blank">View Investigation Report</a>
+                        </div>
+                    @endif
+                </div>
+            @else
+                <div class="text-muted">No investigation captured yet.</div>
+            @endif
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form id="hearingForm" action="{{ route('hr.discipline.cases.hearing.store', $case->Id) }}" method="POST">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -55,11 +99,16 @@
                         <label class="form-label">Status</label>
                         <input type="text" name="Status" class="form-control" value="{{ old('Status', $hearing->Status ?? 'Scheduled') }}">
                     </div>
+                    @if($hearing)
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="CreateSubsequent" value="1" id="createSubsequent">
+                                <label class="form-check-label" for="createSubsequent">Schedule as subsequent hearing (creates a new hearing record)</label>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
-                <div class="mt-4 d-flex justify-content-end gap-2">
-                    <button type="submit" class="btn btn-primary">Save Hearing</button>
-                </div>
             </form>
         </div>
     </div>
@@ -124,6 +173,55 @@
                 </div>
             </div>
         </div>
+    @endif
+
+    <div class="mt-4 d-flex justify-content-end gap-2">
+        <button type="submit" class="btn btn-primary" form="hearingForm">Save Hearing</button>
+    </div>
+
+    @if($hearing)
+        @if(($hearings ?? collect())->count() > 1)
+            <div class="card shadow-sm mt-3">
+                <div class="card-body">
+                    <h5 class="mb-3">Hearing History</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Venue</th>
+                                    <th>Facilitator</th>
+                                    <th>Status</th>
+                                    <th>Panel</th>
+                                    <th>Minutes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($hearings as $index => $item)
+                                    <tr @class(['table-success' => $index === 0])>
+                                        <td>{{ $hearings->count() - $index }}</td>
+                                        <td>{{ $item->HearingDate?->format('Y-m-d H:i') ?? '-' }}</td>
+                                        <td>{{ $item->Venue ?? '-' }}</td>
+                                        <td>{{ $item->facilitator?->FirstName }} {{ $item->facilitator?->LastName }}</td>
+                                        <td>{{ $item->Status ?? '-' }}</td>
+                                        <td>{{ $item->panelMembers?->count() ?? 0 }}</td>
+                                        <td>
+                                            @if($item->minutes)
+                                                <a href="{{ route('file.preview', ['document' => $item->minutes->DocumentId]) }}" target="_blank">View</a>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-muted">Latest hearing highlighted.</small>
+                </div>
+            </div>
+        @endif
     @endif
 </div>
 @endsection

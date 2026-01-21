@@ -12,13 +12,21 @@ class PayrollMandatoryAllocator
 {
     public function syncForEmployee(Employee $employee, int $month, int $year): void
     {
+        if ((int)($employee->IsActive ?? 1) !== 1 || $employee->DeletedOn !== null || (string)($employee->Status ?? '') === 'Exited') {
+            return;
+        }
         $this->syncMandatoryAllowancesForEmployee($employee, $month, $year);
         $this->syncMandatoryDeductionsForEmployee($employee, $month, $year);
     }
 
     public function syncForAllEmployees(int $month, int $year): void
     {
-        Employee::where('IsActive', 1)->chunk(200, function ($employees) use ($month, $year) {
+        Employee::where('IsActive', 1)
+            ->whereNull('DeletedOn')
+            ->where(function ($q) {
+                $q->whereNull('Status')->orWhere('Status', '!=', 'Exited');
+            })
+            ->chunk(200, function ($employees) use ($month, $year) {
             foreach ($employees as $employee) {
                 $this->syncForEmployee($employee, $month, $year);
             }

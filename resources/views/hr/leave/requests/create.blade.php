@@ -40,7 +40,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Leave Type *</label>
-                        <select name="LeaveTypeID" class="form-select" required>
+                        <select name="LeaveTypeID" class="form-select" required data-old="{{ old('LeaveTypeID', '') }}">
                             <option value="">Select</option>
                             @foreach($types as $type)
                                 <option value="{{ $type->Id }}" @selected(old('LeaveTypeID') == $type->Id)>{{ $type->Name }}</option>
@@ -93,11 +93,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const empSelect = document.getElementById('EmployeeID');
     const relSelect = document.getElementById('RelieverID');
     const daysHelp = document.getElementById('DaysHelp');
+    const leaveTypeSelect = document.querySelector('select[name="LeaveTypeID"]');
+    const initialLeaveType = leaveTypeSelect?.dataset.old || '';
     const calcUrl = @json(route('hr.leave.requests.calc'));
+    const eligibleUrl = @json(route('hr.leave.requests.eligible_types'));
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     const calc = async () => {
         if (!start.value || !end.value) return;
+        if (empSelect && !empSelect.value) {
+            daysHelp.textContent = 'Select an employee to calculate days.';
+            return;
+        }
         daysHelp.textContent = 'Calculating...';
         try {
             const res = await fetch(calcUrl, {
@@ -109,7 +116,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({
                     StartDate: start.value,
                     EndDate: end.value,
-                    TotalDays: total.value
+                    TotalDays: total.value,
+                    EmployeeID: empSelect?.value || null
                 })
             });
             if (!res.ok) {
@@ -127,20 +135,51 @@ document.addEventListener('DOMContentLoaded', function () {
             daysHelp.textContent = 'Unable to calculate days.';
         }
     };
-    start.addEventListener('change', calc);
-    end.addEventListener('change', calc);
+
+    const refreshLeaveTypes = async () => {
+        if (!leaveTypeSelect) return;
+        const empId = empSelect?.value;
+        const previous = leaveTypeSelect.value || initialLeaveType;
+        const query = empId ? `?employee_id=${empId}` : '';
+        leaveTypeSelect.innerHTML = '<option value="">Loading...</option>';
+        try {
+            const response = await fetch(eligibleUrl + query, {
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Unable to load leave types.');
+            }
+            const types = await response.json();
+            leaveTypeSelect.innerHTML = '<option value="">Select</option>';
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type.Id;
+                option.textContent = type.Name;
+                if (previous && parseInt(previous) === type.Id) {
+                    option.selected = true;
+                }
+                leaveTypeSelect.appendChild(option);
+            });
+        } catch (error) {
+            leaveTypeSelect.innerHTML = '<option value="">Unable to load leave types</option>';
+        }
+    };
 
     const filterRelievers = () => {
         if (!empSelect || !relSelect) return;
         const selEmp = empSelect.options[empSelect.selectedIndex];
         const dept = selEmp ? selEmp.getAttribute('data-department') : null;
         let cleared = false;
+        const selectedEmployeeId = empSelect.value;
         Array.from(relSelect.options).forEach(opt => {
             if (!opt.value) return;
             const relDept = opt.getAttribute('data-department');
             const match = !dept || !relDept || dept === relDept;
-            opt.disabled = !match;
-            if (!match && opt.selected) {
+            const sameEmployee = selectedEmployeeId && opt.value === selectedEmployeeId;
+            opt.disabled = !match || sameEmployee;
+            if ((!match || sameEmployee) && opt.selected) {
                 opt.selected = false;
                 cleared = true;
             }
@@ -149,10 +188,18 @@ document.addEventListener('DOMContentLoaded', function () {
             relSelect.value = '';
         }
     };
+
+    start.addEventListener('change', calc);
+    end.addEventListener('change', calc);
     if (empSelect) {
-        empSelect.addEventListener('change', filterRelievers);
+        empSelect.addEventListener('change', () => {
+            refreshLeaveTypes();
+            filterRelievers();
+            calc();
+        });
         filterRelievers();
     }
+    refreshLeaveTypes();
     calc();
 });
 </script>

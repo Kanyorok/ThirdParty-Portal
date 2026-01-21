@@ -40,6 +40,10 @@
                         <input type="text" name="BankRegNumber" class="form-control" value="{{ old('BankRegNumber', $profile->BankRegNumber ?? '') }}">
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label">Employer Tax PIN</label>
+                        <input type="text" name="EmployerTaxPIN" class="form-control" value="{{ old('EmployerTaxPIN', $profile->EmployerTaxPIN ?? '') }}">
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">Bank Code</label>
                         <input type="text" name="BankCode" class="form-control" value="{{ old('BankCode', $profile->BankCode ?? '') }}">
                     </div>

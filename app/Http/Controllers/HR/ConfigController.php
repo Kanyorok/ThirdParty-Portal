@@ -31,6 +31,7 @@ class ConfigController extends Controller
             'EmailID'       => ['nullable', 'email', 'max:150'],
             'Website'       => ['nullable', 'string', 'max:150'],
             'BankRegNumber' => ['nullable', 'string', 'max:100'],
+            'EmployerTaxPIN' => ['nullable', 'string', 'max:50'],
         ]);
 
         $profile = SystemBankSetting::query()->orderByDesc('Id')->first();

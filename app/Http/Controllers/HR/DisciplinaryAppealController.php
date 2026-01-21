@@ -20,7 +20,9 @@ class DisciplinaryAppealController extends Controller
     {
         $case = DisciplinaryCase::with('employee')->findOrFail($caseId);
         $appeal = DisciplinaryAppeal::where('CaseID', $case->Id)->latest('CreatedOn')->first();
-        $employees = Employee::orderBy('FirstName')->get(['Id', 'FirstName', 'LastName', 'EmployeeNo']);
+        $employees = Employee::where('Id', '!=', $case->EmployeeID)
+            ->orderBy('FirstName')
+            ->get(['Id', 'FirstName', 'LastName', 'EmployeeNo']);
         $panel = $appeal ? DisciplinaryAppealPanel::where('AppealID', $appeal->Id)->with('employee')->get() : collect();
         $documents = $appeal ? DisciplinaryAppealDocument::with('document')->where('AppealID', $appeal->Id)->get() : collect();
 
@@ -37,7 +39,7 @@ class DisciplinaryAppealController extends Controller
             'HearingDate' => ['nullable', 'date'],
             'Status' => ['nullable', 'string', 'max:30'],
             'PanelMembers' => ['nullable', 'array'],
-            'PanelMembers.*' => ['exists:t_HREmployees,Id'],
+            'PanelMembers.*' => ['exists:t_HREmployees,Id', 'not_in:' . $case->EmployeeID],
             'PanelRoles' => ['nullable', 'array'],
             'AppealDocuments.*' => ['nullable', 'file', 'max:5120', 'mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg'],
         ]);

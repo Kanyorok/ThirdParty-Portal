@@ -19,7 +19,7 @@ class DisciplinaryInvestigationController extends Controller
     public function edit($caseId)
     {
         $case = DisciplinaryCase::with('employee')->findOrFail($caseId);
-        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->latest('CreatedOn')->first();
+        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->orderBy('Id')->first();
         $employees = Employee::where('Id', '!=', $case->EmployeeID)
             ->orderBy('FirstName')
             ->get(['Id', 'FirstName', 'LastName', 'EmployeeNo']);
@@ -70,7 +70,7 @@ class DisciplinaryInvestigationController extends Controller
             $reportDocumentId = $document->Id;
         }
 
-        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->latest('CreatedOn')->first();
+        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->orderBy('Id')->first();
         if ($investigation) {
             $investigation->update([
                 'InvestigatorType' => $data['InvestigatorType'],
@@ -110,7 +110,7 @@ class DisciplinaryInvestigationController extends Controller
     public function approve(Request $request, $caseId)
     {
         $case = DisciplinaryCase::findOrFail($caseId);
-        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->latest('CreatedOn')->first();
+        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->orderBy('Id')->first();
         if (!$investigation) {
             return redirect()->route('hr.discipline.cases.investigation.edit', $case->Id)->withErrors([
                 'status' => 'No investigation record found.',
@@ -133,7 +133,7 @@ class DisciplinaryInvestigationController extends Controller
     public function storeDocument(Request $request, $caseId)
     {
         $case = DisciplinaryCase::findOrFail($caseId);
-        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->latest('CreatedOn')->first();
+        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->orderBy('Id')->first();
         if (!$investigation) {
             return redirect()->route('hr.discipline.cases.investigation.edit', $case->Id)->withErrors([
                 'status' => 'Create the investigation first.',

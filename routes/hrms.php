@@ -4,6 +4,8 @@ use App\Http\Controllers\HR\HolidayController;
 use App\Http\Controllers\HR\LeaveTypeController;
 
 use App\Http\Controllers\HR\EmployeeController;
+use App\Http\Controllers\HR\EmployeeWorkingDayController;
+use App\Http\Controllers\HR\ReligionController;
 use App\Http\Controllers\HR\AttendanceController;
 use App\Http\Controllers\HRM\DepartmentController;
 use App\Http\Controllers\HR\BranchConfigController;
@@ -45,6 +47,20 @@ use App\Http\Controllers\HR\DisciplinaryInvestigationController;
 use App\Http\Controllers\HR\DisciplinaryHearingController;
 use App\Http\Controllers\HR\DisciplinaryDecisionController;
 use App\Http\Controllers\HR\DisciplinaryAppealController;
+use App\Http\Controllers\HR\ExitTypeController;
+use App\Http\Controllers\HR\ExitPolicyController;
+use App\Http\Controllers\HR\ExitLegalRefController;
+use App\Http\Controllers\HR\ExitClearanceDepartmentController;
+use App\Http\Controllers\HR\ExitChecklistTemplateController;
+use App\Http\Controllers\HR\ExitInterviewQuestionController;
+use App\Http\Controllers\HR\ExitLetterTemplateController;
+use App\Http\Controllers\HR\ExitRequestController;
+use App\Http\Controllers\HR\ExitNoticeController;
+use App\Http\Controllers\HR\ExitClearanceController;
+use App\Http\Controllers\HR\ExitTerminalDueController;
+use App\Http\Controllers\HR\ExitRedundancyController;
+use App\Http\Controllers\HR\ExitInterviewController;
+use App\Http\Controllers\HR\ExitReportController;
 use App\Http\Controllers\HR\PayrollAllowanceController;
 use App\Http\Controllers\HR\PayrollAllowanceRuleController;
 use App\Http\Controllers\HR\StatutoryNhifController;
@@ -53,6 +69,15 @@ use App\Http\Controllers\HR\StatutoryPayeController;
 use App\Http\Controllers\HR\StatutoryReliefController;
 use App\Http\Controllers\HR\StatutoryHousingLevyController;
 use App\Http\Controllers\HR\StatutoryFringeBenefitController;
+use App\Http\Controllers\HR\BulkUploadController;
+use App\Http\Controllers\HR\SharedDocumentCategoryController;
+use App\Http\Controllers\HR\SharedDocumentController;
+use App\Http\Controllers\HR\TrainingCategoryController;
+use App\Http\Controllers\HR\TrainingTrainerController;
+use App\Http\Controllers\HR\TrainingProgramController;
+use App\Http\Controllers\HR\TrainingSessionController;
+use App\Http\Controllers\HR\TrainingCertificateController;
+use App\Http\Controllers\HR\TrainingReportController;
 
 Route::middleware(['auth']) // + any HR-specific middleware/permissions
     ->prefix('hr')
@@ -63,6 +88,9 @@ Route::middleware(['auth']) // + any HR-specific middleware/permissions
         Route::resource('employees', EmployeeController::class);
         Route::get('employees/{employee}/status', [EmployeeController::class, 'statusForm'])->name('employees.status.edit');
         Route::put('employees/{employee}/status', [EmployeeController::class, 'statusUpdate'])->name('employees.status.update');
+        Route::get('employees/{employee}/working-days', [EmployeeWorkingDayController::class, 'edit'])->name('employees.working-days.edit');
+        Route::post('employees/{employee}/working-days', [EmployeeWorkingDayController::class, 'update'])->name('employees.working-days.update');
+        Route::delete('employees/{employee}/working-days', [EmployeeWorkingDayController::class, 'destroy'])->name('employees.working-days.destroy');
         Route::resource('departments', DepartmentController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
 
         // Attendance
@@ -105,6 +133,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     // HR Config — Job Grades & Roles
     Route::resource('config/job-grades', JobGradeController::class)->names('config.jobgrades')->except(['show']);
     Route::resource('config/job-roles', JobRoleController::class)->names('config.jobroles')->except(['show']);
+    Route::resource('config/religions', ReligionController::class)->names('config.religions')->except(['show']);
 
     // HR Config — KPI setup (stubs)
     Route::resource('config/kpi/library', KpiItemController::class)->names('config.kpi.library')->except(['show']);
@@ -148,6 +177,17 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::resource('statutory/allowances', PayrollAllowanceController::class)->names('statutory.allowances')->except(['show']);
     Route::resource('statutory/allowances/{allowance}/rules', PayrollAllowanceRuleController::class)->names('statutory.allowances.rules')->except(['show']);
     Route::resource('statutory/reliefs', \App\Http\Controllers\HR\StatutoryReliefController::class)->names('statutory.reliefs')->except(['show']);
+
+    // Exit Management Config
+    Route::resource('config/exit-types', ExitTypeController::class)->names('config.exit-types')->except(['show', 'destroy']);
+    Route::resource('config/exit-policies', ExitPolicyController::class)->names('config.exit-policies')->except(['show', 'destroy']);
+    Route::resource('config/exit-legal-refs', ExitLegalRefController::class)->names('config.exit-legal-refs')->except(['show', 'destroy']);
+    Route::resource('config/exit-clearance-departments', ExitClearanceDepartmentController::class)->names('config.exit-clearance-departments')->except(['show', 'destroy']);
+    Route::resource('config/exit-checklists', ExitChecklistTemplateController::class)->names('config.exit-checklists')->except(['show', 'destroy']);
+    Route::post('config/exit-checklists/{id}/items', [ExitChecklistTemplateController::class, 'addItem'])->name('config.exit-checklists.items.store');
+    Route::delete('config/exit-checklists/{id}/items/{itemId}', [ExitChecklistTemplateController::class, 'removeItem'])->name('config.exit-checklists.items.destroy');
+    Route::resource('config/exit-interview-questions', ExitInterviewQuestionController::class)->names('config.exit-interview-questions')->except(['show', 'destroy']);
+    Route::resource('config/exit-letter-templates', ExitLetterTemplateController::class)->names('config.exit-letter-templates')->except(['show', 'destroy']);
 
     // Employee Movements
     Route::resource('movements/promotions', \App\Http\Controllers\HR\EmployeePromotionController::class)->names('movements.promotions');
@@ -241,11 +281,83 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::post('recruitment/offers/{id}/accept', [JobOfferController::class, 'accept'])->name('recruitment.offers.accept');
     Route::post('recruitment/offers/{id}/reject', [JobOfferController::class, 'reject'])->name('recruitment.offers.reject');
 
+    // Bulk Uploads & Utilities
+    Route::prefix('bulk-uploads')->name('bulk.')->group(function () {
+        Route::get('/', [BulkUploadController::class, 'index'])->name('index');
+        Route::get('employees', [BulkUploadController::class, 'employees'])->name('employees');
+        Route::post('employees', [BulkUploadController::class, 'importEmployees'])->name('employees.import');
+        Route::get('employees/template', [BulkUploadController::class, 'downloadEmployeesTemplate'])->name('employees.template');
+
+        Route::get('payroll', [BulkUploadController::class, 'payroll'])->name('payroll');
+        Route::post('payroll/salary', [BulkUploadController::class, 'importSalary'])->name('salary.import');
+        Route::get('payroll/salary/template', [BulkUploadController::class, 'downloadSalaryTemplate'])->name('salary.template');
+        Route::post('payroll/allowances', [BulkUploadController::class, 'importAllowances'])->name('allowances.import');
+        Route::get('payroll/allowances/template', [BulkUploadController::class, 'downloadAllowancesTemplate'])->name('allowances.template');
+        Route::post('payroll/deductions', [BulkUploadController::class, 'importDeductions'])->name('deductions.import');
+        Route::get('payroll/deductions/template', [BulkUploadController::class, 'downloadDeductionsTemplate'])->name('deductions.template');
+
+        Route::get('attendance', [BulkUploadController::class, 'attendance'])->name('attendance');
+        Route::post('attendance', [BulkUploadController::class, 'importAttendance'])->name('attendance.import');
+        Route::get('attendance/template', [BulkUploadController::class, 'downloadAttendanceTemplate'])->name('attendance.template');
+
+        Route::get('kpi-targets', [BulkUploadController::class, 'kpiTargets'])->name('kpi-targets');
+        Route::post('kpi-targets', [BulkUploadController::class, 'importKpiTargets'])->name('kpi-targets.import');
+        Route::get('kpi-targets/template', [BulkUploadController::class, 'downloadKpiTargetsTemplate'])->name('kpi-targets.template');
+    });
+
+    // Shared Documents & Training
+    Route::resource('shared-docs/categories', SharedDocumentCategoryController::class)->names('shared-docs.categories')->except(['show']);
+    Route::resource('shared-docs', SharedDocumentController::class)
+        ->names('shared-docs')
+        ->where(['shared_doc' => '[0-9]+']);
+    Route::post('shared-docs/{id}/acknowledge', [SharedDocumentController::class, 'acknowledge'])->name('shared-docs.acknowledge')->whereNumber('id');
+
+    Route::resource('training/categories', TrainingCategoryController::class)->names('training.categories')->except(['show']);
+    Route::resource('training/trainers', TrainingTrainerController::class)->names('training.trainers')->except(['show']);
+    Route::resource('training/programs', TrainingProgramController::class)->names('training.programs');
+    Route::resource('training/sessions', TrainingSessionController::class)->names('training.sessions');
+    Route::post('training/sessions/{id}/participants', [TrainingSessionController::class, 'addParticipants'])->name('training.sessions.participants');
+    Route::post('training/sessions/{id}/participants/{participantId}', [TrainingSessionController::class, 'updateParticipant'])->name('training.sessions.participants.update');
+    Route::post('training/sessions/{id}/participants/{participantId}/certificate', [TrainingSessionController::class, 'issueCertificate'])->name('training.sessions.participants.certificate');
+    Route::post('training/sessions/{id}/feedback', [TrainingSessionController::class, 'saveFeedback'])->name('training.sessions.feedback');
+    Route::get('training/certificates', [TrainingCertificateController::class, 'index'])->name('training.certificates.index');
+    Route::get('training/reports', [TrainingReportController::class, 'index'])->name('training.reports.index');
+
     Route::get('recruitment/onboarding', [OnboardingController::class, 'index'])->name('recruitment.onboarding.index');
     Route::get('recruitment/onboarding/{id}', [OnboardingController::class, 'show'])->name('recruitment.onboarding.show');
     Route::post('recruitment/onboarding/{id}/tasks', [OnboardingController::class, 'addTask'])->name('recruitment.onboarding.tasks.add');
     Route::post('recruitment/onboarding/{id}/tasks/{taskId}/complete', [OnboardingController::class, 'completeTask'])->name('recruitment.onboarding.tasks.complete');
     Route::post('recruitment/onboarding/{id}/convert', [OnboardingController::class, 'convert'])->name('recruitment.onboarding.convert');
+
+    // Exit Management
+    Route::resource('exit/requests', ExitRequestController::class)->names('exit.requests')->only(['index', 'create', 'store', 'show']);
+    Route::post('exit/requests/{id}/submit', [ExitRequestController::class, 'submit'])->name('exit.requests.submit');
+    Route::post('exit/requests/{id}/approve', [ExitRequestController::class, 'approve'])->name('exit.requests.approve');
+    Route::post('exit/requests/{id}/reject', [ExitRequestController::class, 'reject'])->name('exit.requests.reject');
+    Route::post('exit/requests/{id}/close', [ExitRequestController::class, 'close'])->name('exit.requests.close');
+    Route::post('exit/requests/{id}/documents', [ExitRequestController::class, 'storeDocument'])->name('exit.requests.documents.store');
+    Route::get('exit/requests/{id}/notice', [ExitNoticeController::class, 'create'])->name('exit.requests.notice.create');
+    Route::post('exit/requests/{id}/notice', [ExitNoticeController::class, 'store'])->name('exit.requests.notice.store');
+    Route::get('exit/requests/{id}/clearances', [ExitRequestController::class, 'clearances'])->name('exit.requests.clearances');
+    Route::post('exit/requests/{exitId}/clearances/{clearanceId}', [ExitClearanceController::class, 'update'])->name('exit.clearances.update');
+
+    Route::get('exit/clearances', [ExitClearanceController::class, 'index'])->name('exit.clearances.index');
+
+    Route::get('exit/terminal-dues', [ExitTerminalDueController::class, 'index'])->name('exit.terminal-dues.index');
+    Route::get('exit/terminal-dues/{exitId}', [ExitTerminalDueController::class, 'edit'])->name('exit.terminal-dues.edit');
+    Route::post('exit/terminal-dues/{exitId}', [ExitTerminalDueController::class, 'store'])->name('exit.terminal-dues.store');
+    Route::post('exit/terminal-dues/{exitId}/generate', [ExitTerminalDueController::class, 'generate'])->name('exit.terminal-dues.generate');
+    Route::delete('exit/terminal-dues/{exitId}/{lineId}', [ExitTerminalDueController::class, 'destroy'])->name('exit.terminal-dues.destroy');
+
+    Route::get('exit/interviews', [ExitInterviewController::class, 'index'])->name('exit.interviews.index');
+    Route::get('exit/interviews/{exitId}/view', [ExitInterviewController::class, 'show'])->name('exit.interviews.show');
+    Route::get('exit/interviews/{exitId}', [ExitInterviewController::class, 'edit'])->name('exit.interviews.edit');
+    Route::post('exit/interviews/{exitId}', [ExitInterviewController::class, 'store'])->name('exit.interviews.store');
+
+    Route::resource('exit/redundancies', ExitRedundancyController::class)->names('exit.redundancies')->only(['index', 'create', 'store', 'show']);
+    Route::post('exit/redundancies/{id}/approve', [ExitRedundancyController::class, 'approve'])->name('exit.redundancies.approve');
+
+    Route::get('exit/reports', [ExitReportController::class, 'index'])->name('exit.reports.index');
 
     // Time & Attendance
     Route::resource('attendance/devices', \App\Http\Controllers\HR\AttendanceDeviceController::class)->names('attendance.devices')->except(['show']);
@@ -254,12 +366,18 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::get('attendance/overtime', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'index'])->name('attendance.overtime.index');
     Route::get('attendance/overtime/create', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'create'])->name('attendance.overtime.create');
     Route::post('attendance/overtime', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'store'])->name('attendance.overtime.store');
+    Route::post('attendance/overtime/sync', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'syncFromAttendance'])->name('attendance.overtime.sync');
     Route::post('attendance/overtime/{id}/approve', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'approve'])->name('attendance.overtime.approve');
     Route::post('attendance/overtime/{id}/reject', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'reject'])->name('attendance.overtime.reject');
+    Route::resource('attendance/overtime-rates', \App\Http\Controllers\HR\OvertimeRateController::class)
+        ->names('attendance.overtime-rates')
+        ->except(['show']);
     Route::get('attendance/exceptions', [\App\Http\Controllers\HR\AttendanceExceptionController::class, 'index'])->name('attendance.exceptions.index');
     Route::post('attendance/exceptions/{id}/resolve', [\App\Http\Controllers\HR\AttendanceExceptionController::class, 'resolve'])->name('attendance.exceptions.resolve');
 
     // Leave Management
+    Route::get('leave/requests/eligible-types',[\App\Http\Controllers\HR\LeaveRequestController::class, 'eligibleTypes'])->name('leave.requests.eligible_types');
+    //Route::get('leave/requests/eligible-types', [\App\Http\Controllers\HR\LeaveRequestController::class, 'eligibleTypes'])->name('hr.leave.requests.eligible_types');
     Route::post('leave/requests/calc-days', [\App\Http\Controllers\HR\LeaveRequestController::class, 'previewDays'])->name('leave.requests.calc');
     Route::resource('leave/requests', \App\Http\Controllers\HR\LeaveRequestController::class)->names('leave.requests')->only(['index','create','store']);
     Route::post('leave/requests/{id}/approve', [\App\Http\Controllers\HR\LeaveRequestController::class, 'approve'])->name('leave.requests.approve');
@@ -267,6 +385,8 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::post('leave/requests/{id}/cancel', [\App\Http\Controllers\HR\LeaveRequestController::class, 'cancel'])->name('leave.requests.cancel');
     Route::get('leave/balances', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'index'])->name('leave.balances.index');
     Route::post('leave/balances/accrue', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'accrueMonthly'])->name('leave.balances.accrue');
+    Route::post('leave/balances/load-yearly', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'loadYearlyBalances'])->name('leave.balances.load_yearly');
+    Route::get('leave/balances/export', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'export'])->name('leave.balances.export');
     Route::get('leave/calendar', [\App\Http\Controllers\HR\LeaveRequestController::class, 'calendar'])->name('leave.calendar.index');
 
     // Payroll Management
@@ -288,11 +408,16 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::get('payroll/runs/{id}/employees/{employeeId}/payslip', [\App\Http\Controllers\HR\PayrollRunController::class, 'payslip'])->name('payroll.runs.payslip');
     Route::get('payroll/runs/{id}/employees/{employeeId}/p9', [\App\Http\Controllers\HR\PayrollRunController::class, 'p9'])->name('payroll.runs.p9');
     Route::get('payroll/runs/{id}/reports/summary', [\App\Http\Controllers\HR\PayrollRunController::class, 'companySummary'])->name('payroll.reports.summary');
+    Route::get('payroll/runs/{id}/reports/summary/export', [\App\Http\Controllers\HR\PayrollRunController::class, 'companySummaryExport'])->name('payroll.reports.summary.export');
     Route::get('payroll/runs/{id}/reports/master', [\App\Http\Controllers\HR\PayrollRunController::class, 'masterRegister'])->name('payroll.reports.master');
+    Route::get('payroll/runs/{id}/reports/master/export', [\App\Http\Controllers\HR\PayrollRunController::class, 'masterRegisterExport'])->name('payroll.reports.master.export');
     Route::get('payroll/runs/{id}/reports/branches', [\App\Http\Controllers\HR\PayrollRunController::class, 'branchSummary'])->name('payroll.reports.branches');
+    Route::get('payroll/runs/{id}/reports/branches/export', [\App\Http\Controllers\HR\PayrollRunController::class, 'branchSummaryExport'])->name('payroll.reports.branches.export');
     Route::get('payroll/runs/{id}/reports/departments', [\App\Http\Controllers\HR\PayrollRunController::class, 'departmentSummary'])->name('payroll.reports.departments');
+    Route::get('payroll/runs/{id}/reports/departments/export', [\App\Http\Controllers\HR\PayrollRunController::class, 'departmentSummaryExport'])->name('payroll.reports.departments.export');
     Route::get('payroll/runs/{id}/returns', [\App\Http\Controllers\HR\PayrollRunController::class, 'statutoryReturns'])->name('payroll.returns.index');
     Route::get('payroll/runs/{id}/returns/{code}', [\App\Http\Controllers\HR\PayrollRunController::class, 'statutoryReturn'])->name('payroll.returns.show');
+    Route::get('payroll/runs/{id}/returns/{code}/export', [\App\Http\Controllers\HR\PayrollRunController::class, 'statutoryReturnExport'])->name('payroll.returns.export');
 
     Route::post('payroll/adjustments/{id}/approve', [\App\Http\Controllers\HR\SalaryAdjustmentController::class, 'approve'])->name('payroll.adjustments.approve');
     Route::post('payroll/adjustments/{id}/reject', [\App\Http\Controllers\HR\SalaryAdjustmentController::class, 'reject'])->name('payroll.adjustments.reject');

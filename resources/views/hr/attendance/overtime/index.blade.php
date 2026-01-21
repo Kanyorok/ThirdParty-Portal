@@ -15,6 +15,21 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
+            <form method="POST" action="{{ route('hr.attendance.overtime.sync') }}" class="row g-2 align-items-end mb-3">
+                @csrf
+                <div class="col-md-3">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="FromDate" class="form-control" value="{{ old('FromDate', now()->startOfMonth()->format('Y-m-d')) }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="ToDate" class="form-control" value="{{ old('ToDate', now()->endOfMonth()->format('Y-m-d')) }}" required>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-primary" type="submit">Sync from Attendance</button>
+                </div>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
                     <thead>
@@ -22,6 +37,7 @@
                             <th>Employee</th>
                             <th>Date</th>
                             <th>Hours</th>
+                            <th>Reason</th>
                             <th>Status</th>
                             <th></th>
                         </tr>
@@ -32,6 +48,7 @@
                                 <td>{{ $req->employee->FirstName ?? '' }} {{ $req->employee->LastName ?? '' }}</td>
                                 <td>{{ $req->WorkDate }}</td>
                                 <td>{{ $req->HoursRequested }}</td>
+                                <td>{{ $req->Reason ?? '-' }}</td>
                                 <td>{{ $req->Status }}</td>
                                 <td class="text-end">
                                     @if($req->Status === 'Pending')
@@ -47,7 +64,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="text-center text-muted">No overtime requests.</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted">No overtime requests.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

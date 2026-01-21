@@ -35,6 +35,7 @@
                             <td>{{ $deduction->Code }}</td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.payroll.returns.show', [$run->Id, $deduction->Code]) }}">View Return</a>
+                                <a class="btn btn-sm btn-outline-secondary ms-1" href="{{ route('hr.payroll.returns.export', [$run->Id, $deduction->Code]) }}">Download Excel</a>
                             </td>
                         </tr>
                     @empty

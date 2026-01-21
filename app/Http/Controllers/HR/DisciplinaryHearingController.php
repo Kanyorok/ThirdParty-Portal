@@ -8,21 +8,33 @@ use App\Models\HR\Discipline\DisciplinaryCase;
 use App\Models\HR\Discipline\DisciplinaryCaseStatusLog;
 use App\Models\HR\Discipline\DisciplinaryHearing;
 use App\Models\HR\Discipline\DisciplinaryHearingPanel;
+use App\Models\HR\Discipline\DisciplinaryInvestigation;
 use App\Models\HR\Employee;
 use App\Services\DMS\DocumentService;
 use App\Services\DMS\RepositoryService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DisciplinaryHearingController extends Controller
 {
     public function edit($caseId)
     {
         $case = DisciplinaryCase::with(['policy', 'employee'])->findOrFail($caseId);
-        $hearing = DisciplinaryHearing::where('CaseID', $case->Id)->latest('CreatedOn')->first();
-        $employees = Employee::orderBy('FirstName')->get(['Id', 'FirstName', 'LastName', 'EmployeeNo']);
+        $hearings = DisciplinaryHearing::where('CaseID', $case->Id)
+            ->with(['facilitator', 'minutes', 'panelMembers'])
+            ->orderByDesc('CreatedOn')
+            ->get();
+        $hearing = $hearings->first();
+        $employees = Employee::where('Id', '!=', $case->EmployeeID)
+            ->orderBy('FirstName')
+            ->get(['Id', 'FirstName', 'LastName', 'EmployeeNo']);
         $panel = $hearing ? DisciplinaryHearingPanel::where('HearingID', $hearing->Id)->with('employee')->get() : collect();
+        $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)
+            ->latest('CreatedOn')
+            ->with(['investigator', 'reportDocument'])
+            ->first();
 
-        return view('hr.discipline.cases.hearing', compact('case', 'hearing', 'employees', 'panel'));
+        return view('hr.discipline.cases.hearing', compact('case', 'hearing', 'hearings', 'employees', 'panel', 'investigation'));
     }
 
     public function store(Request $request, $caseId)
@@ -40,13 +52,19 @@ class DisciplinaryHearingController extends Controller
         $data = $request->validate([
             'HearingDate' => ['required', 'date'],
             'Venue' => ['nullable', 'string', 'max:150'],
-            'HRFacilitatorID' => ['nullable', 'exists:t_HREmployees,Id'],
+            'HRFacilitatorID' => [
+                'nullable',
+                'exists:t_HREmployees,Id',
+                Rule::notIn([$case->EmployeeID]),
+            ],
             'EmployeeRepName' => ['nullable', 'string', 'max:150'],
             'Status' => ['nullable', 'string', 'max:30'],
+            'CreateSubsequent' => ['sometimes', 'boolean'],
         ]);
 
         $hearing = DisciplinaryHearing::where('CaseID', $case->Id)->latest('CreatedOn')->first();
-        if ($hearing) {
+        $createSubsequent = $request->boolean('CreateSubsequent', false);
+        if ($hearing && !$createSubsequent) {
             $hearing->update([
                 'HearingDate' => $data['HearingDate'],
                 'Venue' => $data['Venue'] ?? null,
@@ -86,7 +104,10 @@ class DisciplinaryHearingController extends Controller
 
         $data = $request->validate([
             'PanelMembers' => ['required', 'array'],
-            'PanelMembers.*' => ['exists:t_HREmployees,Id'],
+            'PanelMembers.*' => [
+                'exists:t_HREmployees,Id',
+                Rule::notIn([$case->EmployeeID]),
+            ],
             'PanelRoles' => ['nullable', 'array'],
         ]);
 

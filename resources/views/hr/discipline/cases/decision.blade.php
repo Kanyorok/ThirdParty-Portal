@@ -26,7 +26,7 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Decision Date *</label>
-                        <input type="date" name="DecisionDate" class="form-control" value="{{ old('DecisionDate', optional($decision->DecisionDate)->format('Y-m-d')) }}" required>
+                        <input type="date" name="DecisionDate" class="form-control" value="{{ old('DecisionDate', $decision?->DecisionDate?->format('Y-m-d')) }}" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Legal Reference</label>
@@ -52,11 +52,11 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Sanction Start</label>
-                        <input type="date" name="SanctionStartDate" class="form-control" value="{{ old('SanctionStartDate', optional($decision->SanctionStartDate)->format('Y-m-d')) }}">
+                        <input type="date" name="SanctionStartDate" class="form-control" value="{{ old('SanctionStartDate', $decision?->SanctionStartDate?->format('Y-m-d')) }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Sanction End</label>
-                        <input type="date" name="SanctionEndDate" class="form-control" value="{{ old('SanctionEndDate', optional($decision->SanctionEndDate)->format('Y-m-d')) }}">
+                        <input type="date" name="SanctionEndDate" class="form-control" value="{{ old('SanctionEndDate', $decision?->SanctionEndDate?->format('Y-m-d')) }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Policy Clause</label>

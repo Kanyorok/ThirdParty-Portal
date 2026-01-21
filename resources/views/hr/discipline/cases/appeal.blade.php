@@ -30,15 +30,15 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Appeal Date</label>
-                        <input type="date" name="AppealDate" class="form-control" value="{{ old('AppealDate', optional($appeal->AppealDate)->format('Y-m-d')) }}">
+                        <input type="date" name="AppealDate" class="form-control" value="{{ old('AppealDate', $appeal?->AppealDate?->format('Y-m-d')) }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Deadline Date</label>
-                        <input type="date" name="DeadlineDate" class="form-control" value="{{ old('DeadlineDate', optional($appeal->DeadlineDate)->format('Y-m-d')) }}">
+                        <input type="date" name="DeadlineDate" class="form-control" value="{{ old('DeadlineDate', $appeal?->DeadlineDate?->format('Y-m-d')) }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Hearing Date</label>
-                        <input type="date" name="HearingDate" class="form-control" value="{{ old('HearingDate', optional($appeal->HearingDate)->format('Y-m-d')) }}">
+                        <input type="date" name="HearingDate" class="form-control" value="{{ old('HearingDate', $appeal?->HearingDate?->format('Y-m-d')) }}">
                     </div>
                     <div class="col-12">
                         <label class="form-label">Appeal Grounds *</label>
