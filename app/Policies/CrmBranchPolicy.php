@@ -10,7 +10,10 @@ class CrmBranchPolicy
 {
     public function before(User $user, string $ability): bool
     {
-        return $user->can(PermissionEnum::Branches->value);
+        // Legacy fallback or SuperAdmin check can go here if needed.
+        // For now, we rely on individual checks.
+        // return $user->can(PermissionEnum::Branches->value);
+        return false; // Don't block, but don't auto-grant everything based on legacy
     }
 
     /**
@@ -18,7 +21,7 @@ class CrmBranchPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::Branches->value);
+        return $user->can(PermissionEnum::BranchView->value);
     }
 
     /**
@@ -26,7 +29,7 @@ class CrmBranchPolicy
      */
     public function view(User $user, Branch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Branches->value);
+        return $user->can(PermissionEnum::BranchView->value);
     }
 
     /**
@@ -34,7 +37,7 @@ class CrmBranchPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can(PermissionEnum::Branches->value);
+        return $user->can(PermissionEnum::BranchCreate->value);
     }
 
     /**
@@ -42,7 +45,7 @@ class CrmBranchPolicy
      */
     public function update(User $user, Branch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Branches->value);
+        return $user->can(PermissionEnum::BranchUpdate->value);
     }
 
     /**
@@ -50,7 +53,7 @@ class CrmBranchPolicy
      */
     public function delete(User $user, Branch $crmBranch): bool
     {
-        return $user->can(PermissionEnum::Branches->value);
+        return $user->can(PermissionEnum::BranchDelete->value);
     }
 
     /**

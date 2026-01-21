@@ -210,8 +210,6 @@
             </div>
             @if (View::hasSection('page-alerts'))
                 @yield('page-alerts')
-            @else
-                @include('layouts._partials._alerts')
             @endif
             @yield('content')
         </div>
@@ -313,13 +311,24 @@
 
             async function ajaxNavigate(url, addToHistory = true) {
                 try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]');
                     const res = await fetch(url, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-Partial': '1'
+                            'X-Partial': '1',
+                            'X-CSRF-TOKEN': csrfToken ? csrfToken.content : ''
                         }
                     });
+                    
+                    // Handle 419 Session Expired error
+                    if (res.status === 419) {
+                        console.warn('Session expired (419), redirecting to login');
+                        window.location.href = '/login?expired=1';
+                        return;
+                    }
+                    
                     if (!res.ok) {
+                        console.warn('AJAX navigate failed with status:', res.status);
                         window.location.href = url;
                         return;
                     }
@@ -480,90 +489,10 @@
         })();
     </script>
 
-    <!-- Session Expiry Warning Modal -->
-    <div class="modal fade" id="sessionExpiryModal" tabindex="-1" role="dialog" aria-labelledby="sessionExpiryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="sessionExpiryModalLabel">Session Expiration Warning</h5>
-                </div>
-                <div class="modal-body">
-                    <p>Your session will expire in <span id="session-countdown" class="fw-bold text-danger">30</span> seconds.</p>
-                    <p class="mb-0">Please click "Stay Logged In" to continue your session, or you will be automatically logged out.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="window.extendSession()">Stay Logged In</button>
-                    <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-secondary">Logout Now</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    @include('partials.session-timeout')
     <script>
         (function() {
-            const sessionLifetimeMinutes = {{ config('session.lifetime') ?: 20 }};
-            const warningSeconds = 30;
-            const sessionLifetimeMs = sessionLifetimeMinutes * 60 * 1000;
-            const warningMs = sessionLifetimeMs - (warningSeconds * 1000);
-            let warningTimer, logoutTimer, countdownInterval;
-            
-            function startSessionTimers() {
-                clearTimeout(warningTimer);
-                clearTimeout(logoutTimer);
-                clearInterval(countdownInterval);
-                const safeWarningMs = warningMs > 0 ? warningMs : 1000;
-                warningTimer = setTimeout(showSessionWarning, safeWarningMs);
-                logoutTimer = setTimeout(forceLogout, sessionLifetimeMs);
-            }
-            
-            function showSessionWarning() {
-                const modalEl = document.getElementById('sessionExpiryModal');
-                if (!modalEl) return;
-                if (typeof bootstrap !== 'undefined') {
-                    const modal = new bootstrap.Modal(modalEl);
-                    modal.show();
-                } else if (typeof $ !== 'undefined') {
-                    $(modalEl).modal('show');
-                }
-                let secondsLeft = warningSeconds;
-                const counterEl = document.getElementById('session-countdown');
-                if (counterEl) counterEl.textContent = secondsLeft;
-                countdownInterval = setInterval(() => {
-                    secondsLeft--;
-                    if (counterEl) counterEl.textContent = secondsLeft;
-                    if (secondsLeft <= 0) clearInterval(countdownInterval);
-                }, 1000);
-            }
-            
-            function forceLogout() {
-                const form = document.getElementById('logout-form');
-                if (form) form.submit();
-                else window.location.href = '/login'; 
-            }
-            
-            window.extendSession = function() {
-                const modalEl = document.getElementById('sessionExpiryModal');
-                fetch("{{ route('auth.heartbeat') }}", { 
-                    method: 'GET',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(res => {
-                    if (res.ok) {
-                        if (typeof bootstrap !== 'undefined') {
-                            const modal = bootstrap.Modal.getInstance(modalEl);
-                            if (modal) modal.hide();
-                        } else if (typeof $ !== 'undefined') {
-                             $(modalEl).modal('hide');
-                        }
-                        startSessionTimers();
-                    } else forceLogout();
-                })
-                .catch(err => {
-                    console.error('Session extension failed', err);
-                    forceLogout();
-                });
-            };
-            startSessionTimers();
+            // Re-init partials logic listener if needed
         })();
     </script>
 </body>
