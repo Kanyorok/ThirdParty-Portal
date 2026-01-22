@@ -88,7 +88,10 @@
                     <div class="col-md-3">
                         <label class="form-label">Date of Birth</label>
                         <input type="date" name="DateOfBirth" class="form-control"
-                               value="{{ old('DateOfBirth', optional($employee->DateOfBirth)->format('Y-m-d')) }}">
+                               value="{{ old('DateOfBirth', optional($employee->DateOfBirth)->format('Y-m-d')) }}"
+                               max="{{ now()->subYears(20)->format('Y-m-d') }}"
+                               placeholder="YYYY-MM-DD">
+                        <small class="form-text text-muted">Minimum age: 20 years</small>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Address</label>

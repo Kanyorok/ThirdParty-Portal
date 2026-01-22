@@ -85,7 +85,10 @@
                     <div class="col-md-3">
                         <label class="form-label">Date of Birth</label>
                         <input type="date" name="DateOfBirth" class="form-control"
-                               value="{{ old('DateOfBirth') }}">
+                               value="{{ old('DateOfBirth', now()->subYears(20)->format('Y-m-d')) }}"
+                               max="{{ now()->subYears(20)->format('Y-m-d') }}"
+                               placeholder="YYYY-MM-DD">
+                        <small class="form-text text-muted">Minimum age: 20 years</small>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Address</label>
@@ -388,6 +391,24 @@
                             </div>
                         </div>
                     @endfor
+                </div>
+
+                {{-- Create User Account Option --}}
+                <div class="card mt-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">User Account</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="CreateUser" name="CreateUser" value="1">
+                            <label class="form-check-label" for="CreateUser">
+                                Create a user account for this employee
+                            </label>
+                            <small class="form-text text-muted d-block mt-1">
+                                If checked, a user account will be created and a password reset link will be sent to the employee's email.
+                            </small>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mt-4 d-flex justify-content-end gap-2">

@@ -88,6 +88,7 @@ Route::middleware(['auth']) // + any HR-specific middleware/permissions
         Route::resource('employees', EmployeeController::class);
         Route::get('employees/{employee}/status', [EmployeeController::class, 'statusForm'])->name('employees.status.edit');
         Route::put('employees/{employee}/status', [EmployeeController::class, 'statusUpdate'])->name('employees.status.update');
+        Route::post('employees/{employee}/create-user', [EmployeeController::class, 'createUser'])->name('employees.create-user');
         Route::get('employees/{employee}/working-days', [EmployeeWorkingDayController::class, 'edit'])->name('employees.working-days.edit');
         Route::post('employees/{employee}/working-days', [EmployeeWorkingDayController::class, 'update'])->name('employees.working-days.update');
         Route::delete('employees/{employee}/working-days', [EmployeeWorkingDayController::class, 'destroy'])->name('employees.working-days.destroy');

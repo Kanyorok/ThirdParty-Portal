@@ -371,8 +371,6 @@ class AppServiceProvider extends ServiceProvider
             Authenticate::class
         );
 
-
-
         \Illuminate\Support\Facades\Blade::if('canRead', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
             if (!$user) return false;

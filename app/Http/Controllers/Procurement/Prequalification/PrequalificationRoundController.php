@@ -21,13 +21,11 @@ class PrequalificationRoundController extends Controller
 {
     public function __construct()
     {
-        // Removed authorizeResource() - it runs too early, before LoginBranchId is set in session
-        // Using individual authorize() calls in each method instead (like RequisitionsController)
+        $this->authorizeResource(PrequalificationRound::class, 'prequalificationRound');
     }
 
     public function index(Request $request): View
     {
-        $this->authorize('viewAny', PrequalificationRound::class);
         // Allow optionally including soft-deleted (archived) rounds via ?include_deleted=1
         $includeDeleted = (bool) $request->query('include_deleted', false);
 
@@ -42,8 +40,6 @@ class PrequalificationRoundController extends Controller
 
     public function create(): View
     {
-        $this->authorize('create', PrequalificationRound::class);
-        
         $masterSections = Section::with('criteria')->get();
         $prequalificationRound = new PrequalificationRound();
         return view(
@@ -54,15 +50,11 @@ class PrequalificationRoundController extends Controller
 
     public function store(StorePrequalificationRoundRequest $request): RedirectResponse
     {
-        $this->authorize('create', PrequalificationRound::class);
-        
         return $this->processRound($request);
     }
 
     public function show(PrequalificationRound $prequalificationRound): View
     {
-        $this->authorize('view', $prequalificationRound);
-        
         $prequalificationRound->load([
             'prequalificationSections.masterSection',
             'prequalificationCriteria.masterCriteria',
@@ -74,8 +66,6 @@ class PrequalificationRoundController extends Controller
 
     public function edit(PrequalificationRound $prequalificationRound): View
     {
-        $this->authorize('update', $prequalificationRound);
-        
         $masterSections = Section::with('criteria')->get();
         $prequalificationRound->load(['prequalificationSections', 'prequalificationCriteria']);
         return view('procurement.suppliers.prequalification.prequalification-rounds.edit', [
@@ -86,15 +76,11 @@ class PrequalificationRoundController extends Controller
 
     public function update(UpdatePrequalificationRoundRequest $request, PrequalificationRound $prequalificationRound): RedirectResponse
     {
-        $this->authorize('update', $prequalificationRound);
-        
         return $this->processRound($request, $prequalificationRound);
     }
 
     public function destroy(PrequalificationRound $prequalificationRound): RedirectResponse
     {
-        $this->authorize('delete', $prequalificationRound);
-        
         DB::transaction(function () use ($prequalificationRound) {
             $prequalificationRound->prequalificationCriteria()->delete();
             $prequalificationRound->prequalificationSections()->delete();

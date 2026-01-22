@@ -41,6 +41,21 @@
                     <a href="{{ route('hr.employees.working-days.edit', $employee->Id) }}" class="btn btn-outline-primary btn-sm">Working Days</a>
                     <a href="{{ route('hr.employees.status.edit', $employee->Id) }}" class="btn btn-outline-info btn-sm">Status</a>
 
+                    @php
+                        $employeeService = new \App\Services\HR\EmployeeService($employee);
+                        $hasUser = $employeeService->hasUserAccount();
+                    @endphp
+
+                    @if(!$hasUser)
+                        <form action="{{ route('hr.employees.create-user', $employee->Id) }}" method="POST" class="d-inline"
+                              onsubmit="return confirm('Create a user account for this employee? A password reset link will be sent to {{ $employee->Email }}');">
+                            @csrf
+                            <button class="btn btn-outline-success btn-sm" type="submit">Create User Account</button>
+                        </form>
+                    @else
+                        <button class="btn btn-outline-secondary btn-sm" disabled>User Account Exists</button>
+                    @endif
+
                     @if($employee->IsActive)
                         <form action="{{ route('hr.employees.destroy', $employee->Id) }}" method="POST" class="d-inline"
                               onsubmit="return confirm('Deactivate this employee?');">

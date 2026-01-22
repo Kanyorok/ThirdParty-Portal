@@ -881,7 +881,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1009260, 'Name' => 'Training Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 1009200, 'Route' => 'hr.training.reports.index'],
 
             ['ModuleID' => 1002000, 'Name' => 'Departments', 'Icon' => '<i class="fas fa-building"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => 'hr.departments.index'],
-            ['ModuleID' => 1003000, 'Name' => 'Committees', 'Icon' => '<i class="fas fa-building"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => 'tendercommittee.index'],
             ['ModuleID' => 1099000, 'Name' => 'Financial Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => null],
         ]);
         return $values;

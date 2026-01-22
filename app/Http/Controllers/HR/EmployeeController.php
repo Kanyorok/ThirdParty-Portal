@@ -22,6 +22,7 @@ use App\Models\HR\SalaryHistory;
 use App\Models\HR\StaffLoan;
 use App\Services\HR\PayrollMandatoryAllocator;
 use App\Services\StaticListsService;
+use App\Services\HR\EmployeeService;
 use App\Models\HR\TrainingCertificate;
 use App\Models\HR\TrainingSessionParticipant;
 use App\Models\HR\KpiGoal;
@@ -32,7 +33,11 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Exception;
+use Throwable;
 
 class EmployeeController extends Controller
 {
@@ -103,7 +108,7 @@ class EmployeeController extends Controller
             'Phone'           => 'nullable|string|max:50',
             'Gender'          => ['nullable', Rule::in(['Male','Female','Other'])],
             'Religion'        => 'nullable|string|max:100',
-            'DateOfBirth'     => 'nullable|date',
+            'DateOfBirth'     => 'nullable|date|before_or_equal:' . now()->subYears(20)->format('Y-m-d'),
             'BranchID'        => 'required|integer',
             'DepartmentID'    => 'required|integer',
             'GradeID'         => 'nullable|integer',
@@ -181,6 +186,30 @@ class EmployeeController extends Controller
 
         // Ensure mandatory allowances/deductions are mapped for new employee for the current month.
         app(PayrollMandatoryAllocator::class)->syncForEmployee($employee, now()->month, now()->year);
+
+        // Create user account if requested
+        if ($request->has('CreateUser') && $request->input('CreateUser')) {
+            try {
+                $employeeService = new EmployeeService($employee);
+                
+                // Check if user already exists with this email
+                if ($employee->Email && !$employeeService->hasUserAccount()) {
+                    $userService = $employeeService->createUserAccount(auth()->user());
+                    $userService->sendPasswordResetNotification();
+                    
+                    activity()
+                        ->causedBy(auth()->user())
+                        ->performedOn($employee)
+                        ->log('User account created during employee creation');
+                }
+            } catch (Exception $e) {
+                Log::error('Failed to create user account during employee creation', [
+                    'employee_id' => $employee->Id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail the whole operation, just log it
+            }
+        }
 
         return redirect()
             ->route('hr.employees.index')
@@ -345,7 +374,7 @@ class EmployeeController extends Controller
             'Phone'           => 'nullable|string|max:50',
             'Gender'          => ['nullable', Rule::in(['Male','Female','Other'])],
             'Religion'        => 'nullable|string|max:100',
-            'DateOfBirth'     => 'nullable|date',
+            'DateOfBirth'     => 'nullable|date|before_or_equal:' . now()->subYears(20)->format('Y-m-d'),
             'BranchID'        => 'required|integer',
             'DepartmentID'    => 'required|integer',
             'GradeID'         => 'nullable|integer',
@@ -587,6 +616,38 @@ class EmployeeController extends Controller
             if (!$bank) {
                 throw ValidationException::withMessages(['BankID' => 'Selected bank is invalid.']);
             }
+        }
+    }
+
+    /**
+     * Create a user account for an employee
+     */
+    public function createUser($id)
+    {
+        try {
+            $employee = Employee::findOrFail($id);
+            
+            // Check if employee already has a user account
+            $employeeService = new EmployeeService($employee);
+            if ($employeeService->hasUserAccount()) {
+                return back()->with('warning', 'This employee already has a user account.');
+            }
+
+            // Create user account
+            $userService = $employeeService->createUserAccount(auth()->user());
+            
+            // Send password reset email
+            $userService->sendPasswordResetNotification();
+
+            return back()->with('success', 'User account created successfully. Password reset link sent to ' . $employee->Email);
+        } catch (Exception $e) {
+            Log::error('Failed to create user account for employee', [
+                'employee_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Failed to create user account: ' . $e->getMessage());
         }
     }
 }
