@@ -38,9 +38,11 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     })->middleware(['auth.thirdparty', 'throttle:6,1'])->name('verification.send');
 
     Route::post('password/forgot', [ThirdPartyPasswordController::class, 'forgotPassword'])
+        ->middleware(['throttle:5,1'])
         ->name('password.forgot');
 
     Route::post('password/reset', [ThirdPartyPasswordController::class, 'resetPassword'])
+        ->middleware(['throttle:5,1'])
         ->name('password.reset');
 
     Route::prefix('lookups')->name('lookups.')->group(function () {
@@ -48,12 +50,14 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
         Route::get('{codeId}', [LookupController::class, '__invoke'])->name('show');
     });
 
-    Route::get('metadata/countries', [MetadataController::class, 'getCountries']);
-    Route::get('metadata/business-types', [MetadataController::class, 'getBusinessTypes']);
-    Route::get('metadata/supplier-categories', [MetadataController::class, 'getSupplierCategories']);
-    Route::get('metadata/tenant-types', [MetadataController::class, 'getTenantTypes']);
-    Route::get('metadata/localities/{countryId}', [MetadataController::class, 'getLocalities']);
-    Route::get('metadata/code-details/{group}', [MetadataController::class, 'getCodeDetails']);
+    Route::prefix('metadata')->group(function () {
+        Route::get('countries', [MetadataController::class, 'getCountries']);
+        Route::get('business-types', [MetadataController::class, 'getBusinessTypes']);
+        Route::get('supplier-categories', [MetadataController::class, 'getSupplierCategories']);
+        Route::get('tenant-types', [MetadataController::class, 'getTenantTypes']);
+        Route::get('localities/{countryId}', [MetadataController::class, 'getLocalities'])->whereNumber('countryId');
+        Route::get('code-details/{group}', [MetadataController::class, 'getCodeDetails']);
+    });
 
     Route::controller(ThirdPartyAuthController::class)
         ->middleware(['auth.thirdparty'])
@@ -97,18 +101,18 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
 });
 
 Route::middleware(['auth.thirdparty'])->group(function () {
+
     Route::prefix('prequalification')->name('prequalification.')->group(function () {
         Route::get('applications', [PreqApplicationController::class, 'apiIndex'])->name('applications.index');
         Route::post('applications', [PreqApplicationController::class, 'store'])->name('applications.store');
     });
-});
 
-Route::middleware(['auth.thirdparty'])->group(function () {
-    Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
-        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
-        
-        // Protected RFQ actions (submit, clarifying)
-        Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
-        Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
+    Route::prefix('supplier')->group(function () {
+        Route::get('rfqs', [SupplierRFQController::class, 'listInvitations']);
+        Route::get('rfqs/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+        Route::get('rfqs/{rfq}/clarifications', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
+        Route::post('rfqs/responses', [SupplierRFQController::class, 'submitResponse']);
+        Route::post('rfqs/clarifications', [SupplierRFQController::class, 'postClarification']);
+    });
+
 });
