@@ -133,7 +133,8 @@ class BidSubmission extends Model
 
     public function openedByUser()
     {
-        return $this->belongsTo(User::class, 'OpenedBy', 'Id');
+        return $this->belongsTo(User::class, 'OpenedBy', 'Id')
+           ->select(['Id', 'Name']);
     }
 
     public function tender()
@@ -435,6 +436,6 @@ class BidSubmission extends Model
         return $this->isBidOpeningCeremonyStarted() ? 'opened' : 'accessible';
     }
 
-    // TODO: Document Management Integration
+    // Document management integration 
     // Will be implemented once DMS schema compatibility is resolved
 }
