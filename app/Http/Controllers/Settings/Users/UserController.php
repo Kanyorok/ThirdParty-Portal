@@ -50,21 +50,9 @@ class UserController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-    $validated = $request->validate([
-            'Role' => ['required', 'string', 'max:20'],
+        $validated = $request->validate([
             'Employee' => ['required', 'string', 'max:20'],
-            'BranchId' => ['required', 'integer', 'exists:t_Branches,Id'],
         ]);
-
-        $role = Role::query()->where('id', $validated['Role'])->first();
-        if (!$role instanceof Role) {
-            throw ValidationException::withMessages(['Role' => 'invalid role defined']);
-        }
-
-        $branch = Branch::query()->where('Id', $validated['BranchId'])->first();
-        if (!$branch instanceof Branch) {
-            throw ValidationException::withMessages(['BranchId' => 'branch not found']);
-        }
 
         // Only allow employees without a linked user AND whose email isn't already used by another user
         $employee = Employee::query()
@@ -79,11 +67,16 @@ class UserController extends Controller
             throw ValidationException::withMessages(['Employee' => 'employee not found or already has an account/email in use.']);
         }
 
+        // Use employee's existing branch
+        $branch = $employee->branch;
+        if (!$branch instanceof Branch) {
+            throw ValidationException::withMessages(['Employee' => 'employee does not have a branch assigned.']);
+        }
+
         $actor = $request->user();
         try {
-            return DB::transaction(function () use ($actor, $role, $employee, $branch) {
+            return DB::transaction(function () use ($actor, $employee, $branch) {
                 UserService::create($employee, $actor)
-                    ->setRole($role, $branch, $actor)
                     ->welcomeEmail();
                 return $this->succeeded('user added successfully');
             });
@@ -102,18 +95,18 @@ class UserController extends Controller
     public function create(): View
     {
         // Exclude employees with existing user accounts and those whose email is already present in users
+        // Load branch relationship to display employee's branch
         $employees = Employee::query()
+            ->with('branch')
             ->doesntHave('user')
             ->whereNotNull('Email')
             ->whereNotIn('Email', function ($q) {
                 $q->select('Email')->from('t_Users');
             })
-            ->get(['EmployeeNo', 'FirstName', 'LastName']);
+            ->get(['Id', 'EmployeeNo', 'FirstName', 'LastName', 'BranchID']);
 
         return view('settings.users.create')
-            ->with('employees', $employees)
-            ->with('Roles', Role::all())
-            ->with('branches', Branch::all());
+            ->with('employees', $employees);
     }
 
     /**

@@ -34,7 +34,7 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
         if ($user) {
             $user->CurrentSessionId = $request->session()->getId();
-            $user->saveQuietly();
+            $user->save();
         }
 
         return $this->succeeded(message: 'Logged in successfully.', route: route('home'));

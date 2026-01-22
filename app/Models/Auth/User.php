@@ -51,6 +51,7 @@ class User extends Authenticatable
         'ClientID',
         'ExtensionNo',
         'BranchId',
+        'CurrentSessionId',
         'login_at',
         'CreatedBy',
         'ModifiedBy',
