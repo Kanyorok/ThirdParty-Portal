@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, useMemo, memo } from "react"
+import { useMemo, memo } from "react"
 import { motion, Variants } from "framer-motion"
 import {
   BarChart,
@@ -11,10 +11,12 @@ import {
   Activity,
   FileText,
   AlertCircle,
-  Mail
+  Mail,
 } from "lucide-react"
 import { Skeleton } from "@/components/common/skeleton"
 import { cn } from "@/lib/utils"
+import { useDashboardStore } from "@/store/use-dashboard-store"
+import { useShallow } from "zustand/react/shallow"
 
 type PreqBreakdown = {
   approved: number
@@ -31,19 +33,12 @@ type RFQBreakdown = {
   closed: number
 }
 
-type DashboardSummaryData = {
-  breakdowns?: {
-    prequalification?: PreqBreakdown
-    rfqs?: RFQBreakdown
-  }
-}
-
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 }
-  }
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
 }
 
 const itemVariants: Variants = {
@@ -51,8 +46,8 @@ const itemVariants: Variants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { duration: 0.4, ease: "easeOut" }
-  }
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
 }
 
 const StatusListItem = memo(
@@ -131,67 +126,26 @@ const SectionHeader = ({
   </div>
 )
 
-export default function SummaryCharts({
-  data: providedData,
-  isLoading,
-}: {
-  data?: DashboardSummaryData | null
-  isLoading?: boolean
-}) {
-  const [data, setData] = useState<DashboardSummaryData | null>(
-    providedData ?? null
+export default function SummaryCharts() {
+  const { summary, loading, error } = useDashboardStore(
+    useShallow(s => ({
+      summary: s.summary,
+      loading: s.loading,
+      error: s.error,
+    }))
   )
-  const [loading, setLoading] = useState(Boolean(isLoading) || !providedData)
-  const [error, setError] = useState(false)
 
-  useEffect(() => {
-    if (typeof isLoading !== "undefined" || typeof providedData !== "undefined") {
-      setData(providedData ?? null)
-      setLoading(Boolean(isLoading))
-      setError(false)
-    }
-  }, [providedData, isLoading])
-
-  useEffect(() => {
-    if (typeof isLoading !== "undefined") return
-    if (typeof providedData !== "undefined") return
-    let isMounted = true
-    const load = async () => {
-      try {
-        const res = await fetch("/api/dashboard/summary", {
-          cache: "no-store",
-        })
-        if (!res.ok) throw new Error()
-        const json = await res.json()
-        if (isMounted) setData(json)
-      } catch {
-        if (isMounted) setError(true)
-      } finally {
-        if (isMounted) setLoading(false)
-      }
-    }
-    load()
-    return () => {
-      isMounted = false
-    }
-  }, [providedData, isLoading])
+  const preq = summary?.breakdowns?.prequalification as PreqBreakdown | undefined
+  const rfqs = summary?.breakdowns?.rfqs as RFQBreakdown | undefined
 
   const preqTotal = useMemo(
-    () =>
-      Object.values(data?.breakdowns?.prequalification || {}).reduce(
-        (a, b) => a + b,
-        0
-      ),
-    [data]
+    () => Object.values(preq || {}).reduce((a, b) => a + b, 0),
+    [preq]
   )
 
   const rfqTotal = useMemo(
-    () =>
-      Object.values(data?.breakdowns?.rfqs || {}).reduce(
-        (a, b) => a + b,
-        0
-      ),
-    [data]
+    () => Object.values(rfqs || {}).reduce((a, b) => a + b, 0),
+    [rfqs]
   )
 
   if (loading)
@@ -223,12 +177,6 @@ export default function SummaryCharts({
         <p className="text-muted-foreground font-medium text-center">
           Failed to load dashboard analytics
         </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 text-sm font-semibold text-primary hover:underline"
-        >
-          Try again
-        </button>
       </div>
     )
 
@@ -246,77 +194,25 @@ export default function SummaryCharts({
           variants={containerVariants}
           className="space-y-1"
         >
-          <StatusListItem
-            value={data?.breakdowns?.prequalification?.approved || 0}
-            total={preqTotal}
-            label="Approved"
-            color="bg-emerald-500"
-            icon={CheckCircle}
-          />
-          <StatusListItem
-            value={data?.breakdowns?.prequalification?.under_review || 0}
-            total={preqTotal}
-            label="In review"
-            color="bg-amber-500"
-            icon={Clock}
-          />
-          <StatusListItem
-            value={data?.breakdowns?.prequalification?.submitted || 0}
-            total={preqTotal}
-            label="Submitted"
-            color="bg-sky-500"
-            icon={BarChart}
-          />
-          <StatusListItem
-            value={data?.breakdowns?.prequalification?.rejected || 0}
-            total={preqTotal}
-            label="Rejected"
-            color="bg-rose-500"
-            icon={XCircle}
-          />
+          <StatusListItem value={preq?.approved || 0} total={preqTotal} label="Approved" color="bg-emerald-500" icon={CheckCircle} />
+          <StatusListItem value={preq?.under_review || 0} total={preqTotal} label="In review" color="bg-amber-500" icon={Clock} />
+          <StatusListItem value={preq?.submitted || 0} total={preqTotal} label="Submitted" color="bg-sky-500" icon={BarChart} />
+          <StatusListItem value={preq?.rejected || 0} total={preqTotal} label="Rejected" color="bg-rose-500" icon={XCircle} />
         </motion.div>
       </motion.section>
 
       <motion.section className="rounded-2xl bg-card border border-border/50 p-6 md:p-7">
-        <SectionHeader
-          title="RFQ Invitations"
-          icon={FileText}
-          total={rfqTotal}
-        />
+        <SectionHeader title="RFQ Summarys" icon={FileText} total={rfqTotal} />
         <motion.div
           initial="hidden"
           animate="visible"
           variants={containerVariants}
           className="space-y-1"
         >
-          <StatusListItem
-            value={data?.breakdowns?.rfqs?.invited || 0}
-            total={rfqTotal}
-            label="Invited"
-            color="bg-indigo-500"
-            icon={Mail}
-          />
-          <StatusListItem
-            value={data?.breakdowns?.rfqs?.draft || 0}
-            total={rfqTotal}
-            label="Draft"
-            color="bg-amber-500"
-            icon={Clock}
-          />
-          <StatusListItem
-            value={data?.breakdowns?.rfqs?.submitted || 0}
-            total={rfqTotal}
-            label="Submitted"
-            color="bg-emerald-500"
-            icon={CheckCircle}
-          />
-          <StatusListItem
-            value={data?.breakdowns?.rfqs?.closed || 0}
-            total={rfqTotal}
-            label="Closed"
-            color="bg-rose-500"
-            icon={XCircle}
-          />
+          <StatusListItem value={rfqs?.invited || 0} total={rfqTotal} label="Invited (Active)" color="bg-indigo-500" icon={Mail} />
+          <StatusListItem value={rfqs?.draft || 0} total={rfqTotal} label="Draft" color="bg-amber-500" icon={Clock} />
+          <StatusListItem value={rfqs?.submitted || 0} total={rfqTotal} label="Submitted" color="bg-emerald-500" icon={CheckCircle} />
+          <StatusListItem value={rfqs?.closed || 0} total={rfqTotal} label="Closed (Passed Deadline)" color="bg-rose-500" icon={XCircle} />
         </motion.div>
       </motion.section>
     </div>

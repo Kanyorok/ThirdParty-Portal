@@ -1,31 +1,34 @@
-'use client'
+"use client"
 
-import Link from 'next/link'
-import { useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles } from 'lucide-react'
-
-import { Button } from '@/components/common/button'
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
+import { motion } from "framer-motion"
+import { ArrowRight, Sparkles } from "lucide-react"
+import { Button } from "@/components/common/button"
 
 type Action = { label: string; href: string }
 
 export function WelcomeHeader({
   firstName,
-  contextLabel = "Dashboard",
+  contextLabel,
   primaryAction,
   secondaryAction,
 }: {
   firstName: string
-  contextLabel?: string
+  contextLabel: string
   primaryAction: Action
   secondaryAction: Action
 }) {
-  const greeting = useMemo(() => {
+  const [greeting, setGreeting] = useState<string>("")
+
+  useEffect(() => {
     const hour = new Date().getHours()
-    if (hour < 12) return 'Good morning'
-    if (hour < 17) return 'Good afternoon'
-    return 'Good evening'
+    if (hour < 12) setGreeting("Good morning")
+    else if (hour < 17) setGreeting("Good afternoon")
+    else setGreeting("Good evening")
   }, [])
+
+  const stableLabel = useMemo(() => contextLabel, [])
 
   return (
     <header className="relative w-full overflow-hidden rounded-2xl border border-border/50 bg-card px-6 py-6 shadow-none md:px-8 md:py-7">
@@ -33,7 +36,9 @@ export function WelcomeHeader({
         <div className="space-y-2.5">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-primary">
             <Sparkles className="h-3.5 w-3.5" />
-            <span className="text-[12px] font-semibold tracking-tight">{contextLabel}</span>
+            <span className="text-[12px] font-semibold tracking-tight">
+              {stableLabel}
+            </span>
           </div>
 
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between md:gap-6">
@@ -41,10 +46,10 @@ export function WelcomeHeader({
               <motion.h1
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
                 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
               >
-                {greeting}, {firstName || 'there'}.
+                {greeting && `${greeting}, ${firstName || "there"}.`}
               </motion.h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 Here’s a quick overview and the next best actions to take.
@@ -63,7 +68,9 @@ export function WelcomeHeader({
                 variant="outline"
                 className="h-11 rounded-xl border-border/60 bg-background px-4 text-sm font-semibold shadow-none hover:bg-muted"
               >
-                <Link href={secondaryAction.href}>{secondaryAction.label}</Link>
+                <Link href={secondaryAction.href}>
+                  {secondaryAction.label}
+                </Link>
               </Button>
             </div>
           </div>

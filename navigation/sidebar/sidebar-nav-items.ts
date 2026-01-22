@@ -1,7 +1,7 @@
 import { UserProfile, NavSection, NavMainItem } from "@/types/profile-types"
 import {
     LayoutDashboard, Receipt, FileText,
-    ClipboardList, FolderOpen, ShieldCheck, Home, BookOpen,
+    ClipboardList, FolderOpen, ShieldCheck, BookOpen,
     Settings, HelpCircle, Send,
     Construction,
     LandPlot
@@ -44,7 +44,7 @@ export const sidebarItems: readonly NavSection[] = [
             withProfiles({ title: "Prequalification", url: "/dashboard/procurement/rounds", icon: ShieldCheck, description: "Compliance & onboarding" }, ["Supplier"]),
             withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
             withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText, description: "Explore available tenders" }, ["Supplier"]),
-            withProfiles({ title: "Purchase Orders", url: "/dashboard/supplier/purchase_order", icon: Receipt, description: "Purchase Orders" }, ["Supplier"]),
+            // withProfiles({ title: "Purchase Orders", url: "/dashboard/supplier/purchase_order", icon: Receipt, description: "Purchase Orders" }, ["Supplier"]),
             withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderOpen, description: "Contracts, files & uploads" }, ["Supplier"]),
         ],
     },

@@ -60,8 +60,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} antialiased min-h-screen`}>
+    <html lang="en">
+      <body
+        suppressHydrationWarning
+        className={`${geist.variable} antialiased min-h-screen`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

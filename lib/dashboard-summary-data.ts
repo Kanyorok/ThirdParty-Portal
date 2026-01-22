@@ -18,15 +18,29 @@ export type RFQBreakdown = Record<
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
 
-function resolveRFQState(rfq: any): keyof RFQBreakdown {
-    const rfqStatus = String(rfq.status || "").toLowerCase()
-    if (rfqStatus === "closed" || rfqStatus === "expired") return "closed"
+function computeRFQBreakdown(rfqs: any[]): RFQBreakdown {
+    const now = Date.now()
 
-    const responseStatus = String(rfq.supplierResponse?.status || "").toLowerCase()
-    if (responseStatus === "draft") return "draft"
-    if (responseStatus === "submitted") return "submitted"
+    return rfqs.reduce(
+        (acc, rfq) => {
+            if (
+                rfq.submissionDeadline &&
+                new Date(rfq.submissionDeadline).getTime() < now
+            ) {
+                acc.closed++
+                return acc
+            }
 
-    return "invited"
+            const status = String(rfq.supplierResponse?.status || "").toLowerCase()
+
+            if (status === "draft") acc.draft++
+            else if (status === "submitted") acc.submitted++
+            else acc.invited++
+
+            return acc
+        },
+        { invited: 0, draft: 0, submitted: 0, closed: 0 }
+    )
 }
 
 export async function getDashboardData() {
@@ -37,11 +51,13 @@ export async function getDashboardData() {
         (session?.user as any)?.third_party_id ??
         null
 
-    if (!thirdPartyId || !(session as any)?.accessToken) return null
+    const accessToken = (session as any)?.accessToken
+
+    if (!thirdPartyId || !accessToken) return null
 
     const headers = {
         Accept: "application/json",
-        Authorization: `Bearer ${(session as any).accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
     }
 
     const [preqRes, rfqRes, tendersRes] = await Promise.allSettled([
@@ -50,7 +66,7 @@ export async function getDashboardData() {
             next: { revalidate: 60 },
         }).then(r => r.json()),
 
-        fetch(`${API_BASE}/api/v1/rfq-suppliers`, {
+        fetch(`${API_BASE}/api/v1/supplier/rfqs`, {
             headers,
             cache: "no-store",
         }).then(r => r.json()),
@@ -79,13 +95,6 @@ export async function getDashboardData() {
         submitted: 0,
     }
 
-    const rfqBreakdown: RFQBreakdown = {
-        invited: 0,
-        draft: 0,
-        submitted: 0,
-        closed: 0,
-    }
-
     if (preqRes.status === "fulfilled" && Array.isArray(preqRes.value?.data)) {
         preqRes.value.data.forEach((round: any) => {
             round.categories?.forEach((c: any) => {
@@ -104,7 +113,7 @@ export async function getDashboardData() {
                     preqBreakdown.rejected++
                 } else {
                     if (status === "UNDER_REVIEW") preqBreakdown.under_review++
-                    else if (status === "SUBMITTED") preqBreakdown.submitted++
+                    if (status === "SUBMITTED") preqBreakdown.submitted++
                     activePreq++
                 }
             })
@@ -112,14 +121,11 @@ export async function getDashboardData() {
     }
 
     const rfqData =
-        rfqRes.status === "fulfilled" ? rfqRes.value?.data : []
+        rfqRes.status === "fulfilled" && Array.isArray(rfqRes.value?.data)
+            ? rfqRes.value.data
+            : []
 
-    if (Array.isArray(rfqData)) {
-        rfqData.forEach((rfq: any) => {
-            const state = resolveRFQState(rfq)
-            rfqBreakdown[state]++
-        })
-    }
+    const rfqBreakdown = computeRFQBreakdown(rfqData)
 
     const tenderVal =
         tendersRes.status === "fulfilled" ? tendersRes.value : null
@@ -128,7 +134,7 @@ export async function getDashboardData() {
         tenderVal?.total ??
         (Array.isArray(tenderVal?.data) ? tenderVal.data.length : 0)
 
-    const rfqInvitesCount = Array.isArray(rfqData) ? rfqData.length : 0
+    const rfqInvitesCount = rfqData.length
 
     return {
         summary: {
