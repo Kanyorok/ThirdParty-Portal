@@ -621,20 +621,22 @@
                             <h6 class="mb-0"><i class="fas fa-folder-open"></i> Submitted Documents</h6>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Document</th>
-                                            <th>Size</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${documentsHtml}
-                                    </tbody>
-                                </table>
-                            </div>
+                            ${data.documents_html ? data.documents_html : 
+                                `<div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Document</th>
+                                                <th>Size</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${documentsHtml}
+                                        </tbody>
+                                    </table>
+                                </div>`
+                            }
                         </div>
                     </div>
                 </div>
@@ -677,21 +679,7 @@
         }
 
         // View document (placeholder for DMS integration)
-        function viewDocument(bidId, documentId) {
-            fetch(`/procurement/bid-responsiveness/${bidId}/document/${documentId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`Document Info:\n\nSupplier: ${data.data.supplier}\nTender: ${data.data.tender}\n\nNote: ${data.data.note}`);
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to load document.');
-                });
-        }
+
 
         // View responsiveness details (placeholder)
         function viewResponsivenessDetails(bidId) {
@@ -703,4 +691,8 @@
             showDetailedCheck(bidId);
         }
     </script>
+@endsection
+
+@section('scripts')
+    @include('snippets.actions.preview-files')
 @endsection

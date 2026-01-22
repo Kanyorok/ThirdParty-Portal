@@ -82,11 +82,11 @@
                         <th>Item</th>
                         <th>Branch</th>
                         <th>Dept</th>
-                        <th>Raised</th>
+                        <th>Requested By</th>
                         <th>Qty</th>
                         <th>Unit Cost</th>
                         <th>Est. Total</th>
-                        <th>Needed</th>
+                        <th>Expected Delivery Date</th>
                         <th>Status</th>
                         <th class="text-center">&nbsp;</th>
                     </tr>

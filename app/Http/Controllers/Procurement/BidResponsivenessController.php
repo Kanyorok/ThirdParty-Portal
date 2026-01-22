@@ -149,7 +149,8 @@ class BidResponsivenessController extends Controller
                     'submission_source' => ucfirst($submission->SubmissionSource)
                 ],
                 'supplier_details' => $supplierDetails,
-                'documents' => $documents,
+                'documents' => $documents, // Keep for backward compat if needed
+                'documents_html' => view('partials.documents_summary', ['documents' => $dmsDocs])->render(),
                 'responsiveness_summary' => $responsivenessSummary,
                 'opening_details' => [
                     'opened_at' => $submission->OpenedAt?->format('d/m/Y H:i:s'),
