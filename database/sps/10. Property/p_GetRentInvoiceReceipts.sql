@@ -1,3 +1,9 @@
+-- ========================================
+-- Author:		<Perez Kariuki>
+-- Create date: <19/01/2026>
+-- Description:	Retrieves rent invoice receipts based on receipt status
+-- ========================================
+
 CREATE OR ALTER PROCEDURE p_GetRentInvoiceReceipts
     @ReceiptStatus VARCHAR(20)
 AS
