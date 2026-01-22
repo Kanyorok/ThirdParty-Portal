@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\Core\Approval\CodeDetail;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Insurance\BancassuranceCustomer;

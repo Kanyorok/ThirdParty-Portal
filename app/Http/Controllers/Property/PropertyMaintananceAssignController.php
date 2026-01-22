@@ -11,7 +11,7 @@ use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceAssignService;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\ThirdParies\Supplier;
 use App\Models\Core\Approval\CodeDetail;
 

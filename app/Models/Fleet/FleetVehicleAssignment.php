@@ -11,7 +11,7 @@ use App\Models\Fleet\FleetVehicleInspection;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Fleet\FleetDriver;
 use App\Models\Auth\User;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\Core\Approval\CodeDetail;
 
 

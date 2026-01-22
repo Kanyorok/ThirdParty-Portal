@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Requisition\RequisitionRequest;
 use App\Models\Procurement\Requisitions;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\Procurement\Requisition\RequisitionItemService;
 use App\Services\Procurement\Requisition\RequisitionService;
 use App\Services\Workflow\ApprovalWorkflow;

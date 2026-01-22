@@ -13,7 +13,7 @@ use App\Models\Fleet\FleetDriverLicenseTracking;
 use App\Services\FleetManagement\FleetDriverService;
 use App\Models\Core\Approval\CodeDetail;
 use App\Http\Requests\FleetManagement\FleetDriverRequest;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\DMS\DocumentService;
 
 class FleetDriverController extends Controller

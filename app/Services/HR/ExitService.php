@@ -7,7 +7,7 @@ use App\Models\Auth\User;
 use App\Models\HR\Exit\ExitPolicy;
 use App\Models\HR\Exit\ExitPolicyNoticePeriod;
 use App\Models\HR\Exit\ExitRequest;
-use App\Models\HRM\Employee as LegacyEmployee;
+use App\Models\HR\Employee as LegacyEmployee;
 use App\Models\HR\GratuityAccrual;
 use App\Models\HR\LeaveBalance;
 use App\Models\HR\LeaveType;

@@ -7,7 +7,7 @@ use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\Validation\ValidationRule;

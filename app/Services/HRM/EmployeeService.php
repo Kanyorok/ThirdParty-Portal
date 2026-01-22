@@ -6,7 +6,7 @@ use App\Enums\Employee\GenderEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;

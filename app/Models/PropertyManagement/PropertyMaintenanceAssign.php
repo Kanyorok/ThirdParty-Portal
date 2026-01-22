@@ -4,7 +4,7 @@ namespace App\Models\PropertyManagement;
 
 use App\Enums\Core\PostingEnum;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;

@@ -9,7 +9,7 @@ use App\Traits\Model\UserActorTrait;
 use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Auth\User;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\HRM\Department;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetTripLog;

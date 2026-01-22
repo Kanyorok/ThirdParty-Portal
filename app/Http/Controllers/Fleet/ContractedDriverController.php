@@ -11,7 +11,7 @@ use App\Models\Fleet\FleetContractedDriverLicense;
 use App\Models\Fleet\FleetContractedDriverAssignment;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\ContractedDriver;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParty\SupplierMaster;

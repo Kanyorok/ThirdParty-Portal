@@ -5,7 +5,7 @@ namespace App\Models\Procurement;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\Auth\User;
 
 class RFQCommitteeMember extends Model

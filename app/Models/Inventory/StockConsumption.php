@@ -13,7 +13,7 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Traits\Model\UserActorTrait;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 
 
 class StockConsumption extends Model

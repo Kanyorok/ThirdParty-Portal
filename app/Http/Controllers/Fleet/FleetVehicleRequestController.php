@@ -8,7 +8,7 @@ use App\Models\Fleet\FleetVehicleRequest;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

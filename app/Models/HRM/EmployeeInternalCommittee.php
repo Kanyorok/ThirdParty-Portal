@@ -3,7 +3,7 @@
 namespace App\Models\HRM;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 

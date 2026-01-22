@@ -10,7 +10,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 
 
 class FleetContractedDriverAssignment extends Model
