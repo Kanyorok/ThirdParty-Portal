@@ -55,11 +55,14 @@ class EmployeeController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'create', 'store', 'show']);
-        $this->authorizeResource(Employee::class);
+        // Authorization is done individually in each method for better debugging
     }
 
     public function index(Request $request): View|JsonResponse
     {
+        // Authorize: Check if user can view any employees
+        $this->authorize('viewAny', Employee::class);
+
         if ($request->ajax()) {
             return $this->getEmployees(Employee::query()->select('*'), with: ['department', 'branch', 'photo']);
         }
@@ -101,6 +104,9 @@ class EmployeeController extends Controller
 
     public function create()
     {
+        // Authorize: Check if user can create employees
+        $this->authorize('create', Employee::class);
+
         $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
         $roles  = JobRole::where('IsActive', 1)->orderBy('Name')->get();
         $branches = Branch::whereNull('DeletedOn')->orderBy('Name')->get();
@@ -119,6 +125,9 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
+        // Authorize: Check if user can create employees
+        $this->authorize('create', Employee::class);
+
         $data = $request->validate([
             // EmployeeNo is auto-generated, not submitted
             'FirstName'       => 'required|string|max:100',
@@ -241,6 +250,9 @@ class EmployeeController extends Controller
     {
         $employee = Employee::with(['branch', 'department', 'grade', 'role', 'supervisor', 'bank', 'bankBranch', 'contacts', 'documents', 'salaryHistory'])
             ->findOrFail($id);
+
+        // Authorize: Check if user can view this employee
+        $this->authorize('view', $employee);
 
         $payrollLines = PayrollRunLine::with(['run.cycle'])
             ->where('EmployeeID', $employee->Id)
@@ -382,6 +394,10 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
+        
+        // Authorize: Check if user can update this employee
+        $this->authorize('update', $employee);
+        
         if ($employee->Status === 'Exited') {
             return redirect()
                 ->route('hr.employees.show', $employee->Id)
@@ -482,6 +498,9 @@ class EmployeeController extends Controller
     public function destroy($id)
     {
         $employee = Employee::findOrFail($id);
+
+        // Authorize: Check if user can delete this employee
+        $this->authorize('delete', $employee);
 
         $employee->update([
             'Status'    => 'Deactivated',
