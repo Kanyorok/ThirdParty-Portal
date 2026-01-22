@@ -2,18 +2,37 @@
 
 namespace App\Models\HR;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\DMS\Image;
 use App\Models\HR\EmployeeContact;
 use App\Models\HR\EmployeeDocument;
 use App\Models\HR\EmployeeSalaryHistory;
 use App\Models\HR\EmployeeEducation;
 use App\Models\HR\EmployeeWorkingDaySetting;
+use App\Models\HR\JobGrade;
+use App\Models\HR\JobRole;
+use App\Models\HRM\Committee;
+use App\Models\HRM\Department;
+use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\ImageTrait;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
+    use UserActorTrait, SoftDeletes, ImageTrait, DocumentsTrait;
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
     protected $table = 't_HREmployees';
     protected $primaryKey = 'Id';
-    public $timestamps = false;
 
     protected $fillable = [
         'EmployeeNo',
@@ -66,15 +85,64 @@ class Employee extends Model
         'DeletedOn'      => 'datetime',
     ];
 
-    // Relationships
-    public function branch()
+    /**
+     * Get the primary key name for workflow mapping
+     */
+    public static function getPrimaryKey(): string
     {
-        return $this->belongsTo(\App\Models\Core\Branch::class, 'BranchID');
+        return (new self())->getRouteKeyName();
     }
 
-    public function department()
+    /**
+     * Get the route key name (for URL routing)
+     */
+    public function getRouteKeyName(): string
     {
-        return $this->belongsTo(\App\Models\HRM\Department::class, 'DepartmentID');
+        return 'EmployeeNo';
+    }
+
+    /**
+     * Get the full name attribute
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim($this->FirstName . ' ' . ($this->OtherNames ? $this->OtherNames . ' ' : '') . $this->LastName);
+    }
+
+    /**
+     * Get the name/identifier for images (required by ImageTrait)
+     */
+    protected function getImageName(): string
+    {
+        return $this->full_name;
+    }
+
+    // Relationships
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'BranchID', 'Id')->withTrashed();
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class, 'DepartmentID', 'Id')->withTrashed();
+    }
+
+    public function user(): HasOne
+    {
+        // t_Users.EmployeeId -> t_HREmployees.Id
+        return $this->hasOne(User::class, 'EmployeeId', 'Id')->withTrashed();
+    }
+
+    public function image(): BelongsTo
+    {
+        return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
+    }
+
+    public function committees(): BelongsToMany
+    {
+        return $this->belongsToMany(Committee::class, 't_Committee_Employee', 'EmployeeId', 'CommitteeId')
+            ->withPivot(['CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn']);
     }
 
     public function grade()

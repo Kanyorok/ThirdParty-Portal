@@ -34,9 +34,10 @@
                 <div class="row g-3">
                     {{-- Basic Info --}}
                     <div class="col-md-3">
-                        <label class="form-label">Employee No *</label>
-                        <input type="text" name="EmployeeNo" class="form-control"
-                               value="{{ old('EmployeeNo') }}" required>
+                        <label class="form-label">Employee No</label>
+                        <input type="text" class="form-control bg-light"
+                               value="Auto-generated" readonly disabled>
+                        <small class="form-text text-muted">Auto-generated (e.g., E00006)</small>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">First Name *</label>

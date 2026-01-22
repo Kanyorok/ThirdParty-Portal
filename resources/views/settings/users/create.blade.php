@@ -5,7 +5,7 @@
             <select class="form-control  w-100" name="Employee" id="Employee" required>
                 <option selected disabled>Select an Employee</option>
                 @foreach($employees as $employee)
-                    <option value="{{ $employee->EmployeeID }}">{{ $employee->full_name }} ({{ $employee->EmployeeID }}
+                    <option value="{{ $employee->EmployeeNo }}">{{ $employee->full_name }} ({{ $employee->EmployeeNo }}
                         )
                     </option>
                 @endforeach

@@ -106,7 +106,7 @@ use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
 use App\Models\HRM\Committee;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceCommissionRule;

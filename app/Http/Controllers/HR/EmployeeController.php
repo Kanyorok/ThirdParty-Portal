@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\HR;
 
+use App\Enums\Employee\GenderEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\HRM\AddEmployeeRequest;
+use App\Http\Requests\HRM\EmployeePersonalRequest;
 use App\Models\HR\Employee;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
@@ -29,22 +32,38 @@ use App\Models\HR\KpiGoal;
 use App\Models\HR\KpiAppraisal;
 use App\Models\HR\KpiRatingScale;
 use App\Models\HR\Discipline\DisciplinaryCase;
+use App\Traits\Controller\EmployeeTrait;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 use Carbon\Carbon;
 use Exception;
 use Throwable;
 
 class EmployeeController extends Controller
 {
+    use EmployeeTrait;
+
     private const STATUSES = ['Pending', 'Active', 'OnHold', 'Dormant', 'Deactivated', 'Exited'];
 
-    public function index(Request $request)
+    public function __construct()
     {
+        $this->middleware('ajax')->except(['index', 'create', 'store', 'show']);
+        $this->authorizeResource(Employee::class);
+    }
+
+    public function index(Request $request): View|JsonResponse
+    {
+        if ($request->ajax()) {
+            return $this->getEmployees(Employee::query()->select('*'), with: ['department', 'branch', 'photo']);
+        }
+
         $query = Employee::query()
             ->with(['branch', 'department', 'grade', 'role', 'supervisor']);
 
@@ -101,7 +120,7 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'EmployeeNo'      => 'required|string|max:50|unique:t_HREmployees,EmployeeNo',
+            // EmployeeNo is auto-generated, not submitted
             'FirstName'       => 'required|string|max:100',
             'LastName'        => 'required|string|max:100',
             'Email'           => 'nullable|email|max:150',
@@ -161,6 +180,8 @@ class EmployeeController extends Controller
 
         $this->syncBankNames($data);
 
+        // Auto-generate EmployeeNo
+        $data['EmployeeNo'] = EmployeeService::generateEmployeeNo();
         $data['CreatedBy'] = auth()->id();
         $data['CreatedOn'] = now();
 

@@ -4,7 +4,7 @@ namespace App\Traits\Controller;
 
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -21,7 +21,7 @@ trait EmployeeTrait
         try {
             return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
                 ->addColumn('action', function (Employee $employee) {
-                    return '<a  href="' . route('employees.show', [$employee->EmployeeID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
+                    return '<a  href="' . route('employees.show', [$employee->EmployeeNo]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
                 })->editColumn('branch.Name', function (Employee $employee) use ($with) {
                     if (in_array('branch', $with, true)) {
                         if ($employee->branch instanceof Branch) {
@@ -38,15 +38,15 @@ trait EmployeeTrait
                         return ' ? ';
                     }
                     return '';
-                })->editColumn('EmployeeID', function (Employee $employee) {
-                    return strtoupper($employee->EmployeeID);
+                })->editColumn('EmployeeNo', function (Employee $employee) {
+                    return strtoupper($employee->EmployeeNo);
                 })->editColumn('photo', function (Employee $employee) use ($with) {
                     return (in_array('photo', $with, true)) ?
                         $employee->getImage('class="img-thumbnail" style="height: 70px; width: 70px;"')
                         : '';
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                     'dbl_click_url' => function (Employee $employee) {
-                        return route('employees.show', [$employee->EmployeeID]);
+                        return route('employees.show', [$employee->EmployeeNo]);
                     },
                 ])->rawColumns(['action', 'photo'])->make();
         } catch (Exception $e) {

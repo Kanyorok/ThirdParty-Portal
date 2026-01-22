@@ -12,7 +12,7 @@ use App\Models\Auth\User;
 use App\Models\BR\BRUser;
 use App\Models\Communication\BulkNotification;
 use App\Models\Core\Branch;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\ThirdParies\Board;
 use App\Services\BR\CBSService;
 use App\Services\Core\BranchService;
@@ -74,7 +74,7 @@ class UserService
             'ModifiedBy' => $actor->Id,
         ]);
 
-        activity()->causedBy($actor)->performedOn($user)->event('create')->log('Created user account ' . $user->UserID . ' for employee ' . $employee->EmployeeID);
+        activity()->causedBy($actor)->performedOn($user)->event('create')->log('Created user account ' . $user->UserID . ' for employee ' . $employee->EmployeeNo);
 
         return new self($user);
     }

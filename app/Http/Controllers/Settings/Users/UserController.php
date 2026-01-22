@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\UserRequest;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\HRM\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -69,7 +69,7 @@ class UserController extends Controller
         // Only allow employees without a linked user AND whose email isn't already used by another user
         $employee = Employee::query()
             ->doesntHave('user')
-            ->where('EmployeeID', $validated['Employee'])
+            ->where('EmployeeNo', $validated['Employee'])
             ->whereNotNull('Email')
             ->whereNotIn('Email', function ($q) {
                 $q->select('Email')->from('t_Users');
@@ -108,7 +108,7 @@ class UserController extends Controller
             ->whereNotIn('Email', function ($q) {
                 $q->select('Email')->from('t_Users');
             })
-            ->get(['EmployeeID', 'FirstName', 'LastName']);
+            ->get(['EmployeeNo', 'FirstName', 'LastName']);
 
         return view('settings.users.create')
             ->with('employees', $employees)
