@@ -154,7 +154,11 @@ class SKUController extends Controller
             return response()->json([], 400);
         }
 
-        $stores = Store::where('BranchID', $branchId)->get(['Id', 'StoreName']);
+        $stores = Store::where('BranchID', $branchId)
+        ->where('Status', 1)  
+        ->get(['Id', 'StoreName']);
+        
+
         return response()->json($stores);
     }
 
