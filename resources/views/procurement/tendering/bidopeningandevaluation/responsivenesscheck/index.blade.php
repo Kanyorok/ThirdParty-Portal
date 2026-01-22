@@ -158,7 +158,7 @@
                                         <span class="badge bg-success">✅ Opened</span><br>
                                         <small class="text-muted">
                                             {{ $submission->OpenedAt->format('d/m/Y H:i') }}<br>
-                                            by {{ $submission->openedByUser->name ?? 'Unknown' }}
+                                            by {{ $submission->openedByUser->Name ?? 'Unknown' }}
                                         </small>
                                     @endif
                                 </td>
@@ -678,7 +678,7 @@
         `;
         }
 
-        // View document (placeholder for DMS integration)
+        
 
 
         // View responsiveness details (placeholder)

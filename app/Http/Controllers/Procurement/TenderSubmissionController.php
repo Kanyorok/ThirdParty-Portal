@@ -33,8 +33,10 @@ class TenderSubmissionController extends Controller
         // Exclude tenders that already have submissions & filter by Published status
         $tenders = Tender::select('TenderNo', 'Title')
             ->where('Status', \App\Enums\TenderStatusEnum::Published->value)
+            ->whereNot('Status', \App\Enums\TenderStatusEnum::Awarded->value)
+            ->whereNot('Status', \App\Enums\TenderStatusEnum::Closed->value)
             ->where('ApprovalStatus', '!=', \App\Enums\TenderApprovalStatusEnum::REJECTED->value)
-            ->doesntHave('submissions')
+            // ->doesntHave('submissions') // Removed to allow multiple submissions per tender (e.g. Public Tenders)
             ->get();
 
         // Initialize suppliers (loaded via AJAX)
@@ -64,7 +66,9 @@ class TenderSubmissionController extends Controller
                         'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
                             ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
                     ];
-                });
+                })
+                ->unique('SupplierName')
+                ->values();
         } else {
             // Restricted Tender - load active invitations
              $suppliers = $tender->invitedSuppliers->map(function($supplier) {
@@ -140,6 +144,14 @@ class TenderSubmissionController extends Controller
         $supplier = Supplier::find($request->supplier_name);
 
         if ($supplier) {
+            // Check if tender is Restricted and if supplier is invited
+            if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
+                $isInvited = $tender->invitedSuppliers()->where('t_Suppliers.Id', $supplier->Id)->exists();
+                if (!$isInvited) {
+                     return redirect()->back()->withErrors(['supplier_name' => 'This supplier is not invited to this restricted tender.'])->withInput();
+                }
+            }
+
             $existingSubmission = BidSubmission::where('TenderRef', $request->tender_ref)
                 ->where('SupplierId', $supplier->Id)
                 ->exists();

@@ -37,6 +37,7 @@
                             <tr>
                                 <th>Application</th>
                                 <th>Supplier</th>
+                                <th>Category</th>
                                 <th>Status</th>
                                 <th>Submitted</th>
                                 <th>Score</th>
@@ -53,6 +54,7 @@
                             <tr>
                                 <th>Application</th>
                                 <th>Supplier</th>
+                                <th>Category</th>
                                 <th>Status</th>
                                 <th>Submitted</th>
                                 <th>Score</th>
@@ -69,6 +71,7 @@
                             <tr>
                                 <th>Application</th>
                                 <th>Supplier</th>
+                                <th>Category</th>
                                 <th>Status</th>
                                 <th>Submitted</th>
                                 <th>Score</th>
@@ -112,6 +115,9 @@ try {
             },
             {
                 data: 'supplier'
+            },
+            {
+                data: 'category_name'
             },
             {
                 data: 'status'

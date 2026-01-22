@@ -154,7 +154,7 @@ class BidResponsivenessController extends Controller
                 'responsiveness_summary' => $responsivenessSummary,
                 'opening_details' => [
                     'opened_at' => $submission->OpenedAt?->format('d/m/Y H:i:s'),
-                    'opened_by' => $submission->openedByUser?->name ?? 'Unknown',
+                    'opened_by' => $submission->openedByUser?->Name ?? 'Unknown',
                     'ceremony_type' => ucfirst($submission->CeremonyType ?? 'Unknown'),
                     'read_out_summary' => $submission->ReadOutSummary
                 ]

@@ -38,7 +38,7 @@ class PrequalificationEvaluationController extends Controller
             $statusFilter = $request->get('status'); // passed | failed
 
             // Modified to show all applications, allowing all authorized users to see suppliers
-            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party']);
+            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party', 'category']);
 
             if ($statusFilter === 'pending') {
                 $appsQuery->doesntHave('result');
@@ -82,6 +82,7 @@ class PrequalificationEvaluationController extends Controller
                 return [
                     'application_no' => $app->applicationNo,
                     'supplier' => $app->supplier?->party?->ThirdPartyName,
+                    'category_name' => $app->category?->CategoryName ?? 'N/A', // Add Category Name
                     'status' => $app->Status,
                     'submitted_on' => optional($app->SubmittedOn)->format('Y-m-d'),
                     'total_score' => $res ? number_format($res->TotalScore, 2) : null,

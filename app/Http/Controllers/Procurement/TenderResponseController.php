@@ -25,12 +25,13 @@ class TenderResponseController extends Controller
         
         $tenders = Tender::where('Status', TenderStatusEnum::Published)
              ->where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
-             ->whereDate('SubmissionDeadline', '>=', now())
+             ->where('SubmissionDeadline', '>', now())
+             ->whereNot('Status', TenderStatusEnum::Awarded)
              // Exclude tenders that already have an Accepted or Declined response.
              // Note: This hides the tender if *any* supplier has responded, per user request.
-             ->whereDoesntHave('invitations', function($q) {
-                 $q->whereIn('ResponseStatus', ['Accepted', 'Declined']);
-             })
+            //  ->whereDoesntHave('invitations', function($q) {
+            //      $q->whereIn('ResponseStatus', ['Accepted', 'Declined']);
+            //  })
              ->select('Id', 'TenderNo', 'Title')
              ->get();
 
@@ -49,6 +50,11 @@ class TenderResponseController extends Controller
             'DeclineReason' => 'nullable|string',
             'ConfirmationAttachment' => 'nullable|file|max:2048',
         ]);
+
+        $tender = Tender::findOrFail($validated['TenderId']);
+        if ($tender->SubmissionDeadline && now()->greaterThan($tender->SubmissionDeadline)) {
+            return back()->with('error', 'The submission deadline for this tender has passed. Response cannot be recorded.');
+        }
 
         $path = null;
         if ($request->hasFile('ConfirmationAttachment')) {
@@ -100,7 +106,9 @@ class TenderResponseController extends Controller
                         'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName 
                             ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
                     ];
-                });
+                })
+                ->unique('SupplierName')
+                ->values();
         } else {
             // Restricted Tender - load active invitations
              // Re-using the relationship approach from original code for safety

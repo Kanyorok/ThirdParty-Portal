@@ -133,8 +133,7 @@ class BidSubmission extends Model
 
     public function openedByUser()
     {
-        return $this->belongsTo(User::class, 'OpenedBy', 'Id')
-           ->select(['Id', 'Name']);
+        return $this->belongsTo(User::class, 'OpenedBy', 'Id');
     }
 
     public function tender()

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Procurement;
 
+
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Tender;
+use App\Enums\TenderStatusEnum;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\RFQEvaluation;
@@ -537,10 +539,11 @@ public function approve(Request $request)
                 $request->remarks,
                 'AwardStatus' // Specify the status column
             );
-
+            
             if (!$approved) {
                 throw new \Exception('Workflow approval failed');
             }
+
 
             Log::info("Workflow approval successful", [
                 'award_id' => $award->Id,
@@ -555,6 +558,19 @@ public function approve(Request $request)
                 'ModifiedBy' => $user->Id,
                 'ModifiedOn' => now(),
             ]);
+
+            // Update Tender Status to Awarded
+            if ($award->tender) {
+                $award->tender->update([
+                    'Status' => \App\Enums\TenderStatusEnum::Awarded->value
+                ]);
+            }
+
+            // Notify award creator
+            $creator = \App\Models\Auth\User::find($award->CreatedBy);
+            if ($creator) {
+                $creator->notify(new \App\Notifications\Procurement\AwardApprovedNotification($award));
+            }
 
             // Send notifications to unsuccessful bidders if requested
             if ($award->NotifyUnsuccessfulBidders) {
@@ -1134,10 +1150,57 @@ public function approve(Request $request)
         return view('procurement.awards.create', compact('tenders'));
     }
 
-     protected function notifyUnsuccessfulBidders($award)
+    /**
+     * Send notifications to unsuccessful bidders
+     */
+    protected function notifyUnsuccessfulBidders($award)
     {
-        // TODO: Implement notification logic
-        Log::info("Sending notifications to unsuccessful bidders for award: " . $award->Id);
+        try {
+            // Get all bidders for this tender EXCEPT the winner
+            $unsuccessfulBidders = \App\Models\Procurement\BidSubmission::where('TenderRef', $award->tender->TenderNo)
+                ->where('SupplierId', '!=', $award->WinningSupplierID)
+                ->where('IsResponsive', true) // Only notify responsive bidders who lost
+                ->with('supplier.supplierMaster.thirdParty.users')
+                ->get();
+            
+            $tenderTitle = $award->tender->Title ?? 'Tender';
+            $tenderNo = $award->tender->TenderNo;
+            
+            foreach ($unsuccessfulBidders as $bidder) {
+                // Get supplier primary contact
+                $supplier = $bidder->supplier; // t_Suppliers
+                $thirdParty = $supplier->supplierMaster->thirdParty; // SupplierMaster -> ThirdParty
+                
+                // Try to find a user/contact to email
+                $contactUser = $thirdParty->users ? $thirdParty->users->first() : null; // Get first user as primary contact
+                $email = $contactUser ? $contactUser->Email : ($thirdParty->Email ?? null);
+                $name = $contactUser ? $contactUser->Name : ($thirdParty->ThirdPartyName ?? 'Supplier');
+                
+                if ($email) {
+                    // Send Regret Letter via generic Mail
+                    $subject = "Regret Letter - {$tenderTitle} ({$tenderNo})";
+                    $body = "Dear {$name},<br><br>" .
+                            "Thank you for participating in the tender <strong>{$tenderTitle} ({$tenderNo})</strong>.<br><br>" .
+                            "We regret to inform you that your bid was not successful on this occasion. The contract has been awarded to another bidder.<br><br>" .
+                            "We appreciate the time and effort you put into your submission and encourage you to participate in our future tenders.<br><br>" .
+                            "Sincerely,<br>" .
+                            "Procurement Department<br>" .
+                            config('app.name');
+
+                    try {
+                        \Illuminate\Support\Facades\Mail::html($body, function($message) use ($email, $subject) {
+                            $message->to($email)
+                                    ->subject($subject);
+                        });
+                        Log::info("Regret email sent to {$email} for tender {$tenderNo}");
+                    } catch (\Exception $e) {
+                         Log::error("Failed to send email to {$email}: " . $e->getMessage());
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to notify unsuccessful bidders: " . $e->getMessage());
+        }
     }
 
 }
