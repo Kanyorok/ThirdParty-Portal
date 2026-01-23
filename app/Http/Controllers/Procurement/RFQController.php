@@ -444,20 +444,6 @@ $recipientRows = DB::table('t_Suppliers as s')
 
             $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
 
-            // Build BCC with other suppliers
-            $bcc = [];
-            foreach ($uniqueEmails as $otherEmail) {
-                if ($otherEmail === $recipientEmail) continue;
-                $otherName = null;
-                foreach ($supplierList as $s) {
-                    if (strtolower($s['email']) === $otherEmail) {
-                        $otherName = $s['name'];
-                        break;
-                    }
-                }
-                $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
-            }
-
             $salutationName = $recipientName ?? $recipientEmail;
             $personalBody = '<p>Hello ' . e($salutationName) . ',</p>' . $bodyTemplate;
 
@@ -470,7 +456,7 @@ $recipientRows = DB::table('t_Suppliers as s')
                     'ThirdParty', 
                     '', 
                     [], 
-                    $bcc, 
+                    [], // No BCC to ensures privacy
                     \App\Enums\EmailPriorityEnum::Important
                 );
                 $service->send(true);

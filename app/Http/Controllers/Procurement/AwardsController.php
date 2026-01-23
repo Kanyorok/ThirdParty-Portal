@@ -567,10 +567,30 @@ public function approve(Request $request)
             }
 
             // Notify award creator
+            // Notify award creator
             $creator = \App\Models\Auth\User::find($award->CreatedBy);
-            if ($creator) {
-                $creator->notify(new \App\Notifications\Procurement\AwardApprovedNotification($award));
+            if ($creator && $creator->Email) {
+                 try {
+                    $subject = 'Award Approved: ' . ($award->tender->TenderNo ?? 'N/A');
+                    $body = "<p>The award for tender <strong>" . ($award->tender->TenderNo ?? 'N/A') . "</strong> has been approved.</p>";
+                    $to = [[$creator->Name => $creator->Email]];
+                    
+                    $service = \App\Services\CRMEmailService::createRaw(
+                        Auth::user(),
+                        $subject,
+                        $body,
+                        $to,
+                        null, null, [], [],
+                        \App\Enums\EmailPriorityEnum::Normal
+                    );
+                    $service->send(true);
+                } catch (\Exception $e) {
+                    Log::error("Failed to send award approval email: " . $e->getMessage());
+                }
             }
+
+            // Notify successful bidder
+            $this->notifySuccessfulBidder($award);
 
             // Send notifications to unsuccessful bidders if requested
             if ($award->NotifyUnsuccessfulBidders) {
@@ -1151,6 +1171,60 @@ public function approve(Request $request)
     }
 
     /**
+     * Notify the successful bidder (Winning Supplier)
+     */
+    protected function notifySuccessfulBidder($award)
+    {
+        try {
+            $tenderTitle = $award->tender->Title ?? 'Tender';
+            $tenderNo = $award->tender->TenderNo;
+            
+            // Get supplier contact info
+            $winningSupplier = \App\Models\ThirdParies\Supplier::find($award->WinningSupplierID);
+            if (!$winningSupplier) {
+                 Log::warning("Winning supplier not found for award {$award->Id}");
+                 return;
+            }
+
+            $thirdParty = $winningSupplier->supplierMaster->thirdParty;
+            $contactUser = $thirdParty->users ? $thirdParty->users->first() : null;
+            $email = $contactUser ? $contactUser->Email : ($thirdParty->Email ?? null);
+            $name = $contactUser ? $contactUser->Name : ($thirdParty->ThirdPartyName ?? 'Valued Supplier');
+
+            if ($email) {
+                $subject = "Award Notification - {$tenderTitle} ({$tenderNo})";
+                $body = "Dear {$name},<br><br>" .
+                        "We are pleased to inform you that your bid for the tender <strong>{$tenderTitle} ({$tenderNo})</strong> has been successful.<br><br>" .
+                        "We will be in touch shortly with further details regarding the contract and next steps.<br><br>" .
+                        "Congratulations and we look forward to working with you.<br><br>" .
+                        "Sincerely,<br>" .
+                        "Procurement Department<br>" .
+                        config('app.name');
+
+                $to = [[$name => $email]];
+
+                $service = \App\Services\CRMEmailService::createRaw(
+                    Auth::user(),
+                    $subject,
+                    $body,
+                    $to,
+                    'ThirdParty',
+                    (string)$thirdParty->Id, 
+                    [], [],
+                    \App\Enums\EmailPriorityEnum::Important
+                );
+                $service->send(true);
+                Log::info("Award notification sent to winner {$email} for tender {$tenderNo}");
+            } else {
+                 Log::warning("No email found for winning supplier ID {$award->WinningSupplierID}");
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Failed to notify successful bidder: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Send notifications to unsuccessful bidders
      */
     protected function notifyUnsuccessfulBidders($award)
@@ -1177,7 +1251,7 @@ public function approve(Request $request)
                 $name = $contactUser ? $contactUser->Name : ($thirdParty->ThirdPartyName ?? 'Supplier');
                 
                 if ($email) {
-                    // Send Regret Letter via generic Mail
+                    // Send Regret Letter via CRMEmailService
                     $subject = "Regret Letter - {$tenderTitle} ({$tenderNo})";
                     $body = "Dear {$name},<br><br>" .
                             "Thank you for participating in the tender <strong>{$tenderTitle} ({$tenderNo})</strong>.<br><br>" .
@@ -1188,10 +1262,20 @@ public function approve(Request $request)
                             config('app.name');
 
                     try {
-                        \Illuminate\Support\Facades\Mail::html($body, function($message) use ($email, $subject) {
-                            $message->to($email)
-                                    ->subject($subject);
-                        });
+                        $to = [[$name => $email]];
+                        
+                        $service = \App\Services\CRMEmailService::createRaw(
+                            Auth::user(),
+                            $subject,
+                            $body,
+                            $to,
+                            'ThirdParty',
+                            (string)$thirdParty->Id,
+                            [], [],
+                            \App\Enums\EmailPriorityEnum::Normal
+                        );
+                        $service->send(true); // Send immediately
+
                         Log::info("Regret email sent to {$email} for tender {$tenderNo}");
                     } catch (\Exception $e) {
                          Log::error("Failed to send email to {$email}: " . $e->getMessage());
